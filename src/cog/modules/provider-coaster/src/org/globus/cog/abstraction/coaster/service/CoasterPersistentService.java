@@ -69,7 +69,7 @@ public class CoasterPersistentService extends CoasterService {
         ap.addFlag("local", "Binds the service to the loopback interface");
         ap.addFlag("passive",
             "Initialize the passive worker service and " +
-                    "set the passive worker manager to be the default");
+                    "set the passive worker manager to be the default (otherwise the block allocator will be used)");
         ap.addFlag("help", "Displays usage information");
         ap.addAlias("help", "h");
         try {
@@ -145,7 +145,12 @@ public class CoasterPersistentService extends CoasterService {
             writePorts(s, portFile, localPortFile);
             
             s.setIgnoreIdleTime(true);
-            s.setDefaultQP("passive");
+            if (ap.isPresent("passive")) {
+                s.setDefaultQP("passive");
+            }
+            else {
+                s.setDefaultQP("block");
+            }
             s.start();
             System.out.println("Started coaster service: " + s);
             s.waitFor();

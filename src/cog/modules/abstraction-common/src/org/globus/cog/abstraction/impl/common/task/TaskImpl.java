@@ -183,7 +183,7 @@ public class TaskImpl implements Task {
             }
         }
         finally {
-            outputListeners.release();
+            outputListeners.release(i);
         }
     }
 
@@ -241,7 +241,7 @@ public class TaskImpl implements Task {
             }
         }
         finally {
-            statusListeners.release();
+            statusListeners.release(i);
         }
         synchronized (this) {
             if (anythingWaiting) {

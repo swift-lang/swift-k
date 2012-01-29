@@ -70,7 +70,7 @@ public class NamedArgumentsImpl implements NamedArguments {
 		}
 	}
 	
-	public void addInitial(String name, Object value) {
+	public synchronized void addInitial(String name, Object value) {
 		named.put(name, value);
 	}
 
@@ -105,7 +105,7 @@ public class NamedArgumentsImpl implements NamedArguments {
 		return named.keySet().iterator();
 	}
 
-	public Object getArgument(String name) {
+	public synchronized Object getArgument(String name) {
 		if (named != null) {
 			return named.get(name);
 		}

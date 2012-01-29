@@ -9,13 +9,13 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
-
-import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
-import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * A channel implementation for which the other endpoint lives in the
@@ -75,10 +75,10 @@ public class AbstractPipedChannel extends AbstractKarajanChannel {
 		byte[] copy = new byte[bytes.length];
 		System.arraycopy(bytes, 0, copy, 0, bytes.length);
 		if (reply) {
-			s.handleReply(tag, fin, error, copy.length, copy);
+			s.handleReply(tag, flags, copy.length, copy);
 		}
 		else {
-			s.handleRequest(tag, fin, error, copy.length, copy);
+			s.handleRequest(tag, flags, copy.length, copy);
 		}
 		if (cb != null) {
 			cb.dataSent();

@@ -31,6 +31,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class PBSExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(PBSExecutor.class);
 
+
 	/**
 	   Number of program invocations
 	 */
@@ -60,7 +61,6 @@ public class PBSExecutor extends AbstractExecutor {
 	/** 
 	    The job name is limited to 15 characters: 
 		http://doesciencegrid.org/public/pbs/qsub.html
-		This limit is enforced on Cray machines
 	 */
 	protected void validate(Task task) {
 		String name = task.getName();
@@ -76,10 +76,7 @@ public class PBSExecutor extends AbstractExecutor {
             }
 		}
 		else if (name.length() > 15) {
-			String shorter = name.substring(0, 15);
-			logger.debug("PBS name: for: " + name + 
-			             " is: " + shorter);
-		    task.setName(shorter);
+		    task.setName(name.substring(0, 15));
 		}
 	}
 	
@@ -326,6 +323,7 @@ public class PBSExecutor extends AbstractExecutor {
 		writer.write("#CoG   by class: " + PBSExecutor.class + '\n');
 		writer.write("#CoG   on date: " + new Date() + "\n\n");
 	}
+	
 	
 	private String makeList(Collection<String> names) {
         StringBuilder sb = new StringBuilder();

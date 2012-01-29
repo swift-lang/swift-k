@@ -11,4 +11,10 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers.providers;
 
 public interface WriteIOCallback extends IOCallback {
 
+    void info(String valueOf);
+
+    void suspend();
+
+    void resume();
+
 }

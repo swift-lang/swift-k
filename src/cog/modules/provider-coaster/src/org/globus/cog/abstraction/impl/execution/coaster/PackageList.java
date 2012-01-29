@@ -26,7 +26,6 @@ public class PackageList {
         if (!dir.exists()) {
             throw new RuntimeException(dir + " does not exist");
         }
-        add("backport-util-concurrent.jar");
         add("cog-abstraction-common-*.jar");
         add("cog-jglobus-*.jar");
         add("cog-karajan-*.jar");

@@ -110,5 +110,21 @@ public class LocalCopyIOProvider implements IOProvider {
             super(src, getPath(dest), cb);
             start();
         }
+
+        public void suspend() {
+            // not used
+        }
+
+        public void resume() {
+            // not used
+        }
+
+        public void setUpThrottling() {
+            // not used
+        }
+
+        public void cancelThrottling() {
+            // not used
+        }
     }
 }

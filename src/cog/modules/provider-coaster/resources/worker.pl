@@ -15,6 +15,7 @@ use File::Basename;
 use File::Path;
 use File::Copy;
 use Getopt::Std;
+use FileHandle;
 use Cwd;
 use POSIX ":sys_wait_h";
 use strict;
@@ -63,6 +64,14 @@ use constant {
 	YIELD => 1,
 };
 
+use constant {
+	PUT_START => 0,
+	PUT_CMD_SENT => 1,
+	PUT_SIZE_SENT => 2,
+	PUT_LNAME_SENT => 3,
+	PUT_SENDING_DATA => 4,
+};
+
 my $LOGLEVEL = NONE;
 
 my @LEVELS = ("TRACE", "DEBUG", "INFO ", "WARN ", "ERROR");
@@ -80,7 +89,8 @@ use constant {
 	REPLY_FLAG => 0x00000001,
 	FINAL_FLAG => 0x00000002,
 	ERROR_FLAG => 0x00000004,
-	PROGRESSIVE_FLAG => 0x00000008
+	PROGRESSIVE_FLAG => 0x00000008,
+	SIGNAL_FLAG => 0x00000010,
 };
 
 use constant {
@@ -91,12 +101,13 @@ use constant {
 	STAGEOUT => 0x11,
 };
 
-my $TAG = 0;
+my $TAG = int(rand(10000));
 use constant RETRIES => 3;
 use constant REPLYTIMEOUT => 180;
 use constant MAXFRAGS => 16;
 # TODO: Make this configurable (#537)
 use constant MAX_RECONNECT_ATTEMPTS => 3;
+use constant NEVER => 9999999999;
 
 use constant JOB_CHECK_SKIP => 32;
 
@@ -164,6 +175,55 @@ my %REQUESTS = ();
 
 # REPLIES stores the state of (outgoing) commands for which replies are expected
 my %REPLIES  = ();
+
+my %SUSPENDED_TRANSFERS = ();
+
+# the structure of the above maps is (fields marked with "*" are optional):
+#	tag: [state, time]
+#
+#	state: {} - valid keys:
+#		tag: the current command/request tag
+#		dataIn: proc(state, tag, timeout, err, fin, msg) - invoked when data is received
+#		nextData: proc(state) - invoked to get the next data chunk
+#								returns: (flags, data, yieldFlag), where
+#									flags: the protocol flags to send (e.g. err, fin)
+#									data: the actual data
+#									yieldFlag: if CONTINUE then it instructs the sending procedure
+#												to loop sending data until YIELD is returned  
+#
+#		dataSent: proc(state, tag) - invoked when all data was sent
+#		PUT file specific state:
+#			state: a numeric state number:
+#				0 - new request
+#				1 - command sent
+#				2 - file size sent
+#				3 - local name sent (i.e. sending data)
+#			size: file size
+#			lname: local file name
+#			rname: remote file name
+#			sent: total bytes sent from this file
+#			bindex: block index - multiple I/O buffer size worth of data are sent
+#								  before yielding to other commands/requests (up to IOBLOCKSZ).
+#								  This number counts how many buffer sizes in the current block have
+#								  been sent so far.
+#			handle: file handle
+#
+#		GET file specific state:
+#			state:
+#				0 - new request
+#				1 - size received
+#			handle: file handle
+#			size: file size
+#			lname: local file name
+#
+#		state when sending array data:
+#			index: the current index in the data array
+#			data: an array containing the data chunks
+#			
+#		 
+#	
+#	time:  last communication time (used to determine timeouts)
+#
 
 my $LOG = logfilename($LOGDIR, $BLOCKID);
 
@@ -246,11 +306,10 @@ sub file2hash() {
 }
 
 sub timestring() {
-	# TODO: Make this choice configurable (#541)
-	my $t = sprintf("%.3f", time());
-	# my @d = localtime(time());
-	# my $t = sprintf("%i/%02i/%02i %02i:%02i",
-	# 				$d[5]+1900, $d[4]+1, $d[3], $d[2], $d[1]);
+	#my $t = sprintf("%.3f", time());
+	my $now = time();
+	my @d = localtime($now);
+        my $t = sprintf("%i/%02i/%02i %02i:%02i:%02i.%03i", $d[5]+1900, $d[4]+1, $d[3], $d[2], $d[1], $d[0], ($now*1000) % 1000);
 	return $t;
 }
 
@@ -333,9 +392,7 @@ sub initlog() {
 			print "LOG: $LOG\n";
 		}
 		open(LOG, ">>$LOG") or die "Failed to open log file ($LOG): $!";
-		my $b = select(LOG);
-		$| = 1;
-		select($b);
+		LOG->autoflush(1);
 		my $date = localtime;
 		wlog INFO, "$BLOCKID Logging started: $date\n";
 	}
@@ -383,7 +440,7 @@ sub trim {
 sub sendm {
 	my ($tag, $flags, $msg) = @_;
 	my $len = length($msg);
-	my $buf = pack("VVV", $tag, $flags, $len);
+	my $buf = pack("VVVVV", $tag, $flags, $len, ($tag ^ $flags ^ $len), 0);
 	$buf = $buf.$msg;
 
 	wlog(DEBUG, "OUT: len=$len, tag=$tag, flags=$flags\n");
@@ -401,24 +458,28 @@ sub sendFrags {
 	my $flg2;
 	my $msg;
 	my $yield;
-	if (defined($$data{"tag"})) {
-		$tag = $$data{"tag"};
-	}
+	
 	do {
 		($flg2, $msg, $yield) = $$data{"nextData"}($data);
-		sendm($tag, $flg | $flg2, $msg);
+		if (defined($msg)) {
+			sendm($tag, $flg | $flg2, $msg);
+		}
 	} while (($flg2 & FINAL_FLAG) == 0 && !$yield);
 
 	if (($flg2 & FINAL_FLAG) == 0) {
 		# final flag not set; put it back in the queue
-		wlog DEBUG, "$tag yielding\n";
-		$$data{"tag"} = $tag;
+		wlog TRACE, "$tag yielding\n";
+		
+		# update last time
+		my $record = $REPLIES{$tag};
+		$$record[1] = time();
+		
 		queueCmdCustomDataHandling($REPLIES{$tag}, $data);
 	}
 	else {
 		if (exists($REPLIES{$tag})) {
 			my $record = $REPLIES{$tag};
-			my ($cont, $start) = ($$record[0], $$record[1]);
+			my ($cont, $lastTime) = ($$record[0], $$record[1]);
 			if (defined($$cont{"dataSent"})) {
 				$$cont{"dataSent"}($cont, $tag);
 			}
@@ -451,38 +512,48 @@ sub nextFileData {
 	my ($state) = @_;
 
 	my $s = $$state{"state"};
-	if ($s == 0) {
+	
+	my $tag = $$state{"tag"};
+	
+	wlog TRACE, "$tag nextFileData state=$s\n";
+	
+	if ($s == PUT_START) {
 		$$state{"state"} = $s + 1;
 		return (0, $$state{"cmd"}, CONTINUE);
 	}
-	elsif ($s == 1) {
+	elsif ($s == PUT_CMD_SENT) {
 		$$state{"state"} = $s + 1;
 		return (0, pack("VV", $$state{"size"}, 0), CONTINUE);
 	}
-	elsif ($s == 2) {
+	elsif ($s == PUT_SIZE_SENT) {
 		$$state{"state"} = $s + 1;
 		return (0, $$state{"lname"}, CONTINUE);
 	}
-	elsif ($s == 3) {
+	elsif ($s == PUT_LNAME_SENT) {
 		$$state{"state"} = $s + 1;
 		$$state{"sent"} = 0;
 		$$state{"bindex"} = 0;
 		return ($$state{"size"} == 0 ? FINAL_FLAG : 0, $$state{"rname"}, CONTINUE);
 	}
-	else {
+	elsif ($s == PUT_SENDING_DATA) {
+		if (defined $SUSPENDED_TRANSFERS{"$tag"}) {
+			wlog TRACE, "$tag Transfer suspendend; yielding\n";
+			return (0, undef, YIELD);
+		}
+	
 		my $handle = $$state{"handle"};
 		my $buffer;
 		my $sz = read($handle, $buffer, IOBUFSZ);
 		if (!defined $sz) {
-			wlog INFO, "Failed to read data from file: $!\n";
+			wlog INFO, "$tag Failed to read data from file: $!\n";
 			return (FINAL_FLAG + ERROR_FLAG, "$!", CONTINUE);
 		}
 		elsif ($sz == 0 && $$state{"sent"} < $$state{"size"}) {
-			wlog INFO, "File size mismatch. $$state{'size'} vs. $$state{'sent'}\n";
+			wlog INFO, "$tag File size mismatch. $$state{'size'} vs. $$state{'sent'}\n";
 			return (FINAL_FLAG + ERROR_FLAG, "File size mismatch. Expected $$state{'size'}, got $$state{'sent'}", CONTINUE);
 		}
 		$$state{"sent"} += $sz;
-		wlog DEBUG, "size: $$state{'size'}, sent: $$state{'sent'}\n";
+		wlog DEBUG, "$tag size: $$state{'size'}, sent: $$state{'sent'}\n";
 		if ($$state{"sent"} == $$state{"size"}) {
 			close $handle;
 		}
@@ -523,6 +594,8 @@ sub sendCmdInt {
 	if (!defined $ctag) {
 		$ctag =  $TAG++;
 		registerCmd($ctag, $cont);
+		# make the tag accessible to the data generator
+		$$state{"tag"} = $ctag;
 	}
 	sendFrags($ctag, 0, $state);
 	return $ctag;
@@ -537,6 +610,7 @@ sub sendCmd {
 sub queueCmd {
 	my @cmd = @_;
 	my $cont = shift(@cmd);
+	# $cont is the continuation (what gets called when a reply is received)
 	push @CMDQ, [$cont, arrayData(@cmd)];
 }
 
@@ -559,13 +633,23 @@ sub unpackData {
 	my ($data) = @_;
 
 	my $lendata = length($data);
-	if ($lendata < 12) {
-		wlog WARN, "Received faulty message (length < 12: $lendata)\n";
-		die "Received faulty message (length < 12: $lendata)";
+	if ($lendata < 20) {
+		wlog WARN, "Received faulty message (length < 20: $lendata)\n";
+		die "Received faulty message (length < 20: $lendata)";
 	}
 	my $tag = unpack("V", substr($data, 0, 4));
 	my $flg = unpack("V", substr($data, 4, 4));
 	my $len = unpack("V", substr($data, 8, 4));
+	my $hcsum = unpack("V", substr($data, 12, 4));
+	my $csum = unpack("V", substr($data, 16, 4));
+	
+	my $chcsum = ($tag ^ $flg ^ $len);
+	
+	if ($chcsum != $hcsum) {
+		wlog WARN, "Header checksum failed. Computed checksum: $chcsum, checksum: $hcsum\n";
+		return;
+	}
+	
 	my $msg;
 	my $frag;
 	my $alen = 0;
@@ -574,7 +658,7 @@ sub unpackData {
 		$alen = $alen + length($frag);
 		$msg = $msg.$frag;
 	}
-
+	
 	my $actuallen = length($msg);
 	wlog(TRACE, " IN: len=$len, actuallen=$actuallen, tag=$tag, flags=$flg, $msg\n");
 	if ($len != $actuallen) {
@@ -584,7 +668,7 @@ sub unpackData {
 }
 
 sub processRequest {
-	my ($state, $tag, $timeout, $err, $fin, $msg) = @_;
+	my ($state, $tag, $timeout, $flags, $msg) = @_;
 
 	my $request = $$state{"request"};
 	if (!defined($request)) {
@@ -596,7 +680,7 @@ sub processRequest {
 	if ($timeout) {
 		sendError($tag, ("Timed out waiting for all fragments"));
 	}
-	elsif (!$fin) {
+	elsif (!($flags & FINAL_FLAG)) {
 		return;
 	}
 	else {
@@ -617,15 +701,17 @@ sub process {
 
 
 	my $reply = $flg & REPLY_FLAG;
-	my ($record, $cont, $start);
+	my ($record, $cont, $lastTime);
 
 	if ($reply) {
 		if (exists($REPLIES{$tag})) {
 			$record = $REPLIES{$tag};
-			($cont, $start) = ($$record[0], $$record[1]);
+			($cont, $lastTime) = ($$record[0], $$record[1]);
+			# update last time 
+			$$record[1] = time();
 		}
 		else {
-			wlog(WARN, "received reply to unregistered command (tag=$tag). Discarding.\n");
+			wlog(WARN, "received reply to unregistered command (tag=$tag, msg=$msg). Discarding.\n");
 			return;
 		}
 	}
@@ -635,7 +721,7 @@ sub process {
 			wlog DEBUG, "New request ($tag)\n";
 		}
 		$record = $REQUESTS{$tag};
-		($cont, $start) = ($$record[0], $$record[1]);
+		($cont, $lastTime) = ($$record[0], $$record[1]);
 	}
 
 	my $fin = $flg & FINAL_FLAG;
@@ -658,7 +744,7 @@ sub process {
 		wlog DEBUG, "Fin flag set\n";
 	}
 
-	$$cont{"dataIn"}($cont, $tag, 0, $err, $fin, $msg);
+	$$cont{"dataIn"}($cont, $tag, 0, $flg, $msg);
 
 	return 1;
 }
@@ -702,10 +788,10 @@ my $DATA = "";
 sub recvOne {
 	my $buf;
 	$SOCK->blocking(0);
-	$SOCK->recv($buf, 12 - length($DATA));
+	$SOCK->recv($buf, 20 - length($DATA));
 	if (length($buf) > 0) {
 		$DATA = $DATA . $buf;
-		if (length($DATA) == 12) {
+		if (length($DATA) == 20) {
 			# wlog DEBUG, "Received " . unpackData($DATA) . "\n";
 			eval { process(unpackData($DATA)); } || (wlog ERROR, "Failed to process data: $@\n" && die "Failed to process data: $@");
 			$DATA = "";
@@ -744,7 +830,7 @@ sub loopOne {
 	# things may be added to it while stuff is being sent
 	my $sz = scalar(@CMDQ);
 	for (my $i = 0; $i < $sz; $i++)  {
-		$cmd = pop(@CMDQ);
+		$cmd = shift(@CMDQ);
 		sendCmdInt(@$cmd);
 	}
 	checkJobs();
@@ -774,12 +860,12 @@ sub registerCB {
 }
 
 sub registerCBDataIn {
-	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
+	my ($state, $tag, $timeout, $flags, $reply) = @_;
 
 	if ($timeout) {
 		die "Failed to register (timeout)\n";
 	}
-	elsif ($err) {
+	elsif ($flags & ERROR_FLAG) {
 		die "Failed to register (service returned error: ".join("\n", $reply).")";
 	}
 	else {
@@ -795,7 +881,7 @@ sub heartbeatCB {
 }
 
 sub heartbeatCBDataIn {
-	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
+	my ($state, $tag, $timeout, $flags, $reply) = @_;
 
 	if ($timeout) {
 		if (time() - $LAST_HEARTBEAT > 2 * HEARTBEAT_INTERVAL) {
@@ -803,7 +889,7 @@ sub heartbeatCBDataIn {
 			die "Lost heartbeat\n";
 		}
 	}
-	elsif ($err) {
+	elsif ($flags & ERROR_FLAG) {
 		wlog WARN, "Heartbeat failed: $reply\n";
 		die "Heartbeat failed: $reply\n";
 	}
@@ -851,7 +937,8 @@ sub shutdownw {
 sub heartbeat {
 	my ($tag, $timeout, $msgs) = @_;
 	$LAST_HEARTBEAT = time();
-	sendReply($tag, ("OK"));
+	my $msg = int(time() * 1000);
+	sendReply($tag, ("$msg"));
 }
 
 sub workershellcmd {
@@ -928,8 +1015,8 @@ sub getFileCB {
 		mkfdir($jobid, $dst);
 		# don't try open(DESC, ...) (as I did). It will use the same reference
 		# and concurrent operations will fail.
-		my $desc;
-		if (!open($desc, ">", "$dst")) {
+		my $handle;
+		if (!open($handle, ">", "$dst")) {
 			die "Failed to open $dst: $!";
 		}
 		else {
@@ -939,7 +1026,7 @@ sub getFileCB {
 				"dataIn" => \&getFileCBDataIn,
 				"state" => 0,
 				"lfile" => $dst,
-				"desc" => $desc
+				"handle" => $handle
 			};
 		}
 	}
@@ -953,11 +1040,12 @@ sub getFileCB {
 }
 
 sub getFileCBDataInIndirect {
-	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
+	my ($state, $tag, $timeout, $flags, $reply) = @_;
 
 	my $jobid = $$state{"jobid"};
-	wlog DEBUG, "$jobid getFileCBDataInIndirect jobid: $jobid, tag: $tag, err: $err, fin: $fin\n";
-	if ($err) {
+	wlog DEBUG, "$jobid getFileCBDataInIndirect jobid: $jobid, tag: $tag, flags: $flags\n";
+	if ($flags & ERROR_FLAG) {
+		wlog DEBUG, "$jobid getFileCBDataInIndirect error: $reply\n";
 		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "520", "Error staging in file: $reply"));
 		delete($JOBDATA{$jobid});
 		return;
@@ -967,19 +1055,28 @@ sub getFileCBDataInIndirect {
 		delete($JOBDATA{$jobid});
 		return;
 	}
-	if ($fin) {
+	if ($flags & FINAL_FLAG) {
 		stagein($jobid);
 	}
 }
 
 
 sub getFileCBDataIn {
-	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
+	my ($state, $tag, $timeout, $flags, $reply) = @_;
 
 	my $s = $$state{"state"};
 	my $jobid = $$state{"jobid"};
-	wlog DEBUG, "$jobid getFileCBDataIn jobid: $jobid, state: $s, tag: $tag, err: $err, fin: $fin\n";
-	if ($err) {
+	my $len = length($reply);
+	wlog DEBUG, "$jobid getFileCBDataIn jobid: $jobid, state: $s, tag: $tag, flags: $flags, len: $len\n";
+	
+	if ($flags & SIGNAL_FLAG) {
+		if ($reply eq "QUEUED") {
+			$REPLIES{$tag}[1] = NEVER;
+			wlog DEBUG, "$jobid transfer queued\n";
+		}
+		return;
+	}
+	elsif ($flags & ERROR_FLAG) {
 		wlog DEBUG, "$jobid getFileCBDataIn FAILED 520 Error staging in file: $reply\n";
 		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "520", "Error staging in file: $reply"));
 		delete($JOBDATA{$jobid});
@@ -993,21 +1090,22 @@ sub getFileCBDataIn {
 	elsif ($s == 0) {
 		$$state{"state"} = 1;
 		$$state{"size"} = unpack("V", $reply);
+		wlog DEBUG, "$tag $jobid got file size: $$state{'size'}\n";
 		my $lfile = $$state{"lfile"};
 	}
 	else {
-		my $desc = $$state{"desc"};
-		if (!(print {$desc} $reply)) {
-			close $desc;
-			wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $desc; lfile: $$state{'lfile'}\n";
+		my $handle = $$state{"handle"};
+		if (!(print {$handle} $reply)) {
+			close $handle;
+			wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $handle; lfile: $$state{'lfile'}\n";
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "522", "Could not write to file: $!"));
 			delete($JOBDATA{$jobid});
 			return;
 		}
 	}
-	if ($fin) {
-		my $desc = $$state{"desc"};
-		close $desc;
+	if ($flags & FINAL_FLAG) {
+		my $handle = $$state{"handle"};
+		close $handle;
 		wlog DEBUG, "$jobid Closed $$state{'lfile'}\n";
 		if ($PINNED_READY) {
 			completePinnedFile($jobid);
@@ -1220,6 +1318,13 @@ sub stageout {
 			wlog DEBUG, "$jobid Staging out $lfile (mode = $mode).\n";
 			my ($protocol, $host, $path) = urisplit($rfile);
 			if ($protocol eq "file" || $protocol eq "proxy") {
+				# make sure we keep track of the total number of actual stageouts
+				if (!defined $JOBDATA{$jobid}{"stageoutCount"}) {
+					$JOBDATA{$jobid}{"stageoutCount"} = 0;
+				}
+				$JOBDATA{$jobid}{"stageoutCount"} += 1;
+				wlog DEBUG, "$jobid Stagecount is $JOBDATA{$jobid}{stageoutCount}\n"; 
+				
 				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $lfile, $rfile));
 			}
 			elsif ($protocol eq "sfs") {
@@ -1254,16 +1359,34 @@ sub stageout {
 	}
 }
 
+sub sendStatus {
+	my ($jobid) = @_;
+	
+	my $ec = $JOBDATA{$jobid}{"exitcode"};
+	
+	if ($ec == 0) {
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+	}
+	else {
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with an exit code of $ec"));
+	}
+}
+
 sub cleanup {
 	my ($jobid) = @_;
 
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
 	if (ASYNC) {
-		if ($ec == 0) {
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+		if (!defined($JOBDATA{$jobid}{"stageoutCount"}) || ($JOBDATA{$jobid}{"stageoutCount"} == 0)) {
+			# there were no stageouts. Notification can be sent now
+			wlog DEBUG, "$jobid There were no stageouts. Sending notification immediately\n";
+			sendStatus($jobid);
 		}
 		else {
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with an exit code of $ec"));
+			# there were stageouts. Wait until all are acknowledged
+			# as done by the client. And we keep track of the
+			# count of stageouts that weren't acknowledged in 
+			# $JOBDATA{$jobid}{"stageoutCount"}
 		}
 	}
 
@@ -1282,7 +1405,7 @@ sub cleanup {
 				chop $c;
 			}
 			wlog DEBUG, "$jobid Removing $c\n";
-			rmtree($c, {safe => 1, verbose => 0});
+			rmtree($c, 0, 0);
 			wlog DEBUG, "$jobid Removed $c\n";
 		}
 	}
@@ -1311,34 +1434,51 @@ sub putFileCBDataSent {
 	my ($state, $tag) = @_;
 
 	if (ASYNC) {
-		wlog DEBUG, "putFileCBDataSent\n";
+		wlog DEBUG, "$tag putFileCBDataSent\n";
 		my $jobid = $$state{"jobid"};
-		if ($jobid != -1) {
-			wlog DEBUG, "Data sent, async is on. Staging out next file\n";
+		if ($jobid != -1) { 
+			wlog DEBUG, "$tag Data sent, async is on. Staging out next file\n";
 			stageout($jobid);
 		}
 	}
 }
 
 sub putFileCBDataIn {
-	my ($state, $tag, $timeout, $err, $fin, $reply) = @_;
+	my ($state, $tag, $timeout, $flags, $reply) = @_;
 
-	wlog DEBUG, "putFileCBDataIn: $reply\n";
+	wlog DEBUG, "$tag putFileCBDataIn msg=$reply\n";
 
 	my $jobid = $$state{"jobid"};
 
-	if ($err || $timeout) {
+	if (($flags & ERROR_FLAG) || $timeout) {
 		if ($JOBDATA{$jobid}) {
-			wlog DEBUG, "Stage out failed ($reply)\n";
+			wlog DEBUG, "$tag Stage out failed ($reply)\n";
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "515", "Stage out failed ($reply)"));
 			delete($JOBDATA{$jobid});
 		}
 		return;
 	}
+	elsif ($reply eq "STOP") {
+		$SUSPENDED_TRANSFERS{"$tag"} = 1; 
+		wlog DEBUG, "$tag Got stop request. Suspending transfer.\n";
+	}
+	elsif ($reply eq "CONTINUE") {
+		delete $SUSPENDED_TRANSFERS{"$tag"};
+		wlog DEBUG, "$tag Got continue request. Resuming transfer.\n";
+	}
 	elsif ($jobid != -1) {
+		# OK reply from client
 		if (!ASYNC) {
-			wlog DEBUG, "Stageout done; staging out next file\n";
+			wlog DEBUG, "$tag Stageout done; staging out next file\n";
 			stageout($jobid);
+		}
+		else {
+			wlog DEBUG, "$jobid Stageout done; stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
+			$JOBDATA{$jobid}{"stageoutCount"} -= 1;
+			if ($JOBDATA{$jobid}{"stageoutCount"} == 0) {
+				wlog DEBUG, "$jobid All stageouts acknowledged. Sending notification\n";
+				sendStatus($jobid);
+			}
 		}
 	}
 }
@@ -1492,21 +1632,24 @@ sub forkjob {
 	}
 	$JOBDATA{$JOBID}{"jobslot"} = $JOBSLOT;
 
-	pipe(PARENT_R, CHILD_W);
+	my ($PARENT_R, $CHILD_W);
+	pipe($PARENT_R, $CHILD_W);
+	
 	$pid = fork();
+
 	if (defined($pid)) {
 		if ($pid == 0) {
-			close PARENT_R;
-			runjob(\*CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
-			close CHILD_W;
+			close $PARENT_R;
+			runjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
+			close $CHILD_W;
 		}
 		else {
 			wlog DEBUG, "$JOBID Forked process $pid. Waiting for its completion\n";
-			close CHILD_W;
+			close $CHILD_W;
 			$JOBS_RUNNING++;
 			$JOBWAITDATA{$JOBID} = {
 				pid => $pid,
-				pipe => \*PARENT_R
+				pipe => $PARENT_R
 				};
 			if ($PROFILE) {
 				push(@PROFILE_EVENTS, "FORK", $pid, time());

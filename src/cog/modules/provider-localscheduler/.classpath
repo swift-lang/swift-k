@@ -10,6 +10,7 @@
 		</accessrules>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/jglobus"/>
-	<classpathentry kind="lib" path="/util/lib/log4j-1.2.8.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/util"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>

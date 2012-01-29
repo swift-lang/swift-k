@@ -9,6 +9,8 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,8 +40,8 @@ public class ChannelContext {
 	private String remoteContact;
 	private UserContext userContext;
 	private int cmdseq;
-	private TagTable activeSenders;
-	private TagTable activeReceivers;
+	private TagTable<Command> activeSenders;
+	private TagTable<RequestHandler> activeReceivers;
 	// private Map reexecutionSet;
 	private static Timer timer;
 	private ServiceContext serviceContext;
@@ -55,9 +57,9 @@ public class ChannelContext {
 	
 	public ChannelContext(ServiceContext sc) {
 	    attributes = new HashMap<String,Object>();
-		activeSenders = new TagTable();
-		activeReceivers = new TagTable();
-		// reexecutionSet = new Hashtable();
+		activeSenders = new TagTable<Command>();
+		activeReceivers = new TagTable<RequestHandler>();
+
 		channelID = new ChannelID();
 		this.serviceContext = sc;
 	}
@@ -74,7 +76,7 @@ public class ChannelContext {
 	public synchronized void setUserContext(UserContext userContext) {
 		this.userContext = userContext;
 	}
-
+	
 	public synchronized UserContext newUserContext(String name) throws ChannelException {
 		if (userContext != null && userContext.getName() != null) {
 			try {
@@ -140,7 +142,7 @@ public class ChannelContext {
 		return channelID;
 	}
 	
-	public int nextCmdSeq() {
+	public synchronized int nextCmdSeq() {
 		cmdseq = cmdseq + 1;
 		while (activeSenders.containsKey(cmdseq) || activeReceivers.containsKey(cmdseq)) {
 			cmdseq = cmdseq + 1;
@@ -148,19 +150,39 @@ public class ChannelContext {
 		return cmdseq;
 	}
 
-	public synchronized void registerCommand(Command cmd) throws ProtocolException {
+	public void registerCommand(Command cmd) throws ProtocolException {
 		if (cmd.getId() == RequestReply.NOID) {
 			cmd.setId(nextCmdSeq());
-			activeSenders.put(cmd.getId(), cmd);
+			synchronized(activeSenders) {
+				activeSenders.put(cmd.getId(), cmd);
+			}
 		}
 		else {
 			throw new ProtocolException("Command already registered with id " + cmd.getId());
 		}
 	}
+	
+	public Collection<Command> getActiveCommands() {
+		List<Command> l = new ArrayList<Command>();
+		synchronized(activeSenders) {
+		    l.addAll(activeSenders.values());
+		}
+		return l;
+	}
+	
+	public Collection<RequestHandler> getActiveHandlers() {
+	    List<RequestHandler> l = new ArrayList<RequestHandler>();
+	    synchronized(activeReceivers) {
+	    	l.addAll(activeReceivers.values());
+	    }
+	    return l;
+	}
 
 	public void unregisterCommand(Command cmd) {
 		Object removed;
-		removed = activeSenders.remove(cmd.getId());
+		synchronized(activeSenders) {
+			removed = activeSenders.remove(cmd.getId());
+		}
 		if (removed == null) {
 			logger.warn("Attempted to unregister unregistered command with id " + cmd.getId());
 		}
@@ -170,23 +192,31 @@ public class ChannelContext {
 	}
 
 	public void registerHandler(RequestHandler handler, int tag) {
-		activeReceivers.put(tag, handler);
+		synchronized(activeReceivers) {
+			activeReceivers.put(tag, handler);
+		}
 	}
 
 	public void unregisterHandler(int tag) {
 		Object removed;
-		removed = activeReceivers.remove(tag);
+		synchronized(activeReceivers) {
+			removed = activeReceivers.remove(tag);
+		}
 		if (removed == null) {
 			logger.warn("Attempted to unregister unregistered handler with id " + tag);
 		}
 	}
 
 	public Command getRegisteredCommand(int id) {
-		return (Command) activeSenders.get(id);
+		synchronized(activeSenders) {
+			return activeSenders.get(id);
+		}
 	}
 
 	public RequestHandler getRegisteredHandler(int id) {
-		return (RequestHandler) activeReceivers.get(id);
+		synchronized(activeReceivers) {
+			return activeReceivers.get(id);
+		}
 	}
 
 	public void notifyRegisteredListeners(Exception e) {
@@ -195,8 +225,10 @@ public class ChannelContext {
 	}
 
 	private void notifyListeners(TagTable map, Exception t) {
-		for (Object o : map.values())
-			((RequestReply) o).errorReceived(null, t);
+		synchronized(map) {
+			for (Object o : map.values())
+				((RequestReply) o).errorReceived(null, t);
+		}
 	}
 
 	public Timer getTimer() {
@@ -233,6 +265,12 @@ public class ChannelContext {
 	public void setAttribute(String name, Object o) {
 	    synchronized(attributes) {
 	        attributes.put(name, o);
+	    }
+	}
+	
+	public Object getAttribute(String name) {
+	    synchronized(attributes) {
+	        return attributes.get(name);
 	    }
 	}
 

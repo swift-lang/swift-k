@@ -330,12 +330,10 @@ public class FileResourceImpl extends AbstractFileResource {
         tempFile.delete();
     }
 
-    @Override
     public boolean supportsPartialTransfers() {
         return false;
     }
 
-    @Override
     public boolean supportsThirdPartyTransfers() {
         return false;
     }

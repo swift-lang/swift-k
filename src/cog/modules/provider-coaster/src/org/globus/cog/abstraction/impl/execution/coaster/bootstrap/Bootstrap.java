@@ -17,16 +17,12 @@ import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.security.MessageDigest;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-
-import org.globus.cog.abstraction.impl.execution.coaster.BootstrapService;
-import org.globus.cog.abstraction.impl.execution.coaster.ServiceManager;
 
 
 public class Bootstrap {
@@ -53,14 +49,14 @@ public class Bootstrap {
     private String serviceURL;
     private String registrationURL;
     private String serviceId;
-    private List list;
+    private List<String[]> list;
 
     public Bootstrap(String serviceURL,
             String registrationURL, String serviceId) {
         this.serviceURL = serviceURL;
         this.registrationURL = registrationURL;
         this.serviceId = serviceId;
-        list = new ArrayList();
+        list = new ArrayList<String[]>();
         logger = new Logger(serviceId);
     }
 
@@ -105,9 +101,9 @@ public class Bootstrap {
         if (!CACHE_DIR.mkdirs() && !CACHE_DIR.exists()) {
             error("Could not create jar cache directory");
         }
-        Iterator i = list.iterator();
+        Iterator<String[]> i = list.iterator();
         while (i.hasNext()) {
-            String[] jar = (String[]) i.next();
+            String[] jar = i.next();
             File f = new File(CACHE_DIR, buildName(jar));
             if (!f.exists()) {
                 download(CACHE_DIR, jar[0], jar[1]);
@@ -155,9 +151,9 @@ public class Bootstrap {
 
     private void arrangeJars() {
         String[] coasterJar = null;
-        Iterator i = list.iterator();
+        Iterator<String[]> i = list.iterator();
         while (i.hasNext()) {
-            coasterJar = (String[]) i.next();
+            coasterJar = i.next();
             if (coasterJar[0].indexOf("provider-coaster") != -1) {
                 i.remove();
                 break;
@@ -173,23 +169,24 @@ public class Bootstrap {
         logger.log("Forking service");
         StringBuffer sb = new StringBuffer();
         arrangeJars();
-        Iterator i = list.iterator();
+        Iterator<String[]> i = list.iterator();
         while (i.hasNext()) {
             sb.append(CACHE_DIR.getAbsolutePath());
             sb.append('/');
-            sb.append(buildName((String[]) i.next()));
+            sb.append(buildName(i.next()));
             if (i.hasNext()) {
                 sb.append(':');
             }
         }
         String java = System.getProperty("java");
-        List args = new ArrayList();
+        List<String> args = new ArrayList<String>();
         args.add("nice");
         args.add("-n");
         args.add("2");
         args.add(java);
         addDebuggingOptions(args);
         args.add("-Xmx256M");
+        args.add("-Dtcp.channel.log.io.performance=true");
         //args.add("-agentlib:hprof=file=c.hprof");
         addProperties(args);
         args.add("-cp");
@@ -198,8 +195,7 @@ public class Bootstrap {
         args.add(registrationURL);
         args.add(serviceId);
         logger.log("Args: " + args);
-        Process p = Runtime.getRuntime().exec(
-                (String[]) args.toArray(new String[0]));
+        Process p = Runtime.getRuntime().exec(args.toArray(new String[0]));
         StringBuffer out = new StringBuffer(), err = new StringBuffer();
         logger.log("Starting stdout consumer");
         consumeOutput(p.getInputStream(), out);
@@ -223,13 +219,13 @@ public class Bootstrap {
         }
     }
 
-    private void addDebuggingOptions(List args) {
+    private void addDebuggingOptions(List<String> args) {
         //args.add("-Xdebug");
         //args.add("-Xrunjdwp:transport=dt_socket,address=8788,server=y,suspend=y");
         //args.add("-Xrunjdwp:transport=dt_socket,address=8788,server=y,suspend=n");
     }
 
-    private void addProperties(List args) {
+    private void addProperties(List<String> args) {
         addProperty(args, "X509_USER_PROXY");
         addProperty(args, "GLOBUS_HOSTNAME");
         addProperty(args, "GLOBUS_TCP_PORT_RANGE");
@@ -237,7 +233,7 @@ public class Bootstrap {
         args.add("-Djava.security.egd=file:///dev/urandom");
     }
 
-    private void addProperty(List args, String name) {
+    private void addProperty(List<String> args, String name) {
         String value = System.getProperty(name);
         if (value != null && !value.equals("")) {
             args.add("-D" + name + "=" + value);
@@ -266,14 +262,14 @@ public class Bootstrap {
         URL[] urls = new URL[list.size()];
         for (int i = 0; i < list.size(); i++) {
             urls[i] = new URL("file://" + CACHE_DIR.getAbsolutePath() + "/"
-                    + buildName((String[]) list.get(i)));
+                    + buildName(list.get(i)));
             System.err.println(urls[i]);
         }
         ClassLoader cl = new URLClassLoader(urls, Bootstrap.class
                 .getClassLoader());
-        Class cls = cl.loadClass(SERVICE_CLASS);
+        Class<?> cls = cl.loadClass(SERVICE_CLASS);
 
-        Method m = cls.getMethod("main", new Class[] { String[].class });
+        Method m = cls.getMethod("main", new Class<?>[] { String[].class });
         m.invoke(null, new Object[] { new String[] { registrationURL,
                 serviceId } });
     }

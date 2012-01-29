@@ -82,12 +82,14 @@ public class GSSChannel extends AbstractTCPChannel {
 
 				gssContext.requestAnonymity(false);
 				gssContext.requestCredDeleg(false);
+				//gssContext.requestConf(false);
 				gssContext.setOption(GSSConstants.GSS_MODE, GSIConstants.MODE_SSL);
 				gssContext.setOption(GSSConstants.DELEGATION_TYPE,
 						GSIConstants.DELEGATION_TYPE_LIMITED);
 				URI contact = getContact();
 				socket = (GssSocket) GssSocketFactory.getDefault().createSocket(contact.getHost(),
 						contact.getPort(), gssContext);
+
 				socket.setKeepAlive(true);
 				socket.setSoTimeout(0);
 				socket.setWrapMode(GSIConstants.MODE_SSL.intValue());

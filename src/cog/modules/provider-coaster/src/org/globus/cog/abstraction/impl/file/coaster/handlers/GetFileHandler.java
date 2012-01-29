@@ -24,6 +24,8 @@ import org.globus.cog.karajan.workflow.service.channels.SendCallback;
 
 public class GetFileHandler extends CoasterFileRequestHandler implements SendCallback, ReadIOCallback {
     public static final Logger logger = Logger.getLogger(GetFileHandler.class);
+    
+    public static final String QUEUED = "QUEUED";
 
     // private long size;
     // private Exception ex;
@@ -34,6 +36,9 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
     public void requestComplete() throws ProtocolException {
         String src = getInDataAsString(0);
         try {
+            if (logger.isInfoEnabled()) {
+                logger.info(this + " request complete");
+            }
             provider = IOProviderFactory.getDefault().instance(getProtocol(src));
             sendReply();
         }
@@ -64,6 +69,10 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
     }
 
     public void dataSent() {
+        if (logger.isDebugEnabled()) {
+            logger.debug(this + " data sent");
+        }
+    	setLastTime(System.currentTimeMillis());
         reader.dataSent();
     }
 
@@ -71,22 +80,48 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
         if (!lengthSent) {
             throw new RuntimeException("No length provided");
         }
+        if (logger.isDebugEnabled()) {
+            logger.debug(this + " sending " + data.limit());
+        }
         getChannel().sendTaggedReply(getId(), data, last, false, this);
     }
 
+    public void queued() {
+        if (logger.isInfoEnabled()) {
+            logger.info(this + " sending queued signal");
+        }
+        getChannel().sendTaggedReply(getId(), QUEUED.getBytes(), KarajanChannel.SIGNAL_FLAG, null);
+    }
+
+    public void info(String msg) {
+        if (logger.isInfoEnabled()) {
+            logger.info(this + " -> " + msg);
+        }
+    }
+
     public void done(IOHandle op) {
+        if (logger.isInfoEnabled()) {
+            logger.info(this + " read done");
+        }
         if (!provider.isDirect()) {
-            getChannel().sendTaggedReply(getId(), "OK".getBytes(), true, false, null);
+            getChannel().sendTaggedReply(getId(), "OK".getBytes(), true, false);
             reader.close();
         }
     }
 
     public void error(IOHandle op, Exception e) {
-        getChannel().sendTaggedReply(getId(), e.getMessage().getBytes(), true, true);
+        getChannel().sendTaggedReply(getId(), e.getMessage() != null ? e.getMessage().getBytes() : e.toString().getBytes(), 
+        		KarajanChannel.FINAL_FLAG + KarajanChannel.ERROR_FLAG);
     }
 
     public void length(long len) {
         if (provider.isDirect()) {
+            if (lengthSent) {
+                logger.warn("length() called twice", new Throwable("xz0001"));
+            }
+            if (logger.isInfoEnabled()) {
+                logger.info(this + " sending length: " + len + ", " + System.identityHashCode(this));
+            }
             lengthSent = true;
             getChannel().sendTaggedReply(getId(), pack(len), len == 0, false);
         }

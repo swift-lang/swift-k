@@ -226,6 +226,9 @@ public class ServiceManager implements StatusListener {
             String msg =
                     "Coaster service ended. Reason: " + s.getMessage() + "\n\tstdout: "
                             + t.getStdOutput() + "\n\tstderr: " + t.getStdError();
+            if (logger.isInfoEnabled()) {
+                logger.info(msg);
+            }
             NotificationManager.getDefault().serviceTaskEnded(contact, msg);
             try {
                 if (url != null) {
@@ -431,7 +434,7 @@ public class ServiceManager implements StatusListener {
                             ChannelManager.getManager().reserveChannel(url, (GSSCredential) cred);
                     logger.debug("Got channel " + channel);
                     ServiceShutdownCommand ssc = new ServiceShutdownCommand();
-                    ssc.setReplyTimeout(10000);
+                    ssc.setTimeout(10000);
                     ssc.setMaxRetries(0);
                     ssc.executeAsync(channel, this);
                     ChannelManager.getManager().releaseChannel(channel);

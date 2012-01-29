@@ -130,7 +130,7 @@ public abstract class ElementProperty {
 			this.name = ident.getName();
 		}
 
-		public Object getValue(VariableStack stack) throws VariableNotFoundException {
+		public synchronized Object getValue(VariableStack stack) throws VariableNotFoundException {
 			switch (frame) {
 				case UNINITIALIZED:
 				case VariableStack.NO_FRAME:

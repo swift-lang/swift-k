@@ -156,16 +156,14 @@ public class UDPChannel extends AbstractKarajanChannel {
 		if (checksum != actual) {
 			throw new ChannelException("Checksum failed. Expected " + checksum + " got " + actual);
 		}
-		boolean fin = (flags & FINAL_FLAG) != 0;
-		boolean error = (flags & ERROR_FLAG) != 0;
 		byte[] data = new byte[len - HDRLEN];
 		System.arraycopy(recvbuf, HDRLEN, data, 0, len - HDRLEN);
 		if ((flags & REPLY_FLAG) != 0) {
 			// reply
-			handleReply(tag, fin, error, len - HDRLEN, data);
+			handleReply(tag, flags, len - HDRLEN, data);
 		}
 		else {
-			handleRequest(tag, fin, error, len - HDRLEN, data);
+			handleRequest(tag, flags, len - HDRLEN, data);
 		}
 	}
 	
