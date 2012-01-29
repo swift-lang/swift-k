@@ -450,73 +450,124 @@ implements RegistrationManager, Runnable {
         // Number of new Blocks allocated in this call
         int newBlocks = 0;
 
+        // get the size (w * h) for the current block by 
+        // dividing the total required size (tsum) by the number
+        // of slots used in this round and scaling based on the spread.
+        //
+        // i.e.  0 spread            max spread   
+        //    ________________                 ____
+        //    |  |  |  |  |  |              ___|  |
+        //    |  |  |  |  |  |           ___|  |  |
+        //    |  |  |  |  |  |        ___|  |  |  |
+        //    |  |  |  |  |  |     ___|  |  |  |  |
+        //    |__|__|__|__|__|     |__|__|__|__|__|
+        // (where the total area =~ tsum in both cases)
         double size = metric.blockSize(newBlocks, chunkOfBlocks, tsum);
 
         String s = SECONDS.format(tsum);
-        logger.info("Allocating blocks for (seconds): " + s);
+        logger.info("Allocating blocks for a total walltime of: " + s + "s");
 
         while (index <= holding.size() && newBlocks < chunkOfBlocks) {
             // Job job = holding.get(i);
             int granularity = settings.getNodeGranularity() * settings.getJobsPerNode();
+            // true if the number of jobs for this block is a multiple
+            // of granularity
             boolean granularityFit = (index - last) % granularity == 0;
+            // true if we've reached the end of the job list
             boolean lastChunk = (index == holding.size() - 1);
+            // true when the size of jobs from the last allocated one up to the current one
+            // are greater than the size (which means we have to start committing jobs to the block)
             boolean sizeFit = false;
             if (!lastChunk) {
                 sizeFit = sumSizes(last, index) > size;
             }
+            
+            // if there are enough jobs and they match the granularity or if these are the last jobs
             if ((granularityFit && sizeFit) || lastChunk) {
                 int msz = (int) size;
+                // jobs are sorted on walltime, and the last job is the longest,
+                // so use that for calculating the overallocation
                 int lastwalltime = (int) holding.get(index).getMaxWallTime().getSeconds();
                 int h = overallocatedSize(holding.get(index));
-                // height must be a multiple of the overallocation of the
-                // largest job
+                
+                // the maximum time is a hard limit, so for the maximum useable time
+                // the reserve needs to be subtracted
                 int maxt =
                   settings.getMaxtime() - (int) settings.getReserve().getSeconds();
+                // height must be a multiple of the overallocation of the
+                // largest job
                 // Is not h <= round(h, lastwalltime) ? -Justin
+                //   Yes, it is (see comment in round()) - Mihael
+                // h = Math.min(Math.max(h, round(h, lastwalltime)), maxt);
+                
                 // If h > maxt, should we report a warning/error? -Justin
-                h = Math.min(Math.max(h, round(h, lastwalltime)), maxt);
+                //   No. h is the overallocated time (i.e. greater than the
+                //   job walltime). So it's acceptable for that to go over maxt.
+                //   The error is when walltime > maxt - Mihael
+                h = Math.min(round(h, lastwalltime), maxt);
+                
+                // once we decided on a height, get the width by dividing the total size
+                // by the height (and rounding appropriately to fit the granularity), 
+                // while making sure that we don't go over maxNodes
                 int width =
                         Math.min(round(metric.width(msz, h), granularity),
                                  settings.getMaxNodes()
                                  * settings.getJobsPerNode());
+                // while we were shooting to have the number of jobs be a multiple of the
+                // width, various constraints might have changed that, so adjust the 
+                // number of jobs accordingly
                 int r = (index - last) % width;
+
                 if (logger.isInfoEnabled()) {
                 	logger.info("\t Considering: " + holding.get(index));
-                    //logger.info("h: " + h + ", jj: " + lastwalltime +
-                    //            ", x-last: " + ", r: " + r +
-                    //            ", sumsz: " + sumSizes(last, i));
                 	logger.info("\t  Max Walltime (seconds):   " + lastwalltime);
                     logger.info("\t  Time estimate (seconds):  " + h);
                     logger.info("\t  Total for this new Block (est. seconds): " +
                                 sumSizes(last, index));
                 }
 
-                // read just number of jobs fitted based on granularity
+                // read more jobs to fill up the remaining space towards the granularity
+                // +-----+     +-----+
+                // |xx...|     |xxrrr|
+                // |xxxxx| --> |xxxxx|
+                // |xxxxx|     |xxxxx|
+                // |xxxxx|     |xxxxx|
+                // +-----+     +-----+
                 // This result is unused and overwritten below. -Justin
                 index += (width - r);
+                
+                
                 if (r != 0) {
+                	// and make sure that there is enough walltime to run the new added jobs
+                	// though this is improper: what should be added to h is 
+                	// (newLastwalltime - lastwalltime) where newLastwalltime is the walltime
+                	// of the i-th job after adding (w - r).
                     h = Math.min(h + lastwalltime, maxt);
                 }
 
-                //if (logger.isInfoEnabled()) {
-                //    logger.info("h: " + h + ", w: " + width + ", size: " + size + ", msz: " + msz
-                //            + ", w*h: " + width * h);
-                //}
 
+                // create the actual block
                 Block b = new Block(width, TimeInterval.fromSeconds(h), this);
+                
+                // now add jobs from holding until the size of the jobs exceeds the
+                // size of the block (as given by the metric)
                 int ii = last;
                 while (ii < holding.size() && sumSizes(last, ii + 1) <= metric.size(width, h)) {
                     queue(holding.get(ii));
                     remove.add(holding.get(ii));
                     ii++;
                 }
+                
                 if (logger.isInfoEnabled()) {
                     logger.info("Queued: " + (ii-last) +
                                 " jobs to new Block");
                 }
+                // update index of last added job
                 index = ii - 1;
+                // commit the block
                 addBlock(b);
                 last = index + 1;
+
                 newBlocks++;
                 size = metric.blockSize(newBlocks, chunkOfBlocks, tsum);
             }
@@ -672,6 +723,7 @@ implements RegistrationManager, Runnable {
        Round v up to the next multiple of g
      */
     private int round(int v, int g) {
+        // (v % g) < g => x - (v % g) + g > x
         int r = v - (v % g) + g;
         return r;
     }
