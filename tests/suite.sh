@@ -584,11 +584,6 @@ test_exec() {
   fi
 
   RESULT=$( result )
-<<<<<<< .working
-  output_report test $SEQ "$LASTCMD" $RESULT $OUTPUT
-=======
->>>>>>> .merge-right.r5122
-
   output_report test $SEQ "$LASTCMD" $RESULT $OUTPUT
 
   check_bailout
