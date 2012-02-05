@@ -86,6 +86,7 @@ public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.ex
         }
         
         for (String env : spec.getEnvironmentVariableNames()) {
+            ps.print("export ");
             ps.print(escape(env));
             ps.print("=");
             ps.println(escape(spec.getEnvironmentVariable(env)));
