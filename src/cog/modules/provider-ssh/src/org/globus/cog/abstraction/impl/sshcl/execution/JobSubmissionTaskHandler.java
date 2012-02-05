@@ -49,16 +49,6 @@ public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.ex
         
         List<String> cmdarray = new ArrayList<String>();
         cmdarray.add(ssh);
-
-        if (spec.getAttribute("username") != null) {
-            cmdarray.add("-l");
-            cmdarray.add(spec.getAttribute("username").toString());
-        }
-        
-        if (spec.getAttribute("key") != null) {
-            cmdarray.add("-i");
-            cmdarray.add(spec.getAttribute("key").toString());
-        }
         
         if (service.getServiceContact().getPort() > 0) {
             cmdarray.add("-p");
