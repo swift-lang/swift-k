@@ -1325,23 +1325,27 @@ public class Karajan {
 				parentType = baseType;
 			}
 
-			String actualType = null;
 			// TODO this should be a map lookup of some kind?
 
 			Type t = typesMap.get(parentType);
-
+			
+			if (t == null) {
+			    // this happens when trying to access a field of a built-in type
+			    // which cannot currently be a structure
+			    throw new CompilationException("Type " + parentType + " is not a structure");
+			}
+			
 			TypeStructure ts = t.getTypestructure();
-			int j = 0;
-			for (j = 0; j < ts.sizeOfMemberArray(); j++) {
+			
+			String actualType = null;
+			for (int j = 0; j < ts.sizeOfMemberArray(); j++) {
 				if (ts.getMemberArray(j).getMembername().equals(sm.getMemberName())) 	{
 					actualType = ts.getMemberArray(j).getMembertype();
 					break;
 				}
-			if (j == ts.sizeOfMemberArray())
-				throw new CompilationException("No member " + sm.getMemberName() + " in structure " + parentType);
 			}
 			if (actualType == null) {
-				throw new CompilationException("Type " + parentType + " is not defined.");
+                throw new CompilationException("No member " + sm.getMemberName() + " in type " + parentType);
 			}
 			StringTemplate newst;
 			if(arrayMode) {
