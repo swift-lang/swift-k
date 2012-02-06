@@ -324,6 +324,27 @@ string v =  @regexp("abcdefghi", "c(def)g","monkey");
 
 will assign the value "abmonkeyhi" to the variable v.
 
+@sprintf
+~~~~~~~~
+@sprintf(spec, variable list) will generate a string based on the specified format.
+-----
+Example: string s = @sprintf("\t%s\n", "hello");
+-----
+   
+Format specifiers
+[width="100%",frame="topbot"]
+|======================
+|%%| % sign
+|%M| Filename output (waits for close)
+|%p| Format variable according to an internal format
+|%b| Boolean output
+|%f| Float output
+|%i| int output
+|%s| String output
+|%k| Variable sKipped, no output
+|%q| Array output
+|======================
+
 @strcat
 ~~~~~~~
 @strcat(a,b,c,d,...) will return a string containing all of the
