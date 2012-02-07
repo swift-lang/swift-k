@@ -23,6 +23,7 @@ GROUPLIST=( $TESTDIR/language/working \
 	    $TESTDIR/language-behaviour/cleanup \
 	    $TESTDIR/bugs \
 	    $TESTDIR/documentation/tutorial \
+            $TESTDIR/functions \
 	    # $TESTDIR/cdm/ps/pinned
 	    # $TESTDIR/site/intrepid
           )
