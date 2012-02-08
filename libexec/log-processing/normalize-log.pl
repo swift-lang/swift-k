@@ -15,6 +15,8 @@ open(START, $TIME) || die "$!\n";
 read(START, $earliesttime, 64);
 close START;
 
+print "earliest time: $earliesttime\n";
+
 open(LOG, $LOG) || die "$!\n";
 
 foreach $n (<LOG>) {
