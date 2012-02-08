@@ -4,4 +4,4 @@ set nokey
 set xlabel "Time in sec"
 set ylabel "number of active jobs"
 set title "Active SciColSim jobs"
-plot "plot_active.txt" using 1 with line
+plot "plot_active.txt" using 1:2 with line
