@@ -189,7 +189,7 @@ public class Sprintf extends VDLFunction {
         }
         else {
             throw new ExecutionException
-            ("tracef(): %b requires a boolean!");
+            ("tracef(): %b requires a boolean! " + dshandleDescription(arg));
         }
     }
     
@@ -200,7 +200,7 @@ public class Sprintf extends VDLFunction {
         }
         else {
             throw new ExecutionException
-            ("tracef(): %f requires a float!");
+            ("tracef(): %f requires a float! " + dshandleDescription(arg));
         }
     }
 
@@ -212,7 +212,7 @@ public class Sprintf extends VDLFunction {
         }
         else {
             throw new ExecutionException
-            ("tracef(): %i requires an int!");
+            ("tracef(): %i requires an int! " + dshandleDescription(arg));
         }
     }
     
@@ -241,7 +241,7 @@ public class Sprintf extends VDLFunction {
         }
         else {
             throw new ExecutionException
-            ("tracef(): %q requires an array!");
+            ("tracef(): %q requires an array! " + dshandleDescription(arg));
         }        
     }
     
@@ -252,7 +252,7 @@ public class Sprintf extends VDLFunction {
         }
         else {
             throw new ExecutionException
-            ("tracef(): %s requires a string!");
+            ("tracef(): %s requires a string! " + dshandleDescription(arg));
         }
     }
     
@@ -278,5 +278,13 @@ public class Sprintf extends VDLFunction {
             		    "(\\" + c + ")\n" + 
             		    "\t in " + spec + " character: " + i);
         }
+    }
+    
+    /**
+     * Return String containing variable name and type of a given DSHandle
+     */
+    private static String dshandleDescription(DSHandle dshandle) {
+        String variableName = (dshandle.getRoot().toString().split(":")[0]);
+        return "Variable \"" + variableName + "\" is a " + dshandle.getType();
     }
 }
