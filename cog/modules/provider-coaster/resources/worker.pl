@@ -189,7 +189,7 @@ my %SUSPENDED_TRANSFERS = ();
 #									flags: the protocol flags to send (e.g. err, fin)
 #									data: the actual data
 #									yieldFlag: if CONTINUE then it instructs the sending procedure
-#												to loop sending data until YIELD is returned  
+#												to loop sending data until YIELD is returned
 #
 #		dataSent: proc(state, tag) - invoked when all data was sent
 #		PUT file specific state:
@@ -219,9 +219,9 @@ my %SUSPENDED_TRANSFERS = ();
 #		state when sending array data:
 #			index: the current index in the data array
 #			data: an array containing the data chunks
-#			
-#		 
-#	
+#
+#
+#
 #	time:  last communication time (used to determine timeouts)
 #
 
@@ -403,6 +403,13 @@ sub init() {
 		push(@PROFILE_EVENTS, "START", "N/A", time());
 	}
 	logsetup();
+	if (defined $ENV{"WORKER_COPIES"}) {
+		workerCopies($ENV{"WORKER_COPIES"});
+	}
+	if(defined $ENV{"WORKER_INIT_CMD"}) {
+		worker_init_cmd($ENV{"WORKER_INIT_CMD"});
+	}
+
 	reconnect();
 }
 
@@ -429,6 +436,13 @@ sub workerCopies {
 		copy($src, $dst) or
 			crash "workerCopies: copy failed: $src -> $dst\n";
 	}
+}
+
+sub worker_init_cmd {
+  my ($cmd) = @_;
+  wlog DEBUG, "worker_init_cmd: $cmd\n";
+  my $rc = system($cmd);
+  print "rc: $rc\n";
 }
 
 sub trim {
@@ -458,7 +472,7 @@ sub sendFrags {
 	my $flg2;
 	my $msg;
 	my $yield;
-	
+
 	do {
 		($flg2, $msg, $yield) = $$data{"nextData"}($data);
 		if (defined($msg)) {
@@ -469,11 +483,11 @@ sub sendFrags {
 	if (($flg2 & FINAL_FLAG) == 0) {
 		# final flag not set; put it back in the queue
 		wlog TRACE, "$tag yielding\n";
-		
+
 		# update last time
 		my $record = $REPLIES{$tag};
 		$$record[1] = time();
-		
+
 		queueCmdCustomDataHandling($REPLIES{$tag}, $data);
 	}
 	else {
@@ -512,11 +526,11 @@ sub nextFileData {
 	my ($state) = @_;
 
 	my $s = $$state{"state"};
-	
+
 	my $tag = $$state{"tag"};
-	
+
 	wlog TRACE, "$tag nextFileData state=$s\n";
-	
+
 	if ($s == PUT_START) {
 		$$state{"state"} = $s + 1;
 		return (0, $$state{"cmd"}, CONTINUE);
@@ -540,7 +554,7 @@ sub nextFileData {
 			wlog TRACE, "$tag Transfer suspendend; yielding\n";
 			return (0, undef, YIELD);
 		}
-	
+
 		my $handle = $$state{"handle"};
 		my $buffer;
 		my $sz = read($handle, $buffer, IOBUFSZ);
@@ -642,14 +656,14 @@ sub unpackData {
 	my $len = unpack("V", substr($data, 8, 4));
 	my $hcsum = unpack("V", substr($data, 12, 4));
 	my $csum = unpack("V", substr($data, 16, 4));
-	
+
 	my $chcsum = ($tag ^ $flg ^ $len);
-	
+
 	if ($chcsum != $hcsum) {
 		wlog WARN, "Header checksum failed. Computed checksum: $chcsum, checksum: $hcsum\n";
 		return;
 	}
-	
+
 	my $msg;
 	my $frag;
 	my $alen = 0;
@@ -658,7 +672,7 @@ sub unpackData {
 		$alen = $alen + length($frag);
 		$msg = $msg.$frag;
 	}
-	
+
 	my $actuallen = length($msg);
 	wlog(TRACE, " IN: len=$len, actuallen=$actuallen, tag=$tag, flags=$flg, $msg\n");
 	if ($len != $actuallen) {
@@ -707,7 +721,7 @@ sub process {
 		if (exists($REPLIES{$tag})) {
 			$record = $REPLIES{$tag};
 			($cont, $lastTime) = ($$record[0], $$record[1]);
-			# update last time 
+			# update last time
 			$$record[1] = time();
 		}
 		else {
@@ -1068,7 +1082,7 @@ sub getFileCBDataIn {
 	my $jobid = $$state{"jobid"};
 	my $len = length($reply);
 	wlog DEBUG, "$jobid getFileCBDataIn jobid: $jobid, state: $s, tag: $tag, flags: $flags, len: $len\n";
-	
+
 	if ($flags & SIGNAL_FLAG) {
 		if ($reply eq "QUEUED") {
 			$REPLIES{$tag}[1] = NEVER;
@@ -1323,8 +1337,8 @@ sub stageout {
 					$JOBDATA{$jobid}{"stageoutCount"} = 0;
 				}
 				$JOBDATA{$jobid}{"stageoutCount"} += 1;
-				wlog DEBUG, "$jobid Stagecount is $JOBDATA{$jobid}{stageoutCount}\n"; 
-				
+				wlog DEBUG, "$jobid Stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
+
 				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $lfile, $rfile));
 			}
 			elsif ($protocol eq "sfs") {
@@ -1361,9 +1375,9 @@ sub stageout {
 
 sub sendStatus {
 	my ($jobid) = @_;
-	
+
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
-	
+
 	if ($ec == 0) {
 		queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
 	}
@@ -1385,7 +1399,7 @@ sub cleanup {
 		else {
 			# there were stageouts. Wait until all are acknowledged
 			# as done by the client. And we keep track of the
-			# count of stageouts that weren't acknowledged in 
+			# count of stageouts that weren't acknowledged in
 			# $JOBDATA{$jobid}{"stageoutCount"}
 		}
 	}
@@ -1436,7 +1450,7 @@ sub putFileCBDataSent {
 	if (ASYNC) {
 		wlog DEBUG, "$tag putFileCBDataSent\n";
 		my $jobid = $$state{"jobid"};
-		if ($jobid != -1) { 
+		if ($jobid != -1) {
 			wlog DEBUG, "$tag Data sent, async is on. Staging out next file\n";
 			stageout($jobid);
 		}
@@ -1459,7 +1473,7 @@ sub putFileCBDataIn {
 		return;
 	}
 	elsif ($reply eq "STOP") {
-		$SUSPENDED_TRANSFERS{"$tag"} = 1; 
+		$SUSPENDED_TRANSFERS{"$tag"} = 1;
 		wlog DEBUG, "$tag Got stop request. Suspending transfer.\n";
 	}
 	elsif ($reply eq "CONTINUE") {
@@ -1634,7 +1648,7 @@ sub forkjob {
 
 	my ($PARENT_R, $CHILD_W);
 	pipe($PARENT_R, $CHILD_W);
-	
+
 	$pid = fork();
 
 	if (defined($pid)) {
@@ -1787,10 +1801,6 @@ wlog(INFO, "Running on node $myhost\n");
 # wlog(INFO, "New log name: $LOGNEW \n");
 
 init();
-
-if (defined $ENV{"WORKER_COPIES"}) {
-	workerCopies($ENV{"WORKER_COPIES"});
-}
 
 mainloop();
 
