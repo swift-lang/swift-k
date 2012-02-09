@@ -14,5 +14,6 @@
 	<classpathentry kind="src" path="/abstraction-provider-local"/>
 	<classpathentry kind="src" path="/util"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j"/>
+	<classpathentry kind="lib" path="/home/wozniak/proj/cog/lib/log4j-1.2.16.jar"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
