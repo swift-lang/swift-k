@@ -236,7 +236,7 @@ do
 done
 
 # Replace values
-SEDFILE=`mktemp`
+SEDFILE=`mktemp tmp.XXXXXXXXXX`
 {
   echo "s/_NODES_/${NODES}/"
   echo "s/_HOST_/${GLOBUS_HOSTNAME}/"
