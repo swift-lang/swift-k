@@ -300,7 +300,7 @@ else
 	fi
 	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 fi
-checkError $? "Application $EXEC failed with an exit code of $?" <<$STDERR
+checkError $? "Application $EXEC failed with an exit code of $?" <$STDERR
 
 logstate "EXECUTE_DONE"
 log "Job ran successfully"
