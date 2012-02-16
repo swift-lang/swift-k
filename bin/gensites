@@ -200,7 +200,8 @@ if [ -f "$PROPERTIES_FILE" ]; then
                   NAME=`echo $line |cut -d'=' -f1|awk '{print $2}'`
                   COMMAND=`echo $line |cut -d'=' -f2`
                   COMMAND=`eval echo $COMMAND`
-                  echo $HOST $NAME `readlink -f $COMMAND` null null null >> tc.data
+                  COMMAND_PATH=$(cd $(dirname $COMMAND); pwd)/$(basename $COMMAND)
+                  echo $HOST $NAME $COMMAND_PATH null null null >> tc.data
               done
            fi
 
@@ -211,7 +212,8 @@ if [ -f "$PROPERTIES_FILE" ]; then
                     NAME=`echo $line|awk '{print $3}'|cut -d'=' -f1`
                     COMMAND=`echo $line|awk '{print $3}'|cut -d'=' -f2`
                     COMMAND=`eval echo $COMMAND`
-                    eval echo $HOST $NAME `readlink -f $COMMAND` null null null >> tc.data
+                    COMMAND_PATH=$(cd $(dirname $COMMAND); pwd)/$(basename $COMMAND)
+                    eval echo $HOST $NAME $COMMAND_PATH  null null null >> tc.data
                  fi
                done
             fi
