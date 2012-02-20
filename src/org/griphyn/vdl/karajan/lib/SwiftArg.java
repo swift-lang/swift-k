@@ -74,7 +74,7 @@ public abstract class SwiftArg extends Arg {
 		    return v;
 		}
 		else {
-		    return unwrap(stack, super.getValue(stack));
+		    return unwrap(stack, v);
 		}
 	}
 
