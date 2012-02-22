@@ -377,7 +377,7 @@ else
 fi
 
 echo $! >> $PID_FILE
-sleep 5
+sleep 15
 
 # Determine SERVICE_PORT
 if [ -z "$SERVICE_PORT" ]; then
@@ -399,6 +399,21 @@ fi
 
 echo Service port: $SERVICE_PORT
 echo Local port: $LOCAL_PORT
+
+# Generate sites.xml
+export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
+echo Generating sites.xml
+if [ -f "gensites.template" ]; then
+   gensites `cat gensites.template` -p $CONFIG_FILE > $RUN_DIR/sites.xml
+else
+   gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml
+fi
+
+# For evil bug #467 
+echo "app echo (string i) { echo i; }" > hi.swift
+echo "echo(\"hi\");" >> hi.swift
+swift -sites.file sites.xml -tc.file tc.data -config cf hi.swift > /dev/null 2>&1 &
+DUMMYPID=$!
 
 # Start workers
 case $WORKER_MODE in
@@ -425,14 +440,8 @@ case $WORKER_MODE in
       ;;
 esac
 
-# Generate sites.xml
-export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
-echo Generating sites.xml
-if [ -f "gensites.template" ]; then
-   gensites `cat gensites.template` -p $CONFIG_FILE > $RUN_DIR/sites.xml
-else
-   gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml
-fi
+# Wait for dummy script to finish
+wait $DUMMYPID
 
 # Generate config file
 if [ "$SHARED_FILESYSTEM" == "no" ]; then
