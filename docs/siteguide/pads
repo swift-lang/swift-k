@@ -1,7 +1,8 @@
-PADS
-----
-PADS is a petabyte-scale, data intense computing resource located 
-at the joint Argonne National Laboratory/University of Chicago 
+x86 Cluster: PADS
+-----------------
+
+PADS is a petabyte-scale, data intense computing resource located
+at the joint Argonne National Laboratory/University of Chicago
 Computation Institute. More information about PADS can be found
 at http://pads.ci.uchicago.edu.
 
@@ -33,7 +34,7 @@ ssh yourusername@login.pads.ci.uchicago.edu
 Adding Software Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Softenv is a system used for managing applications. In order to run Swift,
-the softenv environment will have to be modified slightly. Softenv is 
+the softenv environment will have to be modified slightly. Softenv is
 configured by a file in your home directory called .soft. Edit this file
 to look like this:
 -----
@@ -82,7 +83,7 @@ Swift relies on various configuration files to determine how to
 run. This section will provide a working configuration file which
 you can copy and paste to get running quickly. The sites.xml file
 tells Swift how to submit jobs, where working directories are
-located, and various other configuration information. More 
+located, and various other configuration information. More
 information on sites.xml can be found in the Swift User's Guide.
 
 The first step is to paste the text below into a file named sites.xml.
@@ -91,7 +92,7 @@ The first step is to paste the text below into a file named sites.xml.
 include::../../tests/providers/pads/coasters/sites.template.xml[]
 -----
 
-This file will require just a few customizations. First, create a 
+This file will require just a few customizations. First, create a
 directory called swiftwork. Modify \_WORK_ in sites.xml
 to point to this new directory. For example
 -----
@@ -121,22 +122,27 @@ that your sites.xml and tc.data files are located.
 $ cp ~/swift-0.93/examples/misc/catsn.swift .
 $ cp ~/swift-0.93/examples/misc/data.txt .
 -----
-TIP: The location of your swift directory may vary depending on how you installed it. Change this to the examples/misc directory of your installation as needed.
+
+TIP: The location of your swift directory may vary depending on how
+you installed it. Change this to the examples/misc directory of your
+installation as needed.
 
 
 Run Swift
 ^^^^^^^^^
 
-Finally, run the script
+Finally, run the script:
+
 -----
-$ swift -sites.file sites.xml -tc.file tc.data catsn.swift
+ swift -sites.file sites.xml -tc.file tc.data catsn.swift
 -----
 
 You should see several new files being created, called catsn.0001.out, catsn.0002.out, etc. Each of these
 files should contain the contents of what you placed into data.txt. If this happens, your job has run
 successfully on PADS!
 
-TIP: Make sure your default project is defined. Read on for more information.
+TIP: Make sure your default project is defined. Read on for more
+information.
 
 Read on for more detailed information about running Swift on PADS.
 
@@ -145,7 +151,7 @@ Queues
 ^^^^^^
 
 As you run more application in the future, you will likely need
-to change queues. 
+to change queues.
 
 PADS has several different queues you can submit jobs to depending on
 the type of work you will be doing. The command "qstat -q" will print

@@ -1,0 +1,8 @@
+Overview
+--------
+
+This guide explains details required to run Swift on various system
+types, with details for specific installations on which Swift is
+currently used.  For a given system type, most instructions should
+work on that system type anywhere.  However, details such as queue
+names or file system locations will have to be customized by the user.

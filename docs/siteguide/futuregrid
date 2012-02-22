@@ -1,7 +1,8 @@
-Futuregrid Quickstart Guide
----------------------------
-FutureGrid is a distributed, high-performance test-bed that allows 
-scientists to collaboratively develop and test innovative approaches 
+x86 Cloud: Futuregrid Quickstart Guide
+--------------------------------------
+
+FutureGrid is a distributed, high-performance test-bed that allows
+scientists to collaboratively develop and test innovative approaches
 to parallel, grid, and cloud computing.
 
 More information on futuregrid can be found at https://portal.futuregrid.org/.
@@ -16,7 +17,7 @@ a project, how to set up your SSH keys, and how to create a new project.
 Downloading Swift VM Tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 A set of scripts based around cloudinitd are used to easily start virtual
-machines. To download, change to your home directory and run the 
+machines. To download, change to your home directory and run the
 following command:
 
 -----
@@ -38,9 +39,9 @@ values for the next step.
 
 Configuring coaster-service.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-To run on futuregrid, you will need a file called coaster-service.conf. 
+To run on futuregrid, you will need a file called coaster-service.conf.
 This file contains many options to control how things run. Here is
-an example of a working coaster-service.conf on futuregrid. 
+an example of a working coaster-service.conf on futuregrid.
 
 -----
 # Where to copy worker.pl on the remote machine for sites.xml
@@ -95,7 +96,7 @@ $ start-coaster-service
 
 This command will start the VMs, start the required processes on the worker nodes,
 and generate Swift configuration files for you to use. The configuration files
-will be generated in your current directory. These files are sites.xml, tc.data, 
+will be generated in your current directory. These files are sites.xml, tc.data,
 and cf.
 
 Running Swift
@@ -108,10 +109,10 @@ $ swift -sites.file sites.xml -tc.file tc.data -config cf <yourscript.swift>
 
 If you would like to create a custom tc file for repeated use, rename it to something other
 than tc.data to prevent it from being overwritten. The sites.xml however will need to be
-regenerated every time you start the coaster service. If you need to repeatedly modify some 
+regenerated every time you start the coaster service. If you need to repeatedly modify some
 sites.xml options, you may edit the template in Swift's etc/sites/persistent-coasters. You
 may also create your own custom tc files with the hostname of persistent-coasters. More
-information about this can be found in the Swift userguide at 
+information about this can be found in the Swift userguide at
 http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html.
 
 Stopping the Coaster Service Script
@@ -127,6 +128,6 @@ the virtual machines that were created during start-coaster-service.
 More Help
 ~~~~~~~~~
 The best place for additional help is the Swift user mailing list. You can subscribe to this list at
-http://mail.ci.uchicago.edu/mailman/listinfo/swift-user. When submitting information, please send 
+http://mail.ci.uchicago.edu/mailman/listinfo/swift-user. When submitting information, please send
 your sites.xml file, your tc.data, and any error messages you run into.
 

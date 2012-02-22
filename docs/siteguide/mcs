@@ -1,11 +1,12 @@
-MCS Workstations
-----------------
-This sections describes how to use the general use compute servers for 
+x86 Workstations: MCS Compute Servers
+-------------------------------------
+
+This sections describes how to use the general use compute servers for
 the MCS division of Argonne National Laboratory.
 
 Create a coaster-service.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-To begin, copy the text below and paste it into your Swift distribution's etc 
+To begin, copy the text below and paste it into your Swift distribution's etc
 directory. Name the file coaster-service.conf.
 
 -----
@@ -15,7 +16,7 @@ include::../../tests/providers/mcs/coaster-service.conf[]
 Starting the Coaster Service
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Change directories to the location you would like to run a 
+Change directories to the location you would like to run a
 Swift script and start the coaster service with this
 command:
 
@@ -27,7 +28,7 @@ This will create a configuration file that Swift needs
 called sites.xml.
 
 WARNING: Any existing sites.xml files in this directory
-will be overwritten. Be sure to make a copy of any 
+will be overwritten. Be sure to make a copy of any
 custom configuration files you may have.
 
 Run Swift
