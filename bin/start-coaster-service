@@ -229,7 +229,7 @@ start-workers-ssh()
          ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
          ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "scp /tmp/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION" > /dev/null 2>&1
          echo Starting worker on $MACHINE
-         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $WORKER_LOG_DIR" &
+         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER http://localhost:$PORT $MACHINE $WORKER_LOG_DIR" &
          echo $! >> $PID_FILE
       # Connect directly
       else
@@ -265,18 +265,20 @@ start-workers-cobalt()
       crash "start-workers-cobalt: Port number not specified, giving up"
   fi
   EXECUTION_URL=http://$IPADDR:$PORT
-  local TIMESTAMP=$(date "+%Y.%m%d.%H%M%S")
-  local -Z 5 R=${RANDOM}
+  TIMESTAMP=$(date "+%Y.%m%d.%H%M%S")
+  R=${RANDOM}
   ID="${TIMESTAMP}.${R}"
-  echo cqsub -q ${QUEUE}   \
+  # -t in minutes
+  set -x
+  cqsub -q ${QUEUE}   \
         -k zeptoos    \
-        -t ${MAXTIME} \ # minutes
+        -t ${MAXTIME} \
         -n ${NODES}   \
-        --cwd ${LOGDIR} \
-        -E ${LOGDIR}/cobalt.${$}.stderr \
-        -o ${LOGDIR}/cobalt.${$}.stdout \
+        -C ${PWD}/${LOG_DIR} \
+        -E cobalt.${$}.stderr \
+        -o cobalt.${$}.stdout \
         -e "WORKER_LOGGING_LEVEL=DEBUG:ZOID_ENABLE_NAT=true" \
-        $WORKER $EXECUTION_URL $ID $LOG_DIR
+        $SWIFT_BIN/$WORKER $EXECUTION_URL $ID $PWD/$LOG_DIR
 
   echo $! >> $PID_FILE
   return 0
