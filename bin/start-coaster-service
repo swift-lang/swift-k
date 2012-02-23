@@ -414,6 +414,7 @@ echo "app echo (string i) { echo i; }" > hi.swift
 echo "echo(\"hi\");" >> hi.swift
 swift -sites.file sites.xml -tc.file tc.data -config cf hi.swift > /dev/null 2>&1 &
 DUMMYPID=$!
+sleep 15
 
 # Start workers
 case $WORKER_MODE in
