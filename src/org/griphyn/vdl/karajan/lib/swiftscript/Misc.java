@@ -51,21 +51,25 @@ public class Misc extends FunctionsCollection {
 	public static final SwiftArg PA_ARRAY = new SwiftArg.Positional("array");
 
 	static {
+        setArguments("swiftscript_dirname", new Arg[] { PA_FILE });
+	    setArguments("swiftscript_exists", new Arg[] { Arg.VARGS });
+        setArguments("swiftscript_existsfile", new Arg[] { PA_FILE });
+        setArguments("swiftscript_format", new Arg[] { PA_INPUT, PA_TRANSFORM });
+        setArguments("swiftscript_length", new Arg[] { PA_ARRAY });
+        setArguments("swiftscript_pad", new Arg[] { PA_INPUT, PA_TRANSFORM });
+        setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
+        setArguments("swiftscript_strcat",  new Arg[] { Arg.VARGS });
+        setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
+        setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
+        setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_trace", new Arg[] { Arg.VARGS });
-		setArguments("swiftscript_strcat",  new Arg[] { Arg.VARGS });
-		setArguments("swiftscript_exists", new Arg[] { Arg.VARGS });
-		setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
-		setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
-		setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
-		setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
+        setArguments("swiftscript_to_int", new Arg[] { PA_INPUT });
 		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
+        setArguments("swiftscript_to_float", new Arg[] { PA_INPUT });
 		setArguments("swiftscript_tofloat", new Arg[] { PA_INPUT });
-		setArguments("swiftscript_format", new Arg[] { PA_INPUT, PA_TRANSFORM });
-		setArguments("swiftscript_pad", new Arg[] { PA_INPUT, PA_TRANSFORM });
-		setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
-		setArguments("swiftscript_dirname", new Arg[] { PA_FILE });
-		setArguments("swiftscript_length", new Arg[] { PA_ARRAY });
-		setArguments("swiftscript_existsfile", new Arg[] { PA_FILE });
+        setArguments("swiftscript_to_string", new Arg[] { PA_INPUT });
+        setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
+
 	}
 
 	private static final Logger traceLogger =
@@ -293,7 +297,12 @@ public class Misc extends FunctionsCollection {
 		return handle;
 	}
 
-	public DSHandle swiftscript_toint(VariableStack stack)
+	public DSHandle swiftscript_toint(VariableStack stack) 
+	throws ExecutionException {
+	    return swiftscript_to_int(stack);
+	}
+	
+	public DSHandle swiftscript_to_int(VariableStack stack)
 	throws ExecutionException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		int i = inputString.indexOf(".");
@@ -320,6 +329,11 @@ public class Misc extends FunctionsCollection {
 	}
 
 	public DSHandle swiftscript_tofloat(VariableStack stack)
+	throws ExecutionException {
+	    return swiftscript_to_float(stack);
+	}
+
+	public DSHandle swiftscript_to_float(VariableStack stack)
 	throws ExecutionException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
 		DSHandle handle = new RootDataNode(Types.FLOAT);
@@ -385,6 +399,11 @@ public class Misc extends FunctionsCollection {
 	}
 
 	public DSHandle swiftscript_tostring(VariableStack stack)
+	throws ExecutionException {
+	    return swiftscript_to_string(stack);
+	}
+	
+	public DSHandle swiftscript_to_string(VariableStack stack)
 	throws ExecutionException {
 	    Object input = PA_INPUT.getValue(stack);
 	    DSHandle handle = new RootDataNode(Types.STRING);

@@ -213,7 +213,7 @@ start-workers-ssh()
    fi
 
    if [ -n "$WORKER_RELAY_HOST" ]; then
-      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$WORKER_RELAY_HOST:/tmp > /dev/null 2>&1
+      scp -A $SWIFT_BIN/$WORKER $WORKER_USERNAME@$WORKER_RELAY_HOST:/tmp > /dev/null 2>&1
    fi
 
    for MACHINE in $WORKER_HOSTS
@@ -226,10 +226,10 @@ start-workers-ssh()
 
       # Use a relay host
       if [ -n "$WORKER_RELAY_HOST" ]; then
-         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
-         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "scp /tmp/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION" > /dev/null 2>&1
+         ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
+         ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST "scp /tmp/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION" > /dev/null 2>&1
          echo Starting worker on $MACHINE
-         ssh $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $WORKER_LOG_DIR" &
+         ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $WORKER_LOG_DIR" &
          echo $! >> $PID_FILE
       # Connect directly
       else
