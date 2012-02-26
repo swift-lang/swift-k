@@ -76,10 +76,9 @@ done
 
 # Determine SWIFT_HOME
 if [ -z "$SWIFT_HOME" ]; then
-   SWIFT_BIN_DIR=`which swift`
-
+   SWIFT_BIN_DIR="$( cd "$( dirname "$0" )" && pwd )"
    if [ ! -d "$SWIFT_HOME" ]; then
-      SWIFT_HOME=`dirname $SWIFT_BIN_DIR`"/../etc/sites"
+      SWIFT_HOME="$( cd $SWIFT_BIN_DIR/../etc/sites  && pwd )" 
    fi
  
    # Can't find swift path, give up
