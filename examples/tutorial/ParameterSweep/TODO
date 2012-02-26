@@ -19,6 +19,8 @@ Explain the run*.sh conventions
 
 Test on multiple sites
 
+Show issues with how to collect an unknown number of output files...
+(and why we use array_mapper here)
 
 Add a summary jobs; multi level sweep, etc.
 
