@@ -6,7 +6,7 @@ To run:
 
   # make sure Swift 0.93 or trunk is in your $PATH
 
-  svn co https://svn.ci.uchicago.edu/svn/vdl2/trunk/tutorial/ParameterSweep
+  svn co https://svn.ci.uchicago.edu/svn/vdl2/trunk/examples/tutorial/ParameterSweep
   cd ParameterSweep
 
   ./sweep.sh    # Runs default sweep of 5 members with 3 common data/parameter files
