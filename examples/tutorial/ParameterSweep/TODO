@@ -1,0 +1,67 @@
+
+Test on several systems
+
+Extend to run on clusters
+
+Use as an example of errors (tc, exec perm, etc)
+
+SHow how to find debug info, std outs, etc
+
+Show the teh various cf params can be adjusted for different needs (debg prdocution, etc)
+
+Add gnuplot examples
+
+Add data management examples (eg gsiftp:// and http:// URIs)
+
+Show all the places things get logged to
+
+Explain the run*.sh conventions
+
+Test on multiple sites
+
+
+Add a summary jobs; multi level sweep, etc.
+
+Do a version for each of: Python, R, Octave, MATLAB
+
+
+
+---
+
+
+This is a simple example which you can run on any local host
+(e.g. sandbox.beagle) after you do "module load swift".
+
+Over time we will add this to the Swift tutorial document, test it,
+etc.
+
+This is meant to provide a base example
+(non-MATLAB) from which you can create the MATLAB example(s).  Ideally
+we will grow this into a tutorial sequence that shows a few useful
+variations of organizing a parameter sweep or ensemble of simulations,
+including passing parameters only via files, or via a combination of
+Swift variables and files. We welcome your help in developing this,
+starting with the MATLAB version of it.  The first thing for that
+would be to develop the MATLAB replacements for gensweep.sh and
+simulate.sh.  These two "apps" are meant to be stand-ins for the
+equivalent MATLAB programs. They use a simple two-column "name value"
+file format to simulate a .mat file.
+
+
+TODO: this doesn't yet use gensites. Can we add gensites without
+adding any complexity to the sweep.sh script?  Or do we want a version
+with and without?  Hopefully only with.
+
+We should extend to use PADS, Fusion, Beagle, MCS servers, FutureGrid,
+TrySwift, and more.
+
+Can you start adding this to the tutorial asciidoc?
+
+TODO: I simplified the handling of run dir creation. Maybe we can refit
+this into swiftopt.sh?
+
+We can do this as a collaborative exercise because the result will be
+of great benefit to all new Swift users, MATLAB and non-MATLAB
+alike. In fact we should do a version of it for Python, Octave,
+MATLAB, and R.
+
