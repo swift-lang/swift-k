@@ -13,7 +13,7 @@ CPDELIM=":"
 HEAPMAX=256M
 
 if echo `uname` | grep -i "cygwin"; then
-  CYGWIN="yes"
+	CYGWIN="yes"
     CPDELIM=";"
 fi
 
@@ -32,7 +32,7 @@ fixCommandLine() {
 updateOptions() {
 
     if [ "X$1" != "X" ] ; then
-       OPTIONS="$OPTIONS -D$2=$1"
+		OPTIONS="$OPTIONS -D$2=$1"
     fi
 
 }
@@ -123,10 +123,19 @@ if [ -x "$IFCONFIG" ]; then
     MAC=`$IFCONFIG |grep HWaddr`
 fi
 
-MD5SUM=`which md5sum 2>&1`
-if [ ! -x "$MD5SUM" ]; then
-    echo "warning: unable to find md5sum"
-    SWIFT_USAGE_STATS=0
+# Check if we are running on a mac, if so look for md5 and not md5sum
+if [ "`uname`" == "Darwin" ]; then
+	MD5SUM=`which md5 2>&1`
+	if [ ! -x "$MD5SUM" ]; then
+		echo "warning: unable to find md5"
+		SWIFT_USAGE_STATS=0
+	fi
+else
+	MD5SUM=`which md5sum 2>&1`
+	if [ ! -x "$MD5SUM" ]; then
+		echo "warning: unable to find md5sum"
+		SWIFT_USAGE_STATS=0
+	fi
 fi
 
 BASH="/bin/bash"
