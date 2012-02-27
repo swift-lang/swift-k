@@ -8,6 +8,7 @@ die () {
 workerExecutable=`which worker.pl`
 workerWrapper=`which run-worker.sh`
 workerContact=$1
+x509userproxy=$( voms-proxy-info 2>&1 | grep path | awk '{print $NF}' )
 n=$2
 
 [ "$#" -eq 2 ] || die "2 arguments required, $# provided"
@@ -36,6 +37,7 @@ Error   = condor/job.err
 Output  = condor/job.out
 log     = condor.log
 
+x509userproxy = $x509userproxy
 queue $n
 EOF
 
