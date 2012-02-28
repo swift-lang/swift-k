@@ -271,7 +271,7 @@ start-workers-cobalt()
   # -t in minutes
   set -x
   cqsub -q ${QUEUE}   \
-        -k zeptoos    \
+        -k ${KERNEL}    \
         -t ${MAXTIME} \
         -n ${NODES}   \
         -C ${PWD}/${LOG_DIR} \
