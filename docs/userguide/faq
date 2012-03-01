@@ -2,21 +2,37 @@ Frequently Asked Questions (FAQ)
 ================================
 
 Q1. What is Swift?
+A1. It is a parallel scripting framework for HPC and distributed computing.
 
-Q2. Does it have nested foreach?
+Q2. Does Swift have nested foreach?
+A2. Yes.
 
 Q3. What is the learning curve like?
+A3. If you can read/write basic C/C++ and some UNIX, the curve is on the better side of hikeable.
 
 Q4. What if my execution fails?
+A4. You could get an idea of what went wrong from the Swift stdout/stderr or from the Swift log. If all else fails, write to swift team.
 
 Q5. What if the remote node on which I am running fails?
+A5. Depending upon your retry settings the failed jobs from that failed node will be rescheduled on other working nodes.
 
 Q6. How do I know if my service is running?
+A6. ps -u `whoami` | grep coaster
 
 Q7. What if I submit a Swift run from my laptop and shut down the laptop?
+A7. The run will stop. You may resume this run from the point it stopped upon restart. A better option would be to run swift from a node expected to be up. For example a login node or a cluster node.
 
-Q8. How do I run parallell and serial jobs together?
+Q8. How do I run parallel and serial jobs together?
+A8. By designating separate site pools for each of them.
 
 Q9. What kind of data movements are allowed?
+A9. Any kind of data movement that could be done via local, ssh, tcp, http or gridftp protocols are allowed.
 
 Q10. Can Swift run interactive programs?
+A10. No, per se. The interactive inputs could be loaded on a file and fed to swift from commandline or using a wrapper script around your application.
+
+Q11. How can you run two statements in sequence when there is a data dependency between them? I do not see a wait() statement in between?
+A11. Write once future variables enable asynchronous execution.
+
+Q12. What are coasters?
+A12. Coasters are pilot-job like mechanism available with Swift. Essentially a client server mechanism for many-task coordination.
