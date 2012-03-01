@@ -31,7 +31,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import javax.xml.namespace.QName;
 
@@ -670,7 +669,7 @@ public class Karajan {
 			ProcedureSignature proc = proceduresMap.get(procName);
 			
 			if (proc.isDeprecated()) {
-			    warn(call, "Procedure " + procName + " is deprecated");
+			    /* warn(call, "Procedure " + procName + " is deprecated"); */
 			}
 			
 			StringTemplate callST;
