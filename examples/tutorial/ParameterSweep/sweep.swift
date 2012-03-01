@@ -16,8 +16,8 @@ app (file o) simulation (file f, file common[])
 
 # Set the size of the parameter sweep
 
-int nMembers = @toInt(@arg("nMembers","5"));   // number of members in the simulation
-int nCommon  = @toInt(@arg("nCommon","3"));    // number of common files to each sim
+int nMembers = @toint(@arg("nMembers","5"));   // number of members in the simulation
+int nCommon  = @toint(@arg("nCommon","3"));    // number of common files to each sim
 tracef("Running parameter sweep ensemble of %i members with %i common files\n", nMembers, nCommon);
 
 # Generate the file names to use
