@@ -406,11 +406,12 @@ sub init() {
 	if (defined $ENV{"WORKER_COPIES"}) {
 		workerCopies($ENV{"WORKER_COPIES"});
 	}
+
+	reconnect();
+
 	if(defined $ENV{"WORKER_INIT_CMD"}) {
 		worker_init_cmd($ENV{"WORKER_INIT_CMD"});
 	}
-
-	reconnect();
 }
 
 sub logsetup() {
@@ -442,7 +443,7 @@ sub worker_init_cmd {
   my ($cmd) = @_;
   wlog DEBUG, "worker_init_cmd: $cmd\n";
   my $rc = system($cmd);
-  print "rc: $rc\n";
+  print "worker_init_cmd exit code: $rc\n";
 }
 
 sub trim {
