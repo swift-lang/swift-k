@@ -315,7 +315,7 @@ public class SGEExecutor extends AbstractExecutor {
      */
     protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
             throws IOException {
-        wr.write("NODES=`cat $PE_HOSTFILE | awk '{ for(i=0;i<$2;i++){print $1} }'`\n");
+        wr.write("NODES=`cat $PE_HOSTFILE | awk '{print $1}'`\n");
         wr.write("ECF=" + exitcodefile + "\n");
         wr.write("INDEX=0\n");
         wr.write("for NODE in $NODES; do\n");
