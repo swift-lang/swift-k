@@ -54,7 +54,7 @@ namespace("vdl"
 						)
 					)
 				)
-				throw(checkErrorFile(rhost, wfdir, jobid, tr, jobdir))
+				throw(checkErrorFile(rhost, wfdir, jobid, jobdir))
 			)
 		)
 		
