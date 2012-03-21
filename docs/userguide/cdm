@@ -133,6 +133,15 @@ application may read and write normally.  The application may not
 unlink these links; if it does, the application will not be able to
 find or create Swift-compatible data.
 
+=== Debugging
+
+To troubleshoot CDM, check the Swift log and the wrapper logs
+(+*-info+ files).  These will indicate the CDM policy that Swift finds
+for each file and resulting action, such as skipping stage in for
+DIRECT and the creation of links.  Common errors include specifying
+the wrong directory which will result in an error that the file was
+not found, or that a link could not be created.
+
 // .Gather
 // -----
 // property GATHER_LIMIT 500000000 # 500 MB
