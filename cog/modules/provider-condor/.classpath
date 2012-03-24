@@ -9,6 +9,6 @@
 			<accessrule kind="nonaccessible" pattern="**/CVS/*"/>
 		</accessrules>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j"/>
+        <classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
