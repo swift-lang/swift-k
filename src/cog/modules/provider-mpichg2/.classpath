@@ -14,6 +14,6 @@
 			<accessrule kind="nonaccessible" pattern="**/CVS/*"/>
 		</accessrules>
 	</classpathentry>
-	<classpathentry kind="lib" path="/util/lib/log4j-1.2.8.jar"/>
+        <classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
