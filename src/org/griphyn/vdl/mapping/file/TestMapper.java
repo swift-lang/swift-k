@@ -70,7 +70,6 @@ public class TestMapper extends AbstractMapper {
         return !PARAM_TEMP.getBooleanValue(this);
     }
 
-    @Override
     public PhysicalFormat map(Path path) {
         if (remap == null) {
             if (map == null) {
@@ -83,12 +82,10 @@ public class TestMapper extends AbstractMapper {
         }
     }
 
-    @Override
     public Collection<Path> existing() {
         return Collections.singletonList(Path.EMPTY_PATH);
     }
 
-    @Override
     public boolean isStatic() {
         return PARAM_STATIC.getBooleanValue(this);
     }

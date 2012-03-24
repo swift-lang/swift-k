@@ -10,7 +10,7 @@ OPTIONS=
 
 CYGWIN=
 CPDELIM=":"
-HEAPMAX=256M
+HEAPMAX=1024M
 
 if echo `uname` | grep -i "cygwin"; then
 	CYGWIN="yes"

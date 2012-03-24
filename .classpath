@@ -19,7 +19,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/abstraction-provider-coaster"/>
 	<classpathentry kind="lib" path="lib/jline-0.9.94.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j"/>
+        <classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/abstraction-provider-local"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>

@@ -77,12 +77,10 @@ public abstract class AbstractMapper implements Mapper {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public void clean(Path path) {
         // no cleaning by default
     }
 
-    @Override
     public boolean isPersistent(Path path) {
         // persistent unless explicitly overridden
         return true;

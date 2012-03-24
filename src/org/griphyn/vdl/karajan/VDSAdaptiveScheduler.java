@@ -470,8 +470,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
         }
     }
 	
-	@Override
-    public void resourceUpdated(Service service, String name, String value) {
+	public void resourceUpdated(Service service, String name, String value) {
 	    if (logger.isInfoEnabled()) {
 	        logger.info(service + " resource updated: " + name + " -> " + value);
 	    }

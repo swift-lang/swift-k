@@ -182,7 +182,6 @@ public class AbsFile implements GeneralizedFileFormat {
 		return getURIAsString();
 	}
 
-    @Override
     public void clean() {
         try {
             getFileResource().deleteFile(path);

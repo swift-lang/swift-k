@@ -22,7 +22,6 @@ import java.util.Comparator;
 public class PathElementComparator implements Comparator<Comparable<?>> {
 
     @SuppressWarnings("unchecked")
-    @Override
     public int compare(Comparable<?> p1, Comparable<?> p2) {
         Comparable<Object> e1 = (Comparable<Object>) p1;
         Comparable<Object> e2 = (Comparable<Object>) p2;
