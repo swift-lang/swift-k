@@ -139,6 +139,8 @@ public class QueuePoller extends AbstractQueuePoller {
 					String results[] = line.split("\\s+", 2);
 					queueInformation.get(queue).addData(results);
 				}
+				
+				p.destroy();
 			}
 		} catch (IOException e) {
 			logger.error("QueuePoller command interrupted");

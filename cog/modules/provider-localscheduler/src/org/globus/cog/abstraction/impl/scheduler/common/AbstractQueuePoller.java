@@ -184,6 +184,10 @@ public abstract class AbstractQueuePoller implements Runnable {
             else {
                 failures = 0;
             }
+            
+            // otherwise the pipes from the popen stay with the process
+            // untill the Process object gets GC-ed
+            pqstat.destroy();
         }
         catch (Exception e) {
             failAll(e);
