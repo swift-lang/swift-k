@@ -51,7 +51,7 @@ public class LocalTCPService extends GSSService implements Registering {
     }
 
     public String registrationReceived(String blockid, String url, 
-                                       KarajanChannel channel, Map<String, String> options) throws ChannelException {
+           KarajanChannel channel, Map<String, String> options) throws ChannelException {
         if (logger.isInfoEnabled()) {
             logger.info("Received registration: blockid = " +
                         blockid + ", url = " + url);
@@ -81,6 +81,7 @@ public class LocalTCPService extends GSSService implements Registering {
     protected void handleConnection(Socket socket) {
         try {
             buffMan.addSocket(socket);
+            socket.setSoLinger(false, 0);
             socket.setTcpNoDelay(true);
         }
         catch (SocketException e) {
