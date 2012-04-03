@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureListener;
@@ -169,9 +170,13 @@ public class File implements Future {
 		if (listeners != null) {
 			Iterator<ListenerStackPair> i = listeners.iterator();
 			while (i.hasNext()) {
-				ListenerStackPair etp = i.next();
+				final ListenerStackPair etp = i.next();
 				i.remove();
-				etp.listener.futureModified(this, etp.stack);
+				EventBus.post(new Runnable() {
+                    public void run() {
+                        etp.listener.futureModified(File.this, etp.stack);
+                    }				    
+				});
 			}
 		}
 	}
