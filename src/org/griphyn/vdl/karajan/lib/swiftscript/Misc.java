@@ -437,7 +437,9 @@ public class Misc extends FunctionsCollection {
 	 */
 	public DSHandle swiftscript_length(VariableStack stack)
 	throws ExecutionException {
-	    Map<?, ?> n = PA_ARRAY.getRawValue(stack).getArrayValue();
+	    AbstractDataNode array = (AbstractDataNode) PA_ARRAY.getRawValue(stack);
+	    array.waitFor();
+	    Map<?, ?> n = array.getArrayValue();
 	    return new RootDataNode(Types.INT, Integer.valueOf(n.size()));
 	}
 
