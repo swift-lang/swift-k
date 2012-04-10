@@ -41,6 +41,10 @@ public class PerformanceDiagnosticOutputStream extends OutputStream {
 	public PerformanceDiagnosticOutputStream(OutputStream delegate) {
 		this.delegate = delegate;
 	}
+	
+	public static void bytesWritten(int count) {
+	    bytes += count;
+	}
 
 	public void write(int b) throws IOException {
 		delegate.write(b);

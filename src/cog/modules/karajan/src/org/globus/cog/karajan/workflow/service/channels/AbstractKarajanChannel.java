@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectableChannel;
 import java.util.Collection;
 import java.util.TimerTask;
 
@@ -521,5 +522,10 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	public void flush() throws IOException {
+	}
+
+	@Override
+	public SelectableChannel getNIOChannel() {
+		return null;
 	}
 }
