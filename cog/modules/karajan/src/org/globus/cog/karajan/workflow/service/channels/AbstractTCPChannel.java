@@ -11,6 +11,8 @@ package org.globus.cog.karajan.workflow.service.channels;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SocketChannel;
 
 import org.globus.cog.karajan.workflow.service.RequestManager;
 
@@ -19,8 +21,9 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 	private boolean started;
 	private Exception startException;
 	private boolean closing;
+	private SocketChannel nioChannel;
 	
-	private static boolean logPerformanceData;
+	public static final boolean logPerformanceData;
 	
 	static {
 		logPerformanceData = "true".equals(System.getProperty("tcp.channel.log.io.performance"));
@@ -40,6 +43,11 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 		else {
 			setInputStream(socket.getInputStream());
 			setOutputStream(socket.getOutputStream());
+		}
+		
+		this.nioChannel = socket.getChannel();
+		if (this.nioChannel != null) {
+			this.nioChannel.configureBlocking(false);
 		}
 	}
 
@@ -121,5 +129,10 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 
 	public boolean isOffline() {
 		return isClosed();
+	}
+
+	@Override
+	public SelectableChannel getNIOChannel() {
+		return nioChannel;
 	}
 }

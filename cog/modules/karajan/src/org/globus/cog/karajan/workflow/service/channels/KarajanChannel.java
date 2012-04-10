@@ -12,6 +12,7 @@ package org.globus.cog.karajan.workflow.service.channels;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectableChannel;
 
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RequestManager;
@@ -95,4 +96,6 @@ public interface KarajanChannel {
 	void setRequestManager(RequestManager requestManager);
 
 	void flush() throws IOException;
+	
+	SelectableChannel getNIOChannel();
 }

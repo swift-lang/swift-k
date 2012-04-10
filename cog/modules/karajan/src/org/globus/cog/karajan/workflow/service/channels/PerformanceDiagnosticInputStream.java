@@ -66,6 +66,10 @@ public class PerformanceDiagnosticInputStream extends InputStream {
 	public int hashCode() {
 		return delegate.hashCode();
 	}
+	
+	public static void bytesRead(int count) {
+	    bytes += count;
+	}
 
 	public int read(byte[] b) throws IOException {
 		int read = delegate.read(b);

@@ -10,8 +10,10 @@
 package org.globus.cog.karajan.workflow.service.channels;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
+import java.nio.channels.SocketChannel;
 
 import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
@@ -41,7 +43,8 @@ public class TCPChannel extends AbstractTCPChannel {
 	protected void reconnect() throws ChannelException {
 		try {
 			if (contact != null) {
-				setSocket(new Socket(contact.getHost(), contact.getPort()));
+				SocketChannel chan = SocketChannel.open(new InetSocketAddress(contact.getHost(), contact.getPort()));
+				setSocket(chan.socket());
 			}
 		}
 		catch (Exception e) {
