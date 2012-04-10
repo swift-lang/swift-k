@@ -99,10 +99,12 @@ public class CoasterService extends GSSService {
 
     protected void initializeLocalService() throws IOException {
         localService = new LocalTCPService(newLocalRequestManager());
+        localService.start();
     }
 
     protected void initializeLocalService(int port) throws IOException {
         localService = new LocalTCPService(newLocalRequestManager(), port);
+        localService.start();
     }
 
 
@@ -140,7 +142,6 @@ public class CoasterService extends GSSService {
             if (localService == null) {
                 throw new IllegalStateException("Local service not initialized");
             }
-            localService.start();
             jobQueue = new JobQueue(localService);
             jobQueue.start();
             localService.setRegistrationManager(jobQueue);

@@ -14,7 +14,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Map;
@@ -44,8 +43,6 @@ public class LocalTCPService implements Registering, Service, Runnable {
     private RequestManager requestManager;
     private ServiceContext context = new ServiceContext(this);
     
-    private final URI contact;
-    
     private Thread serverThread;
 
     public LocalTCPService(RequestManager rm) throws IOException {
@@ -56,14 +53,6 @@ public class LocalTCPService implements Registering, Service, Runnable {
         setRequestManager(rm);
         buffMan = new TCPBufferManager();
         this.port = port;
-        URI lh = null;
-        try {
-            lh = new URI("localhost:" + port);
-        }
-        catch (URISyntaxException e) {
-            logger.error("Internal error", e);
-        }
-        this.contact = lh;
     }
 
     public String registrationReceived(String blockid, String url, 
