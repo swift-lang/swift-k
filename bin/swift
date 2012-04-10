@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/bash
 
 # Referenced environment variables (default values):
 # SWIFT_ASSERTS
