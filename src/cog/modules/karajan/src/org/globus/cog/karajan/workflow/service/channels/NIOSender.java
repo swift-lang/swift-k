@@ -104,7 +104,7 @@ class NIOSender extends Thread {
 				if (logger.isDebugEnabled()) {
 				    logger.debug(ready + " ready channels");
 				}
-								
+				
 				Iterator<SelectionKey> i = selector.selectedKeys().iterator();
 				while (i.hasNext()) {
 					SelectionKey key = i.next();
@@ -130,6 +130,7 @@ class NIOSender extends Thread {
 						}
 					}
 					catch (IOException ee) {
+						key.cancel();
 						e.channel.handleChannelException(ee);
 					}
 					if (!e.crt.hasRemaining() && !e.nextBuffer()) {
