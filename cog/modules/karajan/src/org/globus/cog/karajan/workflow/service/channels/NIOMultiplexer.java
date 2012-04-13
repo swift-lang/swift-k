@@ -93,7 +93,13 @@ class NIOMultiplexer extends Thread {
 				SelectionKey key = i.next();
 				ReadableByteChannel c = (ReadableByteChannel) key.channel();
 				
-				((AbstractStreamKarajanChannel) key.attachment()).stepNIO();
+				try {
+					((AbstractStreamKarajanChannel) key.attachment()).stepNIO();
+				}
+				catch (IOException e) {
+					((AbstractStreamKarajanChannel) key.attachment()).handleChannelException(e);
+					key.cancel();
+				}
 				i.remove();
 			}
 		}
