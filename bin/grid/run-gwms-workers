@@ -9,6 +9,7 @@ workerExecutable=`which worker.pl`
 workerWrapper=`which run-worker.sh`
 workerContact=$1
 x509userproxy=$( voms-proxy-info 2>&1 | grep path | awk '{print $NF}' )
+wallTimeMinutes=60
 n=$2
 
 [ "$#" -eq 2 ] || die "2 arguments required, $# provided"
@@ -33,11 +34,12 @@ executable = $workerWrapper
 arguments = $workerContact scec /tmp
 environment = WORKER_LOGGING_LEVEL=DEBUG
 Input   = $workerExecutable
-Error   = condor/job.err
-Output  = condor/job.out
+Error   = condor/job.\$(Cluster).\$(Process).err
+Output  = condor/job.\$(Cluster).\$(Process).out
 log     = condor.log
 
 x509userproxy = $x509userproxy
+requirements = (((GLIDEIN_ToRetire + GLIDEIN_Job_Max_Time) - CurrentTime) > $wallTimeMinutes*60) 
 queue $n
 EOF
 

@@ -44,8 +44,7 @@ BIN=$(cd $(dirname $0); pwd)
 
 echo THROTTLE=$THROTTLE LOGLEVEL=$LOGLEVEL
 
-numsites=`cat greensites | wc -l`
-
+#numsites=`cat greensites | wc -l`
 #coaster-service -port 1984 -localport 35753 -nosec >& local-coaster-service.out &
 sleep 5
 start-swift-service 1 &
@@ -63,7 +62,7 @@ cat >sites.grid-ps.xml <<EOF
       <!-- <filesystem provider="local" url="none" /> -->
       <profile namespace="swift" key="stagingMethod">proxy</profile>
       <profile namespace="globus" key="workerLoggingLevel">DEBUG</profile>
-      <workdirectory>/tmp/$USER</workdirectory>
+      <workdirectory>.</workdirectory>
     </pool>
     
    <pool handle="localhost">
