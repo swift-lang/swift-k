@@ -62,19 +62,21 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
         
         String r = getBlock(blockID).workerStarted(workerID, workerHostname, channelContext);
         
-        ResourceUpdateCommand wsc;
-        synchronized(this) {
-            currentWorkers++;
-            wsc = new ResourceUpdateCommand("job-capacity", 
-                String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
-        }
-        try {
-            KarajanChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
-            wsc.executeAsync(channel);
-            ChannelManager.getManager().releaseChannel(channel);
-        }
-        catch (Exception e) {
-            logger.warn("Failed to send worker status update to client", e);
+        if (clientIsConnected()) {
+            ResourceUpdateCommand wsc;
+            synchronized(this) {
+                currentWorkers++;
+                wsc = new ResourceUpdateCommand("job-capacity", 
+                    String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
+            }
+            try {
+                KarajanChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
+                wsc.executeAsync(channel);
+                ChannelManager.getManager().releaseChannel(channel);
+            }
+            catch (Exception e) {
+                logger.warn("Failed to send worker status update to client", e);
+            }
         }
         
         return r;

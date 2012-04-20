@@ -818,6 +818,10 @@ implements RegistrationManager, Runnable {
     public ChannelContext getClientChannelContext() {
         return clientChannelContext;
     }
+    
+    public boolean clientIsConnected() {
+        return clientChannelContext != null;
+    }
 
     public static void main(String[] args) {
         Settings s = new Settings();
