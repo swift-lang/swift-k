@@ -102,7 +102,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     private void sleep() {
-    	logger.debug(block.getId() + ":" + getId() + " sleeping");
+        if (logger.isDebugEnabled()) {
+            logger.debug(block.getId() + ":" + getId() + " sleeping");
+        }
         sleep(this);
     }
 
@@ -169,12 +171,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                     success = launch(running);
                 }
                 else {
-                    if (block.getAllocationProcessor().getQueued().size() == 0) {
-                        sleep();
-                    }
-                    else {
-                        sleep();
-                    }
+                    sleep();
                 }
             }
             else {
@@ -292,7 +289,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         }
     }
 
-    public synchronized Job getRunning() {
+    public Job getRunning() {
         return running;
     }
 
@@ -351,7 +348,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
      public synchronized void statusChanged(StatusEvent event) {
-         logger.debug(event);
+         if (logger.isDebugEnabled()) {
+             logger.debug(event);
+         }
          if (event.getStatus().isTerminal()) {
              running.getTask().removeStatusListener(this);
              running.setEndTime(Time.now());

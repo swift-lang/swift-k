@@ -9,9 +9,12 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -44,7 +47,10 @@ public class SortedJobSet implements Iterable<Job> {
     public SortedJobSet(SortedJobSet other) {
         metric = other.metric;
         synchronized(other) {
-            sm = new TreeMap<TimeInterval, LinkedList<Job>>(other.sm);
+            sm = new TreeMap<TimeInterval, LinkedList<Job>>();
+            for (Map.Entry<TimeInterval, LinkedList<Job>> e : other.sm.entrySet()) {
+                sm.put(e.getKey(), new LinkedList<Job>(e.getValue()));
+            }
             jsize = other.jsize;
             size = other.size;
         }
@@ -53,8 +59,36 @@ public class SortedJobSet implements Iterable<Job> {
     public int size() {
         return size;
     }
+    
+    public boolean isEmpty() {
+        return size == 0;
+    }
+    
+    public List<Job> getAll() {
+        List<Job> l = new ArrayList<Job>();
+        for (List<Job> s : sm.values()) {
+            l.addAll(s);
+        }
+        return l;
+    }
+    
+    public void addAll(Collection<Job> c) {
+        for (Job j : c) {
+            _add(j);
+        }
+    }
+    
+    public void removeAll(Collection<Job> c) {
+        for (Job j : c) {
+            remove(j);
+        }
+    }
 
-    public synchronized void add(Job j) {
+    public void add(Job j) {
+        _add(j);
+    }
+    
+    private void _add(Job j) {
         LinkedList<Job> l = sm.get(j.getMaxWallTime());
         if (l == null) {
             l = new LinkedList<Job>();
@@ -64,6 +98,12 @@ public class SortedJobSet implements Iterable<Job> {
         jsize += metric.getSize(j);
         size++;
         seq++;
+    }
+    
+    public void remove(Job job) {
+        LinkedList<Job> l = sm.get(job.getMaxWallTime());
+        l.remove(job);
+        size--;
     }
 
     /**
@@ -123,6 +163,9 @@ public class SortedJobSet implements Iterable<Job> {
             }
 
             public Job next() {
+                if (it2 == null) {
+                    throw new NoSuchElementException();
+                }
                 if (it2.hasNext()) {
                     return it2.next();
                 }
