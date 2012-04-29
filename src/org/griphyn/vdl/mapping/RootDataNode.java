@@ -138,7 +138,9 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		    }
 			// Static mappers are (array) mappers which know the size of
 			// an array statically. A good example is the fixed array mapper
-		    logger.debug("mapper: " + mapper);
+		    if (logger.isDebugEnabled()) {
+		        logger.debug("mapper: " + mapper);
+		    }
 			for (Path p : mapper.existing()) {
 				try {
 					// Try to get the path in order to check that the 
