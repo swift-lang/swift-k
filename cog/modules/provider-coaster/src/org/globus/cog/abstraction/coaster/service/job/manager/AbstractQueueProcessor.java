@@ -9,69 +9,45 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.util.Queue;
 
 public abstract class AbstractQueueProcessor extends Thread implements QueueProcessor {
-    private final Queue q;
-    private Queue.Cursor cursor;
+    private final BlockingQueue<AssociatedTask> q;
     private boolean shutdownFlag;
     private boolean wrap;
 
     public AbstractQueueProcessor(String name) {
         super(name);
-        q = new Queue();
+        q = new LinkedBlockingQueue<AssociatedTask>();
     }
 
     public void enqueue(Task t) {
-        synchronized (q) {
-            if (shutdownFlag) {
-                throw new IllegalStateException("Queue is shut down");
-            }
-            q.enqueue(new AssociatedTask(t));
-            q.notifyAll();
+        if (shutdownFlag) {
+            throw new IllegalStateException("Queue is shut down");
         }
+        q.offer(new AssociatedTask(t));
     }
 
     public void shutdown() {
-        synchronized(q) {
-            shutdownFlag = true;
-        }
+        shutdownFlag = true;
     }
 
     protected boolean getShutdownFlag() {
         return shutdownFlag;
     }
 
-    protected final Queue getQueue() {
-        return q;
-    }
-
     protected final AssociatedTask take() throws InterruptedException {
-        return (AssociatedTask) q.take();
+        return q.take();
     }
 
     protected final boolean hasWrapped() {
-        synchronized (q) {
-            return wrap;
-        }
-    }
-
-    protected final void remove() {
-        synchronized (q) {
-            if (cursor == null) {
-                throw new IllegalThreadStateException(
-                        "next() was never called");
-            }
-            else {
-                cursor.remove();
-            }
-        }
+        return wrap;
     }
 
     protected int queuedTaskCount() {
-        synchronized (q) {
-            return q.size();
-        }
+        return q.size();
     }
 }
