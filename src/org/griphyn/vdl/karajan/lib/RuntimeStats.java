@@ -113,8 +113,10 @@ public class RuntimeStats extends FunctionsCollection {
 	static public void setProgress(VariableStack stack, String newState) throws ExecutionException {
 	    RuntimeProgress p = getProgress(stack);
 	    ProgressTicker t = getTicker(stack);
-	    t.dec(p.status);
-	    t.inc(newState);
+	    synchronized(t) {
+	        t.dec(p.status);
+	        t.inc(newState);
+	    }
 		p.status = newState;
 		t.dumpState();
 	}
@@ -124,7 +126,9 @@ public class RuntimeStats extends FunctionsCollection {
 		ProgressTicker p = getTicker(stack);
 		setProgress(stack, rp);
 		rp.status = "Initializing";
-		p.inc(rp.status);
+		synchronized(p) {
+		    p.inc(rp.status);
+		}
 		p.dumpState();
 		return null;
 	}
