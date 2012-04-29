@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
 import org.apache.log4j.Logger;
@@ -84,8 +85,7 @@ public class SubmitJobCommand extends Command {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         OutputStream dos;
         if (compression) {
-            dos = new DeflaterOutputStream(baos);
-            // dos = baos;
+            dos = new DeflaterOutputStream(baos, new Deflater(1));
         }
         else {
             dos = baos;
