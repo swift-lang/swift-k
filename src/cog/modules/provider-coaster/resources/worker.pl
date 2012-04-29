@@ -11,6 +11,7 @@
 #
 
 use IO::Socket;
+use Socket qw(IPPROTO_TCP TCP_NODELAY);
 use IO::Select;
 use File::Basename;
 use File::Path;
@@ -363,8 +364,10 @@ sub reconnect() {
 		if ($success) {
 			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 32768);
 			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768*8);
+			$SOCK->setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
 			wlog INFO, "Connected\n";
 			$SOCK->blocking(0);
+			$SOCK->autoflush(1);
 			# myhost is used by the CoasterService for MPI tasks
 			queueCmd(registerCB(), "REGISTER", $BLOCKID, $myhost, "maxwalltime = $MAXWALLTIME");
 			last;
@@ -918,10 +921,10 @@ sub loopOne {
 	if (@SENDQ) {
 		# if there are commands to send, don't just wait for data
 		# to read from the socket
-		($rset, $wset) = IO::Select->select($r, $r, undef, 0.1);
+		($rset, $wset) = IO::Select->select($r, $r, undef, 0.001);
 	}
 	else {
-		($rset, $wset) = IO::Select->select($r, undef, undef, 0.1);
+		($rset, $wset) = IO::Select->select($r, undef, undef, 0.001);
 	}
 	if ($rset) {
 		# can read
@@ -1217,6 +1220,9 @@ sub getFileCBDataIn {
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "522", "Could not write to file: $!"));
 			delete($JOBDATA{$jobid});
 			return;
+		}
+		else {
+			select(undef, undef, undef, 0.005);
 		}
 	}
 	if ($flags & FINAL_FLAG) {
@@ -1777,19 +1783,29 @@ sub forkjob {
 	}
 }
 
-my $JOBCHECKCOUNT = 0;
+my $JOBSDONE = 0;
+
+sub JOBDONE {
+	$JOBSDONE = 1;
+	$SIG{CHLD} = \&JOBDONE;
+}
+
+$SIG{CHLD} = \&JOBDONE;
 
 sub checkJobs {
 	my $now = time();
 	
-	if ($now - $LAST_JOB_CHECK_TIME < JOB_CHECK_INTERVAL) {
-		return;
-	} 
+	if (!$JOBSDONE) {
+		if ($now - $LAST_JOB_CHECK_TIME < JOB_CHECK_INTERVAL) {
+			return;
+		}
+	}
+	else {
+		wlog(DEBUG, "SIGCHLD received. Checking jobs\n");
+	}
+	$JOBSDONE = 0;
 	$LAST_JOB_CHECK_TIME = $now;
 	
-	if ($JOBCHECKCOUNT != 0) {
-		return;
-	}
 	if (!%JOBWAITDATA) {
 		return;
 	}
