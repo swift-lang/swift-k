@@ -126,7 +126,7 @@ class Sender extends Thread {
 		}
 	}
 	
-	private class SendEntry {
+	private static class SendEntry {
 		public final int tag, flags;
 		public final byte[] data;
 		public final AbstractStreamKarajanChannel channel;
