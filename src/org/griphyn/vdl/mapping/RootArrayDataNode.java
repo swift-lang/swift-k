@@ -54,7 +54,9 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	}
 
 	private synchronized void innerInit() {
-	    logger.debug("innerInit: " + this);
+		if (logger.isDebugEnabled()) {
+		    logger.debug("innerInit: " + this);
+		}
 	    
 	    for (Map.Entry<String, Object> entry : params.entrySet()) {
 			Object v = entry.getValue();
