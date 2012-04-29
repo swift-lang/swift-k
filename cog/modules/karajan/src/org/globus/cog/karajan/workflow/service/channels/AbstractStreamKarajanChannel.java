@@ -196,6 +196,9 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				flags = unpack(rhdr, 4);
 				len = unpack(rhdr, 8);
 				hcsum = unpack(rhdr, 12);
+				if (logger.isInfoEnabled()) {
+					logger.info(this + ", tag: " + tag + ", flags: " + flags + ", len: " + len);
+				}
 				if ((tag ^ flags ^ len) != hcsum) {
 					logger.warn("(NIO) Header checksum failed. Computed checksum: " + 
 							Integer.toHexString(tag ^ flags ^ len) + 
