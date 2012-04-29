@@ -18,10 +18,9 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
@@ -29,7 +28,6 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
-import org.globus.cog.util.CopyOnWriteArrayList;
 import org.griphyn.vdl.util.VDL2Config;
 
 /** this is an icky class that does too much with globals, but is for
@@ -113,16 +111,20 @@ public class RuntimeStats extends FunctionsCollection {
 	}
 
 	static public void setProgress(VariableStack stack, String newState) throws ExecutionException {
-		getProgress(stack).status = newState;
-		getTicker(stack).dumpState();
+	    RuntimeProgress p = getProgress(stack);
+	    ProgressTicker t = getTicker(stack);
+	    t.dec(p.status);
+	    t.inc(newState);
+		p.status = newState;
+		t.dumpState();
 	}
 
 	public Object vdl_initprogressstate(VariableStack stack) throws ExecutionException {
 		RuntimeProgress rp = new RuntimeProgress();
 		ProgressTicker p = getTicker(stack);
-		p.states.add(rp);
 		setProgress(stack, rp);
 		rp.status = "Initializing";
+		p.inc(rp.status);
 		p.dumpState();
 		return null;
 	}
@@ -137,8 +139,7 @@ public class RuntimeStats extends FunctionsCollection {
 
 	static public class ProgressTicker extends Thread {
 
-		CopyOnWriteArrayList<RuntimeProgress> states = 
-		    new CopyOnWriteArrayList<RuntimeProgress>();
+		private Map<String, Integer> counts;
 
 		long start;
 		long lastDumpTime = 0;
@@ -149,6 +150,7 @@ public class RuntimeStats extends FunctionsCollection {
 		
 		public ProgressTicker() {
 			super("Progress ticker");
+			counts = new HashMap<String, Integer>();
 			try {
 				if ("true".equalsIgnoreCase(VDL2Config.getConfig().getProperty("ticker.disable"))) {
 					logger.info("Ticker disabled in configuration file");
@@ -178,6 +180,28 @@ public class RuntimeStats extends FunctionsCollection {
 			}
 		}
 		
+		public void inc(String state) {
+		    Integer crt = counts.get(state);
+		    if (crt == null) {
+		        counts.put(state, 1);
+		    }
+		    else {
+		        counts.put(state, crt + 1);
+		    }
+		}
+		
+		public void dec(String state) {
+            Integer crt = counts.get(state);
+            if (crt != null) {
+                if (crt == 1) {
+                    counts.remove(state);
+                }
+                else {
+                    counts.put(state, crt - 1);
+                }
+            }
+        }
+		
 		void shutdown() {
 		    shutdown = true;
 		}
@@ -198,33 +222,9 @@ public class RuntimeStats extends FunctionsCollection {
 			}
 			printStates("Final status:");
 		}
-		
-		public Map<String, Integer> getSummary() {
-			Map<String, Integer> summary = new HashMap<String, Integer>();
-			Iterator<RuntimeProgress> stateIterator = states.iterator();
-			try {
-				// summarize details of known states into summary, with
-				// one entry per state type, storing the number of
-				// jobs in that state.
-				while(stateIterator.hasNext()) {
-					String key = stateIterator.next().status;
-					Integer count = summary.get(key);
-					if (count == null) {
-						summary.put(key, 1);
-					} 
-					else {
-						summary.put(key, count + 1);
-					}
-				}
-			}
-			finally {
-			    states.release(stateIterator);
-			}
-			return summary;
-		}
 
 		void printStates(String prefix) {
-			Map<String, Integer> summary = getSummary();
+			Map<String, Integer> summary = new HashMap<String, Integer>(counts);
 		//	SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 
 			// output the results of summarization, in a relatively
@@ -236,7 +236,7 @@ public class RuntimeStats extends FunctionsCollection {
 
 			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
 				String key = preferredOutputOrder[pos];
-				Object value = summary.get(key);
+				Integer value = summary.get(key);
 				if(value != null) {
 				    System.err.print("  " + key + ":" + value);
 				}
@@ -246,6 +246,7 @@ public class RuntimeStats extends FunctionsCollection {
 			for (Map.Entry<String, Integer> s : summary.entrySet()) {
 				System.err.print(" " + s.getKey() + ":" + s.getValue());
 			}
+
 			System.err.println();
 		}
 
