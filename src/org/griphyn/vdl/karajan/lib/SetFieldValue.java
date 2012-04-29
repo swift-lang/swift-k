@@ -86,11 +86,15 @@ public class SetFieldValue extends VDLFunction {
 	                p = "";
 	            String name = data.getDisplayableName() + p;
 	            if (value.getType().isArray()) {
-	                logger.info("Set: " + name + "=" + 
+	                if (logger.isInfoEnabled()) {
+	                    logger.info("Set: " + name + "=" + 
                                 unpackHandles(value.getArrayValue()));
+	                }
 	            }
 	            else {
-	                logger.info("Set: " + name + "=" + value.getValue());
+	                if (logger.isInfoEnabled()) {
+	                    logger.info("Set: " + name + "=" + value.getValue());
+	                }
 	            }
 	        }
 	    }
