@@ -222,9 +222,13 @@ public class RuntimeStats extends FunctionsCollection {
 			}
 			printStates("Final status:");
 		}
+		
+		public Map getSummary() {
+            return new HashMap<String, Integer>(counts);
+        }
 
 		void printStates(String prefix) {
-			Map<String, Integer> summary = new HashMap<String, Integer>(counts);
+			Map<String, Integer> summary = getSummary();
 		//	SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 
 			// output the results of summarization, in a relatively
@@ -233,7 +237,7 @@ public class RuntimeStats extends FunctionsCollection {
 			System.err.print(prefix + " ");
 			//System.err.print("  time:" + (System.currentTimeMillis() - start));
 			System.err.print(formatter.format(System.currentTimeMillis()));
-
+			
 			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
 				String key = preferredOutputOrder[pos];
 				Integer value = summary.get(key);
