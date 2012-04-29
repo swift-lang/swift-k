@@ -74,7 +74,6 @@ public class Job implements Comparable<Job> {
 
         JobSpecification spec =
             (JobSpecification) task.getSpecification();
-        logger.info("Coasters Job id=" + id + " is:\n" + spec);
 
         // Set walltime
         Object tmp = spec.getAttribute("maxwalltime");
