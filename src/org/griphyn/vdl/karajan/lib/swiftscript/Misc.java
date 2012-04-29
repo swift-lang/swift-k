@@ -131,9 +131,6 @@ public class Misc extends FunctionsCollection {
     }
 
     public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException {
-	    if (logger.isDebugEnabled()) {
-	        logger.debug(stack);
-	    }
 		Object[] args = SwiftArg.VARGS.asArray(stack);
 		int provid = VDLFunction.nextProvenanceID();
 		StringBuffer buf = new StringBuffer();
@@ -305,22 +302,8 @@ public class Misc extends FunctionsCollection {
 	public DSHandle swiftscript_to_int(VariableStack stack)
 	throws ExecutionException {
 		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
-		int i = inputString.indexOf(".");
-		if( i >= 0 )
-		{
-			inputString = inputString.substring(0, i);
-		}
-		DSHandle handle = new RootDataNode(Types.INT);
-
-		try
-		{
-		    handle.setValue(new Integer(inputString));
-		}
-		catch(NumberFormatException e)
-		{
-		    throw new ExecutionException(stack, "Could not convert value \""+inputString+"\" to type int");
-		}
-		handle.closeShallow();
+		
+		DSHandle handle = new RootDataNode(Types.INT, new Double(inputString).intValue());
 
 		int provid=VDLFunction.nextProvenanceID();
 		VDLFunction.logProvenanceResult(provid, handle, "toint");
@@ -445,7 +428,6 @@ public class Misc extends FunctionsCollection {
 
 	public DSHandle swiftscript_existsfile(VariableStack stack)
     throws ExecutionException {
-	    logger.debug(stack);
 	    DSHandle result = null;
 	    Object[] args = SwiftArg.VARGS.asArray(stack);
 	    String arg = (String) args[0];
