@@ -228,8 +228,10 @@ public class GridExec extends AbstractGridNode implements StatusListener {
 		catch (Exception e) {
 			throw new ExecutionException("Exception caught while submitting job", e);
 		}
-		logger.info("TASK_DEFINITION: " + task + " is " + 
-				    js.getExecutable() + " " + js.getArguments());
+		if (logger.isInfoEnabled()) {
+			logger.info("TASK_DEFINITION: " + task + " is " + 
+					js.getExecutable() + " " + js.getArguments());
+		}
 	}
 
 	protected void addEnvironment(VariableStack stack, JobSpecificationImpl js)
