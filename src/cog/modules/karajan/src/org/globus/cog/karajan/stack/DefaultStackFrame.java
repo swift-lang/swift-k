@@ -44,10 +44,10 @@ public final class DefaultStackFrame implements StackFrame {
 	}
 
 	public synchronized void setVar(final String name, final Object value) {
-		if (map.size() == 0) {
+	    int osz = map.size();
+		if (osz == 0) {
 			map = new ListMap();
 		}
-		int osz = map.size();
 		Object old = map.put(name, value);
 		if (osz == 4 && old == null) {
 			map = new HashMap(map);
