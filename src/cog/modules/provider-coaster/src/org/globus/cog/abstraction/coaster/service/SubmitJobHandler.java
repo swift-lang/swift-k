@@ -45,7 +45,7 @@ public class SubmitJobHandler extends RequestHandler {
     
     Logger logger = Logger.getLogger(SubmitJobHandler.class);
     
-    public static final boolean COMPRESSION = true;
+    public static final boolean COMPRESSION = false;
     
     private CoasterService service;
 
@@ -56,7 +56,6 @@ public class SubmitJobHandler extends RequestHandler {
             service = (CoasterService) channelContext.getService();
             if (COMPRESSION) {
                 task = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
-                // t = read(new ByteArrayInputStream(getInData(0)));
             }
             else {
                 task = read(new ByteArrayInputStream(getInData(0)));
