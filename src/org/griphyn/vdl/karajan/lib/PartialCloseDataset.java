@@ -69,7 +69,9 @@ public class PartialCloseDataset extends VDLFunction {
 			}
 
 			c.add(closeID);
-			logger.debug("Adding token "+closeID+" with hash "+closeID.hashCode());
+			if (logger.isDebugEnabled()) {
+			    logger.debug("Adding token "+closeID+" with hash "+closeID.hashCode());
+			}
 
 			String needToWaitFor = var.getParam("waitfor");
 			logger.debug("need to wait for " + needToWaitFor);
@@ -82,13 +84,19 @@ public class PartialCloseDataset extends VDLFunction {
 					// then we have a required element that we have not
 					// seen yet, so...
 					hasUnseenToken = true;
-					logger.debug("Container does not contain token " + s);
+					if (logger.isDebugEnabled()) {
+					    logger.debug("Container does not contain token " + s);
+					}
 				} else {
-					logger.debug("Container does contain token " + s);
+				    if (logger.isDebugEnabled()) {
+				        logger.debug("Container does contain token " + s);
+				    }
 				}
 			}
 		}
-		logger.debug("hasUnseenToken = "+hasUnseenToken);
+		if (logger.isDebugEnabled()) {
+		    logger.debug("hasUnseenToken = "+hasUnseenToken);
+		}
 		if(!hasUnseenToken) {
 			if(logger.isDebugEnabled()) {
 				logger.debug("All partial closes for " + var + 
