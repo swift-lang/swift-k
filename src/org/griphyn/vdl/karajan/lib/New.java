@@ -147,7 +147,9 @@ public class New extends VDLFunction {
 				}
 			}
 			
-			logger.debug("NEW id="+handle.getIdentifier());
+			if (logger.isDebugEnabled()) {
+			    logger.debug("NEW id="+handle.getIdentifier());
+			}
 			return handle;
 		}
 		catch (Exception e) {
