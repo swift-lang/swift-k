@@ -98,7 +98,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static String buildVersion;
 
     public static void main(String[] argv) {
-        logger.debug("Swift started");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Swift started");
+        }
         ArgumentParser ap = buildArgumentParser();
         String project = null;
         try {
@@ -432,7 +434,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
             String name = e.getKey();
             if (ap.isPresent(name)) {
             	String value = ap.getStringValue(name);
-            	logger.debug("setting: " + name + " to: " + value);
+            	if (logger.isDebugEnabled()) {
+            	    logger.debug("setting: " + name + " to: " + value);
+            	}
             	config.setProperty(name, value);
             }
         }
@@ -572,7 +576,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ca.setThreshold(Level.FATAL);
         }
         else if (ap.isPresent(ARG_MINIMAL_LOGGING)) {
-            fa.setThreshold(Level.WARN);
+            Logger.getRootLogger().setLevel(Level.WARN);
         }
         else if (ap.isPresent(ARG_REDUCED_LOGGING)) {
             Logger.getLogger(AbstractDataNode.class).setLevel(Level.WARN);
