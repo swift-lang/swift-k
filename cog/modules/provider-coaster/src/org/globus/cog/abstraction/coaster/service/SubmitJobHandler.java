@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.InflaterInputStream;
 
 import org.apache.log4j.Logger;
@@ -151,6 +152,8 @@ public class SubmitJobHandler extends RequestHandler {
         
         return task;
     }
+    
+    private static final Pattern COLON = Pattern.compile(":");
 
     protected void setServiceParams(ExecutionService s, String contact, 
                                     String provider, String jm) {
@@ -158,7 +161,7 @@ public class SubmitJobHandler extends RequestHandler {
             jm = "fork";
         }
 
-        String[] els = jm.split(":");
+        String[] els = COLON.split(jm);
         if (els.length == 2 && "fork".equals(els[1])) {
             s.setProvider("local");
         }
@@ -259,7 +262,7 @@ public class SubmitJobHandler extends RequestHandler {
         private void scan() throws IOException, ProtocolException {
             key = null;
             value = null;
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             int c = is.read();
             boolean nl = false;
             while (value == null) {
@@ -267,7 +270,7 @@ public class SubmitJobHandler extends RequestHandler {
                     case '=': {
                         if (key == null) {
                             key = sb.toString();
-                            sb = new StringBuffer();
+                            sb = new StringBuilder();
                         }
                         else {
                             sb.append((char) c);
