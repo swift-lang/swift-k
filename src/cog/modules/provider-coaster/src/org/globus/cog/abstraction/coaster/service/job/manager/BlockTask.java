@@ -75,7 +75,6 @@ public class BlockTask extends TaskImpl {
         }
         setRequiredService(1);
         setService(0, buildService());
-        System.out.println(spec);
         if (logger.isDebugEnabled()) {
         	logger.debug("Block task spec: " + spec);
         	logger.debug("Block Task Service: " + getService(0));
