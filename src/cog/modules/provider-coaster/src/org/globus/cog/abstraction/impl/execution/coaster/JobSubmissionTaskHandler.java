@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.CoasterResourceTracker;
@@ -152,6 +153,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         jsc = new SubmitJobCommand(task);
         jsc.executeAsync(channel, this);
     }
+    
+    private static final Pattern COLON = Pattern.compile(":");
 
     private String getBootHandlerProvider(Task t) throws InvalidServiceContactException,
             IllegalSpecException {
@@ -159,7 +162,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         if (jm == null) {
             throw new InvalidServiceContactException("Missing job manager");
         }
-        String[] jmp = jm.split(":");
+        String[] jmp = COLON.split(jm);
         if (jmp.length < 2) {
             throw new InvalidServiceContactException("Invalid job manager: " + jm
                     + ". Use <provider>:<remote-provider>[:<remote-job-manager>].");
@@ -275,6 +278,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             else if (!checkedServices.containsKey(s)) {
                 try {
                     validateTask();
+                    checkedServices.put(s, null);
                 }
                 catch (IllegalArgumentException ee) {
                     e = new TaskSubmissionException(ee.getMessage());
