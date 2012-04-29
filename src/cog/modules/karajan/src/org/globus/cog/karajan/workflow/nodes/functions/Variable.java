@@ -49,8 +49,6 @@ public class Variable extends AbstractFunction {
 			}
 		}
 
-		logger.debug("get: " + name);
-
 		switch (frame) {
 			case UNINITIALIZED:
 			case VariableStack.NO_FRAME:
