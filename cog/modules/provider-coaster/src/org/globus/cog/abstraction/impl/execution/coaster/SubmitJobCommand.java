@@ -12,9 +12,9 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.Deflater;
@@ -54,6 +54,7 @@ public class SubmitJobCommand extends Command {
 
     private Task t;
     private boolean compression = SubmitJobHandler.COMPRESSION;
+    private boolean simple;
 
     public boolean getCompression() {
         return compression;
@@ -82,72 +83,81 @@ public class SubmitJobCommand extends Command {
         // I'd use Java serialization if not for the fact that a similar
         // thing needs to be done to communicate with the perl client
         JobSpecification spec = (JobSpecification) t.getSpecification();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        OutputStream dos;
-        if (compression) {
-            dos = new DeflaterOutputStream(baos, new Deflater(1));
-        }
-        else {
-            dos = baos;
-        }
+        StringBuilder sb = new StringBuilder();
+        
         String identity = t.getIdentity().getValue();
-        add(dos, "identity", identity);
-        add(dos, "executable", spec.getExecutable());
-        add(dos, "directory", spec.getDirectory());
-        add(dos, "batch", spec.isBatchJob());
-        add(dos, "stdin", spec.getStdInput());
-        add(dos, "stdout", spec.getStdOutput());
-        add(dos, "stderr", spec.getStdError());
+        add(sb, "identity", identity);
+        add(sb, "executable", spec.getExecutable());
+        add(sb, "directory", spec.getDirectory());
+        if (!simple) {
+            add(sb, "batch", spec.isBatchJob());
+        }
+        add(sb, "stdin", spec.getStdInput());
+        add(sb, "stdout", spec.getStdOutput());
+        add(sb, "stderr", spec.getStdError());
 
         for (String arg : spec.getArgumentsAsList())
-            add(dos, "arg", arg);
+            add(sb, "arg", arg);
 
         for (String name : spec.getEnvironmentVariableNames())
-            add(dos, "env", 
+            add(sb, "env", 
                 name + "=" + spec.getEnvironmentVariable(name));
     
-        for (String name : spec.getAttributeNames())
-            if (!IGNORED_ATTRIBUTES.contains(name) || 
-                    spec.isBatchJob())
-                add(dos, "attr", 
-                    name + "=" + spec.getAttribute(name));
-        
+        if (!simple) {
+            for (String name : spec.getAttributeNames())
+                if (!IGNORED_ATTRIBUTES.contains(name) || 
+                        spec.isBatchJob())
+                    add(sb, "attr", 
+                        name + "=" + spec.getAttribute(name));
+        }
+            
         if (spec.getStageIn() != null) {
             for (StagingSetEntry e : spec.getStageIn())
-                add(dos, "stagein", absolutize(e.getSource()) + '\n' + 
+                add(sb, "stagein", absolutize(e.getSource()) + '\n' + 
                     e.getDestination() + '\n' + Mode.getId(e.getMode()));
         }
         
         if (spec.getStageOut() != null) {
             for (StagingSetEntry e : spec.getStageOut())
-                add(dos, "stageout", e.getSource() + '\n' + 
+                add(sb, "stageout", e.getSource() + '\n' + 
                     absolutize(e.getDestination()) + '\n' + Mode.getId(e.getMode()));
         }
 
         if (spec.getCleanUpSet() != null)
             for (String cleanup : spec.getCleanUpSet())
-                add(dos, "cleanup", cleanup);
+                add(sb, "cleanup", cleanup);
 
-        Service s = t.getService(0);
-        add(dos, "contact", s.getServiceContact().toString());
-        add(dos, "provider", s.getProvider());
-
-        if (s instanceof ExecutionService) {
-            add(dos, "jm", ((ExecutionService) s).getJobManager());
+        if (!simple) {
+            Service s = t.getService(0);
+            add(sb, "contact", s.getServiceContact().toString());
+            add(sb, "provider", s.getProvider());
+    
+            if (s instanceof ExecutionService) {
+                add(sb, "jm", ((ExecutionService) s).getJobManager());
+            }
+            else {
+                add(sb, "jm", "fork");
+            }
         }
-        else {
-            add(dos, "jm", "fork");
-        }
-        dos.close();
+        
+        String out = sb.toString();
         if (logger.isDebugEnabled()) {
-            logger.debug("Job data: " + baos.toString());
+            logger.debug("Job data: " + out);
         }
+        
+        byte[] bytes = out.getBytes(UTF8);
 
-        addOutData(baos.toByteArray());
+        if (compression) {
+        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        	DeflaterOutputStream dos = new DeflaterOutputStream(baos, new Deflater(2));
+        	dos.write(bytes);
+        	bytes = baos.toByteArray();
+        }
+        addOutData(bytes);
     }
 
     private String absolutize(String file) throws IOException {
-        try {
+        try {            
             URI u = new URI(file);
             if (ABSOLUTIZE.contains(u.getScheme())) {
                 return u.getScheme() + "://" + u.getHost() + 
@@ -162,28 +172,30 @@ public class SubmitJobCommand extends Command {
         }
     }
 
-    private void add(OutputStream baos, String key, boolean value) throws IOException {
-        add(baos, key, String.valueOf(value));
+    private void add(StringBuilder sb, String key, boolean value) throws IOException {
+        add(sb, key, String.valueOf(value));
     }
+    
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     @SuppressWarnings("fallthrough")
-    private void add(OutputStream baos, String key, String value) throws IOException {
+    private void add(final StringBuilder sb, final String key, final String value) throws IOException {
         if (value != null) {
-            baos.write(key.getBytes("UTF-8"));
-            baos.write('=');
+        	sb.append(key);
+            sb.append('=');
             for (int i = 0; i < value.length(); i++) {
                 char c = value.charAt(i);
                 switch (c) {
                     case '\n':
                         c = 'n';
                     case '\\':
-                        baos.write('\\');
+                        sb.append('\\');
                     default:
-                        baos.write(c);
+                        sb.append(c);
                 }
             }
 
-            baos.write('\n');
+            sb.append('\n');
         }
     }
 
@@ -194,5 +206,13 @@ public class SubmitJobCommand extends Command {
 
     public Task getTask() {
         return t;
+    }
+
+    public boolean getSimple() {
+        return simple;
+    }
+
+    public void setSimple(boolean simple) {
+        this.simple = simple;
     }
 }
