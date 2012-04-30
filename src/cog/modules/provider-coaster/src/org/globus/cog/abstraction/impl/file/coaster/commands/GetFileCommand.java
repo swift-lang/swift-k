@@ -35,7 +35,9 @@ public class GetFileCommand extends Command implements WriteBufferCallback {
             throws IOException {
         super(NAME);
         
-        logger.debug("GetFileCommand: " + src + " " + dst);
+        if (logger.isDebugEnabled()) {
+            logger.debug("GetFileCommand: " + src + " " + dst);
+        }
         
         addOutData(src);
         addOutData(dst);
