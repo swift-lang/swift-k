@@ -14,6 +14,9 @@ global(LOG:FATAL, "fatal")
 global(WRAPPER_TRANSFER_MODE,
 	if(vdl:configProperty("wrapperlog.always.transfer") == "true", 
 		STAGING_MODE:IF_PRESENT, STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT))
+		
+pinOption := configProperty("provider.staging.pin.swiftfiles")
+global(PIN, if(pinOption == "true", "pinned:", ""))
 
 namespace("vdl"
 	export(
@@ -134,16 +137,14 @@ namespace("vdl"
 							jobid = jobid
 
 							stagingMethod := vdl:siteProfile(rhost, "swift:stagingMethod", default="proxy")
-							pinOption := configProperty("provider.staging.pin.swiftfiles")
-							pin := if (pinOption == "true" then ("pinned:") else (""))
 
-							stageIn("{pin}{stagingMethod}://localhost/{swift.home}/libexec/{wrapper}", wrapper)
+							stageIn("{PIN}{stagingMethod}://localhost/{swift.home}/libexec/{wrapper}", wrapper)
 
 							if ( cdmfile != "" then(
 								d  := vdl:dirname(cdmfile)
 								file := basename(cdmfile)
 								dir := if ( d == "" then("./") else(str:concat(d,"/")))
-								loc := "{pin}{stagingMethod}://localhost/"
+								loc := "{PIN}{stagingMethod}://localhost/"
 								stageIn("{loc}{dir}{file}", cdmfile)
 								stageIn("{loc}{swift.home}/libexec/cdm.pl", "cdm.pl")
 								stageIn("{loc}{swift.home}/libexec/cdm_lib.sh", "cdm_lib.sh")
