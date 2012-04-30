@@ -255,6 +255,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             KarajanChannel channel = node.getChannel();
             SubmitJobCommand cmd = new SubmitJobCommand(task);
             cmd.setCompression(false);
+            cmd.setSimple(true);
             cmd.executeAsync(channel, this);
         }
         catch (Exception e) {
