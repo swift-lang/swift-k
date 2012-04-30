@@ -79,7 +79,7 @@ implements RegistrationManager, Runnable {
 
     private ChannelContext clientChannelContext;
 
-    private boolean done;
+    private boolean done, planning;
 
     private final Metric metric;
 
@@ -167,11 +167,16 @@ implements RegistrationManager, Runnable {
     public void enqueue1(Task t) {
         Job j = new Job(t);
         if (checkJob(j)) {
-            synchronized (incoming) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Got job with walltime = " + j.getMaxWallTime());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got job with walltime = " + j.getMaxWallTime());
+            }
+            synchronized (holding) {
+                if (planning) {
+                    incoming.add(j);
                 }
-                incoming.add(j);
+                else {
+                    holding.add(j);
+                }
             }
         }
     }
@@ -686,34 +691,39 @@ implements RegistrationManager, Runnable {
         long start = System.currentTimeMillis();
 
         synchronized(holding) {
+            planning = true;
+        }
+
+        // Shutdown Blocks that are done
+        cleanDoneBlocks();
+
+        // Subtract elapsed time from existing allocation
+        updateAllocatedSize();
+    
+        // Move jobs that fit from holding to queued
+        queueToExistingBlocks();
+
+        // int jss = jobs.size();
+        // If queued has too many Jobs, move some back to holding
+        requeueNonFitting();
+
+        updateSettings();
+
+        computeSums();
+
+        tsum = computeTotalRequestSize();
+
+        if (tsum == 0) {
+            removeIdleBlocks();
+        }
+        else {
+            allocateBlocks(tsum);
+        }
+
+        synchronized(holding) {
+            planning = false;
             // Move all incoming Jobs to holding
             commitNewJobs();
-    
-            // Shutdown Blocks that are done
-            cleanDoneBlocks();
-    
-            // Subtract elapsed time from existing allocation
-            updateAllocatedSize();
-        
-            // Move jobs that fit from holding to queued
-            queueToExistingBlocks();
-    
-            // int jss = jobs.size();
-            // If queued has too many Jobs, move some back to holding
-            requeueNonFitting();
-    
-            updateSettings();
-    
-            computeSums();
-    
-            tsum = computeTotalRequestSize();
-    
-            if (tsum == 0) {
-                removeIdleBlocks();
-            }
-            else {
-                allocateBlocks(tsum);
-            }
         }
 
         updateMonitor();
@@ -725,7 +735,9 @@ implements RegistrationManager, Runnable {
         Job job = queued.removeOne(ti, cpus);
         if (job == null) {
             synchronized(holding) {
-                job = holding.removeOne(ti, cpus);
+                if (!planning) {
+                    job = holding.removeOne(ti, cpus);
+                }
             }
         }
         
