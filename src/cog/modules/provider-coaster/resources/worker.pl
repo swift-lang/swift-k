@@ -1261,7 +1261,7 @@ sub completePinnedFile {
 
 sub stagein {
 	my ($jobid) = @_;
-
+	
 	wlog TRACE, "stagein(): $jobid\n";
 
 	my $STAGE = $JOBDATA{$jobid}{"stagein"};
@@ -1327,7 +1327,7 @@ sub getPinnedFile() {
 	my $error;
 	$src =~ s/pinned://;
 	my $jobdir = $JOBDATA{$jobid}{'job'}{'directory'};
-	my $pinned_dir = "$jobdir/../pinned";
+	my $pinned_dir = "$jobdir/../../pinned";
 	my $rdst = $dst;
 	$rdst =~ s/$jobdir//;
 
@@ -1788,6 +1788,7 @@ my $JOBSDONE = 0;
 sub JOBDONE {
 	$JOBSDONE = 1;
 	$SIG{CHLD} = \&JOBDONE;
+	wlog DEBUG, "Got one SIGCHLD\n";
 }
 
 $SIG{CHLD} = \&JOBDONE;
@@ -1917,6 +1918,7 @@ sub runjob {
 	die "Could not execute $executable: $!";
 }
 
+undef $ENV{"LANG"};
 initlog();
 
 my $MSG="0";
