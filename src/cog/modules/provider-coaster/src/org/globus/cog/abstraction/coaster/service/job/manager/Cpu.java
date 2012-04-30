@@ -289,7 +289,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         }
     }
 
-    public Job getRunning() {
+    public synchronized Job getRunning() {
         return running;
     }
 
