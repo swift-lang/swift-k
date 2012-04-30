@@ -206,17 +206,24 @@ public class SubmitJobHandler extends RequestHandler {
 
     private String makeAbsolute(String path) {
         String prefix = "";
+        String spath;
         if (path.startsWith("pinned:")) {
             prefix = "pinned:";
-            path = path.substring(7);
-        }
-        if (path.startsWith("proxy://localhost")) {
-            return prefix + "proxy://" + 
-                   getChannel().getChannelContext().getChannelID() + 
-                   path.substring("proxy://localhost".length());
+            spath = path.substring(7);
         }
         else {
+            spath = path;
+        }
+        if (spath.startsWith("proxy://localhost")) {
+            return prefix + "proxy://" + 
+                   getChannel().getChannelContext().getChannelID() + 
+                   spath.substring("proxy://localhost".length());
+        }
+        else if (spath.startsWith("file://localhost")) {
             return path;
+        }
+        else {
+            return spath;
         }
     }
 
