@@ -227,13 +227,13 @@ public class RuntimeStats extends FunctionsCollection {
 			printStates("Final status:");
 		}
 		
-		public Map getSummary() {
+		public synchronized Map getSummary() {
             return new HashMap<String, Integer>(counts);
         }
-
+		
 		void printStates(String prefix) {
 			Map<String, Integer> summary = getSummary();
-		//	SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+			//	SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 
 			// output the results of summarization, in a relatively
 			// pretty form - first the preferred order listed elements,
