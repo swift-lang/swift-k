@@ -22,6 +22,8 @@ import org.apache.log4j.Logger;
 class Sender extends Thread {
     public static final Logger logger = Logger.getLogger(Sender.class);
     
+    public static final boolean PAYLOAD_CHECKSUM = false;
+    
 	private final BlockingQueue<SendEntry> queue;
 	private final byte[] shdr;
 	private final String name;
@@ -110,9 +112,12 @@ class Sender extends Thread {
         AbstractStreamKarajanChannel.pack(hdr, 4, flags);
         AbstractStreamKarajanChannel.pack(hdr, 8, data.length);
         AbstractStreamKarajanChannel.pack(hdr, 12, tag ^ flags ^ data.length);
-        Adler32 csum = new Adler32();
-        csum.update(data);
-        AbstractStreamKarajanChannel.pack(hdr, 16, (int) csum.getValue());
+        if (PAYLOAD_CHECKSUM) {
+        	Adler32 csum = new Adler32();
+        	csum.update(data);
+        	AbstractStreamKarajanChannel.pack(hdr, 16, (int) csum.getValue());
+        }
+        AbstractStreamKarajanChannel.pack(hdr, 16, 0);
 	}
 
 	private void send(int tag, int flags, byte[] data, OutputStream os) throws IOException {
