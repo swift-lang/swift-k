@@ -592,7 +592,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			}
 			if (status.isTerminal()) {
 				synchronized (this) {
-					Contact[] contacts = getContacts(task);
+					Contact[] contacts = taskContacts.remove(task);
 					if (contacts == null) {
 						logger.warn("Task had no contacts " + task);
 					}
@@ -607,9 +607,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					}
 					if (task.getType() == Task.JOB_SUBMISSION) {
 						currentJobs--;
-					}
-					synchronized (taskContacts) {
-						taskContacts.remove(task);
 					}
 
 					if (contacts != null) {
@@ -713,7 +710,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		return propertyNames;
 	}
 
-	protected Contact[] getContacts(Task t) {
+	protected synchronized Contact[] getContacts(Task t) {
 		return taskContacts.get(t);
 	}
 
