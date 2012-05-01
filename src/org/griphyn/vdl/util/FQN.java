@@ -31,11 +31,13 @@ public class FQN {
 	private final String namespace;
 	private final String name;
 	private final String version;
+	private final int hashCode; 
 
 	public FQN(String namespace, String name, String version) {
 		this.namespace = namespace;
 		this.name = name;
 		this.version = version;
+		this.hashCode = _hashCode();
 	}
 
 	public FQN(String fqn) {
@@ -72,6 +74,7 @@ public class FQN {
 		else {
 			throw new IllegalArgumentException("Invalid FQN: " + fqn);
 		}
+		this.hashCode = _hashCode();
 	}
 
 	private String[] split(String fqn) {
@@ -117,6 +120,9 @@ public class FQN {
 	public boolean equals(Object o) {
 		if (o instanceof FQN) {
 			FQN of = (FQN) o;
+			if (hashCode != of.hashCode) {
+			    return false;
+			}
 			return cmpStr(namespace, of.namespace) && cmpStr(name, of.name)
 					&& cmpStr(version, of.version);
 		}
@@ -125,12 +131,16 @@ public class FQN {
 		}
 	}
 	
-	public int hashCode() {
+	private int _hashCode() {
 		int hc = 0;
 		hc += namespace == null ? 0 : namespace.hashCode();
 		hc += name == null ? 0 : name.hashCode();
 		hc += version == null ? 0 : version.hashCode();
 		return hc;
+	}
+	
+	public int hashCode() {
+	    return hashCode;
 	}
 
 	private boolean cmpStr(String s1, String s2) {
