@@ -40,44 +40,35 @@ public class Variable extends AbstractFunction {
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		synchronized (this) {
-			if (name == null) {
-				name = TypeUtil.toString(A_NAME.getStatic(this)).toLowerCase();
-				if (getStaticArguments().size() == 1) {
-					java.util.Map<String, Object> m = Collections.emptyMap();
-					setStaticArguments(m);
+			if (frame == UNINITIALIZED || frame == VariableStack.NO_FRAME) {
+				if (name == null) {
+					name = TypeUtil.toString(A_NAME.getStatic(this)).toLowerCase();
+					if (getStaticArguments().size() == 1) {
+						java.util.Map<String, Object> m = Collections.emptyMap();
+						setStaticArguments(m);
+					}
 				}
-			}
-		}
-
-		switch (frame) {
-			case UNINITIALIZED:
-			case VariableStack.NO_FRAME:
+			
 				if (stack.parentFrame().isDefined("#quoted")) {
 					Object value = new Identifier(name);
 					setSimple(value);
 					return value;
 				}
-				else {
-					frame = stack.getVarFrameFromTop(name);
-					switch (frame) {
-					    case VariableStack.NO_FRAME:
-					        throw new VariableNotFoundException(name);
-					    case VariableStack.FIRST_FRAME:
-					        Object value = stack.firstFrame().getVar(name);
-					        setSimple(value);
-					        return value;
-					    case VariableStack.DYNAMIC_FRAME:
-					        return stack.getVar(name);
-					    default:
-					        return stack.getFrameFromTop(frame).getVar(name);
-					}
-				}
+				frame = stack.getVarFrameFromTop(name);
+			}
+		}
+		
+		switch (frame) {
+			case VariableStack.NO_FRAME:
+				throw new VariableNotFoundException(name);
 			case VariableStack.FIRST_FRAME:
-			    return stack.firstFrame().getVar(name);
+				Object value = stack.firstFrame().getVar(name);
+				setSimple(value);
+				return value;
 			case VariableStack.DYNAMIC_FRAME:
-			    return stack.getVar(name);
+				return stack.getVar(name);
 			default:
-			    return stack.getFrameFromTop(frame).getVar(name);
+				return stack.getFrameFromTop(frame).getVar(name);
 		}
 	}
 }
