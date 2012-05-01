@@ -17,6 +17,7 @@ global(WRAPPER_TRANSFER_MODE,
 		
 pinOption := configProperty("provider.staging.pin.swiftfiles")
 global(PIN, if(pinOption == "true", "pinned:", ""))
+global(PROVENANCE_GRAPH_ENABLED, vdl:configProperty("pgraph") != "false") 
 
 namespace("vdl"
 	export(
@@ -35,8 +36,8 @@ namespace("vdl"
 		)
 
 		element(graphStuff, [tr, stagein, stageout, err, optional(args)]
-			if(
-				vdl:configProperty("pgraph") != "false" then(
+			if(PROVENANCE_GRAPH_ENABLED 
+				then(
 					errprops := if(err ",color=lightsalmon" ",color=lightsteelblue1")
 					tp := vdl:threadPrefix()
 					to(graph,
