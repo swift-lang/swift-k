@@ -257,6 +257,35 @@ start-workers-local()
    return 0
 }
 
+# Start condor workers
+start-workers-condor()
+{
+   PORT=$1
+   EXECUTION_URL=http://$IPADDR:$PORT
+   if [ -z "$PORT" ]; then
+      crash "start-workers-local: Port number not specified, giving up"
+   fi
+   echo Starting worker on local machine
+
+   if [ -z "$CONDOR_WORKERS" ]; then
+      crash "CONDOR_WORKERS undefined - please check coaster-service.conf"
+   fi
+
+cat <<EOF > start_workers.submit
+output = workers.stdout
+error = workers.stderr
+initialdir = $PWD 
+executable = $SWIFT_BIN/$WORKER
+arguments = $EXECUTION_URL node .
+notification = Never
+leave_in_queue = TRUE
+queue $CONDOR_WORKERS
+EOF
+
+   condor_submit start_workers.submit
+   return 0
+}
+
 # Start cobalt workers
 start-workers-cobalt()
 {
@@ -444,6 +473,9 @@ case $WORKER_MODE in
       ;;
    ec2)
       start-workers-ec2 $LOCAL_PORT
+      ;;
+   condor)
+      start-workers-condor $LOCAL_PORT
       ;;
    *)
       crash "Unknown WORKER_MODE. Please modify coaster-service.conf"

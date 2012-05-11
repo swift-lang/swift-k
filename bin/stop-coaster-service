@@ -60,6 +60,10 @@ if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    fi
 fi
 
+if [ "$WORKER_MODE" == "condor" ]; then
+   condor_rm $USER
+fi
+
 if [ -f "$HOME/.swift/machines" ]; then
    rm "$HOME/.swift/machines"
 fi
