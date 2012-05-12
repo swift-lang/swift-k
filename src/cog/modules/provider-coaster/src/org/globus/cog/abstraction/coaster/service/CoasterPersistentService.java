@@ -152,7 +152,9 @@ public class CoasterPersistentService extends CoasterService {
                 s.setDefaultQP("block");
             }
             s.start();
+            addShutdownHook(s);
             System.out.println("Started coaster service: " + s);
+            System.out.println("Worker connection URL: " + s.getLocalService().getContact());
             s.waitFor();
             System.exit(0);
         }
@@ -176,6 +178,15 @@ public class CoasterPersistentService extends CoasterService {
         }
     }
     
+    private static void addShutdownHook(final CoasterPersistentService s) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                System.out.println("Shutting down service...");
+                s.shutdown();
+            }
+        });
+    }
+
     static void setupLogging() {
         String timestamp = Timestamp.YMDhms_dash();
         String filename =  "cps-"+timestamp+".log";        
