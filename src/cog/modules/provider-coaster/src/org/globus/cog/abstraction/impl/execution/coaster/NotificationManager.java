@@ -80,14 +80,12 @@ public class NotificationManager {
                 task = tasks.get(id);
             }
             lastNotificationTime = System.currentTimeMillis();
+            if (task == null) {
+            	addPending(id, s);
+            }
         }
         if (task != null) {
             setStatus(task, s);
-        }
-        else {
-            synchronized (tasks) {
-                addPending(id, s);
-            }
         }
     }
 
