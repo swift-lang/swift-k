@@ -10,10 +10,13 @@
 package org.globus.cog.abstraction.coaster.service;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Map;
@@ -28,6 +31,7 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
+import org.globus.common.CoGProperties;
 
 public class LocalTCPService implements Registering, Service, Runnable {
     public static final Logger logger = Logger.getLogger(LocalTCPService.class);
@@ -44,6 +48,8 @@ public class LocalTCPService implements Registering, Service, Runnable {
     private ServiceContext context = new ServiceContext(this);
     
     private Thread serverThread;
+    
+    private URI contact;
 
     public LocalTCPService(RequestManager rm) throws IOException {
         this(rm, 0);
@@ -138,8 +144,25 @@ public class LocalTCPService implements Registering, Service, Runnable {
         }
     }
     
-    public URI getContact() {
-        return null;
+    public synchronized URI getContact() {
+        if (contact == null) {
+            String host = CoGProperties.getDefault().getIPAddress();
+            if (host == null) {
+                try {
+                    host = InetAddress.getLocalHost().getHostAddress();
+                }
+                catch (UnknownHostException e) {
+                    host = "127.0.0.1";
+                }
+            }
+            try {
+                contact = new URI("http://" + host + ":" + getPort());
+            }
+            catch (URISyntaxException e) {
+                logger.warn("Cannot build local service contact URI", e);
+            }
+        }
+        return contact;
     }
     
     public int getPort() {
