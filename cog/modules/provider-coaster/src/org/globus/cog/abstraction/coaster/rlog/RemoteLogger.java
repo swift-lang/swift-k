@@ -26,6 +26,9 @@ public class RemoteLogger implements Callback {
     }
 
     public void log(String msg) {
+        if (ctx == null) {
+            return;
+        }
         RemoteLogCommand rlc = new RemoteLogCommand(msg);
         try {
             KarajanChannel channel = ChannelManager.getManager().reserveChannel(ctx);
