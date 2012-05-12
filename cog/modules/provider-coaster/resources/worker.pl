@@ -350,7 +350,7 @@ sub reconnect() {
 		my $sz = @HOSTNAME;
 		$success = 0;
 		for ($j = 0; $j < $sz; $j++) {
-			wlog DEBUG, "Trying $HOSTNAME[$j]:$PORT[$j] ...\n";
+			wlog INFO, "Trying $HOSTNAME[$j]:$PORT[$j] ...\n";
 			$fail = 0;
 			$SOCK = IO::Socket::INET->new(Proto=>'tcp', PeerAddr=>$HOSTNAME[$j], PeerPort=>$PORT[$j], Blocking=>1) || ($fail = 1);
 			if (!$fail) {
@@ -358,7 +358,7 @@ sub reconnect() {
 				last;
 			}
 			else {
-				wlog DEBUG, "Connection failed: $!. Trying other addresses\n";
+				wlog INFO, "Connection failed: $!. Trying other addresses\n";
 			}
 		}
 		if ($success) {
@@ -870,6 +870,8 @@ sub checkTimeouts {
 
 my $DATA = "";
 
+my $CONNECTION_WARNING = 0;
+
 sub recvOne {
 	my $buf;
 	$SOCK->recv($buf, 20 - length($DATA));
@@ -883,6 +885,13 @@ sub recvOne {
 		}
 	}
 	else {
+		# chances are that this is a non-yet detected dead connection
+		# so wait a bit
+		if (!$CONNECTION_WARNING) {
+			wlog WARN, "Connection to server lost?\n";
+			$CONNECTION_WARNING = 1;
+		}
+		select(undef, undef, undef, 1);
 		checkTimeouts();
 	}
 }
@@ -913,7 +922,7 @@ sub checkHeartbeat {
 
 sub loopOne {
 	my ($r) = @_;
-	my ($rset, $wset);
+	my ($rset, $wset, $eset);
 	
 	checkHeartbeat();
 	checkJobs();
@@ -921,18 +930,22 @@ sub loopOne {
 	if (@SENDQ) {
 		# if there are commands to send, don't just wait for data
 		# to read from the socket
-		($rset, $wset) = IO::Select->select($r, $r, undef, 0.001);
+		($rset, $wset, $eset) = IO::Select->select($r, $r, $r, 0.001);
 	}
 	else {
-		($rset, $wset) = IO::Select->select($r, undef, undef, 0.001);
+		($rset, $wset, $eset) = IO::Select->select($r, undef, $r, 0.001);
 	}
-	if ($rset) {
+	if ($eset && @$eset) {
+		wlog(DEBUG, "Has error\n");
+		die "Connection closed\n";
+	}
+	if ($rset && @$rset) {
 		# can read
 		wlog(DEBUG, "Can read\n");
 		recvOne();
 	}
 	
-	if ($wset) {
+	if ($wset && @$wset) {
 		# can write
 		wlog(DEBUG, "Can write\n");
 		my $wouldBlock;
@@ -1013,7 +1026,7 @@ sub heartbeatCBDataIn {
 		die "Heartbeat failed: $reply\n";
 	}
 	else {
-		wlog DEBUG, "Heartbeat acknowledged\n";
+		wlog INFO, "Heartbeat acknowledged\n";
 	}
 }
 
@@ -1269,7 +1282,7 @@ sub stagein {
 	my $STAGEINDEX = $JOBDATA{$jobid}{"stageindex"};
 
 	if (scalar @$STAGE <= $STAGEINDEX) {
-		wlog DEBUG, "$jobid Done staging in files ($STAGEINDEX, $STAGE)\n";
+		wlog INFO, "$jobid Done staging in files ($STAGEINDEX, $STAGE)\n";
 		$JOBDATA{$jobid}{"stageindex"} = 0;
 		queueCmd((nullCB(), "JOBSTATUS", $jobid, ACTIVE, "0", "workerid=$ID"));
 		forkjob($jobid);
@@ -1278,7 +1291,7 @@ sub stagein {
 		if ($STAGEINDEX == 0) {
 			queueCmd((nullCB(), "JOBSTATUS", $jobid, STAGEIN, "0", "workerid=$ID"));
 		}
-		wlog DEBUG, "$jobid Staging in $$STAGE[$STAGEINDEX]\n";
+		wlog INFO, "$jobid Staging in $$STAGE[$STAGEINDEX]\n";
 		$JOBDATA{$jobid}{"stageindex"} =  $STAGEINDEX + 1;
 		my ($protocol, $host, $path) = urisplit($$STAGE[$STAGEINDEX]);
 		wlog DEBUG, "$jobid protocol: $protocol\n";
@@ -1411,7 +1424,7 @@ sub stageout {
 	wlog DEBUG, "sz: $sz, STAGEINDEX: $STAGEINDEX\n";
 	if (scalar @$STAGE <= $STAGEINDEX) {
 		$JOBDATA{$jobid}{"stageindex"} = 0;
-		wlog DEBUG, "$jobid No more stageouts. Doing cleanup.\n";
+		wlog INFO, "$jobid No more stageouts. Doing cleanup.\n";
 		cleanup($jobid);
 	}
 	else {
@@ -1437,7 +1450,7 @@ sub stageout {
 			}
 			my $rfile = $$STAGED[$STAGEINDEX];
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
-			wlog DEBUG, "$jobid Staging out $lfile (mode = $mode).\n";
+			wlog INFO, "$jobid Staging out $lfile (mode = $mode).\n";
 			my ($protocol, $host, $path) = urisplit($rfile);
 			if ($protocol eq "file" || $protocol eq "proxy") {
 				# make sure we keep track of the total number of actual stageouts
@@ -1467,13 +1480,13 @@ sub stageout {
 		}
 		else {
 			if ($skip == 1) {
-				wlog DEBUG, "$jobid Skipping stageout of missing file ($lfile)\n";
+				wlog INFO, "$jobid Skipping stageout of missing file ($lfile)\n";
 			}
 			elsif ($skip == 2) {
-				wlog DEBUG, "$jobid Skipping stageout of file ($lfile) (ON_ERROR mode and job succeeded)\n";
+				wlog INFO, "$jobid Skipping stageout of file ($lfile) (ON_ERROR mode and job succeeded)\n";
 			}
 			elsif ($skip == 3) {
-				wlog DEBUG, "$jobid Skipping stageout of file ($lfile) (ON_SUCCESS mode and job failed)\n";
+				wlog INFO, "$jobid Skipping stageout of file ($lfile) (ON_SUCCESS mode and job failed)\n";
 			}
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
 			stageout($jobid);
@@ -1513,9 +1526,9 @@ sub cleanup {
 	}
 
 	if ($ec != 0) {
-		wlog DEBUG, "$jobid Job data: ".hts($JOBDATA{$jobid})."\n";
-		wlog DEBUG, "$jobid Job: ".hts($JOBDATA{$jobid}{'job'})."\n";
-		wlog DEBUG, "$jobid Job dir ".`ls -al $JOBDATA{$jobid}{'job'}{'directory'}`."\n";
+		wlog INFO, "$jobid Job data: ".hts($JOBDATA{$jobid})."\n";
+		wlog INFO, "$jobid Job: ".hts($JOBDATA{$jobid}{'job'})."\n";
+		wlog INFO, "$jobid Job dir ".`ls -al $JOBDATA{$jobid}{'job'}{'directory'}`."\n";
 	}
 
 	my $CLEANUP = $JOBDATA{$jobid}{"cleanup"};
@@ -1697,7 +1710,7 @@ sub submitjob {
 sub checkJob() {
 	my ($tag, $JOBID, $JOB) = @_;
 
-	wlog DEBUG, "$JOBID Job info received (tag=$tag)\n";
+	wlog INFO, "$JOBID Job info received (tag=$tag)\n";
 	my $executable = $$JOB{"executable"};
 	if (!(defined $JOBID)) {
 		my $ds = hts($JOB);
@@ -1766,7 +1779,7 @@ sub forkjob {
 			close $CHILD_W;
 		}
 		else {
-			wlog DEBUG, "$JOBID Forked process $pid. Waiting for its completion\n";
+			wlog INFO, "$JOBID Forked process $pid. Waiting for its completion\n";
 			close $CHILD_W;
 			$JOBS_RUNNING++;
 			$JOBWAITDATA{$JOBID} = {
@@ -1802,7 +1815,7 @@ sub checkJobs {
 		}
 	}
 	else {
-		wlog(DEBUG, "SIGCHLD received. Checking jobs\n");
+		wlog(INFO, "SIGCHLD received. Checking jobs\n");
 	}
 	$JOBSDONE = 0;
 	$LAST_JOB_CHECK_TIME = $now;
@@ -1850,7 +1863,7 @@ sub checkJobStatus {
 		$status = $? >> 8 + (($? & 0xff) << 8);
 	}
 
-	wlog DEBUG, "$JOBID Child process $pid terminated. Status is $status.\n";
+	wlog INFO, "$JOBID Child process $pid terminated. Status is $status.\n";
 	my $s;
 	if (!eof($RD)) {
 		$s = <$RD>;
@@ -1869,11 +1882,9 @@ sub checkJobStatus {
 	}
 
 	if (defined $s) {
-		#queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, "$status", $s);
 		stageout($JOBID);
 	}
 	else {
-		#queueCmd(nullCB(), "JOBSTATUS", $JOBID, COMPLETED, "$status", "");
 		stageout($JOBID);
 	}
 	$JOB_COUNT++;
