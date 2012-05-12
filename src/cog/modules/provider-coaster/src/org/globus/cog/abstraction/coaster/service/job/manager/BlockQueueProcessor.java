@@ -876,7 +876,7 @@ implements RegistrationManager, Runnable {
     }
 
     public int getQueueSeq() {
-        return queued.getSeq();
+        return queued.getSeq() + holding.getSeq();
     }
 
     public RemoteLogger getRLogger() {
