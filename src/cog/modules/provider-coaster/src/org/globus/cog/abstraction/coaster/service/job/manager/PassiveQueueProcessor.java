@@ -90,6 +90,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
             b = blocks.get(id);
             if (b == null) {
                 b = new Block(id, 1, TimeInterval.FOREVER, this);
+                b.setRunning(true);
                 blocks.put(id, b);
             }
         }
