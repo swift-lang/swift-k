@@ -61,6 +61,8 @@ public class Block implements StatusListener, Comparable<Block> {
     private static int sid;
 
     private static final NumberFormat IDF = new DecimalFormat("000000");
+    
+    public static volatile int requestedWorkers, activeWorkers, failedWorkers, completedWorkers;
 
     public Block(String id) {
         this.id = id;
@@ -80,6 +82,7 @@ public class Block implements StatusListener, Comparable<Block> {
         this.bqp = ap;
         this.creationtime = Time.now();
         this.deadline = Time.now().add(ap.getSettings().getReserve());
+        requestedWorkers += workers;
     }
 
     public void start() {
@@ -332,6 +335,8 @@ public class Block implements StatusListener, Comparable<Block> {
         if (logger.isInfoEnabled()) {
             logger.info("Worker task failed: " + msg, e);
         }
+        requestedWorkers -= workers;
+        activeWorkers -= workers;
         synchronized (cpus) {
             synchronized (scpus) {
                 failed = true;
@@ -356,6 +361,7 @@ public class Block implements StatusListener, Comparable<Block> {
     public String workerStarted(String workerID,
                                 String workerHostname,
                                 ChannelContext channelContext) {
+    	activeWorkers += workers;
         synchronized (cpus) {
             synchronized (scpus) {
                 int wid = Integer.parseInt(workerID);
@@ -371,7 +377,9 @@ public class Block implements StatusListener, Comparable<Block> {
                     cpus.add(cpu);
                     n.add(cpu);
                     cpu.workerStarted();
-                    logger.info("Started CPU " + cpu);
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Started CPU " + cpu);
+                    }
                 }
                 if (logger.isInfoEnabled()) {
                     logger.info("Started worker " + this.id + ":" + IDF.format(wid));
@@ -418,6 +426,8 @@ public class Block implements StatusListener, Comparable<Block> {
                         }
                     }
                     bqp.blockTaskFinished(this);
+                    activeWorkers -= workers;
+                    completedWorkers += workers;
                     running = false;
                     task = null;
                 }

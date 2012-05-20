@@ -43,6 +43,8 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     private int lastseq;
     protected long busyTime, idleTime, lastTime;
 	private boolean shutdown;
+	
+	public static volatile int completedJobs, failedJobs;
 
     public Cpu() {
         this.done = new ArrayList<Job>();
@@ -80,6 +82,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public synchronized void jobTerminated() {
+    	completedJobs++;
         if (logger.isInfoEnabled()) {
             logger.info(block.getId() + ":" + getId() + " jobTerminated");
         }
@@ -319,6 +322,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
 
     public synchronized void taskFailed(String msg, Exception e) {
 		shutdown = true;
+		failedJobs++;
         if (running == null) {
             if (starttime == null) {
                 starttime = Time.now();
