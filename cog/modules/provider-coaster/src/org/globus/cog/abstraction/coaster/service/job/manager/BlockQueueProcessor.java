@@ -84,6 +84,8 @@ implements RegistrationManager, Runnable {
     private final Metric metric;
 
     private final RemoteLogger rlogger;
+    
+    public static volatile int queuedJobs, runningJobs;
 
     /**
        Formatter for time-based variables in whole seconds
@@ -165,6 +167,7 @@ implements RegistrationManager, Runnable {
     }
 
     public void enqueue1(Task t) {
+    	queuedJobs++;
         Job j = new Job(t);
         if (checkJob(j)) {
             if (logger.isDebugEnabled()) {
@@ -742,7 +745,9 @@ implements RegistrationManager, Runnable {
         }
         
         if (job != null) {
+        	queuedJobs--;
             synchronized(running) {
+            	runningJobs++;
                 running.add(job);
             }
         }
@@ -756,6 +761,7 @@ implements RegistrationManager, Runnable {
 
     public void jobTerminated(Job job) {
         synchronized(running) {
+        	runningJobs--;
             running.remove(job);
         }
     }
