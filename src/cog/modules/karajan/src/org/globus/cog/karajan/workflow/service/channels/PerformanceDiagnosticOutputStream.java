@@ -20,18 +20,20 @@ public class PerformanceDiagnosticOutputStream extends OutputStream {
 	private final OutputStream delegate;
 
 	private static volatile long bytes, last;
-	private static int count;
+	private static int count = 1;
+	
+	public static final int INTERVAL = 10; //seconds
 
 	static {
-		Timer.every(1000, new Runnable() {
+		Timer.every(1000 * INTERVAL, new Runnable() {
 			public void run() {
-				count++;
+				count += INTERVAL;
 				String s;
 				logger.info(s = "[OUT] Total transferred: "
-						+ PerformanceDiagnosticInputStream.units(bytes) + "B, current rate: "
-						+ PerformanceDiagnosticInputStream.units(bytes - last)
+						+ getTotal() + "B, current rate: "
+						+ getCurrentRate()
 						+ "B/s, average rate: "
-						+ PerformanceDiagnosticInputStream.units(bytes / count)
+						+ getAverageRate()
 						+ "B/s");
 				last = bytes;
 			}
@@ -40,6 +42,18 @@ public class PerformanceDiagnosticOutputStream extends OutputStream {
 
 	public PerformanceDiagnosticOutputStream(OutputStream delegate) {
 		this.delegate = delegate;
+	}
+	
+	public static String getTotal() {
+		return PerformanceDiagnosticInputStream.units(bytes);
+	}
+	
+	public static String getCurrentRate() {
+		return PerformanceDiagnosticInputStream.units(bytes - last);
+	}
+	
+	public static String getAverageRate() {
+		return PerformanceDiagnosticInputStream.units(bytes / count);
 	}
 	
 	public static void bytesWritten(int count) {
