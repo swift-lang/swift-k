@@ -21,15 +21,17 @@ public class PerformanceDiagnosticInputStream extends InputStream {
 
 	private InputStream delegate;
 	private static volatile long bytes, last;
-	private static int count;
+	private static int count = 1;
+	
+	public static final int INTERVAL = 10; //seconds
 
 	static {
-		Timer.every(1000, new Runnable() {
+		Timer.every(1000 * INTERVAL, new Runnable() {
 			public void run() {
-				count++;
+				count += INTERVAL;
 				String s;
-				logger.info(s = "[IN] Total transferred: " + units(bytes) + "B, current rate: "
-						+ units(bytes - last) + "B/s, average rate: " + units(bytes / count)
+				logger.info(s = "[IN] Total transferred: " + getTotal() + "B, current rate: "
+						+ getCurrentRate() + "B/s, average rate: " + getAverageRate()
 						+ "B/s");
 				logger.info(s = "[MEM] Heap total: "
 						+ units(Runtime.getRuntime().totalMemory())
@@ -43,6 +45,18 @@ public class PerformanceDiagnosticInputStream extends InputStream {
 
 	public PerformanceDiagnosticInputStream(InputStream delegate) {
 		this.delegate = delegate;
+	}
+	
+	public static String getTotal() {
+		return units(bytes);
+	}
+	
+	public static String getCurrentRate() {
+		return units(bytes - last);
+	}
+	
+	public static String getAverageRate() {
+		return units(bytes / count);
 	}
 
 	private static final String[] U = { "", "K", "M", "G" };
