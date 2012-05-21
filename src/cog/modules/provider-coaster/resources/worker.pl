@@ -1234,9 +1234,6 @@ sub getFileCBDataIn {
 			delete($JOBDATA{$jobid});
 			return;
 		}
-		else {
-			select(undef, undef, undef, 0.005);
-		}
 	}
 	if ($flags & FINAL_FLAG) {
 		my $handle = $$state{"handle"};
@@ -1929,7 +1926,8 @@ sub runjob {
 	die "Could not execute $executable: $!";
 }
 
-undef $ENV{"LANG"};
+$ENV{"LANG"} = "C";
+
 initlog();
 
 my $MSG="0";
