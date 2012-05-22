@@ -265,7 +265,7 @@ start-workers-condor()
    if [ -z "$PORT" ]; then
       crash "start-workers-local: Port number not specified, giving up"
    fi
-   echo Starting worker on local machine
+   echo Starting workers
 
    if [ -z "$CONDOR_WORKERS" ]; then
       crash "CONDOR_WORKERS undefined - please check coaster-service.conf"
@@ -284,6 +284,25 @@ EOF
 
    condor_submit start_workers.submit
    return 0
+}
+
+# Start GWMS workers
+start-workers-gwms()
+{
+   PORT=$1
+   EXECUTION_URL=http://$IPADDR:$PORT
+
+   if [ -z "$PORT" ]; then
+      crash "start-workers-local: Port number not specified, giving up"
+   fi
+
+   if [ -z "$CONDOR_WORKERS" ]; then
+      crash "CONDOR_WORKERS undefined - please check coaster-service.conf"
+   fi
+
+   echo Starting workers   
+   mkdir -p condor
+   run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS > gwms-workers.log 2>&1 &
 }
 
 # Start cobalt workers
@@ -476,6 +495,9 @@ case $WORKER_MODE in
       ;;
    condor)
       start-workers-condor $LOCAL_PORT
+      ;;
+   gwms)
+      start-workers-gwms $LOCAL_PORT
       ;;
    *)
       crash "Unknown WORKER_MODE. Please modify coaster-service.conf"

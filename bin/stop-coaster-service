@@ -60,7 +60,7 @@ if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
    fi
 fi
 
-if [ "$WORKER_MODE" == "condor" ]; then
+if [ "$WORKER_MODE" == "condor" ] || [ "$WORKER_MODE" == "gwms" ]; then
    condor_rm $USER
 fi
 
