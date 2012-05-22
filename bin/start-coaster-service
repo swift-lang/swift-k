@@ -302,7 +302,7 @@ start-workers-gwms()
 
    echo Starting workers   
    mkdir -p condor
-   run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS > gwms-workers.log 2>&1 &
+   run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS 
 }
 
 # Start cobalt workers
@@ -513,7 +513,7 @@ echo Generating config file
 cat > $RUN_DIR/cf << EOF
 use.provider.staging=true
 wrapperlog.always.transfer=false
-execution.retries=0
+execution.retries=10
 provider.staging.pin.swiftfiles=false
 sitedir.keep=false
 EOF
