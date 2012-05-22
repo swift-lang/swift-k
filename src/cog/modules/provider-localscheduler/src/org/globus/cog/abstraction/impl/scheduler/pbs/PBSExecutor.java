@@ -270,6 +270,8 @@ public class PBSExecutor extends AbstractExecutor {
 			logger.debug("Job type: " + type);
 		if ("multiple".equals(type)) 
 		    multiple = true;
+		else if("single".equals(type))
+		    multiple = false;
 		if (aprun) 
 			multiple = false;
 		if (multiple)
