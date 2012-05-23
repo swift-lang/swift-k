@@ -199,8 +199,13 @@ if [ -f "$PROPERTIES_FILE" ]; then
                   NAME=`echo $line |cut -d'=' -f1|awk '{print $2}'`
                   COMMAND=`echo $line |cut -d'=' -f2`
                   COMMAND=`eval echo $COMMAND`
-                  COMMAND_PATH=$(cd $(dirname $COMMAND); pwd)/$(basename $COMMAND)
-                  echo $HOST $NAME $COMMAND_PATH null null null >> tc.data
+                  COMMAND_DIRNAME=$(dirname $COMMAND)
+                  if [ -d "$COMMAND_DIRNAME" ]; then
+                     COMMAND_PATH=$(cd $COMMAND_DIRNAME; pwd)/$(basename $COMMAND)
+                     echo $HOST $NAME $COMMAND_PATH null null null >> tc.data
+                  else
+                     echo $HOST $NAME $COMMAND null null null >> tc.data
+                  fi
               done
            fi
 

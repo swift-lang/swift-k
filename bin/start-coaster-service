@@ -274,7 +274,7 @@ start-workers-condor()
 cat <<EOF > start_workers.submit
 output = workers.stdout
 error = workers.stderr
-initialdir = $PWD 
+#initialdir = \$PWD 
 executable = $SWIFT_BIN/$WORKER
 arguments = $EXECUTION_URL node .
 notification = Never
@@ -282,8 +282,12 @@ leave_in_queue = TRUE
 queue $CONDOR_WORKERS
 EOF
 
-   condor_submit start_workers.submit
-   return 0
+   if [ -n "$WORKER_RELAY_HOST" ]; then
+      scp start_workers.submit $WORKER_USERNAME@$WORKER_RELAY_HOST:
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "condor_submit start_workers.submit"
+   else
+      condor_submit start_workers.submit
+   fi
 }
 
 # Start GWMS workers
@@ -301,8 +305,13 @@ start-workers-gwms()
    fi
 
    echo Starting workers   
-   mkdir -p condor
-   run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS 
+   if [ -n "$WORKER_RELAY_HOST" ]; then
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "mkdir -p condor"
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS" 
+   else
+      mkdir -p condor
+      run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS
+   fi
 }
 
 # Start cobalt workers

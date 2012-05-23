@@ -257,7 +257,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		if(logger.isDebugEnabled()) {
 			logger.debug("Finish list existing paths for mapper "+this.hashCode()+" list="+result);
 		}
-		System.out.println(getVarName() + " (input): found " + result.size() + " files");
+		// System.out.println(getVarName() + " (input): found " + result.size() + " files");
 		return result;
 	}
 

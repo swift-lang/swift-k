@@ -61,7 +61,11 @@ if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
 fi
 
 if [ "$WORKER_MODE" == "condor" ] || [ "$WORKER_MODE" == "gwms" ]; then
-   condor_rm $USER
+   if [ -n "$WORKER_RELAY_HOST" ]; then
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "condor_rm $USER"    
+   else
+     condor_rm $USER
+   fi
 fi
 
 if [ -f "$HOME/.swift/machines" ]; then
