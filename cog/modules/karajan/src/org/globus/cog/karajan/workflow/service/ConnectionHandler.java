@@ -40,7 +40,7 @@ public class ConnectionHandler {
 	    this.requestManager = requestManager == null ? new ServiceRequestManager() : requestManager;
 		this.socket = socket;
 		
-		if (socket instanceof GssSocket) {			
+		if (socket instanceof GssSocket) {
 			channel = new GSSChannel((GssSocket) socket, this.requestManager, new ChannelContext(service));
 		}
 		else {

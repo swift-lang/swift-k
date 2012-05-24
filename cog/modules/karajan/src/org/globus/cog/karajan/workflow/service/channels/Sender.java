@@ -60,6 +60,9 @@ class Sender extends Thread {
 				}
 				
 				try {
+					if (logger.isDebugEnabled()) {
+						logger.debug("send channel: " + e.channel + ", tag: " + e.tag + ", flags: " + e.flags + ", len: " + e.data.length);
+					}
 					send(e.tag, e.flags, e.data, e.channel.getOutputStream());
 					if (e.cb != null) {
 						e.cb.dataSent();

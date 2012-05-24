@@ -62,7 +62,7 @@ public abstract class GroupHandler extends RequestHandler {
 			// sub-commands
 			if (crtHandler == null) {
 				try {
-					crtHandler = this.getChannel().getRequestManager().handleInitialRequest(data);
+					crtHandler = this.getChannel().getRequestManager().handleInitialRequest(getId(), data);
 					crtHandler.register(getChannel());
 					crtHandler.setId(membertags[index++]);
 				}

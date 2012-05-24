@@ -98,4 +98,8 @@ public interface KarajanChannel {
 	void flush() throws IOException;
 	
 	SelectableChannel getNIOChannel();
+
+	void ignoreRequest(RequestHandler h, int timeout);
+	
+	boolean handleChannelException(Exception e);		
 }

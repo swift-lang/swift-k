@@ -12,8 +12,8 @@ package org.globus.cog.karajan.workflow.service;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
 public interface RequestManager {
-	RequestHandler handleInitialRequest(byte[] data)
+	RequestHandler handleInitialRequest(int tag, byte[] data)
 			throws NoSuchHandlerException;
 	
-	void addHandler(String name, Class cls);
+	void addHandler(String name, Class<? extends RequestHandler> cls);
 }

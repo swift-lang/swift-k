@@ -9,9 +9,30 @@
  */
 package org.globus.cog.karajan.workflow.service;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+
 public class TimeoutException extends ProtocolException {
 	private static final long serialVersionUID = -6781619140427115780L;
 
+	public static final DateFormat DF = new SimpleDateFormat("yyMMdd-HHmmss.SSS");
+	
+	public TimeoutException(Command c, String msg) {
+	    super(c + " " + msg + ". sendReqTime="
+                    + DF.format(new Date(c.getSendReqTime())) + ", lastSendTime=" + DF.format(new Date(c.getSendTime()))
+                    + ", now=" + DF.format(new Date()) + ", channel=" + c.getChannel());
+    }
+	
+	public TimeoutException(RequestHandler h, String msg) {
+        super(h + " " + msg + ". lastTime="
+                    + DF.format(new Date(h.getLastTime()))
+                    + ", now=" + DF.format(new Date()) + ", channel=" + h.getChannel());
+    }
+	
 	public TimeoutException() {
 		super();
 	}

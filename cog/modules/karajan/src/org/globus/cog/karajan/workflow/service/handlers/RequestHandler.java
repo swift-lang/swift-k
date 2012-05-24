@@ -45,8 +45,8 @@ public abstract class RequestHandler extends RequestReply {
 		return replySent;
 	}
 	
-	protected void unregister() {
-		this.getChannel().unregisterHandler(this.getId());
+	protected synchronized void unregister() {
+    	this.getChannel().unregisterHandler(this.getId());
 	}
 	
 	public void dataReceived(boolean fin, boolean error, byte[] data) throws ProtocolException {
@@ -59,7 +59,7 @@ public abstract class RequestHandler extends RequestReply {
 		}
 	}
 	
-	public void send(boolean err) throws ProtocolException {
+	public void send(boolean err) throws ProtocolException {   
 		KarajanChannel channel = getChannel();
 		Collection<byte[]> outData = getOutData();
 		if (channel == null) {
@@ -76,6 +76,10 @@ public abstract class RequestHandler extends RequestReply {
 				channel.sendTaggedReply(getId(), buf, !i.hasNext(), err);
 			}
 		}
+		if (logger.isInfoEnabled()) {
+			logger.info(this + " unregistering (send)");
+		}
+		unregister();
 	}
 
 	public final void receiveCompleted() {
@@ -97,7 +101,11 @@ public abstract class RequestHandler extends RequestReply {
 	}
 
 	public void errorReceived(String msg, Exception t) {
-		logger.warn(msg, t);
+		logger.info(msg, t);
+		if (logger.isInfoEnabled()) {
+			logger.info(this + " unregister (errorReceived)");
+		}
+		unregister();
 	}
 	
 	protected String ppOutData(String prefix) {
@@ -109,7 +117,7 @@ public abstract class RequestHandler extends RequestReply {
 	}
 
 	public String toString() {
-		return "Handler(" + getId() + ", " + getInCmd() + ")";
+		return "Handler(tag: " + getId() + ", " + getInCmd() + ")";
 	}
 
 	public void handleTimeout() {
@@ -117,10 +125,8 @@ public abstract class RequestHandler extends RequestReply {
 			return;
 		}
 		setLastTime(Long.MAX_VALUE);
-		getChannel().unregisterHandler(getId());
-		String msg = this + ": timed out receiving request. Last time "
-				+ DF.format(new Date(getLastTime())) + ", now: " + DF.format(new Date());
-		logger.info(msg);
-		errorReceived("Timeout", new TimeoutException(msg));
+		TimeoutException t = new TimeoutException(this, "Timed out receiving request");
+		logger.info(t.getMessage());
+		errorReceived(t.getMessage(), t);
 	}
 }

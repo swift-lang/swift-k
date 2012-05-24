@@ -47,8 +47,6 @@ public abstract class RequestReply {
 	private boolean inDataReceived;
 	private KarajanChannel channel;
 	private long lastTime = Long.MAX_VALUE;
-	
-	public static final DateFormat DF = new SimpleDateFormat("yyMMdd-HHmmss.SSS");
 
 	// private static final byte[] NO_EXCEPTION = new byte[0];
 
@@ -68,6 +66,9 @@ public abstract class RequestReply {
 		this.outCmd = outCmd;
 	}
 	 
+	/**
+	 * @deprecated Use setChannel
+	 */
 	public void register(KarajanChannel channel) {
 		this.channel = channel;
 	}
@@ -118,6 +119,7 @@ public abstract class RequestReply {
 	}
 
 	public void sendError(String error, Throwable e) throws ProtocolException {
+	    logger.info(this + " sending error: " + error, e);
 		if (error == null) {
 			if (e == null) {
 				error = "No message available";
@@ -270,7 +272,7 @@ public abstract class RequestReply {
 		return channel;
 	}
 
-	protected void setChannel(KarajanChannel channel) {
+	public void setChannel(KarajanChannel channel) {
 		this.channel = channel;
 	}
 
@@ -284,7 +286,7 @@ public abstract class RequestReply {
 		String msg = null;
 		Exception exception = null;
 		List<byte[]> data = getInDataChunks();
-		if (data.size() > 0) {
+		if (data != null && data.size() > 0) {
 			msg = new String(data.get(0));
 			if (data.size() > 1) {
 				String ex = new String(data.get(1));

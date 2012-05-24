@@ -74,17 +74,6 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 
 	protected abstract void reconnect() throws ChannelException;
 
-	protected synchronized boolean handleChannelException(Exception e) {
-		logger.info("Channel config: " + getChannelContext().getConfiguration());
-		if (!ChannelManager.getManager().handleChannelException(this, e)) {
-			close();
-			return false;
-		}
-		else {
-		    return true;
-		}
-	}
-
 	protected void configure() throws Exception {
 		URI callbackURI = null;
 		ChannelContext sc = getChannelContext();
@@ -99,7 +88,7 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 		logger.info("Channel configured");
 	}
 
-	public synchronized void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
+	public void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
 		if (getNIOChannel() != null) {
 			getNIOSender(this).enqueue(tag, flags, data, this, cb);
 		}
@@ -137,6 +126,9 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 					return true;
 				}
 				csum = unpack(rhdr, 16);
+				if (logger.isDebugEnabled()) {
+                    logger.debug("recv channel: "+ this + ", tag: " + tag + ", flags: " + flags + ", len: " + len);
+                }
 				if (len > 1048576) {
 					logger.warn("Big len: " + len + " (tag: " + tag + ", flags: " + flags + ")");
 					data = new byte[1024];
@@ -196,8 +188,8 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				flags = unpack(rhdr, 4);
 				len = unpack(rhdr, 8);
 				hcsum = unpack(rhdr, 12);
-				if (logger.isInfoEnabled()) {
-					logger.info(this + ", tag: " + tag + ", flags: " + flags + ", len: " + len);
+				if (logger.isDebugEnabled()) {
+					logger.debug("NIOrecv channel: "+ this + ", tag: " + tag + ", flags: " + flags + ", len: " + len);
 				}
 				if ((tag ^ flags ^ len) != hcsum) {
 					logger.warn("(NIO) Header checksum failed. Computed checksum: " + 

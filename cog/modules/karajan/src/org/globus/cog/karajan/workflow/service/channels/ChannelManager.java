@@ -264,7 +264,7 @@ public class ChannelManager {
 	 * exception
 	 */
 	public boolean handleChannelException(KarajanChannel channel, Exception e) {
-		logger.info("Handling channel exception", e == null ? new Throwable() : e);
+		logger.info(channel + " handling channel exception", e == null ? new Throwable() : e);
 		if (channel.isOffline()) {
 			logger.info("Channel already shut down");
 			return false;

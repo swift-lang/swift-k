@@ -123,6 +123,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	protected void checkTimeouts() {
 	    checkTimeouts(context.getActiveCommands());
 	    checkTimeouts(context.getActiveHandlers());
+	    getChannelContext().removeOldIgnoredRequests();
 	}
 	
 	private void checkTimeouts(Collection<? extends RequestReply> l) {
@@ -145,7 +146,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	public void registerCommand(Command cmd) throws ProtocolException {
 		context.registerCommand(cmd);
-		cmd.register(this);
+		cmd.setChannel(this);
 	}
 
 	public void unregisterCommand(Command cmd) {
@@ -157,7 +158,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 
 	public void registerHandler(RequestHandler handler, int tag) {
 		context.registerHandler(handler, tag);
-		handler.register(this);
+		handler.setChannel(this);
 	}
 
 	public void unregisterHandler(int tag) {
@@ -452,8 +453,10 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		boolean fin = finalFlagIsSet(flags);
 		boolean err = errorFlagIsSet(flags);
 		try {
+		    boolean signal = false;
 			if (handler != null) {
 				if (flagIsSet(flags, SIGNAL_FLAG)) {
+				    signal = true;
 					handler.handleSignal(data);
 				}
 				else {
@@ -462,20 +465,35 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			}
 			else {
 				if (flagIsSet(flags, SIGNAL_FLAG)) {
-					logger.warn("Got signal for unregistered tag (" + tag + "): " + new String(data));
+				    /*
+				     *  since signals are not part of the normal flow,
+				     *  they can arrive after a handler's lifecycle has terminated.
+				     *  Since signals are supposed to alter the behavior of a handler,
+				     *  but are time-sensitive, the arrival of a signal after
+				     *  a handler has sent all the data can have no consequence
+				     *  (whether handled or not).
+				     *  
+				     *  Long story short, signals with no registered handler are fine to discard.
+				     */
+				    if (logger.isInfoEnabled()) {
+				    	logger.info("Got signal for unregistered tag (" + tag + "): " + new String(data));
+				    	logger.info("Registered handlers: " + getChannelContext().getActiveHandlers());
+				    }
 					return;
 				}
 				try {
-					handler = getRequestManager().handleInitialRequest(data);
+					handler = getRequestManager().handleInitialRequest(tag, data);
 					handler.setId(tag);
 					registerHandler(handler, tag);
 				}
 				catch (NoSuchHandlerException e) {
-					logger.warn(getName() + "Could not handle request", e);
+					if (!getChannelContext().isIgnoredRequest(tag)) {
+						logger.warn(getName() + "Could not handle request", e);
+					}
 				}
 
 			}
-			if (fin) {
+			if (fin && !signal) {
 				try {
 					if (logger.isDebugEnabled()) {
 						logger.debug(this + " REQ: " + handler);
@@ -504,20 +522,15 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 					}
 					throw e;
 				}
-				finally {
-					if (handler != null) {
-						unregisterHandler(tag);
-					}
-				}
 			}
 		}
 		catch (ProtocolException e) {
-			unregisterHandler(tag);
 			logger.warn(e);
+			unregisterHandler(tag);
 		}
 		catch (Exception e) {
+			logger.warn("Unhandled exception in handler processing code (tag: " + tag + ")", e);
 			unregisterHandler(tag);
-			logger.warn("Unhandled exception in handler processing code", e);
 		}
 	}
 
@@ -528,4 +541,20 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	public SelectableChannel getNIOChannel() {
 		return null;
 	}
+
+	@Override
+	public void ignoreRequest(RequestHandler h, int timeout) {
+		getChannelContext().ignoreRequest(h.getId(), timeout);
+	}
+
+	public synchronized boolean handleChannelException(Exception e) {
+        logger.info("Channel config: " + getChannelContext().getConfiguration());
+        if (!ChannelManager.getManager().handleChannelException(this, e)) {
+            close();
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
 }

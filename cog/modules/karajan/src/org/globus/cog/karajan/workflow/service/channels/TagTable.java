@@ -9,8 +9,10 @@
  */
 package org.globus.cog.karajan.workflow.service.channels;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TagTable<T> {
@@ -47,8 +49,24 @@ public class TagTable<T> {
 		return map.values();
 	}
 	
+	public Collection<Integer> keys() {
+		List<Integer> l = new ArrayList<Integer>();
+		for (MutableInteger i : map.keySet()) {
+			l.add(i.getValue());
+		}
+		return l;
+	}
+	
+	public boolean isEmpty() {
+		return map.isEmpty();
+	}
+	
 	public String toString() {
 		return map.toString();
+	}
+	
+	public void clear() {
+	    map.clear();
 	}
 	
 	private static class MutableInteger {
@@ -62,7 +80,6 @@ public class TagTable<T> {
 			this.value = value;
 		}
 		
-		@SuppressWarnings("unused")
 		public int getValue() {
 			return value;
 		}
@@ -86,5 +103,4 @@ public class TagTable<T> {
 		    return String.valueOf(value);
 		}
 	}
-
 }
