@@ -43,8 +43,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     private int lastseq;
     protected long busyTime, idleTime, lastTime;
 	private boolean shutdown;
+	private int failedJobs, completedJobs;
 	
-	public static volatile int completedJobs, failedJobs;
+	public static volatile int totalCompletedJobs, totalFailedJobs;
 
     public Cpu() {
         this.done = new ArrayList<Job>();
@@ -73,6 +74,14 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         timeDiff();
         pullLater();
     }
+    
+    public double getQuality() {
+        int failed = failedJobs;
+        if (failed < 0) {
+            failed = 0;
+        }
+        return (double) (completedJobs + 1) / (failed + 1);
+    }
 
     private long timeDiff() {
         long now = System.currentTimeMillis();
@@ -82,7 +91,6 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public synchronized void jobTerminated() {
-    	completedJobs++;
         if (logger.isInfoEnabled()) {
             logger.info(block.getId() + ":" + getId() + " jobTerminated");
         }
@@ -249,7 +257,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         if (logger.isInfoEnabled()) {
             JobSpecification spec =
                 (JobSpecification) task.getSpecification();
-            logger.info(block.getId() + ":" + getId() +
+            logger.info(block.getId() + ":" + getId() + " (quality: " + getQuality() + ")" + 
                 " submitting " + task.getIdentity() + ": " +
                 spec.getExecutable() + " " + spec.getArguments());
         }
@@ -322,7 +330,6 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
 
     public synchronized void taskFailed(String msg, Exception e) {
 		shutdown = true;
-		failedJobs++;
         if (running == null) {
             if (starttime == null) {
                 starttime = Time.now();
@@ -359,6 +366,14 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
          if (event.getStatus().isTerminal()) {
              running.getTask().removeStatusListener(this);
              running.setEndTime(Time.now());
+             if (event.getStatus().getStatusCode() == Status.FAILED) {
+                 failedJobs++;
+                 totalFailedJobs++;
+             }
+             else {
+                 completedJobs++;
+                 totalCompletedJobs++;
+             }
              jobTerminated();
          }
     }

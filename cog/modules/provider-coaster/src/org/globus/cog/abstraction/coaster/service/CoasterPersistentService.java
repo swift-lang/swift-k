@@ -18,11 +18,6 @@ import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.coaster.service.job.manager.Block;
-import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
-import org.globus.cog.abstraction.coaster.service.job.manager.Cpu;
-import org.globus.cog.karajan.workflow.service.channels.PerformanceDiagnosticInputStream;
-import org.globus.cog.karajan.workflow.service.channels.PerformanceDiagnosticOutputStream;
 import org.globus.cog.karajan.workflow.service.channels.Timer;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
@@ -38,11 +33,13 @@ import org.ietf.jgss.GSSException;
 public class CoasterPersistentService extends CoasterService {
     public static final Logger logger = Logger.getLogger(CoasterPersistentService.class);
     
-    private static boolean stats;
+    private static boolean stats, passive;
 
     public CoasterPersistentService() throws IOException {
         super(false);
     }
+    
+    private static CPSStatusDisplay statusDisplay;
 
     public CoasterPersistentService(GSSCredential cred, int port, InetAddress bindTo)
             throws IOException {
@@ -160,6 +157,7 @@ public class CoasterPersistentService extends CoasterService {
             s.setIgnoreIdleTime(true);
             if (ap.isPresent("passive")) {
                 s.setDefaultQP("passive");
+                passive = true;
             }
             else {
                 s.setDefaultQP("block");
@@ -169,12 +167,12 @@ public class CoasterPersistentService extends CoasterService {
             System.out.println("Started coaster service: " + s);
             System.out.println("Worker connection URL: " + s.getLocalService().getContact());
             if (ap.isPresent("stats")) {
-            	stats = true;
             	disableConsoleLogging();
-            	initScreen();
+            	statusDisplay = new CPSStatusDisplay(passive);
+            	statusDisplay.initScreen();
                 Timer.every(1000, new Runnable() {
                     public void run() {
-                    	printStats(s);
+                    	statusDisplay.printStats(s);
                     }
                 });
             }
@@ -225,107 +223,14 @@ public class CoasterPersistentService extends CoasterService {
         return null;
     }
 
-    private static final String CLS = ((char) (27)) + "[2J";
-    private static final String HIDE_CURSOR = ((char) (27)) + "[?25l";
-    private static final String SHOW_CURSOR = ((char) (27)) + "[?25h";
-    private static final String HOME = ((char) (27)) + "[0;0f";
-    private static final String BOLD = ((char) (27)) + "[01m";
-    private static final String REVERSE = ((char) (27)) + "[07m";
-    private static final String NORMAL = ((char) (27)) + "[00m";
     
-    private static void initScreen() {
-    	System.out.print(HIDE_CURSOR);
-    	System.out.print(CLS);
-    }
-    
-    private static void printStats(CoasterService s) {
-    	Runtime r = Runtime.getRuntime();
-    	System.out.print(HOME);
-    	header(1, "Coaster Service");
-    	tabbed(1, "URL ", 30, s);
-    	tabbed(1, "Worker connect URL ", 30, s.getLocalService().getContact());
-    	header(2, "Workers", 16, "Requested", 32, "Active", 48, "Completed", 64, "Failed");
-    	tabbed(0, "", 16, Block.requestedWorkers, 32, Block.activeWorkers, 48, Block.completedWorkers, 64, Block.failedWorkers);
-    	
-    	header(2, "Jobs", 16, "Queued", 32, "Active", 48, "Completed", 64, "Failed");
-    	tabbed(0, "", 16, BlockQueueProcessor.queuedJobs, 32, BlockQueueProcessor.runningJobs, 48, Cpu.completedJobs, 64, Cpu.failedJobs);
-    	
-    	header(2, "Heap", 20, "Max", 40, "Used", 60, "Free");
-    	tabbed(0, "",
-    		   20, PerformanceDiagnosticInputStream.units(r.maxMemory()) + "B",
-    		   40, PerformanceDiagnosticInputStream.units(r.totalMemory() - r.freeMemory()) + "B",
-    		   60, PerformanceDiagnosticInputStream.units(r.freeMemory()) + "B");
-    	
-    	header(2, "I/O", 20, "Total", 40, "Current", 60, "Average");
-    	tabbed(2, "Read ",
-    		   20, PerformanceDiagnosticInputStream.getTotal() + "B", 
-    		   40, PerformanceDiagnosticInputStream.getCurrentRate() + "B/s", 
-    		   60, PerformanceDiagnosticInputStream.getAverageRate() + "B/s");
-    	tabbed(2, "Write ",
-               20, PerformanceDiagnosticOutputStream.getTotal() + "B", 
-               40, PerformanceDiagnosticOutputStream.getCurrentRate() + "B/s", 
-               60, PerformanceDiagnosticOutputStream.getAverageRate() + "B/s");
-    	System.out.println();
-    }
-    
-    private static void spaces(int len) {
-    	for (int i = 0; i < len; i++) {
-            System.out.print(' ');
-        }
-    }
-    
-    private static void header(Object... p) {
-    	spaces(80);
-    	System.out.println();
-    	System.out.print(REVERSE);
-    	spaces(80);
-    	System.out.print(NORMAL);
-    	System.out.println();
-    	_tabbed(REVERSE, NORMAL, REVERSE, p);
-    	spaces(80);
-        System.out.println();
-    }
-    
-    private static void tabbed(Object... p) {
-        _tabbed(NORMAL, BOLD, NORMAL, p);
-    }
-    
-    private static void _tabbed(String beforeSpace, String beforeFirst, String beforeItem, Object... p) {
-        int index = 0;
-        int crt = 0;
-        while (index < p.length) {
-        	int nextPos = (Integer) p[index];
-        	System.out.print(beforeSpace);
-        	spaces(nextPos - crt);
-        	crt = nextPos;
-            
-            String msg = String.valueOf(p[index + 1]);
-            if (index == 0) {
-                System.out.print(beforeFirst);
-            }
-            else {
-            	System.out.print(beforeItem);
-            }
-            System.out.print(" ");
-            System.out.print(msg);
-            System.out.print(" ");
-            crt += msg.length() + 2;
-            System.out.print(beforeSpace);
-            index += 2;
-        }
-        
-        spaces(80 - crt);
-        
-        System.out.print(NORMAL);
-        System.out.println();
-    }
-
     private static void addShutdownHook(final CoasterPersistentService s) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
             	if (stats) {
-            		System.out.print(SHOW_CURSOR);
-            		System.out.print(CLS);
+            		if (statusDisplay != null) {
+            			statusDisplay.close();
+            		}           		
             	}
                 System.out.println("Shutting down service...");
                 s.shutdown();

@@ -201,5 +201,13 @@ public class CoGResourceIOProvider implements IOProvider {
         public void abort() throws IOException {
             close();
         }
+        
+        public void resume() {
+            // TODO
+        }
+
+        public void suspend() {
+            // TODO
+        }
     }
 }

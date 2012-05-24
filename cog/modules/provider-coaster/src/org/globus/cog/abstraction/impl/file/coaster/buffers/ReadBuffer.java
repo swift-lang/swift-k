@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 
 
 
-public abstract class ReadBuffer extends Buffer {
+public abstract class ReadBuffer extends Buffer implements BufferOwner {
     public static final Logger logger = Logger.getLogger(ReadBuffer.class);
     
     private final ReadBufferCallback cb;
@@ -28,6 +28,7 @@ public abstract class ReadBuffer extends Buffer {
     protected long read;
     protected long size;
     protected List<Buffers.Allocation> allocs;
+    private boolean suspended;
 
     protected ReadBuffer(Buffers buffers, ReadBufferCallback cb, long size) {
         super(buffers);
@@ -55,7 +56,11 @@ public abstract class ReadBuffer extends Buffer {
             // which also happens to happen in the I/O thread
             empty.add(null);
         }
-        if (requestFill() == nbuf) {
+        int queuedBuffers = requestFill();
+        if (logger.isInfoEnabled()) {
+        	logger.info("Actual allocated buffers " + (nbuf - queuedBuffers));
+        }
+        if (queuedBuffers == nbuf) {
             // all buffers are queued
             cb.queued();
         }
@@ -67,11 +72,14 @@ public abstract class ReadBuffer extends Buffer {
             b = full.removeFirst();
             b.clear();
         }
-        buffers.queueRequest(false, b, this);
+        buffers.queueRequest(false, b, this, this);
         requestFill();
     }
 
     protected int requestFill() {
+    	if (suspended) {
+    		return 0;
+    	}
         int queued = 0;
         synchronized (empty) {
             while (!empty.isEmpty() && read < size) {
@@ -79,7 +87,7 @@ public abstract class ReadBuffer extends Buffer {
                 if (buf != null) {
                     buf.clear();
                 }
-                if (buffers.queueRequest(false, buf, this)) {
+                if (buffers.queueRequest(false, buf, this, this)) {
                     queued++;
                 }
             }
@@ -102,24 +110,42 @@ public abstract class ReadBuffer extends Buffer {
         getCallback().dataRead(read == size, buf);
     }
     
-    protected void bufferCreated(Buffers.Allocation a) {
+    protected synchronized void bufferCreated(Buffers.Allocation a) {
         if (logger.isDebugEnabled()) {
             logger.debug("buffer created");
         }
         allocs.add(a);
     }
     
-    protected void deallocateBuffers() {
+    protected synchronized void deallocateBuffers() {
         if (logger.isInfoEnabled()) {
             logger.info("De-allocating " + allocs.size() + " buffers");
         }
         for (Buffers.Allocation a : allocs) {
             buffers.free(a);
         }
+        allocs.clear();
     }
     
     public void close() throws IOException {
         super.close();
         deallocateBuffers();
+    }
+
+    public String getName() {
+        return "RB-" + cb;
+    }
+
+    public boolean isAlive() {
+        return true;
+    }
+
+    public void resume() {
+    	suspended = false;
+    	requestFill();
+    }
+
+    public void suspend() {
+    	suspended = true;
     }
 }

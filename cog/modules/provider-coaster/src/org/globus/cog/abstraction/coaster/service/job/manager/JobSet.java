@@ -61,4 +61,8 @@ public class JobSet implements Iterable<Job> {
     public Iterator<Job> iterator() {
         return jobs.iterator();
     }
+    
+    public int size() {
+        return jobs.size();
+    }
 }

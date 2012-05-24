@@ -28,7 +28,7 @@ public class TCPBufferManager {
     
     public static final int K = 1024;
     public static final int M = K*K;
-    public static final int MAX_COMBINED_BUFFER_SIZES = 2 * M;
+    public static final int MAX_COMBINED_BUFFER_SIZES = 32 * M;
     public static final int MIN_COMBINED_BUFFER_SIZES = 1 * M;
     public static final int MIN_BUFFER_SIZE = 16 * K;
     public static final int BUFFER_SIZE_GRANULARITY = 1 * K;
@@ -94,7 +94,7 @@ public class TCPBufferManager {
                     crtSocketBuffSz = MIN_BUFFER_SIZE;
                 }
                 if (logger.isInfoEnabled()) {
-                    logger.info("Adjusting buffer size to " + crtSocketBuffSz);
+                    logger.info("Adjusting buffer size to " + crtSocketBuffSz + " for " + sockets.size() + " sockets");
                 }
                 updateBufferSizes();
             }

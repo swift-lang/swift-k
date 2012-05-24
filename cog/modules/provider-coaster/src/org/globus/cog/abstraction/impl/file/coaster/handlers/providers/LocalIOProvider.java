@@ -95,16 +95,16 @@ public class LocalIOProvider implements IOProvider {
         }
 
         public void write(boolean last, byte[] data) throws IOException {
+            crt += data.length;
+            if (last && crt != len) {
+                throw new IOException(" File size mismatch. Expected " + len + " bytes, got "
+                        + crt);
+            }
             try {
                 buf.write(last, data);
             }
             catch (InterruptedException e) {
                 throw new IOException("Interrupted!");
-            }
-            crt += data.length;
-            if (last && crt != len) {
-                throw new IOException("File size mismatch. Expected " + len + " bytes, got "
-                        + crt);
             }
         }
 
@@ -202,16 +202,18 @@ public class LocalIOProvider implements IOProvider {
 
         public void close() {
             closeBuffer();
-            try {
-                fc.close();
-            }
-            catch (IOException e) {
-                logger.warn("Failed to close file channel", e);
-            }
         }
 
         public void abort() throws IOException {
             close();
+        }
+
+        public void resume() {
+        	rbuf.resume();
+        }
+
+        public void suspend() {
+        	rbuf.suspend();
         }
     }
 }

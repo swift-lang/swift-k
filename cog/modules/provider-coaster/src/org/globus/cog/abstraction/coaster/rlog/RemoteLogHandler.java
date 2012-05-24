@@ -37,10 +37,14 @@ public class RemoteLogHandler extends RequestHandler {
                 logger.warn(msg);
                 break;
             case INFO:
-                logger.info(msg);
+            	if (logger.isInfoEnabled()) {
+            	    logger.info(msg);
+            	}
                 break;
             case DEBUG:
-                logger.debug(msg);
+            	if (logger.isDebugEnabled()) {
+            	    logger.debug(msg);
+            	}
                 break;
         }
         sendReply("OK");

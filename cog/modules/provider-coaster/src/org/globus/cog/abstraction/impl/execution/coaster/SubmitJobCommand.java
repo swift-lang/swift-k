@@ -23,6 +23,7 @@ import java.util.zip.DeflaterOutputStream;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.SubmitJobHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
@@ -103,7 +104,10 @@ public class SubmitJobCommand extends Command {
             add(sb, "env", 
                 name + "=" + spec.getEnvironmentVariable(name));
     
-        if (!simple) {
+        if (simple) {
+        	add(sb, "attr", "maxwalltime=" + formatWalltime(spec.getAttribute("maxwalltime")));
+        }
+        else {
             for (String name : spec.getAttributeNames())
                 if (!IGNORED_ATTRIBUTES.contains(name) || 
                         spec.isBatchJob())
@@ -154,6 +158,15 @@ public class SubmitJobCommand extends Command {
         	bytes = baos.toByteArray();
         }
         addOutData(bytes);
+    }
+
+    private String formatWalltime(Object value) {
+        if (value == null) {
+        	return "600";
+        }
+        else {
+        	return String.valueOf(new WallTime(value.toString()).getSeconds());
+        }
     }
 
     private String absolutize(String file) throws IOException {

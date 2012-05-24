@@ -62,7 +62,7 @@ public class Block implements StatusListener, Comparable<Block> {
 
     private static final NumberFormat IDF = new DecimalFormat("000000");
     
-    public static volatile int requestedWorkers, activeWorkers, failedWorkers, completedWorkers;
+    public static volatile int requestedWorkers, activeWorkers, failedWorkers, completedWorkers, completedJobs;
 
     public Block(String id) {
         this.id = id;
@@ -403,6 +403,10 @@ public class Block implements StatusListener, Comparable<Block> {
     public String toString() {
         return "Block " + id + " (" + workers + "x" + walltime + ")";
     }
+    
+    public List<Node> getNodes(){
+        return nodes;
+    }
 
     public void statusChanged(StatusEvent event) {
         if (logger.isInfoEnabled()) {
@@ -424,10 +428,13 @@ public class Block implements StatusListener, Comparable<Block> {
                                     + prettifyOut(task.getStdOutput())
                                     + prettifyOut(task.getStdError()), null);
                         }
+                        failedWorkers += workers;
+                    }
+                    else {
+                        completedWorkers += workers;
                     }
                     bqp.blockTaskFinished(this);
                     activeWorkers -= workers;
-                    completedWorkers += workers;
                     running = false;
                     task = null;
                 }
@@ -493,6 +500,10 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public void increaseDoneJobCount() {
         doneJobCount++;
+    }
+    
+    public int getDoneJobCount() {
+        return doneJobCount;
     }
 
     public void suspend() {

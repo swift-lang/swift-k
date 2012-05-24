@@ -237,7 +237,7 @@ public class ServiceManager implements StatusListener {
                     KarajanChannel channel =
                             ChannelManager.getManager().getExistingChannel(url, cred);
                     if (channel != null) {
-                        channel.getChannelContext().notifyRegisteredListeners(
+                        channel.getChannelContext().notifyRegisteredCommandsAndHandlers(
                             new IrrecoverableException(msg));
                         channel.close();
                     }

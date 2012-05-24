@@ -152,11 +152,15 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
         catch (ProtocolException e) {
             logger.warn("Failed to send reply", e);
         }
+        catch (Exception e) {
+            logger.warn("Failed to send reply", e);
+        }
     }
 
     public void error(IOHandle op, Exception e) {
         try {
-        	logger.warn("Failed to write file data", e);
+        	logger.info("Failed to write file data", e);
+        	getChannel().ignoreRequest(this, 60 * 1000);
             sendError("Failed to write file data: " + e.getMessage());
         }
         catch (ProtocolException ee) {
@@ -179,6 +183,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
                 logger.warn("Failed to abort transfer", ee);
             }
         }
+        this.getChannel().ignoreRequest(this, 60 * 1000);
         super.sendError(error, e);
     }
 
@@ -193,7 +198,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
             }
         }
         ThrottleManager.getDefault(Direction.OUT).unregister(this);
-        super.errorReceived(msg, t);
+        unregister();
     }
 
     @Override

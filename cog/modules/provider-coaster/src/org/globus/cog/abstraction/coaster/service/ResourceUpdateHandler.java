@@ -9,16 +9,25 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.LocalService;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 
-public class ResourceUpdateHandler extends RequestHandler {
+public class ResourceUpdateHandler extends RequestHandler { 
+    public static Logger logger = Logger.getLogger(ResourceUpdateHandler.class);
+    
     @Override
     public void requestComplete() throws ProtocolException {
         LocalService ls = (LocalService) getChannel().getChannelContext().getService();
-        ls.resourceUpdated(getChannel().getChannelContext(), 
-            getInDataAsString(0), getInDataAsString(1));
+        if (ls == null) {
+            // getting this on a client channel, so just log this
+            logger.info(getInDataAsString(0) + ": " + getInDataAsString(1));
+        }
+        else {
+            ls.resourceUpdated(getChannel().getChannelContext(), 
+                getInDataAsString(0), getInDataAsString(1));
+        }
         sendReply("OK");
     }
 }

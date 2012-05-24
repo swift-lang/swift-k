@@ -43,7 +43,9 @@ public class Node implements Callback, ChannelListener {
         Settings settings = block.getAllocationProcessor().getSettings();
         cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
 
-        logger.debug("new: " + this);
+        if (logger.isDebugEnabled()) {
+            logger.debug("new: " + this);
+        }
     }
 
     @Deprecated
@@ -82,7 +84,7 @@ public class Node implements Callback, ChannelListener {
             }
         }
         try {
-            KarajanChannel channel = ChannelManager.getManager().reserveChannel(channelContext);
+            KarajanChannel channel = getChannel();
             ChannelManager.getManager().reserveLongTerm(channel);
             ShutdownCommand cmd = new ShutdownCommand();
             cmd.executeAsync(channel, this);
@@ -101,7 +103,7 @@ public class Node implements Callback, ChannelListener {
     public void replyReceived(Command cmd) {
         logger.info(this + " shut down successfully");
         try {
-            KarajanChannel channel = ChannelManager.getManager().reserveChannel(channelContext);
+        	getChannel().close();
             channel.close();
             ChannelManager.getManager().removeChannel(channelContext);
         }
@@ -149,11 +151,13 @@ public class Node implements Callback, ChannelListener {
             // even if the workers do re-establish the connection, since the current
             // strategy is to fail the jobs they were running when the connection was lost,
             // treating them as entirely new workers should be just peachy 
-            ChannelManager.getManager().removeChannel(channel.getChannelContext());
+            ChannelManager.getManager().removeChannel(channelContext);
         }
         catch (ChannelException ee) {
             logger.warn("Failed to remove channel", ee);
         }
         getBlock().removeNode(this);
+        Block.activeWorkers -= getBlock().getWorkerCount();
+        Block.failedWorkers += getBlock().getWorkerCount();
     }
 }

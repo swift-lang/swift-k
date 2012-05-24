@@ -114,6 +114,13 @@ public class GetFileCommand extends Command implements WriteBufferCallback {
             return super.getLastTime();
         }
     }
+    
+    public void errorReceived(String msg, Exception t) {
+    	if (logger.isInfoEnabled()) {
+    		logger.info(this + " Error received: " + msg, t);
+    	}
+    	super.errorReceived(msg, t);
+    }
 
     public void error(boolean last, Exception e) {
     	this.errorReceived("Failed to write file data", e);
