@@ -9,7 +9,7 @@
  */
 package org.globus.cog.karajan.workflow.service;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -19,27 +19,29 @@ import org.globus.cog.karajan.workflow.service.handlers.UnknownCommandHandler;
 public abstract class AbstractRequestManager implements RequestManager {
     public static final Logger logger = Logger.getLogger(AbstractRequestManager.class);
     
-	private final Map handlers;
+	private final Map<String, Class<? extends RequestHandler>> handlers;
 
 	public AbstractRequestManager() {
-		handlers = new Hashtable();
+		handlers = new HashMap<String, Class<? extends RequestHandler>>();
 	}
 
-	public void addHandler(String cmd, Class cls) {
+	public void addHandler(String cmd, Class<? extends RequestHandler> cls) {
 		handlers.put(cmd, cls);
 	}
 
-	public RequestHandler handleInitialRequest(byte[] data) throws NoSuchHandlerException {
+	public RequestHandler handleInitialRequest(int tag, byte[] data) throws NoSuchHandlerException {
 		String cmd = new String(data).toUpperCase();
-		Class handlerClass = (Class) handlers.get(cmd);
+		Class<? extends RequestHandler> handlerClass = handlers.get(cmd);
 		RequestHandler handler;
 		if (handlerClass == null) {
-			logger.warn(getClass().getSimpleName() + ": unknown handler: " + cmd + ". Available handlers: " + handlers);
+			logger.warn(getClass().getSimpleName() 
+					+ ": unknown handler(tag: " + tag + ", cmd: " 
+					+ truncate(cmd) + "). Available handlers: " + handlers);
 			handler = new UnknownCommandHandler();
 		}
 		else {
 			try {
-				handler = (RequestHandler) handlerClass.newInstance();
+				handler = handlerClass.newInstance();
 			}
 			catch (Exception e) {
 				throw new NoSuchHandlerException("Could not instantiate handler for " + cmd, e);
@@ -49,6 +51,17 @@ public abstract class AbstractRequestManager implements RequestManager {
 		return handler;
 	}
 	
+	public static final int MAX_CMD_LEN = 32;
+	
+	private String truncate(String cmd) {
+		if (cmd.length() < MAX_CMD_LEN) {
+			return cmd;
+		}
+		else {
+			return cmd.substring(0, MAX_CMD_LEN) + "...";
+		}
+	}
+
 	public String toString() {
 		return handlers.toString();
 	}
