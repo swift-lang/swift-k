@@ -12,13 +12,21 @@ package org.globus.cog.abstraction.impl.file.coaster.buffers;
 import java.nio.ByteBuffer;
 
 
-public abstract class WriteBuffer extends Buffer {
+public abstract class WriteBuffer extends Buffer implements BufferOwner {
 
     protected WriteBuffer(Buffers buffers) {
         super(buffers);
     }
 
     public void write(boolean last, byte[] data) throws InterruptedException {
-        buffers.queueRequest(last, ByteBuffer.wrap(data), this);
+        buffers.queueRequest(last, ByteBuffer.wrap(data), this, this);
+    }
+
+    public String getName() {
+        return "WB";
+    }
+
+    public boolean isAlive() {
+        return true;
     }
 }

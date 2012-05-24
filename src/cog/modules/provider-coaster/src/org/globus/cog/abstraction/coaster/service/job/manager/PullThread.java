@@ -1,10 +1,12 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
@@ -20,7 +22,7 @@ class PullThread extends Thread {
     /** 
        Cpus sleeping (tried to pull but found no work)
      */
-    private final LinkedList<Cpu> sleeping;
+    private final SortedSet<Cpu> sleeping;
 
     /**
        Time slept since last report in milliseconds 
@@ -44,7 +46,21 @@ class PullThread extends Thread {
         setName("PullThread");
         setDaemon(true);
         queue = new LinkedList<Cpu>();
-        sleeping = new LinkedList<Cpu>();
+        sleeping = new TreeSet<Cpu>(new Comparator<Cpu>() {
+            public int compare(Cpu a, Cpu b) {
+                double aq = a.getQuality();
+                double bq = b.getQuality();
+                if (aq > bq) {
+                	return -1;
+                }
+                else if (aq < bq) {
+                	return 1;
+                }
+                else {
+                	return 0;
+                }
+            }
+        });
     }
 
     public synchronized void enqueue(Cpu cpu) {
@@ -64,13 +80,11 @@ class PullThread extends Thread {
     }
 
     public synchronized Cpu getSleeper() {
-        Cpu result = null;
-        try {
-            result = sleeping.remove();
+        if (sleeping.isEmpty()) {
+        	return null;
         }
-        catch (NoSuchElementException e) {
-            return null;
-        }
+        Cpu result = sleeping.first();
+        sleeping.remove(result);
         return result;
     }
 

@@ -18,4 +18,8 @@ public interface IOReader extends IOHandle, Abortable {
     void dataSent();
 
     void close();
+
+    void resume();
+
+    void suspend();
 }

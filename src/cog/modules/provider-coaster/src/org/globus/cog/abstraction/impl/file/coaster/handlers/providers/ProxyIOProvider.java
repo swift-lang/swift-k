@@ -128,6 +128,7 @@ public class ProxyIOProvider implements IOProvider {
         }
 
         public void replyReceived(Command cmd) {
+            cb.done(this);
             ChannelManager.getManager().releaseChannel(channel);
         }
 
@@ -209,15 +210,6 @@ public class ProxyIOProvider implements IOProvider {
         public CReadBuffer getBuffer() {
             return buffer;
         }
-
-        public void replyReceived(boolean fin, boolean err, byte[] data) throws ProtocolException {
-            if (err) {
-                handle.cb.error(handle, new Exception(new String(data)));
-            }
-            else {
-                handle.cb.done(handle);
-            }
-        }
     }
 
     private static class CReadBuffer extends ReadBuffer {
@@ -242,16 +234,23 @@ public class ProxyIOProvider implements IOProvider {
             if (logger.isDebugEnabled()) {
                 logger.debug(getCallback() + " got data");
             }
-            Buffers.Allocation a = buffers.request(1);
+            Buffers.Allocation a = buffers.request(1, this);
             synchronized(this) {
                 crt++;
                 alloc.add(a);
-                /* if (last) {
-                    seenLast = true;
-                } */
             }
             getCallback().dataRead(last, buf);
-        }    
+        }
+        
+                @Override
+        public String getName() {
+            return "POR-" + getCallback();
+        }
+
+        @Override
+        public boolean isAlive() {
+            return true;
+        }
 
         public synchronized void freeFirst() {
             buffers.free(alloc.removeFirst());
@@ -342,7 +341,14 @@ public class ProxyIOProvider implements IOProvider {
         }
 
         public void errorReceived(Command cmd, String msg, Exception t) {
-            cb.error(this, t);
+        	if (GetFileHandler.ABORTED.equals(msg)) {
+        	    if (logger.isInfoEnabled()) {
+        	        logger.info(this.cb + " client acknowledged abort");
+        	    }
+        	}
+        	else {
+        	    cb.error(this, t);
+        	}
         }
 
         public void replyReceived(Command cmd) {
@@ -356,14 +362,24 @@ public class ProxyIOProvider implements IOProvider {
         }
 
         public void abort() throws IOException {
+            cmd.abort();
             close();
+        }
+
+        public void resume() {
+            // not needed here
+        }
+
+        public void suspend() {
+            // not needed here
         }
     }
 
     private static class CustomGetFileCmd extends GetFileCommand {
         private final ReadIOCallback cb;
         private final Reader handle;
-        public CWriteBuffer cwb; 
+        public CWriteBuffer cwb;
+        private boolean suspended;
 
         public CustomGetFileCmd(String src, String dst, Reader handle) throws IOException {
             super(src, dst, null);
@@ -390,11 +406,57 @@ public class ProxyIOProvider implements IOProvider {
                 cb.queued();
             }
         }
+
+        public synchronized void abort() throws IOException {
+            if (logger.isInfoEnabled()) {
+                logger.info(this + " forwarding abort request");
+            }
+            cwb.close();
+            // if the channel died, there is an unknown number of 
+            // buffers that were queued to be sent on the channel 
+            // but didn't make it through, so make sure things
+            // get cleaned up
+            cwb.releaseAll();
+            getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, GetFileHandler.ABORT.getBytes());
+        }
+
+        public void resume() {
+            if (cwb.isAlive() && suspended) {
+                if (logger.isInfoEnabled()) {
+                    logger.info(this + " resuming");
+                }
+                suspended = false;
+                getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, GetFileHandler.RESUME.getBytes());
+            }
+        }
+
+        public void suspend() {
+            if (cwb.isAlive() && !suspended) {
+                if (logger.isInfoEnabled()) {
+                    logger.info(this + " suspending");
+                }
+                suspended = true;
+                getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, GetFileHandler.SUSPEND.getBytes());
+            }
+        }
+
+        @Override
+        public long getLastTime() {
+            if (suspended) {
+                return Long.MAX_VALUE;
+            }
+            else {
+                return super.getLastTime();
+            }
+        }
+        
+        
     }
 
     private static class CWriteBuffer extends WriteBuffer {
         private final CustomGetFileCmd cmd;
         public List<Allocation> alloc;
+        private boolean closed;
 
         protected CWriteBuffer(Buffers buffers, CustomGetFileCmd cmd) {
             super(buffers);
@@ -402,10 +464,33 @@ public class ProxyIOProvider implements IOProvider {
             alloc = new LinkedList<Allocation>();
         }
 
+        public void releaseAll() {
+        	synchronized(alloc) {
+            	for (Allocation a : alloc) {
+            		buffers.free(a);
+            	}
+            	alloc.clear();
+        	}
+        }
+
         public void releaseOne() {
             Allocation a;
+            boolean resume;
             synchronized(alloc) {
+            	if (alloc.isEmpty()) {
+            	    if (logger.isInfoEnabled()) {
+            	        logger.info(cmd + " releaseOne. Spurious release.");
+            	    }
+            		return;
+            	}
                 a = alloc.remove(0);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(cmd + " releaseOne. allocsz: " + alloc.size());
+                }
+                resume = alloc.size() == Buffers.ENTRIES_PER_STREAM / 2;
+            }
+            if (resume) {
+                cmd.resume();
             }
             buffers.free(a);
         }
@@ -420,11 +505,31 @@ public class ProxyIOProvider implements IOProvider {
         }
         
         public void write(boolean last, byte[] data) throws InterruptedException {
-            Allocation a = buffers.request(1);
+        	if (closed) {
+        	    return;
+        	}
+            Allocation a = buffers.request(1, this);
+            boolean suspend;
             synchronized(alloc) {
                 alloc.add(a);
+                suspend = alloc.size() == Buffers.MAX_ENTRIES / 4;
             }
-            buffers.queueRequest(last, ByteBuffer.wrap(data), this);
+            if (suspend) {
+                cmd.suspend();
+            }
+            buffers.queueRequest(last, ByteBuffer.wrap(data), this, this);
+        }
+        
+        
+
+        @Override
+        public String getName() {
+            return "POW-" + cmd;
+        }
+
+        @Override
+        public boolean isAlive() {
+            return !closed;
         }
 
         private byte[] getByteArray(ByteBuffer b) {
@@ -436,6 +541,12 @@ public class ProxyIOProvider implements IOProvider {
                 b.get(ba);
                 return ba;
             }
+        }
+        
+        public void close() {
+        	// don't free buffers here
+        	// they get freed when the data is sent
+       		closed = true;
         }
     }
 }

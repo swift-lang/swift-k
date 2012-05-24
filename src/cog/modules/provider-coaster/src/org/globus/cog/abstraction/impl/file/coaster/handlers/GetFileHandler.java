@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOHandle;
@@ -26,12 +27,16 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
     public static final Logger logger = Logger.getLogger(GetFileHandler.class);
     
     public static final String QUEUED = "QUEUED";
+    public static final String ABORT = "ABORT";
+    public static final String ABORTED = "ABORTED";
+    public static final String SUSPEND = "SUSPEND";
+    public static final String RESUME = "RESUME";
 
     // private long size;
     // private Exception ex;
     private IOProvider provider;
     private IOReader reader;
-    private boolean lengthSent;
+    private boolean lengthSent, aborted;
 
     public void requestComplete() throws ProtocolException {
         String src = getInDataAsString(0);
@@ -67,7 +72,7 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
             throw new ProtocolException(e);
         }
     }
-
+    
     public void dataSent() {
         if (logger.isDebugEnabled()) {
             logger.debug(this + " data sent");
@@ -77,6 +82,13 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
     }
 
     public void data(IOHandle handle, ByteBuffer data, boolean last) {
+    	if (aborted) {
+    		if (logger.isInfoEnabled()) {
+    			logger.info(this + " Got data on aborted handler. Calling dataSent()");
+    		}
+    		dataSent();
+    		return;
+    	}
         if (!lengthSent) {
             throw new RuntimeException("No length provided");
         }
@@ -84,11 +96,27 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
             logger.debug(this + " sending " + data.limit());
         }
         getChannel().sendTaggedReply(getId(), data, last, false, this);
+        if (last) {
+            if (logger.isInfoEnabled()) {
+                logger.info(this + " unregistering (last)");
+            }
+        	unregister();
+        }
+    }
+    
+    @Override
+    public void errorReceived(String msg, Exception t) {
+        // this comes from the request side
+        // but usually represents a dead channel
+        abort();
+        // abort() calls sendError() which calls unregister()
+        // so don't bother
+        // unregister();
     }
 
     public void queued() {
         if (logger.isInfoEnabled()) {
-            logger.info(this + " sending queued signal");
+            logger.info(this + " sending queued signal (input throttled)");
         }
         getChannel().sendTaggedReply(getId(), QUEUED.getBytes(), KarajanChannel.SIGNAL_FLAG, null);
     }
@@ -124,6 +152,43 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
             }
             lengthSent = true;
             getChannel().sendTaggedReply(getId(), pack(len), len == 0, false);
+        }
+    }
+
+    @Override
+    public void handleSignal(byte[] data) {
+        if (Arrays.equals(data, ABORT.getBytes())) {
+        	if (logger.isInfoEnabled()) {
+        	    logger.info(this + " abort requested");
+        	}
+        	abort();
+        }
+        else if (Arrays.equals(data, SUSPEND.getBytes())) {
+            if (logger.isInfoEnabled()) {
+                logger.info(this + " suspending");
+            }
+            reader.suspend();
+        }
+        else if (Arrays.equals(data, RESUME.getBytes())) {
+            if (logger.isInfoEnabled()) {
+                logger.info(this + " resuming");
+            }
+            reader.resume();
+        }
+    }
+    
+    protected void abort() {
+        try {
+            if (logger.isInfoEnabled()) {
+                logger.info(this + " aborting");
+            }
+            aborted = true;
+            provider.abort(reader);
+            // acknowledge abort
+            sendError(ABORTED);
+        }
+        catch (Exception e) {
+            logger.warn("Failed to abort transfer", e);
         }
     }
 }

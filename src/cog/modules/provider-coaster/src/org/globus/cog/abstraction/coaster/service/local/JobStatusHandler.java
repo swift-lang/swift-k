@@ -34,7 +34,12 @@ public class JobStatusHandler extends RequestHandler {
             Status s = new StatusImpl();
             s.setStatusCode(status);
             if (status == Status.FAILED && code != 0) {
-                s.setException(new JobException(code));
+            	if (message != null && !message.equals("")) {
+            		s.setException(new JobException(message, code));
+            	}
+            	else {
+            	    s.setException(new JobException(code));
+            	}
             }
             if (message != null && !message.equals("")) {
                 s.setMessage(message);

@@ -99,6 +99,14 @@ public class LocalCopyIOProvider implements IOProvider {
         public Reader(String src, String dest, ReadIOCallback cb) throws IOException {
             super(getPath(src), dest, cb);
         }
+
+        public void resume() {
+        	// not needed here
+        }
+
+        public void suspend() {
+        	// not needed here
+        }
     }
 
     public IOWriter push(String src, String dest, WriteIOCallback cb) throws IOException {

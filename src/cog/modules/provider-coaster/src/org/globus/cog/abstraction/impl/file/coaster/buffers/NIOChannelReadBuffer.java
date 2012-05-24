@@ -21,6 +21,7 @@ public class NIOChannelReadBuffer extends ReadBuffer {
     private ScatteringByteChannel channel;
     private long crt;
     private Exception ex;
+    private boolean closed;
 
     protected NIOChannelReadBuffer(Buffers buffers, ScatteringByteChannel channel, long size,
             ReadBufferCallback cb) throws InterruptedException {
@@ -30,6 +31,11 @@ public class NIOChannelReadBuffer extends ReadBuffer {
     }
 
     public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
+    	synchronized(this) {
+    		if (closed) {
+    			return;
+    		}
+    	}
         if (read >= size) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Transfer done. De-allocating one unused buffer");
@@ -54,6 +60,9 @@ public class NIOChannelReadBuffer extends ReadBuffer {
     }
 
     public void close() throws IOException {
+    	synchronized(this) {
+    		closed = true;
+    	}
         super.close();
         channel.close();
     }

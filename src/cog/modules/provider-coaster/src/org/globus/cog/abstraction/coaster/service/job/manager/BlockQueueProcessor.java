@@ -747,8 +747,8 @@ implements RegistrationManager, Runnable {
         if (job != null) {
         	queuedJobs--;
             synchronized(running) {
-            	runningJobs++;
                 running.add(job);
+                runningJobs = running.size();
             }
         }
         else {

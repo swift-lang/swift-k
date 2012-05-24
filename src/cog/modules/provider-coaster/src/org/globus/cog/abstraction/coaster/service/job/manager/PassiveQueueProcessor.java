@@ -75,7 +75,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
                 ChannelManager.getManager().releaseChannel(channel);
             }
             catch (Exception e) {
-                logger.warn("Failed to send worker status update to client", e);
+                logger.info("Failed to send worker status update to client", e);
             }
         }
         

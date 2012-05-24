@@ -42,7 +42,9 @@ public class TaskNotifier implements StatusListener, Callback {
         CoasterService.addPeriodicWatchdog(new TimerTask() {
             public void run() {
                 synchronized (TaskNotifier.class) {
-                    logger.info("Congestion queue size: " + queue.size());
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Congestion queue size: " + queue.size());
+                    }
                     checkQueue();
                 }
             }
@@ -63,7 +65,7 @@ public class TaskNotifier implements StatusListener, Callback {
         }
     }
 
-    private static synchronized void sendStatus(TaskNotifier tn, Status s) {
+    public static synchronized void sendStatus(TaskNotifier tn, Status s) {
         if (notacknowledged >= CONGESTION_THRESHOLD) {
             queue.addLast(new Entry(tn, s));
         }
@@ -83,7 +85,7 @@ public class TaskNotifier implements StatusListener, Callback {
             }
         }
     }
-
+    
     public void errorReceived(Command cmd, String msg, Exception t) {
         logger.warn("Client could not properly process notification: " + msg, t);
         ChannelManager.getManager().releaseChannel(channel);
