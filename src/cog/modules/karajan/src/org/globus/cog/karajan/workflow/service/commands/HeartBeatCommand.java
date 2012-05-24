@@ -11,6 +11,8 @@ package org.globus.cog.karajan.workflow.service.commands;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.karajan.workflow.service.TimeoutException;
+import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.handlers.HeartBeatHandler;
 
 
@@ -39,5 +41,14 @@ public class HeartBeatCommand extends Command {
             long now = System.currentTimeMillis();
             logger.info(getChannel() + " up latency: " + (now - rst) + "ms, rtt: " + (now - start) + "ms");
         }
+	}
+
+	@Override
+	public void handleTimeout() {
+		if (logger.isInfoEnabled()) {
+			logger.info("Heartbeat timed out. Closing channel.");
+		}
+		ChannelManager.getManager().handleChannelException(getChannel(), new TimeoutException(this, "Heartbeat timed out"));
+		unregister();
 	}
 }

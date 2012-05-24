@@ -44,7 +44,7 @@ class NIOMultiplexer extends Thread {
 			logger.debug("Registering " + channel);
 		}
 		add.add(channel);
-		selector.wakeup();				
+		selector.wakeup();
 	}
 
 	public void unregister(AbstractStreamKarajanChannel channel) {

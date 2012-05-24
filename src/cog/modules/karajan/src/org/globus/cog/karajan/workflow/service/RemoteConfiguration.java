@@ -76,11 +76,11 @@ public class RemoteConfiguration {
 	}
 
 	public Entry find(String host) {
-		logger.warn("Find: " + host);
+		logger.info("Find: " + host);
 		Iterator i = entries.iterator();
 		while (i.hasNext()) {
 			Entry e = (Entry) i.next();
-			logger.warn("Find: " + e.getUnparsed() + " - " + host);
+			logger.info("Find: " + e.getUnparsed() + " - " + host);
 			if (e.compiled.matcher(host).matches()) {
 				return e;
 			}

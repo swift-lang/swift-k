@@ -28,7 +28,6 @@ import org.globus.cog.karajan.workflow.service.UserContext;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
 import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSName;
 
 public class ChannelContext {
 	private static final Logger logger = Logger.getLogger(ChannelContext.class);
@@ -42,10 +41,9 @@ public class ChannelContext {
 	private int cmdseq;
 	private TagTable<Command> activeSenders;
 	private TagTable<RequestHandler> activeReceivers;
-	// private Map reexecutionSet;
+	private TagTable<Long> ignoredRequests;
 	private static Timer timer;
 	private ServiceContext serviceContext;
-	// private ChannelAttributes attr;
 	private int reconnectionAttempts;
 	private long lastHeartBeat;
 	
@@ -219,15 +217,24 @@ public class ChannelContext {
 		}
 	}
 
-	public void notifyRegisteredListeners(Exception e) {
+	public void notifyRegisteredCommandsAndHandlers(Exception e) {
+		if (logger.isInfoEnabled()) {
+			logger.info("Notifying commands and handlers about exception");
+		}
 		notifyListeners(activeReceivers, e);
 		notifyListeners(activeSenders, e);
 	}
 
-	private void notifyListeners(TagTable map, Exception t) {
+	private void notifyListeners(TagTable<? extends RequestReply> map, Exception t) {
+		Collection<RequestReply> l = new ArrayList<RequestReply>();
 		synchronized(map) {
-			for (Object o : map.values())
-				((RequestReply) o).errorReceived(null, t);
+			l.addAll(map.values());
+		}
+		for (RequestReply r : l) {
+			if (logger.isInfoEnabled()) {
+				logger.info("=> " + r);
+			}
+			r.errorReceived(null, t);
 		}
 	}
 
@@ -308,6 +315,7 @@ public class ChannelContext {
 	}
 
 	public synchronized void channelShutDown(Exception e) {
+		notifyRegisteredCommandsAndHandlers(e);
 	    if (listeners != null) {
 	        for (ChannelListener l : listeners) {
 	            try {
@@ -318,6 +326,37 @@ public class ChannelContext {
 	            }
 	        }
 	    }
+	}
+
+	public synchronized void ignoreRequest(int tag, int timeout) {
+		if (ignoredRequests == null) {
+			ignoredRequests = new TagTable<Long>();
+		}
+		ignoredRequests.put(tag, System.currentTimeMillis() + timeout);
+	}
+
+	public synchronized boolean isIgnoredRequest(int tag) {
+		if (ignoredRequests == null) {
+			return false;
+		}
+		else {
+			return ignoredRequests.containsKey(tag); 
+		}
+	}
+
+	public synchronized void removeOldIgnoredRequests() {
+		if (ignoredRequests == null) {
+			return;
+		}
+		long now = System.currentTimeMillis();
+		for (Integer i : ignoredRequests.keys()) {
+			if (ignoredRequests.get(i) < now) {
+				ignoredRequests.remove(i);
+			}
+		}
+		if (ignoredRequests.isEmpty()) {
+			ignoredRequests = null;
+		}
 	}
 	
 	

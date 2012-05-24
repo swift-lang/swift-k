@@ -135,9 +135,6 @@ public class GSSChannel extends AbstractTCPChannel {
 	}
 
 	public void shutdown() {
-		if (isClosed()) {
-			return;
-		}
 		synchronized (this) {
 			if (isClosed()) {
 				return;

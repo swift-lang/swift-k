@@ -49,6 +49,9 @@ class NIOSender extends Thread {
 	
 	public void enqueue(int tag, int flags, byte[] data,
 			AbstractStreamKarajanChannel channel, SendCallback cb) {
+	    if (data == null) {
+	        throw new NullPointerException();
+	    }
 		BlockingQueue<NIOSendEntry> q;
 		SelectableChannel c = channel.getNIOChannel();
 		
@@ -58,8 +61,8 @@ class NIOSender extends Thread {
 				 q = new LinkedBlockingQueue<NIOSendEntry>();
 				 queues.put(c, q);
 			 }
-			 if (logger.isDebugEnabled()) {
-			     logger.debug("Queue for " + channel + " has " + q.size() + " entries");
+			 if (logger.isTraceEnabled()) {
+			     logger.trace("Queue for " + channel + " has " + q.size() + " entries");
 			 }
 			 if (!registered.containsKey(c)) {
 				 add.add(channel);
@@ -68,6 +71,9 @@ class NIOSender extends Thread {
 			 }
 			 q.add(new NIOSendEntry(makeHeader(tag, flags, data), ByteBuffer.wrap(data), channel, cb));
 		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("send channel: " + channel + ", tag: " + tag + ", flags: " + flags + ", len: " + data.length);
+		}
 	}
 	
 	private ByteBuffer makeHeader(int tag, int flags, byte[] data) {
@@ -75,7 +81,7 @@ class NIOSender extends Thread {
 		
 		byte[] buf = bb.array();
 		Sender.makeHeader(tag, flags, data, bb.array());
-				
+
 		return bb;
 	}
 
@@ -125,8 +131,8 @@ class NIOSender extends Thread {
 					}
 					try {
 						write(c, e.crt);
-						if (logger.isDebugEnabled()) {
-						    logger.debug("Sent " + e.crt.position() + " bytes on " + e.channel);
+						if (logger.isTraceEnabled()) {
+						    logger.trace("Sent " + e.crt.position() + " bytes on " + e.channel);
 						}
 					}
 					catch (IOException ee) {
@@ -135,7 +141,12 @@ class NIOSender extends Thread {
 					}
 					if (!e.crt.hasRemaining() && !e.nextBuffer()) {
 						if (e.cb != null) {
-							e.cb.dataSent();
+							try {
+								e.cb.dataSent();
+							}
+							catch (Exception ee) {
+								logger.warn("Callback threw exception", ee);
+							}
 						}
 						q.remove();
 					}

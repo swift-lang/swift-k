@@ -44,8 +44,10 @@ public class HeartBeatTask extends TimerTask implements Callback {
 	}
 
 	public void errorReceived(Command cmd, String msg, Exception t) {
-		// if it's a channel error, the channel should have figured it out
-		logger.warn("Heartbeat failed: " + msg, t);
+		// these can't fail in normal operation
+		// so this is a channel error, which should be handled
+		// by the channel (but we do get notifications for it)
+		logger.info("Heartbeat failed: " + msg, t);
 	}
 
 	public void replyReceived(Command cmd) {

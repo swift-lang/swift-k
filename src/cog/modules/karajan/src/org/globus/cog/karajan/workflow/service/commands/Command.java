@@ -11,7 +11,6 @@ package org.globus.cog.karajan.workflow.service.commands;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Timer;
 
@@ -99,6 +98,10 @@ public abstract class Command extends RequestReply implements SendCallback {
 	
 	public void send(boolean err) throws ProtocolException {
 
+	    if (this.isInDataReceived()) {
+	        // probably channel died in-between registration and send, so don't bother
+	        return;
+	    }
 		KarajanChannel channel = getChannel();
 		if (logger.isDebugEnabled()) {
 			logger.debug("Sending " + this + " on " + channel);
@@ -169,6 +172,10 @@ public abstract class Command extends RequestReply implements SendCallback {
 		channel.registerCommand(this);
 		send();
 	}
+	
+	protected void unregister() {
+        this.getChannel().unregisterCommand(this);
+    }
 
 	public int getMaxRetries() {
 		return maxRetries;
@@ -246,24 +253,26 @@ public abstract class Command extends RequestReply implements SendCallback {
 		if (isInDataReceived()) {
 			return;
 		}
-		logger.warn(this
-				+ ": handling reply timeout; sendReqTime="
-				+ DF.format(new Date(sendReqTime)) + ", sendTime=" + DF.format(new Date(sendTime))
-						+ ", now=" + DF.format(new Date()) + ", channel=" + getChannel());
+		TimeoutException t = new TimeoutException(this, "Reply timeout");
+		logger.warn(t.getMessage());
+		errorReceived(t.getMessage(), t);
 		getChannel().unregisterCommand(this);
-		//reexecute("Reply timeout", new TimeoutException());
 	}
 
-	protected long getSendReqTime() {
+	public long getSendReqTime() {
 		return sendReqTime;
 	}
-
+	
+	public long getSendTime() {
+	    return sendTime;
+	}
+	
 	protected void setSendReqTime(long sendReqTime) {
 		this.sendReqTime = sendReqTime;
 	}
 
 	public String toString() {
-		return "Command(" + this.getId() + ", " + this.getOutCmd() + ")";
+		return "Command(tag: " + this.getId() + ", " + this.getOutCmd() + ")";
 	}
 
 	public static interface Callback {
