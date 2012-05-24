@@ -75,6 +75,19 @@ use constant {
 	PUT_SENDING_DATA => 4,
 };
 
+use constant {
+	ERROR_STAGEIN_RECEIVE => 520,
+	ERROR_STAGEIN_TIMEOUT => 521,
+	ERROR_STAGEIN_FILE_WRITE => 522,
+	ERROR_STAGEIN_COPY => 524,
+	ERROR_STAGEIN_REQUEST => 525,
+	ERROR_STAGEOUT_COPY => 528,
+	ERROR_STAGEOUT_SEND => 515,
+	ERROR_STAGEOUT_TIMEOUT => 516,
+	ERROR_PROCESS_FORK => 512,
+	ERROR_PROCESS_WALLTIME_EXCEEDED => 513
+};
+
 my $LOGLEVEL = NONE;
 
 my @LEVELS = ("TRACE", "DEBUG", "INFO ", "WARN ", "ERROR");
@@ -709,6 +722,11 @@ sub queueReply {
 	push @SENDQ, [$tag, undef, REPLY_FLAG, arrayData(@msgs)];
 }
 
+sub queueSignal {
+	my ($tag, @msgs) = @_;
+	push @SENDQ, [$tag, undef, SIGNAL_FLAG, arrayData(@msgs)];
+}
+
 sub queueError {
 	my ($tag, @msgs) = @_;
 	push @SENDQ, [$tag, undef, REPLY_FLAG | ERROR_FLAG, arrayData(@msgs)];
@@ -735,7 +753,7 @@ sub unpackData {
 		return;
 	}
 
-	my $msg;
+	my $msg = "";
 	my $frag;
 	my $alen = 0;
 	while ($alen < $len) {
@@ -1178,12 +1196,12 @@ sub getFileCBDataInIndirect {
 	wlog DEBUG, "$jobid getFileCBDataInIndirect jobid: $jobid, tag: $tag, flags: $flags\n";
 	if ($flags & ERROR_FLAG) {
 		wlog DEBUG, "$jobid getFileCBDataInIndirect error: $reply\n";
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "520", "Error staging in file: $reply"));
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_RECEIVE, "Error staging in file: $reply"));
 		delete($JOBDATA{$jobid});
 		return;
 	}
 	elsif ($timeout) {
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "521", "Timeout staging in file"));
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file"));
 		delete($JOBDATA{$jobid});
 		return;
 	}
@@ -1209,13 +1227,18 @@ sub getFileCBDataIn {
 		return;
 	}
 	elsif ($flags & ERROR_FLAG) {
-		wlog DEBUG, "$jobid getFileCBDataIn FAILED 520 Error staging in file: $reply\n";
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "520", "Error staging in file: $reply"));
-		delete($JOBDATA{$jobid});
+		if ($reply eq "ABORTED") {
+			wlog DEBUG, "$jobid client acknowledged abort\n";
+		}
+		else {
+			wlog DEBUG, "$jobid getFileCBDataIn FAILED 520 Error staging in file: $reply\n";
+			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_RECEIVE, "Error staging in file: $reply"));
+			delete($JOBDATA{$jobid});
+		}
 		return;
 	}
 	elsif ($timeout) {
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "521", "Timeout staging in file"));
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file"));
 		delete($JOBDATA{$jobid});
 		return;
 	}
@@ -1227,12 +1250,19 @@ sub getFileCBDataIn {
 	}
 	else {
 		my $handle = $$state{"handle"};
-		if (!(print {$handle} $reply)) {
-			close $handle;
-			wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $handle; lfile: $$state{'lfile'}\n";
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "522", "Could not write to file: $!"));
-			delete($JOBDATA{$jobid});
-			return;
+		if (defined $handle) {
+			if (!(print {$handle} $reply)) {
+				close $handle;
+				wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $handle; lfile: $$state{'lfile'}\n";
+				queueSignal($tag, ("ABORT $!"));
+				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_FILE_WRITE, "Could not write to file: $!"));
+				delete($$state{"handle"});
+				delete($JOBDATA{$jobid});
+				return;
+			}
+		}
+		else {
+			wlog DEBUG, "$jobid Got data for closed handle. Discarding\n";
 		}
 	}
 	if ($flags & FINAL_FLAG) {
@@ -1300,7 +1330,7 @@ sub stagein {
 			mkfdir($jobid, $dst);
 			if (!copy($path, $dst)) {
 				wlog DEBUG, "$jobid Error staging in $path to $dst: $!\n";
-				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));
+				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_COPY, "$@"));
 			}
 			else {
 				stagein($jobid);
@@ -1323,7 +1353,7 @@ sub getFile {
 	};
 	if ($@) {
 		wlog DEBUG, "$jobid Error staging in file: $@\n";
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "524", "$@"));
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_REQUEST, "$@"));
 	}
 	else {
 		queueCmd(($state, "GET", $src, $dst));
@@ -1463,7 +1493,7 @@ sub stageout {
 				mkfdir($jobid, $path);
 				if (!copy($lfile, $path)) {
 					wlog DEBUG, "$jobid Error staging out $lfile to $path: $!\n";
-					queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "528", "$!"));
+					queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEOUT_COPY, "$!"));
 					return;
 				}
 				else {
@@ -1500,7 +1530,7 @@ sub sendStatus {
 		queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
 	}
 	else {
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with an exit code of $ec"));
+		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", getExitMessage($jobid, $ec)));
 	}
 }
 
@@ -1548,8 +1578,19 @@ sub cleanup {
 		}
 		else {
 			wlog DEBUG, "$jobid Sending failure.\n";
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", "Job failed with and exit code of $ec"));
+			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", getExitMessage($jobid, $ec)));
 		}
+	}
+}
+
+sub getExitMessage {
+	my ($jobid, $ec) = @_;
+	
+	if (defined $JOBDATA{$jobid}{"exitmessage"}) {
+		return $JOBDATA{$jobid}{"exitmessage"};
+	}
+	else {
+		return "Job failed with and exit code of $ec";
 	}
 }
 
@@ -1585,7 +1626,12 @@ sub putFileCBDataIn {
 	if (($flags & ERROR_FLAG) || $timeout) {
 		if ($JOBDATA{$jobid}) {
 			wlog DEBUG, "$tag Stage out failed ($reply)\n";
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "515", "Stage out failed ($reply)"));
+			if ($timeout) {
+				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEOUT_TIMEOUT, "Stage out failed ($reply)"));
+			}
+			else {
+				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEOUT_SEND, "Stage out failed ($reply)"));
+			}
 			delete($JOBDATA{$jobid});
 		}
 		return;
@@ -1628,6 +1674,7 @@ sub submitjob {
 	my @lines = split(/\n/, $desc);
 	my $line;
 	my $JOBID = undef;
+	my $MAXWALLTIME = 600;
 	my %JOB = ();
 	my @JOBARGS = ();
 	my %JOBENV = ();
@@ -1650,6 +1697,9 @@ sub submitjob {
 		}
 		elsif ($pair[0] eq "identity") {
 			$JOBID = $pair[1];
+		}
+		elsif ($pair[0] eq "maxwalltime") {
+			$MAXWALLTIME = $pair[1];
 		}
 		elsif ($pair[0] eq "stagein") {
 			my @pp = split(/\n/, $pair[1], 3);
@@ -1698,6 +1748,7 @@ sub submitjob {
 			stageoutd => \@STAGEOUTD,
 			stageoutm => \@STAGEOUTM,
 			cleanup => \@CLEANUP,
+			maxwalltime => $MAXWALLTIME,
 		};
 
 		stagein($JOBID);
@@ -1781,15 +1832,16 @@ sub forkjob {
 			$JOBS_RUNNING++;
 			$JOBWAITDATA{$JOBID} = {
 				pid => $pid,
-				pipe => $PARENT_R
-				};
+				pipe => $PARENT_R,
+				startTime => time()
+			};
 			if ($PROFILE) {
 				push(@PROFILE_EVENTS, "FORK", $pid, time());
 			}
 		}
 	}
 	else {
-		queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, "512", "Could not fork child process");
+		queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, ERROR_PROCESS_FORK, "Could not fork child process");
 	}
 }
 
@@ -1826,7 +1878,7 @@ sub checkJobs {
 	my @DELETEIDS = ();
 
 	for my $JOBID (keys %JOBWAITDATA) {
-		if (checkJobStatus($JOBID)) {
+		if (checkJobStatus($JOBID, $now)) {
 			push @DELETEIDS, $JOBID;
 		}
 	}
@@ -1836,11 +1888,12 @@ sub checkJobs {
 }
 
 sub checkJobStatus {
-	my ($JOBID) = @_;
+	my ($JOBID, $now) = @_;
 
 
 	my $pid = $JOBWAITDATA{$JOBID}{"pid"};
 	my $RD = $JOBWAITDATA{$JOBID}{"pipe"};
+	my $startTime = $JOBWAITDATA{$JOBID}{"startTime"};
 
 	my $tid;
 	my $status;
@@ -1850,14 +1903,32 @@ sub checkJobStatus {
 	$tid = waitpid($pid, &WNOHANG);
 	if ($tid != $pid) {
 		# not done
-		wlog DEBUG, "$JOBID Job $pid still running\n";
+		my $mwt = $JOBDATA{$JOBID}{"maxwalltime"};
+		if ($now > $startTime + $mwt) {
+			wlog DEBUG, "$JOBID walltime exceeded (start: $startTime, now: $now, maxwalltime: $mwt); killing\n"; 
+			kill 9, $pid;
+			# only kill it once
+			$JOBWAITDATA{$JOBID}{"startTime"} = -1;
+			$JOBWAITDATA{$JOBID}{"walltimeexceeded"} = 1;
+			$JOBDATA{$JOBID}{"exitmessage"} = "Walltime exceeded"; 
+		}
+		else {
+			wlog DEBUG, "$JOBID Job $pid still running\n";
+		}
 		return 0;
 	}
 	else {
-		# exit code is in MSB and signal in LSB, so
-		# switch them such that status & 0xff is the
-		# exit code
-		$status = $? >> 8 + (($? & 0xff) << 8);
+	
+		if ($JOBWAITDATA{$JOBID}{"walltimeexceeded"}) {
+			wlog DEBUG, "Walltime exceeded. The status is $?\n";
+			$status = ERROR_PROCESS_WALLTIME_EXCEEDED;
+		}
+		else {
+			# exit code is in MSB and signal in LSB, so
+			# switch them such that status & 0xff is the
+			# exit code
+			$status = $? >> 8 + (($? & 0xff) << 8);
+		}
 	}
 
 	wlog INFO, "$JOBID Child process $pid terminated. Status is $status.\n";
@@ -1878,12 +1949,8 @@ sub checkJobStatus {
 		push @jobslots,$JOBSLOT;
 	}
 
-	if (defined $s) {
-		stageout($JOBID);
-	}
-	else {
-		stageout($JOBID);
-	}
+	stageout($JOBID);
+
 	$JOB_COUNT++;
 	$JOBS_RUNNING--;
 	return 1;
