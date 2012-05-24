@@ -25,35 +25,41 @@ public class PerformanceDiagnosticOutputStream extends OutputStream {
 	public static final int INTERVAL = 10; //seconds
 
 	static {
-		Timer.every(1000 * INTERVAL, new Runnable() {
+		Timer.every(1000, new Runnable() {
 			public void run() {
-				count += INTERVAL;
-				String s;
-				logger.info(s = "[OUT] Total transferred: "
-						+ getTotal() + "B, current rate: "
-						+ getCurrentRate()
-						+ "B/s, average rate: "
-						+ getAverageRate()
-						+ "B/s");
+				count += 1;
+				if (count % INTERVAL == 0) {
+    				String s;
+    				logger.info(s = "[OUT] Total transferred: "
+    						+ units(getTotal()) + "B, current rate: "
+    						+ units(getCurrentRate())
+    						+ "B/s, average rate: "
+    						+ units(getAverageRate())
+    						+ "B/s");
+				}
 				last = bytes;
 			}
 		});
+	}
+	
+	private static String units(long v) {
+		return PerformanceDiagnosticInputStream.units(v);
 	}
 
 	public PerformanceDiagnosticOutputStream(OutputStream delegate) {
 		this.delegate = delegate;
 	}
 	
-	public static String getTotal() {
-		return PerformanceDiagnosticInputStream.units(bytes);
+	public static long getTotal() {
+		return bytes;
 	}
 	
-	public static String getCurrentRate() {
-		return PerformanceDiagnosticInputStream.units(bytes - last);
+	public static long getCurrentRate() {
+		return bytes - last;
 	}
 	
-	public static String getAverageRate() {
-		return PerformanceDiagnosticInputStream.units(bytes / count);
+	public static long getAverageRate() {
+		return bytes / count;
 	}
 	
 	public static void bytesWritten(int count) {
