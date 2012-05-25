@@ -11,6 +11,10 @@ workerContact=$1
 x509userproxy=$( voms-proxy-info 2>&1 | grep path | awk '{print $NF}' )
 wallTimeMinutes=60
 n=$2
+if [ -z "$WORKER_LOGGING_LEVEL" ];  then
+   WORKER_LOGGING_LEVEL=INFO
+fi
+echo WORKER_INIT_CMD in run-gwms-workers: $WORKER_INIT_CMD
 
 [ "$#" -eq 2 ] || die "2 arguments required, $# provided"
 
@@ -32,7 +36,7 @@ notification = NEVER
 
 executable = $workerWrapper
 arguments = $workerContact scec /tmp
-environment = WORKER_LOGGING_LEVEL=DEBUG
+environment = "WORKER_LOGGING_LEVEL='$WORKER_LOGGING_LEVEL' WORKER_INIT_CMD='$WORKER_INIT_CMD'"
 Input   = $workerExecutable
 Error   = condor/job.\$(Cluster).\$(Process).err
 Output  = condor/job.\$(Cluster).\$(Process).out
