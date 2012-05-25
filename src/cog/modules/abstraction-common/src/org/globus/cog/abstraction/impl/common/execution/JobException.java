@@ -14,13 +14,20 @@ public class JobException extends Exception {
     private static final long serialVersionUID = 1L;
     
     private int exitCode;
+    private String message;
     
     public JobException(int exitCode) {
         this.exitCode = exitCode;
+        this.message = "Job failed with an exit code of " + exitCode;
+    }
+    
+    public JobException(String message, int exitCode) {
+        this.exitCode = exitCode;
+        this.message = message + " (exit code: " + exitCode + ")";
     }
 
     public String getMessage() {
-        return "Job failed with an exit code of " + exitCode;
+        return message;
     }
     
     public int getExitCode() {
