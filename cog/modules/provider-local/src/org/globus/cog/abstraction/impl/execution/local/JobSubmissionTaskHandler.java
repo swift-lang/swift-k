@@ -134,7 +134,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             }
         }
         if (count == 1) {
-            logger.debug("Submitting single job");
+            if (logger.isDebugEnabled()) {
+                logger.debug("Submitting single job");
+            }
         }
         else {
             logger.debug("Submitting " + count + " jobs");
@@ -258,6 +260,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     protected Process startProcess(JobSpecification spec, File dir) throws IOException {
         ProcessBuilder pb = new ProcessBuilder(buildCmdArray(spec));
+        pb.directory(dir);
         addEnvs(pb, spec);
         return pb.start();
     }
@@ -466,7 +469,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         List<String> arguments = new ArrayList<String>();
         arguments.add(spec.getExecutable());
         arguments.addAll(spec.getArgumentsAsList());
-                
+
         return arguments;
     }
 
