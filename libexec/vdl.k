@@ -11,7 +11,12 @@ namespace("vdl"
 	import("vdl-lib.xml", export = true)
 
 	pstaging := configProperty("use.provider.staging")
-	int := if (pstaging == "true", "vdl-int-staging.k", "vdl-int.k")
+	wstaging := configProperty("use.wrapper.staging")
+	int := if (
+		pstaging == "true", "vdl-int-staging.k",
+		wstaging == "true", "vdl-int-wrapper-staging.k", 
+		"vdl-int.k"
+	)
 
 	import(int)
 	import("java.k")
