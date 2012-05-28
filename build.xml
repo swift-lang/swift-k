@@ -94,7 +94,7 @@
 				<include name="stop-coaster-service"/>
 				<include name="run-worker.sh"/>
 				<include name="start-grid-service"/>
-
+                                <include name="run-gwms-workers"/>
 				<include name="foreachsite"/>
 				<include name="gen_gridsites"/>
 				<include name="get_greensites"/>
