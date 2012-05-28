@@ -304,10 +304,14 @@ start-workers-gwms()
       crash "CONDOR_WORKERS undefined - please check coaster-service.conf"
    fi
 
+   if [ -z "$WORKER_LOGGING_LEVEL" ]; then
+      WORKER_LOGGING_LEVEL=INFO
+   fi
+
    echo Starting workers   
    if [ -n "$WORKER_RELAY_HOST" ]; then
       ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "mkdir -p condor"
-      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS" 
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "WORKER_INIT_CMD='$WORKER_INIT_CMD' WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS" 
    else
       mkdir -p condor
       run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS
