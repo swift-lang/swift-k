@@ -386,7 +386,7 @@ namespace("vdl"
 
 						vdl:setprogress("Checking status")
 						if(statusMode == "files"
-							checkJobStatus(rhost, wfdir, jobid, tr)
+							checkJobStatus(wfdir, jobid, tr)
 						)
 
 						if(wrapperMode == "files"
