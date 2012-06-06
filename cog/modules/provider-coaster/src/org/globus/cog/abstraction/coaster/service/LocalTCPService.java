@@ -32,6 +32,7 @@ import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
 import org.globus.common.CoGProperties;
+import org.globus.net.PortRange;
 
 public class LocalTCPService implements Registering, Service, Runnable {
     public static final Logger logger = Logger.getLogger(LocalTCPService.class);
@@ -100,6 +101,10 @@ public class LocalTCPService implements Registering, Service, Runnable {
         try {
             channel = ServerSocketChannel.open();
             channel.configureBlocking(true);
+            if(port == 0) {
+              PortRange portRange = PortRange.getTcpInstance();
+              port = portRange.getFreePort(port);
+            }
             channel.socket().bind(new InetSocketAddress(port));
             
             if (serverThread == null) {
