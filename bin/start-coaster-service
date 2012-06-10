@@ -315,6 +315,7 @@ start-workers-gwms()
    echo Starting workers   
    if [ -n "$WORKER_RELAY_HOST" ]; then
       ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "mkdir -p condor"
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "grid-proxy-init"
       ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "WORKER_INIT_CMD='$WORKER_INIT_CMD' WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS" 
    else
       mkdir -p condor
