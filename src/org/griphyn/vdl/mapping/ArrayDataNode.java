@@ -107,12 +107,14 @@ public class ArrayDataNode extends DataNode {
     }
 
     @Override
-    protected synchronized Future getFutureWrapper() {
-    	if (wrapper == null) {
-    		wrapper = new ArrayIndexFutureList(this, this.getArrayValue());
-    		FutureTracker.get().add(this, wrapper);
-    	}
-        return wrapper;
+    protected Future getFutureWrapper() {
+        synchronized(getHandles()) {
+        	if (wrapper == null) {
+        		wrapper = new ArrayIndexFutureList(this, this.getArrayValue());
+        		FutureTracker.get().add(this, wrapper);
+        	}
+            return wrapper;
+        }
     }
 
     public FutureList getFutureList() {
