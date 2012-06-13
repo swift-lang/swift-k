@@ -103,7 +103,9 @@ public class LocalTCPService implements Registering, Service, Runnable {
             channel.configureBlocking(true);
             if(port == 0) {
               PortRange portRange = PortRange.getTcpInstance();
-              port = portRange.getFreePort(port);
+              if(portRange != null && portRange.isEnabled()) {
+                  port = portRange.getFreePort(port);
+              }
             }
             channel.socket().bind(new InetSocketAddress(port));
             
