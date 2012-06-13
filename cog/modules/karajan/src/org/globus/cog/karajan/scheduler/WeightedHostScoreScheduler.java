@@ -140,13 +140,12 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	    return sorted;
 	}
 
-	protected synchronized void factorScore(WeightedHost wh, double factor) {
-		double score = wh.getScore();
+	protected void factorScore(WeightedHost wh, double factor) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("multiplyScore(" + wh + ", " + factor + ")");
 		}
-		double ns = factor(score, factor);
-		sorted.changeScore(wh, ns);
+		double score = wh.getScore();
+		double ns = sorted.factorScore(wh, factor);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Old score: " + WeightedHost.D4.format(score) + ", new score: "
 					+ WeightedHost.D4.format(ns));
@@ -158,10 +157,6 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			logger.debug("factorLater(" + wh + ", " + factor + ")");
 		}
 		wh.setDelayedDelta(wh.getDelayedDelta() + factor);
-	}
-
-	protected final double factor(double score, double factor) {
-		return score + factor;
 	}
 
 	protected synchronized BoundContact getNextContact(TaskConstraints t)
@@ -204,14 +199,17 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			throw new NoFreeResourceException();
 		}
 		else if (s.size() == 1) {
-			selected = (WeightedHost) s.iterator().next();
+			selected = s.iterator().next();
+			if (logger.isInfoEnabled()) {
+				logger.info("Sorted: " + s);
+			}
 		}
 		else {
 			double sum = s.getSum();
 			if (policy == POLICY_WEIGHTED_RANDOM) {
 				double rand = Math.random() * sum;
-				if (logger.isDebugEnabled() && !s.isEmpty()) {
-					logger.debug("Sorted: " + s);
+				if (logger.isInfoEnabled() && !s.isEmpty()) {
+					logger.info("Sorted: " + s);
 				}
 				if (logger.isDebugEnabled()) {
 					logger.debug("Rand: " + rand + ", sum: " + sum);
