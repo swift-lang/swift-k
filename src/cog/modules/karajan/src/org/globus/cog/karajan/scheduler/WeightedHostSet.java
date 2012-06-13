@@ -61,6 +61,24 @@ public class WeightedHostSet {
 			checkOverloaded(wh);
 		}
 	}
+	
+	public double factorScore(WeightedHost wh, double factor) {
+		synchronized (scores) {
+			scores.remove(wh);
+			sum -= wh.getTScore();
+			double newScore = factor(wh.getScore(), factor);
+			wh.setScore(newScore);
+			weightedHosts.put(wh.getHost(), wh);
+			scores.add(wh);
+			sum += wh.getTScore();
+			checkOverloaded(wh);
+			return newScore;
+		}
+	}
+	
+	protected final double factor(double score, double factor) {
+		return score + factor;
+	}
 
 	public void changeLoad(WeightedHost wh, int dl) {
 		wh.changeLoad(dl);
