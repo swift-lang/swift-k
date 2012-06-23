@@ -280,7 +280,13 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	}
 
 	protected static String pathOnly(String file) {
-		return new AbsFile(file).getPath();
+	    AbsFile af = new AbsFile(file);
+	    if ("file".equals(af.getProtocol())) {
+	        return af.getPath();
+	    }
+	    else {
+	        return af.getHost() + "/" + af.getPath();
+	    }
 	}
 
 	protected String[] pathOnly(String[] files) {
