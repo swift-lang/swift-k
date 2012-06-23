@@ -22,25 +22,7 @@ global(SITEDIR_KEEP, vdl:configProperty("sitedir.keep"))
 
 namespace("vdl"
 	export(
-		element(rmdir, [dir, host]
-			parallelFor(entry, file:list(dir, host=host)
-				epath := "{dir}/{entry}"
-				if(
-					file:isDirectory(epath, host=host) rmdir(epath, host)
-					file:remove(epath, host=host)
-				)
-			)
-			dir:remove(dir, host=host)
-		)
-
-		element(createdirs, [path, dir, host]
-			dc := dircat(dir, path)
-			log(LOG:INFO, "START path={path} dir={dir} - Creating directory structure")
-
-			dir:make(dc, host=host)
-		)
-
-		element(checkJobStatus, [wfdir, jobid, tr]
+		element(checkJobStatus, [jobdir, jobid, tr]
 			log(LOG:DEBUG, "START jobid={jobid}")
 			try(
 				sequential(
@@ -51,39 +33,24 @@ namespace("vdl"
 					 * in one operation. It relies on file:remove() throwing
 					 * an exception if the file is not there.
 					 */
-					file:remove("{wfdir}/status/{jobdir}/{jobid}-success", host=rhost)
+					file:remove("{jobdir}/_swift.success")
 					log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
 				)
-				sequential(
-					try (
-						msg = checkErrorFile(rhost, wfdir, jobid, jobdir)
-						sequential (
-							log(LOG:INFO, "NO_STATUS_FILE jobid={jobid} - Both status files are missing")
-							throw("No status file was found. Check the shared filesystem on {rhost}")
-						)
-					)
-				)
-				throw(checkErrorFile(rhost, wfdir, jobid, jobdir))
+				throw(checkErrorFile(jobdir, jobid))
 			)
 		)
 		
-		element(checkErrorFile, [wfdir, jobid]
+		element(checkErrorFile, [jobdir, jobid]
 			if (
-				file:exists("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost) then(
+				file:exists("{jobdir}/_swift.error") then(
 					log(LOG:INFO, "FAILURE jobid={jobid} - Failure file found")
-					task:transfer(srchost=rhost, srcdir="{wfdir}/status/{jobdir}", srcfile="{jobid}-error")
-					error := parallel(
-						file:remove("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost)
-						sequential(
-							str:strip(file:read("{jobid}-error"))
-							file:remove("{jobid}-error")
-						)
-					)
+					error := str:strip(file:read("{jobdir}/_swift.error"))
+					file:remove("{jobdir}/_swift.error")
 					error
 				)
 				else (
-					log(LOG:INFO, "NO_STATUS_FILE jobid={jobid} - Error file missing")
-					throw("No status file was found. Check the shared filesystem on {rhost}")
+					log(LOG:INFO, "NO_STATUS_FILE jobid={jobid} - Both status files are missing")
+					throw("No status file was found")
 				)
 			)
 		)
@@ -116,7 +83,7 @@ namespace("vdl"
 		)
 
 		element(inFiles, [stageins]
-			pathnames(stageins)
+			stageins
 		)
 
 		element(fileDirs, [stageins, stageouts]
@@ -128,42 +95,8 @@ namespace("vdl"
 			)
 		)
 
-		element(createDirSet, [jobid, destdir, host, dirs]
-			/*
-			 * Ideally this would be done by creating a tree of the directories
-			 * to be created and (eventually) exploiting the concurrency in that.
-			 */
-			log(LOG:INFO, "START jobid={jobid} host={host} - Initializing directory structure")
-			for(u, dirs
-				cacheOn(list(u, destdir, host)
-					createdirs(u, destdir, host)
-				)
-			)
-			log(LOG:INFO, "END jobid={jobid} - Done initializing directory structure")
-		)
-
 		element(cleanup, [dir, host]
 			log(LOG:INFO, "START dir={dir} host={host}")
-			cdmfile := cdm:file()
-			log(LOG:DEBUG, "cdmfile {cdmfile}")
-			if(cdmfile != "" &
-                           cdm:get("GATHER_DIR") != "UNSET" then(
-				log(LOG:INFO, "submitting cdm_cleanup.sh to {dir}")
-				task:transfer(srcfile="cdm_cleanup.sh",
-					      srcdir="{swift.home}/libexec",
-					      desthost=host, destdir=dir)
-				task:transfer(srcfile="cdm_lib.sh",
-					      srcdir="{swift.home}/libexec",
-					      desthost=host, destdir=dir)
-			        log(LOG:INFO, "execute: cdm_cleanup.sh")
-				task:execute(
-					     executable="/bin/bash",
-					     arguments=list("{dir}/cdm_cleanup.sh",
-					                     cdm:get("GATHER_DIR"), cdm:get("GATHER_TARGET")
-							     sys:uid() )
-					     host=host, batch=true, tcprofile(host))
-				)
-			)
 			if(vdl:configProperty("sitedir.keep") == "false"
 				task:execute(
 					vdl:siteprofile(host, "swift:cleanupCommand"),
@@ -189,14 +122,6 @@ namespace("vdl"
 				)
 			)
 			log(LOG:INFO, "END cleanups={cleanup}")
-		)
-
-		element(cleanupFiles, [files, host]
-			uParallelFor(r, files
-				log(LOG:INFO, "Purging ", r, " on ", host)
-				file:remove(r, host=host)
-				vdl:cacheFileRemoved(r, host)
-			)
 		)
 
 		element(stageWrapperParams, [jobid, wrapfile, dir, host]
@@ -243,16 +168,10 @@ namespace("vdl"
 				)
 			)
 		)
-
-		element(fileSizes, [files]
-			math:sum(
-				for(f, files, file:size(file))
-			)
-		)
 		
 		element(readStandardFiles, [jobdir, stdout, stderr]
 			concat(
-				for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))
+				for(f, list(list("_swift.stderr", stderr), list("_swift.stdout", stdout))
 					[name, file] := each(f)
 					destfile := "{jobdir}/{file}"
 					nl()
@@ -291,8 +210,8 @@ namespace("vdl"
 
 				wrapfile := "{jobdir}/_paramfile"
 
-				stdout := try(getFieldValue(stdout), "stdout.txt")
-				stderr := try(getFieldValue(stderr), "stderr.txt")
+				stdout := try(getFieldValue(stdout), "_swift.stdout")
+				stderr := try(getFieldValue(stderr), "_swift.stderr")
 				fileDirs := fileDirs(stagein, stageout)
 				os := vdl:siteprofile(rhost, "SYSINFO:OS")
 				
@@ -306,8 +225,8 @@ namespace("vdl"
 							"-err ", stderr, nl(),
 							"-i ", maybe(getFieldValue(stdin)), nl(),
 							"-d ", flatten(each(fileDirs)), nl(),
-							"-if ", flatten(infiles(stagein)), nl(),
-							"-of ", flatten(outfiles(stageout)), nl(),
+							"-if ", flatten(inFiles(stagein)), nl(),
+							"-of ", flatten(outFiles(stageout)), nl(),
 							"-wt", WRAPPERLOG_ALWAYS_TRANSFER,
 							"-sk", SITEDIR_KEEP,
 							"-cdmfile ", cdm:file(), nl(),
@@ -366,8 +285,8 @@ namespace("vdl"
 									"-err", stderr,
 									"-i", maybe(getFieldValue(stdin)),
 									"-d", flatten(each(fileDirs)),
-									"-if", flatten(infiles(stagein)),
-									"-of", flatten(outfiles(stageout)),
+									"-if", flatten(inFiles(stagein)),
+									"-of", flatten(outFiles(stageout)),
 									"-wt", WRAPPERLOG_ALWAYS_TRANSFER,
 									"-sk", SITEDIR_KEEP,
 									"-cdmfile", cdm:file(),
@@ -386,7 +305,7 @@ namespace("vdl"
 
 						vdl:setprogress("Checking status")
 						if(statusMode == "files"
-							checkJobStatus(wfdir, jobid, tr)
+							checkJobStatus(jobdir, jobid, tr)
 						)
 
 						if(wrapperMode == "files"
@@ -412,7 +331,7 @@ namespace("vdl"
 					catch("^(?!Abort$).*"
 						vdl:setprogress("Failed but can retry")
 						prev := exception
-						exception := try(exception(checkErrorFile(rhost, wfdir, jobid)), prev)
+						exception := try(exception(checkErrorFile(jobdir, jobid)), prev)
 						
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 
