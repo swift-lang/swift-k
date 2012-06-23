@@ -110,6 +110,12 @@ public class Execute extends GridExec {
 					RuntimeStats.setProgress(stack, "Submitted");
 					getReplicationManager(stack).submitted(task, e.getStatus().getTime());
 				}
+				else if (c == Status.STAGE_IN) {
+				    RuntimeStats.setProgress(stack, "Stage in");
+				}
+				else if (c == Status.STAGE_OUT) {
+				    RuntimeStats.setProgress(stack, "Stage out");
+				}
 				else if (c == Status.ACTIVE) {
 					RuntimeStats.setProgress(stack, "Active");
 					getReplicationManager(stack).active(task, e.getStatus().getTime());
