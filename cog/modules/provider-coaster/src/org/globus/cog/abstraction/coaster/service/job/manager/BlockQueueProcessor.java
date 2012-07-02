@@ -789,10 +789,12 @@ implements RegistrationManager, Runnable {
 
     private void shutdownBlocks() {
         logger.info("Shutting down blocks");
+        List<Block> bl;
         synchronized (blocks) {
-            for (Block b : new ArrayList<Block>(blocks.values())) {
-                b.shutdown(true);
-            }
+            bl = new ArrayList<Block>(blocks.values());
+        }
+        for (Block b : bl) {
+            b.shutdown(true);
         }
     }
 
