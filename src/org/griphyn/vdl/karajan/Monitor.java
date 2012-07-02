@@ -233,7 +233,13 @@ public class Monitor implements ActionListener, MouseListener {
 				catch (Exception e) {
 				    value = "<exception>";
 				}
-				ps.println(handle.getType() + " " + handle.getDisplayableName() + " " + value + " " + f);
+				try {
+				    ps.println(handle.getType() + " " + handle.getDisplayableName() + " " + value + " " + f);
+				}
+				catch (Exception e) {
+				    ps.println(handle.getDisplayableName() + " - error");
+				    e.printStackTrace(ps);
+				}
 			}
 			ps.println("----");
 		}
