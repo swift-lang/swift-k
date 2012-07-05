@@ -281,7 +281,7 @@ error = workers.stderr
 executable = $SWIFT_BIN/$WORKER
 arguments = $EXECUTION_URL node .
 notification = Never
-leave_in_queue = TRUE
+leave_in_queue = FALSE
 machine_count = $CONDOR_MACHINE_COUNT
 queue $CONDOR_WORKERS
 EOF
