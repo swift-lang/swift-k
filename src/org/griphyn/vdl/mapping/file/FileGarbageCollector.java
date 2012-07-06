@@ -17,6 +17,7 @@
 
 package org.griphyn.vdl.mapping.file;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -26,6 +27,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.VDL2ConfigProperties;
 
 public class FileGarbageCollector implements Runnable {
     public static final Logger logger = Logger.getLogger(FileGarbageCollector.class);
@@ -43,22 +46,36 @@ public class FileGarbageCollector implements Runnable {
     private Thread thread;
     private Map<PhysicalFormat, Integer> usageCount;
     private Set<PhysicalFormat> persistent;
-    private boolean shutdown, done;
+    private boolean shutdown, done, enabled;
     
     public FileGarbageCollector() {
         queue = new LinkedList<PhysicalFormat>();
         usageCount = new HashMap<PhysicalFormat, Integer>();
         persistent = new HashSet<PhysicalFormat>();
-        thread = new Thread(this, "File Garbage Collector");
-        thread.setDaemon(true);
-        thread.start();
+        try {
+            enabled = !"false".equals(VDL2Config.getConfig().getProperty(VDL2ConfigProperties.FILE_GC_ENABLED));
+        }
+        catch (IOException e) {
+            //enabled by default
+            enabled = true;
+        }
+        if (enabled) {
+            thread = new Thread(this, "File Garbage Collector");
+            thread.setDaemon(true);
+            thread.start();
+        }
     }
     
     public synchronized void markAsPersistent(PhysicalFormat pf) {
-        persistent.add(pf);
+        if (enabled) {
+            persistent.add(pf);
+        }
     }
     
     public synchronized void decreaseUsageCount(PhysicalFormat pf) {
+        if (!enabled) {
+            return;
+        }
         assert Thread.holdsLock(this);
         Integer c = usageCount.get(pf);
         if (c == null) {
@@ -84,6 +101,9 @@ public class FileGarbageCollector implements Runnable {
     }
     
     public synchronized void increaseUsageCount(PhysicalFormat pf) {
+        if (!enabled) {
+            return;
+        }
         // a usage count of 1 is assumed if the key is not in the map
         // A remap of a remappable mapper would increase the usage count to 2 
         Integer c = usageCount.get(pf);
@@ -125,7 +145,7 @@ public class FileGarbageCollector implements Runnable {
 
     public void waitFor() throws InterruptedException {
         shutdown = true;
-        while (!done) {
+        while (!done && enabled) {
             synchronized(this) {
                 notify();
             }

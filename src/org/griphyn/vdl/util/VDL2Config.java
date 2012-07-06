@@ -117,6 +117,8 @@ public class VDL2Config extends Properties {
 		put("use.provider.staging", "false");
 		put("ticker.date.format", "");
 		put("ticker.prefix", "Progress:  time:");
+		
+		put(VDL2ConfigProperties.FILE_GC_ENABLED, "true");
 	}
 
 	private VDL2Config(VDL2Config other) {

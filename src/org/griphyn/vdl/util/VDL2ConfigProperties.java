@@ -42,6 +42,7 @@ public class VDL2ConfigProperties {
 	public static final String WRAPPERLOG_ALWAYS_TRANSFER = "wrapperlog.always.transfer";
 	public static final String SITEDIR_KEEP = "sitedir.keep";
 	public static final String PROVENANCE_LOG = "provenance.log";
+	public static final String FILE_GC_ENABLED = "file.gc.enabled";
 	public static final Map<String, PropInfo> PROPERTIES;
 
 	static {
@@ -133,6 +134,9 @@ public class VDL2ConfigProperties {
 					"<true|false>",
 					"If set to true, will record provenance information in the log file"));
 
+		PROPERTIES.put(FILE_GC_ENABLED, new PropInfo("<true|false>", "Allows disabling the file garbage collector. " +
+				"If set to false, files mapped by collectable mappers (such as the concurrent mapper) will not be " +
+				"deleted when their swift variables go out of scope."));
 	}
 
 	public static Map<String, PropInfo> getPropertyDescriptions() {
