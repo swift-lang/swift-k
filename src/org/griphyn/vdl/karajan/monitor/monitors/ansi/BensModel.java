@@ -33,11 +33,11 @@ import org.griphyn.vdl.karajan.monitor.items.TraceItem;
 
 public class BensModel extends AbstractTableModel implements SystemStateListener {
     private SystemState state;
-    private List lines;
+    private List<String> lines;
 
     public BensModel(SystemState state) {
         this.state = state;
-        lines = new ArrayList();
+        lines = new ArrayList<String>();
         try {
             BufferedReader br = new BufferedReader(new FileReader(state.getProjectName() + ".swift"));
             String line = br.readLine();
@@ -53,7 +53,7 @@ public class BensModel extends AbstractTableModel implements SystemStateListener
         }
     }
 
-    public Class getColumnClass(int columnIndex) {
+    public Class<?> getColumnClass(int columnIndex) {
         return String.class;
     }
 

@@ -26,49 +26,55 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 import org.griphyn.vdl.karajan.monitor.processors.LogMessageProcessor;
 
 public class StateUpdater {
-	private SystemState state;
-    private Map categories;
+    public static final Logger logger = Logger.getLogger(StateUpdater.class);
     
+	private SystemState state;
+    private Map<Level, Map<String, List<LogMessageProcessor>>> levels;
+        
     public StateUpdater(SystemState state) {
         this.state = state;
-        this.categories = new HashMap();
+        this.levels = new HashMap<Level, Map<String, List<LogMessageProcessor>>>();
     }
     
     public void addProcessor(LogMessageProcessor processor) {
-        Object category = processor.getSupportedCategory();
-        Map sources;
-        synchronized(categories) {
-            sources = (Map) categories.get(category);
+        Level level = processor.getSupportedLevel();    
+        Map<String, List<LogMessageProcessor>> sources;
+        
+        synchronized(levels) {
+            sources = levels.get(level);
             if (sources == null) {
-                sources = new HashMap();
-                categories.put(category, sources);
+                sources = new HashMap<String, List<LogMessageProcessor>>();
+                levels.put(level, sources);
             }
         }
         synchronized(sources) {
-        	List l = (List) sources.get(processor.getSupportedSource());
+        	List<LogMessageProcessor> l = sources.get(processor.getSupportedSourceName());
         	if (l == null) {
-        		l = new LinkedList();
-        		sources.put(processor.getSupportedSource(), l);
+        		l = new LinkedList<LogMessageProcessor>();
+        		sources.put(processor.getSupportedSourceName(), l);
         	}
             l.add(processor);
         }
     }
     
     public void logEvent(Object category, String source, Object message, Object details) {
-    	Map sources = (Map) categories.get(category);
+    	Map<String, List<LogMessageProcessor>> sources = levels.get(category);
         if (sources == null) {
-            return; 
+            return;
         }
-        List l = (List) sources.get(source);
+        List<LogMessageProcessor> l = sources.get(source);
         if (l == null) {
         	return;
         }
-        Iterator i = l.iterator();
+        Iterator<LogMessageProcessor> i = l.iterator();
         while (i.hasNext()) {
-        	LogMessageProcessor processor = (LogMessageProcessor) i.next();
+        	LogMessageProcessor processor = i.next();
         	processor.processMessage(state, message, details);
         }
     }

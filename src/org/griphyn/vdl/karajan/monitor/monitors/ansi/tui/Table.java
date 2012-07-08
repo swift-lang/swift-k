@@ -31,7 +31,7 @@ import javax.swing.table.TableModel;
 
 public class Table extends Container implements TableModelListener {
 	private TableModel model;
-	private Map colWidths;
+	private Map<Integer, Integer> colWidths;
 	private int presetColWidthsTotal;
 	private int presetColWidthsCount;
 	private int firstRow;
@@ -45,8 +45,10 @@ public class Table extends Container implements TableModelListener {
 	
 	public Table(TableModel model) {
 		this.model = model;
-		colWidths = new HashMap();
+		colWidths = new HashMap<Integer, Integer>();
 		sb = new VScrollbar();
+		sb.setBackgroundChar(ANSI.GCH_V_LINE);
+		sb.setThumbChar(ANSI.GCH_BULLET);
 		cellRenderer = new DefaultTableCellRenderer();
 	}
 
@@ -66,9 +68,9 @@ public class Table extends Container implements TableModelListener {
 	}
 
 	public void setColumnWidth(int index, int width) {
-		Integer old = (Integer) colWidths.put(new Integer(index), new Integer(width));
+		Integer old = colWidths.put(index, width);
 		if (old != null) {
-			presetColWidthsTotal -= old.intValue();
+			presetColWidthsTotal -= old;
 			presetColWidthsCount--;
 		}
 		presetColWidthsTotal += width;
@@ -82,7 +84,7 @@ public class Table extends Container implements TableModelListener {
 			return;
 		}
 		removeAll();
-		sb.setLocation(width - 1, 0);
+		sb.setLocation(width, 0);
 		sb.setSize(1, height);
 		sb.setBgColor(bgColor);
 		sb.setFgColor(fgColor);
@@ -100,7 +102,7 @@ public class Table extends Container implements TableModelListener {
 		float cx = 0;
 		for (int i = 0; i < cc; i++) {
 			boolean last = i == cc - 1;
-			Integer presetColWidth = (Integer) colWidths.get(new Integer(i));
+			Integer presetColWidth = colWidths.get(i);
 			int colWidth;
 			if (presetColWidth == null) {
 				colWidth = (int) ((cx + defaultWidth) - (int) cx);
@@ -169,15 +171,13 @@ public class Table extends Container implements TableModelListener {
 			sb.setTotal(getModel().getRowCount());
 			sb.setCurrent(selectedRow);
 			this.selectedRow = selectedRow;
-			Iterator i = components.iterator();
-			while (i.hasNext()) {
-				Component c = (Component) i.next();
+			for (Component c : components) {
 				if (c instanceof TableColumn) {
 					((TableColumn) c).setSelectedRow(selectedRow);
 				}
 			}
 			if (selectedRow < firstRow) {
-			    firstRow = Math.min(selectedRow - height + 4, 0);
+			    firstRow = Math.max(selectedRow - height + 4, 0);
 			}
 			if (selectedRow > firstRow + height - 4) {
 			    firstRow = selectedRow;

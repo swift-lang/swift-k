@@ -22,11 +22,31 @@ package org.griphyn.vdl.karajan.monitor.processors;
 
 import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
+import org.griphyn.vdl.karajan.monitor.items.TraceItem;
 
-public interface LogMessageProcessor {
-	void processMessage(SystemState state, Object message, Object details);
-	
-	String getSupportedSourceName();
-	
-	Level getSupportedLevel();
+public class ForeachItEndProcessor extends AbstractSwiftProcessor {
+
+    public Level getSupportedLevel() {
+        return Level.DEBUG;
+    }
+
+    public String getMessageHeader() {
+        return "FOREACH_IT_END";
+    }
+
+    public void processMessage(SystemState state, SimpleParser p, Object details) {
+        try {
+            p.skip("line=");
+            String line = p.word();
+
+            TraceItem ti = (TraceItem) state.getItemByID(line, StatefulItemClass.TRACE);
+            ti.incEnded();
+            state.itemUpdated(ti);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }

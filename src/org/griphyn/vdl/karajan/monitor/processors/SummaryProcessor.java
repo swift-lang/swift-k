@@ -21,23 +21,39 @@
 package org.griphyn.vdl.karajan.monitor.processors;
 
 import org.apache.log4j.Level;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.griphyn.vdl.karajan.VDL2ExecutionContext;
+import org.griphyn.vdl.karajan.lib.RuntimeStats.ProgressTicker;
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
+import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
 
-public class ExecutionContextProcessor extends AbstractMessageProcessor {
+public class SummaryProcessor extends AbstractMessageProcessor {
 
 	public Level getSupportedLevel() {
 		return Level.INFO;
 	}
 
 	public Class<?> getSupportedSource() {
-		return VDL2ExecutionContext.class;
+		return ProgressTicker.class;
 	}
 
 	public void processMessage(SystemState state, Object message, Object details) {
-		if (message instanceof VariableStack) {
-		    state.setStack((VariableStack) message);
+		String msg = String.valueOf(message);
+		SummaryItem s;
+		synchronized(this) {
+		    s = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
+		    if (s == null) {
+		        s = new SummaryItem();
+		        state.addItem(s);
+		    }
 		}
+		String[] pairs = msg.split("  ");
+		for (String pair : pairs) {
+		    if (pair.equals("")) {
+		        continue;
+		    }
+		    String[] v = pair.split(":");
+		    s.setCount(v[0].trim(), Integer.parseInt(v[1]));
+		}
+		state.itemUpdated(s);
 	}
 }

@@ -22,10 +22,14 @@ package org.griphyn.vdl.karajan.monitor.monitors.ansi;
 
 import java.util.Timer;
 
-public class GlobalTimer {
-	private static final Timer timer = new Timer();
+public class GlobalTimer extends Timer {
+	private static final Timer timer = new Timer("TUI Timer", true);
+	
+	public GlobalTimer(String name, boolean isDaemon) {
+        super(name, isDaemon);    
+    }
 
-	public static Timer getTimer() {
+    public static Timer getTimer() {
 		return timer;
 	}
 }

@@ -197,9 +197,10 @@ public class ANSIContext {
     }
 
     protected void expect(String what, int wait) throws IOException {
-        if (wait > 0) {
+        while (wait > 0 && is.available() == 0) {
             try {
-                Thread.sleep(wait);
+                Thread.sleep(1);
+                wait--;
             }
             catch (InterruptedException e) {
                 throw new IOException("Interrupted");

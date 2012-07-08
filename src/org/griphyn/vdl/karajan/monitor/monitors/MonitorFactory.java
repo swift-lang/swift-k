@@ -27,10 +27,10 @@ import org.griphyn.vdl.karajan.monitor.monitors.ansi.ANSIMonitor;
 import org.griphyn.vdl.karajan.monitor.monitors.swing.SwingMonitor;
 
 public class MonitorFactory {
-	private static Map classes;
+	private static Map<String, Class<? extends Monitor>> classes;
 
 	static {
-		classes = new HashMap();
+		classes = new HashMap<String, Class<? extends Monitor>>();
 		classes.put("text", TextMonitor.class);
 		classes.put("ANSI", ANSIMonitor.class);
 		classes.put("Swing", SwingMonitor.class);
@@ -38,11 +38,11 @@ public class MonitorFactory {
 
 	public static Monitor newInstance(String type) throws InstantiationException,
 			IllegalAccessException {
-		Class cls = (Class) classes.get(type);
+		Class<? extends Monitor> cls = classes.get(type);
 		if (cls == null) {
 			throw new IllegalArgumentException("Unsupported monitor type (" + type
 					+ "). The supported types are: " + classes.keySet());
 		}
-		return (Monitor) cls.newInstance();
+		return cls.newInstance();
 	}
 }

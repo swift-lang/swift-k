@@ -28,7 +28,9 @@ import java.util.Timer;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 
+import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.monitors.AbstractMonitor;
@@ -65,8 +67,9 @@ public class SwingMonitor extends AbstractMonitor {
 		tablemap.put(StatefulItemClass.WORKFLOW, workflows);
 		tabs.add("Workflows", (Component) workflows);
 		
-		ClassRenderer applications = new ApplicationTable("Applications",
-				getState().getItemClassSet(StatefulItemClass.APPLICATION));
+		StatefulItemClassSet<ApplicationItem> appSet =
+		    getState().getItemClassSet(StatefulItemClass.APPLICATION);
+		ClassRenderer applications = new ApplicationTable("Applications", appSet);
 		tablemap.put(StatefulItemClass.APPLICATION, applications);
 		tabs.add("Applications", (Component) applications);
 		

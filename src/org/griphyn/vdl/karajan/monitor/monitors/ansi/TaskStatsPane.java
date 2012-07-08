@@ -18,8 +18,6 @@
 package org.griphyn.vdl.karajan.monitor.monitors.ansi;
 
 import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.griphyn.vdl.karajan.monitor.Stats;
 import org.griphyn.vdl.karajan.monitor.SystemState;
@@ -63,9 +61,9 @@ public class TaskStatsPane extends Container {
             cg[i] = addGraph(12 + i * hsz, 6, hsz, vsz);
             pg[i] = addGraph(12 + i * hsz, 6 + vsz, hsz, vsz);
         }
-        GlobalTimer.getTimer().schedule(new TimerTask() {
-            public void run() {
-                update();
+        GlobalTimer.getTimer().schedule(new SafeTimerTask(getScreen()) {
+            public void runTask() {
+                update(); 
             }
         }, 1000, 1000);
     }

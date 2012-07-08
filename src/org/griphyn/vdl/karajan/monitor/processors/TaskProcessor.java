@@ -28,14 +28,14 @@ import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.TaskItem;
 
-public class TaskProcessor implements LogMessageProcessor {
+public class TaskProcessor extends AbstractMessageProcessor {
 
-    public Object getSupportedCategory() {
+    public Level getSupportedLevel() {
         return Level.DEBUG;
     }
 
-    public String getSupportedSource() {
-        return "org.globus.cog.karajan.workflow.nodes.grid.AbstractGridNode";
+    public Class<?> getSupportedSource() {
+        return org.globus.cog.karajan.workflow.nodes.grid.AbstractGridNode.class;
     }
 
     public void processMessage(SystemState state, Object message, Object details) {
@@ -89,7 +89,7 @@ public class TaskProcessor implements LogMessageProcessor {
                             state.removeItem(si);
                         }
                         else {
-                            ((TaskItem) si).setStatus(status);
+                            si.setStatus(status);
                             state.itemUpdated(si);
                         }
                     }

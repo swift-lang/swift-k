@@ -24,17 +24,15 @@ import org.apache.log4j.Level;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.HostItem;
-import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
-import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 
-public class SchedulerInfoProcessor implements LogMessageProcessor {
+public class SchedulerInfoProcessor extends AbstractMessageProcessor {
 
-	public Object getSupportedCategory() {
+	public Level getSupportedLevel() {
 		return Level.INFO;
 	}
 
-	public String getSupportedSource() {
-		return WeightedHostScoreScheduler.class.getName();
+	public Class<?> getSupportedSource() {
+		return WeightedHostScoreScheduler.class;
 	}
 
 	public void processMessage(SystemState state, Object message, Object details) {

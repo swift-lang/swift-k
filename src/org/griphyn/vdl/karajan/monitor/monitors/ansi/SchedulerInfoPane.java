@@ -48,7 +48,7 @@ public class SchedulerInfoPane extends VBox implements SystemStateListener {
 	    
 	    f = new Frame() {
             protected void validate() {
-                Component c = (Component) getComponents().get(0);
+                Component c = getComponents().get(0);
                 c.setLocation(1, 1);
                 c.setSize(width - 2, height - 2);
                 super.validate();

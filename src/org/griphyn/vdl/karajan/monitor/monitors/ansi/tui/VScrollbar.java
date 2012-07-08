@@ -24,6 +24,15 @@ import java.io.IOException;
 
 public class VScrollbar extends Component {
 	private int total, current;
+	private int backgroundChar;
+	private int thumbChar;
+	private boolean invertThumbColor;
+	
+	public VScrollbar() {
+	    backgroundChar = ANSI.GCH_HASH;
+	    thumbChar = ' ';
+	    invertThumbColor = true;
+	}
 
 	protected void draw(ANSIContext context) throws IOException {
 		context.bgColor(bgColor);
@@ -31,7 +40,7 @@ public class VScrollbar extends Component {
 		context.lineArt(true);
 		for (int i = 0; i < height; i++) {
 			context.moveTo(sx, sy + i);
-			context.putChar(ANSI.GCH_HASH);
+			context.putChar(backgroundChar);
 		}
 		int pos = 0;
 		if (total > 1) {
@@ -43,10 +52,12 @@ public class VScrollbar extends Component {
 			}
 			pos = (height - 1) * current / (total - 1);
 		}
-		context.bgColor(fgColor);
-		context.fgColor(bgColor);
+		if (invertThumbColor) {
+		    context.bgColor(fgColor);
+		    context.fgColor(bgColor);
+		}
 		context.moveTo(sx, sy + pos);
-		context.putChar(' ');
+		context.putChar(thumbChar);
 		context.lineArt(false);
 	}
 
@@ -66,4 +77,27 @@ public class VScrollbar extends Component {
 		this.total = total;
 	}
 
+    public int getBackgroundChar() {
+        return backgroundChar;
+    }
+
+    public void setBackgroundChar(int backgroundChar) {
+        this.backgroundChar = backgroundChar;
+    }
+
+    public int getThumbChar() {
+        return thumbChar;
+    }
+
+    public void setThumbChar(int thumbChar) {
+        this.thumbChar = thumbChar;
+    }
+
+    public boolean getInvertThumbColor() {
+        return invertThumbColor;
+    }
+
+    public void setInvertThumbColor(boolean invertThumbColor) {
+        this.invertThumbColor = invertThumbColor;
+    }
 }

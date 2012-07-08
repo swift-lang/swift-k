@@ -20,22 +20,33 @@
  */
 package org.griphyn.vdl.karajan.monitor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 import org.apache.log4j.spi.ErrorHandler;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
 import org.griphyn.vdl.karajan.monitor.monitors.Monitor;
 import org.griphyn.vdl.karajan.monitor.monitors.MonitorFactory;
-import org.griphyn.vdl.karajan.monitor.processors.AppProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.AbstractSwiftProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.AppEndProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.AppStartProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.AppThreadProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.ExecutionContextProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.ForeachItEndProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.ForeachItStartProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.JobProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.ProcedureProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.ProcedureEndProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.ProcedureStartProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.SchedulerInfoProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.SummaryProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.SwiftProcessorDispatcher;
 import org.griphyn.vdl.karajan.monitor.processors.TaskProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.TraceProcessor;
 
 public class MonitorAppender implements Appender {
     public static final Logger logger = Logger.getLogger(MonitorAppender.class);
@@ -43,13 +54,17 @@ public class MonitorAppender implements Appender {
 	private SystemState state;
 	private StateUpdater updater;
 	private Monitor monitor;
-
+	
 	public MonitorAppender(String projectName) {
+	    this(projectName, "ANSI");
+	}
+
+	public MonitorAppender(String projectName, String monitorType) {
 		state = new SystemState(projectName);
 		updater = new StateUpdater(state);
         addProcessors(updater);
 		try {
-			monitor = MonitorFactory.newInstance("ANSI");
+			monitor = MonitorFactory.newInstance(monitorType);
             monitor.setState(state);
 		}
 		catch (Exception e) {
@@ -62,17 +77,41 @@ public class MonitorAppender implements Appender {
 	}
     
     private void addProcessors(StateUpdater updater) {
-    	updater.addProcessor(new AppProcessor());
+        updater.addProcessor(new SummaryProcessor());
     	updater.addProcessor(new TaskProcessor());
     	updater.addProcessor(new JobProcessor());
-    	updater.addProcessor(new AppThreadProcessor());
     	updater.addProcessor(new SchedulerInfoProcessor());
-    	updater.addProcessor(new ProcedureProcessor());
     	updater.addProcessor(new ExecutionContextProcessor());
-    	updater.addProcessor(new TraceProcessor());
+    	
+    	addSwiftProcessors(updater, 
+    	    new AppStartProcessor(),
+    	    new AppEndProcessor(),
+    	    new AppThreadProcessor(),
+    	    new ProcedureStartProcessor(),
+    	    new ProcedureEndProcessor(),
+    	    new ForeachItStartProcessor(),
+    	    new ForeachItEndProcessor());
     }
 
-	public void addFilter(Filter newFilter) {
+	private void addSwiftProcessors(StateUpdater updater, AbstractSwiftProcessor... ps) {
+	    Map<Priority, SwiftProcessorDispatcher> m = new HashMap<Priority, SwiftProcessorDispatcher>();
+	    
+	    for (AbstractSwiftProcessor p : ps) {
+	        Level l = p.getSupportedLevel();
+	        SwiftProcessorDispatcher d = m.get(l);
+	        if (d == null) {
+	            d = new SwiftProcessorDispatcher(l);
+	            m.put(l, d);
+	        }
+	        d.add(p);
+	    }
+	    
+	    for (SwiftProcessorDispatcher d : m.values()) {
+	        updater.addProcessor(d);
+	    }
+    }
+
+    public void addFilter(Filter newFilter) {
 	}
 
 	public void clearFilters() {
@@ -84,7 +123,7 @@ public class MonitorAppender implements Appender {
 
 	public void doAppend(LoggingEvent event) {
         try {
-        	updater.logEvent(event.getLevel(), event.getLocationInformation().getClassName(),
+        	updater.logEvent(event.getLevel(), event.getLogger().getName(),
         			event.getMessage(), event.getThrowableInformation());
         }
         catch (Exception e) {
@@ -119,5 +158,9 @@ public class MonitorAppender implements Appender {
 	}
 
 	public void setName(String name) {
+	}
+	
+	public Monitor getMonitor() {
+	    return monitor;
 	}
 }

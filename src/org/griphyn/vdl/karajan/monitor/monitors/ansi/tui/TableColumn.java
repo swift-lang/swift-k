@@ -43,7 +43,7 @@ public class TableColumn extends Container {
     protected void draw(ANSIContext context) throws IOException {
         super.draw(context);
         int fr = table.getFirstRow();
-        for (int i = 0; i < Math.min(model.getRowCount(), height - 2); i++) {
+        for (int i = 0; i < Math.min(model.getRowCount() - fr, height - 2); i++) {
             Component comp = table.getCellRenderer().getComponent(table,
                 model.getValueAt(i + fr, index), i + fr == selectedRow, getParent().hasFocus(),
                 i + fr, index);
@@ -54,7 +54,7 @@ public class TableColumn extends Container {
         context.lock();
         try {
             context.bgColor(bgColor);
-            for (int i = Math.min(model.getRowCount() + 1, height - 1); i < height - 1; i++) {
+            for (int i = Math.min(model.getRowCount() - fr + 1, height - 1); i < height - 1; i++) {
                 context.moveTo(sx, sy + i + 1);
                 context.spaces(width);
             }

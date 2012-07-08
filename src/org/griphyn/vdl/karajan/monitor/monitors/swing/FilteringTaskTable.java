@@ -21,7 +21,6 @@
 package org.griphyn.vdl.karajan.monitor.monitors.swing;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -43,10 +42,10 @@ import org.griphyn.vdl.karajan.monitor.items.TaskItem;
 public class FilteringTaskTable extends JScrollPane {
 	private JTable table;
 	private String name;
-	private StatefulItemClassSet items;
+	private StatefulItemClassSet<TaskItem> items;
 	private int taskType;
 
-	public FilteringTaskTable(String name, StatefulItemClassSet itemClassSet, int taskType) {
+	public FilteringTaskTable(String name, StatefulItemClassSet<TaskItem> itemClassSet, int taskType) {
 		super(new JTable());
 		this.table = (JTable) super.getViewport().getView();
 		this.name = name;
@@ -83,11 +82,12 @@ public class FilteringTaskTable extends JScrollPane {
 
 	public static class Model extends AbstractTableModel implements StatefulItemModel {
 		private boolean dirty;
-		private List rows, itl;
-		private StatefulItemClassSet items;
+		private List<Task> rows;
+		private List<TaskItem> itl;
+		private StatefulItemClassSet<TaskItem> items;
 		private int taskType;
 
-		public Model(StatefulItemClassSet items, int taskType) {
+		public Model(StatefulItemClassSet<TaskItem> items, int taskType) {
 			dirty = true;
 			this.items = items;
 			this.taskType = taskType;
@@ -102,19 +102,15 @@ public class FilteringTaskTable extends JScrollPane {
 		}
 
 		private synchronized void update() {
-			if (dirty) {
-				rows = new ArrayList();
-				itl = items.getAll();
-				Iterator i = itl.iterator();
-				while (i.hasNext()) {
-					TaskItem t = (TaskItem) i.next();
-					Task task = t.getTask();
-					if (taskType == -1 || task.getType() == taskType) {
-						rows.add(task);
-					}
+			rows = new ArrayList<Task>();
+			itl = items.getAll();
+			for (TaskItem t : itl) {
+				Task task = t.getTask();
+				if (taskType == -1 || task.getType() == taskType) {
+					rows.add(task);
 				}
-				dirty = false;
 			}
+			dirty = false;
 		}
 
 		public int getRowCount() {
@@ -128,7 +124,7 @@ public class FilteringTaskTable extends JScrollPane {
 		}
 		
 		public StatefulItem getItem(int rowIndex) {
-			return (StatefulItem) itl.get(rowIndex);
+			return itl.get(rowIndex);
 		}
 
 		public void fireTableDataChanged() {
@@ -143,7 +139,7 @@ public class FilteringTaskTable extends JScrollPane {
 
 	public static class JobModel extends Model {
 		
-		public JobModel(StatefulItemClassSet items) {
+		public JobModel(StatefulItemClassSet<TaskItem> items) {
 			super(items, Task.JOB_SUBMISSION);
 		}
 		
@@ -188,7 +184,7 @@ public class FilteringTaskTable extends JScrollPane {
 
 	public static class TransferModel extends Model {
 
-		public TransferModel(StatefulItemClassSet items) {
+		public TransferModel(StatefulItemClassSet<TaskItem> items) {
 			super(items, Task.FILE_TRANSFER);
 			transferUpdateTimer.schedule(new TimerTask() {
 				public void run() {
@@ -197,7 +193,7 @@ public class FilteringTaskTable extends JScrollPane {
 			}, 1000, 1000);
 		}
 
-		public Class getColumnClass(int columnIndex) {
+		public Class<?> getColumnClass(int columnIndex) {
 			if (columnIndex == 3) {
 				return TransferProgress.class;
 			}
@@ -241,7 +237,7 @@ public class FilteringTaskTable extends JScrollPane {
 
 	public class FileopModel extends Model {
 		
-		public FileopModel(StatefulItemClassSet items) {
+		public FileopModel(StatefulItemClassSet<TaskItem> items) {
 			super(items, Task.FILE_OPERATION);
 		}
 

@@ -18,41 +18,36 @@
 /*
  * Created on Jan 29, 2007
  */
-package org.griphyn.vdl.karajan.monitor.monitors;
+package org.griphyn.vdl.karajan.monitor.processors;
 
+import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.monitor.SystemState;
-import org.griphyn.vdl.karajan.monitor.SystemStateListener;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
+import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 
-public abstract class AbstractMonitor implements Monitor, SystemStateListener {
-	private SystemState state;
+public class AppEndProcessor extends AbstractSwiftProcessor {
 
-	public SystemState getState() {
-		return state;
-	}
-
-	public void setState(SystemState state) {
-		this.state = state;
-		state.addListener(this);
-	}
-
-	public void itemUpdated(int updateType, StatefulItem item) {
-	}
-
-    @Override
-    public boolean supportsOfflineRendering() {
-        return false;
+    public Level getSupportedLevel() {
+        return Level.DEBUG;
     }
 
     @Override
-    public void setOffline(boolean offline) {
-        throw new UnsupportedOperationException();
+    public String getMessageHeader() {
+        return "JOB_END";
     }
 
-    @Override
-    public TimelineController getTimelineController() {
-        throw new UnsupportedOperationException();
+    public void processMessage(SystemState state, SimpleParser p, Object details) {
+        try {
+            p.skip("jobid=");
+            String id = p.word();
+
+            StatefulItem app = state.getItemByID(id,
+                StatefulItemClass.APPLICATION);
+            state.removeItem(app);
+            state.getStats("apps").remove();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-	
-	
 }

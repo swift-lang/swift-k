@@ -31,6 +31,7 @@ import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
 import org.griphyn.vdl.karajan.monitor.common.StatefulItemModel;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.GlobalTimer;
+import org.griphyn.vdl.karajan.monitor.monitors.ansi.SafeTimerTask;
 
 public class SimpleTableClassRenderer extends JScrollPane implements ClassRenderer {
     private JTable table;
@@ -74,8 +75,8 @@ public class SimpleTableClassRenderer extends JScrollPane implements ClassRender
         public Model(StatefulItemClassSet items, int updateInterval) {
             this.items = items;
             update();
-            GlobalTimer.getTimer().schedule(ta = new TimerTask() {
-				public void run() {
+            GlobalTimer.getTimer().schedule(ta = new SafeTimerTask() {
+				public void runTask() {
 					update();
 				}}, updateInterval, updateInterval);
         } 

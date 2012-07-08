@@ -29,14 +29,14 @@ import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 
 public class ApplicationTable extends SimpleTableClassRenderer {
 
-	public ApplicationTable(String name, StatefulItemClassSet itemClassSet) {
+	public ApplicationTable(String name, StatefulItemClassSet<ApplicationItem> itemClassSet) {
 		super(name, itemClassSet);
 		setTableModel(new Model(itemClassSet));
 	}
 	
 	public static class Model extends SimpleTableClassRenderer.Model {
 		
-		public Model(StatefulItemClassSet items) {
+		public Model(StatefulItemClassSet<ApplicationItem> items) {
 			super(items);
 		}
 

@@ -24,7 +24,7 @@ import org.griphyn.vdl.karajan.lib.Execute;
 
 public class JobProcessor extends TaskProcessor {
 
-	public String getSupportedSource() {
-		return Execute.class.getName();
+	public Class<?> getSupportedSource() {
+		return Execute.class;
 	}	
 }

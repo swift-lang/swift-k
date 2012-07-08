@@ -26,4 +26,10 @@ public interface Monitor {
 	void setState(SystemState state);
 
     void shutdown();
+    
+    boolean supportsOfflineRendering();
+    
+    void setOffline(boolean offline);
+    
+    TimelineController getTimelineController();
 }

@@ -20,7 +20,10 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.ansi;
 
+import java.util.Date;
 import java.util.Iterator;
+
+import javax.swing.event.TableModelEvent;
 
 import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -38,6 +41,7 @@ import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Key;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Table;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Terminal;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.TextArea;
+import org.griphyn.vdl.karajan.monitor.monitors.swing.FilteringTaskTable;
 import org.griphyn.vdl.karajan.monitor.monitors.swing.SimpleTableClassRenderer.Model;
 
 public class STable extends Table implements ActionListener {
@@ -225,5 +229,14 @@ public class STable extends Table implements ActionListener {
         else {
             return String.valueOf(o);
         }
+    }
+
+    @Override
+    public void tableChanged(TableModelEvent e) {
+        if (getModel() instanceof FilteringTaskTable.Model) {
+            FilteringTaskTable.Model model = (FilteringTaskTable.Model) getModel();
+            model.invalidate();
+        }
+        super.tableChanged(e);
     }
 }

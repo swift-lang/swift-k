@@ -22,44 +22,32 @@ package org.griphyn.vdl.karajan.monitor.processors;
 
 import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.monitor.SystemState;
-import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
-import org.griphyn.vdl.karajan.monitor.items.Bridge;
-import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
+import org.griphyn.vdl.karajan.monitor.items.TraceItem;
 
-public class AppThreadProcessor extends AbstractSwiftProcessor {
+public class ProcedureStartProcessor extends AbstractSwiftProcessor {
 
 	public Level getSupportedLevel() {
 		return Level.DEBUG;
 	}
 
 	public String getMessageHeader() {
-		return "THREAD_ASSOCIATION";
+		return "PROCEDURE";
 	}
 
 	public void processMessage(SystemState state, SimpleParser p, Object details) {
 	    try {
-			String appid, threadid, replicationgroup;
-		    p.skip("jobid=");
-			appid = p.word();
-			p.skip("thread=");
-			threadid = p.word();
-			p.skip("replicationGroup=");
-			replicationgroup = p.word();
-				
-			StatefulItem app = state.getItemByID(appid, StatefulItemClass.APPLICATION);
-			if (app == null) {
-				app = new ApplicationItem(appid);
-				state.addItem(app);
-			}
-				
-			StatefulItem thread = state.getItemByID(threadid, StatefulItemClass.BRIDGE);
-			if (thread == null) {
-				thread = new Bridge(threadid);
-				thread.setParent(app);
-				state.addItem(thread);
-				app.addChild(thread);
-			}
+	        state.incTotal();
+	        
+	        p.skip("line=");
+	        String line = p.word();
+	        TraceItem ti = (TraceItem) state.getItemByID(line, StatefulItemClass.TRACE);
+            if (ti == null) {
+                ti = new TraceItem(line);
+                state.addItem(ti);
+            }
+            ti.incStarted();
+            state.itemUpdated(ti);
 		}
 		catch (Exception e) {
 			e.printStackTrace();

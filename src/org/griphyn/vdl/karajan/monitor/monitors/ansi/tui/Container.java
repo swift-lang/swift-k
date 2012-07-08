@@ -26,12 +26,12 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Container extends Component {
-    protected List components;
+    protected List<Component> components;
     protected Component focused, oldFocused;
     private Boolean focusable;
 
     public Container() {
-        components = new ArrayList();
+        components = new ArrayList<Component>();
     }
 
     public void add(Component comp) {
@@ -53,7 +53,7 @@ public class Container extends Component {
         focusable = null;
     }
 
-    public List getComponents() {
+    public List<Component> getComponents() {
         return components;
     }
 
@@ -64,9 +64,7 @@ public class Container extends Component {
 
     protected void drawTree(ANSIContext context) throws IOException {
         super.drawTree(context);
-        Iterator i = components.iterator();
-        while (i.hasNext()) {
-            Component c = (Component) i.next();
+        for (Component c : components) {
             if (c.isVisible()) {
                 drawChild(c, context);
             }
@@ -82,10 +80,8 @@ public class Container extends Component {
         if (isValid()) {
             return;
         }
-        Iterator i = components.iterator();
         boolean focus = false;
-        while (i.hasNext()) {
-            Component c = (Component) i.next();
+        for (Component c : components) {
             if (c.hasFocus() && !hasFocus()) {
                 focus();
             }
@@ -118,9 +114,8 @@ public class Container extends Component {
 
     public boolean keyboardEvent(Key key) {
         if (key.modALT() || key.isFunctionKey()) {
-            Iterator i = components.iterator();
-            while (i.hasNext()) {
-                if (((Component) i.next()).keyboardEvent(key)) {
+            for (Component c : components) {
+                if (c.keyboardEvent(key)) {
                     return true;
                 }
             }
@@ -146,10 +141,8 @@ public class Container extends Component {
     }
 
     public boolean focusFirst() {
-        Iterator j = components.iterator();
-        while (j.hasNext()) {
-            Component comp = (Component) j.next();
-            if (comp.focusFirst()) {
+        for (Component c : components) {
+            if (c.focusFirst()) {
                 return true;
             }
         }
@@ -163,11 +156,11 @@ public class Container extends Component {
         else if (focused.focusNext()) {
             return true;
         }
-        Iterator i = components.iterator();
+        Iterator<Component> i = components.iterator();
         while (i.hasNext()) {
             if (i.next() == focused) {
                 while (i.hasNext()) {
-                    Component comp = (Component) i.next();
+                    Component comp = i.next();
                     if (comp.isFocusable()) {
                         comp.focus();
                         return true;
@@ -184,9 +177,8 @@ public class Container extends Component {
         if (f != null) {
             return f.booleanValue();
         }
-        Iterator i = components.iterator();
-        while (i.hasNext()) {
-            if (((Component) i.next()).isFocusable()) {
+        for (Component c : components) {
+            if (c.isFocusable()) {
                 focusable = Boolean.TRUE;
                 return true;
             }

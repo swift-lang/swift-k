@@ -26,7 +26,7 @@ import java.io.PrintStream;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.ANSI;
 
 public class LocalANSIDisplay extends AbstractANSIDisplay {
-    private PrintStream sout, serr;
+    public PrintStream sout, serr;
     private ANSIMonitor m;
     
 	public LocalANSIDisplay(ANSIMonitor m) {

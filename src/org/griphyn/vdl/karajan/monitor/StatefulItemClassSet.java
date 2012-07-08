@@ -20,21 +20,19 @@
  */
 package org.griphyn.vdl.karajan.monitor;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 
-public class StatefulItemClassSet {
-	private RadixTree map;
-	private Iterator i;
+public class StatefulItemClassSet<T extends StatefulItem> {
+	private RadixTree<T> map;
 	private int crt;
 	
 	public StatefulItemClassSet() {
-		map = new RadixTree();
+		map = new RadixTree<T>();
 	}
 
-	public synchronized void add(StatefulItem item) {
+	public synchronized void add(T item) {
 		map.put(item.getID(), item);
 		crt = Integer.MAX_VALUE;
 	}
@@ -45,7 +43,7 @@ public class StatefulItemClassSet {
 	}
 	
 	public synchronized StatefulItem getByID(String id) {
-		return (StatefulItem) map.get(id);
+		return map.get(id);
 	}
 	
 	public synchronized StatefulItem findWithPrefix(String prefix) {
@@ -54,7 +52,7 @@ public class StatefulItemClassSet {
 			return null;
 		}
 		else {
-			return (StatefulItem) map.get(key);
+			return map.get(key);
 		}
 	}
 	
@@ -62,7 +60,7 @@ public class StatefulItemClassSet {
 		return map.size();
 	}
 	
-	public synchronized List getAll() {
+	public synchronized List<T> getAll() {
 		return map.getAll();
 	}
 }

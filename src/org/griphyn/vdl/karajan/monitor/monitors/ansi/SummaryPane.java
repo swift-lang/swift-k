@@ -21,13 +21,13 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TimerTask;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.griphyn.vdl.karajan.lib.RuntimeStats;
-import org.griphyn.vdl.karajan.lib.RuntimeStats.ProgressTicker;
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
+import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.ANSI;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.ANSIContext;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Container;
+import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Dialog;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Label;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.LevelBars;
 
@@ -52,30 +52,23 @@ public class SummaryPane extends Container {
             labels[i] = addLabel("0", 25, 2 + i, 8);
         }
 
-        GlobalTimer.getTimer().schedule(new TimerTask() {
-            public void run() {
+        GlobalTimer.getTimer().schedule(new SafeTimerTask(getScreen()) {
+            public void runTask() {
                 update();
             }
         }, 1000, 1000);
     }
 
     private void update() {
-        VariableStack stack = state.getStack();
-        if (stack != null) {
-            ProgressTicker t = RuntimeStats.getTicker(stack);
-            if (t != null) {
-                Map summary = t.getSummary();
+        try {
+            SummaryItem summary = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
+            if (summary != null) {
+                Map<String, Integer> counts = summary.getCounts(state);
                 for (int i = 0; i < STATES.length; i++) {
-                    Object v = summary.get(STATES[i]);
+                    Integer v = counts.get(STATES[i]);
                     if (v != null) {
-                        String sv = String.valueOf(v);
-                        labels[i].setText(sv);
-                        try {
-                            bars.setValue(i, Integer.parseInt(sv));
-                        }
-                        catch (NumberFormatException e) {
-                            bars.setValue(i, 0);
-                        }
+                        labels[i].setText(v.toString());
+                        bars.setValue(i, v);
                     }
                     else {
                         labels[i].setText("0");
@@ -83,8 +76,11 @@ public class SummaryPane extends Container {
                     }
                 }
             }
+            redraw();
         }
-        redraw();
+        catch (Exception e) {
+            Dialog.displaySimpleDialog(getScreen(), "Error", e.toString(), new String[] {"Close"});
+        }
     }
 
     private Label addLabel(String text, int x, int y, int w) {

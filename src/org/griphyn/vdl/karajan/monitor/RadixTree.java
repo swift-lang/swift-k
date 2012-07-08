@@ -21,19 +21,18 @@
 package org.griphyn.vdl.karajan.monitor;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class RadixTree {
-	private Node root;
+public class RadixTree<T> {
+	private Node<T> root;
 	private int size;
 
 	public RadixTree() {
-		root = new Node(null, null);
+		root = new Node<T>(null, null);
 	}
 
-	public Object put(String key, Object value) {
+	public T put(String key, T value) {
 	    if (key == null) {
 	        throw new IllegalArgumentException("Key is null");
 	    }
@@ -43,11 +42,11 @@ public class RadixTree {
 		return add(root, key, 0, value);
 	}
 	
-	public Object remove(String key) {
+	public T remove(String key) {
 		return remove(root, key, 0);
 	}
 	
-	public Object get(String key) {
+	public T get(String key) {
 		return get(root, key, 0);
 	}
 	
@@ -55,11 +54,9 @@ public class RadixTree {
 		return find(root, key, 0);
 	}
 
-	private Object add(Node n, String key, int pos, Object value) {
+	private T add(Node<T> n, String key, int pos, T value) {
 		if (n.nodes != null) {
-			Iterator i = n.nodes.iterator();
-			while (i.hasNext()) {
-				Node sn = (Node) i.next();
+		    for (Node<T> sn : n.nodes) {
 				String sk = sn.key;
 				if (key.charAt(pos) == sk.charAt(0)) {
 					int j = 1;
@@ -68,7 +65,7 @@ public class RadixTree {
 					}
 					if (j == sk.length()) {
 						if (j + pos == key.length()) {
-							Object old = sn.value;
+							T old = sn.value;
 							sn.value = value;
 							return old;
 						}
@@ -81,11 +78,11 @@ public class RadixTree {
 						String left = sk.substring(j);
 						String right = key.substring(pos + j);
 						sn.key = common;
-						Node ln = new Node(left, sn.value);
+						Node<T> ln = new Node<T>(left, sn.value);
 						ln.nodes = sn.nodes;
 						sn.nodes = null;
 						sn.value = null;
-						Node rn = new Node(right, value);
+						Node<T> rn = new Node<T>(right, value);
 						sn.addNode(ln);
 						sn.addNode(rn);
 						size++;
@@ -94,16 +91,14 @@ public class RadixTree {
 				}
 			}
 		}
-		n.addNode(new Node(key.substring(pos), value));
+		n.addNode(new Node<T>(key.substring(pos), value));
 		size++;
 		return null;
 	}
 	
-	private Object remove(Node n, String key, int pos) {
+	private T remove(Node<T> n, String key, int pos) {
 		if (n.nodes != null) {
-			Iterator i = n.nodes.iterator();
-			while (i.hasNext()) {
-				Node sn = (Node) i.next();
+		    for (Node<T> sn : n.nodes) {
 				String sk = sn.key;
 				if (key.charAt(pos) == sk.charAt(0)) {
 					int j = 1;
@@ -111,7 +106,7 @@ public class RadixTree {
 						j++;
 					}
 					if (j == sk.length()) {
-						Object old;
+						T old;
 						if (j + pos == key.length()) {
 							old = sn.value;
 							size--;
@@ -135,11 +130,9 @@ public class RadixTree {
 		return null;
 	}
 	
-	private Object get(Node n, String key, int pos) {
+	private T get(Node<T> n, String key, int pos) {
 		if (n.nodes != null) {
-			Iterator i = n.nodes.iterator();
-			while (i.hasNext()) {
-				Node sn = (Node) i.next();
+		    for (Node<T> sn : n.nodes) {
 				String sk = sn.key;
 				if (key.charAt(pos) == sk.charAt(0)) {
 					int j = 1;
@@ -163,11 +156,9 @@ public class RadixTree {
 		return null;
 	}
 	
-	private String find(Node n, String key, int pos) {
+	private String find(Node<T> n, String key, int pos) {
 		if (n.nodes != null) {
-			Iterator i = n.nodes.iterator();
-			while (i.hasNext()) {
-				Node sn = (Node) i.next();
+		    for (Node<T> sn : n.nodes) {
 				String sk = sn.key;
 				if (key.charAt(pos) == sk.charAt(0)) {
 					int j = 1;
@@ -195,21 +186,20 @@ public class RadixTree {
 		return size;
 	}
 	
-	public List getAll() {
-		ArrayList l = new ArrayList();
+	public List<T> getAll() {
+		ArrayList<T> l = new ArrayList<T>();
 		traverse(l, root);
 		return l;
 	}
 	
-	private void traverse(List l, Node n) {
+	private void traverse(List<T> l, Node<T> n) {
 		if (n.value != null) {
 			l.add(n.value);
 		}
-		List nodes = n.nodes;
+		List<Node<T>> nodes = n.nodes;
 		if (nodes != null) {
-			Iterator i = nodes.iterator();
-			while (i.hasNext()) {
-				traverse(l, (Node) i.next());
+		    for (Node<T> sn : nodes) {
+				traverse(l, sn);
 			}
 		}
 	}
@@ -220,28 +210,28 @@ public class RadixTree {
 		return sb.toString();
 	}
 	
-	private void toString(StringBuffer sb, Node n) {
+	private void toString(StringBuffer sb, Node<T> n) {
 		n.toString(sb);
 	}
 
-	private class Node {
+	private class Node<S> {
 		private String key;
-		private Object value;
-		private List nodes;
+		private S value;
+		private List<Node<S>> nodes;
 
-		public Node(String key, Object value) {
+		public Node(String key, S value) {
 			this.key = key;
 			this.value = value;
 		}
 
-		public void addNode(Node n) {
+		public void addNode(Node<S> n) {
 			if (nodes == null) {
-				nodes = new LinkedList();
+				nodes = new LinkedList<Node<S>>();
 			}
 			nodes.add(n);
 		}
 		
-		public void removeNode(Node n) {
+		public void removeNode(Node<S> n) {
 			nodes.remove(n);
 			if (nodes.size() == 0) {
 				nodes = null;
@@ -280,7 +270,7 @@ public class RadixTree {
 	}
 	
 	public static void main(String[] args) {
-		RadixTree rt = new RadixTree();
+		RadixTree<String> rt = new RadixTree<String>();
 		p(rt);
 		rt.put("the dog", "0");
 		p(rt);

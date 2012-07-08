@@ -22,31 +22,28 @@ package org.griphyn.vdl.karajan.monitor.processors;
 
 import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.monitor.SystemState;
-import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
-import org.griphyn.vdl.karajan.monitor.items.Bridge;
-import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
+import org.griphyn.vdl.karajan.monitor.items.TraceItem;
 
-public class ProcedureProcessor implements LogMessageProcessor {
+public class ProcedureEndProcessor extends AbstractSwiftProcessor {
 
-	public Object getSupportedCategory() {
-		return Level.INFO;
+	public Level getSupportedLevel() {
+		return Level.DEBUG;
 	}
 
-	public String getSupportedSource() {
-		return "org.griphyn.vdl.karajan.lib.Log";
+	public String getMessageHeader() {
+		return "PROCEDURE_END";
 	}
 
-	public void processMessage(SystemState state, Object message, Object details) {
-		SimpleParser p = new SimpleParser(String.valueOf(message));
+	public void processMessage(SystemState state, SimpleParser p, Object details) {
 		try {
-			String appid, threadid, replicationgroup;
-			if (p.matchAndSkip("PROCEDURE ")) {
-			    state.incTotal();
-			}
-			else if (p.matchAndSkip("END_SUCCESS ")) {
-			    state.incCompleted();
-			}
+		    state.incCompleted();
+		    
+		    p.skip("line=");
+            String line = p.word();
+            TraceItem ti = (TraceItem) state.getItemByID(line, StatefulItemClass.TRACE);
+            ti.incEnded();
+            state.itemUpdated(ti);
 		}
 		catch (Exception e) {
 			e.printStackTrace();

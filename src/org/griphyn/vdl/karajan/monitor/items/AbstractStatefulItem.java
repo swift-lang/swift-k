@@ -61,12 +61,12 @@ public abstract class AbstractStatefulItem implements StatefulItem {
 	}
 
 	public void removeChild(StatefulItem child) {
-		/*if (children == null) {
+		if (children == null) {
 			throw new IllegalStateException("No such child: " + child);
 		}
 		synchronized (children) {
 			children.remove(child);
-		}*/
+		}
 	}
 
 	public void setParent(StatefulItem parent) {

@@ -26,11 +26,15 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 
 import org.apache.log4j.Logger;
+import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
+import org.griphyn.vdl.karajan.monitor.items.TaskItem;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.ANSI;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.ANSIContext;
+import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.CharacterMap;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Component;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Dialog;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Key;
@@ -79,10 +83,14 @@ public class AbstractANSIDisplay extends Thread {
                     .println("Your terminal does not support ANSI escape codes");
             }
             else {
+                Component cmap = new CharacterMap();
+                cmap.setLocation(10, 20);
                 screen.add(createMainMenu(screen));
                 screen.add(createTitle(screen));
                 screen.add(createMainTabs(screen));
                 screen.add(createProgressBar(screen));
+                
+                //screen.add(cmap);
 
                 apps.focus();
                 screen.redraw();
@@ -181,8 +189,9 @@ public class AbstractANSIDisplay extends Thread {
         apps = new Tab("3 Apps.");
         apps.setAcceleratorKey(new Key(Key.F3));
         appsTable = new AppTable();
-        appsTable.setModel(new ApplicationTable.Model(state
-            .getItemClassSet(StatefulItemClass.APPLICATION)));
+        StatefulItemClassSet<ApplicationItem> set = state
+            .getItemClassSet(StatefulItemClass.APPLICATION);
+        appsTable.setModel(new ApplicationTable.Model(set));
         appsTable.setColumnWidth(0, 9);
         appsTable.setColumnWidth(1, 16);
         appsTable.setColumnWidth(3, 16);
@@ -195,8 +204,9 @@ public class AbstractANSIDisplay extends Thread {
         schedulerInfoTab = new Tab("4 Jobs");
         schedulerInfoTab.setAcceleratorKey(new Key(Key.F4));
         tasksTable = new STable();
-        tasksTable.setModel(new JobModel(state
-            .getItemClassSet(StatefulItemClass.TASK)));
+        StatefulItemClassSet<TaskItem> set = state
+            .getItemClassSet(StatefulItemClass.TASK);
+        tasksTable.setModel(new JobModel(set));
         tasksTable.setColumnWidth(0, 16);
         tasksTable.setColumnWidth(2, 16);
         tasksTable.setColumnWidth(3, 12);
@@ -209,8 +219,9 @@ public class AbstractANSIDisplay extends Thread {
         schedulerInfoTab = new Tab("5 Transfers");
         schedulerInfoTab.setAcceleratorKey(new Key(Key.F5));
         tasksTable = new STable();
-        tasksTable.setModel(new TransferModel(state
-            .getItemClassSet(StatefulItemClass.TASK)));
+        StatefulItemClassSet<TaskItem> set = state
+            .getItemClassSet(StatefulItemClass.TASK);
+        tasksTable.setModel(new TransferModel(set));
         tasksTable.setBgColor(ANSI.CYAN);
         tasksTable.setColumnWidth(2, 21);
         schedulerInfoTab.setContents(tasksTable);
@@ -250,6 +261,11 @@ public class AbstractANSIDisplay extends Thread {
         if (cls.equals(StatefulItemClass.APPLICATION)) {
             if (appsTable != null) {
                 appsTable.dataChanged();
+            }
+        }
+        else if (cls.equals(StatefulItemClass.TASK)) {
+            if (tasksTable != null) {
+                tasksTable.dataChanged();
             }
         }
     }

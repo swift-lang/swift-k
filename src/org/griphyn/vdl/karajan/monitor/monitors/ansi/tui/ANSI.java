@@ -47,6 +47,8 @@ public class ANSI {
 	public static final int GCH_LM_CORNER = 118;
 	public static final int GCH_UM_CORNER = 119;
 	public static final int GCH_HASH = 97;
+	
+	public static final int GCH_BULLET = 96;
 
 	public static String moveTo(int x, int y) {
 		return AESC + y + ';' + x + 'H';

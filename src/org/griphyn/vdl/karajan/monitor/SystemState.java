@@ -22,7 +22,6 @@ package org.griphyn.vdl.karajan.monitor;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,9 +30,9 @@ import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 
 public class SystemState {
-	private Map classes;
-    private Set listeners;
-    private Map stats;
+	private Map<StatefulItemClass, StatefulItemClassSet<? extends StatefulItem>> classes;
+    private Set<SystemStateListener> listeners;
+    private Map<String, Stats> stats;
     private int total, completed;
     private long start;
     private VariableStack stack;
@@ -41,9 +40,9 @@ public class SystemState {
 
 	public SystemState(String projectName) {
 	    this.projectName = projectName;
-		classes = new HashMap();
-        listeners = new HashSet();
-        stats = new HashMap();
+		classes = new HashMap<StatefulItemClass, StatefulItemClassSet<? extends StatefulItem>>();
+        listeners = new HashSet<SystemStateListener>();
+        stats = new HashMap<String, Stats>();
 	}
 
 	public void addItem(StatefulItem item) {
@@ -51,12 +50,13 @@ public class SystemState {
         notifyListeners(SystemStateListener.ITEM_ADDED, item);
 	}
 
-	public StatefulItemClassSet getItemClassSet(StatefulItemClass cls) {
-        StatefulItemClassSet clset;
+	@SuppressWarnings("unchecked")
+    public <T extends StatefulItem> StatefulItemClassSet<T> getItemClassSet(StatefulItemClass cls) {
+        StatefulItemClassSet<T> clset;
 		synchronized (classes) {
-			clset = (StatefulItemClassSet) classes.get(cls);
+			clset = (StatefulItemClassSet<T>) classes.get(cls);
             if (clset == null) {
-            	clset = new StatefulItemClassSet();
+            	clset = new StatefulItemClassSet<T>();
                 classes.put(cls, clset);
             }
 		}
@@ -85,9 +85,8 @@ public class SystemState {
 	}
     
     protected void notifyListeners(int updateType, StatefulItem item) {
-    	Iterator i = listeners.iterator();
-        while (i.hasNext()) {
-        	((SystemStateListener) i.next()).itemUpdated(updateType, item);
+        for (SystemStateListener l : listeners) {
+            l.itemUpdated(updateType, item);
         }
     }
     
@@ -101,7 +100,7 @@ public class SystemState {
 
     public Stats getStats(String key) {
         synchronized(stats) {
-            Stats s = (Stats) stats.get(key);
+            Stats s = stats.get(key);
             if (s == null) {
                 s = new Stats();
                 stats.put(key, s);

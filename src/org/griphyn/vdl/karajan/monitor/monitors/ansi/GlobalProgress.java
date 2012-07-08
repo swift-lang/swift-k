@@ -18,7 +18,6 @@
 package org.griphyn.vdl.karajan.monitor.monitors.ansi;
 
 import java.io.IOException;
-import java.util.TimerTask;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.ANSI;
@@ -27,11 +26,13 @@ import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Component;
 
 public class GlobalProgress extends Component {
     private SystemState state;
+    private long start;
 
     public GlobalProgress(SystemState state) {
         this.state = state;
-        GlobalTimer.getTimer().schedule(new TimerTask() {
-            public void run() {
+        this.start = System.currentTimeMillis();
+        GlobalTimer.getTimer().schedule(new SafeTimerTask(getScreen()) {
+            public void runTask() {
                 redraw();
             }
         }, 1000, 1000);
@@ -50,10 +51,10 @@ public class GlobalProgress extends Component {
             sb.append("N/A");
         }
         sb.append("   Elapsed time: ");
-        sb.append(format(System.currentTimeMillis() - state.getStart()));
+        sb.append(format(System.currentTimeMillis() - start));
         sb.append("   Est. time left: ");
         if (total != 0 && crt != 0) {
-            sb.append(et(state.getCompleted(), total, state.getStart()));
+            sb.append(et(state.getCompleted(), total, start));
         }
         else {
             sb.append("N/A");
