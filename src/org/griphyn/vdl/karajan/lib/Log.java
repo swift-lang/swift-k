@@ -26,13 +26,10 @@ import java.util.Map;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.Trace;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
 
 public class Log extends AbstractSequentialWithArguments {
 	public static final Arg LEVEL = new Arg.Positional("level");
@@ -42,24 +39,10 @@ public class Log extends AbstractSequentialWithArguments {
 		setArguments(Log.class, new Arg[] { LEVEL, MESSAGE, Arg.VARGS });
 	}
 
-	private static Map loggers = new HashMap();
-
-	public static Logger getLogger(String cls) {
-		Logger logger;
-		synchronized (loggers) {
-			logger = (Logger) loggers.get(cls);
-			if (logger == null) {
-				logger = Logger.getLogger("swift." + cls);
-				loggers.put(cls, logger);
-			}
-		}
-		return logger;
-	}
-
-	private static Map priorities;
+	public static final Logger logger = Logger.getLogger("swift");
+	private static final Map<String, Level> priorities = new HashMap<String, Level>();
 
 	static {
-		priorities = new HashMap();
 		priorities.put("debug", Level.DEBUG);
 		priorities.put("info", Level.INFO);
 		priorities.put("warn", Level.WARN);
@@ -68,26 +51,11 @@ public class Log extends AbstractSequentialWithArguments {
 	}
 
 	public static Level getLevel(String lvl) {
-		return (Level) priorities.get(lvl);
+		return priorities.get(lvl);
 	}
-
+	
 	protected void post(VariableStack stack) throws ExecutionException {
-		String cls;
-		FlowElement fe;
-		try{
-			fe = (FlowElement) stack.getDeepVar(Trace.ELEMENT);
-		}
-		catch (VariableNotFoundException e) {
-			fe = null;
-		}
-		if (fe != null) {
-			cls = fe.getElementType();
-		}
-		else {
-			cls = "unknown";
-		}
 		Level lvl = getLevel((String) LEVEL.getValue(stack));
-		Logger logger = getLogger(cls);
 		if (logger.isEnabledFor(lvl)) {
 		    Object smsg = MESSAGE.getValue(stack);
 		    if (smsg != null) {
