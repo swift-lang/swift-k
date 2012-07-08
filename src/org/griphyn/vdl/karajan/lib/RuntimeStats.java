@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -43,7 +44,7 @@ public class RuntimeStats extends FunctionsCollection {
 	public static SimpleDateFormat formatter = 
 		new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 	public static final int MIN_PERIOD_MS=1000;
-	public static final int MAX_PERIOD_MS=30000;
+	public static final int MAX_PERIOD_MS=3000;
 
 	public static final String[] preferredOutputOrder = {
 		"uninitialized",
@@ -142,6 +143,8 @@ public class RuntimeStats extends FunctionsCollection {
 
 
 	static public class ProgressTicker extends Thread {
+	    
+	    public static final Logger logger = Logger.getLogger(ProgressTicker.class);
 
 		private Map<String, Integer> counts;
 
@@ -227,35 +230,47 @@ public class RuntimeStats extends FunctionsCollection {
 			printStates("Final status:");
 		}
 		
-		public synchronized Map getSummary() {
+		public synchronized Map<String, Integer> getSummary() {
             return new HashMap<String, Integer>(counts);
         }
 		
 		void printStates(String prefix) {
 			Map<String, Integer> summary = getSummary();
-			//	SimpleDateFormat formatter = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+			
+			StringBuilder sb = new StringBuilder();
 
 			// output the results of summarization, in a relatively
 			// pretty form - first the preferred order listed elements,
 			// and then anything remaining
-			System.err.print(prefix + " ");
-			//System.err.print("  time:" + (System.currentTimeMillis() - start));
+			System.err.print(prefix);
+			System.err.print(" ");
 			System.err.print(formatter.format(System.currentTimeMillis()));
-			
+						
 			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
 				String key = preferredOutputOrder[pos];
 				Integer value = summary.get(key);
 				if(value != null) {
-				    System.err.print("  " + key + ":" + value);
+				    sb.append("  ");
+				    sb.append(key);
+				    sb.append(":");
+				    sb.append(value);
 				}
 				summary.remove(key);
 			}
 
 			for (Map.Entry<String, Integer> s : summary.entrySet()) {
-				System.err.print(" " + s.getKey() + ":" + s.getValue());
+			    sb.append("  ");
+			    sb.append(s.getKey());
+			    sb.append(":");
+			    sb.append(s.getValue());
 			}
+		
+			String msg = sb.toString();
 
-			System.err.println();
+			System.err.println(msg);
+			if (logger.isInfoEnabled()) {
+			    logger.info(msg);
+			}
 		}
 
 	}
