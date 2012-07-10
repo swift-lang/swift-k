@@ -138,8 +138,13 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
     }
 
     public void error(IOHandle op, Exception e) {
-        getChannel().sendTaggedReply(getId(), e.getMessage() != null ? e.getMessage().getBytes() : e.toString().getBytes(), 
+        if (e == null) {
+            getChannel().sendTaggedReply(getId(), "Unknown error".getBytes(), KarajanChannel.FINAL_FLAG + KarajanChannel.ERROR_FLAG);
+        }
+        else {
+            getChannel().sendTaggedReply(getId(), e.getMessage() != null ? e.getMessage().getBytes() : e.toString().getBytes(), 
         		KarajanChannel.FINAL_FLAG + KarajanChannel.ERROR_FLAG);
+        }
     }
 
     public void length(long len) {
