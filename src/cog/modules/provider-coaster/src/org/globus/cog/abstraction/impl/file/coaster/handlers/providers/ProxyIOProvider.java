@@ -347,7 +347,17 @@ public class ProxyIOProvider implements IOProvider {
         	    }
         	}
         	else {
-        	    cb.error(this, t);
+        	    if (msg == null) {
+        	        cb.error(this, t);
+        	    }
+        	    else {
+        	        if (t == null) {
+        	            cb.error(this, new IOException(msg));
+        	        }
+        	        else {
+        	            cb.error(this, new IOException(msg, t));
+        	        }
+        	    }
         	}
         }
 
