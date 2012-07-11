@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.workflow.events.EventBus;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureIterator;
@@ -133,9 +134,13 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
             listeners = null;
         }
         
-        for (ListenerStackPair lsp : l) {
+        for (final ListenerStackPair lsp : l) {
             WaitingThreadsMonitor.removeThread(lsp.stack);
-            lsp.listener.futureModified(this, lsp.stack);
+            EventBus.post(new Runnable() {
+                public void run() {
+                    lsp.listener.futureModified(ArrayIndexFutureList.this, lsp.stack);
+                } 
+            });
         }
     }
 
