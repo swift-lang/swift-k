@@ -37,10 +37,13 @@ public class VScrollbar extends Component {
 	protected void draw(ANSIContext context) throws IOException {
 		context.bgColor(bgColor);
 		context.fgColor(fgColor);
-		context.lineArt(true);
-		for (int i = 0; i < height; i++) {
+		context.moveTo(sx, sy);
+		context.lineArt(ANSI.GCH_ARROW_UP);
+		context.moveTo(sx, sy + height - 1);
+		context.lineArt(ANSI.GCH_ARROW_DOWN);
+		for (int i = 1; i < height - 1; i++) {
 			context.moveTo(sx, sy + i);
-			context.putChar(backgroundChar);
+			context.lineArt(backgroundChar);
 		}
 		int pos = 0;
 		if (total > 1) {
@@ -50,15 +53,14 @@ public class VScrollbar extends Component {
 			if (current < 0) {
 				current = 0;
 			}
-			pos = (height - 1) * current / (total - 1);
+			pos = (height - 3) * current / (total - 1);
 		}
 		if (invertThumbColor) {
 		    context.bgColor(fgColor);
 		    context.fgColor(bgColor);
 		}
-		context.moveTo(sx, sy + pos);
-		context.putChar(thumbChar);
-		context.lineArt(false);
+		context.moveTo(sx, sy + pos + 1);
+		context.lineArt(thumbChar);
 	}
 
 	public int getCurrent() {

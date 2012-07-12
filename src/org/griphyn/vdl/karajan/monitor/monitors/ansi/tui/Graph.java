@@ -54,51 +54,49 @@ public class Graph extends Component {
         int last = Integer.MIN_VALUE;
         i = data.iterator();
         int j = sx + 1;
-        context.lineArt(true);
         while (i.hasNext()) {
             Double d = (Double) i.next();
             double v = (d.doubleValue() - min) / (max - min) * (height - 3);
             int c = (int) v;
             if (last == Integer.MIN_VALUE || last == c) {
                 context.moveTo(j, sy + height - c - 2);
-                context.putChar(ANSI.GCH_H_LINE);
+                context.lineArt(ANSI.GCH_H_LINE);
             }
             else if (last > c) {
                 for (int k = c; k <= last; k ++) {
                     context.moveTo(j, sy + height - k - 2);
                     if (k == last) {
-                        context.putChar(ANSI.GCH_UR_CORNER);
+                        context.lineArt(ANSI.GCH_UR_CORNER);
                     }
                     else {
-                        context.putChar(ANSI.GCH_V_LINE);
+                        context.lineArt(ANSI.GCH_V_LINE);
                     }
                 }
                 context.moveTo(j, sy + height - c - 2);
-                context.putChar(ANSI.GCH_LL_CORNER);
+                context.lineArt(ANSI.GCH_LL_CORNER);
             }
             else {
                 for (int k = last; k < c; k ++) {
                     context.moveTo(j, sy + height - k - 2);
                     if (k == last) {
-                        context.putChar(ANSI.GCH_LR_CORNER);
+                        context.lineArt(ANSI.GCH_LR_CORNER);
                     }
                     else {
-                        context.putChar(ANSI.GCH_V_LINE);
+                        context.lineArt(ANSI.GCH_V_LINE);
                     }
                 }
                 context.moveTo(j, sy + height - c - 2);
-                context.putChar(ANSI.GCH_UL_CORNER);
+                context.lineArt(ANSI.GCH_UL_CORNER);
             }
             last = c;
             j++;
         }
         context.moveTo(sx, sy + 1);
-        context.putChar(ANSI.GCH_CROSS);
+        context.lineArt(ANSI.GCH_CROSS);
         context.text(String.valueOf(max));
         context.moveTo(sx, sy + height - 2);
-        context.putChar(ANSI.GCH_CROSS);
+        context.lineArt(ANSI.GCH_CROSS);
         context.text(String.valueOf(min));
-        context.lineArt(false);
     }
 }
   

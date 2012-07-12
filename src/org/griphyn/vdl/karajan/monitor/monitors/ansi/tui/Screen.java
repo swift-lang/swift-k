@@ -39,9 +39,13 @@ public class Screen extends LayeredContainer {
 
 	public boolean init() throws IOException {
 	    if (!context.init()) {
+	        logger.info("Terminal does not support ANSI escape sequences!");
 	        return false;
 	    }
 		int[] size = context.querySize();
+		if (size == null) {
+		    size = new int[] {80, 25};
+		}
 		setSize(size[0], size[1]);
 		context.setScreen(this);
 		context.clear();

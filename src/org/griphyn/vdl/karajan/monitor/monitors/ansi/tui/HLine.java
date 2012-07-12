@@ -44,20 +44,18 @@ public class HLine extends Component {
 		try {
 			context.bgColor(bgColor);
 			context.fgColor(fgColor);
-			context.lineArt(true);
 			context.moveTo(sx, sy);
 			for (int i = 0; i < width; i++) {
-				context.putChar(ANSI.GCH_H_LINE);
+				context.lineArt(ANSI.GCH_H_LINE);
 			}
 			if (leftEndCap) {
 			    context.moveTo(sx - 1, sy);
-			    context.putChar(ANSI.GCH_ML_CORNER);
+			    context.lineArt(ANSI.GCH_ML_CORNER);
 			}
 			if (rightEndCap) {
 			    context.moveTo(sx + width, sy);
-			    context.putChar(ANSI.GCH_MR_CORNER);
+			    context.lineArt(ANSI.GCH_MR_CORNER);
 			}
-			context.lineArt(false);
 		}
 		finally {
 			context.unlock();

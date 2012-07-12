@@ -42,19 +42,17 @@ public class VLine extends Component {
 	protected void draw(ANSIContext context) throws IOException {
 		context.bgColor(bgColor);
 		context.fgColor(fgColor);
-		context.lineArt(true);
 		for (int i = 0; i < height; i++) {
 			context.moveTo(sx, sy + i);
-			context.putChar(ANSI.GCH_V_LINE);
+			context.lineArt(ANSI.GCH_V_LINE);
 		}
 		if (topEndCap) {
             context.moveTo(sx, sy - 1);
-            context.putChar(ANSI.GCH_UM_CORNER);
+            context.lineArt(ANSI.GCH_UM_CORNER);
         }
         if (bottomEndCap) {
             context.moveTo(sx, sy + height);
-            context.putChar(ANSI.GCH_LM_CORNER);
+            context.lineArt(ANSI.GCH_LM_CORNER);
         }
-		context.lineArt(false);
 	}
 }

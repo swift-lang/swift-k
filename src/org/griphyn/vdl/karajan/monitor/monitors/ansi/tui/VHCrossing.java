@@ -27,9 +27,7 @@ public class VHCrossing extends Component {
 	protected void draw(ANSIContext context) throws IOException {
 		context.bgColor(bgColor);
 		context.fgColor(fgColor);
-		context.lineArt(true);
 		context.moveTo(sx, sy);
-		context.putChar(ANSI.GCH_CROSS);
-		context.lineArt(false);
+		context.lineArt(ANSI.GCH_CROSS);
 	}
 }

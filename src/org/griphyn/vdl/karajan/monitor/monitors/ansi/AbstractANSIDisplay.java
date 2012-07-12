@@ -98,6 +98,7 @@ public class AbstractANSIDisplay extends Thread {
             }
         }
         catch (Exception e) {
+            logger.error("Could not run display", e);
             e.printStackTrace();
         }
     }

@@ -54,6 +54,10 @@ public class ANSI {
 	public static final int GCH_HASH = 97;
 	
 	public static final int GCH_BULLET = 96;
+	public static final int GCH_ARROW_UP = 94;
+	public static final int GCH_ARROW_DOWN = 95;
+	public static final int GCH_ARROW_LEFT = 60;
+	public static final int GCH_ARROW_RIGHT = 62;
 
 	public static String moveTo(int x, int y) {
 		return AESC + y + ';' + x + 'H';

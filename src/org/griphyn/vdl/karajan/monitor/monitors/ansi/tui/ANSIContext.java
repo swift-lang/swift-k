@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,15 +44,29 @@ public class ANSIContext {
     private ScreenBuffer buf;
     private boolean doubleBuffered;
     private int lock;
-    private boolean done;
+    private boolean done, unicode;
 
     private Terminal terminal;
     private boolean redraw;
+    private UnicodeDrawingScheme uds;
 
     public ANSIContext(OutputStream os, InputStream is) {
-        this.os = new OutputStreamWriter(os);
+        try {
+            this.os = new OutputStreamWriter(os, "UTF8");
+        }
+        catch (UnsupportedEncodingException e) {
+            logger.warn("UTF8 not supported here");
+            this.os = new OutputStreamWriter(os);
+        }
         this.is = is;
         doubleBuffered = true;
+        unicode = "true".equals(System.getProperty("tui.use.unicode"));
+        if (unicode) {
+            uds = new UnicodeDrawingScheme.RoundedLight();
+        }
+        else {
+            uds = new UnicodeDrawingScheme.ASCII();
+        }
     }
 
     public void moveTo(int x, int y) throws IOException {
@@ -117,15 +132,6 @@ public class ANSIContext {
         }
     }
 
-    public void lineArt(boolean enabled) throws IOException {
-        if (doubleBuffered) {
-            buf.lineArt(enabled);
-        }
-        else {
-            os.write(ANSI.lineArt(enabled));
-        }
-    }
-
     public void printReply() throws IOException {
         try {
             Thread.sleep(100);
@@ -140,6 +146,7 @@ public class ANSIContext {
     }
 
     public boolean init() {
+        logger.info("Initializing terminal");
         terminal = Terminal.setupTerminal();
         try {
             terminal.initializeTerminal();
@@ -156,8 +163,16 @@ public class ANSIContext {
         }
         return terminal.isANSISupported();
     }
+    
+    private boolean querySizeWorks = true, alternate = false;
 
     public int[] querySize() throws IOException {
+        if (!querySizeWorks) {
+            return null;
+        }
+        if (alternate) {
+            return new int[] {terminal.getTerminalWidth(), terminal.getTerminalHeight() };
+        }
         os.write(ANSI.AESC + "18t");
         os.flush();
         try {
@@ -177,9 +192,16 @@ public class ANSIContext {
             int[] sz = new int[2];
             sz[0] = ((Integer) nums.get(1)).intValue();
             sz[1] = ((Integer) nums.get(0)).intValue();
+            logger.info("Terminal size is " + sz[0] + "x" + sz[1]);
             return sz;
         }
-        catch (UnsupportedOperationException e) {
+        catch (Exception e) {
+            logger.info("Could not query terminal size", e);
+            if (terminal.getTerminalWidth() != 0) {
+                alternate = true;
+                return new int[] {terminal.getTerminalWidth(), terminal.getTerminalHeight() };
+            }
+            querySizeWorks = false;
             return null;
         }
     }
@@ -427,8 +449,10 @@ public class ANSIContext {
     }
 
     public void putChar(char c) throws IOException {
-        if (c < 32 || c >= 240) {
-            c = '.';
+        if (!unicode) {
+            if (c < 32 || c >= 240) {
+                c = '.';
+            }
         }
         if (doubleBuffered) {
             buf.write(c);
@@ -439,8 +463,10 @@ public class ANSIContext {
     }
 
     public void putChar(int c) throws IOException {
-        if (c < 32 || c >= 240) {
-            c = '.';
+        if (!unicode) {
+            if (c < 32 || c >= 240) {
+                c = '.';
+            }
         }
         if (doubleBuffered) {
             buf.write(c);
@@ -461,50 +487,68 @@ public class ANSIContext {
     }
 
     public void frame(int x, int y, int width, int height) throws IOException {
-        lineArt(true);
         moveTo(x, y);
-        putChar(ANSI.GCH_UL_CORNER);
+        lineArt(ANSI.GCH_UL_CORNER);
         for (int i = 0; i < width - 2; i++) {
-            putChar(ANSI.GCH_H_LINE);
+            lineArt(ANSI.GCH_H_LINE);
         }
-        putChar(ANSI.GCH_UR_CORNER);
+        lineArt(ANSI.GCH_UR_CORNER);
         for (int i = 0; i < height - 2; i++) {
             moveTo(x, y + i + 1);
-            putChar(ANSI.GCH_V_LINE);
+            lineArt(ANSI.GCH_V_LINE);
             moveTo(x + width - 1, y + i + 1);
-            putChar(ANSI.GCH_V_LINE);
+            lineArt(ANSI.GCH_V_LINE);
         }
         moveTo(x, y + height - 1);
-        putChar(ANSI.GCH_LL_CORNER);
+        lineArt(ANSI.GCH_LL_CORNER);
         for (int i = 0; i < width - 2; i++) {
-            putChar(ANSI.GCH_H_LINE);
+            lineArt(ANSI.GCH_H_LINE);
         }
-        putChar(ANSI.GCH_LR_CORNER);
-        lineArt(false);
+        lineArt(ANSI.GCH_LR_CORNER);
     }
 
     public void filledFrame(int x, int y, int width, int height)
             throws IOException {
-        lineArt(true);
         moveTo(x, y);
-        putChar(ANSI.GCH_UL_CORNER);
+        lineArt(ANSI.GCH_UL_CORNER);
         for (int i = 0; i < width - 2; i++) {
-            putChar(ANSI.GCH_H_LINE);
+            lineArt(ANSI.GCH_H_LINE);
         }
-        putChar(ANSI.GCH_UR_CORNER);
+        lineArt(ANSI.GCH_UR_CORNER);
         for (int i = 0; i < height - 2; i++) {
             moveTo(x, y + i + 1);
-            putChar(ANSI.GCH_V_LINE);
+            lineArt(ANSI.GCH_V_LINE);
             spaces(width - 2);
-            putChar(ANSI.GCH_V_LINE);
+            lineArt(ANSI.GCH_V_LINE);
         }
         moveTo(x, y + height - 1);
-        putChar(ANSI.GCH_LL_CORNER);
+        lineArt(ANSI.GCH_LL_CORNER);
         for (int i = 0; i < width - 2; i++) {
-            putChar(ANSI.GCH_H_LINE);
+            lineArt(ANSI.GCH_H_LINE);
         }
-        putChar(ANSI.GCH_LR_CORNER);
-        lineArt(false);
+        lineArt(ANSI.GCH_LR_CORNER);
+    }
+    
+    public void lineArt(int code) throws IOException {
+        if (unicode) {
+            putChar(uds.getChar(code));
+        }
+        else {
+            lineArt(true);
+            putChar(uds.getChar(code));
+            lineArt(false);
+        }
+    }
+    
+    public void lineArt(boolean enabled) throws IOException {
+        if (!unicode) {
+            if (doubleBuffered) {
+                buf.lineArt(enabled);
+            }
+            else {
+                os.write(ANSI.lineArt(enabled));
+            }
+        }
     }
 
     public void filledRect(int x, int y, int width, int height)

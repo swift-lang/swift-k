@@ -30,12 +30,10 @@ public class CharacterMap extends Component {
 	protected void draw(ANSIContext context) throws IOException {
 		for (int i = 0; i < 16; i++) {
 			context.moveTo(sx, sy + i);
-			context.lineArt(true);
 			for (int j = 0; j < 16; j++) {
-				context.putChar((char) (i*16 + j));
+				context.lineArt((char) (i*16 + j));
 				context.putChar(' ');
 			}
-			context.lineArt(false);
 		}
 	}
 }
