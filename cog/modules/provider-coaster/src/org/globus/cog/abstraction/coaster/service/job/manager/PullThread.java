@@ -57,7 +57,10 @@ class PullThread extends Thread {
                 	return 1;
                 }
                 else {
-                	return 0;
+                    // need some arbitrary ordering for different 
+                    // cpus, otherwise cpus with the same quality
+                    // will overwrite each other in the sleeping set
+                    return System.identityHashCode(a) - System.identityHashCode(b);
                 }
             }
         });
