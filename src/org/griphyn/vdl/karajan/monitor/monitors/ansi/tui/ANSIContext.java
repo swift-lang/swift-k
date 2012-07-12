@@ -51,16 +51,17 @@ public class ANSIContext {
     private UnicodeDrawingScheme uds;
 
     public ANSIContext(OutputStream os, InputStream is) {
+        unicode = "true".equals(System.getProperty("tui.use.unicode"));
         try {
             this.os = new OutputStreamWriter(os, "UTF8");
         }
         catch (UnsupportedEncodingException e) {
             logger.warn("UTF8 not supported here");
             this.os = new OutputStreamWriter(os);
+            unicode = false;
         }
         this.is = is;
         doubleBuffered = true;
-        unicode = "true".equals(System.getProperty("tui.use.unicode"));
         if (unicode) {
             uds = new UnicodeDrawingScheme.RoundedLight();
         }
