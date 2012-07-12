@@ -92,7 +92,9 @@ public class ANSIMonitor extends AbstractMonitor implements Runnable {
 
     public void shutdown() {
         try {
-            disp.close();
+            if (disp != null) {
+                disp.close();
+            }
         }
         catch (IOException e) {
             e.printStackTrace();
