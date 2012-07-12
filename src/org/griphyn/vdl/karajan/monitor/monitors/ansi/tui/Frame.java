@@ -42,7 +42,8 @@ public class Frame extends Container {
 			}
 
 			context.frame(sx, sy, width, height);
-			context.bgColor(bgColor);
+			context.bgColor(fgColor);
+			context.fgColor(bgColor);
 			if (title != null) {
 				int tl = title.length() + 2;
 				int space = width - tl;
