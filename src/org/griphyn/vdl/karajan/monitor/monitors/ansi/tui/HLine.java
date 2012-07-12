@@ -23,6 +23,21 @@ package org.griphyn.vdl.karajan.monitor.monitors.ansi.tui;
 import java.io.IOException;
 
 public class HLine extends Component {
+    
+    private boolean leftEndCap, rightEndCap;
+    
+    public HLine(boolean leftEndCap, boolean rightEndCap) {
+        this.leftEndCap = leftEndCap;
+        this.rightEndCap = rightEndCap;
+    }
+    
+    public HLine(boolean endCaps) {
+        this(endCaps, endCaps);
+    }
+    
+    public HLine() {
+        this(false);
+    }
 
 	protected void draw(ANSIContext context) throws IOException {
 		context.lock();
@@ -33,6 +48,14 @@ public class HLine extends Component {
 			context.moveTo(sx, sy);
 			for (int i = 0; i < width; i++) {
 				context.putChar(ANSI.GCH_H_LINE);
+			}
+			if (leftEndCap) {
+			    context.moveTo(sx - 1, sy);
+			    context.putChar(ANSI.GCH_ML_CORNER);
+			}
+			if (rightEndCap) {
+			    context.moveTo(sx + width, sy);
+			    context.putChar(ANSI.GCH_MR_CORNER);
 			}
 			context.lineArt(false);
 		}

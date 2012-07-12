@@ -23,6 +23,21 @@ package org.griphyn.vdl.karajan.monitor.monitors.ansi.tui;
 import java.io.IOException;
 
 public class VLine extends Component {
+    
+    private boolean topEndCap, bottomEndCap;
+    
+    public VLine(boolean topEndCap, boolean bottomEndCap) {
+        this.topEndCap = topEndCap;
+        this.bottomEndCap = bottomEndCap;
+    }
+    
+    public VLine(boolean endCaps) {
+        this(endCaps, endCaps);
+    }
+    
+    public VLine() {
+        this(false);
+    }
 
 	protected void draw(ANSIContext context) throws IOException {
 		context.bgColor(bgColor);
@@ -32,6 +47,14 @@ public class VLine extends Component {
 			context.moveTo(sx, sy + i);
 			context.putChar(ANSI.GCH_V_LINE);
 		}
+		if (topEndCap) {
+            context.moveTo(sx, sy - 1);
+            context.putChar(ANSI.GCH_UM_CORNER);
+        }
+        if (bottomEndCap) {
+            context.moveTo(sx, sy + height);
+            context.putChar(ANSI.GCH_LM_CORNER);
+        }
 		context.lineArt(false);
 	}
 }

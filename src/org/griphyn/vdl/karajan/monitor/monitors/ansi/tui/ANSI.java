@@ -35,6 +35,11 @@ public class ANSI {
 	public static final int WHITE = 7;
 	public static final int DEFAULT = 9;
 
+	/*
+	 * UL UM UR
+	 * ML CR MR
+	 * LL LM LR
+	 */
 	public static final int GCH_LR_CORNER = 106;
 	public static final int GCH_UR_CORNER = 107;
 	public static final int GCH_UL_CORNER = 108;

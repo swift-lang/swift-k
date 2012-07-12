@@ -76,7 +76,7 @@ public class TableColumn extends Container {
         text.setSize(width, 1);
         add(text);
 
-        HLine l = new HLine();
+        HLine l = new HLine(index == 0, index == model.getColumnCount() - 1);
         l.setBgColor(bgColor);
         l.setFgColor(fgColor);
         l.setLocation(0, 1);

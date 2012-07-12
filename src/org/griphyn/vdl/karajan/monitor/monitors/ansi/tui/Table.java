@@ -21,7 +21,6 @@
 package org.griphyn.vdl.karajan.monitor.monitors.ansi.tui;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.swing.event.TableModelEvent;
@@ -47,7 +46,6 @@ public class Table extends Container implements TableModelListener {
 		this.model = model;
 		colWidths = new HashMap<Integer, Integer>();
 		sb = new VScrollbar();
-		sb.setBackgroundChar(ANSI.GCH_V_LINE);
 		sb.setThumbChar(ANSI.GCH_BULLET);
 		cellRenderer = new DefaultTableCellRenderer();
 	}
@@ -84,8 +82,8 @@ public class Table extends Container implements TableModelListener {
 			return;
 		}
 		removeAll();
-		sb.setLocation(width, 0);
-		sb.setSize(1, height);
+		sb.setLocation(width, 2);
+		sb.setSize(1, height - 2);
 		sb.setBgColor(bgColor);
 		sb.setFgColor(fgColor);
 		int cc = model.getColumnCount();
@@ -117,11 +115,16 @@ public class Table extends Container implements TableModelListener {
 			c.setBgColor(bgColor);
 			c.setFgColor(fgColor);
 			c.setLocation((int) cx, 0);
-			c.setSize(colWidth - 1, height);
+			if (last) {
+			    c.setSize(width - (int) cx, height);
+			}
+			else {
+			    c.setSize(colWidth - 1, height);
+			}
 			add(c);
 
 			if (!last) {
-				VLine l = new VLine();
+				VLine l = new VLine(true);
 				l.setBgColor(bgColor);
 				l.setFgColor(fgColor);
 				l.setLocation((int) (cx + colWidth) - 1, 0);
@@ -217,7 +220,7 @@ public class Table extends Container implements TableModelListener {
 			return super.keyboardEvent(key);
 		}
 	}
-
+	
     public TableCellRenderer getCellRenderer() {
         return cellRenderer;
     }
