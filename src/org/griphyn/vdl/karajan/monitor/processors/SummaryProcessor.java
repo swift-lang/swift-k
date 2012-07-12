@@ -25,6 +25,7 @@ import org.griphyn.vdl.karajan.lib.RuntimeStats.ProgressTicker;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
+import org.griphyn.vdl.karajan.monitor.monitors.ansi.SummaryPane;
 
 public class SummaryProcessor extends AbstractMessageProcessor {
 
@@ -47,6 +48,9 @@ public class SummaryProcessor extends AbstractMessageProcessor {
 		    }
 		}
 		String[] pairs = msg.split("  ");
+		for (String key : SummaryPane.STATES) {
+		    s.setCount(key, 0);
+		}
 		for (String pair : pairs) {
 		    if (pair.equals("")) {
 		        continue;

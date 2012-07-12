@@ -34,7 +34,7 @@ import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.LevelBars;
 public class SummaryPane extends Container {
     private SystemState state;
 
-    private static final String[] STATES = new String[] { "Initializing", "Selecting site",
+    public static final String[] STATES = new String[] { "Initializing", "Selecting site",
             "Stage in", "Submitting", "Submitted", "Active", "Stage out",
             "Failed", "Replicating", "Finished successfully" };
     
