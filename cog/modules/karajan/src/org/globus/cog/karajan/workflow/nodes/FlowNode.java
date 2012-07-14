@@ -332,7 +332,7 @@ public class FlowNode implements FlowElement, LoadListener {
 		return sb.toString();
 	}
 
-	protected String getTextualName() {
+	public String getTextualName() {
 		String tmp = getElementType();
 		if (tmp == null) {
 			tmp = this.getClass().getName();
