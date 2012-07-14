@@ -35,7 +35,9 @@ import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.EventBus;
+import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.nodes.grid.SchedulerNode;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class HangChecker extends TimerTask {
@@ -126,7 +128,7 @@ public class HangChecker extends TimerTask {
                 }
                 else { 
                     prev = o;
-                    ps.println("\tand produces " + Monitor.varWithLine((DSHandle) o));
+                    ps.println("\twhich produces " + Monitor.varWithLine((DSHandle) o));
                     ps.println();
                 }
             }
