@@ -274,7 +274,7 @@ public final class LinkedStack implements VariableStack {
 	public VariableStack copy() {
 		return new LinkedStack(this);
 	}
-
+	
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 		buf.append("Stack dump:\n");
@@ -364,9 +364,7 @@ public final class LinkedStack implements VariableStack {
 			if (caller != null) {
 				l.add(caller);
 			}
-			else {
-				crt = crt.prev;
-			}
+			crt = crt.prev;
 		}
 		return l;
 	}
