@@ -28,6 +28,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,10 +37,13 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -56,6 +60,9 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
+import org.globus.cog.karajan.workflow.nodes.FlowElement;
+import org.globus.cog.karajan.workflow.nodes.FlowNode;
+import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -184,15 +191,15 @@ public class Monitor implements ActionListener, MouseListener {
 			crtdisp = THREADS;
 			ArrayList<String> al = new ArrayList<String>();
 			wt = new ArrayList<VariableStack>();
-			Collection<VariableStack> c = WaitingThreadsMonitor.getAllThreads();
-			for (VariableStack stack : c) {
+			Map<VariableStack, DSHandle> c = WaitingThreadsMonitor.getAllThreads();
+			for (Map.Entry<VariableStack, DSHandle> entry : c.entrySet()) {
 				try {
-					al.add(String.valueOf(ThreadingContext.get(stack)));
+					al.add(String.valueOf(ThreadingContext.get(entry.getKey())));
 				}
 				catch (VariableNotFoundException e1) {
 					al.add("unknown thread");
 				}
-				wt.add(stack);
+				wt.add(entry.getKey());
 			}
 
 			ThreadModel m = new ThreadModel(al);
@@ -217,44 +224,51 @@ public class Monitor implements ActionListener, MouseListener {
 	public static void dumpVariables(PrintStream ps) {
 		ps.println("\nRegistered futures:");
 		Map<DSHandle, Future> map = FutureTracker.get().getMap();
+		Map<DSHandle, Future> copy;
 		synchronized (map) {
-			for (Map.Entry<DSHandle, Future> en : map.entrySet()) {
-				Future f = en.getValue();
-				AbstractDataNode handle = (AbstractDataNode) en.getKey();
-				String value = "-";
-				try {
-					if (handle.getValue() != null) {
-						value = "";
-					}
+		    copy = new HashMap<DSHandle, Future>(map);
+		}
+		for (Map.Entry<DSHandle, Future> en : copy.entrySet()) {
+			Future f = en.getValue();
+			AbstractDataNode handle = (AbstractDataNode) en.getKey();
+			String value = "-";
+			try {
+				if (handle.getValue() != null) {
+					value = "";
 				}
-				catch (DependentException e) {
-					value = "<dependent exception>";
-				}
-				catch (Exception e) {
-				    value = "<exception>";
-				}
-				try {
-				    ps.println(handle.getType() + " " + handle.getDisplayableName() + " " + value + " " + f);
-				}
-				catch (Exception e) {
-				    ps.println(handle.getDisplayableName() + " - error");
-				    e.printStackTrace(ps);
-				}
+			}
+			catch (DependentException e) {
+				value = "<dependent exception>";
+			}
+			catch (Exception e) {
+			    value = "<exception>";
+			}
+			try {
+			    ps.println(handle.getType() + " " + handle.getDisplayableName() + " " + value + " " + f);
+			}
+			catch (Exception e) {
+			    ps.println(handle.getDisplayableName() + " - error");
+			    e.printStackTrace(ps);
 			}
 			ps.println("----");
 		}
 	}
-
-	public void dumpThreads() {
+	
+    public void dumpThreads() {
 		dumpThreads(System.out);
 	}
 
 	public static void dumpThreads(PrintStream pw) {
 		pw.println("\nWaiting threads:");
-		Collection<VariableStack> c = WaitingThreadsMonitor.getAllThreads();
-		for (VariableStack stack : c) {
+		Map<VariableStack, DSHandle> c = WaitingThreadsMonitor.getAllThreads();
+		for (Map.Entry<VariableStack, DSHandle> e : c.entrySet()) {
 			try {
-				pw.println(String.valueOf(ThreadingContext.get(stack)));
+				pw.println("Thread: " + String.valueOf(ThreadingContext.get(e.getKey())) + ", waiting on " 
+						+ varWithLine(e.getValue()));
+
+				for (String t : getSwiftTrace(e.getKey())) {
+					pw.println("\t" + t);
+				}
 			}
 			catch (VariableNotFoundException e1) {
 				pw.println("unknown thread");
@@ -263,7 +277,49 @@ public class Monitor implements ActionListener, MouseListener {
 		pw.println("----");
 	}
 
-	public class VariableModel extends AbstractTableModel {
+	public static String varWithLine(DSHandle value) {
+		String line = value.getRoot().getParam("line");
+		return value.getRoot().getParam("dbgname") + 
+            (value == value.getRoot() ? "" : value.getPathFromRoot()) + 
+            (line == null ? "" : " (declared on line " + line + ")");
+    }
+    
+    public static String getLastCall(VariableStack stack) {
+        List<Object> trace = Trace.getAsList(stack);
+        for (Object o : trace) {
+            if (o instanceof FlowNode) {
+                FlowNode n = (FlowNode) o;
+                String traceLine = (String) n.getProperty("_traceline");
+                if (traceLine != null) {
+                    return(Karajan.demangle(n.getTextualName()) + ", " + 
+                            fileName(n) + ", line " + traceLine);
+                }
+            }
+        }
+        return "?";
+    }
+    
+    public static List<String> getSwiftTrace(VariableStack stack) {
+    	List<String> ret = new ArrayList<String>();
+    	List<Object> trace = Trace.getAsList(stack);
+        for (Object o : trace) {
+            if (o instanceof FlowNode) {
+                FlowNode n = (FlowNode) o;
+                String traceLine = (String) n.getProperty("_traceline");
+                if (traceLine != null) {
+                	ret.add(Karajan.demangle(n.getTextualName()) + ", " + 
+                            fileName(n) + ", line " + traceLine);
+                }
+            }
+        }
+        return ret;
+    }
+
+    private static String fileName(FlowNode n) {
+        return new File((String) FlowNode.getTreeProperty(FlowElement.FILENAME, n)).getName().replace(".kml", ".swift");
+    }
+
+    public class VariableModel extends AbstractTableModel {
 		private List<Object[]> l;
 
 		public VariableModel(List<List<Object>> lp) {

@@ -350,6 +350,10 @@ public class Karajan {
 	    }
     }
 	
+	private String getLine(String src) {
+		return src.substring(src.indexOf(' ') + 1);
+	}
+	
 	private void setVariableUsed(String s) {
 	    usedVariables.add(s);
     }
@@ -359,7 +363,7 @@ public class Karajan {
 		VariableScope innerScope = new VariableScope(this, outerScope, VariableScope.ENCLOSURE_NONE);
 		StringTemplate procST = template("procedure");
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
-		procST.setAttribute("line", proc.getSrc().substring(proc.getSrc().indexOf(' ') + 1));
+		procST.setAttribute("line", getLine(proc.getSrc()));
 		procST.setAttribute("name", mangle(proc.getName()));
 		for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
 			FormalParameter param = proc.getOutputArray(i);
@@ -405,7 +409,7 @@ public class Karajan {
      * original name contains a '_' it will be converted 
      * to "__" (two underscores).
      */
-	private String mangle(String name) {
+	public static String mangle(String name) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
@@ -413,6 +417,33 @@ public class Karajan {
                 sb.append('_');
             }
             sb.append(Character.toLowerCase(c));
+        }
+        return sb.toString();
+    }
+	
+	public static String demangle(String name) {
+        StringBuilder sb = new StringBuilder();
+        boolean upper = false;
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (c == '_') {
+            	if (upper) {
+            	    sb.append("_");
+            	    upper = false;
+            	}
+            	else {
+            	    upper = true;
+            	}
+            }
+            else {
+            	if (upper) {
+            		upper = false;
+            		sb.append(Character.toUpperCase(c));
+            	}
+            	else {
+            	    sb.append(Character.toLowerCase(c));
+            	}
+            }
         }
         return sb.toString();
     }
@@ -440,6 +471,7 @@ public class Karajan {
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
 		variableST.setAttribute("isGlobal", Boolean.valueOf(var.getIsGlobal()));
+		variableST.setAttribute("line", getLine(var.getSrc()));
 		variables.add(variableST);
 
 		if(!var.isNil()) {
@@ -682,6 +714,7 @@ public class Karajan {
 				("Unknown procedure invocation mode "+proc.getInvocationMode());
 			}
 			callST.setAttribute("func", mangle(procName));
+			callST.setAttribute("line", getLine(call.getSrc()));
 			/* Does number of input arguments match */
 			for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 				if (proc.getInputArray(i).isOptional())
@@ -1076,6 +1109,7 @@ public class Karajan {
 	public StringTemplate function(Function func, VariableScope scope) throws CompilationException {
 		StringTemplate funcST = template("function");
 		funcST.setAttribute("name", mangle(func.getName()));
+		funcST.setAttribute("line", getLine(func.getSrc()));
 		ProcedureSignature funcSignature =  functionsMap.get(func.getName());
 		if(funcSignature == null) {
 			throw new CompilationException("Unknown function: @"+func.getName());
@@ -1350,7 +1384,7 @@ public class Karajan {
 			if(arrayMode) {
 			    actualType = actualType + "[" + indexType + "]";
 				newst = template("slicearray");
-			} 
+			}
 			else {
 				newst = template("extractstructelement");
 			}

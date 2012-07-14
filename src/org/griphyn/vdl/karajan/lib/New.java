@@ -52,7 +52,7 @@ public class New extends VDLFunction {
 
 	static {
 		setArguments(New.class,
-				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_DBGNAME, OA_WAITFOR, });
+				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_DBGNAME, OA_WAITFOR});
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
@@ -63,13 +63,18 @@ public class New extends VDLFunction {
 		    (Map<String,Object>) OA_MAPPING.getValue(stack);
 		String dbgname = TypeUtil.toString(OA_DBGNAME.getValue(stack));
 		String waitfor = (String) OA_WAITFOR.getValue(stack);
+		String line = (String) getProperty("_defline");
 
 		if (mapping == null) {
-			mapping = new HashMap<String,Object>();
+			mapping = new HashMap<String, Object>();
 		}
 
 		if (dbgname != null) {
 			mapping.put("dbgname", dbgname);
+		}
+		
+		if (line != null) {
+		    mapping.put("line", line);
 		}
 
 		mapping.put("swift#restartid", getThreadPrefix(stack) + ":" + dbgname);

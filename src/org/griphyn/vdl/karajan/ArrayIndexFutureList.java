@@ -37,6 +37,7 @@ import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
 import org.griphyn.vdl.mapping.ArrayDataNode;
+import org.griphyn.vdl.mapping.DSHandle;
 
 public class ArrayIndexFutureList implements FutureList, FutureWrapper {
     private ArrayList<Object> keys;
@@ -107,6 +108,10 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
     public Object getValue() {
         return this;
     }
+    
+    public DSHandle getHandle() {
+        return node;
+    }
 
     public void addModificationAction(FutureListener target, VariableStack stack) {
         synchronized(node) {
@@ -114,7 +119,7 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
                 listeners = new LinkedList<ListenerStackPair>();
             }
             listeners.add(new ListenerStackPair(target, stack));
-            WaitingThreadsMonitor.addThread(stack);
+            WaitingThreadsMonitor.addThread(stack, node);
             if (!node.isClosed()) {
                 return;
             }
@@ -139,7 +144,7 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
             EventBus.post(new Runnable() {
                 public void run() {
                     lsp.listener.futureModified(ArrayIndexFutureList.this, lsp.stack);
-                } 
+                }
             });
         }
     }

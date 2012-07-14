@@ -58,7 +58,7 @@ memberdefinition(type,name,sourcelocation) ::= <<
 >>
 
 procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,config,line,cleanups) ::= <<
-<element name="$name$"$if(arguments)$ arguments="$proc_args(args=arguments)$"$endif$$if(optargs)$ optargs="$proc_args(args=optargs)$"$endif$>
+<element name="$name$"$if(arguments)$ arguments="$proc_args(args=arguments)$"$endif$$if(optargs)$ optargs="$proc_args(args=optargs)$"$endif$ _defline="$line$">
   $optargs:default_arg();separator="\n"$
   $inputs:vdl_log_input();separator="\n"$
   $outputs:vdl_log_output();separator="\n"$
@@ -72,14 +72,14 @@ $endif$
 >>
 
 compound(outputs,inputs,declarations,statements,config,name,cleanups) ::= <<
-<log level="info"><string>STARTCOMPOUND thread={#thread} name=$name$</string></log>
+<unitStart name="$name$" type="COMPOUND" outputs="$outputs:list();separator=","$"/>
 $declarations;separator="\n"$
 $if(statements)$
 $parallel(statements=statements)$
 $endif$
 $outputs:vdl_closedataset();separator="\n"$
 $cleanups:vdl_cleandataset();separator="\n"$
-<log level="info"><string>ENDCOMPOUND thread={#thread}</string></log>
+<unitEnd name="$name$" type="COMPOUND"/>
 >>
 
 proc_args(args) ::= <<
@@ -99,7 +99,7 @@ $endif$
 >>
 
 vdl_execute(outputs,inputs,attributes,application,name,line) ::= <<
-<log level="debug" message="PROCEDURE line=$line$ thread={#thread} name=$name$"/>
+<unitStart name="$name$" line="$line$" type="PROCEDURE" outputs="$outputs:list();separator=","$"/>
 <vdl:execute>
   $attributes$
   <vdl:tr>$application.exec$</vdl:tr>
@@ -108,7 +108,7 @@ vdl_execute(outputs,inputs,attributes,application,name,line) ::= <<
   $vdl_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
 </vdl:execute>
 $outputs:vdl_closedataset();separator="\n"$
-<log level="debug" message="PROCEDURE_END line=$line$"/>
+<unitEnd name="$name$" line="$line$" type="PROCEDURE"/>
 >>
 
 vdl_log_input() ::= <<
@@ -144,6 +144,8 @@ vdl_closedataset() ::= <<
 vdl_cleandataset() ::= <<
 <vdl:cleandataset var="{$it$}"/>
 >>
+
+list() ::= <<$it.name$>>
 
 vdl_arguments(attributes,arguments,stdin,stdout,stderr) ::= <<
   $attributes$
@@ -202,8 +204,8 @@ $endif$
 // the 'function' template outputs a karajan code fragment
 // that calls a function in the 'swiftscript' namespace.
 
-function(name, args, datatype) ::= <<
-<swiftscript:$name$>
+function(name, args, datatype, line) ::= <<
+<swiftscript:$name$ _traceline="$line$">
   $if(args)$ $args$ $endif$
 </swiftscript:$name$>
 >>
@@ -231,15 +233,14 @@ $if(indexVar)$
       <vdl:new type="$indexVarType$" value="{\$\$}"/>
     </set>
 $endif$
-	<log level="debug" message="FOREACH_IT_START line=$line$ thread={#thread}"/>
-<log level="debug"><string>SCOPE thread={#thread}</string></log>
+	<unitStart line="$line$" type="FOREACH_IT"/>
 
     $declarations;separator="\n"$
     $if(statements)$
       $parallel(statements=statements)$
       $cleanups:vdl_cleandataset();separator="\n"$
     $endif$
-    <log level="debug" message="FOREACH_IT_END line=$line$ thread={#thread}"/>
+    <unitEnd line="$line$" type="FOREACH_IT"/>
 </vdl:tparallelFor>
 >>
 
@@ -247,17 +248,17 @@ $endif$
 // they are not
 // $outputs:vdl_log_output();separator="\n"$
 
-callInternal(func, outputs, inputs) ::= <<
+callInternal(func, outputs, inputs, line) ::= <<
 <sequential>
-<log level="debug" message="INTERNALPROC_START thread={#thread} name=$func$"/>
+<unitStart name="$func$" type="INTERNALPROC" outputs="$outputs:list();separator=","$"/>
 <set name="swift#cs"><variable>#thread</variable></set>
-<$func$>
+<$func$ _traceline="$line$">
   <parallel>
     $outputs:callInternal_log_output();separator="\n"$
     $inputs:callInternal_log_input();separator="\n"$
   </parallel>
 </$func$>
-<log level="debug" message="INTERNALPROC_END thread={#thread}"/>
+<unitEnd name="$func$" type="INTERNALPROC"/>
 </sequential>
 >>
 
@@ -287,8 +288,8 @@ callInternal_log_output() ::= <<
 </sequential>
 >>
 
-callUserDefined(func, outputs, inputs) ::= <<
-<$func$>
+callUserDefined(func, outputs, inputs, line) ::= <<
+<$func$ _traceline="$line$">
   <parallel>
     $outputs;separator="\n"$
     $inputs;separator="\n"$
@@ -312,19 +313,19 @@ globalConstant(name, expr, datatype) ::= <<
 </global>
 >>
 
-variable(name,type,expr,mapping,nil,file,waitfor,datatype,isGlobal) ::= <<
+variable(name,type,expr,mapping,nil,file,waitfor,datatype,isGlobal,line) ::= <<
 $if(isGlobal)$<global name="$name$">$else$<set name="$name$">$endif$
   $if(mapping)$
-  <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
+  <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$ _defline="$line$">
     $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
   </vdl:new>
   $else$
     $if(file)$
-      <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$>
+      <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$ _defline="$line$">
         $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
       </vdl:new>
     $else$
-      <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$ />
+      <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$ _defline="$line$"/>
     $endif$
   $endif$
 $if(isGlobal)$</global>$else$</set>$endif$
@@ -445,12 +446,12 @@ if(condition,vthen,velse) ::= <<
 <if>
   <vdl:getfieldvalue>$condition$</vdl:getfieldvalue>
   <then>
-<log level="debug"><string>SCOPE thread={#thread}</string></log>
+  	<unitStart type="CONDITION_BLOCK"/>
     $vthen$
   </then>
   $if(velse)$
   <else>
-<log level="debug"><string>SCOPE thread={#thread}</string></log>
+  	<unitStart type="CONDITION_BLOCK"/>
     $velse$
   </else>
   $endif$

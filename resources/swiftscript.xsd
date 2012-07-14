@@ -234,6 +234,8 @@
         <xs:documentation>name of the mapping function</xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    
+    <xs:attribute name="src" type="xs:string" />
   </xs:complexType>
 
   <!--
@@ -328,6 +330,8 @@
     <xs:attribute name="type" type="xs:QName" use="required"/>
 
     <xs:attribute name="isGlobal" type="xs:boolean"/>
+    
+    <xs:attribute name="src" type="xs:string"/>
   </xs:complexType>
 
   <xs:complexType name="ActualParameter">

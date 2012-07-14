@@ -71,13 +71,13 @@ memberdefinition(type,name,sourcelocation) ::= <<
 
 variable(type,name, sourcelocation, mapping, lfn, global) ::= <<
 $if(lfn)$
-<variable name="$name$" type="$type$" isGlobal="$global$"><file name="$lfn$"/></variable>
+<variable name="$name$" type="$type$" isGlobal="$global$" src="$sourcelocation$"><file name="$lfn$"/></variable>
 $else$$if(mapping)$
-<variable name="$name$" type="$type$" isGlobal="$global$">
+<variable name="$name$" type="$type$" isGlobal="$global$" src="$sourcelocation$">
   $mapping$
 </variable>
 $else$
-<variable name="$name$" type="$type$" isGlobal="$global$" xsi:nil="true"/>$endif$$endif$
+<variable name="$name$" type="$type$" isGlobal="$global$" xsi:nil="true" src="$sourcelocation$"/>$endif$$endif$
 >>
 
 mapping(descriptor,params,sourcelocation) ::= <<
@@ -140,24 +140,9 @@ actualParam(value,bind,sourcelocation) ::= <<
 parameter(type,name,outlink,defaultv,sourcelocation) ::= <<
 
 $if(outlink)$
-  <output
+<output name="$name$" type="$type$" $if(defaultv)$>$defaultv$</output>$else$ xsi:nil="true"/>$endif$
 $else$
-  <input
-$endif$
-
-name="$name$" type="$type$"
-
-$if(defaultv)$>
-$defaultv$
-
-$if(outlink)$
-  </output>
-$else$
-  </input>
-$endif$
-
-$else$
- xsi:nil="true" />
+<input name="$name$" type="$type$" $if(defaultv)$>$defaultv$</input>$else$ xsi:nil="true"/>$endif$
 $endif$
 >>
 
@@ -193,7 +178,7 @@ app_profile(key, value, sourcelocation) ::= <<
 >>
 
 functionInvocation(name,args,sourcelocation) ::= <<
-<function name="$name$">
+<function name="$name$" src="$sourcelocation$">
 $if(args)$
   $args$
 $endif$

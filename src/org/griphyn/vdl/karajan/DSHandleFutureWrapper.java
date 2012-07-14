@@ -53,7 +53,7 @@ public class DSHandleFutureWrapper implements FutureWrapper {
                 listeners = new LinkedList<ListenerStackPair>();
             }
             listeners.add(new ListenerStackPair(target, stack));
-            WaitingThreadsMonitor.addThread(stack);
+            WaitingThreadsMonitor.addThread(stack, node);
             if (!node.isClosed()) {
                 return;
             }

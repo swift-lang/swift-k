@@ -20,39 +20,52 @@
  */
 package org.griphyn.vdl.karajan;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.globus.cog.karajan.stack.VariableStack;
+import org.griphyn.vdl.mapping.DSHandle;
 
 public class WaitingThreadsMonitor {
-	private static Set<VariableStack> threads;
+	private static Map<VariableStack, DSHandle> threads = new HashMap<VariableStack, DSHandle>();
+	private static Map<VariableStack, List<DSHandle>> outputs = new HashMap<VariableStack, List<DSHandle>>();;
 	
-	public synchronized static void addThread(VariableStack stack) {
+	public static void addThread(VariableStack stack, DSHandle waitingOn) {
 	    if (stack != null) {
-	        getThreads().add(stack);
+	        synchronized(threads) {
+	            threads.put(stack, waitingOn);
+	        }
+	    }
+	}
+		
+	public static void removeThread(VariableStack stack) {
+	    synchronized(threads) {
+	        threads.remove(stack);
 	    }
 	}
 	
-	private static synchronized Set<VariableStack> getThreads() {
-		if (threads == null) {
-			threads = new HashSet<VariableStack>();
-		}
-		return threads;
+	public static Map<VariableStack, DSHandle> getAllThreads() {
+	    synchronized(threads) {
+	        return new HashMap<VariableStack, DSHandle>(threads);
+	    }
 	}
-	
-	public synchronized static void removeThread(VariableStack stack) {
-		getThreads().remove(stack);
-	}
-	
-	public synchronized static Collection<VariableStack> getAllThreads() {
-		if (threads == null) {
-			return Collections.emptySet();
-		}
-		else {
-			return new HashSet<VariableStack>(threads);
-		}
-	}
+
+    public static void addOutput(VariableStack stack, List<DSHandle> outputs) {
+        synchronized(outputs) {
+            WaitingThreadsMonitor.outputs.put(stack, outputs);
+        }
+    }
+
+    public static void removeOutput(VariableStack stack) {
+        synchronized(outputs) {
+            outputs.remove(stack);
+        }
+    }
+    
+    public static Map<VariableStack, List<DSHandle>> getOutputs() {
+        synchronized(outputs) {
+            return new HashMap<VariableStack, List<DSHandle>>(outputs);
+        }
+    }
 }

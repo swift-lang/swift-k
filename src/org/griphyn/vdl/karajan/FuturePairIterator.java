@@ -110,7 +110,7 @@ public class FuturePairIterator implements FutureIterator {
 	}
 
 	public synchronized void addModificationAction(FutureListener target, VariableStack stack) {
-		WaitingThreadsMonitor.addThread(stack);
+		WaitingThreadsMonitor.addThread(stack, array.getHandle());
 		array.addModificationAction(target, stack);
 	}
 	
