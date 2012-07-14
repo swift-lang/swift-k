@@ -41,8 +41,9 @@ public class ThreadingContext {
 			if (prev == null) {
 				return tc.prev == null;
 			}
-			else
+			else {
 				return prev.equals(tc.prev);
+			}
 		}
 		return false;
 	}
@@ -51,7 +52,7 @@ public class ThreadingContext {
 	 * Returns true if
 	 * 
 	 * @param reference
-	 *            is a sub context of this context
+	 *            is a sub context of this context (or if the two are equal)
 	 */
 	public boolean isSubContext(ThreadingContext reference) {
 		ThreadingContext crt = this;
@@ -63,6 +64,20 @@ public class ThreadingContext {
 		}
 		return false;
 	}
+	
+	/** 
+	 * Like isSubContext except it returns false of the two are equal.
+	 */
+	public boolean isStrictlySubContext(ThreadingContext reference) {
+        ThreadingContext crt = this.prev;
+        while (crt != null) {
+            if (crt.equals(reference)) {
+                return true;
+            }
+            crt = crt.prev;
+        }
+        return false;
+    }
 
 	public int hashCode() {
 		return prev == null ? id : id + prev.hashCode();
