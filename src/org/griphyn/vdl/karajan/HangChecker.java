@@ -32,10 +32,11 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
+import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.nodes.grid.SchedulerNode;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -44,6 +45,7 @@ public class HangChecker extends TimerTask {
     public static final Logger logger = Logger.getLogger(HangChecker.class);
     
     public static final int CHECK_INTERVAL = 10000;
+    public static final int MAX_CYCLES = 10;
     private Timer timer;
     private long lastEventCount;
     private VariableStack stack;
@@ -94,6 +96,8 @@ public class HangChecker extends TimerTask {
             }
             l.add(e.getKey());
         }
+                
+        System.out.print("Finding dependency loops...");
         
         Set<VariableStack> seen = new HashSet<VariableStack>();
         LinkedList<Object> cycle = new LinkedList<Object>();
@@ -103,8 +107,7 @@ public class HangChecker extends TimerTask {
             cycle.clear();
             findLoop(t, rwt, ot, seen, cycle, cycles);
         }
-        
-        cycles = removeDuplicates(cycles);
+        System.out.println();
         
         if (cycles.size() == 1) {
             ps.println("Dependency loop found:");
@@ -121,38 +124,39 @@ public class HangChecker extends TimerTask {
             Object prev = c.getLast();
             for (Object o : c) {
                 if (o instanceof VariableStack) {
-                    ps.println("\t" + Monitor.varWithLine((DSHandle) prev) + " is needed by: ");
+                    if (prev != null) {
+                        ps.println("\t" + Monitor.varWithLine((DSHandle) prev) + " is needed by: ");
+                    }
+                    else {
+                        ps.println("\tthe above must complete before the block below can complete:");
+                    }
                     for (String t : Monitor.getSwiftTrace((VariableStack) o)) {
-                    	ps.println("\t\t" + t);
+                        ps.println("\t\t" + t);
                     }
                 }
-                else { 
+                else {
                     prev = o;
-                    ps.println("\twhich produces " + Monitor.varWithLine((DSHandle) o));
+                    if (o != null) {
+                        ps.println("\twhich produces " + Monitor.varWithLine((DSHandle) o));
+                    }
                     ps.println();
                 }
             }
         }
+        
+        // TODO: fail the loops
         if (cycles.size() > 0) {
         	ps.println("----");
         }
     }
-    
-    private static List<LinkedList<Object>> removeDuplicates(List<LinkedList<Object>> cycles) {
-    	List<LinkedList<Object>> nc = new LinkedList<LinkedList<Object>>();
-    	while (!cycles.isEmpty()) {
-    		Iterator<LinkedList<Object>> i = cycles.iterator();
-    		LinkedList<Object> first = i.next();
-    		i.remove();
-    		
-    		while (i.hasNext()) {
-    			if (isSameCycle(first, i.next())) {
-    				i.remove();
-    			}
-    		}
-    		nc.add(first);
-    	}
-    	return nc;
+        
+    private static boolean isDuplicate(List<LinkedList<Object>> cycles, LinkedList<Object> cycle) {
+        for (LinkedList<Object> c : cycles) {
+            if (isSameCycle(c, cycle)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isSameCycle(LinkedList<Object> a, LinkedList<Object> b) {
@@ -163,12 +167,12 @@ public class HangChecker extends TimerTask {
         Object o = i.next();
         Iterator<Object> j = b.iterator();
         while (j.hasNext()) {
-        	if (o == j.next()) {
+        	if (sameTraces(o, j.next())) {
         		while (i.hasNext()) {
         		    if (!j.hasNext()) {
         		        j = b.iterator();
         		    }
-        		    if (i.next() != j.next()) {
+        		    if (!sameTraces(i.next(), j.next())) {
         		    	return false;
         		    }
         		}
@@ -178,18 +182,85 @@ public class HangChecker extends TimerTask {
         return false;
     }
 
+    private static boolean sameTraces(Object a, Object b) {
+        if (a instanceof DSHandle) {
+            return a == b;
+        }
+        if (b instanceof DSHandle) {
+            return false;
+        }
+        if (a == null || b == null) {
+            return a == b;
+        }
+        VariableStack sa = (VariableStack) a;
+        VariableStack sb = (VariableStack) b;
+        
+        List<Object> ta = Monitor.getSwiftTraceElements(sa);
+        List<Object> tb = Monitor.getSwiftTraceElements(sb);
+        
+        if (ta.size() != tb.size()) {
+            return false;
+        }
+        for (int i = 0; i < ta.size(); i++) {
+            if (ta.get(i) != tb.get(i)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
     private static void findLoop(VariableStack t, Map<DSHandle, List<VariableStack>> rwt,
             Map<VariableStack, List<DSHandle>> ot, Set<VariableStack> seen, LinkedList<Object> cycle, List<LinkedList<Object>> cycles) {
+        if (cycles.size() > MAX_CYCLES) {
+            return;
+        }
         if (t == null) {
             return;
         }
         if (seen.contains(t)) {
-            cycles.add(new LinkedList<Object>(cycle));
+            // remove things up to t in the cycle since they are just lead-ins
+            LinkedList<Object> lc = new LinkedList<Object>(cycle);
+            while (lc.getFirst() != t) {
+                lc.removeFirst();
+            }
+            if (!isDuplicate(cycles, lc)) {
+                cycles.add(new LinkedList<Object>(lc));
+                System.out.print(".");
+            }
             return;
         }
         cycle.add(t);
         seen.add(t);
         // follow all the outputs of t
+        followOutputs(t, rwt, ot, seen, cycle, cycles);
+        
+        // now follow all the outputs of parent threads to t
+        try {
+            ThreadingContext tc = ThreadingContext.get(t);
+            for (VariableStack stk : ot.keySet()) {
+                if (tc.isStrictlySubContext(ThreadingContext.get(stk))) {
+                    seen.add(stk);
+                    cycle.add(null);
+                    cycle.add(stk);
+                    followOutputs(stk, rwt, ot, seen, cycle, cycles);
+                    cycle.removeLast();
+                    cycle.removeLast();
+                    seen.remove(stk);
+                }
+            }
+        }
+        catch (VariableNotFoundException e) {
+            e.printStackTrace();
+        }
+        cycle.removeLast();
+        seen.remove(t);
+    }
+
+    private static void followOutputs(VariableStack t,
+            Map<DSHandle, List<VariableStack>> rwt,
+            Map<VariableStack, List<DSHandle>> ot, Set<VariableStack> seen,
+            LinkedList<Object> cycle, List<LinkedList<Object>> cycles) {
         List<DSHandle> l = ot.get(t);
         if (l != null) {
             for (DSHandle h : l) {
@@ -203,8 +274,5 @@ public class HangChecker extends TimerTask {
                 cycle.removeLast();
             }
         }
-        cycle.removeLast();
-        seen.remove(t);
     }
-
 }

@@ -204,7 +204,7 @@ statementList(statements,sourcelocation) ::= <<
 >>
 
 if(cond,body,els,sourcelocation) ::= <<
-<if>
+<if src="$sourcelocation$">
   $cond$
   <then>
   $body$
@@ -247,7 +247,7 @@ $endif$
 >>
 
 iterate(cond,body,var,sourcelocation) ::= <<
-<iterate var="$var$">
+<iterate var="$var$" src="$sourcelocation$">
   <body>
     $body$
   </body>

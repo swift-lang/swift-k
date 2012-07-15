@@ -314,6 +314,21 @@ public class Monitor implements ActionListener, MouseListener {
         }
         return ret;
     }
+    
+    public static List<Object> getSwiftTraceElements(VariableStack stack) {
+        List<Object> ret = new ArrayList<Object>();
+        List<Object> trace = Trace.getAsList(stack);
+        for (Object o : trace) {
+            if (o instanceof FlowNode) {
+                FlowNode n = (FlowNode) o;
+                String traceLine = (String) n.getProperty("_traceline");
+                if (traceLine != null) {
+                    ret.add(o);
+                }
+            }
+        }
+        return ret;
+    }
 
     private static String fileName(FlowNode n) {
         return new File((String) FlowNode.getTreeProperty(FlowElement.FILENAME, n)).getName().replace(".kml", ".swift");

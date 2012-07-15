@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
@@ -52,15 +53,25 @@ public class UnitStart extends FlowNode {
         
         String outputs = (String) OUTPUTS.getStatic(this);
         if (outputs != null) {
-            trackOutputs(stack, outputs);
+            trackOutputs(stack, outputs, "SCOPE".equals(type));
         }
     }
 
-    private void trackOutputs(VariableStack stack, String outputs) {
+    private void trackOutputs(VariableStack stack, String outputs, boolean deep) {
         String[] names = outputs.split(",");
         List<DSHandle> l = new LinkedList<DSHandle>();
         for (String name : names) {
-            l.add((DSHandle) stack.parentFrame().getVar(name));
+        	if (deep) {
+        	    try {
+                    l.add((DSHandle) stack.getVar(name));
+                }
+                catch (VariableNotFoundException e) {
+                    e.printStackTrace();
+                }
+        	}
+        	else {
+        		l.add((DSHandle) stack.parentFrame().getVar(name));
+        	}
         }
         WaitingThreadsMonitor.addOutput(stack, l);
     }

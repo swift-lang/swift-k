@@ -484,6 +484,8 @@
        item</xs:documentation>
      </xs:annotation>
    </xs:attribute>
+   
+   <xs:attribute name="src" type="xs:string" />
 
   </xs:complexType>
 
@@ -506,6 +508,8 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
+    
+    <xs:attribute name="src" type="xs:string" />
 
   </xs:complexType>
 

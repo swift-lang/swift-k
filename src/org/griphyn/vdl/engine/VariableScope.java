@@ -47,7 +47,12 @@ public class VariableScope {
 	/** permit no access to the containing scope except for finding
 	    global variables */
 	public static final int ENCLOSURE_PROCEDURE = 301926;
-
+	
+	/** Override ENCLOSURE_LOOP to allow assignment inside a loop
+	 * based on some condition
+	 */
+	public static final int ENCLOSURE_CONDITION = 301927;
+	
 	public static final Logger logger = Logger.getLogger(VariableScope.class);
 
 	/** need this for the program as a whole. probably should factor
@@ -66,6 +71,9 @@ public class VariableScope {
 	/** The string template in which we will store statements
 	    outputted into this scope. */
 	public StringTemplate bodyTemplate;
+	
+	private List<String> outputs = new ArrayList<String>();
+	private Set<String> inhibitClosing = new HashSet<String>();
 
 	public VariableScope(Karajan c, VariableScope parent) {
 		this(c,parent,ENCLOSURE_ALL);
@@ -113,6 +121,10 @@ public class VariableScope {
 
 	public void addVariable(String name, String type) throws CompilationException {
 		addVariable(name,type,false);
+	}
+	
+	public void inhibitClosing(String name) {
+		inhibitClosing.add(name);
 	}
 
 	public void addVariable(String name, String type, boolean global) throws CompilationException {
@@ -194,6 +206,10 @@ public class VariableScope {
 // in the same scope here
 	public boolean isVariableWriteable(String name, boolean partialWriter) {
 		if(isVariableLocallyDefined(name)) return true;
+		if(parentScope != null && parentScope.isVariableWriteable(name, true) && enclosureType == ENCLOSURE_CONDITION) {
+		    logger.warn("Variable " + name + " might have multiple writers");
+		    return true;
+		}
 		if(parentScope != null && parentScope.isVariableWriteable(name, partialWriter) && enclosureType == ENCLOSURE_ALL) return true;
 		if(parentScope != null && parentScope.isVariableWriteable(name, partialWriter) && enclosureType == ENCLOSURE_LOOP && partialWriter) return true;
 		return false;
@@ -206,9 +222,9 @@ public class VariableScope {
 
 	/** List of templates to be executed in sequence after the present
 	    in-preparation statement is outputted. */
-	List<StringTemplate> presentStatementPostStatements =  Collections.synchronizedList(new ArrayList<StringTemplate>());
+	List<StringTemplate> presentStatementPostStatements =  new ArrayList<StringTemplate>();
 
-	Map<String, Variable> variableUsage = Collections.synchronizedMap(new HashMap<String, Variable>());
+	Map<String, Variable> variableUsage = new HashMap<String, Variable>();
 
 	/** indicates that the present in-preparation statement writes to the
 	    named variable. If the variable is declared in the local scope,
@@ -231,10 +247,14 @@ public class VariableScope {
 			} else {
 				logger.debug("Variable "+variableName+" is local but has no template.");
 			}
-			StringTemplate postST = compiler.template("partialclose");
-			postST.setAttribute("var", variableName);
-			postST.setAttribute("closeID", closeID);
-			presentStatementPostStatements.add(postST);
+			outputs.add(variableName);
+			if (!inhibitClosing.contains(variableName)) {
+    			StringTemplate postST = compiler.template("partialclose");
+    			postST.setAttribute("var", variableName);
+    			postST.setAttribute("closeID", closeID);
+    		
+    			presentStatementPostStatements.add(postST);
+			}
 		} else {
 
 // TODO now we have to walk up the scopes until either we find the
@@ -258,6 +278,7 @@ public class VariableScope {
 				}
 				logger.debug("added "+closeID+" to variable "+variableName+" in scope "+hashCode());
 			} else {
+			    isVariableWriteable(variableName, partialWriter);
 				throw new CompilationException("variable "+variableName+" is not writeable in this scope");
 			}
 		}
@@ -310,18 +331,46 @@ public class VariableScope {
 	void appendStatement(StringTemplate statementST) {
 		StringTemplate wrapperST = compiler.template("sequential");
 		bodyTemplate.setAttribute("statements", wrapperST);
+		if (!outputs.isEmpty()) {
+            StringTemplate unitStart = compiler.template("unitStart");
+            unitStart.setAttribute("type", "SCOPE");
+            unitStart.setAttribute("outputs", join(outputs));
+            wrapperST.setAttribute("statements", unitStart);
+            StringTemplate unitEnd = compiler.template("unitEnd");
+            unitEnd.setAttribute("type", "SCOPE");
+            presentStatementPostStatements.add(unitEnd);
+            if ("foreach".equals(statementST.getName()) ||
+                    "if".equals(statementST.getName()) ||
+                    "iterate".equals(statementST.getName())) {
+                statementST.setAttribute("trace", Boolean.TRUE);
+            }
+        }
 		wrapperST.setAttribute("statements",statementST);
 		Iterator<StringTemplate> it = presentStatementPostStatements.iterator();
 		while(it.hasNext()) {
 			wrapperST.setAttribute("statements", it.next());
 		}
-		presentStatementPostStatements =  Collections.synchronizedList(new ArrayList<StringTemplate>());
+		presentStatementPostStatements.clear();
+		outputs.clear();
+		inhibitClosing.clear();
 	}
 
-	/** Stores information about a variable that is referred to in this
+	private String join(List<String> l) {
+        StringBuilder sb = new StringBuilder();
+        Iterator<String> i = l.iterator();
+        while (i.hasNext()) {
+            sb.append(i.next());
+            if (i.hasNext()) {
+                sb.append(",");
+            }
+        }
+        return sb.toString();
+    }
+
+    /** Stores information about a variable that is referred to in this
 	    scope. Should probably get used for dataset marking eventually. */
 	class Variable {
-		List<Object> writingStatements =  Collections.synchronizedList(new ArrayList<Object>());
+		List<Object> writingStatements =  new ArrayList<Object>();
 	}
 
 	Iterator<String> getVariableIterator() {

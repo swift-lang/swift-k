@@ -574,6 +574,7 @@ public class Karajan {
 						" to a variable of type " + datatype(varST));
 			assignST.setAttribute("var", varST);
 			assignST.setAttribute("value", valueST);
+			assignST.setAttribute("line", getLine(assign.getSrc()));
 			String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
 			scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(assign.getAbstractExpressionArray(0)));
 			scope.appendStatement(assignST);
@@ -817,8 +818,7 @@ public class Karajan {
 					ActualParameter output = call.getOutputArray(i);
 					StringTemplate argST = actualParameter(output, scope);
 					callST.setAttribute("outputs", argST);
-					String rootvar = abstractExpressionToRootVariable(call.getOutputArray(i).getAbstractExpression());
-					scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(call.getOutputArray(i).getAbstractExpression()));
+					addWriterToScope(scope, call.getOutputArray(i).getAbstractExpression());
 				}
 			}
 			if (keywordArgsOutput) {
@@ -837,8 +837,7 @@ public class Karajan {
 						throw new CompilationException("Wrong type for output parameter number " + i +
 								", expected " + formalType + ", got " + actualType);
 
-					String rootvar = abstractExpressionToRootVariable(call.getOutputArray(i).getAbstractExpression());
-					scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(call.getOutputArray(i).getAbstractExpression()));
+					addWriterToScope(scope, call.getOutputArray(i).getAbstractExpression());
 				}
 			} else { /* Positional arguments */
 				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
@@ -855,8 +854,7 @@ public class Karajan {
 						throw new CompilationException("Wrong type for parameter number " + i +
 								", expected " + formalType + ", got " + actualType);
 
-					String rootvar = abstractExpressionToRootVariable(call.getOutputArray(i).getAbstractExpression());
-					scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(call.getOutputArray(i).getAbstractExpression()));
+					addWriterToScope(scope, call.getOutputArray(i).getAbstractExpression());
 				}
 			}
 
@@ -869,6 +867,16 @@ public class Karajan {
 		}
 	}
 
+    private void addWriterToScope(VariableScope scope, XmlObject var) throws CompilationException {
+        String rootvar = abstractExpressionToRootVariable(var);
+        boolean partial = rootVariableIsPartial(var);
+        if (!partial) {
+            // don't close variables that are already closed by the function itself
+            scope.inhibitClosing(rootvar);
+        }
+        scope.addWriter(rootvar, new Integer(callID++), partial);
+    }
+
     public void iterateStat(Iterate iterate, VariableScope scope) throws CompilationException {
 		VariableScope loopScope = new VariableScope(this, scope, VariableScope.ENCLOSURE_LOOP);
 		VariableScope innerScope = new VariableScope(this, loopScope, VariableScope.ENCLOSURE_LOOP);
@@ -876,6 +884,7 @@ public class Karajan {
 		loopScope.addVariable(iterate.getVar(), "int");
 
 		StringTemplate iterateST = template("iterate");
+		iterateST.setAttribute("line", getLine(iterate.getSrc()));
 
 		iterateST.setAttribute("var", iterate.getVar());
 		innerScope.bodyTemplate = iterateST;
@@ -945,13 +954,14 @@ public class Karajan {
 		StringTemplate ifST = template("if");
 		StringTemplate conditionST = expressionToKarajan(ifstat.getAbstractExpression(), scope);
 		ifST.setAttribute("condition", conditionST.toString());
+		ifST.setAttribute("line", getLine(ifstat.getSrc()));
 		if (!datatype(conditionST).equals("boolean"))
 			throw new CompilationException ("Condition in if statement has to be of boolean type.");
 
 		Then thenstat = ifstat.getThen();
 		Else elsestat = ifstat.getElse();
 
-		VariableScope innerThenScope = new VariableScope(this, scope);
+		VariableScope innerThenScope = new VariableScope(this, scope, VariableScope.ENCLOSURE_CONDITION);
 		innerThenScope.bodyTemplate = template("sub_comp");
 		ifST.setAttribute("vthen", innerThenScope.bodyTemplate);
 

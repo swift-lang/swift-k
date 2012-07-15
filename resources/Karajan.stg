@@ -210,9 +210,9 @@ function(name, args, datatype, line) ::= <<
 </swiftscript:$name$>
 >>
 
-iterate(declarations,statements,cond,var,cleanups) ::= <<
+iterate(declarations,statements,cond,var,cleanups,trace,line) ::= <<
 
-<vdl:infinitecountingwhile var="$var$">
+<vdl:infinitecountingwhile var="$var$" $if(trace)$ _traceline="$line$"$endif$>
   $sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
   <sys:if>
     <vdl:getfieldvalue>$cond$</vdl:getfieldvalue>
@@ -222,8 +222,8 @@ iterate(declarations,statements,cond,var,cleanups) ::= <<
 </vdl:infinitecountingwhile>
 >>
 
-foreach(var,in,indexVar,indexVarType,declarations,statements,line,selfClose,cleanups) ::= <<
-<vdl:tparallelFor name="\$"$if(selfClose)$ selfClose="$selfClose$"$endif$>
+foreach(var,in,indexVar,indexVarType,declarations,statements,line,selfClose,cleanups,trace) ::= <<
+<vdl:tparallelFor name="\$"$if(selfClose)$ selfClose="$selfClose$"$endif$ $if(trace)$ _traceline="$line$"$endif$>
   <getarrayiterator>$in$</getarrayiterator>
   <set names="\$\$, $var$">
     <each items="{\$}"/>
@@ -364,8 +364,8 @@ vdl_parameter(name,expr) ::= <<
 <vdl:parameter name="$name$">$expr$</vdl:parameter>
 >>
 
-assign(var,value) ::= <<
-   <vdl:setfieldvalue>
+assign(var,value,line) ::= <<
+   <vdl:setfieldvalue $if(line)$_traceline="$line$"$else$_traceline="-1"$endif$>
        $var$
        $value$
    </vdl:setfieldvalue>
@@ -442,8 +442,8 @@ range_log() ::= <<
  	</if>
 >>
 
-if(condition,vthen,velse) ::= <<
-<if>
+if(condition,vthen,velse,line,trace) ::= <<
+<if $if(trace)$ _traceline="$line$"$endif$>
   <vdl:getfieldvalue>$condition$</vdl:getfieldvalue>
   <then>
   	<unitStart type="CONDITION_BLOCK"/>
@@ -507,7 +507,13 @@ partialclose(var, closeID) ::= <<
   <partialCloseDataset var="{$var$}" closeID="$closeID$" />
 >>
 
+unitStart(type, outputs) ::= <<
+  <unitStart type="$type$" outputs="$outputs$"/>
+>>
 
+unitEnd(type) ::= <<
+  <unitEnd type="$type$"/>
+>>
 
 operator ::= [
   "+":"vdlop:sum",
