@@ -182,8 +182,13 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 			throws VariableNotFoundException {
 		return (ThreadCount) stack.getVar(THREAD_COUNT);
 	}
+	
+	@Override
+    public String getTextualName() {
+        return "foreach";
+    }
 
-	private static class ThreadCount implements FutureIterator {
+    private static class ThreadCount implements FutureIterator {
 		private int maxThreadCount;
 		private int crt;
 		private boolean selfClose, closed;

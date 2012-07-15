@@ -44,6 +44,8 @@ public class SetFieldValue extends VDLFunction {
 	static {
 		setArguments(SetFieldValue.class, new Arg[] { OA_PATH, PA_VAR, PA_VALUE });
 	}
+	
+	private String src, dest;
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
@@ -51,6 +53,11 @@ public class SetFieldValue extends VDLFunction {
 		    Path path = parsePath(OA_PATH.getValue(stack), stack);
 			DSHandle leaf = var.getField(path);
 			AbstractDataNode value = (AbstractDataNode) PA_VALUE.getValue(stack);
+			
+			if (src == null) {
+			    dest = getVarName(var);
+			    src = getVarName(value);
+			}
 			
 			log(leaf, value);
 			    
@@ -72,7 +79,17 @@ public class SetFieldValue extends VDLFunction {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	private String getVarName(DSHandle var) {
+	    String name = var.getRoot().getParam("dbgname");
+        if (var == var.getRoot()) {
+            return name;
+        }
+        else {
+            return name + var.getPathFromRoot();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private void log(DSHandle leaf, DSHandle value) {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Setting " + leaf + " to " + value);
@@ -194,4 +211,12 @@ public class SetFieldValue extends VDLFunction {
 		}
 	}
 
-}
+    @Override
+    public String getTextualName() {
+        if (src == null) {
+            return "assignment";
+        }
+        else {
+            return dest + " = " + src;
+        }
+    }}
