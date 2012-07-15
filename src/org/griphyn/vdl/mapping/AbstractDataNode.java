@@ -29,7 +29,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.DSHandleFutureWrapper;
 import org.griphyn.vdl.karajan.FutureTracker;
@@ -266,30 +265,24 @@ public abstract class AbstractDataNode implements DSHandle {
         ((AbstractDataNode) getParent()).setField(field.getId(), handle);
     }
 
-    protected void setField(Comparable<?> id, DSHandle handle) {
-        synchronized (handles) {
-            handles.put(id, handle);
-        }
+    protected synchronized void setField(Comparable<?> id, DSHandle handle) {
+        handles.put(id, handle);
     }
 
-    protected DSHandle getField(Comparable<?> key)
+    protected synchronized DSHandle getField(Comparable<?> key)
         throws NoSuchFieldException {
-        synchronized(handles) {
-            DSHandle handle = handles.get(key);
-            if (handle == null) {
-                if (closed) {
-                    throw new NoSuchFieldException(key.toString());
-                }
-                handle = createField(key);
+        DSHandle handle = handles.get(key);
+        if (handle == null) {
+            if (closed) {
+                throw new NoSuchFieldException(key.toString());
             }
-            return handle;
+            handle = createField(key);
         }
+        return handle;
     }
 
-    protected boolean isHandlesEmpty() {
-        synchronized (handles) {
-            return handles.isEmpty();
-        }
+    protected synchronized boolean isHandlesEmpty() {
+        return handles.isEmpty();
     }
 
     public DSHandle createField(Comparable<?> key)
@@ -302,14 +295,12 @@ public abstract class AbstractDataNode implements DSHandle {
         return addHandle(key, newNode(getChildField(key)));
     }
     
-    protected DSHandle addHandle(Comparable<?> id, DSHandle handle) {
-        synchronized (handles) {
-            Object o = handles.put(id, handle);
-            if (o != null) {
-                throw new RuntimeException(
-                    "Trying to create a handle that already exists ("
-                    + id + ") in " + this);
-            }
+    protected synchronized DSHandle addHandle(Comparable<?> id, DSHandle handle) {
+        Object o = handles.put(id, handle);
+        if (o != null) {
+            throw new RuntimeException(
+                "Trying to create a handle that already exists ("
+                + id + ") in " + this);
         }
         return handle;
     }
@@ -516,7 +507,7 @@ public abstract class AbstractDataNode implements DSHandle {
             }
         }
 
-        synchronized (handles) {
+        synchronized (this) {
             //Iterator i = handles.entrySet().iterator();
             //while (i.hasNext()) {
             //    Map.Entry e = (Map.Entry) i.next();
@@ -543,11 +534,9 @@ public abstract class AbstractDataNode implements DSHandle {
         if (!this.closed) {
             closeShallow();
         }
-        synchronized (handles) {
-            for (DSHandle handle : handles.values()) {
-                AbstractDataNode mapper = (AbstractDataNode) handle;
-                mapper.closeDeep();
-            }
+        for (DSHandle handle : handles.values()) {
+            AbstractDataNode mapper = (AbstractDataNode) handle;
+            mapper.closeDeep();
         }
     }
 	
@@ -558,7 +547,7 @@ public abstract class AbstractDataNode implements DSHandle {
         if (!this.closed && this.getType().isArray()) {
             closeShallow();
         }
-        synchronized (handles) {
+        synchronized (this) {
             for (DSHandle handle : handles.values()) {
                 AbstractDataNode child = (AbstractDataNode) handle;
                 if (child.getType().isArray() ||
@@ -623,7 +612,7 @@ public abstract class AbstractDataNode implements DSHandle {
         throw new UnsupportedOperationException();
     }
     
-    protected synchronized Future getFutureWrapper() {
+    public synchronized Future getFutureWrapper() {
     	if (wrapper == null) {
     		wrapper = new DSHandleFutureWrapper(this);
     		FutureTracker.get().add(this, wrapper);

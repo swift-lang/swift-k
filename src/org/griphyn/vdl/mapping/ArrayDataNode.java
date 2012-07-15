@@ -41,7 +41,7 @@ public class ArrayDataNode extends DataNode {
 		    throw new FutureNotYetAvailable(getFutureWrapper());
 		}
 		Map<Comparable<?>, DSHandle> handles = getHandles();
-		synchronized (handles) {
+		synchronized (this) {
 			for (Map.Entry<Comparable<?>, DSHandle> e : handles.entrySet()) {
 				AbstractDataNode mapper = (AbstractDataNode) e.getValue();
 				Path fullPath = parentPath.addLast(e.getKey(), getType().isArray());
@@ -61,7 +61,7 @@ public class ArrayDataNode extends DataNode {
         assert(this.getType().isArray());
         closeShallow();
         Map<Comparable<?>, DSHandle> handles = getHandles();
-        synchronized (handles) {
+        synchronized (this) {
         	for (Map.Entry<Comparable<?>, DSHandle> e : handles.entrySet()) {
                 AbstractDataNode child = (AbstractDataNode) e.getValue();
                 child.closeDeep();
@@ -79,7 +79,7 @@ public class ArrayDataNode extends DataNode {
 	
     @Override
     protected void setField(Comparable<?> id, DSHandle handle) {
-        synchronized(getHandles()) {
+        synchronized(this) {
             super.setField(id, handle);
             // Operations on the handles and the wrapper keys need to be synchronized.
             // When a wrapper is created, it populates its list of keys with the handles
@@ -98,23 +98,19 @@ public class ArrayDataNode extends DataNode {
     }
     
     @Override
-    public DSHandle createField(Comparable<?> key) throws NoSuchFieldException {
-        synchronized(getHandles()) {
-            DSHandle h = super.createField(key);
-            addKey(key);
-            return h;
-        }
+    public synchronized DSHandle createField(Comparable<?> key) throws NoSuchFieldException {
+        DSHandle h = super.createField(key);
+        addKey(key);
+        return h;
     }
 
     @Override
-    protected Future getFutureWrapper() {
-        synchronized(getHandles()) {
-        	if (wrapper == null) {
-        		wrapper = new ArrayIndexFutureList(this, this.getArrayValue());
-        		FutureTracker.get().add(this, wrapper);
-        	}
-            return wrapper;
-        }
+    public synchronized Future getFutureWrapper() {
+    	if (wrapper == null) {
+    		wrapper = new ArrayIndexFutureList(this, this.getArrayValue());
+    		FutureTracker.get().add(this, wrapper);
+    	}
+        return wrapper;
     }
 
     public FutureList getFutureList() {
