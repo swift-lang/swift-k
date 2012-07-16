@@ -126,7 +126,7 @@ if [ -x "$IFCONFIG" ]; then
 fi
 
 # Check if we are running on a mac, if so look for md5 and not md5sum
-if [ "`uname`" == "Darwin" ]; then
+if [ "`uname`" = "Darwin" ]; then
 	MD5SUM=`which md5 2>&1`
 	if [ ! -x "$MD5SUM" ]; then
 		echo "warning: unable to find md5"
