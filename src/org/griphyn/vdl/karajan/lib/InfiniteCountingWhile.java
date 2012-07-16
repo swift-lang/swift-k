@@ -97,4 +97,11 @@ public class InfiniteCountingWhile extends Sequential {
             return;
         }
     }
+
+    @Override
+    public String getTextualName() {
+        return "iterate";
+    }
+    
+    
 }
