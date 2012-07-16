@@ -23,6 +23,7 @@ import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class UnitStart extends FlowNode {
+	public static final Logger uslogger = Logger.getLogger(UnitStart.class);
     // keep compatibility with log()
     public static final Logger logger = Logger.getLogger("swift");
     
@@ -63,10 +64,10 @@ public class UnitStart extends FlowNode {
         for (String name : names) {
         	if (deep) {
         	    try {
-                    l.add((DSHandle) stack.getVar(name));
+                    l.add((DSHandle) stack.getVar(name.toLowerCase()));
                 }
                 catch (VariableNotFoundException e) {
-                    e.printStackTrace();
+                    logger.info("Could not find variable " + name, e);
                 }
         	}
         	else {
