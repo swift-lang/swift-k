@@ -207,7 +207,7 @@ public class VariableScope {
 	public boolean isVariableWriteable(String name, boolean partialWriter) {
 		if(isVariableLocallyDefined(name)) return true;
 		if(parentScope != null && parentScope.isVariableWriteable(name, true) && enclosureType == ENCLOSURE_CONDITION) {
-		    logger.warn("Variable " + name + " might have multiple writers");
+		    logger.warn("Warning: variable " + name + " might have multiple writers");
 		    return true;
 		}
 		if(parentScope != null && parentScope.isVariableWriteable(name, partialWriter) && enclosureType == ENCLOSURE_ALL) return true;
