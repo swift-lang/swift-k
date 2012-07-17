@@ -224,11 +224,7 @@ public class Monitor implements ActionListener, MouseListener {
 
 	public static void dumpVariables(PrintStream ps) {
 		ps.println("\nRegistered futures:");
-		Map<DSHandle, Future> map = FutureTracker.get().getMapSafe();
-		Map<DSHandle, Future> copy;
-		synchronized (map) {
-		    copy = new HashMap<DSHandle, Future>(map);
-		}
+		Map<DSHandle, Future> copy = FutureTracker.get().getMapSafe();
 		for (Map.Entry<DSHandle, Future> en : copy.entrySet()) {
 			Future f = en.getValue();
 			AbstractDataNode handle = (AbstractDataNode) en.getKey();
