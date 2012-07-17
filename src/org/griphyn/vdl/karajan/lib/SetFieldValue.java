@@ -20,6 +20,7 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -31,10 +32,12 @@ import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.karajan.PairIterator;
+import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.type.Type;
 
 public class SetFieldValue extends VDLFunction {
 	public static final Logger logger = Logger.getLogger(SetFieldValue.class);
@@ -72,6 +75,7 @@ public class SetFieldValue extends VDLFunction {
 			return null;
 		}
 		catch (FutureFault f) {
+		    WaitingThreadsMonitor.addOutput(stack, Collections.singletonList(var));
 			throw f;
 		}
 		catch (Exception e) { // TODO tighten this
@@ -85,7 +89,13 @@ public class SetFieldValue extends VDLFunction {
             return name;
         }
         else {
-            return name + var.getPathFromRoot();
+            Path p = var.getPathFromRoot();
+            if (p.isArrayIndex(0)) {
+                return name + var.getPathFromRoot();
+            }
+            else {
+                return name + "." + var.getPathFromRoot();
+            }
         }
     }
 
@@ -98,9 +108,16 @@ public class SetFieldValue extends VDLFunction {
 	        if (leaf instanceof AbstractDataNode) {
 	            AbstractDataNode data = (AbstractDataNode) leaf;
 	            Path path = data.getPathFromRoot();
-	            String p = path.toString();
-	            if (p.equals("$"))
+	            String p;
+	            if (path.isEmpty()) {
 	                p = "";
+	            }
+	            else if (path.isArrayIndex(0)) {
+	                p = path.toString();
+	            }
+	            else {
+	                p = "." + path.toString();
+	            }
 	            String name = data.getDisplayableName() + p;
 	            if (value.getType().isArray()) {
 	                if (logger.isInfoEnabled()) {
@@ -136,9 +153,10 @@ public class SetFieldValue extends VDLFunction {
 	
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
-	void deepCopy(DSHandle dest, DSHandle source, VariableStack stack, int level) throws ExecutionException {
-	    ((AbstractDataNode) source).waitFor();
+	@SuppressWarnings("unchecked")
+    void deepCopy(DSHandle dest, DSHandle source, VariableStack stack, int level) throws ExecutionException {
 		if (source.getType().isPrimitive()) {
+		    ((AbstractDataNode) source).waitFor();
 			dest.setValue(source.getValue());
 		}
 		else if (source.getType().isArray()) {
@@ -206,8 +224,27 @@ public class SetFieldValue extends VDLFunction {
 		    }
 		}
 		else {
-		    // TODO implement this
-            //throw new RuntimeException("Deep non-array structure copying not implemented, when trying to copy "+source);
+		    Type t = source.getType();
+		    Iterator<String> it;
+            if (stack.isDefined("it" + level)) {
+                it = (Iterator<String>) stack.getVar("it" + level);
+            }
+            else {
+                it = t.getFieldNames().iterator();
+                stack.setVar("it" + level, it);
+            }
+		    while (it.hasNext()) {
+		        Path memberPath = Path.EMPTY_PATH.addLast(it.next(), false);
+                try {
+                    deepCopy(dest.getField(memberPath), source.getField(memberPath), stack, level + 1);
+                }
+                catch (InvalidPathException ipe) {
+                    throw new ExecutionException("Could not get destination field", ipe);
+                }
+		    }
+		    
+		    stack.currentFrame().deleteVar("it" + level);
+            dest.closeShallow();
 		}
 	}
 
