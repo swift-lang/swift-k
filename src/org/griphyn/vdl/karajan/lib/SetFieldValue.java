@@ -155,8 +155,9 @@ public class SetFieldValue extends VDLFunction {
 	    and if its an array then recursively copy */
 	@SuppressWarnings("unchecked")
     void deepCopy(DSHandle dest, DSHandle source, VariableStack stack, int level) throws ExecutionException {
+	    // can move this to the leaf assignment to pipeline things
+	    ((AbstractDataNode) source).waitFor();
 		if (source.getType().isPrimitive()) {
-		    ((AbstractDataNode) source).waitFor();
 			dest.setValue(source.getValue());
 		}
 		else if (source.getType().isArray()) {
