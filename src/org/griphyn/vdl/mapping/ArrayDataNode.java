@@ -91,13 +91,13 @@ public class ArrayDataNode extends DataNode {
         }
     }
     
-    private void addKey(String name) {
+    private void addKey(Comparable<?> key) {
         ArrayIndexFutureList w;
         synchronized(this) {
             w = (ArrayIndexFutureList) wrapper;
         }
         if (w != null) {
-            w.addKey(name);
+            w.addKey(key);
         }
     }
     
