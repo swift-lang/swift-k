@@ -101,7 +101,7 @@ public class UnitStart extends FlowNode {
             }
         }
         else if (type.equals("INTERNALPROC")) {
-            logger.debug("INTERNALPROC_" + (start ? "START" : "END") + "thread=" + thread + " name=" + name);
+            logger.debug("INTERNALPROC_" + (start ? "START" : "END") + " thread=" + thread + " name=" + name);
         }
         else if (type.equals("CONDITION_BLOCK")) {
             if (start) {
