@@ -1437,6 +1437,9 @@ public class Karajan {
 
 			String fromType = datatype(fromST);
 			String toType = datatype(toST);
+			if (!fromType.equals(toType)) {
+			    throw new CompilationException("To and from range values must have the same type");
+            }
 			if (stepST == null && (!fromType.equals("int") || !toType.equals("int"))) {
 				throw new CompilationException("Step in range specification can be omitted only when from and to types are int");
 			}
