@@ -67,6 +67,7 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.Path;
 
 public class Monitor implements ActionListener, MouseListener {
 	public static final int VARS = 0;
@@ -262,25 +263,31 @@ public class Monitor implements ActionListener, MouseListener {
 		pw.println("\nWaiting threads:");
 		Map<VariableStack, DSHandle> c = WaitingThreadsMonitor.getAllThreads();
 		for (Map.Entry<VariableStack, DSHandle> e : c.entrySet()) {
-			try {
-				pw.println("Thread: " + String.valueOf(ThreadingContext.get(e.getKey())) + ", waiting on " 
-						+ varWithLine(e.getValue()));
-
-				for (String t : getSwiftTrace(e.getKey())) {
-					pw.println("\t" + t);
-				}
-			}
-			catch (VariableNotFoundException e1) {
-				pw.println("unknown thread");
-			}
+		    dumpThread(pw, e.getKey(), e.getValue());
+			pw.println();
 		}
 		pw.println("----");
 	}
 
-	public static String varWithLine(DSHandle value) {
+	public static void dumpThread(PrintStream pw, VariableStack stack, DSHandle handle) {
+	    try {
+            pw.println("Thread: " + String.valueOf(ThreadingContext.get(stack)) 
+                + (handle == null ? "" : ", waiting on " + varWithLine(handle)));
+
+            for (String t : getSwiftTrace(stack)) {
+                pw.println("\t" + t);
+            }
+        }
+        catch (VariableNotFoundException e1) {
+            pw.println("unknown thread");
+        }
+    }
+
+    public static String varWithLine(DSHandle value) {
 		String line = value.getRoot().getParam("line");
+		Path path = value.getPathFromRoot();
 		return value.getRoot().getParam("dbgname") + 
-            (value == value.getRoot() ? "" : value.getPathFromRoot()) + 
+            (value == value.getRoot() ? "" : (path.isArrayIndex(0) ? path : "." + path)) + 
             (line == null ? "" : " (declared on line " + line + ")");
     }
     
