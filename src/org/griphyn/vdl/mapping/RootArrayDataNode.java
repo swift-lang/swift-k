@@ -47,7 +47,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		this.params = params;
 		if (this.params == null) {
 			initialized();
-		} 
+		}
 		else {
 			innerInit();
 		}
@@ -126,7 +126,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
         }
 	}
 	
-	protected Mapper getActualMapper() {
+	public Mapper getActualMapper() {
         return mapper;
     }
 

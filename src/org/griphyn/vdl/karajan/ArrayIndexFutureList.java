@@ -39,11 +39,12 @@ import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 
-public class ArrayIndexFutureList implements FutureList, FutureWrapper {
+public class ArrayIndexFutureList implements FutureList, FutureWrapper {    
     private ArrayList<Object> keys;
     private Map<?, ?> values;
     private List<ListenerStackPair> listeners;
     private ArrayDataNode node;
+    private boolean purged;
 
     public ArrayIndexFutureList(ArrayDataNode node, Map<?, ?> values) {
         this.node = node;
@@ -69,11 +70,15 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
     }
 
     public int available() {
-        return keys.size();
+        synchronized(node) {
+            return keys.size();
+        }
     }
 
     public void addKey(Object key) {
-        keys.add(key);
+        synchronized(node) {
+            keys.add(key);
+        }
         notifyListeners();
     }
 
@@ -86,10 +91,7 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
     }
 
     public void close() {
-        synchronized(node) {
-            purge();
-        }
-        notifyListeners();
+        throw new UnsupportedOperationException("Not used here");
     }
 
     private void purge() {
@@ -97,11 +99,18 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
         allkeys.removeAll(keys);
         // remaining keys must be added
         keys.addAll(allkeys);
+        purged = true;
     }
 
     public boolean isClosed() {
         synchronized(node) {
-            return node.isClosed();
+            boolean closed = node.isClosed();
+            if (closed && !purged) {
+                // this is done here because no explicit close() is 
+                // ever called on this object
+                purge();
+            }
+            return closed;
         }
     }
 
@@ -142,6 +151,7 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
         for (final ListenerStackPair lsp : l) {
             WaitingThreadsMonitor.removeThread(lsp.stack);
             EventBus.post(new Runnable() {
+                @Override
                 public void run() {
                     lsp.listener.futureModified(ArrayIndexFutureList.this, lsp.stack);
                 }

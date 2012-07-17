@@ -175,7 +175,7 @@ public class File implements Future {
 				EventBus.post(new Runnable() {
                     public void run() {
                         etp.listener.futureModified(File.this, etp.stack);
-                    }				    
+                    }
 				});
 			}
 		}

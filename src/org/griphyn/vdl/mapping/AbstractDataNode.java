@@ -522,7 +522,7 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
     
-    protected Mapper getActualMapper() {
+    public Mapper getActualMapper() {
         return null;
     }
 
