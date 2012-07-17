@@ -38,7 +38,6 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
 public class SetFieldValue extends VDLFunction {
@@ -101,7 +100,6 @@ public class SetFieldValue extends VDLFunction {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void log(DSHandle leaf, DSHandle value) {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Setting " + leaf + " to " + value);
@@ -140,10 +138,10 @@ public class SetFieldValue extends VDLFunction {
 	    StringBuilder sb = new StringBuilder();
 	    sb.append("{");
 	    synchronized(handle) {
-    	    Iterator<Map.Entry<String,DSHandle>> it = 
+    	    Iterator<Map.Entry<Comparable<?>, DSHandle>> it = 
     	        handles.entrySet().iterator();
     	    while (it.hasNext()) { 
-    	        Map.Entry<String,DSHandle> entry = it.next();
+    	        Map.Entry<Comparable<?>, DSHandle> entry = it.next();
     	        sb.append(entry.getKey());
     	        sb.append('=');
     	        sb.append(entry.getValue().getValue());
@@ -157,7 +155,6 @@ public class SetFieldValue extends VDLFunction {
 	
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
-	@SuppressWarnings("unchecked")
 	public static void deepCopy(DSHandle dest, DSHandle source, VariableStack stack, int level) throws ExecutionException {
 	    ((AbstractDataNode) source).waitFor();
 		if (source.getType().isPrimitive()) {
@@ -214,7 +211,7 @@ public class SetFieldValue extends VDLFunction {
             if (logger.isDebugEnabled()) {
                 logger.debug("Remapping " + dest + " to " + source);
             }
-            dmapper.remap(dpath, source.getMapper().map(source.getPathFromRoot()));
+            dmapper.remap(dpath, source.getMapper(), source.getPathFromRoot());
             dest.closeShallow();
         }
         else {
