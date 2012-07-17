@@ -9,6 +9,7 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,24 +58,28 @@ public class UnitStart extends FlowNode {
             trackOutputs(stack, outputs, "SCOPE".equals(type));
         }
     }
+    
+    private static final List<DSHandle> EMPTY_OUTPUTS = Collections.emptyList();
 
     private void trackOutputs(VariableStack stack, String outputs, boolean deep) {
-        String[] names = outputs.split(",");
-        List<DSHandle> l = new LinkedList<DSHandle>();
-        for (String name : names) {
-        	if (deep) {
-        	    try {
-                    l.add((DSHandle) stack.getVar(name.toLowerCase()));
-                }
-                catch (VariableNotFoundException e) {
-                    logger.info("Could not find variable " + name, e);
-                }
-        	}
-        	else {
-        		l.add((DSHandle) stack.parentFrame().getVar(name));
-        	}
-        }
-        WaitingThreadsMonitor.addOutput(stack, l);
+    	if (outputs.length() != 0) {
+            String[] names = outputs.split(",");
+            List<DSHandle> l = new LinkedList<DSHandle>();
+            for (String name : names) {
+            	if (deep) {
+            	    try {
+                        l.add((DSHandle) stack.getVar(name.toLowerCase()));
+                    }
+                    catch (VariableNotFoundException e) {
+                        logger.info("Could not find variable " + name, e);
+                    }
+            	}
+            	else {
+            		l.add((DSHandle) stack.parentFrame().getVar(name));
+            	}
+            }
+            WaitingThreadsMonitor.addOutput(stack, l);
+    	}
     }
 
     protected static void log(boolean start, String type, ThreadingContext thread, String name, String line) {
