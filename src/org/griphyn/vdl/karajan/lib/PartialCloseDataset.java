@@ -98,8 +98,8 @@ public class PartialCloseDataset extends VDLFunction {
 		    logger.debug("hasUnseenToken = "+hasUnseenToken);
 		}
 		if(!hasUnseenToken) {
-			if(logger.isDebugEnabled()) {
-				logger.debug("All partial closes for " + var + 
+			if(logger.isInfoEnabled()) {
+				logger.info("All partial closes for " + var + 
 				             " have happened. Closing fully.");
 			}
 			var.closeDeep();
