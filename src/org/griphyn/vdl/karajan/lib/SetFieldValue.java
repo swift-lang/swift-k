@@ -254,15 +254,10 @@ public class SetFieldValue extends VDLFunction {
         }
         while (it.hasNext()) {
             Pair pair = (Pair) it.next();
-            Object lhs = pair.get(0);
+            Comparable<?> lhs = (Comparable<?>) pair.get(0);
             DSHandle rhs = (DSHandle) pair.get(1);
-            Path memberPath;
-            if (lhs instanceof Double) {
-                memberPath = Path.EMPTY_PATH.addLast(String.valueOf(((Double) lhs).intValue()), true);
-            }
-            else {
-                memberPath = Path.EMPTY_PATH.addLast(String.valueOf(lhs), true);
-            }
+            Path memberPath = Path.EMPTY_PATH.addLast(lhs, true);
+            
             DSHandle field;
             try {
                 field = dest.getField(memberPath);
