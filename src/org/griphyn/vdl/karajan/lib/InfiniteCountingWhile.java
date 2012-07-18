@@ -89,5 +89,6 @@ public class InfiniteCountingWhile extends Sequential {
             startNext(e.getStack());
             return;
         }
+        super.failed(stack, e);
     }
 }
