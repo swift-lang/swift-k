@@ -58,9 +58,9 @@ public class FileCopier implements Future, StatusListener {
         AbsFile fdst = (AbsFile) dst;
         FileTransferSpecification fts = new FileTransferSpecificationImpl();
         fts.setDestinationDirectory(fdst.getDir());
-        fts.setDestinationFile(fdst.getPath());
+        fts.setDestinationFile(fdst.getName());
         fts.setSourceDirectory(fsrc.getDir());
-        fts.setSourceFile(fsrc.getPath());
+        fts.setSourceFile(fsrc.getName());
         fts.setThirdPartyIfPossible(true);
         task = new FileTransferTask();
         task.setSpecification(fts);
