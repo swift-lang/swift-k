@@ -79,6 +79,11 @@ public class ConcurrentMapper extends AbstractFileMapper {
     }
 
     public synchronized void remap(Path path, Mapper sourceMapper, Path sourcePath) {
+        // this will prevent cleaning of the old file
+        // which doesn't need to be cleaned
+        PhysicalFormat old = map(sourcePath);
+        FileGarbageCollector.getDefault().markAsPersistent(old);
+        
         if (remappedPaths == null) {
             remappedPaths = new HashMap();
         }
