@@ -640,7 +640,7 @@ public abstract class AbstractDataNode implements DSHandle {
                 ((AbstractDataNode) h).clean();
             }
         }
-        else if (!getType().isArray()) {
+        else if (!getType().isArray() && !getType().isPrimitive()) {
             Mapper mapper = getRoot().getMapper();
             if (mapper != null) {
                 mapper.clean(getPathFromRoot());
