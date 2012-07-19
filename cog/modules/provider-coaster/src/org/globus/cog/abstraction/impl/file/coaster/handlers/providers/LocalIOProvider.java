@@ -20,12 +20,12 @@ import java.nio.channels.FileChannel;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers;
+import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBufferCallback;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ThrottleManager;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBufferCallback;
-import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.CoasterFileRequestHandler;
 
 public class LocalIOProvider implements IOProvider {
@@ -81,6 +81,7 @@ public class LocalIOProvider implements IOProvider {
         public void setLength(long len) throws IOException {
             this.len = len;
             if (len == 0) {
+                f.createNewFile();
                 cb.done(this);
             }
             else {
