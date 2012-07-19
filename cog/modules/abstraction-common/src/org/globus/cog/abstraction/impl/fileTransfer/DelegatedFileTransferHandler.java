@@ -311,6 +311,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
                         logger
                                 .debug("Directory transfer with resource local->local");
                     }
+                    fr.createDirectories(spec.getDestinationDirectory());
                     fr.putFile(new FileFragmentImpl(localSource.getAbsolutePath()), 
                         new FileFragmentImpl(spec.getDestination()));
                 }
@@ -334,6 +335,8 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
                         logger
                                 .debug("File transfer with resource local->remote");
                     }
+                    
+                    this.destinationResource.createDirectories(spec.getDestinationDirectory());
                     this.destinationResource.putFile(new FileFragmentImpl(localSource
                             .getAbsolutePath()), new FileFragmentImpl(spec.getDestination()),
                             new ProgressMonitor() {
@@ -522,6 +525,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
         logger.debug("Performing third party transfer");
         
         try {
+            this.destinationResource.createDirectories(spec.getDestinationDirectory());
             this.destinationResource.thirdPartyTransfer(this.sourceResource, 
                 makeFragment(spec.getSource(), spec.getSourceOffset(), spec.getSourceLength()), 
                 makeFragment(spec.getDestination(), spec.getDestinationOffset(), spec.getSourceLength()));
