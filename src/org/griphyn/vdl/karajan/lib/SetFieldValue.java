@@ -47,7 +47,6 @@ public class SetFieldValue extends VDLFunction {
             // type checking.
 			
    			deepCopy(leaf, value, stack, 0);
-			
 			return null;
 		}
 		catch (FutureFault f) {
@@ -118,10 +117,21 @@ public class SetFieldValue extends VDLFunction {
 		}
 	}
 
+    @SuppressWarnings("unchecked")
     private static void copyStructure(DSHandle dest, DSHandle source,
             VariableStack stack, int level) throws ExecutionException {
         Type type = dest.getType();
-        for (String fname : type.getFieldNames()) {
+        Iterator<String> fni = (Iterator<String>) stack.currentFrame().getVar("it" + level);
+        if (fni == null) {
+            fni = type.getFieldNames().iterator();
+            stack.currentFrame().setVar("it" + level, fni);
+        }
+        String fname = (String) stack.currentFrame().getVar("f" + level);
+        while (fni.hasNext() || fname != null) {
+            if (fname == null) {
+                fname = fni.next();
+                stack.currentFrame().setVar("f" + level, fname);
+            }
             Path fpath = Path.EMPTY_PATH.addFirst(fname);
             try {
                 DSHandle dstf = dest.getField(fpath);
@@ -137,7 +147,11 @@ public class SetFieldValue extends VDLFunction {
                 throw new ExecutionException("Internal type inconsistency detected. " + 
                     dest + " claims not to have a " + fname + " field");
             }
+            stack.currentFrame().deleteVar("f" + level);
+            fname = null;
         }
+        stack.currentFrame().deleteVar("it" + level);
+        dest.closeShallow();
     }
 
     private static void copyNonComposite(DSHandle dest, DSHandle source,
@@ -153,7 +167,7 @@ public class SetFieldValue extends VDLFunction {
         }
         else {
             if (stack.currentFrame().isDefined("fc")) {
-                FileCopier fc = (FileCopier) stack.currentFrame().getVar("fc");
+                FileCopier fc = (FileCopier) stack.currentFrame().getVarAndDelete("fc");
                 if (!fc.isClosed()) {
                     throw new FutureNotYetAvailable(fc);
                 }
@@ -189,8 +203,12 @@ public class SetFieldValue extends VDLFunction {
             it = new PairIterator(source.getArrayValue());
             stack.setVar("it" + level, it);
         }
-        while (it.hasNext()) {
-            Pair pair = (Pair) it.next();
+        Pair pair = (Pair) stack.currentFrame().getVar("p" + level);
+        while (it.hasNext() || pair != null) {
+            if (pair == null) {
+                pair = (Pair) it.next();
+                stack.currentFrame().setVar("p" + level, pair);
+            }
             Object lhs = pair.get(0);
             DSHandle rhs = (DSHandle) pair.get(1);
             Path memberPath;
@@ -208,6 +226,8 @@ public class SetFieldValue extends VDLFunction {
                 throw new ExecutionException("Could not get destination field",ipe);
             }
             deepCopy(field, rhs, stack, level + 1);
+            stack.currentFrame().deleteVar("p" + level);
+            pair = null;
         }
         stack.currentFrame().deleteVar("it" + level);
         dest.closeShallow();
