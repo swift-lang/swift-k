@@ -80,17 +80,17 @@ public class LocalIOProvider implements IOProvider {
 
         public void setLength(long len) throws IOException {
             this.len = len;
+            File p = f.getParentFile();
+            if (!p.exists()) {
+                if (!p.mkdirs()) {
+                    throw new IOException("Failed to create directory " + p.getAbsolutePath());
+                }
+            }
             if (len == 0) {
                 f.createNewFile();
                 cb.done(this);
             }
             else {
-                File p = f.getParentFile();
-                if (!p.exists()) {
-                    if (!p.mkdirs()) {
-                        throw new IOException("Failed to create directory " + p.getAbsolutePath());
-                    }
-                }
                 buf = Buffers.newWriteBuffer(Buffers.getBuffers(Direction.OUT), new FileOutputStream(f).getChannel(), this);
             }
         }
