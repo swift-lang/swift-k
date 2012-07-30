@@ -120,7 +120,9 @@ public class LocalIOProvider implements IOProvider {
         }
 
         public void abort() throws IOException {
-            buf.close();
+            if (buf != null) {
+                buf.close();
+            }
             f.delete();
         }
 
