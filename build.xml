@@ -112,6 +112,9 @@
 				<include name="swift-workers"/>
 				<include name="worker.sh"/>
 				<include name="workers.ranger.sh"/>
+                                <include name="slurm-qsub"/>
+  				<include name="slurm-qdel"/>
+				<include name="slurm-qstat"/>
 			</fileset>
 		</chmod>
 		<chmod perm="+x">
