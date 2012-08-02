@@ -12,12 +12,18 @@ package org.globus.cog.abstraction.impl.file;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.PasswordAuthentication;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
+import org.globus.cog.abstraction.impl.common.ProviderMethodException;
+import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
+import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
@@ -30,6 +36,8 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 public abstract class AbstractFileResource implements FileResource {
+    public static final Logger logger = Logger.getLogger(AbstractFileResource.class);
+    
     private String name;
     private Map<String, Object> attributes;
     private Service service;
@@ -53,6 +61,43 @@ public abstract class AbstractFileResource implements FileResource {
         }
         this.protocol = protocol;
         this.service = service;
+    }
+    
+    protected ServiceContact getAndCheckServiceContact() throws IllegalHostException {
+        ServiceContact serviceContact = getServiceContact();
+        if (serviceContact == null) {
+            throw new IllegalHostException("No service contact specified");
+        }
+        return serviceContact;
+    }
+    
+    protected SecurityContext getOrCreateSecurityContext(String provider, ServiceContact serviceContact) 
+    throws InvalidProviderException, ProviderMethodException {
+        SecurityContext securityContext = getSecurityContext();
+        if (securityContext == null) {
+            securityContext = AbstractionFactory.getSecurityContext("gsiftp", serviceContact);
+        }
+        return securityContext;
+    }
+    
+    protected PasswordAuthentication getCredentialsAsPasswordAuthentication(SecurityContext securityContext) throws InvalidSecurityContextException {
+        Object credentials = securityContext.getCredentials();
+        if (credentials == null) {
+            if (logger.isInfoEnabled()) {
+                logger.info(name + ": credentials are null; using default username/password.");
+            }
+            
+            return getDefaultUsernameAndPassword();
+        }
+        if (!(credentials instanceof PasswordAuthentication)) {
+            throw new InvalidSecurityContextException("FTP only supports password authentication. Credentials supplied: " + 
+                credentials.getClass().getName());
+        }
+        return (PasswordAuthentication) credentials;
+    }
+    
+    protected PasswordAuthentication getDefaultUsernameAndPassword() {
+        return new PasswordAuthentication("", new char[0]);
     }
 
     /** Set the name of the resource */

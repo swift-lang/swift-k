@@ -89,7 +89,7 @@ public class FileOperation implements StatusListener {
             service.setProvider(this.provider.toLowerCase());
 
             SecurityContext securityContext = AbstractionFactory
-                    .newSecurityContext(provider);
+                    .getSecurityContext(provider, new ServiceContactImpl(serviceContact));
             service.setSecurityContext(securityContext);
 
             ServiceContact sc = new ServiceContactImpl(this.serviceContact);
