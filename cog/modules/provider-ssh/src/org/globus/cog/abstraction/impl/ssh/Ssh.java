@@ -33,12 +33,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.CredentialsDialog.Prompt;
 import org.globus.cog.abstraction.impl.common.PasswordAuthentication;
 import org.globus.cog.abstraction.impl.common.PublicKeyAuthentication;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
-import org.globus.cog.abstraction.impl.ssh.CredentialsDialog.Prompt;
 
 import com.sshtools.common.hosts.AbstractHostKeyVerification;
 import com.sshtools.j2ssh.SshClient;
