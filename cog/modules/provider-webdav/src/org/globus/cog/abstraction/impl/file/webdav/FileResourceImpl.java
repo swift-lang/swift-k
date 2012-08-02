@@ -18,10 +18,8 @@ import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.URIException;
 import org.apache.log4j.Logger;
 import org.apache.webdav.lib.WebdavResource;
-import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
-import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.AbstractFileResource;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
@@ -46,8 +44,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** throws exception */
     public FileResourceImpl() throws Exception {
-        this(null, new ServiceContactImpl(), AbstractionFactory
-                .newSecurityContext("WebDAV"));
+        this(null, null, null);
     }
 
     /** constructor to be used normally */
@@ -62,14 +59,19 @@ public class FileResourceImpl extends AbstractFileResource {
      */
     public void start() throws IllegalHostException,
             InvalidSecurityContextException, FileResourceException {
+        
+        ServiceContact serviceContact = getAndCheckServiceContact();
+        
         try {
+            
+            SecurityContext securityContext = getOrCreateSecurityContext("WebDAV", serviceContact);
+            
             String contact = getServiceContact().getContact().toString();
             if (!contact.startsWith("http")) {
                 contact = "http://" + contact;
             }
             HttpURL hrl = new HttpURL(contact);
-            PasswordAuthentication credentials = (PasswordAuthentication) getSecurityContext()
-                    .getCredentials();
+            PasswordAuthentication credentials = getCredentialsAsPasswordAuthentication(securityContext);
             
             String username = credentials.getUserName();
             String password = String.valueOf(credentials.getPassword());
@@ -80,9 +82,9 @@ public class FileResourceImpl extends AbstractFileResource {
         }
         catch (URIException ue) {
             throw new IllegalHostException(
-                    "Error while communicating with the webdav server", ue);
+                    "Error connecting to the WebDAV server at " + serviceContact, ue);
         }
-        catch (IOException e) {
+        catch (Exception e) {
             throw new IrrecoverableResourceException(e);
         }
     }
