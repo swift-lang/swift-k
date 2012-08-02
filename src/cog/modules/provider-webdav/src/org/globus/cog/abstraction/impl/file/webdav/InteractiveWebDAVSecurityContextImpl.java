@@ -6,29 +6,7 @@
 
 package org.globus.cog.abstraction.impl.file.webdav;
 
-import java.net.PasswordAuthentication;
+import org.globus.cog.abstraction.impl.common.InteractivePasswordSecurityContextImpl;
 
-import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
-
-public class InteractiveWebDAVSecurityContextImpl extends SecurityContextImpl {
-
-    private static Logger logger = Logger
-            .getLogger(InteractiveWebDAVSecurityContextImpl.class.getName());
-
-    public InteractiveWebDAVSecurityContextImpl() {
-    }
-
-    public InteractiveWebDAVSecurityContextImpl(PasswordAuthentication credentials) {
-        setCredentials(credentials);
-    }
-
-    public synchronized Object getCredentials() {
-        Object credentials = getCredentials();
-        if (credentials == null) {
-            credentials = CredentialsDialog.showCredentialsDialog();
-            setCredentials(credentials);
-        }
-        return credentials;
-    }
+public class InteractiveWebDAVSecurityContextImpl extends InteractivePasswordSecurityContextImpl {
 }

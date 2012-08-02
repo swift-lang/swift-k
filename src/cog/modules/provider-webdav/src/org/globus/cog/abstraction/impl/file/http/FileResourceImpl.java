@@ -17,10 +17,8 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
-import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.AbstractFileResource;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
@@ -45,8 +43,7 @@ public class FileResourceImpl extends AbstractFileResource {
     private String contact, cwd;
 
     public FileResourceImpl() throws Exception {
-        this(null, new ServiceContactImpl(), AbstractionFactory
-                .newSecurityContext("http"));
+        this(null, null, null);
     }
 
     public FileResourceImpl(String name, ServiceContact serviceContact,
@@ -56,7 +53,9 @@ public class FileResourceImpl extends AbstractFileResource {
 
     public void start() throws IllegalHostException,
             InvalidSecurityContextException, FileResourceException {
-        contact = "http://" + getServiceContact().getContact().toString();
+        ServiceContact serviceContact = getAndCheckServiceContact();
+        
+        contact = "http://" + serviceContact.getContact().toString();
         cwd = "";
         client = new HttpClient();
         setStarted(true);
