@@ -13,10 +13,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -119,22 +118,30 @@ public abstract class RequestReply {
 	}
 
 	public void sendError(String error, Throwable e) throws ProtocolException {
-	    logger.info(this + " sending error: " + error, e);
+	    if (logger.isInfoEnabled()) {
+	    	logger.info(this + " sending error: " + error, e);
+	    }
 		if (error == null) {
 			if (e == null) {
 				error = "No message available";
 			}
 			else {
-				error = e.toString();
+				error = (e.getMessage() == null ? e.toString() : e.getMessage());
 			}
 		}
 		this.addOutData(error.getBytes());
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		if (e != null) {
-			PrintStream ps = new PrintStream(baos);
-			e.printStackTrace(ps);
+		try {
+    		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    		ObjectOutputStream oos = new ObjectOutputStream(baos);
+    		if (e != null) {
+    		    oos.writeObject(e);
+    		}
+    		oos.close();
+    		this.addOutData(baos.toByteArray());
 		}
-		this.addOutData(baos.toByteArray());
+		catch (IOException ex) {
+		    logger.warn("Exception caught serializing exception", e);
+		}
 		send(true);
 	}
 	
@@ -289,8 +296,14 @@ public abstract class RequestReply {
 		if (data != null && data.size() > 0) {
 			msg = new String(data.get(0));
 			if (data.size() > 1) {
-				String ex = new String(data.get(1));
-				exception = new RemoteException(msg, ex);
+			    try {
+    			    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data.get(1)));
+    				exception = new RemoteException(msg, (Exception) ois.readObject());
+    				ois.close();
+			    }
+			    catch (Exception e) {
+			        logger.warn("Failed to de-serialize remote exception", e);
+			    }
 			}
 		}
 		errorReceived(msg, exception);
