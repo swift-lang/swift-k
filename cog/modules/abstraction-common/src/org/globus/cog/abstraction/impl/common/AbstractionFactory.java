@@ -16,6 +16,7 @@ import org.globus.cog.abstraction.impl.common.task.FileTransferTaskHandler;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 /**
@@ -29,11 +30,11 @@ public class AbstractionFactory {
     private static final String PROVIDER_PROP = "cog-provider.properties";
 
     private static Logger logger = Logger.getLogger(AbstractionFactory.class);
-
-    private static Map<String, SecurityContext> defaultCredentials;
+    
+    public static Map<String, Map<ServiceContact, SecurityContext>> cachedSecurityContexts;
     
     static {
-    	defaultCredentials = new HashMap<String, SecurityContext>();
+        cachedSecurityContexts = new HashMap<String, Map<ServiceContact, SecurityContext>>();
     }
 
     public static TaskHandler newExecutionTaskHandler()
@@ -92,10 +93,46 @@ public class AbstractionFactory {
                 AbstractionProperties.TYPE_FILE_RESOURCE);
     }
 
+    /**
+     * @deprecated 
+     */
     public static SecurityContext newSecurityContext(String provider)
             throws InvalidProviderException, ProviderMethodException {
         return (SecurityContext) newObject(provider,
                 AbstractionProperties.TYPE_SECURITY_CONTEXT);
+    }
+    
+    public static SecurityContext newSecurityContext(String provider, ServiceContact serviceContact)
+            throws InvalidProviderException, ProviderMethodException {
+        SecurityContext sc = (SecurityContext) newObject(provider,
+                AbstractionProperties.TYPE_SECURITY_CONTEXT);
+        sc.setServiceContact(serviceContact);
+        return sc;
+    }
+    
+    /**
+     * Return a possibly cached security context
+     */
+    public static SecurityContext getSecurityContext(String provider, ServiceContact serviceContact)
+            throws InvalidProviderException, ProviderMethodException {
+        Map<ServiceContact, SecurityContext> providerContexts;
+        synchronized(cachedSecurityContexts) {
+            providerContexts = cachedSecurityContexts.get(provider);
+            if (providerContexts == null) {
+                providerContexts = new HashMap<ServiceContact, SecurityContext>();
+                cachedSecurityContexts.put(provider, providerContexts);
+            }
+        }
+        
+        synchronized(providerContexts) {
+            SecurityContext sc = providerContexts.get(serviceContact);
+            if (sc == null) {
+                sc = newSecurityContext(provider, serviceContact);
+                providerContexts.put(serviceContact, sc);
+            }
+            
+            return sc;
+        }
     }
 
     public static boolean hasObject(String provider, String role) {
@@ -134,9 +171,11 @@ public class AbstractionFactory {
             boolean useSandbox) throws InvalidProviderException,
             InvalidClassException {
         provider = provider.toLowerCase();
-        logger
+        if (logger.isDebugEnabled()) {
+            logger
                 .debug("Instantiating " + className + " for provider "
                         + provider);
+        }
         ClassLoader cl = AbstractionFactory.class.getClassLoader();
         try {
             return cl.loadClass(className).newInstance();
@@ -145,14 +184,4 @@ public class AbstractionFactory {
             throw new InvalidClassException(e);
         }
     }
-    
-    public synchronized static Object getDefaultCredentials(String provider) throws InvalidProviderException, ProviderMethodException {
-    	SecurityContext sc = defaultCredentials.get(provider);
-    	if (sc == null) {
-    	    sc = newSecurityContext(provider);
-            defaultCredentials.put(provider, sc);   
-    	}
-    	return sc.getDefaultCredentials();
-    }
-    
 }

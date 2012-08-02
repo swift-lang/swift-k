@@ -9,11 +9,13 @@ package org.globus.cog.abstraction.impl.common.task;
 import java.util.HashMap;
 
 import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 public class SecurityContextImpl implements SecurityContext {
     private HashMap<String, Object> attributes;
     private Object credentials;
     private String alias;
+    private ServiceContact serviceContact;
 
     public SecurityContextImpl() {
         this.attributes = new HashMap<String, Object>();
@@ -87,5 +89,13 @@ public class SecurityContextImpl implements SecurityContext {
     @Override
     public Object getDefaultCredentials() {
         return null;
+    }
+
+    public ServiceContact getServiceContact() {
+        return serviceContact;
+    }
+
+    public void setServiceContact(ServiceContact serviceContact) {
+        this.serviceContact = serviceContact;
     }
 }

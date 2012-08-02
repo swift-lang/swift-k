@@ -92,28 +92,23 @@ public class FileTransfer implements StatusListener {
         this.task.setSpecification(spec);
 
         // create te source service
-        SecurityContext sourceSecurityContext = AbstractionFactory
-                .newSecurityContext(sourceURI.getScheme());
-        // selects the default credentials
-        sourceSecurityContext.setCredentials(null);
-
         ServiceContact sourceServiceContact = new ServiceContactImpl();
         sourceServiceContact.setHost(sourceURI.getHost());
         sourceServiceContact.setPort(sourceURI.getPort());
+        
+        SecurityContext sourceSecurityContext = 
+            AbstractionFactory.getSecurityContext(sourceURI.getScheme(), sourceServiceContact);
 
         Service sourceService = new ServiceImpl(sourceURI.getScheme(),
                 Service.FILE_TRANSFER, sourceServiceContact,
                 sourceSecurityContext);
 
-        // create te destination service
-        SecurityContext destinationSecurityContext = AbstractionFactory
-                .newSecurityContext(destinationURI.getScheme());
-        // selects the default credentials
-        destinationSecurityContext.setCredentials(null);
-
         ServiceContact destinationServiceContact = new ServiceContactImpl();
         destinationServiceContact.setHost(destinationURI.getHost());
         destinationServiceContact.setPort(destinationURI.getPort());
+        
+        SecurityContext destinationSecurityContext = 
+            AbstractionFactory.getSecurityContext(destinationURI.getScheme(), destinationServiceContact);
 
         Service destinationService = new ServiceImpl(
                 destinationURI.getScheme(), Service.FILE_TRANSFER,

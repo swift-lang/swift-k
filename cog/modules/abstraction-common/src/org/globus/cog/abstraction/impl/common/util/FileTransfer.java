@@ -122,11 +122,11 @@ public class FileTransfer implements StatusListener {
 		else {
 			if (protocol.equals("gsiftp")) {
 				service.setProvider("GridFTP");
-				securityContext = AbstractionFactory.newSecurityContext("GridFTP");
+				securityContext = AbstractionFactory.getSecurityContext("GridFTP", service.getServiceContact());
 			}
 			else if (protocol.equals("scp")) {
 				service.setProvider("ssh");
-				securityContext = AbstractionFactory.newSecurityContext("ssh");
+				securityContext = AbstractionFactory.getSecurityContext("ssh", service.getServiceContact());
 			}
 			else {
 				throw new Exception("unsupported protocol: " + protocol);
