@@ -42,7 +42,9 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
                 ("Execution handler can only handle job submission tasks");
         }
         String provider = task.getService(0).getProvider().toLowerCase();
-        logger.info("provider=" + provider);
+        if (logger.isInfoEnabled()) {
+            logger.info("provider=" + provider);
+        }
         TaskHandler taskHandler = mapping.get(provider);
 
         if (taskHandler == null) {
@@ -53,7 +55,9 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
             }
         }
 
-        logger.debug("taskHandler="+taskHandler);
+        if (logger.isDebugEnabled()) {
+            logger.debug("taskHandler="+taskHandler);
+        }
         taskHandler.submit(task);
     }
 
