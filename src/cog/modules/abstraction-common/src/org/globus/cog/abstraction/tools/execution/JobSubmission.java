@@ -167,13 +167,11 @@ public class JobSubmission implements StatusListener {
         ExecutionService service = new ExecutionServiceImpl();
         service.setProvider(this.provider.toLowerCase());
 
-        SecurityContext securityContext = AbstractionFactory
-                .newSecurityContext(provider);
-        securityContext.setCredentials(null);
-        service.setSecurityContext(securityContext);
-
         ServiceContact sc = new ServiceContactImpl(this.serviceContact);
         service.setServiceContact(sc);
+        
+        SecurityContext securityContext = AbstractionFactory.getSecurityContext(provider, sc);
+        service.setSecurityContext(securityContext);
 
         /*
          * This is an abstraction for the jobmanager. For example, the

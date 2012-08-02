@@ -6,6 +6,7 @@
 
 package org.globus.cog.abstraction.interfaces;
 
+import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.ietf.jgss.GSSCredential;
 
 /**
@@ -40,4 +41,8 @@ public interface SecurityContext {
      * else return <code>null</code>
      */
     public Object getDefaultCredentials();
+    
+    public void setServiceContact(ServiceContact serviceContact);
+    
+    public ServiceContact getServiceContact();
 }

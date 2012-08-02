@@ -26,7 +26,6 @@ import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.interfaces.FileResource;
-import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 
 public class FileResourceCache {
@@ -115,7 +114,7 @@ public class FileResourceCache {
             throw new InvalidProviderException("Provider is null");
         }
         if (service.getSecurityContext() == null) {
-            service.setSecurityContext(AbstractionFactory.newSecurityContext(provider));
+            service.setSecurityContext(AbstractionFactory.getSecurityContext(provider, service.getServiceContact()));
         }
         FileResource fileResource = AbstractionFactory
                 .newFileResource(provider);

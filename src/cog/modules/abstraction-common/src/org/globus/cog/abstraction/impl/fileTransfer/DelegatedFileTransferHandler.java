@@ -8,7 +8,6 @@ package org.globus.cog.abstraction.impl.fileTransfer;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
@@ -20,7 +19,6 @@ import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
-import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
@@ -38,13 +36,7 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
-import org.globus.gsi.gssapi.auth.Authorization;
-import org.globus.gsi.gssapi.auth.HostAuthorization;
-import org.globus.io.urlcopy.UrlCopy;
-import org.globus.io.urlcopy.UrlCopyException;
 import org.globus.io.urlcopy.UrlCopyListener;
-import org.globus.util.GlobusURL;
-import org.ietf.jgss.GSSCredential;
 
 public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler implements 
         Runnable, UrlCopyListener {
@@ -628,12 +620,13 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
         }
     }
 
-    private SecurityContext getSecurityContext(Service service) {
+    private SecurityContext getSecurityContext(Service service) throws InvalidProviderException, ProviderMethodException {
         SecurityContext securityContext = service.getSecurityContext();
         if (securityContext == null) {
-            // create default credentials
-            securityContext = new SecurityContextImpl();
+            return AbstractionFactory.getSecurityContext(service.getProvider(), service.getServiceContact());
         }
-        return securityContext;
+        else {
+            return securityContext;
+        }
     }
 }

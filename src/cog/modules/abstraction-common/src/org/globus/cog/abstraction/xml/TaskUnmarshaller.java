@@ -141,18 +141,6 @@ public class TaskUnmarshaller {
                 }
             }
             String provider = xmlService.getProvider();
-            if (provider != null && provider.length() > 0) {
-                service.setProvider(provider.trim());
-
-                try {
-                    service.setSecurityContext(AbstractionFactory
-                            .newSecurityContext(provider));
-                } catch (Exception e) {
-                    throw new UnmarshalException(
-                            "Cannot establish the appropriate security context",
-                            e);
-                }
-            }
             // set the service contact
             String serviceContact = xmlService.getServiceContact();
             if (serviceContact != null && serviceContact.length() > 0) {
@@ -160,6 +148,19 @@ public class TaskUnmarshaller {
                         .trim());
                 service.setServiceContact(contact);
             }
+            
+            if (provider != null && provider.length() > 0) {
+                service.setProvider(provider.trim());
+
+                try {
+                    service.setSecurityContext(AbstractionFactory.newSecurityContext(provider, service.getServiceContact()));
+                } catch (Exception e) {
+                    throw new UnmarshalException(
+                            "Cannot establish the appropriate security context",
+                            e);
+                }
+            }
+
 
             // set the service attributes
             AttributeList attrList = xmlService.getAttributeList();
