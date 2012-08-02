@@ -20,10 +20,8 @@ import java.util.Enumeration;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
-import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
@@ -92,15 +90,15 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
     private boolean bufferSizeChanged;
 
     /** throws InvalidProviderException */
-    public FileResourceImpl() throws Exception {
-        this(null, new ServiceContactImpl(), AbstractionFactory
-            .newSecurityContext("GridFTP"));
+    public FileResourceImpl() {
+        this(null, null, null);
     }
 
     /** constructor be used normally */
     public FileResourceImpl(String name, ServiceContact serviceContact,
             SecurityContext securityContext) {
-        super(name == null ? serviceContact.toString() : name, "gsiftp", serviceContact, securityContext);
+        super((name == null && !(serviceContact == null)) ? serviceContact.toString() : name, 
+                "gsiftp", serviceContact, securityContext);
     }
 
     /**
@@ -111,9 +109,11 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
      */
     public void start() throws IllegalHostException,
             InvalidSecurityContextException, FileResourceException {
+        
+        ServiceContact serviceContact = getAndCheckServiceContact();
 
-        String host = getServiceContact().getHost();
-        int port = getServiceContact().getPort();
+        String host = serviceContact.getHost();
+        int port = serviceContact.getPort();
         if (port == -1) {
             port = 2811;
         }
@@ -123,6 +123,8 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
         }
         
         try {
+            SecurityContext securityContext = getOrCreateSecurityContext("gsiftp", serviceContact);            
+            
             gridFTPClient = new GridFTPClient(host, port);
             Reply r = gridFTPClient.getLastReply();
 
@@ -140,11 +142,10 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
             if (logger.isDebugEnabled()) {
                 logger.debug("Data channel reuse: " + dataChannelReuse);
             }
-            gridFTPClient.setClientWaitParams(MAX_REPLY_WAIT_TIME,
-                Session.DEFAULT_WAIT_DELAY);
-            GSSCredential proxy = (GSSCredential) getSecurityContext()
-                .getCredentials();
-            gridFTPClient.authenticate(proxy);
+            gridFTPClient.setClientWaitParams(MAX_REPLY_WAIT_TIME, Session.DEFAULT_WAIT_DELAY);
+            
+            GSSCredential cred = (GSSCredential) securityContext.getCredentials();
+            gridFTPClient.authenticate(cred);
             gridFTPClient.setType(Session.TYPE_IMAGE);
             if (dataChannelReuse) {
                 gridFTPClient.setMode(GridFTPSession.MODE_EBLOCK);
@@ -155,7 +156,7 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
         }
         catch (Exception e) {
             throw translateException(
-                "Error communicating with the GridFTP server at " + host + ":" + port, e);
+                "Error connecting to the GridFTP server at " + host + ":" + port, e);
         }
     }
 

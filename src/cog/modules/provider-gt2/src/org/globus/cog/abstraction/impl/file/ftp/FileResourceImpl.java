@@ -19,14 +19,13 @@ import java.util.Enumeration;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
-import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
+import org.globus.cog.abstraction.impl.file.IllegalHostException;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
@@ -54,14 +53,21 @@ import org.globus.ftp.vanilla.TransferState;
 public class FileResourceImpl extends AbstractFTPFileResource {
     public static final String PROTOCOL = "ftp";
     
+    public static final String ANONYMOUS_USERNAME = "anonymous";
+    public static final char[] ANONYMOUS_PASSWORD;
+    static {
+        String pwd = "none@example.com";
+        ANONYMOUS_PASSWORD = new char[pwd.length()];
+        pwd.getChars(0, pwd.length(), ANONYMOUS_PASSWORD, 0);
+    }
+    
     private FTPClient ftpClient;
     public static final Logger logger = Logger.getLogger(FileResource.class
         .getName());
 
     /** throws invalidprovider exception */
-    public FileResourceImpl() throws Exception {
-        this(null, new ServiceContactImpl(), AbstractionFactory
-            .newSecurityContext("ftp"));
+    public FileResourceImpl() {
+        this(null, null, null);
     }
 
     /** the constructor to be used normally */
@@ -76,18 +82,29 @@ public class FileResourceImpl extends AbstractFTPFileResource {
      * @throws FileResourceException
      *             if an exception occurs during the resource start-up
      */
-    public void start() throws InvalidSecurityContextException,
+    public void start() throws InvalidSecurityContextException, IllegalHostException,
             FileResourceException {
 
+        ServiceContact serviceContact = getAndCheckServiceContact();
+        
+        String host = getServiceContact().getHost();
+        int port = getServiceContact().getPort();
+        if (port == -1) {
+            port = 21;
+        }
+        
+        if (getName() == null) {
+            setName(host + ":" + port);
+        }
+        
+        
         try {
-            String host = getServiceContact().getHost();
-            int port = getServiceContact().getPort();
-            if (port == -1) {
-                port = 21;
-            }
+            SecurityContext securityContext = getOrCreateSecurityContext("ftp", serviceContact);
+            
+            PasswordAuthentication credentials = getCredentialsAsPasswordAuthentication(securityContext); 
+            
             ftpClient = new FTPClient(host, port);
-            PasswordAuthentication credentials = (PasswordAuthentication) getSecurityContext()
-                .getCredentials();
+
             String username = credentials.getUserName();
             String password = String.valueOf(credentials.getPassword());
 
@@ -95,10 +112,15 @@ public class FileResourceImpl extends AbstractFTPFileResource {
             ftpClient.setType(Session.TYPE_IMAGE);
             setStarted(true);
         }
-        catch (Exception se) {
+        catch (Exception e) {
             throw translateException(
-                "Error while communicating with the FTP server", se);
+                "Error connecting to the FTP server at " + host + ":" + port, e);
         }
+    }
+    
+    @Override
+    protected PasswordAuthentication getDefaultUsernameAndPassword() {
+        return new PasswordAuthentication(ANONYMOUS_USERNAME, ANONYMOUS_PASSWORD);
     }
 
     /**
