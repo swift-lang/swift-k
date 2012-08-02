@@ -25,6 +25,7 @@ import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
+import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -118,22 +119,21 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 
 	private void addDefaultServices(BoundContact bc, String contact, String provider)
 			throws ExecutionException {
+	    
+	    ServiceContact serviceContact = new ServiceContactImpl(contact);
 		SecurityContext sc = null;
 		if (provider != null) {
 			try {
-				sc = AbstractionFactory.newSecurityContext(provider);
+				sc = AbstractionFactory.getSecurityContext(provider, serviceContact);
 			}
 			catch (Exception e) {
 				throw new ExecutionException("Could not get default security context for provider "
 						+ provider, e);
 			}
 		}
-		bc.addService(new ServiceImpl(provider, Service.EXECUTION, new ServiceContactImpl(contact),
-				sc));
-		bc.addService(new ServiceImpl(provider, Service.FILE_OPERATION, new ServiceContactImpl(
-				contact), sc));
-		bc.addService(new ServiceImpl(provider, Service.FILE_TRANSFER, new ServiceContactImpl(
-				contact), sc));
+		bc.addService(new ServiceImpl(provider, Service.EXECUTION, serviceContact, sc));
+		bc.addService(new ServiceImpl(provider, Service.FILE_OPERATION, serviceContact, sc));
+		bc.addService(new ServiceImpl(provider, Service.FILE_TRANSFER, serviceContact, sc));
 	}
 
 	public static final Arg A_SECURITY_CONTEXT = new Arg.TypedPositional("securityContext",
@@ -334,7 +334,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 		}
 	}
 
-	protected SecurityContext getSecurityContext(VariableStack stack, String provider)
+	protected SecurityContext getSecurityContext(VariableStack stack, String provider, ServiceContact serviceContact)
 			throws InvalidProviderException, ProviderMethodException, ExecutionException {
 		if (A_SECURITY_CONTEXT.isPresent(stack)) {
 			return (SecurityContext) A_SECURITY_CONTEXT.getValue(stack);
@@ -344,7 +344,7 @@ public abstract class AbstractGridNode extends SequentialWithArguments implement
 					SecurityContext.class, "Security Context");
 		}
 		else {
-			return AbstractionFactory.newSecurityContext(provider);
+			return AbstractionFactory.getSecurityContext(provider, serviceContact);
 		}
 	}
 }

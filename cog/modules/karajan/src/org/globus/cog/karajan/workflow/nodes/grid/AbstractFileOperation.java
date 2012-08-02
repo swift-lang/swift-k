@@ -56,8 +56,9 @@ public abstract class AbstractFileOperation extends AbstractGridNode {
 			}
 			
 			if (scheduler == null) {
-				task.setService(0, getService((BoundContact) host, provider));
-				SecurityContext sc = getSecurityContext(stack, provider);
+			    Service service = getService((BoundContact) host, provider);
+				task.setService(0, service);
+				SecurityContext sc = getSecurityContext(stack, provider, service.getServiceContact());
 				setSecurityContextIfNotLocal(task.getService(0), sc);
 				synchronized (this.getClass()) {
 					if (handler == null) {
