@@ -9,25 +9,10 @@
  */
 package org.globus.cog.karajan.workflow.service;
 
-import java.io.PrintStream;
-import java.io.PrintWriter;
 
 public class RemoteException extends Exception {
-	private String remote;
-	public RemoteException(String msg, String remote) {
-		super(msg);
-		this.remote = remote;
-	}
-	
-	public void printStackTrace(PrintStream s) {
-		super.printStackTrace(s);
-		s.println("Remote exception:");
-		s.println(remote);
-	}
-	
-	public void printStackTrace(PrintWriter s) {
-		super.printStackTrace(s);
-		s.println("Remote exception:");
-		s.println(remote);
+
+	public RemoteException(String msg, Exception remote) {
+		super(msg, remote);
 	}
 }
