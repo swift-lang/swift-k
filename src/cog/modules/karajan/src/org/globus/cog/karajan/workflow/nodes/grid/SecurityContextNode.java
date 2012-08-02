@@ -32,7 +32,7 @@ public class SecurityContextNode extends AbstractFunction {
 		if (context == null) {
 		    String provider = TypeUtil.toString(A_PROVIDER.getValue(stack));
 			try {
-				context = AbstractionFactory.newSecurityContext(provider);
+				context = AbstractionFactory.getSecurityContext(provider, null);
 			}
 			catch (Exception e) {
 				throw new ExecutionException("Unsupported security context type: " + provider, e);

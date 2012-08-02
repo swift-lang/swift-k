@@ -164,8 +164,8 @@ public class GridTransfer extends AbstractGridNode implements StatusListener {
 									+ destinationContact);
 				}
 
-				setSecurityContextIfNotLocal(s, getSecurityContext(stack, s.getProvider()));
-				setSecurityContextIfNotLocal(d, getSecurityContext(stack, d.getProvider()));
+				setSecurityContextIfNotLocal(s, getSecurityContext(stack, s.getProvider(), s.getServiceContact()));
+				setSecurityContextIfNotLocal(d, getSecurityContext(stack, d.getProvider(), d.getServiceContact()));
 
 				task.setService(Service.FILE_TRANSFER_SOURCE_SERVICE, s);
 				task.setService(Service.FILE_TRANSFER_DESTINATION_SERVICE, d);

@@ -12,6 +12,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.AbstractionProperties;
+import org.globus.cog.abstraction.impl.common.InteractivePasswordSecurityContextImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
@@ -88,6 +89,15 @@ public class ServiceNode extends AbstractFunction {
 		if (A_PROJECT.isPresent(stack)) {
 			service.setAttribute("project", TypeUtil.toString(A_PROJECT.getValue(stack)));
 		}
+		
+		String uri = null;
+		uri = TypeUtil.toString(A_URI.getValue(stack));
+		if (uri == null) {
+			uri = TypeUtil.toString(A_URL.getValue(stack));
+		}
+		if (uri != null) {
+			service.setServiceContact(new ServiceContactImpl(uri));
+		}
 
 		SecurityContext sc = (SecurityContext) A_SECURITY_CONTEXT.getValue(stack);
 		if (sc == null) {
@@ -101,7 +111,7 @@ public class ServiceNode extends AbstractFunction {
 				}
 				if (sc == null) {
 					try {
-						sc = AbstractionFactory.newSecurityContext(provider);
+						sc = AbstractionFactory.getSecurityContext(provider, service.getServiceContact());
 						stack.setGlobal(scName, sc);
 					}
 					catch (Exception e1) {
@@ -112,16 +122,13 @@ public class ServiceNode extends AbstractFunction {
 				}
 			}
 		}
+		else {
+			if (sc instanceof InteractivePasswordSecurityContextImpl) {
+				((InteractivePasswordSecurityContextImpl) sc).setHostName(uri);
+			}
+		}
 		service.setSecurityContext(sc);
 		service.setType(itype);
-		String uri = null;
-		uri = TypeUtil.toString(A_URI.getValue(stack));
-		if (uri == null) {
-			uri = TypeUtil.toString(A_URL.getValue(stack));
-		}
-		if (uri != null) {
-			service.setServiceContact(new ServiceContactImpl(uri));
-		}
 		return service;
 	}
 }
