@@ -202,7 +202,7 @@ public class ServiceManager implements StatusListener {
 
     private void setSecurityContext(Task t, SecurityContext sc, String provider)
             throws InvalidProviderException, ProviderMethodException {
-        t.getService(0).setSecurityContext(AbstractionFactory.newSecurityContext(provider));
+        t.getService(0).setSecurityContext(AbstractionFactory.getSecurityContext(provider, t.getService(0).getServiceContact()));
     }
 
     public void statusChanged(StatusEvent event) {
