@@ -219,19 +219,16 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     private GSSCredential getCredentials(Task task) throws InvalidSecurityContextException {
         SecurityContext sc = task.getService(0).getSecurityContext();
-        if (sc == null) {
+        if (sc == null || sc.getCredentials() == null) {
             try {
-                GSSCredential cred = (GSSCredential) AbstractionFactory.getDefaultCredentials("gt2");
-                task.getService(0).setSecurityContext(new SecurityContextImpl(cred));
-                return cred;
+                sc = AbstractionFactory.getSecurityContext("gt2", task.getService(0).getServiceContact());
+                task.getService(0).setSecurityContext(sc);
             }
             catch (Exception e) {
                 throw new InvalidSecurityContextException(e);
             }
         }
-        else {
-            return (GSSCredential) sc.getCredentials();
-        }
+        return (GSSCredential) sc.getCredentials();
     }
 
     public void errorReceived(Command cmd, String msg, Exception t) {

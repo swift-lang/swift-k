@@ -643,7 +643,7 @@ implements RegistrationManager, Runnable {
             }
             else {
                 try {
-                    settings.setSecurityContext(AbstractionFactory.newSecurityContext(settings.getProvider()));
+                    settings.setSecurityContext(AbstractionFactory.getSecurityContext(settings.getProvider(), null));
                 }
                 catch (Exception e) {
                     throw new PlanningException(e);

@@ -82,7 +82,7 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
             s.setSecurityContext(p.getSecurityContext());
         }
         else {
-            s.setSecurityContext(AbstractionFactory.newSecurityContext(s.getProvider()));
+            s.setSecurityContext(AbstractionFactory.getSecurityContext(s.getProvider(), s.getServiceContact()));
         }
         return s;
     }

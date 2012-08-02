@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
+import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -158,12 +159,12 @@ public class LocalService extends GSSService implements Registering {
             try {
                 GSSCredential cred = channel.getUserContext().getCredential();
                 if (cred == null) {
-                    cred = (GSSCredential) AbstractionFactory.getDefaultCredentials("gt2");
+                    cred = (GSSCredential) AbstractionFactory.getSecurityContext("gt2", new ServiceContactImpl(url)).getCredentials();
                 }
                 ChannelManager.getManager().registerChannel(url, cred, channel);
             }
             catch (Exception e) {
-                throw new RuntimeException("Failed to register channel " + url);
+                throw new RuntimeException("Failed to register channel " + url, e);
             }
             services.put(id, url);
             services.notifyAll();
