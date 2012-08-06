@@ -283,6 +283,7 @@ arguments = $EXECUTION_URL node .
 notification = Never
 leave_in_queue = FALSE
 machine_count = $CONDOR_MACHINE_COUNT
++AccountingGroup="group_friends.$USER"
 queue $CONDOR_WORKERS
 EOF
 
