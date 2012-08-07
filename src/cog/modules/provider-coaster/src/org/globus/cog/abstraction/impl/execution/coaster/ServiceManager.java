@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -53,6 +54,7 @@ import org.globus.cog.karajan.workflow.service.channels.IrrecoverableException;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.common.CoGProperties;
 import org.ietf.jgss.GSSCredential;
 
 public class ServiceManager implements StatusListener {
@@ -164,11 +166,20 @@ public class ServiceManager implements StatusListener {
         try {
             startLocalService();
             final Task t = buildTask(service);
-            setSecurityContext(t, sc, bootHandlerProvider);
+            
             t.addStatusListener(this);
             if (logger.isDebugEnabled()) {
                 logger.debug("Starting coaster service on " + contact + ". Task is " + t);
             }
+            
+            boolean ssh = "ssh".equalsIgnoreCase(bootHandlerProvider);
+            
+            if (ssh) {
+                setupGSIProxy();
+            }
+            
+            setSecurityContext(t, sc, bootHandlerProvider);
+            
             boolean local = "local".equals(bootHandlerProvider);
             if (LOCALJVM || (LOCALJVM_WHEN_LOCAL && local)) {
                 final String ls = getLocalServiceURL();
@@ -198,6 +209,12 @@ public class ServiceManager implements StatusListener {
                 services.notifyAll();
             }
         }
+    }
+
+    private void setupGSIProxy() throws IOException, GeneralSecurityException {
+        AutoCA.Info result = AutoCA.getInstance().createProxy();
+        CoGProperties.getDefault().setProxyFile(result.proxyPath);
+        CoGProperties.getDefault().setCaCertLocations(result.caCertPath);
     }
 
     private void setSecurityContext(Task t, SecurityContext sc, String provider)

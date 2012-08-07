@@ -19,7 +19,6 @@ import org.globus.cog.abstraction.coaster.service.local.CoasterResourceTracker;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.coaster.service.local.LocalService;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
-import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -32,7 +31,6 @@ import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
-import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -117,7 +115,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             ChannelException {
         if (autostart) {
             String provider = getBootHandlerProvider(task);
-            cred = getCredentials(task);
             url = ServiceManager.getDefault().reserveService(task, provider);
             task.getService(0).setAttribute("coaster-url", url);
         }
@@ -215,20 +212,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private String getJavaHome(Task task) {
         JobSpecification js = (JobSpecification) task.getSpecification();
         return js.getEnvironmentVariable("JAVA_HOME");
-    }
-
-    private GSSCredential getCredentials(Task task) throws InvalidSecurityContextException {
-        SecurityContext sc = task.getService(0).getSecurityContext();
-        if (sc == null || sc.getCredentials() == null) {
-            try {
-                sc = AbstractionFactory.getSecurityContext("gt2", task.getService(0).getServiceContact());
-                task.getService(0).setSecurityContext(sc);
-            }
-            catch (Exception e) {
-                throw new InvalidSecurityContextException(e);
-            }
-        }
-        return (GSSCredential) sc.getCredentials();
     }
 
     public void errorReceived(Command cmd, String msg, Exception t) {
