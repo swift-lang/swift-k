@@ -30,6 +30,7 @@ import org.globus.gsi.CertUtil;
 import org.globus.gsi.GSIConstants;
 import org.globus.gsi.GlobusCredential;
 import org.globus.gsi.GlobusCredentialException;
+import org.globus.gsi.TrustedCertificates;
 import org.globus.gsi.X509ExtensionSet;
 import org.globus.gsi.bc.BouncyCastleCertProcessingFactory;
 
@@ -48,7 +49,8 @@ import com.sshtools.j2ssh.sftp.SftpSubsystemClient;
  */
 public class ProxyForwardingManager {
     public static final long TIME_MARGIN = 10000;
-    public static final String PREFIX = "sshproxy";
+    public static final String PROXY_PREFIX = "sshproxy";
+    public static final String CA_PREFIX = "sshCAcert";
 
     private static ProxyForwardingManager dm;
 
@@ -86,12 +88,13 @@ public class ProxyForwardingManager {
         }
     }
 
-    private static class Info {
-        public final String proxyFile;
+    public static class Info {
+        public final String proxyFile, caCertFile;
         public final long expirationTime;
 
-        public Info(String proxyFile, long expirationTime) {
+        public Info(String proxyFile, String caCertFile, long expirationTime) {
             this.proxyFile = proxyFile;
+            this.caCertFile = caCertFile;
             this.expirationTime = expirationTime;
         }
     }
@@ -102,7 +105,7 @@ public class ProxyForwardingManager {
         this.state = new HashMap<Key, Info>();
     }
 
-    public synchronized String forwardProxy(int type, SSHChannel s)
+    public synchronized Info forwardProxy(int type, SSHChannel s)
             throws InvalidSecurityContextException {
         if (type == Delegation.NO_DELEGATION) {
             return null;
@@ -113,7 +116,7 @@ public class ProxyForwardingManager {
             info = actualForward(key, s);
             state.put(key, info);
         }
-        return info.proxyFile;
+        return info;
     }
 
     private Info actualForward(Key key, SSHChannel s)
@@ -144,25 +147,33 @@ public class ProxyForwardingManager {
                 String globusDir = makeGlobusDir(sftp);
                 cleanupOldProxies(sftp, globusDir);
                 SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
-                String name = PREFIX + "-" + Math.abs(random.nextInt()) + "-"
-                        + (cred.getTimeLeft() + System.currentTimeMillis() / 1000);
-                FileAttributes fa = new FileAttributes();
-                fa.setPermissions(new UnsignedInteger32(FileAttributes.S_IRUSR
-                        | FileAttributes.S_IWUSR));
-                SftpFile f = sftp.openFile(globusDir + "/" + name,
-                        SftpSubsystemClient.OPEN_WRITE
-                                | SftpSubsystemClient.OPEN_CREATE
-                                | SftpSubsystemClient.OPEN_EXCLUSIVE,
-                        fa);
-                // specifying the permissions to sftp.openFile() above doesn't
-                // seem to work
-                sftp.changePermissions(f, fa.getPermissions().intValue());
-                BufferedOutputStream out = new BufferedOutputStream(new SftpFileOutputStream(
-                    f));
-
-                cred.save(out);
-                out.close();
-                return new Info(globusDir + "/" + name, cred.getTimeLeft() * 1000
+                long now = System.currentTimeMillis();
+                int id = Math.abs(random.nextInt());
+                String proxyFileName = PROXY_PREFIX + "-" + id + "-" + (cred.getTimeLeft() + now / 1000);
+                String caCertFileName = CA_PREFIX + "-" + id + "-" + (cred.getTimeLeft() + now / 1000);
+                
+                
+                SftpFile fp = createFile(sftp, globusDir, proxyFileName);
+                BufferedOutputStream pout = new BufferedOutputStream(new SftpFileOutputStream(fp));
+                cred.save(pout);
+                pout.close();
+                
+                X509Certificate[] chain = cred.getCertificateChain();
+                X509Certificate userCert = chain[chain.length - 1];
+                TrustedCertificates tc = TrustedCertificates.getDefaultTrustedCertificates();
+                
+                X509Certificate caCert = tc.getCertificate(userCert.getIssuerDN().getName());
+                if (caCert == null) {
+                    throw new InvalidSecurityContextException("Failed to find root CA certificate (" + userCert.getIssuerDN().getName() + ")");
+                }
+                
+                
+                SftpFile fc = createFile(sftp, globusDir, caCertFileName);
+                BufferedOutputStream cout = new BufferedOutputStream(new SftpFileOutputStream(fc));
+                CertUtil.writeCertificate(cout, caCert);
+                cout.close();
+                
+                return new Info(globusDir + "/" + proxyFileName, globusDir + "/" + caCertFileName, cred.getTimeLeft() * 1000
                         + System.currentTimeMillis());
             }
             finally {
@@ -176,6 +187,21 @@ public class ProxyForwardingManager {
         catch (Exception e) {
             throw new InvalidSecurityContextException(e);
         }
+    }
+    
+    private SftpFile createFile(SftpSubsystemClient sftp, String dir, String name) throws IOException {
+        FileAttributes fa = new FileAttributes();
+        fa.setPermissions(new UnsignedInteger32(FileAttributes.S_IRUSR
+                | FileAttributes.S_IWUSR));
+        SftpFile f = sftp.openFile(dir + "/" + name,
+                SftpSubsystemClient.OPEN_WRITE
+                        | SftpSubsystemClient.OPEN_CREATE
+                        | SftpSubsystemClient.OPEN_EXCLUSIVE,
+                fa);
+        // specifying the permissions to sftp.openFile() above doesn't
+        // seem to work
+        sftp.changePermissions(f, fa.getPermissions().intValue());
+        return f;
     }
 
     private static final Pattern PROXY_NAME_PATTERN = Pattern
