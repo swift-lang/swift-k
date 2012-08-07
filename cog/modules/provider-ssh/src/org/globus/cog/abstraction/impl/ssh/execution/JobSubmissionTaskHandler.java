@@ -53,12 +53,14 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
         s = SSHChannelManager.getDefault().getChannel(host,
                 port, getSecurityContext().getCredentials());
+         
         
         exec = new Exec();
         if (spec.getDelegation() != Delegation.NO_DELEGATION) {
-            String proxyFile = ProxyForwardingManager.getDefault().forwardProxy(spec.getDelegation(), s);
-            if (proxyFile != null) {
-                exec.addEnv("X509_USER_PROXY", proxyFile);
+            ProxyForwardingManager.Info info = ProxyForwardingManager.getDefault().forwardProxy(spec.getDelegation(), s);
+            if (info != null) {
+                exec.addEnv("X509_USER_PROXY", info.proxyFile);
+                exec.addEnv("X509_CERT_DIR", info.caCertFile);
             }
         }
         exec.setCmd(cmd);
