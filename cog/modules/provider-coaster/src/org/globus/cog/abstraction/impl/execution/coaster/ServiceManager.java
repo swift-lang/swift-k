@@ -213,8 +213,8 @@ public class ServiceManager implements StatusListener {
 
     private void setupGSIProxy() throws IOException, GeneralSecurityException {
         AutoCA.Info result = AutoCA.getInstance().createProxy();
-        CoGProperties.getDefault().setProxyFile(result.proxyPath);
-        CoGProperties.getDefault().setCaCertLocations(result.caCertPath);
+        System.setProperty("X509_USER_PROXY", result.proxyPath);
+        System.setProperty("X509_CERT_DIR", result.caCertPath);
     }
 
     private void setSecurityContext(Task t, SecurityContext sc, String provider)
