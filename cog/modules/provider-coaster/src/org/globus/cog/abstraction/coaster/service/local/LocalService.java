@@ -158,9 +158,6 @@ public class LocalService extends GSSService implements Registering {
             }
             try {
                 GSSCredential cred = channel.getUserContext().getCredential();
-                if (cred == null) {
-                    cred = (GSSCredential) AbstractionFactory.getSecurityContext("gt2", new ServiceContactImpl(url)).getCredentials();
-                }
                 ChannelManager.getManager().registerChannel(url, cred, channel);
             }
             catch (Exception e) {
