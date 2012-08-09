@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.ssh.ConnectionID;
 import org.globus.cog.abstraction.impl.ssh.SSHChannel;
@@ -48,6 +49,8 @@ import com.sshtools.j2ssh.sftp.SftpSubsystemClient;
  * 
  */
 public class ProxyForwardingManager {
+    public static final Logger logger = Logger.getLogger(ProxyForwardingManager.class);
+    
     public static final long TIME_MARGIN = 10000;
     public static final String PROXY_PREFIX = "sshproxy";
     public static final String CA_PREFIX = "sshCAcert";
@@ -164,6 +167,12 @@ public class ProxyForwardingManager {
                 
                 X509Certificate caCert = tc.getCertificate(userCert.getIssuerDN().getName());
                 if (caCert == null) {
+                    logger.info("Cannot find root CA certificate for proxy");
+                    logger.info("DNs of trusted certificates:");
+                    X509Certificate[] roots = tc.getCertificates();
+                    for (X509Certificate root : roots) {
+                        logger.info("\t" + root.getSubjectDN());
+                    }
                     throw new InvalidSecurityContextException("Failed to find root CA certificate (" + userCert.getIssuerDN().getName() + ")");
                 }
                 
