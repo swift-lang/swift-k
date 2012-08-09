@@ -167,11 +167,11 @@ public class ProxyForwardingManager {
                 
                 X509Certificate caCert = tc.getCertificate(userCert.getIssuerDN().getName());
                 if (caCert == null) {
-                    logger.info("Cannot find root CA certificate for proxy");
-                    logger.info("DNs of trusted certificates:");
+                    logger.warn("Cannot find root CA certificate for proxy");
+                    logger.warn("DNs of trusted certificates:");
                     X509Certificate[] roots = tc.getCertificates();
                     for (X509Certificate root : roots) {
-                        logger.info("\t" + root.getSubjectDN());
+                        logger.warn("\t" + root.getSubjectDN());
                     }
                     throw new InvalidSecurityContextException("Failed to find root CA certificate (" + userCert.getIssuerDN().getName() + ")");
                 }
