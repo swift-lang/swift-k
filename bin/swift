@@ -122,7 +122,7 @@ fi
 PATH=$PATH:/sbin
 IFCONFIG=`which ifconfig 2>&1`
 if [ -x "$IFCONFIG" ]; then
-    MAC=`$IFCONFIG |grep HWaddr`
+    MAC=`$IFCONFIG 2>/dev/null |grep HWaddr`
 fi
 
 # Check if we are running on a mac, if so look for md5 and not md5sum
