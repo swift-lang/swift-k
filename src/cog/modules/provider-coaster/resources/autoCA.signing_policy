@@ -1,0 +1,13 @@
+#
+# Format:
+#------------------------------------------------------------------------
+#  token type  | def.authority |                value              
+#--------------|---------------|-----------------------------------------
+# EACL entry #1|
+
+ access_id_CA      X509         '/C=US/O=JavaCoG/OU=AutoCA/CN=Certificate Authority'
+ 
+ pos_rights        globus        CA:sign
+ 
+ cond_subjects     globus     	'"/C=US/O=JavaCoG/OU=AutoCA/*"'
+
