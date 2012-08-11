@@ -10,7 +10,10 @@
 package org.globus.cog.abstraction.impl.ssh.execution;
 
 import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.SecureRandom;
@@ -31,6 +34,7 @@ import org.globus.gsi.CertUtil;
 import org.globus.gsi.GSIConstants;
 import org.globus.gsi.GlobusCredential;
 import org.globus.gsi.GlobusCredentialException;
+import org.globus.gsi.SigningPolicy;
 import org.globus.gsi.TrustedCertificates;
 import org.globus.gsi.X509ExtensionSet;
 import org.globus.gsi.bc.BouncyCastleCertProcessingFactory;
@@ -152,8 +156,11 @@ public class ProxyForwardingManager {
                 SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
                 long now = System.currentTimeMillis();
                 int id = Math.abs(random.nextInt());
-                String proxyFileName = PROXY_PREFIX + "-" + id + "-" + (cred.getTimeLeft() + now / 1000);
-                String caCertFileName = CA_PREFIX + "-" + id + "-" + (cred.getTimeLeft() + now / 1000);
+                long suffix = cred.getTimeLeft() + now / 1000;
+                String proxyFileName = PROXY_PREFIX + "-" + id + "-" + suffix;
+                String caCertFileName = CA_PREFIX + "-" + id + "-" + suffix + ".pem";
+                String signingPolicyFileName = CA_PREFIX + "-" + id + "-" + suffix + ".signing_policy";
+                
                 
                 
                 SftpFile fp = createFile(sftp, globusDir, proxyFileName);
@@ -182,6 +189,14 @@ public class ProxyForwardingManager {
                 CertUtil.writeCertificate(cout, caCert);
                 cout.close();
                 
+                SigningPolicy sp = tc.getSigningPolicy('/' + userCert.getIssuerDN().getName().replace(',', '/'));
+                if (sp != null) {
+                    SftpFile spf = createFile(sftp, globusDir, signingPolicyFileName);
+                    BufferedOutputStream spout = new BufferedOutputStream(new SftpFileOutputStream(spf));
+                    writeFile(spout, new FileInputStream(sp.getFileName()));
+                }
+                
+                
                 return new Info(globusDir + "/" + proxyFileName, globusDir + "/" + caCertFileName, cred.getTimeLeft() * 1000
                         + System.currentTimeMillis());
             }
@@ -198,6 +213,17 @@ public class ProxyForwardingManager {
         }
     }
     
+    private void writeFile(OutputStream out, InputStream in) throws IOException {
+        byte[] buf = new byte[1024];
+        int len = in.read(buf);
+        while (len != -1) {
+            out.write(buf, 0, len);
+            len = in.read(buf);
+        }
+        out.close();
+        in.close();
+    }
+
     private SftpFile createFile(SftpSubsystemClient sftp, String dir, String name) throws IOException {
         FileAttributes fa = new FileAttributes();
         fa.setPermissions(new UnsignedInteger32(FileAttributes.S_IRUSR
