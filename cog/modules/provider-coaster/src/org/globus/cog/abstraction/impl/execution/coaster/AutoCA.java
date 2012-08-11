@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -68,6 +69,7 @@ public class AutoCA {
     public static final String USER_CRT_NAME_PREFIX = "usercert";
     public static final String USER_KEY_NAME_PREFIX = "userkey";
     public static final String PROXY_NAME_PREFIX = "proxy";
+    public static final String SIGNING_POLICY_RES_NAME = "autoCA.signing_policy";
     
     public static final String CA_CERT_ALGORITHM = "RSA";
     public static final int CA_CERT_BITS = 1024;
@@ -171,24 +173,27 @@ public class AutoCA {
     }
     
     private File makeFile(String prefix, int index) {
-        return new File(CA_DIR + File.separator + prefix + ".pem." + index);
+        return new File(CA_DIR + File.separator + prefix + "." + index + ".pem");
     }
 
     private static final String[] ALL_NAMES = new String[] {CA_CRT_NAME_PREFIX, 
         CA_KEY_NAME_PREFIX, USER_CRT_NAME_PREFIX, USER_KEY_NAME_PREFIX, PROXY_NAME_PREFIX};
     private void deleteAll(int index) {
-        for (String name : ALL_NAMES) {
-            new File(CA_DIR + File.separator + name + ".pem." + index).delete();
+        for (String prefix : ALL_NAMES) {
+            makeFile(prefix, index).delete();
         }
+        new File(CA_DIR + File.separator + CA_CRT_NAME_PREFIX + "." + index + ".signing_policy").delete();
     }
 
     private int getIndex(File c) {
-        return Integer.parseInt(c.getName().substring(c.getName().lastIndexOf('.') + 1));
+        String name = c.getName();
+        int i2 = name.lastIndexOf('.');
+        return Integer.parseInt(name.substring(i2 - 1, i2));
     }
 
     private int discoverNextIndex() throws GeneralSecurityException {
         for (int i = 0; i < 10; i++) {
-            File f = new File(CA_DIR + File.separator + PROXY_NAME_PREFIX + ".pem." + i);
+            File f = makeFile(PROXY_NAME_PREFIX, i);
             if (!f.exists()) {
                 return i;
             }
@@ -199,7 +204,7 @@ public class AutoCA {
     private File[] discoverProxies() {
         return new File(CA_DIR).listFiles(new FileFilter() {
             public boolean accept(File f) {
-                return f.isFile() && f.getName().matches(PROXY_NAME_PREFIX + "\\.pem\\.[0-9]");
+                return f.isFile() && f.getName().matches(PROXY_NAME_PREFIX + "\\.[0-9]\\.pem");
             }
         });
     }
@@ -227,12 +232,34 @@ public class AutoCA {
             writeKey(userKey, makeFile(USER_KEY_NAME_PREFIX, index));
             writeCert(userCert, makeFile(USER_CRT_NAME_PREFIX, index));
             writeProxy(proxy, makeFile(PROXY_NAME_PREFIX, index));
+            copySigningPolicy(index);
         }
         catch (GeneralSecurityException e) {
             deleteAll(index);
             throw e;
         }
         return cert;
+    }
+
+    private void copySigningPolicy(int index) throws IOException {
+        FileOutputStream fos = new FileOutputStream(CA_DIR + File.separator + CA_CRT_NAME_PREFIX + "." + index + ".signing_policy");
+        try {
+            InputStream is = AutoCA.class.getClassLoader().getResource(SIGNING_POLICY_RES_NAME).openStream();
+            try {
+                byte[] buf = new byte[1024];
+                int read = is.read(buf);
+                while (read != -1) {
+                    fos.write(buf, 0, read);
+                    read = is.read(buf);
+                }
+            }
+            finally {
+                is.close();
+            }
+        }
+        finally {
+            fos.close();
+        }
     }
 
     private Map<DERObjectIdentifier, DEREncodable> createExtensions(PublicKey caPub, PublicKey userPub) throws IOException {
