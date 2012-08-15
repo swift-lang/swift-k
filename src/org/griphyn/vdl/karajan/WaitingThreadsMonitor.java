@@ -52,7 +52,7 @@ public class WaitingThreadsMonitor {
 	}
 
     public static void addOutput(VariableStack stack, List<DSHandle> outputs) {
-        synchronized(outputs) {
+        synchronized(WaitingThreadsMonitor.outputs) {
             WaitingThreadsMonitor.outputs.put(stack, outputs);
         }
     }
