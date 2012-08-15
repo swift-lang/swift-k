@@ -42,7 +42,7 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
         String src = getInDataAsString(0);
         try {
             if (logger.isInfoEnabled()) {
-                logger.info(this + " request complete");
+                logger.info(this + " request complete; src=" + src);
             }
             provider = IOProviderFactory.getDefault().instance(getProtocol(src));
             sendReply();
