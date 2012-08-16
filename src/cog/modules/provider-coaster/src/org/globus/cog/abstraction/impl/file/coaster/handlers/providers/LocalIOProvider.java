@@ -150,7 +150,9 @@ public class LocalIOProvider implements IOProvider {
         private FileChannel fc;
 
         public Reader(String src, ReadIOCallback cb) throws IOException {
-            logger.debug("LocalIOProvider.Reader " + src);
+            if (logger.isDebugEnabled()) {
+                logger.debug("LocalIOProvider.Reader " + src);
+            }
             URI srcURI = newURI(src);
             f = CoasterFileRequestHandler.normalize(srcURI.getPath().substring(1));
             this.cb = cb;
@@ -158,7 +160,7 @@ public class LocalIOProvider implements IOProvider {
         }
         
         public String toString() {
-            return "LR " + f;
+            return "LR-" + System.identityHashCode(this);
         }
 
         public void start() throws IOException {
@@ -166,6 +168,9 @@ public class LocalIOProvider implements IOProvider {
             try {
                 synchronized(this) {
                     rbuf = Buffers.newReadBuffer(Buffers.getBuffers(Direction.IN), fc, f.length(), this);
+                }
+                if (logger.isInfoEnabled()) {
+                    logger.info(this + " rbuf: " + rbuf);
                 }
             }
             catch (InterruptedException e) {

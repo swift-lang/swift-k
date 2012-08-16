@@ -48,7 +48,7 @@ public abstract class ReadBuffer extends Buffer implements BufferOwner {
         int nbuf = Math.min((int) (size / Buffers.ENTRY_SIZE) + 1, Buffers.ENTRIES_PER_STREAM);
         
         if (logger.isInfoEnabled()) {
-            logger.info("Will ask for " + nbuf + " buffers for a size of " + size);
+            logger.info(this + " will ask for " + nbuf + " buffers for a size of " + size);
         }
         
         for (int i = 0; i < nbuf; i++) {
@@ -58,7 +58,7 @@ public abstract class ReadBuffer extends Buffer implements BufferOwner {
         }
         int queuedBuffers = requestFill();
         if (logger.isInfoEnabled()) {
-        	logger.info("Actual allocated buffers " + (nbuf - queuedBuffers));
+        	logger.info(this + " actual allocated buffers " + (nbuf - queuedBuffers));
         }
         if (queuedBuffers == nbuf) {
             // all buffers are queued
@@ -112,14 +112,14 @@ public abstract class ReadBuffer extends Buffer implements BufferOwner {
     
     protected synchronized void bufferCreated(Buffers.Allocation a) {
         if (logger.isDebugEnabled()) {
-            logger.debug("buffer created");
+            logger.debug(this + " buffer created");
         }
         allocs.add(a);
     }
     
     protected synchronized void deallocateBuffers() {
         if (logger.isInfoEnabled()) {
-            logger.info("De-allocating " + allocs.size() + " buffers");
+            logger.info(this + " de-allocating " + allocs.size() + " buffers");
         }
         for (Buffers.Allocation a : allocs) {
             buffers.free(a);
@@ -133,7 +133,7 @@ public abstract class ReadBuffer extends Buffer implements BufferOwner {
     }
 
     public String getName() {
-        return "RB-" + cb;
+        return "RB-" + System.identityHashCode(this);
     }
 
     public boolean isAlive() {
@@ -147,5 +147,10 @@ public abstract class ReadBuffer extends Buffer implements BufferOwner {
 
     public void suspend() {
     	suspended = true;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

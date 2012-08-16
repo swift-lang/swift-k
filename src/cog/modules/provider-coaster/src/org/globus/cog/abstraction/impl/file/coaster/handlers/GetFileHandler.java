@@ -66,6 +66,9 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
         }
         try {
             reader = provider.pull(src, dst, this);
+            if (logger.isInfoEnabled()) {
+                logger.info(this + " reader: " + reader);
+            }
             reader.start();
         }
         catch (IOException e) {
