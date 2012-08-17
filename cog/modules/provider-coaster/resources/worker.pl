@@ -966,26 +966,31 @@ sub loopOne {
 	if ($wset && @$wset) {
 		# can write
 		wlog(DEBUG, "Can write\n");
-		my $wouldBlock;
-		# if last write didn't finish, try to finish it now
-		$wouldBlock = resumeSend();
-		
-		if (!$wouldBlock) {
-			my $cmd;
-			# send whatever is now queued; don't clear the queue, since
-			# things may be added to it while stuff is being sent
-			my $sz = scalar(@SENDQ);
-			wlog(DEBUG, "SENDQ size: $sz\n");
-			for (my $i = 0; $i < $sz; $i++)  {
-				$cmd = shift(@SENDQ);
-				$wouldBlock = sendInternal(@$cmd);
-				if ($wouldBlock) {
-					last;
-				}
+		sendQueued();
+	}
+}
+
+sub sendQueued {
+	my $wouldBlock;
+	# if last write didn't finish, try to finish it now
+	$wouldBlock = resumeSend();
+	
+	if (!$wouldBlock) {
+		my $cmd;
+		# send whatever is now queued; don't clear the queue, since
+		# things may be added to it while stuff is being sent
+		my $sz = scalar(@SENDQ);
+		wlog(DEBUG, "SENDQ size: $sz\n");
+		for (my $i = 0; $i < $sz; $i++)  {
+			$cmd = shift(@SENDQ);
+			$wouldBlock = sendInternal(@$cmd);
+			if ($wouldBlock) {
+				last;
 			}
 		}
 	}
 }
+
 
 sub printreply {
 	my ($tag, $timeout, $err, $fin, $reply) = @_;
@@ -1072,15 +1077,17 @@ sub shutdownw {
 	my ($tag, $timeout, $msgs) = @_;
 	wlog DEBUG, "Shutdown command received\n";
 	queueReply($tag, ("OK"));
+	sendQueued();
 	wlog INFO, "Acknowledged shutdown.\n";
 	wlog INFO, "Ran a total of $JOB_COUNT jobs\n";
 	if ($PROFILE) {
 		push(@PROFILE_EVENTS, "STOP", "N/A", time());
 	}
 	writeprofile();
+	
 	select(undef, undef, undef, 1);
 	wlog INFO, "Exiting\n";
-
+	
 	exit 0;
 }
 
