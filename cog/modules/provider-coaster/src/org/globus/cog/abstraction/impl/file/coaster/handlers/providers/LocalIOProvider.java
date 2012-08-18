@@ -160,7 +160,7 @@ public class LocalIOProvider implements IOProvider {
         }
         
         public String toString() {
-            return "LR-" + System.identityHashCode(this);
+            return "LR-" + cb;
         }
 
         public void start() throws IOException {
