@@ -133,7 +133,7 @@ public abstract class ReadBuffer extends Buffer implements BufferOwner {
     }
 
     public String getName() {
-        return "RB-" + System.identityHashCode(this);
+        return "RB-" + cb;
     }
 
     public boolean isAlive() {
