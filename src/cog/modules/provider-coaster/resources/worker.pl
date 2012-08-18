@@ -1394,7 +1394,7 @@ sub mkPinnedDirectory() {
 			wlog DEBUG, "mkpath: $pinned_dir\n";
 			mkpath($pinned_dir) ||
 				die "mkPinnedDirectory(): " .
-				"Could not mkdir: $pinned_dir\n";
+				"Could not mkdir: $pinned_dir ($!)\n";
 		}
 		$PINNED_READY = 1;
 	}
@@ -1407,7 +1407,7 @@ sub downloadPinnedFile() {
 	wlog DEBUG, "link: $dst -> $pinned_dir$rdst\n";
 	if (! -f "$pinned_dir$rdst") {
 		link($dst, "$pinned_dir$rdst") ||
-			die "getPinnedFile(): Could not link: $pinned_dir$rdst\n";
+			die "getPinnedFile(): Could not link: $pinned_dir$rdst ($!)\n";
 	}
 }
 
@@ -1418,10 +1418,10 @@ sub linkToPinnedFile() {
 	if (! -d $dir) {
 		wlog DEBUG, "mkpath: $dir\n";
 		mkpath($dir) ||
-			die "getPinnedFile(): Could not mkdir: $dir\n";
+			die "getPinnedFile(): Could not mkdir: $dir ($!)\n";
 	}
 	link("$pinned_dir$rdst", $dst) ||
-		die "getPinnedFile(): Could not link!\n";
+		die "getPinnedFile(): Could not link: $!\n";
 	if ($PINNED{$rdst} == INFLIGHT) {
 		waitForPinnedFile($rdst, $jobid);
 	}
