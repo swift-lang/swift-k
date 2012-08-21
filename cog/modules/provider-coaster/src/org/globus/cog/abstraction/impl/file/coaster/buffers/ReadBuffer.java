@@ -58,7 +58,7 @@ public abstract class ReadBuffer extends Buffer implements BufferOwner {
         }
         int queuedBuffers = requestFill();
         if (logger.isInfoEnabled()) {
-        	logger.info(this + " actual allocated buffers " + (nbuf - queuedBuffers));
+        	logger.info(this + " actual allocated buffers " + (nbuf - queuedBuffers) + "(" + queuedBuffers + " queued)");
         }
         if (queuedBuffers == nbuf) {
             // all buffers are queued
@@ -71,9 +71,9 @@ public abstract class ReadBuffer extends Buffer implements BufferOwner {
         synchronized (this) {
             b = full.removeFirst();
             b.clear();
+            empty.addLast(b);
+            requestFill();
         }
-        buffers.queueRequest(false, b, this, this);
-        requestFill();
     }
 
     protected int requestFill() {
@@ -81,25 +81,20 @@ public abstract class ReadBuffer extends Buffer implements BufferOwner {
     		return 0;
     	}
         int queued = 0;
-        synchronized (empty) {
-            while (!empty.isEmpty() && read < size) {
-                ByteBuffer buf = empty.removeFirst();
-                if (buf != null) {
-                    buf.clear();
-                }
-                if (buffers.queueRequest(false, buf, this, this)) {
-                    queued++;
-                }
+        while (!empty.isEmpty() && read < size) {
+            ByteBuffer buf = empty.removeFirst();
+            if (buf != null) {
+                buf.clear();
+            }
+            if (buffers.queueRequest(false, buf, this, this)) {
+                queued++;
             }
         }
         return queued;
     }
 
     public void error(ByteBuffer buf, Exception e) {
-        synchronized (empty) {
-            empty.addLast(buf);
-            getCallback().error(false, e);
-        }
+        getCallback().error(false, e);
     }
 
     public void bufferRead(ByteBuffer buf) {

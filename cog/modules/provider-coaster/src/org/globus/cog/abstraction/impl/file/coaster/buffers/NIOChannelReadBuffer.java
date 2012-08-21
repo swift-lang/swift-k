@@ -33,18 +33,15 @@ public class NIOChannelReadBuffer extends ReadBuffer {
     public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
     	synchronized(this) {
     		if (closed) {
+    		    if (logger.isInfoEnabled()) {
+    		        logger.info("Transfer done. De-allocating one unused buffer");
+    		    }
+    		    if (alloc != null) {
+    		        buffers.free(alloc);
+    		    }
     			return;
     		}
     	}
-        if (read >= size) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Transfer done. De-allocating one unused buffer");
-            }
-            if (alloc != null) {
-                buffers.free(alloc);
-            }
-            return;
-        }
         if (alloc != null) {
             bufferCreated(alloc);
         }
