@@ -275,7 +275,8 @@ start-workers-condor()
       export CONDOR_MACHINE_COUNT=1
    fi
 
-cat <<EOF > start_workers.submit
+export MYPID=$$
+cat <<EOF > start_workers.$MYPID.submit
 output = workers.stdout
 error = workers.stderr
 executable = $SWIFT_BIN/$WORKER
@@ -288,10 +289,10 @@ queue $CONDOR_WORKERS
 EOF
 
    if [ -n "$WORKER_RELAY_HOST" ]; then
-      scp start_workers.submit $WORKER_USERNAME@$WORKER_RELAY_HOST:
-      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "condor_submit start_workers.submit"
+      scp start_workers.$MYPID.submit $WORKER_USERNAME@$WORKER_RELAY_HOST:
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "condor_submit start_workers.$MYPID.submit"
    else
-      condor_submit start_workers.submit
+      condor_submit start_workers.$MYPID.submit
    fi
 }
 
