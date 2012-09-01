@@ -36,7 +36,6 @@ import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -62,7 +61,7 @@ public class ReadData extends VDLFunction {
 			readData(dest, (String) src.getValue());
 		}
 		else {
-			PhysicalFormat pf = src.getMapper().map(Path.EMPTY_PATH);
+			PhysicalFormat pf = src.getMapper().map(src.getPathFromRoot());
 			if (pf instanceof AbsFile) {
 				AbsFile af = (AbsFile) pf;
 				if (!af.getProtocol().equalsIgnoreCase("file")) {

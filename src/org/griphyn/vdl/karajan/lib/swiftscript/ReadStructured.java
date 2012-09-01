@@ -57,7 +57,7 @@ public class ReadStructured extends VDLFunction {
 			readData(dest, (String) src.getValue());
 		}
 		else {
-			PhysicalFormat pf = src.getMapper().map(Path.EMPTY_PATH);
+			PhysicalFormat pf = src.getMapper().map(src.getPathFromRoot());
 			if (pf instanceof AbsFile) {
 				AbsFile af = (AbsFile) pf;
 				if (!af.getProtocol().equalsIgnoreCase("file")) {
