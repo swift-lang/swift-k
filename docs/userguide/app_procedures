@@ -368,13 +368,28 @@ string out = @strcat("Your name is ",name);
 trace(out);
 ----
 
-will output the message: Your name is John.
+This will output the message: Your name is John.
+
+@strjoin
+~~~~~~~~
+@strjoin(array, delimiter) will combine the elements of an array
+into a single string separated by a given delimiter. The array
+passed to @strjoin must be of a primitive type (string, int, float, 
+or boolean). It will not join the contents of an array of files.
+
+Example:
+----
+string test[] = ["this", "is", "a", "test" ];
+string mystring = @strjoin(test, " ");
+tracef("%s\n", mystring);
+----
+
+This will print the string "this is a test".
 
 @strsplit
 ~~~~~~~~~
 @strsplit(input,pattern) will split the input string based on
 separators that match the given pattern and return a string array.
-(since Swift 0.9)
 
 Example:
 ----
@@ -385,7 +400,7 @@ foreach word in words {
 }
 ----
 
-will output one word of the sentence on each line (though not
+This will output one word of the sentence on each line (though not
 necessarily in order, due to the fact that foreach iterations execute in
 parallel).
 

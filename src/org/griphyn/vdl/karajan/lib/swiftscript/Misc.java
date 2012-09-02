@@ -61,6 +61,7 @@ public class Misc extends FunctionsCollection {
         setArguments("swiftscript_strcat",  new Arg[] { Arg.VARGS });
         setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
         setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
+        setArguments("swiftscript_strjoin", new Arg[] { PA_ARRAY, PA_INPUT });
         setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
 		setArguments("swiftscript_trace", new Arg[] { Arg.VARGS });
         setArguments("swiftscript_to_int", new Arg[] { PA_INPUT });
@@ -69,7 +70,6 @@ public class Misc extends FunctionsCollection {
 		setArguments("swiftscript_tofloat", new Arg[] { PA_INPUT });
         setArguments("swiftscript_to_string", new Arg[] { PA_INPUT });
         setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
-
 	}
 
 	private static final Logger traceLogger =
@@ -256,6 +256,30 @@ public class Misc extends FunctionsCollection {
 		VDLFunction.logProvenanceParameter(provid, PA_PATTERN.getRawValue(stack), "pattern");
 		return handle;
 	}
+	
+	/**
+	 * swiftscript_strjoin (@strjoin) - Combine elements of an array into a single string with a specified delimiter
+	 * @param stack
+	 * @return DSHandle representing the resulting string
+	 * @throws ExecutionException
+	 */
+    public DSHandle swiftscript_strjoin(VariableStack stack) throws ExecutionException 
+    {
+        AbstractDataNode array = (AbstractDataNode) PA_ARRAY.getRawValue(stack);
+        String delim = TypeUtil.toString(PA_INPUT.getValue(stack));
+        String result = "";
+
+        array.waitFor();
+
+        Map<?, ?> arrayValues = array.getArrayValue();
+        for (Object value : arrayValues.values()) {
+            if (result == "") { result += ((DSHandle) value).getValue(); }
+            else { result += delim + ((DSHandle) value).getValue(); }
+        }
+
+        DSHandle handle = new RootDataNode(Types.STRING, result);
+        return handle;
+    }
 
 	public DSHandle swiftscript_regexp(VariableStack stack)
 	throws ExecutionException {

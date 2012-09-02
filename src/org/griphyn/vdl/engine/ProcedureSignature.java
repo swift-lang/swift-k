@@ -196,7 +196,7 @@ public class ProcedureSignature {
 		add(functionsMap, "strcut", returns(STRING), args(STRING, STRING));
 		add(functionsMap, "strstr", returns(INT), args(STRING, STRING));
 		add(functionsMap, "strsplit", returns(STRING_ARRAY), args(STRING, STRING));
-		
+		add(functionsMap, "strjoin", returns(STRING), args(ANY, STRING));
 		add(functionsMap, "toInt", returns(INT), args(ANY));
 		add(functionsMap, "toFloat", returns(FLOAT), args(ANY));
 		add(functionsMap, "toString", returns(STRING), args(ANY));
