@@ -971,7 +971,7 @@ group_sites_xml() {
   # Give default to _WORK_ if undefined in swift.properties
   if [ -z "$WORK" ]
   then
-     export WORK=$TOPDIR/work
+     export WORK=$PWD/swiftwork
   fi
 
   # Call gensites
