@@ -14,7 +14,7 @@ Logger::Logger(ostream& pout) {
 	out = &pout;
 	level = NONE;
 	setFile("<unknown>");
-	flushed = true;
+	startOfItem = true;
 }
 
 Logger::~Logger() {
@@ -49,23 +49,23 @@ const char* Logger::levelToStr(Level level) {
 
 Logger& Logger::operator<< (string str) {
 	header();
-	*out << str << '\n';
+	*out << str;
 	return *this;
 }
 
 Logger& Logger::operator<< (const string* str) {
 	header();
-	*out << *str << '\n';
+	*out << *str;
 	return *this;
 }
 
 Logger& Logger::operator<< (const char* str) {
 	header();
-	*out << str << '\n';
+	*out << str;
 	return *this;
 }
 
-Logger& Logger::operator<< (ostream& ( *pf )(ostream&)) {
+Logger& Logger::operator<< (Logger& ( *pf )(Logger&)) {
 	(*pf)(*this);
 	return *this;
 }
@@ -76,12 +76,6 @@ Logger& Logger::setFile(const char* pfile) {
 		 file = pfile;
 	 }
 	 return *this;
-}
-
-Logger& Logger::flush() {
-	ostream::flush();
-	flushed = true;
-	return *this;
 }
 
 void Logger::log(Level level, const char* fileName, const char* msg) {
@@ -95,6 +89,11 @@ void Logger::log(Level level, const char* fileName, string msg) {
 	setFile(fileName);
 	header();
 	*out << msg << endl;
+}
+
+void Logger::endItem() {
+	out->flush();
+	startOfItem = true;
 }
 
 char* Logger::timeStamp() {
@@ -112,10 +111,16 @@ char* Logger::timeStamp() {
 }
 
 void Logger::header() {
-	if (flushed) {
+	if (startOfItem) {
 		*out << timeStamp() << " " << strLevel << " " << file << " ";
-		flushed = false;
+		startOfItem = false;
 	}
+}
+
+Logger& endl(Logger& l) {
+	l << "\n";
+	l.endItem();
+	return l;
 }
 
 StdoutLogger::StdoutLogger(): Logger(cout) {

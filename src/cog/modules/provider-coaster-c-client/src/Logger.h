@@ -26,7 +26,7 @@ class Logger: public ostream {
 		const char* file;
 		const char* strLevel;
 		char ts[TS_LEN + 1];
-		bool flushed;
+		bool startOfItem;
 
 	protected:
 		Logger(ostream& out);
@@ -42,9 +42,9 @@ class Logger: public ostream {
 		Logger& operator<< (const char* str);
 		Logger& operator<< (int i);
 		Logger& operator<< (long l);
-		Logger& operator<< (ostream& ( *pf )(ostream&));
+		Logger& operator<< (Logger& ( *pf )(Logger&));
 		Logger& setFile(const char* file);
-		Logger& flush();
+		void endItem();
 		void log(Level level, const char* fileName, const char* msg);
 		void log(Level level, const char* fileName, string msg);
 
@@ -56,6 +56,8 @@ class StdoutLogger: public Logger {
 		StdoutLogger();
 		virtual ~StdoutLogger();
 };
+
+Logger& endl(Logger& l);
 
 #define LogError Logger::singleton().setFile(__FILE__) << Logger::ERROR
 #define LogWarn Logger::singleton().setFile(__FILE__) << Logger::WARN
