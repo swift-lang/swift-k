@@ -47,6 +47,7 @@ class CoasterLoop {
 		Lock lock;
 
 		CoasterLoop();
+		virtual ~CoasterLoop();
 		void start();
 		void stop();
 

@@ -7,6 +7,7 @@
 
 #include "CoasterLoop.h"
 #include "CoasterError.h"
+#include "Logger.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -23,10 +24,16 @@ CoasterLoop::CoasterLoop() {
 	FD_ZERO(&wfds);
 }
 
+CoasterLoop::~CoasterLoop() {
+	stop();
+}
+
 void CoasterLoop::start() { Lock::Scoped l(lock);
 	if (started) {
 		return;
 	}
+
+	LogInfo << "Starting coaster loop" << endl;
 
 	time(&lastHeartbeatCheck);
 
@@ -37,15 +44,18 @@ void CoasterLoop::start() { Lock::Scoped l(lock);
 
 	thread = pthread_create(&thread, NULL, run, this);
 
-	started = 1;
+	started = true;
 }
 
 void CoasterLoop::stop() { Lock::Scoped l(lock);
-
 	if (!started) {
 		return;
 	}
-	done = 1;
+	LogInfo << "Stopping coaster loop" << endl;
+	done = true;
+	awake();
+	pthread_join(thread, NULL);
+	LogInfo << "Coaster loop stopped" << endl;
 }
 
 void* run(void* ptr) {
@@ -152,7 +162,9 @@ void CoasterLoop::addSockets() {
 		socketCount++;
 	}
 
-	updateMaxFD();
+	if (addList.size() > 0) {
+		updateMaxFD();
+	}
 
 	addList.clear();
 }
