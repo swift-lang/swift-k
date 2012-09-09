@@ -27,15 +27,6 @@ class HandlerFactory;
 class CoasterLoop;
 class CoasterChannel;
 
-class ConnectionError: public exception {
-	private:
-		const char* message;
-	public:
-		ConnectionError(string msg);
-
-		virtual const char* what() const throw();
-};
-
 class CoasterClient: public CommandCallback {
 	private:
 		Lock lock;

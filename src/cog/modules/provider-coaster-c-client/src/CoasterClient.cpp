@@ -7,6 +7,7 @@
 
 #include "CoasterClient.h"
 #include "JobSubmitCommand.h"
+#include "CoasterError.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -16,14 +17,6 @@
 #include <arpa/inet.h>
 
 #include "Logger.h"
-
-ConnectionError::ConnectionError(string msg) {
-	message = msg.c_str();
-}
-
-const char* ConnectionError::what() const throw() {
-	return message;
-}
 
 CoasterClient::CoasterClient(string URLp, CoasterLoop& ploop) {
 	URL = URLp;
@@ -36,6 +29,8 @@ void CoasterClient::start() {
 	if (started) {
 		return;
 	}
+
+	LogInfo << "Starting client " << getHostName() << endl;
 
 	struct addrinfo* addrInfo;
 	struct addrinfo* it;
@@ -51,7 +46,10 @@ void CoasterClient::start() {
 			continue;
 		}
 
+		LogDebug << "Trying " << inet_ntoa(((sockaddr_in*) (it->ai_addr))->sin_addr) << endl;
+
 		if (connect(sockFD, it->ai_addr, it->ai_addrlen) == 0) {
+			LogDebug << "Connected" << endl;
 			break;
 		}
 
@@ -66,10 +64,10 @@ void CoasterClient::start() {
 	if (sockFD == -1) {
 		// none succeeded
 		if (error != NULL) {
-			throw ConnectionError("Failed to connect to " + URL + ": " + error);
+			throw CoasterError("Failed to connect to %s: %s", URL.c_str(), error);
 		}
 		else {
-			throw ConnectionError("Failed to connect to " + URL);
+			throw CoasterError("Failed to connect to %s", URL.c_str());
 		}
 	}
 
@@ -77,6 +75,8 @@ void CoasterClient::start() {
 	channel->setSockFD(sockFD);
 	channel->start();
 	loop->addChannel(channel);
+
+	LogInfo << "Done" << endl;
 
 	started = true;
 }
@@ -86,11 +86,15 @@ void CoasterClient::stop() {
 		return;
 	}
 
+	LogInfo << "Stopping client " << getHostName() << endl;
+
 	channel->shutdown();
 	loop->removeChannel(channel);
 	close(sockFD);
 
 	delete channel;
+
+	LogInfo << "Done" << endl;
 
 	started = false;
 }
@@ -186,7 +190,7 @@ struct addrinfo* CoasterClient::resolve(const char* hostName, int port) {
 	int result = getaddrinfo(hostName, sPort, &hints, &info);
 
 	if (result != 0) {
-		throw ConnectionError(string("Host name lookup failure: ") + gai_strerror(result));
+		throw CoasterError("Host name lookup failure: %s", gai_strerror(result));
 	}
 
 	free(sPort);
