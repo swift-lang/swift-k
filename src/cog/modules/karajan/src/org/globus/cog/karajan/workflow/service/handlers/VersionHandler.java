@@ -13,7 +13,7 @@ import org.globus.cog.karajan.workflow.service.ProtocolException;
 
 
 public class VersionHandler extends RequestHandler {
-	public static final String VERSION = "0.2";
+	public static final String VERSION = "0.3";
 	
 	public void requestComplete() throws ProtocolException {
 		sendReply(VERSION.getBytes());
