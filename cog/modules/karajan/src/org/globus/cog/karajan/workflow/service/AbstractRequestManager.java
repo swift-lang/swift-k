@@ -44,7 +44,7 @@ public abstract class AbstractRequestManager implements RequestManager {
 				handler = handlerClass.newInstance();
 			}
 			catch (Exception e) {
-				throw new NoSuchHandlerException("Could not instantiate handler for " + cmd, e);
+				return new UnknownHandler(cmd);
 			}
 		}
 		handler.setInCmd(cmd);
@@ -64,5 +64,18 @@ public abstract class AbstractRequestManager implements RequestManager {
 
 	public String toString() {
 		return handlers.toString();
+	}
+	
+	public static class UnknownHandler extends RequestHandler {
+		private String type;
+		
+		public UnknownHandler(String type) {
+			this.type = type;
+		}
+		
+		@Override
+		public void requestComplete() throws ProtocolException {
+			sendError("No such handler: " + type);
+		}
 	}
 }
