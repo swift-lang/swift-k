@@ -120,10 +120,9 @@ public abstract class AbstractStreamKarajanChannel extends AbstractKarajanChanne
 				len = unpack(rhdr, 8);
 				hcsum = unpack(rhdr, 12);
 				if ((tag ^ flags ^ len) != hcsum) {
-					logger.warn("Header checksum failed. Computed checksum: " + 
+					throw new IOException("Header checksum failed. Computed checksum: " + 
 							Integer.toHexString(tag ^ flags ^ len) + 
 							", checksum: " + Integer.toHexString(hcsum));
-					return true;
 				}
 				csum = unpack(rhdr, 16);
 				if (logger.isDebugEnabled()) {
