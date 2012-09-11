@@ -146,18 +146,30 @@ public class SubmitJobHandler extends RequestHandler {
 
         ExecutionService service = new ExecutionServiceImpl();
 
-        setServiceParams(service, helper.read("contact"), helper.read("provider"), helper.read("jm").intern());
+        setServiceParams(service, intern(helper.read("contact")), intern(helper.read("provider")), intern(helper.read("jm")));
         task.setService(0, service);
         
         return task;
     }
     
+    private String intern(String str) {
+        if (str == null) {
+            return null;
+        }
+        else {
+            return str.intern();
+        }
+    }
+
     private static final Pattern COLON = Pattern.compile(":");
 
     protected void setServiceParams(ExecutionService s, String contact, 
                                     String provider, String jm) {
         if (jm == null) {
             jm = "fork";
+        }
+        if (contact == null) {
+            contact = "localhost";
         }
 
         String[] els = COLON.split(jm);
