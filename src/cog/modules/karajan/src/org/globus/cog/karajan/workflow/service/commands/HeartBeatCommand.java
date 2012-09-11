@@ -30,14 +30,14 @@ public class HeartBeatCommand extends Command {
 	
 	public void send() throws ProtocolException {
 	    start = System.currentTimeMillis();
-	    addOutData(String.valueOf(start));
+	    addOutData(start);
 		super.send();
 	}
 
 	public void replyReceived(boolean fin, boolean err, byte[] data) throws ProtocolException {
 		super.replyReceived(fin, err, data);
 		if (logger.isInfoEnabled()) {
-            long rst = Long.parseLong(getInDataAsString(0));
+            long rst = getInDataAsLong(0);
             long now = System.currentTimeMillis();
             logger.info(getChannel() + " up latency: " + (now - rst) + "ms, rtt: " + (now - start) + "ms");
         }
