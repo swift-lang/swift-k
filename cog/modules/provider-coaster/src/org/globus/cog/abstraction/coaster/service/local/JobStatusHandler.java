@@ -27,8 +27,8 @@ public class JobStatusHandler extends RequestHandler {
     public void requestComplete() throws ProtocolException {
         try {
             String jobId = getInDataAsString(0);
-            int status = Integer.parseInt(getInDataAsString(1));
-            int code = Integer.parseInt(getInDataAsString(2));
+            int status = getInDataAsInt(1);
+            int code = getInDataAsInt(2);
             String message = getInDataAsString(3);
             
             Status s = new StatusImpl();

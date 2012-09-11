@@ -44,12 +44,12 @@ public class JobStatusCommand extends Command {
 
     protected void serialize() throws IOException {
         addOutData(taskId);
-        addOutData(String.valueOf(status.getStatusCode()));
+        addOutData(status.getStatusCode());
         if (status.getException() instanceof JobException) {
-            addOutData(String.valueOf(((JobException) status.getException()).getExitCode()));
+            addOutData(((JobException) status.getException()).getExitCode());
         }
         else {
-            addOutData("0");
+            addOutData(0);
         }
         StringBuffer sb = new StringBuffer();
         if (status.getMessage() != null) {
