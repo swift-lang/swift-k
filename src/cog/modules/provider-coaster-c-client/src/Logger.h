@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "Lock.h"
 
 using namespace std;
 
@@ -27,7 +28,7 @@ class Logger: public ostream {
 		const char* strLevel;
 		char ts[TS_LEN + 1];
 		bool startOfItem;
-
+		Lock lock;
 	protected:
 		Logger(ostream& out);
 		void setLevel(Level level);
@@ -37,7 +38,7 @@ class Logger: public ostream {
 	public:
 		virtual ~Logger();
 		Logger& operator<< (Level level);
-		Logger& operator<< (string str);
+		Logger& operator<< (string& str);
 		Logger& operator<< (const string* str);
 		Logger& operator<< (const char* str);
 		Logger& operator<< (int i);

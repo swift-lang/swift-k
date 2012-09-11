@@ -9,7 +9,7 @@
 #define COMMANDCALLBACK_H_
 
 #include <string>
-#include "Command.h"
+#include "RemoteCoasterException.h"
 
 class Command;
 
@@ -17,7 +17,7 @@ using namespace std;
 
 class CommandCallback {
 	public:
-		virtual void errorReceived(Command* cmd, string* message, string* details) = 0;
+		virtual void errorReceived(Command* cmd, string* message, RemoteCoasterException* details) = 0;
 		virtual void replyReceived(Command* cmd) = 0;
 };
 

@@ -1,4 +1,3 @@
-
 bin_PROGRAMS = CoasterClientTest
 CoasterClientTest_SOURCES = CoasterClientTest.cpp
 CoasterClientTest_LDADD = libcoasterclient.la
@@ -8,10 +7,14 @@ lib_LTLIBRARIES = libcoasterclient.la
 libcoasterclient_la_SOURCES = Lock.h Lock.cpp \
 	ConditionVariable.h ConditionVariable.cpp \
 	CommandCallback.h \
+	CmdCBCV.h CmdCBCV.cpp \
 	Buffer.h Buffer.cpp \
+	RemoteCoasterException.h RemoteCoasterException.cpp \
 	SerUtil.h \
 	Logger.h Logger.cpp \
+	Settings.h Settings.cpp \
 	HandlerFactory.h HandlerFactory.cpp \
+	ClientHandlerFactory.h ClientHandlerFactory.cpp \
 	ChannelCallback.h ChannelCallback.cpp \
 	CoasterCannel.h CoasterChannel.cpp \
 	CoasterClient.h CoasterClient.cpp \
@@ -22,6 +25,8 @@ libcoasterclient_la_SOURCES = Lock.h Lock.cpp \
 	JobStatus.h JobStatus.cpp \
 	Job.h Job.cpp \
 	JobSubmitCommand.h JobSubmitCommand.cpp \
+	ChannelConfigurationCommand.h ChannelConfigurationCommand.cpp \
+	ServiceConfigurationCommand.h ServiceConfigurationCommand.cpp \
 	StagingSetEntry.h StagingSetEntry.cpp \
 	CoasterError.h CoasterError.cpp \
 	JobStatusHandler.h JobStatusHandler.cpp \

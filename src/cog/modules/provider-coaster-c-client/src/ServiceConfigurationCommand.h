@@ -1,25 +1,21 @@
-#ifndef JOB_SUBMIT_COMMAND_H_
-#define JOB_SUBMIT_COMMAND_H_
+#ifndef SERVICE_CONFIGURATION_COMMAND_H_
+#define SERVICE_CONFIGURATION_COMMAND_H_
 
 #include "Command.h"
 #include "CommandCallback.h"
-#include "Job.h"
-#include <vector>
 #include <string>
 #include "Buffer.h"
+#include "Settings.h"
 
 using namespace std;
 
-class JobSubmitCommand: public Command {
+class ServiceConfigurationCommand: public Command {
 	private:
-		Job* job;
-		string ss;
+		Settings* settings;
 	public:
 		static string NAME;
-		JobSubmitCommand(Job* job);
+		ServiceConfigurationCommand(Settings& s);
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
-		Job* getJob();
-		string* getRemoteId();
 	private:
 		void serialize();
 };

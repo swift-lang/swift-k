@@ -13,12 +13,14 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "Logger.h"
 
 #include <sstream>
 
 using namespace std;
 
 int socksend(int fd, const char* buf, int len, int flags);
+void pp(char* dest, const char* src, int len);
 
 class HeartBeatCommand;
 
@@ -38,29 +40,21 @@ void DataChunk::reset() {
 	bufpos = 0;
 }
 
-CoasterChannel::CoasterChannel(CoasterClient* pClient, CoasterLoop* pLoop, HandlerFactory* pHandlerFactory) {
+CoasterChannel::CoasterChannel(CoasterClient* client, CoasterLoop* loop, HandlerFactory* handlerFactory) {
 	sockFD = 0;
-	handlerFactory = pHandlerFactory;
+	this->handlerFactory = handlerFactory;
 	tagSeq = rand() % 65536;
-	loop = pLoop;
-	client = pClient;
+	this->loop = loop;
+	this->client = client;
 
-	readState = READ_STATE_IDLE;
+	readState = READ_STATE_HDR;
 
-	whdr.buf = new DynamicBuffer(HEADER_LENGTH);
 	rhdr.buf = new DynamicBuffer(HEADER_LENGTH);
 }
 
 CoasterChannel::~CoasterChannel() {
-	delete whdr.buf;
 	delete rhdr.buf;
 }
-
-ostream& operator<< (ostream& os, CoasterChannel* channel) {
-	os << "Channel[" << channel->getClient()->getURL() << "]";
-	return os;
-}
-
 
 void CoasterChannel::start() {
 	if (sockFD == 0) {
@@ -82,8 +76,6 @@ void CoasterChannel::setSockFD(int psockFD) {
 
 void CoasterChannel::read() {
 	switch(readState) {
-		case READ_STATE_IDLE:
-			break;
 		case READ_STATE_HDR:
 			if (read(&rhdr)) {
 				// full header read
@@ -95,6 +87,7 @@ void CoasterChannel::read() {
 			else {
 				break;
 			}
+			/* no break */
 		case READ_STATE_DATA:
 			if (read(&msg)) {
 				// full message read
@@ -125,7 +118,7 @@ bool CoasterChannel::read(DataChunk* dc) {
 }
 
 void CoasterChannel::dispatchData() {
-	if (rflags & FLAG_REPLY != 0) {
+	if (rflags & FLAG_REPLY) {
 		dispatchReply();
 	}
 	else {
@@ -137,14 +130,13 @@ void CoasterChannel::dispatchReply() {
 	if (commands.count(rtag) == 0) {
 		throw new CoasterError("Received reply to unknown command (tag: %d)", rtag);
 	}
+	LogDebug << "dispatching reply " << rtag << ", " << rflags << endl;
 	Command* cmd = commands[rtag];
-	if (rflags & FLAG_SIGNAL != 0) {
+	if (rflags & FLAG_SIGNAL) {
 		try {
 			cmd->signalReceived(msg.buf);
 		}
 		catch (exception &e) {
-			Logger::singleton() << endl;
-			LogWarn << endl;
 			LogWarn << "Command::signalReceived() threw exception: " << e.what() << endl;
 		}
 		catch (...) {
@@ -172,6 +164,7 @@ void CoasterChannel::dispatchRequest() {
 	if (handlers.count(rtag) == 0) {
 		// initial request
 		string* name = msg.buf->str();
+		LogDebug << "Handling initial request for " << name << endl;
 		Handler* h = handlerFactory->newInstance(name);
 		if (h == NULL) {
 			LogWarn << "Unknown handler: " << name << endl;
@@ -183,7 +176,7 @@ void CoasterChannel::dispatchRequest() {
 	}
 	else {
 		Handler* h = handlers[rtag];
-		if (rflags & FLAG_SIGNAL != 0) {
+		if (rflags & FLAG_SIGNAL) {
 			try {
 				h->signalReceived(msg.buf);
 			}
@@ -211,12 +204,20 @@ void CoasterChannel::dispatchRequest() {
 	}
 }
 
+/**
+ * Attempts to write the data chunk at the front of the queue. If the entire chunk is
+ * written, it removes it from the queue and returns true. Returns false there are bytes
+ * left to write in the chunk
+ */
 bool CoasterChannel::write() { Lock::Scoped l(writeLock);
 	DataChunk* dc = sendQueue.front();
 
 	Buffer* buf = dc->buf;
 
 	int ret = socksend(sockFD, buf->getData(), (buf->getLen() - dc->bufpos), MSG_DONTWAIT);
+	char tmp[81];
+	pp(tmp, buf->getData(), min(80, ret));
+	LogDebug << this << " sent " << ret << " bytes: " << tmp << endl;
 	if (ret == -1) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return false;
@@ -240,19 +241,28 @@ bool CoasterChannel::write() { Lock::Scoped l(writeLock);
 					LogWarn << "Callback threw unknown exception" << endl;
 				}
 			}
+			delete dc;
+			return true;
 		}
-		return true;
+		else {
+			return false;
+		}
 	}
 }
 
-void CoasterChannel::makeHeader(int tag, Buffer* buf, int flags) {
-	whdr.reset();
-	Buffer* hdr = whdr.buf;
+DataChunk* CoasterChannel::makeHeader(int tag, Buffer* buf, int flags) {
+	DataChunk* whdr = new DataChunk(new DynamicBuffer(HEADER_LENGTH), NULL);
+	Buffer* hdr = whdr->buf;
 	hdr->putInt(0, tag);
 	hdr->putInt(4, flags);
 	hdr->putInt(8, buf->getLen());
-	hdr->putInt(12, tag ^ flags ^ buf->getLen());
+	int hcsum = tag ^ flags ^ buf->getLen();
+	hdr->putInt(12, hcsum);
 	hdr->putInt(16, 0);
+	char tmp[128];
+	sprintf(tmp, "Send[tag: 0x%08x, flags: 0x%08x, len: 0x%08d, hcsum: 0x%08x]", tag, flags, buf->getLen(), hcsum);
+	LogDebug << tmp << endl;
+	return whdr;
 }
 
 void CoasterChannel::decodeHeader(int* tag, int* flags, int* len) {
@@ -262,6 +272,9 @@ void CoasterChannel::decodeHeader(int* tag, int* flags, int* len) {
 	*len = buf->getInt(8);
 	int hcsum = buf->getInt(12);
 	int ccsum = *tag ^ *flags ^ *len;
+	char tmp[128];
+	sprintf(tmp, "Recv[tag: 0x%08x, flags: 0x%08x, len: 0x%08d, hcsum: 0x%08x]", *tag, *flags, *len, hcsum);
+	LogDebug << tmp << endl;
 	if (hcsum != ccsum) {
 		throw CoasterError("Header checksum failed. Received checksum: %d, computed checksum: %d", hcsum, ccsum);
 	}
@@ -280,18 +293,19 @@ void CoasterChannel::unregisterCommand(Command* cmd) {
 void CoasterChannel::registerHandler(int tag, Handler* h) {
 	h->setTag(tag);
 	handlers[tag] = h;
+	h->setChannel(this);
 }
 
 void CoasterChannel::unregisterHandler(Handler* h) {
 	handlers.erase(h->getTag());
+	h->setChannel(NULL);
 }
 
 
 void CoasterChannel::send(int tag, Buffer* buf, int flags, ChannelCallback* cb) { Lock::Scoped l(writeLock);
-	makeHeader(tag, buf, flags);
-	sendQueue.push_back(&whdr);
+	sendQueue.push_back(makeHeader(tag, buf, flags));
 	sendQueue.push_back(new DataChunk(buf, cb));
-	loop->requestWrite(this);
+	loop->requestWrite(this, 2);
 }
 
 CoasterClient* CoasterChannel::getClient() {
@@ -303,7 +317,7 @@ void CoasterChannel::checkHeartbeat() {
 	cmd->send(this);
 }
 
-void CoasterChannel::errorReceived(Command* cmd, string* message, string* details) {
+void CoasterChannel::errorReceived(Command* cmd, string* message, RemoteCoasterException* details) {
 	delete cmd;
 	LogWarn << "Heartbeat failed: " << message << endl;
 }
@@ -312,9 +326,24 @@ void CoasterChannel::replyReceived(Command* cmd) {
 	delete cmd;
 }
 
+string& CoasterChannel::getURL() {
+	return getClient()->getURL();
+}
+
 /*
  * Without this, GCC gets confused by CoasterChannel::send.
  */
 int socksend(int fd, const char* buf, int len, int flags) {
 	return send(fd, buf, len, flags);
+}
+
+void pp(char* dest, const char* src, int len) {
+	for(int i = 0; i < len; i++) {
+		char c = src[i];
+		if (c < '0' || c > 127) {
+			c = '.';
+		}
+		dest[i] = c;
+	}
+	dest[len] = 0;
 }

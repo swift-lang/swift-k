@@ -1,21 +1,28 @@
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <list>
 
 #include "CoasterLoop.h"
 #include "CoasterClient.h"
 #include "Job.h"
+#include "Settings.h"
 
 using namespace std;
 
 int main(void) {
 	try {
-		CoasterLoop loop = CoasterLoop();
+		CoasterLoop loop;
 		loop.start();
 
 		CoasterClient client("localhost:1984", loop);
 		client.start();
+
+		Settings s;
+		s.set(Settings::Key::SLOTS, "1");
+		s.set(Settings::Key::MAX_NODES, "1");
+		s.set(Settings::Key::JOBS_PER_NODE, "2");
+
+		client.setOptions(s);
 
 		Job j1("/bin/date");
 		Job j2("/bin/echo");
@@ -29,10 +36,14 @@ int main(void) {
 		client.waitForJob(j2);
 		list<Job*>* doneJobs = client.getAndPurgeDoneJobs();
 
-		printf("All done\n");
+		if (j1.getStatus()->getStatusCode() == FAILED) {
+			cerr << "Job 1 failed: " << *j1.getStatus()->getMessage() << endl;
+		}
+		if (j2.getStatus()->getStatusCode() == FAILED) {
+			cerr << "Job 2 failed: " << *j2.getStatus()->getMessage() << endl;
+		}
 
-		client.stop();
-		loop.stop();
+		cout << "All done" << endl;
 
 		return EXIT_SUCCESS;
 	}

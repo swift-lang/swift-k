@@ -14,19 +14,27 @@ using namespace std;
 
 RequestReply::RequestReply() {
 	channel = NULL;
+	errorData = NULL;
 }
 
 RequestReply::~RequestReply() {
-	clearBufferVector(inData);
-	clearBufferVector(outData);
-	clearBufferVector(*errorData);
+	clearBufferVector(&inData);
+	while (outData.size() > 0) {
+		delete outData.front();
+		outData.pop_front();
+	}
+	clearBufferVector(errorData);
 	delete errorData;
 }
 
-void RequestReply::clearBufferVector(vector<Buffer*>& v) {
+void RequestReply::clearBufferVector(vector<Buffer*>* v) {
+	if (v == NULL) {
+		return;
+	}
+
 	vector<Buffer*>::iterator i;
 
-	for (i = v.begin(); i != v.end(); i++) {
+	for (i = v->begin(); i != v->end(); i++) {
 		delete *i;
 	}
 }
@@ -75,7 +83,7 @@ void RequestReply::addErrorData(Buffer* buf) {
 	errorData->push_back(buf);
 }
 
-vector<Buffer*>* RequestReply::getOutData() {
+list<Buffer*>* RequestReply::getOutData() {
 	return &outData;
 }
 
@@ -88,7 +96,7 @@ vector<Buffer*>* RequestReply::getErrorData() {
 }
 
 void RequestReply::dataReceived(Buffer* buf, int flags) {
-	if (flags & FLAG_ERROR != 0) {
+	if (flags & FLAG_ERROR) {
 		addErrorData(buf);
 	}
 	else {

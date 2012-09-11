@@ -10,9 +10,8 @@
 
 #define HEADER_LENGTH 20
 
-#define READ_STATE_IDLE 0
-#define READ_STATE_HDR 1
-#define READ_STATE_DATA 2
+#define READ_STATE_HDR 0
+#define READ_STATE_DATA 1
 
 #include <map>
 #include <list>
@@ -29,6 +28,7 @@
 #include "Lock.h"
 #include "Buffer.h"
 #include "Logger.h"
+#include "RemoteCoasterException.h"
 
 using namespace std;
 
@@ -62,7 +62,7 @@ class CoasterChannel: public CommandCallback {
 		int sockFD;
 		bool connected;
 
-		DataChunk whdr, rhdr, msg;
+		DataChunk rhdr, msg;
 		int rtag, rflags, rlen;
 
 		int tagSeq;
@@ -72,7 +72,7 @@ class CoasterChannel: public CommandCallback {
 		CoasterClient* client;
 		Lock writeLock;
 
-		void makeHeader(int tag, Buffer* buf, int flags);
+		DataChunk* makeHeader(int tag, Buffer* buf, int flags);
 		void decodeHeader(int* tag, int* flags, int* len);
 		void dispatchData();
 		void dispatchRequest();
@@ -103,13 +103,19 @@ class CoasterChannel: public CommandCallback {
 		void send(int tag, Buffer* buf, int flags, ChannelCallback* cb);
 
 		CoasterClient* getClient();
+		string& getURL();
 
 		void checkHeartbeat();
 
-		friend ostream& operator<< (ostream& os, CoasterChannel* channel);
+		template<typename cls> friend cls& operator<< (cls& os, CoasterChannel* channel);
 
-		void errorReceived(Command* cmd, string* message, string* details);
+		void errorReceived(Command* cmd, string* message, RemoteCoasterException* details);
 		void replyReceived(Command* cmd);
 };
+
+template<typename cls> cls& operator<< (cls& os, CoasterChannel* channel) {
+	os << "Channel[" << channel->getURL() << "]";
+	return os;
+}
 
 #endif /* COASTER_CHANNEL_H_ */

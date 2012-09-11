@@ -22,6 +22,8 @@ CoasterLoop::CoasterLoop() {
 	socketCount = 0;
 	FD_ZERO(&rfds);
 	FD_ZERO(&wfds);
+	writesPending = 0;
+	maxFD = 0;
 }
 
 CoasterLoop::~CoasterLoop() {
@@ -41,6 +43,7 @@ void CoasterLoop::start() { Lock::Scoped l(lock);
 			throw CoasterError(string("Could not create pipe: ") + strerror(errno));
 	}
 	FD_SET(wakePipe[0], &rfds);
+	updateMaxFD();
 
 	thread = pthread_create(&thread, NULL, run, this);
 
@@ -53,7 +56,8 @@ void CoasterLoop::stop() { Lock::Scoped l(lock);
 	}
 	LogInfo << "Stopping coaster loop" << endl;
 	done = true;
-	awake();
+	// make sure we are not stuck in select()
+	requestWrite(1);
 	pthread_join(thread, NULL);
 	LogInfo << "Coaster loop stopped" << endl;
 }
@@ -86,8 +90,9 @@ void* run(void* ptr) {
 
 		// can read or has data to write
 		// try to read from each socket
-		if (!loop->readSockets(&myrfds)) {
+		if (loop->readSockets(&myrfds)) {
 			// no channel sockets had anything to read, so there is data to write
+			LogDebug << "Write requested" << endl;
 			{ Lock::Scoped l(loop->lock);
 				// synchronize when copying wfds since they are concurrently updated
 				// based on whether a channel has stuff to write or not
@@ -111,20 +116,14 @@ void* run(void* ptr) {
 bool CoasterLoop::readSockets(fd_set* fds) {
 	map<int, CoasterChannel*>::iterator it;
 
-	bool writePending = false;
-
 	for (it = channelMap.begin(); it != channelMap.end(); ++it) {
 		if (FD_ISSET(it->first, fds)) {
-			if (it->first == getWakePipeReadFD()) {
-				writePending = true;
-			}
-			else {
-				it->second->read();
-			}
+			LogDebug << it->second << " can read" << endl;
+			it->second->read();
 		}
 	}
 
-	return writePending;
+	return FD_ISSET(getWakePipeReadFD(), fds);
 }
 
 void CoasterLoop::writeSockets(fd_set* fds) {
@@ -132,19 +131,18 @@ void CoasterLoop::writeSockets(fd_set* fds) {
 
 	for (it = channelMap.begin(); it != channelMap.end(); ++it) {
 		if (FD_ISSET(it->first, fds)) {
+			LogDebug << it->second << " can write" << endl;
 			if (it->second->write()) {
-				acknowledgeWake();
+				acknowledgeWriteRequest(1);
 			}
 		}
 	}
 }
 
-
 void checkSelectError(int ret) {
 	if (ret < 0) {
 		if (errno == EBADF) {
 			// at least one fd is invalid/has an error
-
 		}
 		else {
 			throw CoasterError(string("Error in select: ") + strerror(errno));
@@ -163,6 +161,7 @@ void CoasterLoop::addSockets() {
 	}
 
 	if (addList.size() > 0) {
+		LogDebug << "Channels added; updating maxFD" << endl;
 		updateMaxFD();
 	}
 
@@ -179,7 +178,10 @@ void CoasterLoop::removeSockets() {
 		socketCount--;
 	}
 
-	updateMaxFD();
+	if (removeList.size() > 0) {
+		LogDebug << "Channels removed; updating maxFD" << endl;
+		updateMaxFD();
+	}
 
 	removeList.clear();
 }
@@ -192,13 +194,24 @@ void CoasterLoop::removeChannel(CoasterChannel* channel) { Lock::Scoped l(lock);
 	removeList.push_back(channel);
 }
 
-void CoasterLoop::awake() {
-	int result = write(wakePipe[1], "0", 1);
+void CoasterLoop::requestWrite(int count) {
+	writesPending += count;
+	LogDebug << "request " << count <<  " writes; writesPending: " << writesPending << endl;
+	char tmp[count]; // doesn't need to be initialized since it doesn't matter what goes on the pipe
+	int result = write(wakePipe[1], tmp, count);
+	if (result != count) {
+		LogWarn << "written " << result << " bytes instead of " << count << endl;
+	}
 }
 
-void CoasterLoop::acknowledgeWake() {
-	char buf[1];
-	int result = read(wakePipe[0], buf, 1);
+void CoasterLoop::acknowledgeWriteRequest(int count) {
+	writesPending -= count;
+	LogDebug << "acknowledged " << count << " write requests; writesPending: " << writesPending << endl;
+	char buf[count];
+	int result = read(wakePipe[0], buf, count);
+	if (result != count) {
+		LogWarn << "read " << result << " bytes instead of " << count << endl;
+	}
 }
 
 fd_set* CoasterLoop::getReadFDs() {
@@ -222,16 +235,21 @@ void CoasterLoop::updateMaxFD() {
 			maxFD = it->first;
 		}
 	}
+
+	LogDebug << "Updated maxFD to " << maxFD << endl;
 }
 
 int CoasterLoop::getWakePipeReadFD() {
 	return wakePipe[0];
 }
 
-void CoasterLoop::requestWrite(CoasterChannel* channel) { Lock::Scoped l(lock);
-	FD_SET(channel->getSockFD(), &wfds);
-	updateMaxFD();
-	awake();
+void CoasterLoop::requestWrite(CoasterChannel* channel, int count) { Lock::Scoped l(lock);
+	LogDebug << "Channel " << channel << " requests " << count << " writes." << endl;
+	if (!FD_ISSET(channel->getSockFD(), &wfds)) {
+		FD_SET(channel->getSockFD(), &wfds);
+		updateMaxFD();
+	}
+	requestWrite(count);
 }
 
 void CoasterLoop::checkHeartbeats() {

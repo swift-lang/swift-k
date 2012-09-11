@@ -16,6 +16,7 @@
 #include "CoasterLoop.h"
 #include "HandlerFactory.h"
 #include "Job.h"
+#include "Settings.h"
 #include <list>
 #include <map>
 
@@ -23,6 +24,7 @@
 
 using namespace std;
 
+class ClientHandlerFactory;
 class HandlerFactory;
 class CoasterLoop;
 class CoasterChannel;
@@ -32,25 +34,30 @@ class CoasterClient: public CommandCallback {
 		Lock lock;
 		ConditionVariable cv;
 		string URL;
+		string* hostName;
 		CoasterChannel* channel;
 		bool started;
 
 		int sockFD;
 
 		int getPort();
-		string getHostName();
+		string& getHostName();
 		struct addrinfo* resolve(const char* hostName, int port);
 
 		CoasterLoop* loop;
 		HandlerFactory* handlerFactory;
 
 		map<const string*, Job*> jobs;
+		map<string, const string*> remoteJobIdMapping;
+
 		list<Job*> doneJobs;
 	public:
 		CoasterClient(string URL, CoasterLoop& loop);
+		virtual ~CoasterClient();
 		void start();
 		void stop();
 
+		void setOptions(Settings& settings);
 		void submit(Job& job);
 		void waitForJob(Job& job);
 
@@ -61,7 +68,7 @@ class CoasterClient: public CommandCallback {
 
 		string& getURL();
 
-		void errorReceived(Command* cmd, string* message, string* details);
+		void errorReceived(Command* cmd, string* message, RemoteCoasterException* details);
 		void replyReceived(Command* cmd);
 };
 
