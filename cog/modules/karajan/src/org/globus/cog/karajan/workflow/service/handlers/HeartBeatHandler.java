@@ -16,6 +16,7 @@ public class HeartBeatHandler extends RequestHandler {
 	public static final String NAME = "HEARTBEAT";
 	
 	public void requestComplete() throws ProtocolException {
-		sendReply(String.valueOf(System.currentTimeMillis()));
+		addOutData(System.currentTimeMillis());
+		sendReply();
 	}
 }
