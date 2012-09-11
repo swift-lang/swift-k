@@ -7,6 +7,8 @@
 
 #include "CoasterClient.h"
 #include "JobSubmitCommand.h"
+#include "ServiceConfigurationCommand.h"
+#include "ChannelConfigurationCommand.h"
 #include "CoasterError.h"
 #include <stdlib.h>
 #include <string.h>
@@ -15,14 +17,23 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include "ClientHandlerFactory.h"
 
 #include "Logger.h"
 
-CoasterClient::CoasterClient(string URLp, CoasterLoop& ploop) {
-	URL = URLp;
+CoasterClient::CoasterClient(string URL, CoasterLoop& ploop) {
+	this->URL = URL;
+	hostName = NULL;
 	sockFD = 0;
 	loop = &ploop;
 	started = false;
+	handlerFactory = new ClientHandlerFactory;
+}
+
+CoasterClient::~CoasterClient() {
+	stop();
 }
 
 void CoasterClient::start() {
@@ -71,10 +82,21 @@ void CoasterClient::start() {
 		}
 	}
 
+	// configure non-blocking
+	int flags = fcntl(sockFD, F_GETFL);
+	if (flags & O_NONBLOCK == 0) {
+		if (fcntl(sockFD, F_SETFL, flags | O_NONBLOCK) < 0) {
+			throw CoasterError("Failed to configure socket for non-blocking operations: %s", strerror(errno));
+		}
+	}
+
 	channel = new CoasterChannel(this, loop, handlerFactory);
 	channel->setSockFD(sockFD);
 	channel->start();
 	loop->addChannel(channel);
+
+	ChannelConfigurationCommand ccc;
+	ccc.execute(channel);
 
 	LogInfo << "Done" << endl;
 
@@ -99,6 +121,12 @@ void CoasterClient::stop() {
 	started = false;
 }
 
+void CoasterClient::setOptions(Settings& s) {
+	LogInfo << "Setting options: " << s << endl;
+	ServiceConfigurationCommand scc(s);
+	scc.execute(channel);
+}
+
 void CoasterClient::submit(Job& job) {
 	{ Lock::Scoped l(lock);
 		jobs[&job.getIdentity()] = &job;
@@ -107,9 +135,10 @@ void CoasterClient::submit(Job& job) {
 	sjc->send(channel, this);
 }
 
-void CoasterClient::errorReceived(Command* cmd, string* message, string* details) {
+void CoasterClient::errorReceived(Command* cmd, string* message, RemoteCoasterException* details) {
 	if (*(cmd->getName()) == JobSubmitCommand::NAME) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
+		LogInfo << "Job " << jsc->getJob()->getIdentity() << " failed: " << message << "\n" << details->str() << endl;
 		updateJobStatus(jsc->getJob()->getIdentity(), new JobStatus(FAILED, message, details));
 	}
 	else {
@@ -129,20 +158,25 @@ void CoasterClient::errorReceived(Command* cmd, string* message, string* details
 void CoasterClient::replyReceived(Command* cmd) {
 	if (*(cmd->getName()) == JobSubmitCommand::NAME) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
+		string* remoteId = jsc->getRemoteId();
+		LogInfo << "Job " << jsc->getJob()->getIdentity() << " submitted; remoteId: " << remoteId << endl;
+		remoteJobIdMapping[*remoteId] = &jsc->getJob()->getIdentity();
 		updateJobStatus(jsc->getJob()->getIdentity(), new JobStatus(SUBMITTED));
 	}
 	delete cmd;
 }
 
-void CoasterClient::updateJobStatus(string& jobId, JobStatus* status) { Lock::Scoped l(lock);
-	if (jobs.count(&jobId) == 0) {
-		LogWarn << "Received job status notification for unknown job (" << jobId << "): " << status << endl;
+void CoasterClient::updateJobStatus(string& remoteJobId, JobStatus* status) { Lock::Scoped l(lock);
+	if (remoteJobIdMapping.count(remoteJobId) == 0) {
+		LogWarn << "Received job status notification for unknown job (" << remoteJobId << "): " << status << endl;
 	}
 	else {
-		Job* job = jobs[&jobId];
+		const string* jobId = remoteJobIdMapping[remoteJobId];
+		Job* job = jobs[jobId];
 		job->setStatus(status);
 		if (status->isTerminal()) {
-			jobs.erase(&jobId);
+			remoteJobIdMapping.erase(remoteJobId);
+			jobs.erase(jobId);
 			doneJobs.push_back(job);
 			cv.broadcast();
 		}
@@ -158,20 +192,24 @@ int CoasterClient::getPort() {
 		return 1984;
 	}
 	else {
-		return atoi(URL.substr(index).c_str());
+		const char* sport = URL.substr(index + 1).c_str();
+		return atoi(sport);
 	}
 }
 
-string CoasterClient::getHostName() {
+string& CoasterClient::getHostName() {
 	size_t index;
 
-	index = URL.find(':');
-	if (index == string::npos) {
-		return URL;
+	if (hostName == NULL) {
+		index = URL.find(':');
+		if (index == string::npos) {
+			hostName = &URL;
+		}
+		else {
+			hostName = new string(URL.substr(0, index));
+		}
 	}
-	else {
-		return URL.substr(0, index);
-	}
+	return *hostName;
 }
 
 struct addrinfo* CoasterClient::resolve(const char* hostName, int port) {

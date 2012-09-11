@@ -12,6 +12,7 @@
 #include "Buffer.h"
 #include "Flags.h"
 #include <vector>
+#include <list>
 
 class CoasterChannel;
 
@@ -20,18 +21,18 @@ using namespace std;
 class RequestReply: public ChannelCallback {
 	private:
 		CoasterChannel* channel;
-		vector<Buffer*> outData;
+		list<Buffer*> outData;
 		vector<Buffer*> inData;
 		vector<Buffer*>* errorData;
 
-		void clearBufferVector(vector<Buffer*>& v);
+		void clearBufferVector(vector<Buffer*>* v);
 
 	protected:
 		virtual void addOutData(Buffer*);
 		virtual void addInData(Buffer*);
 		virtual void addErrorData(Buffer*);
 
-		virtual vector<Buffer*>* getOutData();
+		virtual list<Buffer*>* getOutData();
 		virtual vector<Buffer*>* getErrorData();
 		virtual vector<Buffer*>* getInData();
 

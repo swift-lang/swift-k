@@ -11,6 +11,7 @@
 #include <time.h>
 #include <string>
 #include <iostream>
+#include "RemoteCoasterException.h"
 
 using namespace std;
 
@@ -31,29 +32,47 @@ enum JobStatusCode {
 
 
 class JobStatus {
-	JobStatusCode statusCode;
-	time_t stime;
-	string* message;
-	string* exception;
-	JobStatus* prev;
+	private:
+		JobStatusCode statusCode;
+		time_t stime;
+		string* message;
+		RemoteCoasterException* exception;
+		JobStatus* prev;
+
+		void init(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception);
 
 	public:
-		JobStatus(JobStatusCode statusCode, time_t time, const string* message, const string* exception);
-		JobStatus(JobStatusCode statusCode, const string* message, const string* exception);
+		JobStatus(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception);
+		JobStatus(JobStatusCode statusCode, const string* message, RemoteCoasterException* exception);
 		JobStatus(JobStatusCode statusCode);
 		JobStatus();
 		virtual ~JobStatus();
 		JobStatusCode getStatusCode();
 		time_t getTime();
 		string* getMessage();
-		string* getException();
+		RemoteCoasterException* getException();
 		const JobStatus* getPreviousStatus();
 		void setPreviousStatus(JobStatus* prev);
 		static const char* statusCodeToStr(JobStatusCode code);
 		bool isTerminal();
 
-		friend ostream& operator<< (ostream& os, JobStatus& s);
-		friend ostream& operator<< (ostream& os, JobStatus* s);
+		template<typename cls> friend cls& operator<< (cls& os, JobStatus& s);
+		template<typename cls> friend cls& operator<< (cls& os, JobStatus* s);
 };
+
+const char* statusCodeToStr(JobStatusCode code);
+
+template<typename cls> cls& operator<< (cls& os, JobStatus& s) {
+	return os << &s;
+}
+
+template<typename cls> cls& operator<< (cls& os, JobStatus* s) {
+	os << "Status(" << statusCodeToStr(s->getStatusCode());
+	if ((s->getMessage() != NULL) && (s->getMessage()->length() != 0)) {
+		os << ", msg: " << s->getMessage();
+	}
+	os << ")";
+	return os;
+}
 
 #endif /* JOB_STATUS_H_ */

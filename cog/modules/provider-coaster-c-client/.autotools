@@ -30,6 +30,11 @@
 <option id="program-suffix" value=""/>
 <option id="program-transform-name" value=""/>
 <option id="enable-maintainer-mode" value="false"/>
+<flag id="CFLAGS">
+<flagvalue id="cflags-debug" value="false"/>
+<flagvalue id="cflags-gprof" value="false"/>
+<flagvalue id="cflags-gcov" value="false"/>
+</flag>
 <option id="user" value=""/>
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>

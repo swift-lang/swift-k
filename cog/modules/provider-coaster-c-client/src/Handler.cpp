@@ -3,7 +3,7 @@
 #include "Logger.h"
 
 void Handler::receiveCompleted(int flags) {
-	if (flags & FLAG_ERROR != 0) {
+	if (flags & FLAG_ERROR) {
 		errorReceived();
 	}
 	else {
@@ -45,11 +45,12 @@ void Handler::sendReply(const char* msg) {
 }
 
 void Handler::send(CoasterChannel* channel) {
-	vector<Buffer*>* od = getOutData();
-	vector<Buffer*>::iterator i;
+	list<Buffer*>* od = getOutData();
 
-	for (i = od->begin(); i != od->end(); i++) {
-		channel->send(tag, *i, FLAG_REPLY + (i == --od->end() ? FLAG_FINAL : 0), this);
+	while (od->size() > 0) {
+		Buffer* b = od->front();
+		channel->send(tag, b, FLAG_REPLY + (od->size() == 0 ? FLAG_FINAL : 0), this);
+		od->pop_front();
 	}
 	channel->unregisterHandler(this);
 }

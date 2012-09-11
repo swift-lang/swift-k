@@ -9,34 +9,39 @@
 #include <time.h>
 #include "JobStatus.h"
 
-JobStatus::JobStatus(JobStatusCode pstatusCode, time_t ptime, const string* pmessage, const string* pexception) {
-	statusCode = pstatusCode;
-	stime = ptime;
+void JobStatus::init(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception) {
+	this->statusCode = statusCode;
+	this->stime = time;
 	// always copy strings because the job status' lifetime is weird
-	if (pmessage != NULL) {
-		message = new string(*pmessage);
+	if (message != NULL) {
+		this->message = new string(*message);
 	}
 	else {
-		message = NULL;
+		this->message = NULL;
 	}
-	if (pexception != NULL) {
-		exception = new string(*pexception);
+	if (exception != NULL) {
+		this->exception = exception;
 	}
 	else {
-		exception = NULL;
+		this->exception = NULL;
 	}
+	prev = NULL;
 }
 
-JobStatus::JobStatus(JobStatusCode pstatusCode, const string* pmessage, const string* pexception) {
-	JobStatus(pstatusCode, time(NULL), pmessage, pexception);
+JobStatus::JobStatus(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception) {
+	init(statusCode, time, message, exception);
 }
 
-JobStatus::JobStatus(JobStatusCode pstatusCode) {
-	JobStatus(pstatusCode, NULL, NULL);
+JobStatus::JobStatus(JobStatusCode statusCode, const string* message, RemoteCoasterException* exception) {
+	 init(statusCode, time(NULL), message, exception);
+}
+
+JobStatus::JobStatus(JobStatusCode statusCode) {
+	init(statusCode, time(NULL), NULL, NULL);
 }
 
 JobStatus::JobStatus() {
-	JobStatus(UNSUBMITTED);
+	init(UNSUBMITTED, time(NULL), NULL, NULL);
 }
 
 JobStatusCode JobStatus::getStatusCode() {
@@ -51,7 +56,7 @@ string* JobStatus::getMessage() {
 	return message;
 }
 
-string* JobStatus::getException() {
+RemoteCoasterException* JobStatus::getException() {
 	return exception;
 }
 
@@ -73,7 +78,7 @@ JobStatus::~JobStatus() {
 	}
 }
 
-static const char* statusCodeToStr(JobStatusCode code) {
+const char* statusCodeToStr(JobStatusCode code) {
 	switch (code) {
 		case UNSUBMITTED: return "UNSUBMITTED";
 		case SUBMITTING: return "SUBMITTING";
@@ -89,17 +94,3 @@ static const char* statusCodeToStr(JobStatusCode code) {
 		default: return "UNKNWON";
 	}
 }
-
-ostream& operator<< (ostream& os, JobStatus& s) {
-	return os << &s;
-}
-
-ostream& operator<< (ostream& os, JobStatus* s) {
-	os << "Status(" << statusCodeToStr(s->getStatusCode());
-	if (s->getMessage()->length() != 0) {
-		os << ", msg: " << s->getMessage();
-	}
-	os << ")";
-	return os;
-}
-

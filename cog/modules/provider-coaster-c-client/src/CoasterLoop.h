@@ -36,9 +36,10 @@ class CoasterLoop {
 		fd_set rfds, wfds;
 		int socketCount;
 		int maxFD;
+		int writesPending;
 
 		void updateMaxFD();
-		void acknowledgeWake();
+		void acknowledgeWriteRequest(int count);
 
 		time_t lastHeartbeatCheck;
 	public:
@@ -55,7 +56,7 @@ class CoasterLoop {
 		void removeChannel(CoasterChannel* channel);
 		void addSockets();
 		void removeSockets();
-		void awake();
+		void requestWrite(int count);
 		fd_set* getReadFDs();
 		fd_set* getWriteFDs();
 		int getMaxFD();
@@ -63,7 +64,7 @@ class CoasterLoop {
 		void writeSockets(fd_set* fds);
 		int getWakePipeReadFD();
 
-		void requestWrite(CoasterChannel* channel);
+		void requestWrite(CoasterChannel* channel, int count);
 
 		void checkHeartbeats();
 };

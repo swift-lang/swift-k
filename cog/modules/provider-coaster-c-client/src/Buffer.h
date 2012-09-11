@@ -38,6 +38,9 @@ class Buffer {
 		static Buffer* wrap(const char* buf, int len);
 		static Buffer* wrap(string s);
 		static Buffer* wrap(const string* s);
+		static Buffer* copy(string& s);
+
+		template<typename cls> friend cls& operator<< (cls& os, Buffer& buf);
 };
 
 class StaticBuffer: public Buffer {
@@ -60,8 +63,6 @@ class DynamicBuffer: public Buffer {
 
 		virtual const char* getData();
 		virtual char* getModifiableData();
-
-		friend ostream& operator<< (ostream& os, Buffer& buf);
 };
 
 #endif /* BUFFER_H_ */

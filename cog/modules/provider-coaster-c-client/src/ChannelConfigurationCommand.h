@@ -1,25 +1,22 @@
-#ifndef JOB_SUBMIT_COMMAND_H_
-#define JOB_SUBMIT_COMMAND_H_
+#ifndef CHANNEL_CONFIGURATION_COMMAND_H_
+#define CHANNEL_CONFIGURATION_COMMAND_H_
 
 #include "Command.h"
 #include "CommandCallback.h"
-#include "Job.h"
-#include <vector>
 #include <string>
 #include "Buffer.h"
 
 using namespace std;
 
-class JobSubmitCommand: public Command {
+class ChannelConfigurationCommand: public Command {
 	private:
-		Job* job;
-		string ss;
+		string localId;
+		string remoteId;
 	public:
 		static string NAME;
-		JobSubmitCommand(Job* job);
+		ChannelConfigurationCommand();
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
-		Job* getJob();
-		string* getRemoteId();
+		virtual void replyReceived();
 	private:
 		void serialize();
 };

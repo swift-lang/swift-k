@@ -27,4 +27,11 @@ class HandlerFactory {
 		Handler* newInstance(const string* name);
 };
 
+template<typename T> Handler * newHandler() { return new T; }
+
+template<typename T> void HandlerFactory::addHandler(string name) {
+	creators[name] = &newHandler<T>;
+}
+
+
 #endif /* HANDLERFACTORY_H_ */

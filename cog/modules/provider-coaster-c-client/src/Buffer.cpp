@@ -7,6 +7,7 @@
 
 #include "Buffer.h"
 #include <stdlib.h>
+#include <string.h>
 
 Buffer::Buffer(int plen) {
 	len = plen;
@@ -111,13 +112,19 @@ Buffer* Buffer::wrap(string s) {
 	return b;
 }
 
+Buffer* Buffer::copy(string& s) {
+	DynamicBuffer* b = new DynamicBuffer(s.length());
+	strncpy(b->getModifiableData(), s.data(), s.length());
+	return b;
+}
+
 Buffer* Buffer::wrap(const string* s) {
 	StaticBuffer* b = new StaticBuffer(s->length());
 	b->setData(s->data());
 	return b;
 }
 
-ostream& operator<< (ostream& os, Buffer& buf) {
+template<typename cls> cls& operator<< (cls& os, Buffer& buf) {
 	const char* data = buf.getData();
 	int len = buf.getLen();
 

@@ -1,13 +1,13 @@
 #include "JobSubmitCommand.h"
+#include "CoasterError.h"
 #include <cstring>
-#include <sstream>
 
 using namespace std;
 
-char* copyStr(const char* str);
-void add(stringstream& ss, const char* key, string* value);
-void add(stringstream& ss, const char* key, string value);
-void add(stringstream& ss, const char* key, const char* value);
+void add(string& ss, const char* key, string* value);
+void add(string& ss, const char* key, string& value);
+void add(string& ss, const char* key, const char* value);
+void add(string& ss, const char* key, const char* value, int n);
 
 string JobSubmitCommand::NAME("SUBMITJOB");
 
@@ -24,11 +24,14 @@ Job* JobSubmitCommand::getJob() {
 	return job;
 }
 
+string* JobSubmitCommand::getRemoteId() {
+	if (!isReceiveCompleted() || isErrorReceived()) {
+		throw CoasterError("getRemoteId called before reply was received");
+	}
+	return getInData()->at(0)->str();
+}
+
 void JobSubmitCommand::serialize() {
-	addOutData(Buffer::wrap(getName()));
-
-	stringstream ss;
-
 	add(ss, "identity", job->getIdentity());
 	add(ss, "executable", job->getExecutable());
 	add(ss, "directory", job->getDirectory());
@@ -48,22 +51,14 @@ void JobSubmitCommand::serialize() {
 	map<string, string>* env = job->getEnv();
 	if (env != NULL) {
 		for (map<string, string>::iterator i = env->begin(); i != env->end(); ++i) {
-			stringstream tmp;
-			tmp << i->first;
-			tmp << "=";
-			tmp << i->second;
-			add(ss, "env", tmp.str().c_str());
+			add(ss, "env", string(i->first).append("=").append(i->second));
 		}
 	}
 
 	map<string, string>* attributes = job->getAttributes();
 	if (attributes != NULL) {
 		for (map<string, string>::iterator i = attributes->begin(); i != attributes->end(); ++i) {
-			stringstream tmp;
-			tmp << i->first;
-			tmp << "=";
-			tmp << i->second;
-			add(ss, "attr", tmp.str().c_str());
+			add(ss, "attr", string(i->first).append("=").append(i->second));
 		}
 	}
 
@@ -74,33 +69,40 @@ void JobSubmitCommand::serialize() {
 		add(ss, "jm", job->getJobManager());
 	}
 
-	addOutData(Buffer::wrap(ss.str()));
+	addOutData(Buffer::wrap(ss));
 }
 
-void add(stringstream& ss, const char* key, string* value) {
+void add(string& ss, const char* key, string* value) {
 	if (value != NULL) {
-		add(ss, key, value->c_str());
+		add(ss, key, value->data(), value->length());
 	}
 }
 
-void add(stringstream& ss, const char* key, string value) {
-	add(ss, key, value.c_str());
+void add(string& ss, const char* key, string& value) {
+	add(ss, key, value.data(), value.length());
 }
 
-void add(stringstream& ss, const char* key, const char* value) {
-	if (value != NULL) {
-		ss << key << "=";
+void add(string& ss, const char* key, const char* value) {
+	add(ss, key, value, -1);
+}
+
+void add(string& ss, const char* key, const char* value, int n) {
+	if (value != NULL && n != 0) {
+		ss.append(key);
+		ss.append(1, '=');
 		while (*value) {
 			char c = *value;
 			switch (c) {
 				case '\n':
 					c = 'n';
 				case '\\':
-					ss << '\\';
+					ss.append(1, '\\');
 				default:
-					ss << c;
+					ss.append(1, c);
 			}
 			value++;
+			n--;
 		}
 	}
+	ss.append(1, '\n');
 }
