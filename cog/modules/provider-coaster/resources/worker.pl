@@ -514,6 +514,12 @@ sub sendm {
 	return $msgBytesLeft; 
 }
 
+sub encodeInt {
+	my ($value) = @_;
+	
+	return pack("V", $value);
+}
+
 sub sendFrags {
 	my ($tag, $flg, $data) = @_;
 
@@ -1053,6 +1059,12 @@ sub heartbeatCBDataIn {
 	}
 }
 
+sub queueJobStatusCmd {
+	my ($jobid, $statusCode, $errorCode, $msg) = @_;
+	
+	queueCmd((nullCB(), "JOBSTATUS", $jobid, 
+			encodeInt($statusCode), encodeInt($errorCode), $msg));
+}
 
 sub register {
 	my ($tag, $timeout, $reply) = @_;
@@ -1094,8 +1106,8 @@ sub shutdownw {
 sub heartbeat {
 	my ($tag, $timeout, $msgs) = @_;
 	$LAST_HEARTBEAT = time();
-	my $msg = int(time() * 1000);
-	queueReply($tag, ("$msg"));
+	my $ts = int(time() * 1000);
+	queueReply($tag, pack("V", $ts));
 }
 
 sub workershellcmd {
@@ -1203,12 +1215,12 @@ sub getFileCBDataInIndirect {
 	wlog DEBUG, "$jobid getFileCBDataInIndirect jobid: $jobid, tag: $tag, flags: $flags\n";
 	if ($flags & ERROR_FLAG) {
 		wlog DEBUG, "$jobid getFileCBDataInIndirect error: $reply\n";
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_RECEIVE, "Error staging in file: $reply"));
+		queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_RECEIVE, "Error staging in file: $reply");
 		delete($JOBDATA{$jobid});
 		return;
 	}
 	elsif ($timeout) {
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file"));
+		queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file");
 		delete($JOBDATA{$jobid});
 		return;
 	}
@@ -1239,13 +1251,13 @@ sub getFileCBDataIn {
 		}
 		else {
 			wlog DEBUG, "$jobid getFileCBDataIn FAILED 520 Error staging in file: $reply\n";
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_RECEIVE, "Error staging in file: $reply"));
+			queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_RECEIVE, "Error staging in file: $reply");
 			delete($JOBDATA{$jobid});
 		}
 		return;
 	}
 	elsif ($timeout) {
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file"));
+		queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file");
 		delete($JOBDATA{$jobid});
 		return;
 	}
@@ -1262,7 +1274,7 @@ sub getFileCBDataIn {
 				close $handle;
 				wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $handle; lfile: $$state{'lfile'}\n";
 				queueSignal($tag, ("ABORT $!"));
-				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_FILE_WRITE, "Could not write to file: $!"));
+				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_FILE_WRITE, "Could not write to file: $!");
 				delete($$state{"handle"});
 				delete($JOBDATA{$jobid});
 				return;
@@ -1318,12 +1330,12 @@ sub stagein {
 	if (scalar @$STAGE <= $STAGEINDEX) {
 		wlog INFO, "$jobid Done staging in files ($STAGEINDEX, $STAGE)\n";
 		$JOBDATA{$jobid}{"stageindex"} = 0;
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, ACTIVE, "0", "workerid=$ID"));
+		queueJobStatusCmd($jobid, ACTIVE, 0, "workerid=$ID");
 		forkjob($jobid);
 	}
 	else {
 		if ($STAGEINDEX == 0) {
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, STAGEIN, "0", "workerid=$ID"));
+			queueJobStatusCmd($jobid, STAGEIN, 0, "workerid=$ID");
 		}
 		wlog INFO, "$jobid Staging in $$STAGE[$STAGEINDEX]\n";
 		$JOBDATA{$jobid}{"stageindex"} =  $STAGEINDEX + 1;
@@ -1337,7 +1349,7 @@ sub stagein {
 			mkfdir($jobid, $dst);
 			if (!copy($path, $dst)) {
 				wlog DEBUG, "$jobid Error staging in $path to $dst: $!\n";
-				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_COPY, "$@"));
+				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_COPY, "$@");
 			}
 			else {
 				stagein($jobid);
@@ -1360,7 +1372,7 @@ sub getFile {
 	};
 	if ($@) {
 		wlog DEBUG, "$jobid Error staging in file: $@\n";
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEIN_REQUEST, "$@"));
+		queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_REQUEST, "$@");
 	}
 	else {
 		queueCmd(($state, "GET", $src, $dst));
@@ -1479,7 +1491,7 @@ sub stageout {
 		if (!$skip) {
 			if (!defined($JOBDATA{$jobid}{"stagoutStatusSent"})) {
 				wlog DEBUG, "$jobid Sending STAGEOUT status\n";
-				queueCmd((nullCB(), "JOBSTATUS", $jobid, STAGEOUT, "0", "workerid=$ID"));
+				queueJobStatusCmd($jobid, STAGEOUT, 0, "workerid=$ID");
 				$JOBDATA{$jobid}{"jobStatusSent"} = 1;
 			}
 			my $rfile = $$STAGED[$STAGEINDEX];
@@ -1500,7 +1512,7 @@ sub stageout {
 				mkfdir($jobid, $path);
 				if (!copy($lfile, $path)) {
 					wlog DEBUG, "$jobid Error staging out $lfile to $path: $!\n";
-					queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEOUT_COPY, "$!"));
+					queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_COPY, "$!");
 					return;
 				}
 				else {
@@ -1534,10 +1546,10 @@ sub sendStatus {
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
 
 	if ($ec == 0) {
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+		queueJobStatusCmd($jobid, COMPLETED, 0, "");
 	}
 	else {
-		queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", getExitMessage($jobid, $ec)));
+		queueJobStatusCmd($jobid, FAILED, $ec, getExitMessage($jobid, $ec));
 	}
 }
 
@@ -1581,11 +1593,11 @@ sub cleanup {
 
 	if (!ASYNC) {
 		if ($ec == 0) {
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, COMPLETED, "0", ""));
+			queueJobStatusCmd($jobid, COMPLETED, 0, "");
 		}
 		else {
 			wlog DEBUG, "$jobid Sending failure.\n";
-			queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, "$ec", getExitMessage($jobid, $ec)));
+			queueJobStatusCmd($jobid, FAILED, $ec, getExitMessage($jobid, $ec));
 		}
 	}
 }
@@ -1634,10 +1646,10 @@ sub putFileCBDataIn {
 		if ($JOBDATA{$jobid}) {
 			wlog DEBUG, "$tag Stage out failed ($reply)\n";
 			if ($timeout) {
-				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEOUT_TIMEOUT, "Stage out failed ($reply)"));
+				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_TIMEOUT, "Stage out failed ($reply)");
 			}
 			else {
-				queueCmd((nullCB(), "JOBSTATUS", $jobid, FAILED, ERROR_STAGEOUT_SEND, "Stage out failed ($reply)"));
+				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_SEND, "Stage out failed ($reply)");
 			}
 			delete($JOBDATA{$jobid});
 		}
@@ -1848,7 +1860,7 @@ sub forkjob {
 		}
 	}
 	else {
-		queueCmd(nullCB(), "JOBSTATUS", $JOBID, FAILED, ERROR_PROCESS_FORK, "Could not fork child process");
+		queueJobStatusCmd($JOBID, FAILED, ERROR_PROCESS_FORK, "Could not fork child process");
 	}
 }
 
