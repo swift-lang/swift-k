@@ -35,7 +35,7 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 public class ConcurrentMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_THREAD_PREFIX = new MappingParam("thread_prefix", "");
 	
-	private Map<Path, Path> remappedPaths;
+	private Map<Path, PhysicalFormat> remappedPaths;
 
 	public ConcurrentMapper() {
 		super(new ConcurrentElementMapper());
@@ -86,7 +86,7 @@ public class ConcurrentMapper extends AbstractFileMapper {
         FileGarbageCollector.getDefault().markAsPersistent(old);
         
         if (remappedPaths == null) {
-            remappedPaths = new HashMap();
+            remappedPaths = new HashMap<Path, PhysicalFormat>();
         }
         PhysicalFormat pf = sourceMapper.map(sourcePath);
         remappedPaths.put(path, pf);
