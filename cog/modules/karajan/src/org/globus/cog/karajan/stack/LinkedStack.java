@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.events.EventListener;
@@ -327,7 +328,7 @@ public final class LinkedStack implements VariableStack {
 	}
 
 	public Object getGlobal(final String name) {
-		return firstFrame().getVarNoSync(name);
+		return firstFrame().getVar(name);
 	}
 
 	public Regs getRegs() {
