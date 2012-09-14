@@ -28,13 +28,14 @@ import java.util.Set;
 
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
 public class ConcurrentMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_THREAD_PREFIX = new MappingParam("thread_prefix", "");
 	
-	private Map remappedPaths;
+	private Map<Path, Path> remappedPaths;
 
 	public ConcurrentMapper() {
 		super(new ConcurrentElementMapper());
@@ -48,11 +49,11 @@ public class ConcurrentMapper extends AbstractFileMapper {
 		super.setParams(params);
 	}
 	
-    public synchronized Collection existing() {
-        Collection c = super.existing();
+    public synchronized Collection<Path> existing() {
+        Collection<Path> c = super.existing();
         if (remappedPaths != null) {
-            Set s = new HashSet(c);
-            s.add(remappedPaths.keySet());
+            Set<Path> s = new HashSet<Path>(c);
+            s.addAll(remappedPaths.keySet());
             return s;
         }
         else {
