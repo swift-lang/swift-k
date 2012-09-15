@@ -34,7 +34,6 @@ element([tr, optional(arguments, stdin, stdout, stderr, attributes, deperror, md
 					)
 					catch(".*"
 						log(LOG:INFO, "END_FAILURE thread={#thread} tr={tr}")
-						log(LOG:WARN, "EXCEPTION {exception}")
 						vdl:setprogress("Failed")
 						if(
 							vdl:configProperty("lazy.errors") == "false" then(
