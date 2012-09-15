@@ -62,8 +62,7 @@ public class MapperFactory {
 		registerMapper("test_mapper", TestMapper.class);
 	}
 
-	public synchronized static Mapper getMapper(String type, 
-	                                            Map<String,Object> params) 
+	public synchronized static Mapper getMapper(String type, MappingParamSet params) 
 	throws InvalidMapperException {
 		Class<Mapper> cls = mappers.get(type);
 		if (cls == null) {

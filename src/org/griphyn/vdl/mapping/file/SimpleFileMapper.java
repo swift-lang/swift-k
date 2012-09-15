@@ -20,9 +20,8 @@
  */
 package org.griphyn.vdl.mapping.file;
 
-import java.util.Map;
-
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 
 public class SimpleFileMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_PADDING = new MappingParam("padding", new Integer(4));
@@ -31,7 +30,7 @@ public class SimpleFileMapper extends AbstractFileMapper {
 		super();
 	}
 
-	public void setParams(Map params) {
+	public void setParams(MappingParamSet params) {
 		super.setParams(params);
 		int precision = PARAM_PADDING.getIntValue(this);
 		setElementMapper(new DefaultFileNameElementMapper(precision));

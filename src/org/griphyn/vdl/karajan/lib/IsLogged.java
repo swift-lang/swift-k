@@ -29,6 +29,7 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.restartLog.LogEntry;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class IsLogged extends VDLFunction {
@@ -51,7 +52,7 @@ public class IsLogged extends VDLFunction {
 	
 	public static boolean isLogged(VariableStack stack, DSHandle var, Path path) throws ExecutionException {
 	    path = var.getPathFromRoot().append(path);
-        LogEntry entry = LogEntry.build(var.getRoot().getParam("swift#restartid") + "." + path.stringForm());
+        LogEntry entry = LogEntry.build(var.getRoot().getParam(MappingParam.SWIFT_RESTARTID) + "." + path.stringForm());
         Map map = getLogData(stack);
         boolean found = false;
         synchronized (map) {

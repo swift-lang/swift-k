@@ -48,7 +48,7 @@ public class DataNode extends AbstractDataNode {
 		this.parent = parent;
 	}
 
-	public String getParam(String name) {
+	public String getParam(MappingParam p) {
 		return null;
 	}
 }

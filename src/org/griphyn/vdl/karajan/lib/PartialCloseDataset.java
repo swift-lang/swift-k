@@ -22,6 +22,7 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.MappingParam;
 
 import java.util.StringTokenizer;
 import java.util.List;
@@ -73,7 +74,7 @@ public class PartialCloseDataset extends VDLFunction {
 			    logger.debug("Adding token "+closeID+" with hash "+closeID.hashCode());
 			}
 
-			String needToWaitFor = var.getParam("waitfor");
+			String needToWaitFor = var.getParam(MappingParam.SWIFT_WAITFOR);
 			logger.debug("need to wait for " + needToWaitFor);
 			StringTokenizer stok = new StringTokenizer(needToWaitFor, " ");
 			while(stok.hasMoreTokens()) {

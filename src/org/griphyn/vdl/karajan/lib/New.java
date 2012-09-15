@@ -20,22 +20,22 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.ExternalDataNode;
+import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
-import org.griphyn.vdl.mapping.ExternalDataNode;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -64,35 +64,34 @@ public class New extends VDLFunction {
 		String dbgname = TypeUtil.toString(OA_DBGNAME.getValue(stack));
 		String waitfor = (String) OA_WAITFOR.getValue(stack);
 		String line = (String) getProperty("_defline");
-
-		if (mapping == null) {
-			mapping = new HashMap<String, Object>();
-		}
+		
+		MappingParamSet mps = new MappingParamSet();
+		mps.setAll(mapping);
 
 		if (dbgname != null) {
-			mapping.put("dbgname", dbgname);
+			mps.set(MappingParam.SWIFT_DBGNAME, dbgname);
 		}
 		
 		if (line != null) {
-		    mapping.put("line", line);
+		    mps.set(MappingParam.SWIFT_LINE, line);
 		}
 
-		mapping.put("swift#restartid", getThreadPrefix(stack) + ":" + dbgname);
+		mps.set(MappingParam.SWIFT_RESTARTID, getThreadPrefix(stack) + ":" + dbgname);
 
 		if (waitfor != null) {
-			mapping.put("waitfor", waitfor);
+			mps.set(MappingParam.SWIFT_WAITFOR, waitfor);
 		}
 
 		if (typename == null && value == null) {
 			throw new ExecutionException("You must specify either a type or a value");
 		}
 	
-		String mapper = (String) mapping.get("descriptor");
+		String mapper = (String) mps.get(MappingParam.SWIFT_DESCRIPTOR);
 		if ("concurrent_mapper".equals(mapper)) {
 		    String threadPrefix = getThreadPrefix(stack);
-		    ConcurrentMapper.PARAM_THREAD_PREFIX.setValue(mapping, threadPrefix);
+		    mps.set(ConcurrentMapper.PARAM_THREAD_PREFIX, threadPrefix);
 		}
-		mapping.put("#basedir", stack.getExecutionContext().getBasedir());
+		mps.set(MappingParam.SWIFT_BASEDIR, stack.getExecutionContext().getBasedir());
 		
 		try {
 			Type type;
@@ -139,14 +138,14 @@ public class New extends VDLFunction {
 					handle.closeShallow();
 				}
 
-				handle.init(mapping);
+				handle.init(mps);
 			}
 			else if (value instanceof DSHandle) {
 				handle = (DSHandle) value;
 			}
 			else {
 				handle = new RootDataNode(type);
-				handle.init(mapping);
+				handle.init(mps);
 				if (value != null) {
 					handle.setValue(internalValue(type, value));
 				}

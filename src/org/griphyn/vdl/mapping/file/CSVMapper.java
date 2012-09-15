@@ -36,6 +36,7 @@ import org.griphyn.vdl.mapping.GeneralizedFileFormat;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Types;
@@ -68,7 +69,7 @@ public class CSVMapper extends AbstractMapper {
 	/** whether the CSV file has been read already. */
 	private boolean read = false;
 
-	public void setParams(Map params) {
+	public void setParams(MappingParamSet params) {
 		super.setParams(params);
 		if (!PARAM_FILE.isPresent(this)) {
 			throw new InvalidMappingParameterException("CSV mapper must have a file parameter.");

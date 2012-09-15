@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.util.Base64;
@@ -34,6 +33,7 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
@@ -99,7 +99,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		this.elementMapper = elementMapper;
 	}
 
-	public void setParams(Map<String,Object> params) {
+	public void setParams(MappingParamSet params) {
 		super.setParams(params);
 		if (PARAM_SUFFIX.isPresent(this)) {
 			String suffix = PARAM_SUFFIX.getStringValue(this);
@@ -136,7 +136,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		Iterator<Path.Entry> pi = path.iterator();
 		int level = 0, tokenCount = path.size();
 		while (pi.hasNext()) {
-			Path.Entry nextPathElement = (Path.Entry) pi.next();
+			Path.Entry nextPathElement = pi.next();
 			if (nextPathElement.isIndex()) {
 			    Comparable<?> key = nextPathElement.getKey();
 			    String f, token;
@@ -262,7 +262,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	}
 
 	private String getVarName() {
-        AbstractDataNode var = (AbstractDataNode) getParam("handle");
+        AbstractDataNode var = (AbstractDataNode) getParam(MappingParam.SWIFT_HANDLE);
         return var == null ? "" : var.getDisplayableName();
     }
 

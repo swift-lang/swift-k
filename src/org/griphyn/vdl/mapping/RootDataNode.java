@@ -32,11 +32,11 @@ import org.griphyn.vdl.type.Type;
 
 public class RootDataNode extends AbstractDataNode implements FutureListener {
 
-    static Logger logger = Logger.getLogger(RootDataNode.class); 
+    static Logger logger = Logger.getLogger(RootDataNode.class);
     
 	private boolean initialized=false;
 	private Mapper mapper;
-	private Map<String, Object> params;
+	private MappingParamSet params;
 	private AbstractDataNode waitingMapperParam;
 
 	public RootDataNode(Type type) {
@@ -49,7 +49,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	    setValue(value);
 	}
 
-	public void init(Map<String,Object> params) {
+	public void init(MappingParamSet params) {
 		this.params = params;
 		if(this.params == null) { 
 			initialized();
@@ -61,17 +61,13 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	/** must have this.params set to the appropriate parameters before
 	    being called. */
 	private synchronized void innerInit() {
-	    for (Object v : params.values()) {
-			if(v instanceof AbstractDataNode && !((AbstractDataNode) v).isClosed()) {
-			    if (logger.isDebugEnabled()) {
-			        logger.debug("addListener: " + this + " " + v);
-			    }
-			    waitingMapperParam = (AbstractDataNode) v;
-                waitingMapperParam.getFutureWrapper().addModificationAction(this, null);
-				return;
-			}
-		}
-		String desc = (String) params.get("descriptor");
+	    waitingMapperParam = params.getFirstOpenParamValue();
+	    if (waitingMapperParam != null) {
+            waitingMapperParam.getFutureWrapper().addModificationAction(this, null);
+            return;
+	    }
+	    
+		String desc = (String) params.get(MappingParam.SWIFT_DESCRIPTOR);
 		if (desc == null) {
 			initialized();
 			return;
@@ -111,23 +107,10 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	}
 
 
-	static protected void checkInputs(Map<String, Object> params, Mapper mapper, AbstractDataNode root) {
-		String input = (String) params.get("input");
+	static protected void checkInputs(MappingParamSet params, Mapper mapper, AbstractDataNode root) {
+		String input = (String) params.get(MappingParam.SWIFT_INPUT);
 		if (input != null && Boolean.valueOf(input.trim()).booleanValue()) {
-		    for (Path p : mapper.existing()) {
-				try {
-					DSHandle field = root.getField(p);
-					field.closeShallow();
-					if (logger.isInfoEnabled()) {
-						logger.info("Found data " + root + "." + p);
-					}
-				}
-				catch (InvalidPathException e) {
-				    throw new IllegalStateException("Structure of mapped data is " +
-				    		"incompatible with the mapped variable type: " + e.getMessage());
-				}
-			}
-		    root.closeDeep();
+			addExisting(mapper, root);
 			checkConsistency(root);
 		}
 		else if (mapper.isStatic()) {
@@ -164,7 +147,24 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		}
 	}
 
-	public static void checkConsistency(DSHandle handle) {
+	private static void addExisting(Mapper mapper, AbstractDataNode root) {
+		for (Path p : mapper.existing()) {
+            try {
+                DSHandle field = root.getField(p);
+                field.closeShallow();
+                if (logger.isInfoEnabled()) {
+                    logger.info("Found data " + root + "." + p);
+                }
+            }
+            catch (InvalidPathException e) {
+                throw new IllegalStateException("Structure of mapped data is " +
+                        "incompatible with the mapped variable type: " + e.getMessage());
+            }
+        }
+        root.closeDeep();
+    }
+
+    public static void checkConsistency(DSHandle handle) {
 		if (handle.getType().isArray()) {
 			// any number of indices is ok
 			try {
@@ -197,11 +197,11 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		}
 	}
 
-	public String getParam(String name) {
+	public String getParam(MappingParam p) {
 		if (params == null) {
 			return null;
 		}
-		return (String) params.get(name);
+		return (String) params.get(p);
 	}
 
 	public DSHandle getRoot() {

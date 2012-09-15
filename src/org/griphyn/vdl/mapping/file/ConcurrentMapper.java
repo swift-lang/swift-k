@@ -41,7 +41,7 @@ public class ConcurrentMapper extends AbstractFileMapper {
 		super(new ConcurrentElementMapper());
 	}
 
-	public void setParams(Map params) {
+	public void setParams(MappingParamSet params) {
 		String prefix = PARAM_PREFIX.getStringValue(params);
 		prefix = "_concurrent/" + (prefix == null ? "" : prefix + "-") + 
 		    PARAM_THREAD_PREFIX.getValue(params);

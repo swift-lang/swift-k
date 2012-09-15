@@ -47,7 +47,7 @@ public interface DSHandle {
      */
     public Type getType();
 
-    public void init(Map<String, Object> params);
+    public void init(MappingParamSet params);
 
     public DSHandle getRoot();
 
@@ -90,7 +90,7 @@ public interface DSHandle {
 
     public void set(DSHandle svar);
 
-    public String getParam(String name);
+    public String getParam(MappingParam name);
 
     public boolean isClosed();
 

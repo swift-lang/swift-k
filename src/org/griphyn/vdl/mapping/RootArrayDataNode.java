@@ -33,7 +33,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
     
 	private boolean initialized = false;
 	private Mapper mapper;
-	private Map<String, Object> params;
+	private MappingParamSet params;
 	private AbstractDataNode waitingMapperParam;
 
 	/**
@@ -43,7 +43,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		super(Field.Factory.createField(null, type), null, null);
 	}
 
-	public void init(Map<String, Object> params) {
+	public void init(MappingParamSet params) {
 		this.params = params;
 		if (this.params == null) {
 			initialized();
@@ -58,15 +58,13 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		    logger.debug("innerInit: " + this);
 		}
 	    
-	    for (Map.Entry<String, Object> entry : params.entrySet()) {
-			Object v = entry.getValue();
-			if (v instanceof AbstractDataNode && !((AbstractDataNode) v).isClosed()) {
-				waitingMapperParam = (AbstractDataNode) v;
-				waitingMapperParam.getFutureWrapper().addModificationAction(this, null);
-				return;
-			}
-		}
-		String desc = (String) params.get("descriptor");
+		waitingMapperParam = params.getFirstOpenParamValue();
+        if (waitingMapperParam != null) {
+            waitingMapperParam.getFutureWrapper().addModificationAction(this, null);
+            return;
+        }
+	    
+		String desc = (String) params.get(MappingParam.SWIFT_DESCRIPTOR);
 		if (desc == null) {
 			initialized();
 			return;
@@ -99,11 +97,11 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	    innerInit();
     }
 
-	public String getParam(String name) {
+	public String getParam(MappingParam p) {
 		if (params == null) {
 			return null;
 		}
-		return (String) params.get(name);
+		return (String) params.get(p);
 	}
 
 	public DSHandle getRoot() {

@@ -37,13 +37,9 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -67,6 +63,7 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class Monitor implements ActionListener, MouseListener {
@@ -228,6 +225,9 @@ public class Monitor implements ActionListener, MouseListener {
 		for (Map.Entry<DSHandle, Future> en : copy.entrySet()) {
 			Future f = en.getValue();
 			AbstractDataNode handle = (AbstractDataNode) en.getKey();
+			if (handle.isClosed()) {
+				continue;
+			}
 			String value = "-";
 			try {
 				if (handle.getValue() != null) {
@@ -244,8 +244,10 @@ public class Monitor implements ActionListener, MouseListener {
 			    ps.println(handle.getType() + " " + handle.getDisplayableName() + " " + value + " " + f);
 			}
 			catch (Exception e) {
-			    ps.println(handle.getDisplayableName() + " - error");
-			    e.printStackTrace(ps);
+				if (!handle.isClosed()) {
+				    ps.println(handle.getDisplayableName() + " - error");
+				    e.printStackTrace(ps);
+				}
 			}
 			ps.println("----");
 		}
@@ -280,9 +282,9 @@ public class Monitor implements ActionListener, MouseListener {
     }
 
     public static String varWithLine(DSHandle value) {
-		String line = value.getRoot().getParam("line");
+		String line = value.getRoot().getParam(MappingParam.SWIFT_LINE);
 		Path path = value.getPathFromRoot();
-		return value.getRoot().getParam("dbgname") + 
+		return value.getRoot().getParam(MappingParam.SWIFT_DBGNAME) + 
             (value == value.getRoot() ? "" : (path.isArrayIndex(0) ? path : "." + path)) + 
             (line == null ? "" : " (declared on line " + line + ")");
     }

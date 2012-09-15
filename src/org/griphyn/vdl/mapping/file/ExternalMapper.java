@@ -34,6 +34,7 @@ import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
@@ -44,36 +45,22 @@ public class ExternalMapper extends AbstractMapper {
 	private Map<String, Path> rmap;
 
 	public static final MappingParam PARAM_EXEC = new MappingParam("exec");
-	public static final MappingParam PARAM_BASEDIR = new MappingParam("#basedir", null);
-
-	private static Set<String> ignored;
-
-	static {
-		ignored = new HashSet<String>();
-		ignored.add("exec");
-		ignored.add("input");
-		ignored.add("dbgname");
-		ignored.add("descriptor");
-		ignored.add("#basedir");
-		ignored.add("waitfor");
-		ignored.add("swift#restartid");
-	}
 
 	private static final String[] STRING_ARRAY = new String[0];
 
-	public void setParams(Map<String, Object> params) {
+	public void setParams(MappingParamSet params) {
 		super.setParams(params);
 		map = new HashMap<Path, AbsFile>();
 		rmap = new HashMap<String, Path>();
 		String exec = PARAM_EXEC.getStringValue(this);
-		String bdir = PARAM_BASEDIR.getStringValue(this);
+		String bdir = MappingParam.SWIFT_BASEDIR.getStringValue(this);
 		if (bdir != null && !exec.startsWith("/")) {
 			exec = bdir + File.separator + exec;
 		}
 		List<String> cmd = new ArrayList<String>();
 		cmd.add(exec);
-		for (String name : params.keySet()) {
-			if (!ignored.contains(name)) {
+		for (String name : params.names()) {
+			if (!name.contains("#") && !name.equals("exec")) {
 				MappingParam tp = new MappingParam(name);
 				cmd.add('-' + name);
 				cmd.add(tp.getStringValue(this));
@@ -81,12 +68,12 @@ public class ExternalMapper extends AbstractMapper {
 		}
 		try {
 		    if (logger.isDebugEnabled()) {
-		        logger.debug("invoking external mapper for " + getParam("dbgname") + ": " + cmd);
+		        logger.debug("invoking external mapper for " + getParam(MappingParam.SWIFT_DBGNAME) + ": " + cmd);
 		    }
 			Process p = Runtime.getRuntime().exec(cmd.toArray(STRING_ARRAY));
 			List<String> lines = fetchOutput(p.getInputStream());
 			if (logger.isDebugEnabled()) {
-			    logger.debug("external mapper for " + getParam("dbgname") + " output: " + lines);
+			    logger.debug("external mapper for " + getParam(MappingParam.SWIFT_DBGNAME) + " output: " + lines);
 			}
 			int ec = p.waitFor();
 			if (ec != 0) {

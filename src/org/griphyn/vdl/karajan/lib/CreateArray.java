@@ -17,7 +17,6 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,8 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.type.Field;
@@ -102,9 +103,9 @@ public class CreateArray extends VDLFunction {
 
     private void setMapper(DSHandle handle) {
         // slap a concurrent mapper on this
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("descriptor", "concurrent_mapper");
-        params.put("dbgname", "arrayexpr");
+        MappingParamSet params = new MappingParamSet();
+        params.set(MappingParam.SWIFT_DESCRIPTOR, "concurrent_mapper");
+        params.set(MappingParam.SWIFT_DBGNAME, "arrayexpr");
         handle.init(params);
     }
 

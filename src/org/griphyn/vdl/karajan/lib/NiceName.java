@@ -25,6 +25,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class NiceName extends VDLFunction {
@@ -39,7 +40,7 @@ public class NiceName extends VDLFunction {
 			DSHandle field = var.getField(path);
 			Path p = field.getPathFromRoot();
 			if (p.equals(Path.EMPTY_PATH)) {
-				Object dbgname = field.getRoot().getParam("dbgname");
+				Object dbgname = field.getRoot().getParam(MappingParam.SWIFT_DBGNAME);
 				if (dbgname == null) {
 					return "tmp"+field.getRoot().hashCode();
 				}
@@ -48,7 +49,7 @@ public class NiceName extends VDLFunction {
 				}
 			}
 			else {
-				return field.getRoot().getParam("dbgname") + "." + p;
+				return field.getRoot().getParam(MappingParam.SWIFT_DBGNAME) + "." + p;
 			}
 		}
 		catch (InvalidPathException e) {

@@ -37,6 +37,7 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
+import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.type.Type;
 
@@ -84,7 +85,7 @@ public class SetFieldValue extends VDLFunction {
 	}
 
 	private String getVarName(DSHandle var) {
-	    String name = var.getRoot().getParam("dbgname");
+	    String name = var.getRoot().getParam(MappingParam.SWIFT_DBGNAME);
         if (var == var.getRoot()) {
             return name;
         }

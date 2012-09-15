@@ -39,14 +39,14 @@ public class ExternalDataNode extends AbstractDataNode {
 
 	private static final String datasetIDPartialID = Loader.getUUID();
 	
-	private Map<String, Object> params;
+	private MappingParamSet params;
 
 	public ExternalDataNode() {
 	    super(new FieldImpl("", Types.EXTERNAL));
 	}
 
 	@Override
-    public void init(Map<String, Object> params) {
+    public void init(MappingParamSet params) {
         this.params = params;
     }
 
@@ -113,10 +113,10 @@ public class ExternalDataNode extends AbstractDataNode {
 	    return null;
 	}
 
-    public String getParam(String name) {
+    public String getParam(MappingParam p) {
         if (params == null) {
             return null;
         }
-        return (String) params.get(name);
+        return (String) params.get(p);
     }
 }

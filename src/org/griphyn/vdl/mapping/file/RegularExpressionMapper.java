@@ -29,6 +29,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
@@ -40,18 +41,18 @@ public class RegularExpressionMapper extends AbstractMapper {
 	public RegularExpressionMapper() {
 	}
 
-	public void setParams(Map params) {
+	public void setParams(MappingParamSet params) {
 		super.setParams(params);
 		if (!PARAM_MATCH.isPresent(this)) {
 			throw new RuntimeException("Missing parameter match!");
 		}
 	}
 
-	public Collection existing() {
+	public Collection<Path> existing() {
 		if (exists(Path.EMPTY_PATH))
 			return Arrays.asList(new Path[] { Path.EMPTY_PATH });
 		else {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 	}
 
@@ -97,11 +98,13 @@ public class RegularExpressionMapper extends AbstractMapper {
 
 	public static void main(String[] args) {
 		RegularExpressionMapper reMapper = new RegularExpressionMapper();
-		Map params = new HashMap();
+		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("source", "2mass-j1223.fits");
 		params.put("match", "(.*)\\.(.*)");
 		params.put("transform", "\\1_area.\\2");
-		reMapper.setParams(params);
+		MappingParamSet mps = new MappingParamSet();
+		mps.setAll(params);
+		reMapper.setParams(mps);
 		System.out.println(reMapper.map(Path.EMPTY_PATH));
 	}
 }

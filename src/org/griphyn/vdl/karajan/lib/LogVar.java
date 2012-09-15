@@ -27,6 +27,7 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class LogVar extends VDLFunction {
@@ -57,7 +58,7 @@ public class LogVar extends VDLFunction {
         } else {
             annotation = "unmapped";
         }
-        RestartLog.LOG_CHANNEL.ret(stack, var.getRoot().getParam("swift#restartid")
+        RestartLog.LOG_CHANNEL.ret(stack, var.getRoot().getParam(MappingParam.SWIFT_RESTARTID)
                 + "." + path.stringForm() + "!" + annotation);
 	}
 }

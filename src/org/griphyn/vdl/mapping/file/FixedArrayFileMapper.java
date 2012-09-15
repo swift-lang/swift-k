@@ -20,13 +20,13 @@ package org.griphyn.vdl.mapping.file;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
@@ -40,7 +40,7 @@ public class FixedArrayFileMapper extends AbstractMapper {
 		super();
 	}
 
-	public void setParams(Map params) {
+	public void setParams(MappingParamSet params) {
 		super.setParams(params);
 		String cfiles = PARAM_FILES.getStringValue(this);
 		if (cfiles == null) {

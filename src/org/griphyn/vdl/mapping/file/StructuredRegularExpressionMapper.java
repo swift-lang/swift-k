@@ -21,17 +21,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
@@ -47,32 +46,32 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 	public StructuredRegularExpressionMapper() {
 	}
 
-	public void setParams(Map params) {
+	public void setParams(MappingParamSet params) {
 		super.setParams(params);
 		if (!PARAM_MATCH.isPresent(this)) {
 			throw new RuntimeException("Missing parameter match!");
 		}
 	}
 
-	public Collection existing() {
+	public Collection<Path> existing() {
 
 		DSHandle sourceHandle = (DSHandle) PARAM_SOURCE.getRawValue(this);
 
-		Collection output = new ArrayList();
-		Collection sourceFields;
+		Collection<Path> output = new ArrayList<Path>();
+		Collection<DSHandle> sourceFields;
 		try {
 			sourceFields = sourceHandle.getFields(Path.CHILDREN);
 		}
 		catch (InvalidPathException ipe) {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 		catch (HandleOpenException hoe) {
 			throw new RuntimeException(
 					"Handle open. Throwing this exception may not be the right thing to do. TODO");
 		}
-		Iterator i = sourceFields.iterator();
+		Iterator<DSHandle> i = sourceFields.iterator();
 		while (i.hasNext()) {
-			DSHandle f = (DSHandle) i.next();
+			DSHandle f = i.next();
 			output.add(f.getPathFromRoot());
 		}
 

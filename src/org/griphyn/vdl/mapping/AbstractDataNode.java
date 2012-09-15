@@ -87,7 +87,11 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
 
-    public void init(Map<String, Object> params) {
+    public void init(MappingParamSet params) {
+        throw new UnsupportedOperationException();
+    }
+    
+    public final void init(Map<String, Object> params) {
         throw new UnsupportedOperationException();
     }
 
@@ -193,9 +197,9 @@ public abstract class AbstractDataNode implements DSHandle {
     }
 
     public String getDisplayableName() {
-        String prefix = getRoot().getParam("dbgname");
+        String prefix = getRoot().getParam(MappingParam.SWIFT_DBGNAME);
         if (prefix == null) {
-            prefix = getRoot().getParam("prefix");
+            prefix = getRoot().getParam(PARAM_PREFIX);
         }
         if (prefix == null) {
             prefix = "?";

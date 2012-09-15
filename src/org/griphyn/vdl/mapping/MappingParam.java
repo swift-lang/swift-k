@@ -17,8 +17,6 @@
 
 package org.griphyn.vdl.mapping;
 
-import java.util.Map;
-
 import org.griphyn.vdl.type.Types;
 
 /** The MappingParam class provides helper methods to deal with
@@ -28,6 +26,16 @@ import org.griphyn.vdl.type.Types;
   * retrieve parameters in the mapper code.
   */
 public class MappingParam {
+    public static final MappingParam SWIFT_LINE = new MappingParam("swift#line");
+    public static final MappingParam SWIFT_DBGNAME = new MappingParam("swift#dbgname");
+    public static final MappingParam SWIFT_RESTARTID = new MappingParam("swift#restartid");
+    public static final MappingParam SWIFT_WAITFOR = new MappingParam("swift#waitfor");
+    public static final MappingParam SWIFT_BASEDIR = new MappingParam("swift#basedir");
+    public static final MappingParam SWIFT_DESCRIPTOR = new MappingParam("swift#descriptor");
+    public static final MappingParam SWIFT_INPUT = new MappingParam("swift#input");
+    public static final MappingParam SWIFT_HANDLE = new MappingParam("swift#handle");
+    
+    
 	private final String name;
 	private Object defValue;
 	private boolean defSet;
@@ -57,7 +65,7 @@ public class MappingParam {
 	  * will be returned.
 	  */
 	public Object getValue(Mapper mapper) {
-		Object value = mapper.getParam(name);
+		Object value = mapper.getParam(this);
 		if (value instanceof AbstractDataNode) {
 			AbstractDataNode handle = (AbstractDataNode) value;
 			handle.waitFor();
@@ -82,8 +90,8 @@ public class MappingParam {
 		}
 	}
 	
-	public Object getValue(Map<String, Object> params) {
-        Object value = params.get(name);
+	public Object getValue(MappingParamSet params) {
+        Object value = params.get(this);
         if (value instanceof AbstractDataNode) {
             AbstractDataNode handle = (AbstractDataNode) value;
             handle.waitFor();
@@ -108,7 +116,7 @@ public class MappingParam {
 	/** return the raw value of this parameter. Defaulting and type
 	  * conversion will not occur. */
 	public Object getRawValue(Mapper mapper) {
-		return mapper.getParam(name);
+		return mapper.getParam(this);
 	}
 
 	/** Returns the mapper parameter as a String. Other data types will be
@@ -121,7 +129,7 @@ public class MappingParam {
 		return String.valueOf(value);
 	}
 	
-	public String getStringValue(Map params) {
+	public String getStringValue(MappingParamSet params) {
         Object value = getValue(params);
         if (value == null) {
             return null;
@@ -130,15 +138,15 @@ public class MappingParam {
     }
 
 	public void setValue(Mapper mapper, Object value) {
-		mapper.setParam(name, value);
+		mapper.setParam(this, value);
 	}
 
 	public boolean isPresent(Mapper mapper) {
-		return mapper.getParam(name) != null;
+		return mapper.getParam(this) != null;
 	}
 
-	public boolean isPresent(Map map) {
-		return map.containsKey(name);
+	public boolean isPresent(MappingParamSet map) {
+		return map.isPresent(this);
 	}
 
 
@@ -178,8 +186,8 @@ public class MappingParam {
 		}
 	}
 
-	public void setValue(Map map, Object value) {
-		map.put(name, value);
+	public void setValue(MappingParamSet map, Object value) {
+	    map.set(this, value);
 	}
 
 	public String toString() {
