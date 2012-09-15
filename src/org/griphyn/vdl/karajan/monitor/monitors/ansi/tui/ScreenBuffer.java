@@ -54,8 +54,8 @@ public class ScreenBuffer {
 	}
 
 	private int attrs() {
-		return (fgColor << 16) + (bgColor << 20) + (underline ? 0x01000000 : 0x00000000)
-				+ (bold ? 0x02000000 : 0x00000000) + (lineArt ? 0x04000000 : 0x00000000);
+		return (fgColor << 16) + (bgColor << 20) + (underline ? ATTR_MASK_UNDERLINE : 0)
+				+ (bold ? ATTR_MASK_BOLD : 0) + (lineArt ? ATTR_MASK_LINE_ART : 0);
 	}
 
 	public void moveTo(int x, int y) {
