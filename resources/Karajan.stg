@@ -244,6 +244,10 @@ $endif$
 </vdl:tparallelFor>
 >>
 
+cs() ::= <<
+	<set name="swift#cs"><variable>#thread</variable></set>
+>>
+
 // need to log inputs and outputs at the calling stage here because
 // they are not
 // $outputs:vdl_log_output();separator="\n"$
@@ -251,7 +255,7 @@ $endif$
 callInternal(func, outputs, inputs, line) ::= <<
 <sequential>
 <unitStart name="$func$" type="INTERNALPROC" outputs="$outputs:list();separator=","$"/>
-<set name="swift#cs"><variable>#thread</variable></set>
+$cs()$
 <$func$ _traceline="$line$">
   <parallel>
     $outputs:callInternal_log_output();separator="\n"$
@@ -347,14 +351,14 @@ $if(file)$
   <vdl:parameter name="file" value="$file.name$"/>
   $if(file.params)$$file.params;separator="\n"$$endif$
   $if(!waitfor)$
-  <vdl:parameter name="input" value="true" />
+  <vdl:parameter name="swift#input" value="true" />
   $endif$
 </vdl:mapping>
 $else$
 <vdl:mapping descriptor="$mapping.descriptor$">
   $mapping.params;separator="\n"$
   $if(!waitfor)$
-  <vdl:parameter name="input" value="true" />
+  <vdl:parameter name="swift#input" value="true" />
   $endif$
 </vdl:mapping>
 $endif$
