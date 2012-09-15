@@ -387,7 +387,12 @@ public class VariableScope {
 
     public List<String> getCleanups() {
         List<String> cleanups = new ArrayList<String>();
-        cleanups.addAll(variables);
+        for (String var : variables) {
+            String type = getVariableType(var);
+            if (!org.griphyn.vdl.type.Types.isPrimitive(type)) {
+                cleanups.add(var);
+            }
+        }
         return cleanups;
     }
     
