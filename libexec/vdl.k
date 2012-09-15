@@ -65,7 +65,7 @@ namespace("vdl"
 		)
 
 		element(mapping, [descriptor, ...]
-			mapping=map(map:entry("descriptor", descriptor), each(...))
+			mapping=map(map:entry("swift#descriptor", descriptor), each(...))
 		)
 
 		element(parameter, [name, value]
