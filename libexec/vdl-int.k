@@ -404,8 +404,7 @@ namespace("vdl"
 				task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{VDL:SCRIPTNAME}-{VDL:RUNID}.d/")
 				(
 					maybe(file:remove(recfile))
-					log(LOG:WARN, "Failed to transfer wrapper log for job {jobid}")
-					log(LOG:DEBUG, "Exception for wrapper log failure from {srcdir} on {rhost}: ", exception)
+					log(LOG:INFO, "Failed to transfer wrapper log for job {jobid} from {srcdir} on {rhost}", exception)
 				)
 			)
 			recfile
