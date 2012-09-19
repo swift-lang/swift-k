@@ -22,6 +22,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -199,12 +200,23 @@ public class TCProfile extends VDLFunction {
 		}
 	}
 	
-	private void addAttributes(NamedArguments named, 
-	                           Map<String,Object> attrs) {
+	private void addAttributes(NamedArguments named, Map<String,Object> attrs) {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Attributes: " + attrs);
 	    }
-	    if (attrs == null || attrs.size() == 0) {
+	    if (attrs == null) {
+	        return;
+	    }
+	    Iterator<Map.Entry<String, Object>> i = attrs.entrySet().iterator();
+	    while (i.hasNext()) {
+	        Map.Entry<String, Object> e = i.next();
+	        Arg a = PROFILE_T.get(e.getKey());
+	        if (a != null) {
+	            named.add(a, e.getValue());
+	            i.remove();
+	        }
+	    }
+	    if (attrs.size() == 0) {
 	        return;
 	    }
 	    named.add(GridExec.A_ATTRIBUTES, attrs);
