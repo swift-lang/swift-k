@@ -14,6 +14,8 @@ import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.ssh.ProxyForwarder;
+import org.globus.cog.abstraction.impl.ssh.ProxyForwardingManager;
 import org.globus.cog.abstraction.impl.ssh.SSHChannel;
 import org.globus.cog.abstraction.impl.ssh.SSHChannelManager;
 import org.globus.cog.abstraction.impl.ssh.SSHRunner;
@@ -57,7 +59,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         
         exec = new Exec();
         if (spec.getDelegation() != Delegation.NO_DELEGATION) {
-            ProxyForwardingManager.Info info = ProxyForwardingManager.getDefault().forwardProxy(spec.getDelegation(), s);
+            ProxyForwarder.Info info = ProxyForwardingManager.getDefault().forwardProxy(spec.getDelegation(), 
+                new SSHProxyForwarder(s));
             if (info != null) {
                 exec.addEnv("X509_USER_PROXY", info.proxyFile);
                 exec.addEnv("X509_CERT_DIR", info.caCertFile);
@@ -128,9 +131,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         append(cmd, spec.getExecutable());
         if (spec.getArgumentsAsString() != null) {
             cmd.append(' ');
-            Iterator i = spec.getArgumentsAsList().iterator();
+            Iterator<String> i = spec.getArgumentsAsList().iterator();
             while (i.hasNext()) {
-                String arg = (String) i.next();
+                String arg = i.next();
                 append(cmd, arg);
                 if (i.hasNext()) {
                     cmd.append(' ');
