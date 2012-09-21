@@ -18,6 +18,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Random;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
@@ -26,7 +28,7 @@ import org.apache.log4j.Logger;
  * It tries to use the PID as thread identifier with fallback to random numbers.
  *
  * The Entering and Number arrays are implemented as sparse arrays of
- * files in some directory.
+ * files in some directory. The lock is not re-entrant.
  */
 public class FileLock {    
     public static final Logger logger = Logger.getLogger(FileLock.class);
@@ -36,6 +38,8 @@ public class FileLock {
     
     private int myId, myN;
     private File dir;
+    private Lock jvmLocalLock;
+    private int lockCount;
     
     public FileLock(String dir) {
         this(new File(dir));
@@ -45,6 +49,7 @@ public class FileLock {
         this.dir = dir;
         dir.mkdirs();
         this.myId = getId();
+        jvmLocalLock = new ReentrantLock();
     }
 
     private int getId() {
@@ -65,6 +70,7 @@ public class FileLock {
     }
     
     public void lock() throws IOException, InterruptedException {
+        jvmLocalLock.lock();
         write(ENTERING, myId, 1);
         write(NUMBER, myId, myN = 1 + maxNumber());
         write(ENTERING, myId, 0);
@@ -185,6 +191,51 @@ public class FileLock {
     }
 
     public void unlock() throws IOException {
-        write("locking.number", myId, 0);
+        try {
+            write("locking.number", myId, 0);
+        }
+        finally {
+            jvmLocalLock.unlock();
+        }
+    }
+    
+    public static void main(String[] args) {
+        String dir = args[0];
+        int delay = Integer.parseInt(args[1]);
+        final FileLock l = new FileLock(dir);
+        try {
+            System.out.println(". " + l.getId());
+            l.lock();
+            System.out.println("+ " + l.getId());
+            try {
+                if (Math.random() < 0.1) {
+                    new Thread() {
+
+                        @Override
+                        public void run() {
+                            try {
+                                System.out.println(". " + l.getId() + "x");
+                                l.lock();
+                                System.out.println("+ " + l.getId() + "x");
+                                l.unlock();
+                                System.out.println("- " + l.getId() + "x");
+                            }
+                            catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }.start();
+                }
+                Thread.sleep(delay);
+            }
+            finally {
+                l.unlock();
+                System.out.println("- " + l.getId());
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 }
