@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.impl.sshcl.execution;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -18,7 +19,11 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.impl.ssh.ProxyForwarder;
+import org.globus.cog.abstraction.impl.ssh.ProxyForwardingManager;
+import org.globus.cog.abstraction.interfaces.Delegation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 
@@ -28,12 +33,34 @@ public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.ex
     
     private static Properties props;
     
+
+    @Override
+    protected Process startProcess(JobSpecification spec, File dir) throws IOException {
+        if (spec.getDelegation() != Delegation.NO_DELEGATION) {
+            try {
+                ProxyForwarder.Info info = ProxyForwardingManager.getDefault().forwardProxy(spec.getDelegation(), 
+                    new SSHCLProxyForwarder(getTask().getService(0), getProperties()));
+                if (info != null) {
+                    spec.addEnvironmentVariable("X509_USER_PROXY", info.proxyFile);
+                    spec.addEnvironmentVariable("X509_CERT_DIR", info.caCertFile);
+                }
+            }
+            catch (InvalidSecurityContextException e) {
+                throw new IOException(e);
+            }
+        }
+        return super.startProcess(spec, dir);
+    }
+
     private synchronized static Properties getProperties() {
         if (props == null) {
             props = new Properties();
             try {
-                ClassLoader cl = JobSubmissionTaskHandler.class.getClassLoader(); 
-                props.load(cl.getResourceAsStream("provider-sshcl.properties")); 
+                ClassLoader cl = JobSubmissionTaskHandler.class.getClassLoader();
+                InputStream is = cl.getResourceAsStream("provider-sshcl.properties");
+                if (is != null) {
+                    props.load(is);
+                }
             }
             catch (Exception e) {
                 logger.warn("Failed to load properties", e);
