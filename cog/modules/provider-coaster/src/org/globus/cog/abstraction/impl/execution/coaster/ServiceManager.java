@@ -172,7 +172,8 @@ public class ServiceManager implements StatusListener {
                 logger.debug("Starting coaster service on " + contact + ". Task is " + t);
             }
             
-            boolean ssh = "ssh".equalsIgnoreCase(bootHandlerProvider);
+            boolean ssh = "ssh".equalsIgnoreCase(bootHandlerProvider) || 
+                "ssh-cl".equalsIgnoreCase(bootHandlerProvider);
             
             if (ssh) {
                 setupGSIProxy();
