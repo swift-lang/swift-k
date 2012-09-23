@@ -1440,11 +1440,14 @@ public class Karajan {
 			if (!fromType.equals(toType)) {
 			    throw new CompilationException("To and from range values must have the same type");
             }
+			if (stepST != null && !datatype(stepST).equals(fromType)) {
+			    throw new CompilationException("Step (" + datatype(stepST) + 
+			            ") must be of the same type as from and to (" + toType + ")");
+			}
 			if (stepST == null && (!fromType.equals("int") || !toType.equals("int"))) {
 				throw new CompilationException("Step in range specification can be omitted only when from and to types are int");
 			}
-			else if ((fromType.equals("int") && toType.equals("int")) &&
-					(stepST == null || datatype(stepST).equals("int"))) {
+			else if (fromType.equals("int") && toType.equals("int")) {
 				st.setAttribute("datatype", "int[int]");
 			}
 			else if (fromType.equals("float") && toType.equals("float") &&
