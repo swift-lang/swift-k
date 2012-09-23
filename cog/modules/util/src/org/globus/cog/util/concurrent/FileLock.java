@@ -17,9 +17,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
@@ -38,8 +38,13 @@ public class FileLock {
     
     private int myId, myN;
     private File dir;
-    private Lock jvmLocalLock;
     private int lockCount;
+    
+    private static Map<File, Boolean> jvmLocalLocks;
+    
+    static {
+        jvmLocalLocks = new HashMap<File, Boolean>();
+    }
     
     public FileLock(String dir) {
         this(new File(dir));
@@ -49,7 +54,6 @@ public class FileLock {
         this.dir = dir;
         dir.mkdirs();
         this.myId = getId();
-        jvmLocalLock = new ReentrantLock();
     }
 
     private int getId() {
@@ -70,7 +74,12 @@ public class FileLock {
     }
     
     public void lock() throws IOException, InterruptedException {
-        jvmLocalLock.lock();
+        synchronized(jvmLocalLocks) {
+            while (jvmLocalLocks.containsKey(dir)) {
+                jvmLocalLocks.wait();
+            }
+            jvmLocalLocks.put(dir, Boolean.TRUE);
+        }
         write(ENTERING, myId, 1);
         write(NUMBER, myId, myN = 1 + maxNumber());
         write(ENTERING, myId, 0);
@@ -195,12 +204,15 @@ public class FileLock {
             write("locking.number", myId, 0);
         }
         finally {
-            jvmLocalLock.unlock();
+            synchronized(jvmLocalLocks) {
+                jvmLocalLocks.remove(dir);
+                jvmLocalLocks.notifyAll();
+            }
         }
     }
     
     public static void main(String[] args) {
-        String dir = args[0];
+        final String dir = args[0];
         int delay = Integer.parseInt(args[1]);
         final FileLock l = new FileLock(dir);
         try {
@@ -208,15 +220,17 @@ public class FileLock {
             l.lock();
             System.out.println("+ " + l.getId());
             try {
-                if (Math.random() < 0.1) {
+                while (Math.random() < 0.8) {
                     new Thread() {
 
                         @Override
                         public void run() {
                             try {
+                                FileLock l = new FileLock(dir);
                                 System.out.println(". " + l.getId() + "x");
                                 l.lock();
                                 System.out.println("+ " + l.getId() + "x");
+                                Thread.sleep((int) (Math.random() * 5));
                                 l.unlock();
                                 System.out.println("- " + l.getId() + "x");
                             }
