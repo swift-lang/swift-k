@@ -20,12 +20,9 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.ChannelListener;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
-import org.globus.cog.karajan.workflow.service.commands.HeartBeatCommand;
 
 public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     public static final Logger logger = Logger.getLogger(Cpu.class);
@@ -90,7 +87,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         return dif;
     }
 
-    public synchronized void jobTerminated() {
+    private void jobTerminated() {
+        assert Thread.holdsLock(this);
+        
         if (logger.isInfoEnabled()) {
             logger.info(block.getId() + ":" + getId() + " jobTerminated");
         }
@@ -281,12 +280,12 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                 return;
             }
             shutdown = true;
-        }
-		Block block = node.getBlock();
-        done.clear();
-        if (running != null) {
-            logger.info(block.getId() + "-" + id + ": Job still running while shutting down");
-            running.fail("Shutting down worker", null);
+    		Block block = node.getBlock();
+            done.clear();
+            if (running != null) {
+                logger.info(block.getId() + "-" + id + ": Job still running while shutting down");
+                running.fail("Shutting down worker", null);
+            }
         }
         node.shutdown();
     }
@@ -305,7 +304,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         return running;
     }
 
-    public Time getTimeLast() {
+    public synchronized Time getTimeLast() {
         if (running != null) {
             if (timelast.isGreaterThan(Time.now())) {
                 return timelast;
@@ -329,6 +328,9 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     public synchronized void taskFailed(String msg, Exception e) {
+        if (shutdown) {
+            return;
+        }
 		shutdown = true;
         if (running == null) {
             if (starttime == null) {

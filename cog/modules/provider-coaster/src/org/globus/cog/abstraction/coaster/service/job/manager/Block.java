@@ -45,7 +45,7 @@ public class Block implements StatusListener, Comparable<Block> {
         return submitter;
     }
 
-    private int workers;
+    private int workers, workersStarting;
     private TimeInterval walltime;
     private Time endtime, starttime, deadline, creationtime;
     private final SortedSet<Cpu> scpus;
@@ -62,7 +62,7 @@ public class Block implements StatusListener, Comparable<Block> {
 
     private static final NumberFormat IDF = new DecimalFormat("000000");
     
-    public static volatile int requestedWorkers, activeWorkers, failedWorkers, completedWorkers, completedJobs;
+    public static int requestedWorkers, activeWorkers, failedWorkers, completedWorkers, completedJobs;
 
     public Block(String id) {
         this.id = id;
@@ -93,6 +93,9 @@ public class Block implements StatusListener, Comparable<Block> {
             "BLOCK_REQUESTED id=" + getId() + ", workers=" + getWorkerCount() + ", walltime="
                     + getWalltime().getSeconds());
         task = new BlockTask(this);
+        synchronized(cpus) {
+            workersStarting = workers;
+        }
         task.addStatusListener(this);
         try {
             task.initialize();
@@ -170,7 +173,7 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public void remove(Cpu cpu) {
-        synchronized (scpus) {
+        synchronized (cpus) {
             if (!scpus.remove(cpu)) {
                 CoasterService.error(16, "CPU was not in the block", new Throwable());
             }
@@ -181,7 +184,7 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public void add(Cpu cpu) {
-        synchronized (scpus) {
+        synchronized (cpus) {
             if (!scpus.add(cpu)) {
                 CoasterService.error(15, "CPU is already in the block", new Throwable());
             }
@@ -195,7 +198,7 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public void shutdownIfEmpty(Cpu cpu) {
-        synchronized (scpus) {
+        synchronized (cpus) {
             if (scpus.isEmpty()) {
                 if (logger.isInfoEnabled() && !shutdown) {
                     logger.info(this + ": all cpus are clear");
@@ -335,22 +338,23 @@ public class Block implements StatusListener, Comparable<Block> {
         if (logger.isInfoEnabled()) {
             logger.info("Worker task failed: " + msg, e);
         }
-        requestedWorkers -= workers;
-        activeWorkers -= workers;
+        // use auxiliary list to avoid deadlocks when
+        // cpus get notified separately by the dead channel
+        List<Cpu> cpusToNotify = new ArrayList<Cpu>();
         synchronized (cpus) {
-            synchronized (scpus) {
-                failed = true;
-                running = false;
-                for (int j = cpus.size(); j < workers; j++) {
-                    Cpu cpu = new Cpu(j, new Node(j, this, null));
-                    scpus.add(cpu);
-                    cpus.add(cpu);
-                }
-
-                for (Cpu cpu : cpus) {
-                    cpu.taskFailed(msg, e);
-                }
+            requestedWorkers -= workers;
+            activeWorkers -= workers;
+            failed = true;
+            running = false;
+            for (int j = cpus.size(); j < workersStarting; j++) {
+                Cpu cpu = new Cpu(j, new Node(j, this, null));
+                scpus.add(cpu);
+                cpus.add(cpu);
             }
+            cpusToNotify.addAll(cpus);
+        }
+        for (Cpu cpu : cpusToNotify) {
+            cpu.taskFailed(msg, e);
         }
     }
 
@@ -361,31 +365,30 @@ public class Block implements StatusListener, Comparable<Block> {
     public String workerStarted(String workerID,
                                 String workerHostname,
                                 ChannelContext channelContext) {
-    	activeWorkers += workers;
         synchronized (cpus) {
-            synchronized (scpus) {
-                int wid = Integer.parseInt(workerID);
-                Node n = new Node(wid, this, workerHostname,
-                                  channelContext);
-                nodes.add(n);
-                int jobsPerNode = bqp.getSettings().getJobsPerNode();
-                for (int i = 0; i < jobsPerNode; i++) {
-                    //this id scheme works out because the sid is based on the
-                    //number of cpus already added (i.e. cpus.size()).
-                    Cpu cpu = new Cpu(wid + i, n);
-                    scpus.add(cpu);
-                    cpus.add(cpu);
-                    n.add(cpu);
-                    cpu.workerStarted();
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Started CPU " + cpu);
-                    }
-                }
+            int wid = Integer.parseInt(workerID);
+            Node n = new Node(wid, this, workerHostname,
+                              channelContext);
+            nodes.add(n);
+            int jobsPerNode = bqp.getSettings().getJobsPerNode();
+            workersStarting -= jobsPerNode;
+            activeWorkers += jobsPerNode;
+            for (int i = 0; i < jobsPerNode; i++) {
+                //this id scheme works out because the sid is based on the
+                //number of cpus already added (i.e. cpus.size()).
+                Cpu cpu = new Cpu(wid + i, n);
+                scpus.add(cpu);
+                cpus.add(cpu);
+                n.add(cpu);
+                cpu.workerStarted();
                 if (logger.isInfoEnabled()) {
-                    logger.info("Started worker " + this.id + ":" + IDF.format(wid));
+                    logger.info("Started CPU " + cpu);
                 }
-                return workerID;
             }
+            if (logger.isInfoEnabled()) {
+                logger.info("Started worker " + this.id + ":" + IDF.format(wid));
+            }
+            return workerID;
         }
     }
     
@@ -538,12 +541,10 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public void removeNode(Node node) {
         synchronized(cpus) {
-            synchronized(scpus) {
-                nodes.remove(node);
-                for (Cpu cpu : node.getCpus()) {
-                    scpus.remove(cpu);
-                    cpus.remove(cpu);
-                }
+            nodes.remove(node);
+            for (Cpu cpu : node.getCpus()) {
+                scpus.remove(cpu);
+                cpus.remove(cpu);
             }
         }
         bqp.nodeRemoved(node);
