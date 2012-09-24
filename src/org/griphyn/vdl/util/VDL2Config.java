@@ -245,7 +245,7 @@ public class VDL2Config extends Properties {
 	}
 	
 	public String toString() {
-		return "Swift configuration " + files;
+		return "Swift configuration (" + files + "): " + super.toString();
 	}
 
 	public Object clone() {

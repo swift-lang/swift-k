@@ -199,6 +199,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
             VariableStack stack = new LinkedStack(ec);
             VDL2Config config = loadConfig(ap, stack);
             addCommandLineProperties(config, ap);
+            if (logger.isDebugEnabled()) {
+                logger.debug(config);
+            }
             debugSitesText(config);
             
             if (ap.isPresent(ARG_DRYRUN)) {
