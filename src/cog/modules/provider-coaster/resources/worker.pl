@@ -1107,7 +1107,7 @@ sub heartbeat {
 	my ($tag, $timeout, $msgs) = @_;
 	$LAST_HEARTBEAT = time();
 	my $ts = int(time() * 1000);
-	queueReply($tag, pack("V", $ts));
+	queueReply($tag, pack("VV", ($ts & 0xffffffff), ($ts >> 32)));
 }
 
 sub workershellcmd {
