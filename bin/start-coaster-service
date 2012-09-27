@@ -364,7 +364,7 @@ if [ ! -d "$HOME/.swift" ]; then
 fi
 
 PID_FILE="$HOME/.swift/.coaster-service-pids"
-RUN_DIR=`pwd`
+RUN_DIR=$PWD
 
 # Import settings
 if [ -f "$CMDLN_CONF" ]; then
@@ -378,7 +378,6 @@ elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
 else
    crash "Cannot find coaster-service.conf!"
 fi
-cp $CONFIG_FILE $HOME/.swift/.config
 
 echo "Start-coaster-service..."
 echo "Configuration: $CONFIG_FILE"
