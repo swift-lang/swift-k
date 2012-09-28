@@ -146,6 +146,7 @@ my $PROFILE = 0;
 my @PROFILE_EVENTS = ();
 
 my $ID = "-";
+my $CONNECTED = 0;
 
 my $myhost=`hostname`;
 $myhost =~ s/\s+$//;
@@ -395,8 +396,9 @@ sub reconnect() {
 		}
 	}
 	if (!$success) {
-		die "Failed to connect: $!";
+		dieNicely("Failed to connect: $!");
 	}
+	$CONNECTED = 1;
 	$LAST_HEARTBEAT = time();
 }
 
@@ -485,7 +487,8 @@ sub sockSend {
 			$r = 0;
 		}
 		else {
-			wlog(WARN, "Send failed: $!\n") and die "Send failed: $!";
+			$CONNECTED = 0;
+			dieNicely("Send failed: $!");
 		}
 	}
 	my $diff = sprintf("%.8f", time() - $start);
@@ -583,7 +586,7 @@ sub nextArrayData {
 	$$state{"index"} = $index + 1;
 	my $data = $$state{"data"};
 	if ($index > $#$data) {
-		die "Index out of bounds";
+		dieNicely("Index out of bounds in nextArrayData");
 	}
 	return ($index >= $#$data ? FINAL_FLAG : 0, $$data[$index], CONTINUE);
 }
@@ -743,8 +746,7 @@ sub unpackData {
 
 	my $lendata = length($data);
 	if ($lendata < 20) {
-		wlog WARN, "Received faulty message (length < 20: $lendata)\n";
-		die "Received faulty message (length < 20: $lendata)";
+		dieNicely("Received faulty message (length < 20: $lendata)");
 	}
 	my $tag = unpack("V", substr($data, 0, 4));
 	my $flg = unpack("V", substr($data, 4, 4));
@@ -755,8 +757,7 @@ sub unpackData {
 	my $chcsum = ($tag ^ $flg ^ $len);
 
 	if ($chcsum != $hcsum) {
-		wlog WARN, "Header checksum failed. Computed checksum: $chcsum, checksum: $hcsum\n";
-		return;
+		dieNicely("Header checksum failed. Computed checksum: $chcsum, checksum: $hcsum");
 	}
 
 	my $msg = "";
@@ -771,7 +772,7 @@ sub unpackData {
 	my $actuallen = length($msg);
 	wlog(TRACE, " IN: len=$len, actuallen=$actuallen, tag=$tag, flags=$flg, $msg\n");
 	if ($len != $actuallen) {
-		wlog(WARN, "len != actuallen\n");
+		dieNicely("len != actuallen\n");
 	}
 	return ($tag, $flg, $msg);
 }
@@ -903,7 +904,7 @@ sub recvOne {
 		$DATA = $DATA . $buf;
 		if (length($DATA) == 20) {
 			# wlog DEBUG, "Received " . unpackData($DATA) . "\n";
-			eval { process(unpackData($DATA)); } || (wlog ERROR, "Failed to process data: $@\n" && die "Failed to process data: $@");
+			eval { process(unpackData($DATA)); } || (dieNicely("Failed to process data: $@"));
 			$DATA = "";
 			return;
 		}
@@ -961,7 +962,8 @@ sub loopOne {
 	}
 	if ($eset && @$eset) {
 		wlog(DEBUG, "Has error\n");
-		die "Connection closed\n";
+		$CONNECTED = 0;
+		dieNicely("Connection closed\n");
 	}
 	if ($rset && @$rset) {
 		# can read
@@ -1024,10 +1026,10 @@ sub registerCBDataIn {
 	my ($state, $tag, $timeout, $flags, $reply) = @_;
 
 	if ($timeout) {
-		die "Failed to register (timeout)\n";
+		dieNicely("Failed to register (timeout)");
 	}
 	elsif ($flags & ERROR_FLAG) {
-		die "Failed to register (service returned error: ".join("\n", $reply).")";
+		dieNicely("Failed to register (service returned error: ".join("\n", $reply).")");
 	}
 	else {
 		$ID = $reply;
@@ -1046,13 +1048,11 @@ sub heartbeatCBDataIn {
 
 	if ($timeout) {
 		if (time() - $LAST_HEARTBEAT > 2 * HEARTBEAT_INTERVAL) {
-			wlog WARN, "No heartbeats received in a while. Dying.\n";
-			die "Lost heartbeat\n";
+			dieNicely("Lost heartbeat");
 		}
 	}
 	elsif ($flags & ERROR_FLAG) {
-		wlog WARN, "Heartbeat failed: $reply\n";
-		die "Heartbeat failed: $reply\n";
+		dieNicely("Heartbeat failed: $reply");
 	}
 	else {
 		wlog INFO, "Heartbeat acknowledged\n";
@@ -1064,6 +1064,18 @@ sub queueJobStatusCmd {
 	
 	queueCmd((nullCB(), "JOBSTATUS", $jobid, 
 			encodeInt($statusCode), encodeInt($errorCode), $msg));
+}
+
+sub dieNicely {
+	my ($msg) = @_;
+	
+	wlog ERROR, "$msg\n";
+	if ($CONNECTED) {
+		$CONNECTED = 0; // avoid recursive calls to this method
+		queueCmd((nullCB(), "RLOG", "WARN", $msg));
+		sendQueued();
+	}
+	die $msg;
 }
 
 sub register {
@@ -1158,13 +1170,12 @@ sub mkfdir {
 	my ($jobid, $file) = @_;
 	my $dir = dirname($file);
 	if (-f $dir) {
-		die "$jobid Cannot create directory $dir. A file with this name already exists";
+		dieNicely("$jobid Cannot create directory $dir. A file with this name already exists");
 	}
 	if (!-d $dir) {
 		wlog DEBUG, "Creating directory $dir\n";
 		if (!mkpath($dir)) {
-			wlog WARN, "Cannot create directory $dir. $!\n";
-			die "Cannot create directory $dir. $!";
+			dieNicely("Cannot create directory $dir. $!");
 		}
 	}
 }
@@ -1186,7 +1197,7 @@ sub getFileCB {
 		# and concurrent operations will fail.
 		my $handle;
 		if (!open($handle, ">", "$dst")) {
-			die "Failed to open $dst: $!";
+			dieNicely("Failed to open $dst: $!");
 		}
 		else {
 			wlog DEBUG, "$jobid Opened $dst\n";
@@ -1405,8 +1416,7 @@ sub mkPinnedDirectory() {
 		if (! -d $pinned_dir) {
 			wlog DEBUG, "mkpath: $pinned_dir\n";
 			mkpath($pinned_dir) ||
-				die "mkPinnedDirectory(): " .
-				"Could not mkdir: $pinned_dir ($!)\n";
+				dieNicely("mkPinnedDirectory(): Could not mkdir: $pinned_dir ($!)");
 		}
 		$PINNED_READY = 1;
 	}
@@ -1419,7 +1429,7 @@ sub downloadPinnedFile() {
 	wlog DEBUG, "link: $dst -> $pinned_dir$rdst\n";
 	if (! -f "$pinned_dir$rdst") {
 		link($dst, "$pinned_dir$rdst") ||
-			die "getPinnedFile(): Could not link: $pinned_dir$rdst ($!)\n";
+			dieNicely("getPinnedFile(): Could not link: $pinned_dir$rdst ($!)");
 	}
 }
 
@@ -1430,10 +1440,10 @@ sub linkToPinnedFile() {
 	if (! -d $dir) {
 		wlog DEBUG, "mkpath: $dir\n";
 		mkpath($dir) ||
-			die "getPinnedFile(): Could not mkdir: $dir ($!)\n";
+			dieNicely("getPinnedFile(): Could not mkdir: $dir ($!)");
 	}
 	link("$pinned_dir$rdst", $dst) ||
-		die "getPinnedFile(): Could not link: $!\n";
+		dieNicely("getPinnedFile(): Could not link: $!");
 	if ($PINNED{$rdst} == INFLIGHT) {
 		waitForPinnedFile($rdst, $jobid);
 	}
@@ -1776,7 +1786,7 @@ sub submitjob {
 
 sub checkJob() {
 	my ($tag, $JOBID, $JOB) = @_;
-
+	
 	wlog INFO, "$JOBID Job info received (tag=$tag)\n";
 	my $executable = $$JOB{"executable"};
 	if (!(defined $JOBID)) {
@@ -1999,12 +2009,12 @@ sub runjob {
 	if (defined $stdout) {
 		wlog DEBUG, "STDOUT: $stdout\n";
 		close STDOUT;
-		open STDOUT, ">$stdout" or die "Cannot redirect STDOUT";
+		open STDOUT, ">$stdout" or dieNicely("Cannot redirect STDOUT");
 	}
 	if (defined $stderr) {
 		wlog DEBUG, "STDERR: $stderr\n";
 		close STDERR;
-		open STDERR, ">$stderr" or die "Cannot redirect STDERR";
+		open STDERR, ">$stderr" or dieNicely("Cannot redirect STDERR");
 	}
 	close STDIN;
 
