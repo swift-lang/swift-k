@@ -1071,7 +1071,7 @@ sub dieNicely {
 	
 	wlog ERROR, "$msg\n";
 	if ($CONNECTED) {
-		$CONNECTED = 0; // avoid recursive calls to this method
+		$CONNECTED = 0; # avoid recursive calls to this method
 		queueCmd((nullCB(), "RLOG", "WARN", $msg));
 		sendQueued();
 	}
