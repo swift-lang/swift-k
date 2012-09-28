@@ -16,6 +16,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
+import org.globus.cog.abstraction.coaster.rlog.RemoteLogHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
 import org.globus.cog.abstraction.coaster.service.local.JobStatusHandler;
 import org.globus.cog.abstraction.coaster.service.local.RegistrationHandler;
@@ -94,6 +96,7 @@ public class CoasterService extends GSSService {
         rm.addHandler("JOBSTATUS", JobStatusHandler.class);
         rm.addHandler("GET", GetFileHandler.class);
         rm.addHandler("PUT", PutFileHandler.class);
+        rm.addHandler(RemoteLogCommand.NAME, RemoteLogHandler.class);
         return rm;
     }
 
