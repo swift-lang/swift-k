@@ -1727,8 +1727,14 @@ sub submitjob {
 		elsif ($pair[0] eq "identity") {
 			$JOBID = $pair[1];
 		}
-		elsif ($pair[0] eq "maxwalltime") {
-			$MAXWALLTIME = $pair[1];
+		elsif ($pair[0] eq "attr") {
+			my @ap = split(/=/, $pair[1], 2);
+			if ($ap[0] eq "maxwalltime") {
+				$MAXWALLTIME = $ap[1];
+			}
+			else {
+				wlog WARN, "Ignoring attribute $ap[0] = $ap[1]\n";
+			}
 		}
 		elsif ($pair[0] eq "stagein") {
 			my @pp = split(/\n/, $pair[1], 3);
