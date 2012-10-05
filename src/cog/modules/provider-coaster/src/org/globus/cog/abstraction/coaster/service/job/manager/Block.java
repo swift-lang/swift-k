@@ -81,7 +81,7 @@ public class Block implements StatusListener, Comparable<Block> {
         this.walltime = walltime;
         this.bqp = ap;
         this.creationtime = Time.now();
-        this.deadline = Time.now().add(ap.getSettings().getReserve());
+        setDeadline(Time.now().add(ap.getSettings().getReserve()));
         requestedWorkers += workers;
     }
 
@@ -130,9 +130,9 @@ public class Block implements StatusListener, Comparable<Block> {
                     last = Time.now();
                 }
             }
-            deadline =
-                    Time.min(starttime.add(walltime),
+            Time deadline = Time.min(starttime.add(walltime),
                         last.add(bqp.getSettings().getMaxWorkerIdleTime()));
+            setDeadline(deadline);
             return Time.now().isGreaterThan(deadline);
         }
         else {
@@ -184,16 +184,16 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public void add(Cpu cpu) {
+    	Cpu last = null;
         synchronized (cpus) {
             if (!scpus.add(cpu)) {
                 CoasterService.error(15, "CPU is already in the block", new Throwable());
             }
-            Cpu last = scpus.last();
-            if (last != null) {
-                deadline =
-                        Time.min(last.getTimeLast().add(bqp.getSettings().getReserve()),
-                            getEndTime());
-            }
+            last = scpus.last();
+        }
+        if (last != null) {
+            setDeadline(Time.min(last.getTimeLast().add(bqp.getSettings().getReserve()),
+                getEndTime()));
         }
     }
 
@@ -445,7 +445,7 @@ public class Block implements StatusListener, Comparable<Block> {
             else if (s.getStatusCode() == Status.ACTIVE) {
                 starttime = Time.now();
                 endtime = starttime.add(walltime);
-                deadline = starttime.add(bqp.getSettings().getReserve());
+                setDeadline(starttime.add(bqp.getSettings().getReserve()));
                 running = true;
                 bqp.getRLogger().log("BLOCK_ACTIVE id=" + getId());
                 bqp.getSettings().getHook().blockActive(event);
@@ -477,11 +477,11 @@ public class Block implements StatusListener, Comparable<Block> {
         return deadline;
     }
 
-    public void setDeadline(Time t) {
+    public synchronized void setDeadline(Time t) {
         this.deadline = t;
     }
 
-    public Time getCreationTime() {
+    public synchronized Time getCreationTime() {
         return creationtime;
     }
 
