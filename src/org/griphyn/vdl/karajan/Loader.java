@@ -287,7 +287,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         File swiftscript = new File(project);
         debugText("SWIFTSCRIPT", swiftscript);
         String projectBase = project.substring(0, project.lastIndexOf('.'));
-        File xml = new File(projectBase + ".xml");
+        File xml = new File(projectBase + ".swiftx");
         File kml = new File(projectBase + ".kml");
 
         loadBuildVersion(provenanceEnabled);
@@ -359,7 +359,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 // error message for the user
                 kml.delete();
                 throw new CompilationException(
-                    "Failed to convert .xml to .kml for " + project, e);
+                    "Failed to convert .swiftx to .kml for " + project, e);
             }
         }
         else {
