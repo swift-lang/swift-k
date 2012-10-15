@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -880,9 +881,15 @@ public class Karajan {
 	    VAR_TYPES.add("extractstructureelement");
 	}
 	
-    private boolean allVariables(Object list) {
-        @SuppressWarnings("unchecked")
-        List<StringTemplate> l = (List<StringTemplate>) list;
+    @SuppressWarnings("unchecked")
+    private boolean allVariables(Object st) {
+        List<StringTemplate> l;
+        if (st instanceof List) {
+            l = (List<StringTemplate>) st;
+        }
+        else {
+            l = Collections.singletonList((StringTemplate) st);
+        }
         for (StringTemplate pst : l) {
             if (!pst.getName().equals("call_arg")) {
                 return false;
