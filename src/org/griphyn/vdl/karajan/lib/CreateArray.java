@@ -17,15 +17,14 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureFault;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
@@ -44,7 +43,6 @@ public class CreateArray extends VDLFunction {
 		setArguments(CreateArray.class, new Arg[] { PA_VALUE });
 	}
 
-	@SuppressWarnings("unchecked")
     public Object function(VariableStack stack) throws ExecutionException {
 		Object value = PA_VALUE.getValue(stack);
 		try {
@@ -61,7 +59,12 @@ public class CreateArray extends VDLFunction {
 			    setMapper(handle);
 			}
 
-			if (logger.isInfoEnabled()) {
+			/*
+			 *  The reason this is disabled without provenance is that the identifier
+			 *  is essentially a random number plus a counter. It does not help
+			 *  in debugging problems.  
+			 */
+			if (AbstractDataNode.provenance && logger.isInfoEnabled()) {
 			    logger.info("CREATEARRAY START array=" + handle.getIdentifier());
 			}
 
@@ -78,7 +81,7 @@ public class CreateArray extends VDLFunction {
 
 				SetFieldValue.deepCopy(dst, n, stack, 1);
 				
-				if (logger.isInfoEnabled()) {
+				if (AbstractDataNode.provenance && logger.isInfoEnabled()) {
 				    logger.info("CREATEARRAY MEMBER array=" + handle.getIdentifier() 
 				        + " index=" + index + " member=" + n.getIdentifier());
 				}
@@ -87,7 +90,7 @@ public class CreateArray extends VDLFunction {
 			
 			handle.closeShallow();
 			
-			if (logger.isInfoEnabled()) {
+			if (AbstractDataNode.provenance && logger.isInfoEnabled()) {
 			    logger.info("CREATEARRAY COMPLETED array=" + handle.getIdentifier());
 			}
 

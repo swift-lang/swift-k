@@ -20,6 +20,7 @@
  */
 package org.griphyn.vdl.mapping;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,11 +45,9 @@ public abstract class AbstractDataNode implements DSHandle {
 
     static final String DATASET_URI_PREFIX = "dataset:";
 
-    public static final Logger logger = Logger
-    .getLogger(AbstractDataNode.class);
+    public static final Logger logger = Logger.getLogger(AbstractDataNode.class);
 
-    public static final MappingParam PARAM_PREFIX = new MappingParam("prefix",
-        null);
+    public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
 
     /**
      * Datasets are identified within a run by this sequence number and the
@@ -67,12 +66,21 @@ public abstract class AbstractDataNode implements DSHandle {
      * this value - it exists purely for making unique URIs.
      */
     private static final String datasetIDPartialID = Loader.getUUID();
+    
+    public static boolean provenance = false;
+    static {
+        try {
+        	provenance = VDL2Config.getConfig().getProvenanceLog();
+        }
+        catch (IOException e) {
+        }
+    }
 
     private Field field;
     private Map<Comparable<?>, DSHandle> handles;
     private Object value;
     private boolean closed;
-    final String identifierURI = makeIdentifierURIString();
+    private String identifier;
     private Path pathFromRoot;
     
     protected FutureWrapper wrapper;
@@ -222,8 +230,7 @@ public abstract class AbstractDataNode implements DSHandle {
             }
         }
         catch (NoSuchFieldException e) {
-            logger.warn("could not find variable: " + field.getId() + 
-                               " " + path);
+            logger.warn("could not find variable: " + field.getId() + " " + path);
             throw new InvalidPathException(path, this);
         }
     }
@@ -243,8 +250,7 @@ public abstract class AbstractDataNode implements DSHandle {
                 throw new InvalidPathException("getFields([*]) only applies to arrays");
             }
             try {
-                ((AbstractDataNode) getField(path.getFirst())).getFields(
-                    fields, path.butFirst());
+                ((AbstractDataNode) getField(path.getFirst())).getFields(fields, path.butFirst());
             }
             catch (NoSuchFieldException e) {
                 throw new InvalidPathException(path, this);
@@ -255,8 +261,7 @@ public abstract class AbstractDataNode implements DSHandle {
     public void set(DSHandle handle) {
         // TODO check type
         if (closed) {
-            throw new IllegalArgumentException(this.getDisplayableName()
-                + " is already assigned");
+            throw new IllegalArgumentException(this.getDisplayableName() + " is already assigned");
         }
         if (getParent() == null) {
             /*
@@ -292,8 +297,7 @@ public abstract class AbstractDataNode implements DSHandle {
     public DSHandle createField(Comparable<?> key)
     throws NoSuchFieldException {
         if (closed) {
-            throw new RuntimeException("Cannot write to closed handle: " + this
-                + " (" + key + ")");
+            throw new RuntimeException("Cannot write to closed handle: " + this + " (" + key + ")");
         }
         
         return addHandle(key, newNode(getChildField(key)));
@@ -302,9 +306,7 @@ public abstract class AbstractDataNode implements DSHandle {
     protected synchronized DSHandle addHandle(Comparable<?> id, DSHandle handle) {
         Object o = handles.put(id, handle);
         if (o != null) {
-            throw new RuntimeException(
-                "Trying to create a handle that already exists ("
-                + id + ") in " + this);
+            throw new RuntimeException("Trying to create a handle that already exists (" + id + ") in " + this);
         }
         return handle;
     }
@@ -366,12 +368,12 @@ public abstract class AbstractDataNode implements DSHandle {
 
     public void setValue(Object value) {
         if (this.closed) {
-            throw new IllegalArgumentException(this.getDisplayableName()
-                + " is closed with a value of " + this.value);
+            throw new IllegalArgumentException(this.getDisplayableName() 
+            		+ " is closed with a value of " + this.value);
         }
         if (this.value != null) {
-            throw new IllegalArgumentException(this.getDisplayableName()
-                + " is already assigned with a value of " + this.value);
+            throw new IllegalArgumentException(this.getDisplayableName() 
+            		+ " is already assigned with a value of " + this.value);
         }
         this.value = value;
         closeShallow();
@@ -397,15 +399,12 @@ public abstract class AbstractDataNode implements DSHandle {
                     child = (AbstractDataNode) this.getField(name);
                 }
                 catch (NoSuchFieldException e) {
-                    throw new RuntimeException
-                    ("Inconsistency between type declaration and " + 
+                    throw new RuntimeException("Inconsistency between type declaration and " + 
                         "handle for field '" + name + "'");
                 }
                 Path fullPath = parentPath.addLast(name);
                 Type type = child.getType(); 
-                if (!type.isPrimitive() &&
-                        !child.isArray() && 
-                        type.getFields().size() == 0) {
+                if (!type.isPrimitive() && !child.isArray() && type.getFields().size() == 0) {
                     list.add(fullPath);
                 }
                 else {
@@ -424,32 +423,27 @@ public abstract class AbstractDataNode implements DSHandle {
         }
         // closed
         notifyListeners();
-        if (logger.isInfoEnabled()) {
+        if (logger.isDebugEnabled()) {
             logger.debug("closed " + this.getIdentifyingString());
         }
         // so because its closed, we can dump the contents
 
         try {
-            if(VDL2Config.getConfig().getProvenanceLog()) {
+            if(provenance) {
                 logContent();
             }
         }
         catch (Exception e) {
-            logger.warn("Exception whilst logging dataset content for " + this,
-                e);
+            logger.warn("Exception whilst logging dataset content for " + this, e);
         }
-        // TODO record retrospective provenance information for this dataset
-        // here
+        // TODO record retrospective provenance information for this dataset here
         // we should do it at closing time because that's the point at which we
         // know the dataset has its values (all the way down the tree) assigned.
 
-        // provenance-id for this dataset should have been assigned at creation
-        // time,
-        // though, so that we can refer to this dataset elsewhere before it is
-        // closed.
+        // provenance-id for this dataset should have been assigned at creation time,
+        // though, so that we can refer to this dataset elsewhere before it is closed.
 
-        // is this method the only one called to set this.closed? or do
-        // subclasses
+        // is this method the only one called to set this.closed? or do subclasses
         // or other methods ever change it?
     }
 
@@ -458,11 +452,9 @@ public abstract class AbstractDataNode implements DSHandle {
         Path pathFromRoot = this.getPathFromRoot();
         if (this.getPathFromRoot() != null) {
             if (logger.isInfoEnabled()) {
-                logger.info("ROOTPATH dataset=" + identifier + " path="
-                    + pathFromRoot);
+                logger.info("ROOTPATH dataset=" + identifier + " path=" + pathFromRoot);
                 if (this.getType().isPrimitive()) {
-                    logger.info("VALUE dataset=" + identifier + " VALUE="
-                        + this.toString());
+                    logger.info("VALUE dataset=" + identifier + " VALUE=" + this.toString());
                 }
             }
 
@@ -498,8 +490,7 @@ public abstract class AbstractDataNode implements DSHandle {
                     if(filemapped) {
                         Object path = m.map(pathFromRoot);
                         if (logger.isInfoEnabled()) {
-                            logger.info("FILENAME dataset=" + identifier + " filename="
-                                + path);
+                            logger.info("FILENAME dataset=" + identifier + " filename=" + path);
                         }
                     }
                 }
@@ -518,8 +509,7 @@ public abstract class AbstractDataNode implements DSHandle {
             for (DSHandle handle : handles.values()) {
                 AbstractDataNode node = (AbstractDataNode) handle;
                 if (logger.isInfoEnabled()) {
-                    logger.info("CONTAINMENT parent=" + identifier + 
-                        " child=" + node.getIdentifier());
+                    logger.info("CONTAINMENT parent=" + identifier + " child=" + node.getIdentifier());
                 }
                 node.logContent();
             }
@@ -554,8 +544,7 @@ public abstract class AbstractDataNode implements DSHandle {
         synchronized (this) {
             for (DSHandle handle : handles.values()) {
                 AbstractDataNode child = (AbstractDataNode) handle;
-                if (child.getType().isArray() ||
-                                  child.getType().getFields().size() > 0) {
+                if (child.getType().isArray() || child.getType().getFields().size() > 0) {
                     child.closeArraySizes();
                 }
             }
@@ -568,8 +557,7 @@ public abstract class AbstractDataNode implements DSHandle {
             Path myPath;
             if (parent != null) {
                 myPath = parent.getPathFromRoot();
-                pathFromRoot = myPath.addLast(getField().getId(), parent
-                    .getField().getType().isArray());
+                pathFromRoot = myPath.addLast(getField().getId(), parent.getField().getType().isArray());
             }
             else {
                 pathFromRoot = Path.EMPTY_PATH;
@@ -586,8 +574,11 @@ public abstract class AbstractDataNode implements DSHandle {
         return handles;
     }
     
-    public String getIdentifier() {
-        return identifierURI;
+    public synchronized String getIdentifier() {
+    	if (identifier == null) {
+   		    identifier = makeIdentifierURIString();
+    	}
+        return identifier;
     }
 
     String makeIdentifierURIString() {

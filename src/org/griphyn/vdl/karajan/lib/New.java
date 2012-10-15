@@ -29,6 +29,7 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.ExternalDataNode;
 import org.griphyn.vdl.mapping.MappingParam;
@@ -75,8 +76,10 @@ public class New extends VDLFunction {
 		if (line != null) {
 		    mps.set(MappingParam.SWIFT_LINE, line);
 		}
+		
+		String threadPrefix = getThreadPrefix(stack);
 
-		mps.set(MappingParam.SWIFT_RESTARTID, getThreadPrefix(stack) + ":" + dbgname);
+		mps.set(MappingParam.SWIFT_RESTARTID, threadPrefix + ":" + dbgname);
 
 		if (waitfor != null) {
 			mps.set(MappingParam.SWIFT_WAITFOR, waitfor);
@@ -88,7 +91,6 @@ public class New extends VDLFunction {
 	
 		String mapper = (String) mps.get(MappingParam.SWIFT_DESCRIPTOR);
 		if ("concurrent_mapper".equals(mapper)) {
-		    String threadPrefix = getThreadPrefix(stack);
 		    mps.set(ConcurrentMapper.PARAM_THREAD_PREFIX, threadPrefix);
 		}
 		mps.set(MappingParam.SWIFT_BASEDIR, stack.getExecutionContext().getBasedir());
@@ -96,16 +98,16 @@ public class New extends VDLFunction {
 		try {
 			Type type;
 			if (typename == null) {
-				throw new ExecutionException
-				("vdl:new requires a type specification for value: " + value);
+				throw new ExecutionException("vdl:new requires a type specification for value: " + value);
 			}
 			else {
 				type = Types.getType(typename);
 			}
 			DSHandle handle;
-			if(typename.equals("external")) {
+			if (typename.equals("external")) {
 				handle = new ExternalDataNode();
-			} else if (type.isArray()) {
+			}
+			else if (type.isArray()) {
 				// dealing with array variable
 				handle = new RootArrayDataNode(type);
 				if (value != null) {
@@ -114,9 +116,7 @@ public class New extends VDLFunction {
 					}
 					else {
 						if (!(value instanceof List)) {
-							throw new ExecutionException
-							("An array variable can only be initialized " +
-							 "with a list of values");
+							throw new ExecutionException("An array variable can only be initialized with a list of values");
 						}
 						int index = 0;
 						Iterator<?> i = ((List<?>) value).iterator();
@@ -151,8 +151,8 @@ public class New extends VDLFunction {
 				}
 			}
 			
-			if (logger.isDebugEnabled()) {
-			    logger.debug("NEW id="+handle.getIdentifier());
+			if (AbstractDataNode.provenance && logger.isDebugEnabled()) {
+			    logger.debug("NEW id=" + handle.getIdentifier());
 			}
 			return handle;
 		}

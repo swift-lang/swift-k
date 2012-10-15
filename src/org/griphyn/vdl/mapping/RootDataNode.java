@@ -20,8 +20,6 @@
  */
 package org.griphyn.vdl.mapping;
 
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.futures.Future;
