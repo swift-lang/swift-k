@@ -10,7 +10,7 @@ element([tr, optional(arguments, stdin, stdout, stderr, attributes, deperror, md
 		derr == false then(
 			if(
 				sys:not(done) try(
-					sequential(
+					throttled(
 						log(LOG:INFO, "START thread={#thread} tr={tr}")
 						vdl:setprogress("Selecting site")
 						restartOnError(".*", vdl:configProperty("execution.retries"),
