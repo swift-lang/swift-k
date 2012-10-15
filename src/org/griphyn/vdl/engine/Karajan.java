@@ -721,7 +721,7 @@ public class Karajan {
 				if (proc.getInputArray(i).isOptional())
 					noOfOptInArgs++;
 				inArgs.put(proc.getInputArray(i).getName(), proc.getInputArray(i));
-			}				
+			}
 			if (!proc.getAnyNumOfInputArgs() && (call.sizeOfInputArray() < proc.sizeOfInputArray() - noOfOptInArgs ||
 
 				                                 call.sizeOfInputArray() > proc.sizeOfInputArray()))
@@ -861,11 +861,39 @@ public class Karajan {
 			if (!inhibitOutput) {
 			    scope.appendStatement(callST);
 			}
+			if (allVariables(callST.getAttribute("outputs")) && allVariables(callST.getAttribute("inputs"))) {
+			    callST.setAttribute("serialize", Boolean.TRUE);
+			}
 			return callST;
 		} catch(CompilationException ce) {
 			throw new CompilationException("Compile error in procedure invocation at "+call.getSrc()+": "+ce.getMessage(),ce);
 		}
 	}
+
+	private static final Set<String> VAR_TYPES;
+	
+	static {
+	    VAR_TYPES = new HashSet<String>();
+	    VAR_TYPES.add("id");
+	    VAR_TYPES.add("extractarrayelement");
+	    VAR_TYPES.add("slicearray");
+	    VAR_TYPES.add("extractstructureelement");
+	}
+	
+    private boolean allVariables(Object list) {
+        @SuppressWarnings("unchecked")
+        List<StringTemplate> l = (List<StringTemplate>) list;
+        for (StringTemplate pst : l) {
+            if (!pst.getName().equals("call_arg")) {
+                return false;
+            }
+            StringTemplate expr = (StringTemplate) pst.getAttribute("expr");
+            if (!VAR_TYPES.contains(expr.getName())) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     private void addWriterToScope(VariableScope scope, XmlObject var) throws CompilationException {
         String rootvar = abstractExpressionToRootVariable(var);

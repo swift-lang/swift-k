@@ -189,17 +189,20 @@ map_entry(key,value) ::= <<
       </entry>
 >>
 
+// use unbuffered parallel here
+// since calls don't use this macro
 parallel(statements) ::= <<
 $if(rest(statements))$
-<parallel>
+<uparallel>
   $statements;separator="\n"$
-</parallel>
+</uparallel>
 $else$
 <sequentialWithID>
   $statements$
 </sequentialWithID>
 $endif$
 >>
+
 
 // the 'function' template outputs a karajan code fragment
 // that calls a function in the 'swiftscript' namespace.
@@ -252,15 +255,15 @@ cs() ::= <<
 // they are not
 // $outputs:vdl_log_output();separator="\n"$
 
-callInternal(func, outputs, inputs, line) ::= <<
+callInternal(func, outputs, inputs, line, serialize) ::= <<
 <sequential>
 <unitStart name="$func$" type="INTERNALPROC" outputs="$outputs:list();separator=","$"/>
 $cs()$
 <$func$ _traceline="$line$">
-  <parallel>
+  $if(!serialize)$<parallel>$endif$
     $outputs:callInternal_log_output();separator="\n"$
     $inputs:callInternal_log_input();separator="\n"$
-  </parallel>
+  $if(!serialize)$</parallel>$endif$
 </$func$>
 <unitEnd name="$func$" type="INTERNALPROC"/>
 </sequential>
@@ -292,12 +295,12 @@ callInternal_log_output() ::= <<
 </sequential>
 >>
 
-callUserDefined(func, outputs, inputs, line) ::= <<
+callUserDefined(func, outputs, inputs, line, serialize) ::= <<
 <$func$ _traceline="$line$">
-  <parallel>
+  $if(!serialize)$<parallel>$endif$
     $outputs;separator="\n"$
     $inputs;separator="\n"$
-  </parallel>
+  $if(!serialize)$</parallel>$endif$
 </$func$>
 >>
 
