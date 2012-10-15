@@ -116,19 +116,21 @@ public class Block implements StatusListener, Comparable<Block> {
         }
         else if (running) {
             Time last = getStartTime();
+            List<Cpu> active = new ArrayList<Cpu>();
             synchronized (cpus) {
-                for (Cpu cpu: cpus) {
-                    if (cpu.getTimeLast().isGreaterThan(last)) {
-                        last = cpu.getTimeLast();
-                    }
+            	active.addAll(cpus);
+            }
+            for (Cpu cpu: active) {
+                if (cpu.getTimeLast().isGreaterThan(last)) {
+                    last = cpu.getTimeLast();
                 }
-                if (cpus.isEmpty()) {
-                    // prevent block from being done when startup of workers is
-                    // really really slow,
-                    // like as on the BGP where it takes a couple of minutes to
-                    // initialize a partition
-                    last = Time.now();
-                }
+            }
+            if (active.isEmpty()) {
+                // prevent block from being done when startup of workers is
+                // really really slow,
+                // like as on the BGP where it takes a couple of minutes to
+                // initialize a partition
+                last = Time.now();
             }
             Time deadline = Time.min(starttime.add(walltime),
                         last.add(bqp.getSettings().getMaxWorkerIdleTime()));

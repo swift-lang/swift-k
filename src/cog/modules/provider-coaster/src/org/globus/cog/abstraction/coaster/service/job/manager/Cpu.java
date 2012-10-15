@@ -242,13 +242,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     private boolean checkSuspended(Block block) {
-        if (block.isSuspended()) {
-            block.shutdownIfEmpty(this);
-            return true;
-        }
-        else {
-            return false;
-        }
+    	return block.isSuspended();
     }
 
     protected void submit(Job job) {
