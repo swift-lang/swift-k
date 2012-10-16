@@ -124,7 +124,7 @@
 	<export name="execute"><elementDef classname="org.griphyn.vdl.karajan.lib.Execute"/></export>
 	<export name="expandArguments"><elementDef classname="org.griphyn.vdl.karajan.lib.ExpandArguments"/></export>
 
-	<export name="tparallelFor"><elementDef classname="org.griphyn.vdl.karajan.lib.SelfCloseParallelFor"/></export>
+	<export name="tparallelFor"><elementDef classname="org.griphyn.vdl.karajan.lib.ThrottledParallelFor"/></export>
 	<export name="throttled"><elementDef classname="org.griphyn.vdl.karajan.lib.Throttled"/></export>
 
 	<export name="appStageins"><elementDef classname="org.griphyn.vdl.karajan.lib.AppStageins"/></export>
