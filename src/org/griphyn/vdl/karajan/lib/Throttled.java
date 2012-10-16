@@ -30,7 +30,7 @@ import org.globus.cog.karajan.workflow.nodes.Sequential;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class Throttled extends Sequential {
-    public static final int DEFAULT_MAX_THREADS = 1024;
+    public static final int DEFAULT_MAX_THREADS = 1000000;
     
     private LinkedList<VariableStack> waiting;
     private int maxThreadCount, current;
@@ -38,7 +38,7 @@ public class Throttled extends Sequential {
     public Throttled() {
         try {
             maxThreadCount = TypeUtil.toInt(VDL2Config.getConfig()
-                            .getProperty("foreach.max.threads", String.valueOf(DEFAULT_MAX_THREADS)));
+                            .getProperty("exec.throttle", String.valueOf(DEFAULT_MAX_THREADS)));
         }
         catch (IOException e) {
             maxThreadCount = DEFAULT_MAX_THREADS;
