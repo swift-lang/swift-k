@@ -32,7 +32,9 @@ public class LocalIOProvider implements IOProvider {
     public static final Logger logger = Logger.getLogger(LocalIOProvider.class); 
 
     public void abort(IOHandle handle) throws IOException {
-        ((Abortable) handle).abort();
+        if (handle != null) {
+            ((Abortable) handle).abort();
+        }
     }
 
     public IOReader pull(String src, String dest, ReadIOCallback cb) throws IOException {
