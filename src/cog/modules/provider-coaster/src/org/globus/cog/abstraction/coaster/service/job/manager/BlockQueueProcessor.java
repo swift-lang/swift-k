@@ -117,7 +117,7 @@ implements RegistrationManager, Runnable {
     }
 
     public Metric getMetric() {
-        return metric;
+    	return metric;
     }
 
     @Override
@@ -310,8 +310,10 @@ implements RegistrationManager, Runnable {
                     warnAboutWalltimes(running);
                 }
             }
-            holding.add(j);
-            count++;
+            else {
+                holding.add(j);
+                count++;
+            }
         }
         if (count > 0) {
             if (logger.isInfoEnabled()) {
