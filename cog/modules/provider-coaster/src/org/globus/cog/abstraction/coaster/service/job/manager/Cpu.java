@@ -123,9 +123,11 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     static PullThread getPullThread(Block block) {
-        if (pullThread == null) {
-            pullThread = new PullThread(block.getAllocationProcessor());
-            pullThread.start();
+        synchronized(Cpu.class) {
+            if (pullThread == null) {
+                pullThread = new PullThread(block.getAllocationProcessor());
+                pullThread.start();
+            }
         }
         return pullThread;
     }
@@ -139,6 +141,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         getPullThread(block).enqueue(cpu);
     }
 
+    
     private synchronized void sleep(Cpu cpu) {
         getPullThread(cpu.node.getBlock()).sleep(cpu);
     }
@@ -151,7 +154,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
        The Cpu requests work from the BlockQueueProcessor
        The Cpu is awake when calling this (not in PullThread.sleeping)
      */
-    public synchronized void pull() {
+    public void pull() {
         boolean success = true;
         try {
             if (checkSuspended(block)) {
@@ -160,33 +163,35 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             if (logger.isTraceEnabled()) {
                 logger.trace(block.getId() + ":" + getId() + " pull");
             }
-            if (shutdown) {
-                return;
-            }
-            if (!started()) {
-                sleep();
-            }
-            else if (running == null) {
-                lastseq = bqp.getQueueSeq();
-                TimeInterval time = endtime.subtract(Time.now());
-                int cpus = pullThread.sleepers() + 1;
-                if (logger.isDebugEnabled())
-                    logger.debug("requesting work: " +
-                                 "block=" + block.getId() +
-                                 " id=" + getId() +
-                                 " Cpus sleeping: " + cpus);
-                running = bqp.request(time, cpus);
-                if (running != null) {
-                    block.jobPulled();
-                    success = launch(running);
+            synchronized (this) {
+                if (shutdown) {
+                    return;
                 }
-                else {
+                if (!started()) {
                     sleep();
                 }
-            }
-            else {
-                CoasterService.error(40, "pull called while another job was running",
-                    new Throwable());
+                else if (running == null) {
+                    lastseq = bqp.getQueueSeq();
+                    TimeInterval time = endtime.subtract(Time.now());
+                    int cpus = pullThread.sleepers() + 1;
+                    if (logger.isDebugEnabled())
+                        logger.debug("requesting work: " +
+                                     "block=" + block.getId() +
+                                     " id=" + getId() +
+                                     " Cpus sleeping: " + cpus);
+                    running = bqp.request(time, cpus);
+                    if (running != null) {
+                        block.jobPulled();
+                        success = launch(running);
+                    }
+                    else {
+                        sleep();
+                    }
+                }
+                else {
+                    CoasterService.error(40, "pull called while another job was running",
+                        new Throwable());
+                }
             }
         }
         catch (Exception e) {
