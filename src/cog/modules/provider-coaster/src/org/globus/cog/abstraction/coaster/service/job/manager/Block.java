@@ -193,8 +193,8 @@ public class Block implements StatusListener, Comparable<Block> {
             }
             last = scpus.last();
         }
-        if (last != null) {
-            setDeadline(Time.min(last.getTimeLast().add(bqp.getSettings().getReserve()),
+        if (last == cpu) {
+            setDeadline(Time.min(cpu.getTimeLast().add(bqp.getSettings().getReserve()),
                 getEndTime()));
         }
     }
@@ -512,12 +512,14 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public void suspend() {
-        suspended = true;
+        synchronized(this) {
+            suspended = true;
+        }
         // ensure we still shut down if no jobs are running
         shutdownIfEmpty(null);
     }
 
-    public boolean isSuspended() {
+    public synchronized boolean isSuspended() {
         return suspended;
     }
 
