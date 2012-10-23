@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# 2008-03-04 09:03:10,988-0800 INFO  vdl:stageout TIE_URL_FILENAME_OUTPUT url=file://localhost/readData.int.in filename=readData.int.in
+
+grep ' vdl:stage' | iso-to-secs | \
+grep 'TIE_URL_FILENAME' | \
+sed 's/^\(.*\) INFO  vdl:stage[^ ]* TIE_URL_FILENAME[^ ]* url=\([^ ]*\) filename=\([^ ]*\)/\2 \3/'
+

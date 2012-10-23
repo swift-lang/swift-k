@@ -1,0 +1,36 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <procedure name="f" src="line 2">
+
+      <output 
+    name="A" type="int"
+
+     xsi:nil="true" />
+
+      <output 
+    name="B" type="int"
+
+     xsi:nil="true" />
+
+      <input 
+    name="i" type="int"
+
+     xsi:nil="true" />
+    <assign src="line 2">
+     <variableReference>A</variableReference>
+     <variableReference>i</variableReference>
+    </assign>
+    <assign src="line 2">
+     <variableReference>B</variableReference>
+     <variableReference>i</variableReference>
+    </assign>
+  </procedure>
+  <variable name="i" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="j" type="int" isGlobal="false" xsi:nil="true"/>
+  <call proc="f" src="line 7">
+    <output><variableReference>i</variableReference></output>
+    <output><variableReference>j</variableReference></output>
+    <input><integerConstant>7</integerConstant></input>
+  </call>
+</program>

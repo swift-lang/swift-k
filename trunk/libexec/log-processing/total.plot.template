@@ -1,0 +1,12 @@
+set terminal png
+set output 'total.tmp.png'
+
+set ylabel 'events in progress'
+
+set style arrow 1 nohead lt 1
+set border 0
+
+set xrange [0:MAXTIME]
+
+plot 'total.plot2.tmp' with vector arrowstyle 1 title 'CHANNELDESC'
+

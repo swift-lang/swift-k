@@ -1,0 +1,180 @@
+Commands
+--------
+The commands detailed in this section are available in the bin/
+directory of a Swift installation and can by run from the commandline if
+that directory is placed on the PATH.
+
+
+swift
+~~~~~
+The swift command is the main command line tool for executing
+SwiftScript programs.
+
+
+Command-line Syntax
+^^^^^^^^^^^^^^^^^^^
+The swift command is invoked as follows: swift [options]
+SwiftScript-program [SwiftScript-arguments]* with options taken from the
+following list, and SwiftScript-arguments made available to the
+SwiftScript program through the @arg function.
+
+Swift command-line options
+
+-help or -h
+
+    Display usage information
+
+-typecheck
+
+    Does a typecheck of a SwiftScript program, instead of executing it.
+
+-dryrun
+
+    Runs the SwiftScript program without submitting any jobs (can be
+    used to get a graph)
+
+-monitor
+
+    Shows a graphical resource monitor
+
+-resume file
+
+    Resumes the execution using a log file
+
+-config file
+
+    Indicates the Swift configuration file to be used for this run.
+    Properties in this configuration file will override the default
+    properties. If individual command line arguments are used for
+    properties, they will override the contents of this file.
+
+-verbose | -v
+
+    Increases the level of output that Swift produces on the console to
+    include more detail about the execution
+
+-debug | -d
+
+    Increases the level of output that Swift produces on the console to
+    include lots of detail about the execution
+
+-logfile file
+
+    Specifies a file where log messages should go to. By default Swift
+    uses the name of the program being run and a numeric index (e.g.
+    myworkflow.1.log)
+
+-runid identifier
+
+    Specifies the run identifier. This must be unique for every
+    invocation and is used in several places to keep files from
+    different executions cleanly separated. By default, a datestamp and
+    random number are used to generate a run identifier. When using this
+    parameter, care should be taken to ensure that the run ID remains
+    unique with respect to all other run IDs that might be used,
+    irrespective of (at least) expected execution sites, program or user.
+
+-tui
+
+    Displays an interactive text mode monitor during a run. (since Swift
+    0.9) 
+
+In addition, the following Swift properties can be set on the command line:
+
+    * caching.algorithm
+    * clustering.enabled
+    * clustering.min.time
+    * clustering.queue.delay
+    * ip.address
+    * kickstart.always.transfer
+    * kickstart.enabled
+    * lazy.errors
+    * pgraph
+    * pgraph.graph.options
+    * pgraph.node.options
+    * sitedir.keep
+    * sites.file
+    * tc.file
+    * tcp.port.range
+
+
+Return codes
+^^^^^^^^^^^^
+
+The swift command may exit with the following return codes:
+
+[options="header, autowidth"]
+|=========
+|value|meaning
+|0|success
+|1|command line syntax error or missing project name
+|2|error during execution
+|3|error during compilation
+|4|input file does not exist
+|===========
+
+Environment variables
+^^^^^^^^^^^^^^^^^^^^^
+
+The swift is influenced by the following environment variables:
+
+GLOBUS_HOSTNAME, GLOBUS_TCP_PORT_RANGE - set in the environment
+before running Swift. These can be set to inform Swift of the
+configuration of your local firewall. More information can be found in
+the Globus firewall How-to <http://dev.globus.org/wiki/FirewallHowTo>.
+
+COG_OPTS - set in the environment before running Swift. Options set in
+this variable will be passed as parameters to the Java Virtual Machine
+which will run Swift. The parameters vary between virtual machine
+imlementations, but can usually be used to alter settings such as
+maximum heap size. Typing 'java -help' will sometimes give a list of
+commands. The Sun Java 1.4.2 command line options are documented here
+<http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/java.html>.
+
+
+swift-osg-ress-site-catalog
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The swift-osg-ress-site-catalog command generates a site catalog based
+on OSG <http://www.opensciencegrid.org/>'s ReSS information system
+(since Swift 0.9)
+
+Usage: *swift-osg-ress-site-catalog [options]*
+
+--help
+
+    Show help message
+
+--vo=[name]
+
+    Set what VO to query ReSS for
+
+--engage-verified
+
+    Only retrieve sites verified by the Engagement VO site verification
+    tests This can not be used together with |--vo|, as the query will
+    only work for sites advertising support for the Engagement VO.
+
+    This option means information will be retrieved from the Engagement
+    collector instead of the top-level ReSS collector.
+
+--out=[filename]
+
+    Write to [filename] instead of stdout
+
+--condor-g
+
+    Generates sites files which will submit jobs using a local Condor-G
+    installation rather than through direct GRAM2 submission. (since
+    Swift 0.10)
+
+
+swift-plot-log
+~~~~~~~~~~~~~~
+swift-plot-log generates summaries of Swift run log files.
+
+Usage: swift-plot-log [logfile] [targets]
+
+When no targets are specified, swift-plog-log will generate an HTML
+report for the run. When targets are specified, only those named targets
+will be generated.
+

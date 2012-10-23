@@ -1,0 +1,11 @@
+There are 109 executables in the log-processing libexec directory.
+
+One test for each would be useful.
+
+However, some of these executables are probably unused, in which case
+removing them would be a better thing to do.
+
+For the text processing ones, a diff based approach would be good. For
+the ones that output graphs or other hard-to-compare data, checking that
+a non-trivial output file of some kind is made is probably the best thing
+to do.

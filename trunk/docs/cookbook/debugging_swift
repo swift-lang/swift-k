@@ -1,0 +1,17 @@
+Debugging Swift
+---------------
+Swift errors are logged in several places:
+
+. All text from standard output and standard error produced by running the
+swift command
+. The .log file from this run. It will be named swiftscript.uniqueID.log
+where "swiftscript" is the name of your *.swift script source file, and
+uniqueID is a long unique id which starts with the date and time you ran the
+swift command.
+. $HOME/.globus/coasters directory on remote machines on which you are
+running coasters
+. $HOME/.globus/scripts directory on the host on which you run the Swift
+command, when swift is submitting to a local scheduler (Condor, PBS, SGE,
+Cobalt)
+. $HOME/.globus/??? on remote systems that you access via Globus 
+

@@ -1,0 +1,52 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<!-- (TODO indicate log file name here; indicate report generation
+time here; indicate version of swift that was used - if locally modified
+print a big red warning) -->
+
+<h2>Summary of execution</h2>
+<p>This plot shows the state of executions over time. When a SwiftScript
+program makes a procedure call, an execution will appear on this plot
+in START state. Over time, jobs should end up either in END_SUCCESS or
+END_FAILURE states. (<a href="execute.html">More detail about
+execute events</a>)
+</p>
+<img src="execute-trails.png" />
+
+<p>Number of karajan level job submissions that are 'Active' - this means
+that the underlying execution layer (such as GRAM) has reported that the
+job is actually executing - this is an approximation of the number
+of cores in use at once (for single threaded application code)
+(<a href="karajan.html">More detail about karajan events</a>)</p>
+<img src="karatasks.JOB_SUBMISSION.Active-total.png" />
+
+<p>Various execution-related total-event plots on one chart:</p>
+<img src="execstages.png" />
+
+<hr />
+<h2>general stats</h2>
+<p>Some execution counts:</p>
+<pre>
+include(`execution-counts.txt')
+</pre>
+
+<p>List of sites used in this run:</p>
+<pre>
+include(`sites-list.data')
+</pre>
+
+<h2>Workflow</h2>
+
+<p>The whole workflow
+(<a href="workflow.event">text file of event(s)</a>)
+ - there should be just one of them and it should
+take the whole span of execution time:</p>
+<img src="workflow.png" />
+
+<p>end</p>
+</body>

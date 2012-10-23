@@ -1,0 +1,230 @@
+#!/usr/bin/perl -w
+
+use strict;
+use FindBin qw($Bin);
+use lib "$FindBin::Bin/../lib/perl";
+use Cwd;
+use Cwd qw(abs_path);
+use File::Copy;
+use File::Path;
+use Getopt::Long qw(:config permute pass_through);
+use File::Which qw(which where);
+use XML::Simple;
+use Pod::Usage;
+use SwiftConfig;
+
+# Command line processing
+my @option_sites;      	# Site name to execute upon
+my $option_script;     	# Script name to run
+my @option_inputs;     	# Name of data to include with execution
+my @option_groups;     	# Name of group/groups to run script on
+my $option_certificate;	# Use a default certificate instead of your own 
+
+GetOptions(
+    'site|sites=s{,}'   => \@option_sites,
+    'script=s'          => \$option_script,
+    'input|inputs=s{,}' => \@option_inputs,
+    'help|man|h'        => sub { pod2usage(-verbose => 2); },
+    'group|groups=s{,}' => \@option_groups,
+    'certificate'	=> \$option_certificate,
+);
+
+# Check arguments
+initialize_swiftconfig();
+if(!$option_script || (!@option_sites && !@option_groups)) {
+    print "Incorrect usage. Try swiftrun -help\n";
+    exit;
+}
+
+# Create run directory
+my $script_filename = strip_directory($option_script);
+my $dotswift_directory = "$ENV{'HOME'}/.swift";
+my @run_directories = <run.????>;
+if(!@run_directories) {
+    $run_directories[0] = "run.0000";
+}
+my ($run_number) = $run_directories[-1] =~ m{(\d+)};
+$run_number++;
+my $run_directory = getcwd() . "/" . sprintf "run.%04s", $run_number;
+create_directory($run_directory);
+
+# Copy over needed files
+copy_file( "$option_script", "$run_directory" );
+
+# Determine list of sites. Store each swiftconfig directory we need in @sites
+my @sites = ();
+
+# Check for -sites all
+foreach my $option_site (@option_sites) {
+    if(lc($option_site) eq 'all') {
+        @sites = glob("$dotswift_directory/sites/*");
+    }
+}
+
+# Everything else specified by -sites
+foreach my $option_site (@option_sites) {
+    if(lc($option_site) eq 'all') {
+        next;
+    }
+    if(-d "$dotswift_directory/sites/$option_site") {
+        push(@sites, "$dotswift_directory/sites/$option_site");
+    }
+    else {
+        die "Unable to find configuration for $option_site\n";
+    }
+}
+
+# Groups
+foreach my $group(@option_groups) {
+    open(GROUPFILE, "$dotswift_directory/groups/$group.group")
+        || die "Unable to open file for $group\n";
+    while(<GROUPFILE>) {
+        chomp($_);
+        push(@sites, "$dotswift_directory/sites/$_");
+    }
+    close(GROUPFILE);
+}
+
+# Create configuration files for run         
+my @sites_xml;
+my @apps_data;
+foreach my $site (@sites) {
+    if ( !-d "$site" ) {
+        die "Unable to find configuration for $site\n";
+    }
+    
+    # Sites.xml
+    if ( !-e "$site/sites.xml" ) {
+        die "Unable to find sites.xml for $site\n";
+    }              
+    open(CURRENT_SITE, "$site/sites.xml")
+            || die "Unable to open $site/sites.xml";
+    push(@sites_xml, <CURRENT_SITE>);
+    close(CURRENT_SITE);
+    
+    # Properties
+    if( -e "$site/swift.properties") {
+        copy_file( "$site/swift.properties", "$run_directory");
+    }
+
+    # Applications
+    if(-e "$site/apps") {
+        open(APPFILE, "$site/apps") || die "Unable to open $site/apps";
+        while(<APPFILE>) {
+            chomp($_);
+            if(-e "$dotswift_directory/apps/$_.apps") {
+                open(APPDATA, "$dotswift_directory/apps/$_.apps")
+                    || die "Unable to open $dotswift_directory/apps/$_.apps";
+                my @temp_app_data = <APPDATA>;
+                close(APPDATA);
+                foreach(@temp_app_data) {
+                    my $simple_site_name = strip_directory($site);
+                    s/SWIFTCONFIGURATION/$simple_site_name/ig;
+                }
+                push(@apps_data, @temp_app_data);
+            }
+        }
+    }
+}
+
+# Save configuration information
+open(TC, ">>$run_directory/tc.data") 
+    || die "Unable to write to $run_directory/tc.data\n";
+print TC @apps_data;
+close(TC);
+
+open( SITEFILE, ">$run_directory/sites.xml" ) 
+    || die "Unable to open $run_directory/sites.xml for writing\n";
+print SITEFILE "<config>\n@sites_xml</config>\n";
+close(SITEFILE);
+
+# Link input data
+foreach my $input_file (@option_inputs) {
+    # Check for relative path
+    my $first_char = substr $input_file, 0, 1;
+    if( $first_char ne '/') {
+        $input_file = getcwd() . "/$input_file";
+    }
+
+    if ( !-e $input_file ) {
+        die "Unable to find requested input file: $input_file\n";
+    }
+    my $new_path = "$run_directory/" . strip_directory($input_file);
+    symlink $input_file, $new_path
+        || die "Unable to create symlink to $new_path\n";
+}
+
+# Handle certificates if needed
+if($option_certificate) {
+	$ENV{'X509_CERT_DIR'} = "$FindBin::Bin/../etc/certificate";
+	$ENV{'X509_CADIR'} = "$FindBin::Bin/../etc/certificate";
+	$ENV{'X509_USER_PROXY'} = "$FindBin::Bin/../etc/certificate/x509up_swift";
+}
+
+
+# Run swift
+chdir("$run_directory") || die "Unable to chdir to $run_directory\n";
+print "Executing script $option_script\n";
+print "Check $run_directory for output and debugging information\n";
+my $system_command = 
+      'swift '
+    . "-sites.file $run_directory/sites.xml "
+    . "-tc.file $run_directory/tc.data "
+    . "$option_script ";
+if(-e "$run_directory/swift.properties") {
+    $system_command .= "-config $run_directory/swift.properties ";
+}
+
+# Add unknown options
+foreach my $unknown_argument (@ARGV) {
+    $system_command .= "$unknown_argument ";
+}
+
+# Execute
+system($system_command);
+
+my $sec = (time - $^T);
+my $hours = ($sec/(60*60))%24;
+my $mins = ($sec/60)%60;
+my $secs = $sec%60;
+my $datestring = sprintf("%dh:%dm:%ds", $hours, $mins, $secs);
+print "Script $option_script finished in $datestring\n";
+
+__END__
+
+=head1 NAME
+
+swiftrun - Run swift using configurations generated by swiftconfig
+
+=head1 SYNOPSIS
+
+swiftrun [B<-option> value]
+
+=head1 OVERVIEW
+
+The swiftrun program allows you to execute swift using configurations
+generated by swiftconfig.
+
+=head1 DESCRIPTION
+
+General operations:
+   -site <site1 site2>	  Execute swift on given sitename(s)
+   -script file.swift	  Specify the swift script to run
+   -input <file1 file2>    Link to data required for execution
+   -groups <group1 group2> Run script on a site grouping
+=head1 EXAMPLES
+
+Run a script on a single site
+   swiftrun -site local -script my.script
+
+Run a script on multiple sites
+   swiftrun -site host1 host2 -script my.script
+   
+Run a script on all available configurations
+    swiftrun -site all -script my.script
+
+Link multiple files 
+   swiftrun -site local -script my.script -input /foo/file* /foo2/file*
+
+=cut
+

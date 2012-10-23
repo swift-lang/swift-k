@@ -1,0 +1,87 @@
+#! /bin/bash
+
+# FIXME: improve arg parsing / checking / optionals
+
+function usage ()
+{
+       echo "Usage:"
+       echo " $0 --throttle 0.01 --loglevel INFO|DEBUG|TRACE --jobspernode 1"
+}
+
+if [ $# -ne 6 ]
+then
+    usage
+    exit 1
+fi
+
+LOGLEVEL=INFO # INFO, DEBUG, TRACE for increasing detail
+THROTTLE=0.09
+
+while test "$1" != "" ; do
+    case $1 in
+        --jobspernode|-j)
+                JOBSPERNODE="$2"
+                shift
+        ;;
+        --loglevel|-l)
+                LOGLEVEL="$2"
+                shift
+        ;;
+        --throttle|-t)
+                THROTTLE="$2"
+                shift
+        ;;
+        -*)
+                echo "Error: no such option $1"
+                usage
+                exit 1
+        ;;
+    esac
+    shift
+done
+
+BIN=$(cd $(dirname $0); pwd)
+
+echo THROTTLE=$THROTTLE LOGLEVEL=$LOGLEVEL
+
+#numsites=`cat greensites | wc -l`
+#coaster-service -port 1984 -localport 35753 -nosec >& local-coaster-service.out &
+sleep 5
+start-swift-service 1 &
+#start-swift-service $numsites &
+sleep 5
+SPORT=$(cat service.sports)
+cat >sites.grid-ps.xml <<EOF
+  <config>
+    <pool handle="grid">
+      <execution provider="coaster-persistent" url="http://localhost:$SPORT" jobmanager="local:local"/>
+      <profile namespace="globus" key="workerManager">passive</profile>
+      <profile namespace="globus" key="jobsPerNode">$JOBSPERNODE</profile>
+      <profile key="jobThrottle" namespace="karajan">$THROTTLE</profile>
+      <profile namespace="karajan" key="initialScore">10000</profile>
+      <!-- <filesystem provider="local" url="none" /> -->
+      <profile namespace="swift" key="stagingMethod">proxy</profile>
+      <profile namespace="globus" key="workerLoggingLevel">DEBUG</profile>
+      <workdirectory>.</workdirectory>
+    </pool>
+    
+   <pool handle="localhost">
+      <execution provider="coaster-persistent" url="http://localhost:1984" jobmanager="local:local"/>
+      <profile namespace="globus" key="workerManager">passive</profile>
+      <profile namespace="globus" key="jobsPerNode">$JOBSPERNODE</profile>
+      <profile key="jobThrottle" namespace="karajan">$THROTTLE</profile>
+      <profile namespace="karajan" key="initialScore">10000</profile>
+      <filesystem provider="local" url="none" />
+      <profile namespace="globus" key="workerLoggingLevel">DEBUG</profile>
+      <profile namespace="swift" key="stagingMethod">proxy</profile>
+      <workdirectory>/tmp/$USER</workdirectory>
+    </pool>
+  </config>
+EOF
+
+WPORT=$(cat service.wports)
+SERVICE_URL=http://$(hostname -f):$WPORT
+echo swift service started - SPORT=$(cat service.sports) WPORT=$WPORT SERVICE_URL=$SERVICE_URL
+
+# SERVICE_URL=$SERVICE_URL WORKER_LOGLEVEL=$LOGLEVEL
+

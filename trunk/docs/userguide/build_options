@@ -1,0 +1,50 @@
+Build options
+-------------
+See the Swift download page
+<http://www.ci.uchicago.edu/swift/downloads/> for instructions on
+downloading and building Swift from source. When building, various build
+options can be supplied on the ant commandline. These are summarised here:
+
+with-provider-condor - build with CoG condor provider
+
+with-provider-coaster - build with CoG coaster provider (see the
+section on coasters). Since 0.8, coasters are always built,
+and this option has no effect.
+
+with-provider-deef - build with Falkon provider deef. In order for
+this option to work, it is necessary to check out the provider-deef code
+in the cog/modules directory alongside swift:
+
+----
+$ cd cog/modules
+$ svn co https://svn.ci.uchicago.edu/svn/vdl2/provider-deef
+$ cd ../swift
+$ ant -Dwith-provider-deef=true redist
+----
+			
+with-provider-wonky - build with provider-wonky, an execution provider
+that provides delays and unreliability for the purposes of testing
+Swift's fault tolerance mechanisms. In order for this option to work, it
+is necessary to check out the provider-wonky code in the |cog/modules|
+directory alongside swift:
+
+----
+$ cd cog/modules
+$ svn co https://svn.ci.uchicago.edu/svn/vdl2/provider-wonky
+$ cd ../swift
+$ ant -Dwith-provider-wonky=true redist
+----
+			
+no-supporting - produces a distribution without supporting commands
+such as grid-proxy-init. This is intended for when the Swift
+distribution will be used in an environment where those commands are
+already provided by other packages, where the Swift package should be
+providing only Swift commands, and where the presence of commands such
+as grid-proxy-init from the Swift distribution in the path will mask the
+presence of those commands from their true distribution package such as
+a Globus Toolkit package.
+
+----
+$ ant -Dno-supporting=true redist
+----
+

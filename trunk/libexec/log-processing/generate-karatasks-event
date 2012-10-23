@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for taskid in $(cat tasks.list); do
+  extract-activity-for-task $taskid > tfat.tmp
+  sort < tfat.tmp > tfat2.tmp
+  START=$(head -n 1 tfat2.tmp | cut -f 1 -d ' ')
+  END=$(tail -n 1 tfat2.tmp | cut -f 1 -d ' ')
+  DURATION=$(echo $END - $START | bc )
+  read t tasktype rest < tfat.tmp # assumes task type never changes
+  echo $START $DURATION $taskid $tasktype
+done

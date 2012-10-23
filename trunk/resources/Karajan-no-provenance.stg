@@ -1,0 +1,15 @@
+group Karajan-np;
+
+vdl_log_input() ::= << >>
+
+vdl_log_output() ::= << >>
+
+callInternal_log_input() ::= <<$it$>>
+
+callInternal_log_output() ::= <<$it$>>
+
+variable_log() ::= << >>
+
+range_log() ::= << >>
+
+cs() ::= << >>

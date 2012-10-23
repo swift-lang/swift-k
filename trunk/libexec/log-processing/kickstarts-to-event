@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ "$KDIR" == "" ]; then
+  echo No kickstart record directory defined in environment variable KDIR - exiting
+  exit 0
+fi
+
+while read t d id rest; do
+  record=$(find ${KDIR} -name ${id}-kickstart.xml)
+
+  if [ "X$record" != "X" ] && [ -f $record ] ; then
+  #<mainjob start="2007-09-21T13:21:37.525+01:00" duration="26.016" pid="4584">
+
+    START=$(grep "<mainjob " $record | sed 's/^.*start="\([^"]*\)".*$/\1/' | iso-to-secs)
+    DURATION=$(grep "<mainjob " $record | sed 's/^.*duration="\([^"]*\)".*$/\1/')
+    if [ "X$START" != "X" ] && [ "X$DURATION" != "X" ]; then
+      echo $START $DURATION $record
+      echo Processed kickstart record $record >&2
+    else
+      echo Bad kickstart record $record >&2
+    fi
+  else
+    echo No kickstart record for $id >&2
+  fi
+
+done < execute2.event

@@ -1,0 +1,58 @@
+Before running this test, be sure to copy coaster-service.conf to your swift etc directory
+
+There are no templates in this directory. start-coaster-service generates sites.xml from the persistent-coasters template
+
+Be sure that you have all the hosts properly configured in ~/.ssh/auth.defaults. You can use the example below as a template.
+
+crush.mcs.anl.gov.type=key
+crush.mcs.anl.gov.username=davidk
+crush.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+crush.mcs.anl.gov.passphrase=your passphrase here
+
+thwomp.mcs.anl.gov.type=key
+thwomp.mcs.anl.gov.username=davidk
+thwomp.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+thwomp.mcs.anl.gov.passphrase=your passphrase here
+
+stomp.mcs.anl.gov.type=key
+stomp.mcs.anl.gov.username=davidk
+stomp.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+stomp.mcs.anl.gov.passphrase=your passphrase here
+
+crank.mcs.anl.gov.type=key
+crank.mcs.anl.gov.username=davidk
+crank.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+crank.mcs.anl.gov.passphrase=your passphrase here
+
+steamroller.mcs.anl.gov.type=key
+steamroller.mcs.anl.gov.username=davidk
+steamroller.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+steamroller.mcs.anl.gov.passphrase=your passphrase here
+
+grind.mcs.anl.gov.type=key
+grind.mcs.anl.gov.username=davidk
+grind.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+grind.mcs.anl.gov.passphrase=your passphrase here
+
+churn.mcs.anl.gov.type=key
+churn.mcs.anl.gov.username=davidk
+churn.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+churn.mcs.anl.gov.passphrase=your passphrase here
+
+trounce.mcs.anl.gov.type=key
+trounce.mcs.anl.gov.username=davidk
+trounce.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+trounce.mcs.anl.gov.passphrase=your passphrase here
+
+thrash.mcs.anl.gov.type=key
+thrash.mcs.anl.gov.username=davidk
+thrash.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+thrash.mcs.anl.gov.passphrase=your passphrase here
+
+vanquish.mcs.anl.gov.type=key
+vanquish.mcs.anl.gov.username=davidk
+vanquish.mcs.anl.gov.key=/home/davidk/.ssh/id_rsa
+vanquish.mcs.anl.gov.passphrase=your passphrase here
+
+
+

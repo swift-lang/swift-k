@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# feed in karatasks.JOB_SUBMISSION.transitions and column 5 will be
+# made to be the execute2 id associated with that karajan task, column 6
+# with the replication group id.
+# (if there is such an association - not all execution tasks will be
+# associated with an execute2)
+
+# 1219781848.384 0-1-1219781848210 Active JOB_SUBMISSION 
+
+while read time karaid state type rest; do
+  exec2id=$(get-jobid-for-karajanid $karaid)
+  replid=$(get-replicationid-for-execute2id $exec2id)
+  echo $time $karaid $state $type $exec2id $replid $rest
+done

@@ -1,0 +1,53 @@
+<project>
+	<import file="sys.xml"/>
+	<import file="task.xml"/>
+	<import file="vdl-lib.xml"/>
+	<import file="vdl-sc.k"/>
+	
+	<set names="sites, tcfile, clusteringEnabled, clusteringQueueDelay, clusteringMinTime">
+		<vdl:configProperty name="sites.file"/>
+		<vdl:configProperty name="tc.file"/>
+		<vdl:configProperty name="clustering.enabled"/>
+		<vdl:configProperty name="clustering.queue.delay"/>
+		<vdl:configProperty name="clustering.min.time"/>
+	</set>
+	
+	<set names="hostSubmitThrottle, submitThrottle, maxTransfers, maxFileOperations, jobThrottle">
+		<vdl:configProperty name="throttle.host.submit"/>
+		<vdl:configProperty name="throttle.submit"/>
+		<vdl:configProperty name="throttle.transfers"/>
+		<vdl:configProperty name="throttle.file.operations"/>
+		<vdl:configProperty name="throttle.score.job.factor"/>
+	</set>
+	
+	<log level="info"><string>Using sites file: {sites}</string></log>
+	<if><not><file:exists name="{sites}"/>
+            </not>
+            <then>
+		<generateError>
+		<string>
+		Could not find sites file: {sites}
+		</string></generateError></then>
+	</if>
+
+	<log level="info"><string>Using tc.data: {tcfile}</string></log>
+  
+	<scheduler type="vds-adaptive" shareID="vdl2:scheduler:{sites}">
+		<property name="transformationCatalogFile" value="{tcfile}"/>
+		<property name="clusteringEnabled" value="{clusteringEnabled}"/>
+		<property name="clusteringQueueDelay" value="{clusteringQueueDelay}"/>
+		<property name="clusteringMinTime" value="{clusteringMinTime}"/>
+		
+		<property name="hostSubmitThrottle" value="{hostSubmitThrottle}"/>
+		<property name="submitThrottle" value="{submitThrottle}"/>
+		<property name="jobsPerCpu" value="off"/>
+		<property name="maxTransfers" value="{maxTransfers}"/>
+		<property name="maxFileOperations" value="{maxFileOperations}"/>
+		<property name="jobThrottle" value="{jobThrottle}"/>
+		
+		<task:availableHandlers type="execution" includeAliases="true"/>
+		<task:availableHandlers type="file" includeAliases="true"/>
+		
+		<vdl:siteCatalog file="{sites}"/>
+	</scheduler>
+</project>

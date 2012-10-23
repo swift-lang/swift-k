@@ -1,0 +1,7 @@
+queenbee-pbs 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
+queenbee-pbs 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
+queenbee-pbs 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
+queenbee-pbs 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
+queenbee-pbs 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
+queenbee-pbs 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
+queenbee-pbs	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX

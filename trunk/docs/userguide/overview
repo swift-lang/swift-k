@@ -1,0 +1,20 @@
+Overview
+--------
+This manual provides reference material for Swift: the SwiftScript
+language and the Swift runtime system. For introductory material,
+consult the Swift tutorial
+<http://www.ci.uchicago.edu/swift/guides/tutorial.php>.
+
+Swift is a data-oriented coarse grained scripting language that supports
+dataset typing and mapping, dataset iteration, conditional branching,
+and procedural composition.
+
+Swift programs (or workflows) are written in a language called
+SwiftScript.
+
+SwiftScript programs are dataflow oriented - they are primarily
+concerned with processing (possibly large) collections of data files, by
+invoking programs to do that processing. Swift handles execution of such
+programs on remote sites by choosing sites, handling the staging of
+input and output files to and from the chosen sites and remote execution
+of program code.

@@ -1,0 +1,72 @@
+BUGS TO INVESTIGATE AND/OR FILE
+
+- why are there two logs from the coaster service: uuid-named log and swift.log????
+
+- missing .error file???
+
+- new error handling strategy ?
+
+- unique sub file for each worker job
+--- log file for each
+--- worker log on $tmp
+--- cat worker log on error
+--- set worker run time
+--- option for per-site service
+--- option for gridftp if using per-site service
+--- return log file on error if possible
+
+
+
+EXTENCI APPLICATION WORK
+
+create modft install & test file; test under fork and work
+
+run sites gen
+
+run tcgen
+
+run factory  (convert factory from ruby to shell?)
+
+run wf (one service for all w/ provider staging; one service per site)
+
+
+TO RESOLVE
+
+- how to set swift throttles to handle a varying number of coaster
+workers per site?
+
+- why did Allan set exceptions in workdir names, eg for BNL?
+
+- how to dynamically grow/shrink pool and add/remove sites;
+dynamically take coaster services in and out of service.
+
+- settings for retry and replication
+
+
+FEATURES
+
+- Add site selection option to foreachsite
+
+- Add test of larger/variable-size data transfer, and test of data
+transfer speed
+
+It should be easy to set the data size.
+
+It will be a bit harder to test the data transfer *speed*,
+though. That could perhaps be tested with a run against the fork
+jobmanager, where we can set a bound on the expected delay
+time. Otherwise the delay from the time the file staging starts to the
+time the app runs is hard to determine.
+
+
+
+CLEANUP
+
+- Find all interim tools under swift/lab/osg and place under grid/ for
+development
+
+ENHANCEMENTS
+
+- Find Glen's tgsites command and integrate
+
+- incorporate gstar (would be a good Globus Online feature)

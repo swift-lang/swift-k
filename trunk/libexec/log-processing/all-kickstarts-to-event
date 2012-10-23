@@ -1,0 +1,18 @@
+#!/bin/bash
+
+for record in $(find $KDIR -name \*-kickstart.xml); do
+  echo processing record $record >&2
+
+  if [ -f $record ] ; then
+  #<mainjob start="2007-09-21T13:21:37.525+01:00" duration="26.016" pid="4584">
+
+    START=$(grep "<mainjob " $record | sed 's/^.*start="\([^"]*\)".*$/\1/' | iso-to-secs)
+    DURATION=$(grep "<mainjob " $record | sed 's/^.*duration="\([^"]*\)".*$/\1/')
+    if [ "X$START" != "X" ] && [ "X$DURATION" != "X" ]; then
+      echo $START $DURATION $record
+    else
+      echo bad record $record >&2
+    fi
+  fi
+
+done

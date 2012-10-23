@@ -1,0 +1,8 @@
+#! /bin/sh
+for f in $*; do
+  flist=$flist" -format %s| "$f
+done
+
+echo flist: $flist >>ressfields.log
+
+condor_status -pool engage-submit.renci.org $flist -format "\\n" ""

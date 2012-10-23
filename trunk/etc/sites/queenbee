@@ -1,0 +1,9 @@
+<!-- Queenbee on Teragrid - http://www.loni.org/teragrid/users_guide.php -->
+<config>
+<pool handle="queenbee-pbs">
+  <execution jobmanager="local:pbs" provider="local" url="none" />
+  <filesystem provider="local" url="none" />
+  <profile key="jobThrottle" namespace="karajan">0</profile>
+  <workdirectory>_WORK_</workdirectory>
+</pool>
+</config>

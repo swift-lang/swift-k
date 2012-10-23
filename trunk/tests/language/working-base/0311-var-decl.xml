@@ -1,0 +1,35 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="x" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="y" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 2">
+   <variableReference>y</variableReference>
+   <integerConstant>2</integerConstant>
+  </assign>
+  <variable name="s" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 3">
+   <variableReference>s</variableReference>
+   <stringConstant>hello</stringConstant>
+  </assign>
+  <variable name="f" type="float[]" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 4">
+   <variableReference>f</variableReference>
+
+     <array>
+       <floatConstant>1.0</floatConstant><floatConstant>2.0</floatConstant><floatConstant>3.0</floatConstant>
+     </array>
+
+  </assign>
+  <variable name="p" type="int[]" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 6">
+   <variableReference>p</variableReference>
+
+     <range>
+       <integerConstant>1</integerConstant>
+       <integerConstant>9</integerConstant>
+       <integerConstant>2</integerConstant>
+     </range>
+
+  </assign>
+</program>

@@ -1,0 +1,61 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <procedure name="f" src="line 2">
+
+      <input 
+    name="g" type="int"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 2">
+        <executable>echo</executable>
+        <variableReference>g</variableReference>  </application>
+    </binding>
+  </procedure>
+  <variable name="d" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 5">
+   <variableReference>d</variableReference>
+   <integerConstant>5</integerConstant>
+  </assign>
+  <variable name="j" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="uuu" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="s" type="string" isGlobal="false" xsi:nil="true"/>
+  <variable name="g" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="t" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="e" type="int" isGlobal="false" xsi:nil="true"/>
+  <switch>
+    <variableReference>d</variableReference>
+    <case>
+      <integerConstant>1</integerConstant>
+      <statements>
+      <call proc="f" src="line 12">
+        <input><variableReference>g</variableReference></input>
+      </call>
+      </statements>
+    </case>
+    <case>
+      <integerConstant>5</integerConstant>
+      <statements>
+      <assign src="line 15">
+       <variableReference>j</variableReference>
+       <integerConstant>7</integerConstant>
+      </assign>
+      <assign src="line 16">
+       <variableReference>uuu</variableReference>
+       <function name="toint">
+         <arith op="+">
+           <stringConstant>5</stringConstant>
+           <stringConstant>2</stringConstant>
+         </arith></function>
+      </assign>
+      </statements>
+    </case>
+    <default>
+      <assign src="line 18">
+       <variableReference>s</variableReference>
+       <stringConstant>the default</stringConstant>
+      </assign>
+    </default>
+  </switch>
+</program>

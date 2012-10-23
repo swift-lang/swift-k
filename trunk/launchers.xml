@@ -1,0 +1,14 @@
+<project name="Launchers" default="create" basedir=".">
+	<target name="create">
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="VDLx2Karajan"/>
+			<property name="class-name" value="org.griphyn.vdl.engine.Karajan"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="VDLt2VDLx"/>
+			<property name="class-name" value="org.griphyn.vdl.toolkit.VDLt2VDLx"/>
+		</ant>
+	</target>
+	<target name="webstart">
+	</target>
+</project>

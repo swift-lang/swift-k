@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# summarise the state (FAILED) and site (localhost) fields of the input
+# file in a 2-d html table, from execute2.event
+# 1193173122 1 goodmonkey-3xu5anhi FAILED localhost
+
+STATES="JOB_START JOB_END APPLICATION_EXCEPTION JOB_CANCELED"
+
+echo "<table border=\"1\">"
+
+echo "<tr> <th>site</th> "
+
+for state in $STATES; do
+
+  echo "<th>$state</th>"
+
+# <th>FAILED</th> <th>unknown</th> <th>TOTAL</th></tr>"
+
+done
+
+echo "<th>unknown</th> <th>total</th> </tr>"
+
+for site in $(cat sites-list.data); do
+
+ACC=0
+
+echo "<tr> <th align=\"right\">$site</th>"
+
+for status in $STATES; do
+count=$(grep $status execute2.event | grep $site | wc -l)
+ACC=$(( $ACC + $count ))
+echo "<td align=\"right\">$count</td>"
+done
+
+count=$(grep $site execute2.event | wc -l)
+
+unaccounted=$(( $count - $ACC ))
+
+echo "<td>$unaccounted</td>"
+echo "<td>$count</td>"
+
+echo "</tr>"
+
+done
+
+
+echo "</table>"
+

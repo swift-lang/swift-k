@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# 2007-09-22 09:12:35,828+0100 DEBUG vdl:execute2 badmonkey-2s8uqkhi application exception: Exit code 1
+# 59630 INFO  vdl:execute2 Completed job softmean-x7pgqhhi softmean with arguments [atlas.img, y, null, intermediate-slices0003.img, intermediate-slices0002.img, intermediate-slices0004.img, intermediate-slices0001.img] on localhost
+
+grep "DEBUG vdl:execute2 $1 application exception:" log  | sed 's/^\([^ ]*\) .*/\1/'

@@ -1,0 +1,20 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<h2>falkon</h2>
+<p>Falkon taskperf log:</p>
+
+<img src="falkon.png" alt="-"/>
+
+<p>Total jobs that falkon has queued or running:</p>
+<img src="falkon-total.png" alt="-"/>
+
+<p>Falkon job status trails:</p>
+<img src="falkon-task-status-trails.png" alt="-"/>
+
+<p>end</p>
+</body>

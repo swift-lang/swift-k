@@ -1,0 +1,143 @@
+<config>
+
+<!-- sites.xml specifies details of the sites that Swift can run on.
+
+The first entry entry, for localhost, should work on most linux-like systems
+without any change.
+
+It may be necessary to change the two occurences of /var/tmp to a different
+working directory.
+
+The jobThrottle profile is set to 0 so that Swift will not try to run more
+than two jobs at once (the minimum) when using the local sites. This is
+appropriate for local execution, but make sure if/when using another
+execution mechanism to submit to an HPC resource that this jobThrottle
+is removed.
+
+-->
+
+
+  <pool handle="localhost">
+    <filesystem provider="local" />
+    <execution provider="local" />
+    <workdirectory >/var/tmp</workdirectory>
+    <profile namespace="karajan" key="jobThrottle">0</profile>
+  </pool>
+
+
+
+
+
+<!-- The remainder of this file is commented out by default. It contains
+example site definitions for a number of sites on TeraGrid and OSG.
+
+How this list was constructed:
+
+1. Teragrid
+http://www.teragrid.org/userinfo/hardware/resources.php
+fill out the gatekeeper info and the gridftp hostname
+for the storage/workspace, login into the machine, and make yourself a
+temporary directory
+
+2. OSG
+http://osg-cat.grid.iu.edu/index.php?site_name=osgcat
+sort by CPUs
+Add the gatekeeper hostname into the jobmanager name and into the gridftp url
+Add the ($TMP) or ($WNTMP) to the storage element in the gridftp url AND
+into the workspace element
+
+TODO by user:
+customize the storage and workdirectory to use your personal working directories
+
+-->
+
+
+<!--
+  <pool handle="skynet" >
+    <gridftp url="gsiftp://skynet-login.isi.edu" > 
+    </gridftp>
+    <jobmanager universe="vanilla" url="skynet-login.isi.edu/jobmanager-fork" major="2" />
+    <workdirectory >/nfs/scratch01/tiberius</workdirectory>
+  </pool>
+-->
+<!--
+  <pool handle="teraport" >
+    <gridftp  url="gsiftp://tp-grid1.uchicago.edu" /> 
+    <jobmanager universe="vanilla" url="tp-grid1.uchicago.edu/jobmanager-pbs" major="2" />
+    <workdirectory >/home/tiberius/scratch/SWIFT-WORK</workdirectory>
+  </pool>
+-->
+<!--
+<pool handle="ncsa_32" >
+    <gridftp  url="gsiftp://login-w.ncsa.teragrid.org" />
+    <jobmanager universe="vanilla" url="grid-w.ncsa.teragrid.org/jobmanager" major="2" /> 
+    <workdirectory >/u/ac/tstef</workdirectory>
+</pool>
+-->
+<!--
+<pool handle="purdue" >
+    <gridftp  url="gsiftp://tg-data.purdue.teragrid.org" />
+    <jobmanager universe="vanilla" url="tg-gatekeeper.purdue.teragrid.org" major="2" />
+    <workdirectory >/scratch/teragrid/stef</workdirectory>
+</pool>
+-->
+<!-- 
+<pool handle="tacc" >
+    <gridftp  url="gsiftp://tg-gridftp.lonestar.tacc.teragrid.org" />
+    <jobmanager universe="vanilla" url="tg-login.tacc.teragrid.org/jobmanager-lsf" major="2" />
+    <workdirectory >/work/teragrid/tstef</workdirectory>
+</pool>
+-->
+<!-- 
+<pool handle="UC" >
+    <gridftp url="gsiftp://tg-gridftp.uc.teragrid.org" />
+    <execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" />
+    <workdirectory >/disks/scratchgpfs1/tstef</workdirectory>
+</pool>
+ -->
+ 
+<!-- OSG SITES -->
+<!-- 
+<pool handle="OSG_LIGO_PSU" >
+    <gridftp  url="gsiftp://grid3.aset.psu.edu" />
+    <jobmanager universe="vanilla" url="grid3.aset.psu.edu/jobmanager-pbs" major="2" />
+    <workdirectory >/usr1/grid3/data</workdirectory>
+</pool>
+ -->
+<!-- 
+<pool handle="fnal" >
+    <gridftp  url="gsiftp://fngp-osg.fnal.gov" />
+    <jobmanager universe="vanilla" url="fngp-osg.fnal.gov/jobmanager-pbs" major="2" minor="2" />
+    <workdirectory >/grid/data</workdirectory>
+</pool>
+-->
+<!-- 
+<pool handle="prod_slac" >
+    <gridftp  url="gsiftp://osgserv01.slac.stanford.edu" />
+    <jobmanager universe="vanilla" url="osgserv01.slac.stanford.edu/jobmanager-lsf" major="2" />
+    <workdirectory >/nfs/slac/g/grid/osg/data</workdirectory>
+</pool>
+-->
+<!-- 
+<pool handle="bnl_atlas_2" >
+    <gridftp  url="gsiftp://gridgk02.racf.bnl.gov" />
+    <jobmanager universe="vanilla" url="gridgk02.racf.bnl.gov/jobmanager-condor" major="2" />
+    <workdirectory >/usatlas/prodjob/share/</workdirectory>
+</pool>
+-->
+<!--
+<pool handle="unm_hpc" >
+    <gridftp  url="gsiftp://milta.alliance.unm.edu" />
+    <jobmanager universe="vanilla" url="milta.alliance.unm.edu/jobmanager-pbs" major="2" />
+    <workdirectory >/tmp</workdirectory>
+</pool>
+-->
+<!--  
+<pool handle="UWM_CMS" >
+    <gridftp  url="gsiftp://cmsgrid02.hep.wisc.edu" />
+    <jobmanager universe="vanilla" url="cmsgrid02.hep.wisc.edu/jobmanager-condor" major="2" />
+    <workdirectory >/tmp</workdirectory>
+</pool>
+-->
+
+</config>

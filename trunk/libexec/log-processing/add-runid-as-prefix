@@ -1,0 +1,12 @@
+#!/bin/bash
+
+export RUNID=$(basename $LOG .log)
+
+export EVENTSTREAM=$(basename $1 .event)
+
+export WFID="${EVENTSTREAM}:${RUNID}:"
+
+while read one two thread rest; do
+  echo $one $two ${WFID}$thread $thread $rest
+done < $1 > $2
+

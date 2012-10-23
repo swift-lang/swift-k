@@ -1,0 +1,11 @@
+Overview
+--------
+This cookbook covers various recipes involving setting up and running Swift under diverse
+configurations based on the application requirements and the underlying
+infrastructures. The Swift system comprises of SwiftScript language and the
+Swift runtime system. For
+introductory material, consult the Swift tutorial found 
+link:http://www.ci.uchicago.edu/swift/guides/tutorial.php[here].
+
+WARNING: Please be warned that the cookbook is under construction and most recipes are not tested rigorously. You are advised to use them at your own risk.
+

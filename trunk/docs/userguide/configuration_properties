@@ -1,0 +1,447 @@
+Swift configuration properties
+------------------------------
+Various aspects of the behavior of the Swift Engine can be configured
+through properties. The Swift Engine recognizes a global, per
+installation properties file which can found in etc/swift.properties
+in the Swift installation directory and a user properties file which can
+be created by each user in ~/.swift/swift.properties. The Swift Engine
+will first load the global properties file. It will then try to load the
+user properties file. If a user properties file is found, individual
+properties explicitly set in that file will override the respective
+properties in the global properties file. Furthermore, some of the
+properties can be overridden directly using command line arguments to
+the *swift* command.
+
+Swift properties are specified in the following format:
+
+<name>=<value>
+
+The value can contain variables which will be expanded when the
+properties file is read. Expansion is performed when the name of the
+variable is used inside the standard shell dereference construct:
+${name}. The following variables can be used in the Swift
+configuration file:
+
+Swift Configuration Variables
+
+swift.home
+
+    Points to the Swift installation directory ($SWIFT_HOME). In
+    general, this should not be set as Swift can find its own
+    installation directory, and incorrectly setting it may impair the
+    correct functionality of Swift.
+
+user.name
+
+    The name of the current logged in user.
+
+user.home
+
+    The user's home directory.
+
+The following is a list of valid Swift properties:
+
+Swift Properties
+
+caching.algorithm
+
+    Valid values: LRU
+
+    Default value: LRU
+
+    Swift caches files that are staged in on remote resources, and files
+    that are produced remotely by applications, such that they can be
+    re-used if needed without being transfered again. However, the
+    amount of remote file system space to be used for caching can be
+    limited using the swift:storagesize profile entry in the sites.xml file. Example:
+
+----
+<pool handle="example" sysinfo="INTEL32::LINUX">
+<gridftp url="gsiftp://example.org" storage="/scratch/swift" major="2" minor="4" patch="3"/>
+<jobmanager universe="vanilla" url="example.org/jobmanager-pbs" major="2" minor="4" patch="3"/>
+<workdirectory>/scratch/swift</workdirectory>
+<profile namespace="SWIFT" key="storagesize">20000000</profile>
+</pool>
+----
+
+    The decision of which files to keep in the cache and which files to
+    remove is made considering the value of the caching.algorithm
+    property. Currently, the only available value for this property is
+    LRU, which would cause the least recently used files to be deleted
+    first.
+
+clustering.enabled
+
+    Valid values: true, false
+
+    Default value: false
+
+    Enables clustering.
+
+clustering.min.time
+
+    Valid values: <int>
+
+    Default value: 60
+
+    Indicates the threshold wall time for clustering, in seconds. Jobs
+    that have a wall time smaller than the value of this property will
+    be considered for clustering.
+
+clustering.queue.delay
+
+    Valid values: <int>
+
+    Default value: 4
+
+    This property indicates the interval, in seconds, at which the
+    clustering queue is processed.
+
+execution.retries
+
+    Valid values: positive integers
+
+    Default value: 2
+
+    The number of time a job will be retried if it fails (giving a
+    maximum of 1 + execution.retries attempts at execution)
+
+foreach.max.threads
+
+    Valid values: positive integers
+
+    Default value: 1024
+
+    Limits the number of concurrent iterations that each foreach
+    statement can have at one time. This conserves memory for swift
+    programs that have large numbers of iterations (which would
+    otherwise all be executed in parallel). (since Swift 0.9)
+
+ip.address
+
+    Valid values: <ipaddress>
+
+    Default value: N/A
+
+    The Globus GRAM service uses a callback mechanism to send
+    notifications about the status of submitted jobs. The callback
+    mechanism requires that the Swift client be reachable from the hosts
+    the GRAM services are running on. Normally, Swift can detect the
+    correct IP address of the client machine. However, in certain cases
+    (such as the client machine having more than one network interface)
+    the automatic detection mechanism is not reliable. In such cases,
+    the IP address of the Swift client machine can be specified using
+    this property. The value of this property must be a numeric address
+    without quotes.
+
+    This option is deprecated and the hostname property should be used
+    instead.
+
+kickstart.always.transfer
+
+    Valid values: true, false
+
+    Default value: false
+
+    This property controls when output from Kickstart is transfered back
+    to the submit site, if Kickstart is enabled. When set to false,
+    Kickstart output is only transfered for jobs that fail. If set to
+    true, Kickstart output is transfered after every job is completed
+    or failed.
+
+kickstart.enabled
+
+    Valid values: true, false, maybe
+
+    Default value: maybe
+
+    This option allows controlling of when Swift uses Kickstart. 
+    A value of false disables the use of Kickstart,
+    while a value of true enables the use of Kickstart, in which case
+    sites specified in the sites.xml file must have valid
+    gridlaunch attributes. The maybe value will enable the use of
+    Kickstart only on sites that have the gridlaunch attribute
+    specified.
+
+lazy.errors
+
+    Valid values: true, false
+
+    Default value: false
+
+    Swift can report application errors in two modes, depending on the
+    value of this property. If set to false, Swift will report the
+    first error encountered and immediately stop execution. If set to
+    true, Swift will attempt to run as much as possible from a
+    SwiftScript program before stopping execution and reporting all
+    errors encountered.
+
+    When developing SwiftScript programs, using the default value of
+    false can make the program easier to debug. However in production
+    runs, using true will allow more of a SwiftScript program to be
+    run before Swift aborts execution.
+
+pgraph
+
+    Valid values: true, false, <file>
+
+    Default value: false
+
+    Swift can generate a Graphviz <http://www.graphviz.org/> file
+    representing the structure of the SwiftScript program it has run. If
+    this property is set to true, Swift will save the provenance graph
+    in a file named by concatenating the program name and the instance
+    ID (e.g. helloworld-ht0adgi315l61.dot).
+
+    If set to false, no provenance graph will be generated. If a file
+    name is used, then the provenance graph will be saved in the
+    specified file.
+
+    The generated dot file can be rendered into a graphical form using
+    Graphviz <http://www.graphviz.org/>, for example with a command-line
+    such as:
+
+----
+$ swift -pgraph graph1.dot q1.swift
+$ dot -ograph.png -Tpng graph1.dot
+----						
+
+pgraph.graph.options
+
+    Valid values: <string>
+
+    Default value: splines="compound", rankdir="TB"
+
+    This property specifies a Graphviz <http://www.graphviz.org>
+    specific set of parameters for the graph.
+
+pgraph.node.options
+
+    Valid values: <string>
+
+    Default value: color="seagreen", style="filled"
+
+    Used to specify a set of Graphviz <http://www.graphviz.org> specific
+    properties for the nodes in the graph.
+
+provenance.log
+
+    Valid values: true, false
+
+    Default value: false
+
+    This property controls whether the log file will contain provenance
+    information enabling this will increase the size of log files,
+    sometimes significantly.
+
+replication.enabled
+
+    Valid values: true, false
+
+    Default value: false
+
+    Enables/disables replication. Replication is used to deal with jobs
+    sitting in batch queues for abnormally large amounts of time. If
+    replication is enabled and certain conditions are met, Swift creates
+    and submits replicas of jobs, and allows multiple instances of a job
+    to compete.
+
+replication.limit
+
+    Valid values: positive integers
+
+    Default value: 3
+
+    The maximum number of replicas that Swift should attempt.
+
+sitedir.keep
+
+    Valid values: true, false
+
+    Default value: false
+
+    Indicates whether the working directory on the remote site should be
+    left intact even when a run completes successfully. This can be used
+    to inspect the site working directory for debugging purposes.
+
+sites.file
+
+    Valid values: <file>
+
+    Default value: ${swift.home}/etc/sites.xml
+
+    Points to the location of the site catalog, which contains a list of
+    all sites that Swift should use.
+
+status.mode
+
+    Valid values: files, provider
+
+    Default value: files
+
+    Controls how Swift will communicate the result code of running user
+    programs from workers to the submit side. In files mode, a file
+    indicating success or failure will be created on the site shared
+    filesystem. In provider mode, the execution provider job status
+    will be used.
+
+    provider mode requires the underlying job execution system to
+    correctly return exit codes. In at least the cases of GRAM2, and
+    clusters used with any provider, exit codes are not returned, and so
+    files mode must be used in those cases. Otherwise, provider mode
+    can be used to reduce the amount of filesystem access. (since Swift
+    0.8)
+
+tc.file
+
+    Valid values: <file>
+
+    Default value: ${swift.home}/etc/tc.data
+
+    Points to the location of the transformation catalog file which
+    contains information about installed applications. Details about the
+    format of the transformation catalog can be found here
+    <http://vds.uchicago.edu/vds/doc/userguide/html/H_TransformationCatalog.html>.
+
+
+tcp.port.range
+
+    Valid values: <start>,<end> where start and end are integers
+
+    Default value: none
+
+    A TCP port range can be specified to restrict the ports on which
+    GRAM callback services are started. This is likely needed if your
+    submit host is behind a firewall, in which case the firewall should
+    be configured to allow incoming connections on ports in the range.
+
+throttle.file.operations
+
+    Valid values: <int>, off
+
+    Default value: 8
+
+    Limits the total number of concurrent file operations that can
+    happen at any given time. File operations (like transfers) require
+    an exclusive connection to a site. These connections can be
+    expensive to establish. A large number of concurrent file operations
+    may cause Swift to attempt to establish many such expensive
+    connections to various sites. Limiting the number of concurrent file
+    operations causes Swift to use a small number of cached connections
+    and achieve better overall performance.
+
+throttle.host.submit
+
+    Valid values: <int>, off
+
+    Default value: 2
+
+    Limits the number of concurrent submissions for any of the sites
+    Swift will try to send jobs to. In other words it guarantees that no
+    more than the value of this throttle jobs sent to any site will be
+    concurrently in a state of being submitted.
+
+throttle.score.job.factor
+
+    Valid values: <int>, off
+
+    Default value: 4
+
+    The Swift scheduler has the ability to limit the number of
+    concurrent jobs allowed on a site based on the performance history
+    of that site. Each site is assigned a score (initially 1), which can
+    increase or decrease based on whether the site yields successful or
+    faulty job runs. The score for a site can take values in the (0.1,
+    100) interval. The number of allowed jobs is calculated using the
+    following formula:
+
+    2 + score*throttle.score.job.factor
+
+    This means a site will always be allowed at least two concurrent
+    jobs and at most 2 + 100*throttle.score.job.factor. With a default
+    of 4 this means at least 2 jobs and at most 402.
+
+    This parameter can also be set per site using the jobThrottle
+    profile key in a site catalog entry.
+
+throttle.submit
+
+    Valid values: <int>, off
+
+    Default value: 4
+
+    Limits the number of concurrent submissions for a run. This throttle
+    only limits the number of concurrent tasks (jobs) that are being
+    sent to sites, not the total number of concurrent jobs that can be
+    run. The submission stage in GRAM is one of the most CPU expensive
+    stages (due mostly to the mutual authentication and delegation).
+    Having too many concurrent submissions can overload either or both
+    the submit host CPU and the remote host/head node causing degraded
+    performance.
+
+throttle.transfers
+
+    Valid values: <int>, off
+
+    Default value: 4	
+
+    Limits the total number of concurrent file transfers that can happen
+    at any given time. File transfers consume bandwidth. Too many
+    concurrent transfers can cause the network to be overloaded
+    preventing various other signaling traffic from flowing properly.
+
+ticker.disable
+
+    Valid values: true, false
+
+    Default value: false
+
+    When set to true, suppresses the output progress ticker that Swift
+    sends to the console every few seconds during a run (since Swift 0.9)
+
+wrapper.invocation.mode
+
+    Valid values: absolute, relative
+
+    Default value: absolute
+
+    Determines if Swift remote wrappers will be executed by specifying
+    an absolute path, or a path relative to the job initial working
+    directory. In most cases, execution will be successful with either
+    option. However, some execution sites ignore the specified initial
+    working directory, and so absolute must be used. Conversely on
+    some sites, job directories appear in a different place on the
+    worker node file system than on the filesystem access node, with the
+    execution system handling translation of the job initial working
+    directory. In such cases, relative mode must be used. (since Swift
+    0.9)
+
+wrapper.parameter.mode
+
+    Controls how Swift will supply parameters to the remote wrapper
+    script. args mode will pass parameters on the command line. Some
+    execution systems do not pass commandline parameters sufficiently
+    cleanly for Swift to operate correctly. files mode will pass
+    parameters through an additional input file (since Swift 0.95). This
+    provides a cleaner communication channel for parameters, at the
+    expense of transferring an additional file for each job invocation.
+
+wrapperlog.always.transfer
+
+    Valid values: true, false
+
+    Default value: false
+
+    This property controls when output from the Swift remote wrapper is
+    transfered back to the submit site. When set to false, wrapper
+    logs are only transfered for jobs that fail. If set to true,
+    wrapper logs are transfered after every job is completed or failed.
+
+Example:
+
+----
+sites.file=${vds.home}/etc/sites.xml
+tc.file=${vds.home}/etc/tc.data
+ip.address=192.168.0.1
+----
+

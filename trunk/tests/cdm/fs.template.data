@@ -1,0 +1,13 @@
+
+property GATHER_LIMIT 50000 # ~50KB
+property GATHER_DIR /tmp/cdm_gather
+property GATHER_TARGET _PWD_/501-output
+
+rule .*201-output.txt DIRECT _PWD_/201
+rule .*205-output.txt DIRECT /
+rule .*206-input.txt  DIRECT /
+rule .*210-input.txt EXTERNAL PWD_/external.sh
+rule .*301-input.txt BROADCAST _PWD_/301
+rule .*501-output.*.txt GATHER
+rule .*601-input.*.txt LOCAL cp _PWD_/601
+rule .*602-input.*.txt LOCAL dd _PWD_/602

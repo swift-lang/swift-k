@@ -1,0 +1,4 @@
+import "testimport";
+
+type F;
+

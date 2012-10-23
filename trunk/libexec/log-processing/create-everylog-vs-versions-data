@@ -1,0 +1,26 @@
+#!/bin/bash
+
+echo Creating log/version data file: everylog-vs-versions.data
+
+rm -f everylog-vs-versions.data
+
+
+for logfile in `find $1 -name \*.log -and -not -name cluster-\* -and -not -name swift.log $EXTRALOGRESTRICTION`; do
+  VERSION=$(grep -m 1 -E 'Swift v[^ ]* r[0-9]*' $logfile | sed 's/.*Swift v[^ ]* r\([0-9]*\).*/\1/')
+  if [ "X$VERSION" == "X" ]; then
+# try newer format version info
+#2008-05-06 09:30:42,365-0500 INFO  unknown Swift svn swift-r1800 cog-r1963 (CoG modified locally)
+    VERSION=$(grep -m 1 -E 'Swift .* swift-r[0-9]*' $logfile | sed 's/.*Swift .* swift-r\([0-9]*\).*/\1/')
+  fi
+  START=$(head -n1 < $logfile | iso-to-secs | cut -f 1 -d ' ')
+  if [ "X$VERSION" == "X" ]; then
+    VERSION=1262
+  fi
+  if [ "X$START" != "X" ]; then
+    echo $START $VERSION $logfile >> everylog-vs-versions.data
+  fi
+#  echo $START $VERSION $logfile 
+
+done
+
+echo Finished creating log/version data file

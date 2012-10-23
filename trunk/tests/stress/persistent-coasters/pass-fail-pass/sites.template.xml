@@ -1,0 +1,9 @@
+persistent-coasters 	echo		/bin/echo		null	null	null
+persistent-coasters 	cat		/bin/cat		null	null	null
+persistent-coasters 	ls		/bin/ls			null	null	null
+persistent-coasters 	grep		/bin/grep		null	null	null
+persistent-coasters 	sort		/bin/sort		null	null	null
+persistent-coasters 	paste		/bin/paste		null	null	null
+persistent-coasters 	cp		/bin/cp	        	null	null	null
+persistent-coasters	wc		/usr/bin/wc		null	null	null
+persistent-coasters	hostname	/bin/hostname		null	null	null

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+export st=$(cat start-time.tmp)
+export et=$(cat end-time.tmp)
+
+#2008-08-30 08:59:26,994-0500 INFO  unknown RUNID id=run:20080830-0859-q9bqd8r4
+
+WFID=$(grep -E '^[^ ]* [^ ]* INFO  unknown RUNID id=' $1 | sed 's/^.*INFO  unknown RUNID id=\(.*\)$/\1/')
+
+if [ "X$WFID" == "X" ] ; then
+  WFID="unknown-run-id"
+fi
+
+echo $st $(echo $et - $st | bc ) $WFID $1
+

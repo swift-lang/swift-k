@@ -1,0 +1,20 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <procedure name="echo" src="line 2">
+
+      <input 
+    name="i" type="int"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 3">
+        <executable>echo</executable>
+        <variableReference>i</variableReference>  </application>
+    </binding>
+  </procedure>
+  <variable name="greetings" type="int" isGlobal="false" xsi:nil="true"/>
+  <call proc="echo" src="line 7">
+    <input><variableReference>greetings</variableReference></input>
+  </call>
+</program>

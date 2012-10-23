@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# assumption here is that lines which are log-formatted begin with a
+# digit, and lines which are continuations begin with whitespace.
+
+rm -f tmp-extract-endtime2
+
+if [ "X$LOG" != "X" ] ; then
+  grep -E '^[0-9]' $LOG | tail -n 1 | iso-to-secs | cut -f 1 -d ' ' >> tmp-extract-endtime2
+fi
+
+for e in *.event; do
+  sort -n $e | tail -n 1 >> tmp-extract-endtime2
+done
+
+sort -n < tmp-extract-endtime2 | tail -n 1 >tmp-extract-endtime
+
+read st rest < tmp-extract-endtime
+
+echo $st
+

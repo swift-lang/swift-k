@@ -1,0 +1,17 @@
+#!/bin/bash
+
+events-in-progress < execute2.event > esp.execute2.a.tmp
+normalise-event-start-time < esp.execute2.a.tmp > esp.execute2.tmp
+
+events-in-progress < dostagein.event > esp.dostagein.a.tmp
+normalise-event-start-time < esp.dostagein.a.tmp > esp.dostagein.tmp
+
+events-in-progress < dostageout.event > esp.dostageout.a.tmp
+normalise-event-start-time < esp.dostageout.a.tmp > esp.dostageout.tmp
+
+maxtime=$(max-duration)
+
+cat ${SWIFT_PLOT_HOME}/execstages.plot.template | sed "s/MAXTIME/${maxtime}/g" > execstages.plot
+
+gnuplot execstages.plot
+

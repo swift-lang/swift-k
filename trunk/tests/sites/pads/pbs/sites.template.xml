@@ -1,0 +1,16 @@
+<config>
+<pool handle="PADS-pbs">
+  <execution jobmanager="local:pbs" provider="pbs" url="none"/>
+  <filesystem provider="local" url="none" />
+  <profile namespace="globus" key="maxWallTime">2</profile>
+  <profile namespace="globus" key="maxTime">300</profile>
+  <profile key="jobsPerNode" namespace="globus">1</profile>
+  <profile key="slots" namespace="globus">1</profile>
+  <profile key="nodeGranularity" namespace="globus">1</profile>
+  <profile key="maxNodes" namespace="globus">1</profile>
+  <profile key="queue" namespace="globus">fast</profile>
+  <profile key="jobThrottle" namespace="karajan">5.99</profile>
+  <profile key="initialScore" namespace="karajan">10000</profile>
+  <workdirectory>_WORK_</workdirectory>
+</pool>
+</config>

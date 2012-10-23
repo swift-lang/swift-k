@@ -1,0 +1,50 @@
+#!/bin/bash
+
+die () {
+    echo >&2 "$@"
+    exit 1
+}
+
+workerExecutable=`which worker.pl`
+workerWrapper=`which run-worker.sh`
+workerContact=$1
+x509userproxy=$( voms-proxy-info 2>&1 | grep path | awk '{print $NF}' )
+wallTimeMinutes=60
+n=$2
+if [ -z "$WORKER_LOGGING_LEVEL" ];  then
+   WORKER_LOGGING_LEVEL=INFO
+fi
+echo WORKER_INIT_CMD in run-gwms-workers: $WORKER_INIT_CMD
+
+[ "$#" -eq 2 ] || die "2 arguments required, $# provided"
+
+cat > myjob.condor <<EOF
+universe = vanilla
+
+transfer_output = true
+transfer_error = true
+
+stream_output = False
+stream_error = False
+
+transfer_executable = true
+should_transfer_files = YES
+WhenToTransferOutput = ON_EXIT
+
+periodic_remove = JobStatus == 5
+notification = NEVER
+
+executable = $workerWrapper
+arguments = $workerContact scec /tmp
+environment = "WORKER_LOGGING_LEVEL='$WORKER_LOGGING_LEVEL' WORKER_INIT_CMD='$WORKER_INIT_CMD'"
+Input   = $workerExecutable
+Error   = condor/job.\$(Cluster).\$(Process).err
+Output  = condor/job.\$(Cluster).\$(Process).out
+log     = condor.log
+
+x509userproxy = $x509userproxy
+requirements = (((GLIDEIN_ToRetire + GLIDEIN_Job_Max_Time) - CurrentTime) > $wallTimeMinutes*60) 
+queue $n
+EOF
+
+condor_submit myjob.condor

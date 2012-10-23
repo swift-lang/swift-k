@@ -1,0 +1,10 @@
+#!/bin/bash
+
+for cmd in wc touch sleep; do
+  echo "localhost	$cmd	$(which $cmd)	INSTALLED	INTEL32::LINUX	null" >> ./tc.data
+done
+
+for cmd in delayedcat; do
+  echo "localhost	$cmd	$(pwd)/${cmd}.sh	INSTALLED	INTEL32::LINUX	null" >> ./tc.data
+done
+

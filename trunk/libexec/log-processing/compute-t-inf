@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# computes infinity absolute time
+
+# for now, approximates by the last line of the swift log file
+
+tail -n 500 | grep -E '^[0-9]' | tail -n 1 | iso-to-secs | cut -f 1 -d " "
+

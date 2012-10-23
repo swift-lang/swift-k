@@ -1,0 +1,157 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="file">
+       <xs:restriction base="string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="Pre_antchmbr">
+    <output name="t" type="file"/>
+    <input name="f" type="file[]"/>
+    <binding>
+      <application>
+        <executable>pre_ch</executable>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="Antchmbr">
+    <output name="k" type="file"/>
+    <output name="m" type="file"/>
+    <output name="n" type="file"/>
+    <input name="l" type="file"/>
+    <binding>
+      <application>
+        <executable>antch</executable>
+        <argument>&quot;-s&quot;</argument>
+        <argument>&quot;2&quot;</argument>
+        <argument>&quot;-i&quot;</argument>
+        <argument><function name="filename">l</function></argument>
+        <argument>&quot;-fi&quot;</argument>
+        <argument>&quot;mol2&quot;</argument>
+        <argument>&quot;-rn&quot;</argument>
+        <argument>&quot;m001&quot;</argument>
+        <argument>&quot;-o&quot;</argument>
+        <argument><function name="filename">l</function></argument>
+        <argument>&quot;-fo&quot;</argument>
+        <argument>&quot;charmm&quot;</argument>
+        <argument>&quot;-c&quot;</argument>
+        <argument>&quot;bcc&quot;</argument>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="CHARMM">
+    <output name="out1" type="file"/>
+    <output name="out2" type="file"/>
+    <output name="out3" type="file"/>
+    <output name="out4" type="file"/>
+    <output name="out5" type="file"/>
+    <output name="out6" type="file"/>
+    <input name="in1" type="file"/>
+    <input name="in2" type="file"/>
+    <input name="in3" type="file"/>
+    <input name="in4" type="file"/>
+    <input name="in5" type="file"/>
+    <input name="in6" type="file"/>
+    <input name="in7" type="file"/>
+    <binding>
+      <application>
+        <executable>chrm</executable>
+        <argument>&quot;system:solv_m001&quot;</argument>
+        <argument>&quot;title:solv&quot;</argument>
+        <argument>&quot;stitle:m001&quot;</argument>
+        <argument>&quot;rtffile:&quot;</argument>
+        <argument><function name="filename">in1</function></argument>
+        <argument>&quot;paramfile:&quot;</argument>
+        <argument><function name="filename">in2</function></argument>
+        <argument>&quot;gaff:m001_am1&quot;</argument>
+        <argument>&quot;nwater:400&quot;</argument>
+        <argument>&quot;ligcrd:lyz&quot;</argument>
+        <argument>&quot;rforce:0&quot;</argument>
+        <argument>&quot;iseed:3131887&quot;</argument>
+        <argument>&quot;rwater:15&quot;</argument>
+        <argument>&quot;nstep:100&quot;</argument>
+        <argument>&quot;minstep:100&quot;</argument>
+        <argument>&quot;skipstep:100&quot;</argument>
+        <argument>&quot;startstep:10000&quot;</argument>
+        <stdin><function name="filename">in3</function></stdin>
+        <stdout><function name="filename">out1</function></stdout>
+      </application>
+    </binding>
+  </procedure>
+  <dataset name="files" type="file[]">
+    <mapping descriptor="filesys_mapper">
+      <param name="pattern">&quot;*mol2&quot;</param>
+      <param name="location">&quot;.&quot;</param>
+    </mapping>
+  </dataset>
+  <dataset name="am1_file" type="file">
+    <file name="m001_am1"/>
+  </dataset>
+  <dataset name="rtf_file" type="file">
+    <file name="m001_am1.rtf"/>
+  </dataset>
+  <dataset name="crd_file" type="file">
+    <file name="m001_am1.crd"/>
+  </dataset>
+  <dataset name="prm_file" type="file">
+    <file name="m001_am1.prm"/>
+  </dataset>
+  <dataset name="gaff_rft" type="file">
+    <file name="parm03_gaff_all.rtf"/>
+  </dataset>
+  <dataset name="gaff_prm" type="file">
+    <file name="parm03_gaffnb_all.prm"/>
+  </dataset>
+  <dataset name="stdn" type="file">
+    <file name="equil_solv.inp"/>
+  </dataset>
+  <dataset name="water_file" type="file">
+    <file name="water_400.crd"/>
+  </dataset>
+  <dataset name="stdt" type="file">
+    <file name="equil_solv.out"/>
+  </dataset>
+  <dataset name="psf_file" type="file">
+    <file name="solv_m001.psf"/>
+  </dataset>
+  <dataset name="crd_eq_file" type="file">
+    <file name="solv_m001_eq.crd"/>
+  </dataset>
+  <dataset name="rst_file" type="file">
+    <file name="solv_m001.rst"/>
+  </dataset>
+  <dataset name="trj_file" type="file">
+    <file name="solv_m001.trj"/>
+  </dataset>
+  <dataset name="crd_min_file" type="file">
+    <file name="solv_m001_min.crd"/>
+  </dataset>
+  <call proc="Pre_antchmbr">
+    <output>am1_file</output>
+    <input><function name="filename">files</function></input>
+  </call>
+  <call proc="Antchmbr">
+    <output>rtf_file</output>
+    <output>crd_file</output>
+    <output>prm_file</output>
+    <input>am1_file</input>
+  </call>
+  <call proc="CHARMM">
+    <output>stdt</output>
+    <output>psf_file</output>
+    <output>crd_eq_file</output>
+    <output>rst_file</output>
+    <output>trj_file</output>
+    <output>crd_min_file</output>
+    <input>gaff_rft</input>
+    <input>gaff_prm</input>
+    <input>stdn</input>
+    <input>rtf_file</input>
+    <input>prm_file</input>
+    <input>crd_file</input>
+    <input>water_file</input>
+  </call>
+</program>

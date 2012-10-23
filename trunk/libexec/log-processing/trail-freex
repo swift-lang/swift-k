@@ -1,0 +1,32 @@
+#!/bin/bash
+
+rm tmp-trail.png
+
+# maxtime=$(max-duration)
+
+FIRSTSTATE=YES
+cat ${SWIFT_PLOT_HOME}/trail-freex.plot.template > tmp-trail.plot
+
+for state in $(cat $1.seenstates); do
+ #grep $state $1.transitions > tmp-ss-$state
+ grep -E "^[^ ]* *[^ ]* *${state}(\$| .*$)" $1.transitions > tmp-ss-$state
+ cat tmp-ss-$state | sed 's/^\([^ ]*\) .*$/\1/' > tmp-ss2-$state
+ sort -n < tmp-ss2-$state > tmp-ss0-$state
+ I=0
+ while read t rest; do
+   echo $t $I
+   I=$(( $I + 1 ))
+ done < tmp-ss0-$state > tmp-ss9-$state
+ normalise-event-start-time < tmp-ss9-$state > tmp-ss3-$state
+ if [ "X$FIRSTSTATE" == "XNO" ]; then
+   echo -n ", " >> tmp-trail.plot
+ else
+   FIRSTSTATE=NO
+ fi
+ echo -n "'tmp-ss3-${state}' with lines title \"${state}\"" >> tmp-trail.plot
+done
+
+gnuplot tmp-trail.plot
+
+cp tmp-trail.png $1-trailsx.png
+

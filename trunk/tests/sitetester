@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+import commands
+import os
+
+# the workdir for a given site needs to exist on the site you're testing
+# and should contain run-suite & suite.sh
+# this script will ssh onto the site, pass run-suite the necesary variables
+# for running suite.sh
+
+class Site:
+
+    def __init__(self,login,logtype,workdir,queue,project):
+        self.login = login
+        self.logintype = logtype
+        self.workdir = workdir
+        self.queue = queue
+        self.project = project
+
+    def testSite(self,cogv,swiftv,test_type):
+            cmdline = self.logintype+" "+self.login+" "+self.workdir+"/run-suite.sh "+self.workdir+"/"+test_type+" "+self.workdir+" "+self.queue+" "+self.project+" "+cogv+" "+swiftv
+            print "running......"+cmdline
+            res = commands.getoutput(cmdline)
+            print res
+            cmdline2 =  "scp -r "+s+":"+rundir+" ."
+            res2 = commands.getoutput(cmdline)
+
+
+
+
+#---------------------main--------------------------------------------------------
+
+sites = []
+
+s_logins = ['skenny@login2.pads.ci.uchicago.edu','login-abe.ncsa.teragrid.org','login1-qb.loni-lsu.teragrid.org']
+logintype = ['ssh','gsissh','gsissh']
+workdirs = ['/home/skenny/swift_runs/tests','/u/ac/skenny/swift_runs/tests','/home/skenny/swift_runs/tests']
+queues = ['short','debug','workq']
+projects = ['CI-IBN000039','TG-DBS080004N','TG-DBS080004N']
+
+test_type = "groups/local-pbs-coasters.sh"
+cogv = 'branches/4.1.8'
+swiftv = 'branches/release-0.92'
+
+rundir = commands.getoutput('date +\"%Y-%m-%d\"')
+rundir = "run-"+rundir
+
+for idx,s in enumerate(s_logins):
+    sites.append(Site(s,logintype[idx],workdirs[idx],queues[idx],projects[idx]))
+
+# loop over all or run single
+
+sites[1].testSite(cogv,swiftv,test_type)
+sites[2].testSite(cogv,swiftv,test_type)
+
+
+
+
+

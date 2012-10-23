@@ -1,0 +1,2 @@
+Queenbee uses an older version of bash which does not work with the nightly.sh by default
+In order to run these tests, download and compile a newer version of bash from ftp.gnu.org/pub/bash

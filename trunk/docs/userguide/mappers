@@ -1,0 +1,854 @@
+Mappers
+~~~~~~~
+When a DSHandle represents a data file (or container of datafiles), it
+is associated with a mapper. The mapper is used to identify which files
+belong to that DSHandle.
+
+A dataset's physical representation is declared by a mapping descriptor,
+which defines how each element in the dataset's logical schema is stored
+in, and fetched from, physical structures such as directories, files,
+and remote servers.
+
+Mappers are parameterized to take into account properties such as
+varying dataset location. In order to access a dataset, we need to know
+three things: its type, its mapping, and the value(s) of any
+parameter(s) associated with the mapping descriptor. For example, if we
+want to describe a dataset, of type imagefile, and whose physical
+representation is a file called "file1.bin" located at
+"/home/yongzh/data/", then the dataset might be declared as follows:
+
+----
+imagefile f1<single_file_mapper;file="/home/yongzh/data/file1.bin">
+----
+
+The above example declares a dataset called f1, which uses a single file
+mapper to map a file from a specific location.
+
+SwiftScript has a simplified syntax for this case, since
+single_file_mapper is frequently used:
+
+----
+binaryfile f1<"/home/yongzh/data/file1.bin">
+----
+
+Swift comes with a number of mappers that handle common mapping
+patterns. These are documented in the mappers section of this
+guide.
+
+More technical details about SwiftScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The syntax of SwiftScript has a superficial resemblance to C and Java.
+For example, { and } characters are used to enclose blocks of statements.
+
+A SwiftScript program consists of a number of statements. Statements may
+declare types, procedures and variables, assign values to variables, and
+express operations over arrays.
+
+
+Variables
+^^^^^^^^^
+Variables in SwiftScript are declared to be of a specific type.
+Assignments to those variables must be data of that type. SwiftScript
+variables are single-assignment - a value may be assigned to a variable
+at most once. This assignment can happen at declaration time or later on
+in execution. When an attempt to read from a variable that has not yet
+been assigned is made, the code performing the read is suspended until
+that variable has been written to. This forms the basis for Swift's
+ability to parallelise execution - all code will execute in parallel
+unless there are variables shared between the code that cause sequencing.
+
+
+Variable Declarations
+^^^^^^^^^^^^^^^^^^^^^
+Variable declaration statements declare new variables. They can
+optionally assign a value to them or map those variables to on-disk files.
+
+Declaration statements have the general form:
+
+----
+typename variablename (<mapping> | = initialValue ) ;
+----
+
+The format of the mapping expression is defined in the Mappers section.
+initialValue may be either an expression or a procedure call that
+returns a single value.
+
+Variables can also be declared in a multivalued-procedure statement,
+described in another section.
+
+
+Assignment Statements
+^^^^^^^^^^^^^^^^^^^^^
+Assignment statements assign values to previously declared variables.
+Assignments may only be made to variables that have not already been
+assigned. Assignment statements have the general form:
+
+----
+variable = value;
+----
+
+where value can be either an expression or a procedure call that returns
+a single value.
+
+Variables can also be assigned in a multivalued-procedure statement,
+described in another section.
+
+
+Procedures
+~~~~~~~~~~
+There are two kinds of procedure: An atomic procedure, which describes
+how an external program can be executed; and compound procedures which
+consist of a sequence of SwiftScript statements.
+
+A procedure declaration defines the name of a procedure and its input
+and output parameters. SwiftScript procedures can take multiple inputs
+and produce multiple outputs. Inputs are specified to the right of the
+function name, and outputs are specified to the left. For example:
+
+----
+(type3 out1, type4 out2) myproc (type1 in1, type2 in2)
+----
+
+The above example declares a procedure called myproc, which has two
+inputs in1 (of type type1) and in2 (of type type2) and two
+outputs out1 (of type type3) and out2 (of type type4).
+
+A procedure input parameter can be an optional parameter in which case
+it must be declared with a default value. When calling a procedure, both
+positional parameter and named parameter passings can be passed,
+provided that all optional parameters are declared after the required
+parameters and any optional parameter is bound using keyword parameter
+passing. For example, if myproc1 is defined as:
+
+----
+(binaryfile bf) myproc1 (int i, string s="foo")
+----
+
+Then that procedure can be called like this, omitting the optional
+----
+parameter s:
+binaryfile mybf = myproc1(1);
+----
+
+or like this supplying a value for the optional parameter s:
+----
+binaryfile mybf = myproc1 (1, s="bar");
+----
+
+Atomic procedures
+^^^^^^^^^^^^^^^^^
+An atomic procedure specifies how to invoke an external executable
+program, and how logical data types are mapped to command line arguments.
+
+Atomic procedures are defined with the app keyword:
+
+----
+app (binaryfile bf) myproc (int i, string s="foo") {
+    myapp i s @filename(bf);
+}
+----
+
+which specifies that myproc invokes an executable called myapp,
+passing the values of i, s and the filename of bf as command line
+arguments.
+
+
+Compound procedures
+^^^^^^^^^^^^^^^^^^^
+A compound procedure contains a set of SwiftScript statements:
+
+----
+(type2 b) foo_bar (type1 a) {
+    type3 c;
+    c = foo(a);    // c holds the result of foo
+    b = bar(c);    // c is an input to bar
+}
+----
+
+Control Constructs
+~~~~~~~~~~~~~~~~~~
+SwiftScript provides if, switch, foreach, and iterate
+constructs, with syntax and semantics similar to comparable constructs
+in other high-level languages.
+
+
+foreach
+^^^^^^^
+The foreach construct is used to apply a block of statements to each
+element in an array. For example:
+
+----
+check_order (file a[]) {
+    foreach f in a {
+        compute(f);
+    }
+}
+----
+
+foreach statements have the general form:
+
+----
+foreach controlvariable (,index) in expression {
+    statements
+}
+----
+
+The block of statements is evaluated once for each element in
+expression which must be an array, with controlvariable set to the
+corresponding element and index (if specified) set to the integer
+position in the array that is being iterated over.
+
+
+if
+^^
+The if statement allows one of two blocks of statements to be
+executed, based on a boolean predicate. if statements generally have
+the form:
+
+----
+if(predicate) {
+    statements
+} else {
+    statements
+}
+----
+
+where predicate is a boolean expression.
+
+
+switch
+^^^^^^
+
+switch expressions allow one of a selection of blocks to be chosen
+based on the value of a numerical control expression. switch
+statements take the general form:
+
+----
+switch(controlExpression) {
+    case n1:
+        statements2
+    case n2:
+        statements2
+    [...]
+    default:
+        statements
+}
+----
+
+The control expression is evaluated, the resulting numerical value used
+to select a corresponding case, and the statements belonging to that
+case block are evaluated. If no case corresponds, then the statements
+belonging to the default block are evaluated.
+
+Unlike C or Java switch statements, execution does not fall through to
+subsequent case blocks, and no break statement is necessary at the
+end of each block.
+
+
+iterate
+^^^^^^^
+iterate expressions allow a block of code to be evaluated repeatedly,
+with an integer parameter sweeping upwards from 0 until a termination
+condition holds.
+
+The general form is:
+
+----
+iterate var {
+    statements;
+} until (terminationExpression);
+----
+
+with the variable var starting at 0 and increasing by one in each
+iteration. That variable is in scope in the statements block and when
+evaluating the termination expression.
+
+Operators
+~~~~~~~~~
+The following infix operators are available for use in SwiftScript
+expressions.
+
+[options="header, autowidth"]
+|=================
+|operator|purpose
+|+|numeric addition; string concatenation
+|-|numeric subtraction
+|*|numeric multiplication
+|/|floating point division
+|%/|integer division
+|%%|integer remainder of division
+|== !=|comparison and not-equal-to
+|< > <= >=|numerical ordering
+|&& \|\||boolean and, or
+|!|boolean not
+|=================
+
+Global constants
+~~~~~~~~~~~~~~~~
+
+At the top level of a SwiftScript program, the global modified may be
+added to a declaration so that it is visible throughout the program,
+rather than only at the top level of the program. This allows global
+constants (of any type) to be defined. (since Swift 0.10)
+
+
+Imports
+~~~~~~~
+The import directive can be used to import definitions from another
+SwiftScript file. (since Swift 0.10)
+
+For example, a SwiftScript program might contain this:
+
+----
+import "defs";
+file f;
+----
+
+which would import the content of defs.swift:
+
+----
+type file;
+----
+
+Imported files are read from two places. They are either read from
+the path that is specified from the import command, such as:
+----
+import "definitions/file/defs";
+----
+
+or they are read from the environment variable SWIFT_LIB. This
+environment variable is used just like the PATH environment
+variable. For example, if the command below was issued to the bash
+shell:
+----
+export SWIFT_LIB=${HOME}/Swift/defs:${HOME}/Swift/functions
+----
+then the import command will check for the file defs.swift in both
+"$\{HOME}/Swift/defs" and "$\{HOME}/Swift/functions" first before trying
+the path that was specified in the import command.
+
+Other valid imports:
+----
+import "../functions/func"
+import "/home/user/Swift/definitions/defs"
+----
+
+There is no requirement that a module is imported only once. If a module
+is imported multiple times, for example in different files, then Swift
+will only process the imports once.
+
+Imports may contain anything that is valid in a SwiftScript program,
+including code that causes remote execution.
+
+Mappers
+-------
+Mappers provide a mechanism to specify the layout of mapped datasets on
+disk. This is needed when Swift must access files to transfer them to
+remote sites for execution or to pass to applications.
+
+Swift provides a number of mappers that are useful in common cases. This
+section details those standard mappers. For more complex cases, it is
+possible to write application-specific mappers in Java and use them
+within a SwiftScript program.
+
+
+The single file mapper
+~~~~~~~~~~~~~~~~~~~~~~
+The single_file_mapper maps a single physical file to a dataset.
+
+[options="header, autowidth"]
+|=======================
+|Swift variable|Filename
+|f|myfile
+|f[0]|INVALID
+|f.bar|INVALID
+|=======================
+
+[options="header, autowidth"]
+|=================
+|parameter|meaning
+|file|The location of the physical file including path and file name.
+|=================
+
+Example:
+----
+file f <single_file_mapper;file="plot_outfile_param">;
+----
+
+There is a simplified syntax for this mapper:
+----
+file f <"plot_outfile_param">;
+----
+
+The simple mapper
+~~~~~~~~~~~~~~~~~
+The simple_mapper maps a file or a list of files into an array by
+prefix, suffix, and pattern. If more than one file is matched, each of
+the file names will be mapped as a subelement of the dataset.
+
+[options="header, autowidth"]
+|====================
+|Parameter|Meaning
+|location|A directory that the files are located.
+|prefix|The prefix of the files
+|suffix|The suffix of the files, for instance: ".txt"
+|pattern|A UNIX glob style pattern, for instance: "\*foo*" would match
+all file names that contain foo. When this mapper is used to specify
+output filenames, pattern is ignored.
+|====================
+
+----
+type file;
+file f <simple_mapper;prefix="foo", suffix=".txt">;
+----
+
+The above maps all filenames that start with foo and have an extension
+.txt into file f.
+
+[options="header, autowidth"]
+|================
+|Swift variable|Filename
+|f|foo.txt
+|=================
+----
+type messagefile;
+
+(messagefile t) greeting(string m) {.
+    app {
+        echo m stdout=@filename(t);
+    }
+}
+
+messagefile outfile <simple_mapper;prefix="foo",suffix=".txt">;
+
+outfile = greeting("hi");
+----
+
+This will output the string 'hi' to the file foo.txt.
+
+The simple_mapper can be used to map arrays. It will map the array
+index into the filename between the prefix and suffix.
+
+----
+type messagefile;
+
+(messagefile t) greeting(string m) {
+    app {
+        echo m stdout=@filename(t);
+    }
+}
+
+messagefile outfile[] <simple_mapper;prefix="baz",suffix=".txt">;
+
+outfile[0] = greeting("hello");
+outfile[1] = greeting("middle");
+outfile[2] = greeting("goodbye");
+----
+
+[options="header, autowidth"]
+|=======================
+|Swift variable|Filename
+|outfile[0]|baz0000.txt
+|outfile[1]|baz0001.txt
+|outfile[2]|baz0002.txt
+|=======================
+
+simple_mapper can be used to map structures. It will map the name of
+the structure member into the filename, between the prefix and the suffix.
+
+----
+type messagefile;
+
+type mystruct {
+  messagefile left;
+  messagefile right;
+};
+
+(messagefile t) greeting(string m) {
+    app {
+        echo m stdout=@filename(t);
+    }
+}
+
+mystruct out <simple_mapper;prefix="qux",suffix=".txt">;
+
+out.left = greeting("hello");
+out.right = greeting("goodbye");
+----
+
+This will output the string "hello" into the file qux.left.txt and the
+string "goodbye" into the file qux.right.txt.
+
+[options="header, autowidth"]
+|=======================
+|Swift variable|Filename
+|out.left|quxleft.txt
+|out.right|quxright.txt
+|=======================
+
+concurrent mapper
+~~~~~~~~~~~~~~~~~
+concurrent_mapper is almost the same as the simple mapper, except that
+it is used to map an output file, and the filename generated will
+contain an extract sequence that is unique. This mapper is the default
+mapper for variables when no mapper is specified.
+
+
+[options="header, autowidth"]
+|=================
+|Parameter|Meaning
+|location|A directory that the files are located.
+|prefix|The prefix of the files
+|suffix|The suffix of the files, for instance: ".txt"
+pattern	A UNIX glob style pattern, for instance: "\*foo*" would match
+all file names that contain foo. When this mapper is used to specify
+output filenames, pattern is ignored.
+|=================
+
+Example:
+----
+file f1;
+file f2 <concurrent_mapper;prefix="foo", suffix=".txt">;
+----
+The above example would use concurrent mapper for f1 and f2, and
+generate f2 filename with prefix "foo" and extension ".txt"
+
+
+File system mapper
+~~~~~~~~~~~~~~~~~~
+filesys_mapper is similar to the simple mapper, but maps a file or a
+list of files to an array. Each of the filename is mapped as an element
+in the array. The order of files in the resulting array is not defined.
+
+TODO: note on difference between location as a relative vs absolute path
+wrt staging to remote location - as mihael said: It's because you
+specify that location in the mapper. Try location="." instead of
+location="/sandbox/..."
+
+[options="header, autowidth"]
+|======================
+|parameter|meaning
+|location|The directory where the files are located.
+|prefix|The prefix of the files
+|suffix|The suffix of the files, for instance: ".txt"
+|pattern|A UNIX glob style pattern, for instance: "\*foo*" would match
+all file names that contain foo.
+|======================
+
+Example:
+----
+file texts[] <filesys_mapper;prefix="foo", suffix=".txt">;
+----
+
+The above example would map all filenames that start with "foo" and
+have an extension ".txt" into the array texts. For example, if the
+specified directory contains files: foo1.txt, footest.txt,
+foo__1.txt, then the mapping might be:
+
+[options="header, autowidth"]
+|=================
+|Swift variable|Filename
+|texts[0]|footest.txt
+|texts[1]|foo1.txt
+|texts[2]|foo__1.txt
+|=================
+
+
+
+fixed array mapper
+~~~~~~~~~~~~~~~~~~
+The fixed_array_mapper maps from a string that contains a list of
+filenames into a file array.
+
+[options="header, autowidth"]
+|=================
+|parameter|Meaning
+|files|A string that contains a list of filenames, separated by space,
+comma or colon
+|=================
+
+Example:
+
+----
+file texts[] <fixed_array_mapper;files="file1.txt, fileB.txt, file3.txt">;
+----
+
+would cause a mapping like this:
+
+[options="header, autowidth"]
+|========
+|Swift variable|Filename
+|texts[0]|file1.txt
+|texts[1]|fileB.txt
+|texts[2]|file3.txt
+|========
+
+array mapper
+~~~~~~~~~~~~
+The array_mapper maps from an array of strings into a file
+
+[options="header, autowidth"]
+|============
+|parameter|meaning
+|files|An array of strings containing one filename per element
+|==============
+
+Example:
+----
+string s[] = [ "a.txt", "b.txt", "c.txt" ];
+
+file f[] <array_mapper;files=s>;
+----
+
+This will establish the mapping:
+
+[options="header, autowidth"]
+|==========
+|Swift variable|Filename
+|f[0]|a.txt
+|f[1]|b.txt
+|f[2]|c.txt
+|==========
+
+regular expression mapper
+~~~~~~~~~~~~~~~~~~~~~~~~~
+The regexp_mapper transforms one file name to another using regular
+expression matching.
+
+[options="header, autowidth"]
+|==========
+|parameter|meaning
+|source|The source file name
+|match|Regular expression pattern to match, use |()| to match whatever
+regular expression is inside the parentheses, and indicate the start and
+end of a group; the contents of a group can be retrieved with the
+|\\number|special sequence (two backslashes are needed because the
+backslash is an escape sequence introducer)
+|transform|The pattern of the file name to transform to, use \number to
+reference the group matched.
+|==========
+
+Example:
+----
+string s = "picture.gif";
+file f <regexp_mapper;
+  source=s,
+  match="(.*)gif",
+  transform="\\1jpg">;
+----
+
+This example transforms a string ending gif into one ending jpg and
+maps that to a file.
+
+[options="header, autowidth"]
+|===========
+|Swift variable|Filename
+|f|picture.jpg
+|=============
+
+structured regular expression mapper
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The structured_regexp_mapper is similar to the regexp_mapper. The
+structured_regexp_mapper can be applied to lists while the regexp_mapper cannot.
+
+[options="header, autowidth"]
+|==========
+|parameter|meaning
+|source|The source file name
+|match|Regular expression pattern to match, use |()| to match whatever
+regular expression is inside the parentheses, and indicate the start and
+end of a group; the contents of a group can be retrieved with the
+|\\number|special sequence (two backslashes are needed because the
+backslash is an escape sequence introducer)
+|transform|The pattern of the file name to transform to, use \number to
+reference the group matched.
+|==========
+
+Example:
+----
+string s[] = ["picture.gif", "hello.gif", "world.gif"];
+file f[] <structured_regexp_mapper;
+          source=s,
+          match="(.*)gif",
+          transform="\\1jpg">;
+----
+
+This example transforms all strings in a list that end in gif to end in jpg and maps
+the list to those files.
+
+csv mapper
+~~~~~~~~~~
+The csv_mapper maps the content of a CSV (comma-separated value) file
+into an array of structures. The dataset type needs to be correctly
+defined to conform to the column names in the file. For instance, if the
+file contains columns: name age GPA then the type needs to have member
+elements like this:
+
+----
+type student {
+  file name;
+  file age;
+  file GPA;
+}
+----
+
+If the file does not contain a header with column info, then the column
+names are assumed as column1, column2, etc.
+
+[options="header, autowidth"]
+|============
+|Parameter|Meaning
+|file|The name of the CSV file to read mappings from.
+|header|Whether the file has a line describing header info; default is |true|
+|skip|The number of lines to skip at the beginning (after header line);
+default is 0.
+|hdelim|Header field delimiter; default is the value of the |delim| parameter
+|delim|Content field delimiters; defaults are space, tab and comma
+|=============
+
+Example:
+----
+student stus[] <csv_mapper;file="stu_list.txt">;
+----
+
+The above example would read a list of student info from file
+"stu_list.txt" and map them into a student array. By default, the file
+should contain a header line specifying the names of the columns. If
+stu_list.txt contains the following:
+
+----
+name,age,gpa
+101-name.txt, 101-age.txt, 101-gpa.txt
+name55.txt, age55.txt, age55.txt
+q, r, s
+----
+
+then some of the mappings produced by this example would be:
+
+[options="header, autowidth"]
+|=========
+|stus[0].name|101-name.txt
+|stus[0].age|101-age.txt
+|stus[0].gpa|101-gpa.txt
+|stus[1].name|name55.txt
+|stus[1].age|age55.txt
+|stus[1].gpa|gpa55.txt
+|stus[2].name|q
+|stus[2].age|r
+|stus[2].gpa|s
+|=========
+
+external mapper
+~~~~~~~~~~~~~~~
+The external mapper, ext maps based on the output of a supplied Unix
+executable.
+
+[option="header, autowidth"]
+|=============
+|parameter|meaning
+|exec|The name of the executable (relative to the current directory, if
+an absolute path is not specified)
+|*|Other parameters are passed to the executable prefixed with a - symbol
+|==============
+
+The output (stdout) of the executable should consist of two columns of data,
+separated by a space. The first column should be the path of the mapped
+variable, in SwiftScript syntax (for example [2] means the 2nd element
+of an array) or the symbol $ to represent the root of the mapped
+variable. The following table shows the symbols that should appear in the first column corresponding to the mapping of different types of swift constructs such as scalars, arrays and structs.
+
+[option="header, autowidth"]
+|=============
+|Swift construct|first column|second column
+|scalar|$|file_name
+|anarray[]|[]|file_name
+|2dimarray[][]|[][]|file_name
+|astruct.fld|fld|file_name
+|astructarray[].fldname|[].fldname|file_name
+|==============
+
+Example: With the following in mapper.sh,
+
+----
+#!/bin/bash
+echo "[2] qux"
+echo "[0] foo"
+echo "[1] bar"
+----
+
+then a mapping statement:
+
+----
+student stus[] <ext;exec="mapper.sh">;
+----
+
+would map
+
+[options="header, autowidth"]
+|============
+|Swift variable|Filename
+|stus[0]|foo
+|stus[1]|bar
+|stus[2]|qux
+|===========
+
+Advanced Example: The following mapper.sh is an advanced example of an external mapper that maps a two-dimensional array to a directory of files. The files in the said directory are identified by their names appended by a number between 000 and 099. The first index of the array maps to the first part of the filename while the second index of the array maps to the second part of the filename.
+
+----
+#!/bin/sh
+
+#take care of the mapper args
+while [ $# -gt 0 ]; do
+  case $1 in
+    -location)          location=$2;;
+    -padding)           padding=$2;;
+    -prefix)            prefix=$2;;
+    -suffix)            suffix=$2;;
+    -mod_index)         mod_index=$2;;
+    -outer_index)       outer_index=$2;;
+    *) echo "$0: bad mapper args" 1>&2
+       exit 1;;
+  esac
+  shift 2
+done
+
+for i in `seq 0 ${outer_index}`
+do
+ for j in `seq -w 000 ${mod_index}`
+ do
+  fj=`echo ${j} | awk '{print $1 +0}'` #format j by removing leading zeros
+  echo "["${i}"]["${fj}"]" ${location}"/"${prefix}${j}${suffix}
+ done
+done
+----
+
+The mapper definition is as follows:
+
+----
+file_dat dat_files[][] < ext;
+                              exec="mapper.sh",
+                              padding=3,
+                              location="output",
+                              prefix=@strcat( str_root, "_" ),
+                              suffix=".dat",
+                              outer_index=pid,
+                              mod_index=n >;
+
+----
+
+Assuming there are 4 files with name aaa, bbb, ccc, ddd and a mod_index of 10, we will have 4x10=40 files mapped to a two-dimensional array in the following pattern:
+
+[options="header, autowidth"]
+|============
+|Swift variable|Filename
+|stus[0][0]|output/aaa_000.dat
+|stus[0][1]|output/aaa_001.dat
+|stus[0][2]|output/aaa_002.dat
+|stus[0][3]|output/aaa_003.dat
+|...|...
+|stus[0][9]|output/aaa_009.dat
+|stus[1][0]|output/bbb_000.dat
+|stus[1][1]|output/bbb_001.dat
+|...|...
+|stus[3][9]|output/ddd_009.dat
+|===========
