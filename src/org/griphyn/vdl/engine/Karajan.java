@@ -884,7 +884,10 @@ public class Karajan {
     @SuppressWarnings("unchecked")
     private boolean allVariables(Object st) {
         List<StringTemplate> l;
-        if (st instanceof List) {
+        if (st == null) {
+            return true;
+        }
+        else if (st instanceof List) {
             l = (List<StringTemplate>) st;
         }
         else {
