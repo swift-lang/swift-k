@@ -12,7 +12,7 @@ if [ ! -f $PREFIX.else.1.1.out ] || [ ! -f $PREFIX.then.2.0.out ]; then
 	exit 1
 fi
 
-if [ `grep "Cleaning" $OUTPUT | wc -l` != "2" ]; then
+if [ `grep "Cleaning" $PREFIX.stdout | wc -l` != "2" ]; then
 	echo "Wrong number of files cleaned"
 	exit 1
 fi
