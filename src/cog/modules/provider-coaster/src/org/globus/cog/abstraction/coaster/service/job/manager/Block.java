@@ -256,53 +256,56 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public void shutdown(boolean now) {
+        List<Cpu> cpusToShutDown;
         synchronized (cpus) {
             if (shutdown) {
                 return;
             }
-            logger.info("Shutting down block " + this);
-            bqp.getRLogger().log("BLOCK_SHUTDOWN id=" + getId());
             shutdown = true;
-            long busyTotal = 0;
-            long idleTotal = 0;
-            int count = 0;
-            if (running) {
-                for (Cpu cpu : cpus) {
-                    idleTotal = cpu.idleTime;
-                    busyTotal = cpu.busyTime;
-                    if (!failed) {
-                        cpu.shutdown();
-                    }
-                    count++;
-                }
-				if (!failed) {
-					if (count < workers || now) {
-					    if (logger.isInfoEnabled()) {
-					        logger.info("Adding short shutdown watchdog: count = " + 
-					            count + ", workers = " + workers + ", now = " + now);
-					    }
-	                    addForcedShutdownWatchdog(100);
-    	            }
-					else {
-					    if (logger.isInfoEnabled()) {
-					        logger.info("Adding normal shutdown watchdog");
-					    }
-	   					addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
-					}
-				}
-
-                if (idleTotal > 0) {
-                    double u = (busyTotal * 10000) / (busyTotal + idleTotal);
-                    u /= 100;
-                    logger.info("Average utilization: " + u + "%");
-                    bqp.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + ", u=" + u);
-                }
-            }
-            else {
-                logger.info("Block " + this + " not running. Cancelling job.");
-                forceShutdown();
-            }
+            cpusToShutDown = new ArrayList<Cpu>(cpus);
             cpus.clear();
+        }
+        logger.info("Shutting down block " + this);
+        bqp.getRLogger().log("BLOCK_SHUTDOWN id=" + getId());
+        
+        long busyTotal = 0;
+        long idleTotal = 0;
+        int count = 0;
+        if (running) {
+            for (Cpu cpu : cpusToShutDown) {
+                idleTotal = cpu.idleTime;
+                busyTotal = cpu.busyTime;
+                if (!failed) {
+                    cpu.shutdown();
+                }
+                count++;
+            }
+			if (!failed) {
+				if (count < workers || now) {
+				    if (logger.isInfoEnabled()) {
+				        logger.info("Adding short shutdown watchdog: count = " + 
+				            count + ", workers = " + workers + ", now = " + now);
+				    }
+                    addForcedShutdownWatchdog(100);
+	            }
+				else {
+				    if (logger.isInfoEnabled()) {
+				        logger.info("Adding normal shutdown watchdog");
+				    }
+   					addForcedShutdownWatchdog(SHUTDOWN_WATCHDOG_DELAY);
+				}
+			}
+
+            if (idleTotal > 0) {
+                double u = (busyTotal * 10000) / (busyTotal + idleTotal);
+                u /= 100;
+                logger.info("Average utilization: " + u + "%");
+                bqp.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + ", u=" + u);
+            }
+        }
+        else {
+            logger.info("Block " + this + " not running. Cancelling job.");
+            forceShutdown();
         }
     }
 
