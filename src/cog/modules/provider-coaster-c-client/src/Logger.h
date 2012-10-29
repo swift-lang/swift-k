@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include "Lock.h"
 
@@ -23,7 +24,8 @@ class Logger: public ostream {
 		static Logger* instance;
 	private:
 		ostream* out;
-		Level level;
+		stringstream buffer;
+		Level level, threshold;
 		const char* file;
 		const char* strLevel;
 		char ts[TS_LEN + 1];
@@ -35,6 +37,7 @@ class Logger: public ostream {
 		const char* levelToStr(Level level);
 		void header();
 		char* timeStamp();
+		void commitBuffer();
 	public:
 		virtual ~Logger();
 		Logger& operator<< (Level level);
@@ -48,6 +51,8 @@ class Logger: public ostream {
 		void endItem();
 		void log(Level level, const char* fileName, const char* msg);
 		void log(Level level, const char* fileName, string msg);
+
+		void setThreshold(Level level);
 
 		static Logger& singleton();
 };
