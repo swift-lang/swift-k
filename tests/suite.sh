@@ -1079,15 +1079,6 @@ test_group() {
 
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
 
-	echo
-	echo
-	echo "/--------------------------------------------------------------"
-    echo -e "|   Test case: $LGREEN$TESTNAME$GRAY"
-    echo "\--------------------------------------------------------------"
-    echo
-
-    TESTLINK=$TESTNAME
-
    # Use repeat.txt to determine number of test iterations
     SCRIPT_BASENAME=`basename $TESTNAME .swift`
     TESTLINK="$TESTNAMEDIR/$TESTNAME"
@@ -1102,9 +1093,16 @@ test_group() {
       TESTNAME=$( basename $TEST )
       TESTNAMEDIR=`basename $TESTNAME .swift`-$HOURMINSEC
       TESTLINK="$TESTNAMEDIR/$TESTNAME"
+
+      echo
+      echo
+      echo    "+--------------------------------------------------------------"
+      echo -e "|   Test case: $LGREEN$TESTNAME$GRAY"
+      echo    "+--------------------------------------------------------------"
+      echo
+
       mkdir -p $TESTNAMEDIR
       pushd $TESTNAMEDIR > /dev/null 2>&1
-
       cp $TEST .    
       group_swift_properties
       group_sites_xml
