@@ -30,6 +30,11 @@ void Logger::setLevel(Level plevel) {
 	strLevel = levelToStr(level);
 }
 
+void Logger::setThreshold(Level plevel) {
+	threshold = plevel;
+}
+
+
 const char* Logger::levelToStr(Level level) {
 	switch (level) {
 		case NONE:
@@ -49,31 +54,41 @@ const char* Logger::levelToStr(Level level) {
 
 Logger& Logger::operator<< (string& str) {
 	header();
-	*out << str;
+	if (level >= threshold) {
+		buffer << str;
+	}
 	return *this;
 }
 
 Logger& Logger::operator<< (const string* str) {
 	header();
-	*out << *str;
+	if (level >= threshold) {
+		buffer << *str;
+	}
 	return *this;
 }
 
 Logger& Logger::operator<< (const char* str) {
 	header();
-	*out << str;
+	if (level >= threshold) {
+		buffer << str;
+	}
 	return *this;
 }
 
 Logger& Logger::operator<< (int i) {
 	header();
-	*out << i;
+	if (level >= threshold) {
+		buffer << i;
+	}
 	return *this;
 }
 
 Logger& Logger::operator<< (long l) {
 	header();
-	*out << l;
+	if (level >= threshold) {
+		buffer << l;
+	}
 	return *this;
 }
 
@@ -84,7 +99,6 @@ Logger& Logger::operator<< (Logger& ( *pf )(Logger&)) {
 
 Logger& Logger::setFile(const char* pfile) {
      lock.lock();
-     cout << '['; cout.flush();
 	 file = strrchr(pfile, '/');
 	 if (file == NULL) {
 		 file = pfile;
@@ -93,24 +107,37 @@ Logger& Logger::setFile(const char* pfile) {
 }
 
 void Logger::log(Level level, const char* fileName, const char* msg) {
-	setLevel(level);
-	setFile(fileName);
-	header();
-	*out << msg << endl;
+	if (level >= threshold) {
+		setLevel(level);
+		setFile(fileName);
+		header();
+		buffer << msg << endl;
+		commitBuffer();
+	}
 }
 void Logger::log(Level level, const char* fileName, string msg) {
-	setLevel(level);
-	setFile(fileName);
-	header();
-	*out << msg << endl;
+	if (level >= threshold) {
+		setLevel(level);
+		setFile(fileName);
+		header();
+		buffer << msg << endl;
+		commitBuffer();
+	}
 }
 
 void Logger::endItem() {
-	cout << ']';
-	*out << '\n';
-	out->flush();
+	if (level >= threshold) {
+		buffer << '\n';
+		commitBuffer();
+	}
 	startOfItem = true;
 	lock.unlock();
+}
+
+void Logger::commitBuffer() {
+	*out << buffer.rdbuf();
+	buffer.str("");
+	out->flush();
 }
 
 char* Logger::timeStamp() {
@@ -129,7 +156,9 @@ char* Logger::timeStamp() {
 
 void Logger::header() {
 	if (startOfItem) {
-		*out << timeStamp() << " " << strLevel << " " << file << " ";
+		if (level >= threshold) {
+			buffer << timeStamp() << " " << strLevel << " " << file << " ";
+		}
 		startOfItem = false;
 	}
 }
