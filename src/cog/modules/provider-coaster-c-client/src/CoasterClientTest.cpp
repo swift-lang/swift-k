@@ -36,6 +36,8 @@ int main(void) {
 		client.waitForJob(j2);
 		list<Job*>* doneJobs = client.getAndPurgeDoneJobs();
 
+		delete doneJobs;
+
 		if (j1.getStatus()->getStatusCode() == FAILED) {
 			cerr << "Job 1 failed: " << *j1.getStatus()->getMessage() << endl;
 		}

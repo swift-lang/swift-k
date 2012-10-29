@@ -1,6 +1,8 @@
-bin_PROGRAMS = CoasterClientTest
-CoasterClientTest_SOURCES = CoasterClientTest.cpp
-CoasterClientTest_LDADD = libcoasterclient.la
+bin_PROGRAMS = coaster-client-test run-coaster-job
+coaster_client_test_SOURCES = CoasterClientTest.cpp
+run_coaster_job_SOURCES = RunCoasterJob.cpp
+coaster_client_test_LDADD = libcoasterclient.la
+run_coaster_job_LDADD = libcoasterclient.la
 
 lib_LTLIBRARIES = libcoasterclient.la
 
