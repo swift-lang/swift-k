@@ -19,6 +19,7 @@ static struct option long_options[] = {
    {"env", required_argument, 0, 'e'},
    {"attr",  required_argument, 0, 'a'},
    {"option",  required_argument, 0, 'o'},
+   {"dir",  required_argument, 0, 'd'},
    {"stdout",  required_argument, 0, 'O'},
    {"stderr",  required_argument, 0, 'E'},
    {"verbosity",  required_argument, 0, 'v'},
@@ -48,6 +49,7 @@ char* jobManager = NULL;
 char* stdoutLoc = NULL;
 char* stderrLoc = NULL;
 char* verbosity = NULL;
+string* dir = NULL;
 
 int main(int argc, char* argv[]) {
 	try {
@@ -65,7 +67,7 @@ int main(int argc, char* argv[]) {
 void parseArguments(int argc, char* argv[]) {
 	int oindex, c;
 	while (true) {
-		c = getopt_long(argc, argv, "hs:e:a:o:j:O:E:v:", long_options, &oindex);
+		c = getopt_long(argc, argv, "hs:e:a:o:j:d:O:E:v:", long_options, &oindex);
 		if (c == -1) {
 			break;
 		}
@@ -84,6 +86,9 @@ void parseArguments(int argc, char* argv[]) {
 				break;
 			case 'j':
 				jobManager = optarg;
+				break;
+			case 'd':
+				dir = new string(optarg);
 				break;
 			case 'O':
 				stdoutLoc = optarg;
@@ -216,6 +221,11 @@ int runJob() {
 	client.setOptions(s);
 
 	Job j(executable);
+
+	if (dir != NULL) {
+		j.setDirectory(*dir);
+	}
+
 	for (i = args.begin(); i != args.end(); i++) {
 		j.addArgument(*i);
 	}
