@@ -90,8 +90,8 @@ void* run(void* ptr) {
 
 		// can read or has data to write
 		// try to read from each socket
-		if (loop->readSockets(&myrfds)) {
-			// no channel sockets had anything to read, so there is data to write
+		if (ret > 0 && loop->readSockets(&myrfds)) {
+			// wake pipe has stuff to read
 			LogDebug << "Write requested" << endl;
 			{ Lock::Scoped l(loop->lock);
 				// synchronize when copying wfds since they are concurrently updated
@@ -105,7 +105,9 @@ void* run(void* ptr) {
 			// can be written to
 			int ret = select(loop->getMaxFD() + 1, NULL, &mywfds, NULL, &timeout);
 			checkSelectError(ret);
-			loop->writeSockets(&mywfds);
+			if (ret > 0) {
+				loop->writeSockets(&mywfds);
+			}
 		}
 		loop->checkHeartbeats();
 	}
@@ -142,7 +144,7 @@ void CoasterLoop::writeSockets(fd_set* fds) {
 void checkSelectError(int ret) {
 	if (ret < 0) {
 		if (errno == EBADF) {
-			// at least one fd is invalid/has an error
+			// TODO at least one fd is invalid/has an error
 		}
 		else {
 			throw CoasterError(string("Error in select: ") + strerror(errno));
@@ -246,6 +248,7 @@ int CoasterLoop::getWakePipeReadFD() {
 void CoasterLoop::requestWrite(CoasterChannel* channel, int count) { Lock::Scoped l(lock);
 	LogDebug << "Channel " << channel << " requests " << count << " writes." << endl;
 	if (!FD_ISSET(channel->getSockFD(), &wfds)) {
+		// TODO there is nothing to remove a socket from wfds and there should be
 		FD_SET(channel->getSockFD(), &wfds);
 		updateMaxFD();
 	}
