@@ -39,12 +39,14 @@ import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
+import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.transformation.File;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.karajan.AssertFailedException;
+import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
@@ -86,10 +88,16 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		    logger.fatal("swift: assert failed: " + e.getMessage());
 		    stack.getExecutionContext().failedQuietly(stack, e);
 		}
+		catch (ExecutionException e) {
+            if (e.getStack() == null) {
+                e.setStack(stack);
+            }
+            throw e;
+        }
 		catch (DependentException e) {
 			// This would not be the primal fault so in non-lazy errors mode it
 			// should not matter
-			throw new ExecutionException("Wrapping a dependent exception in VDLFunction.post() - errors in data dependencies",e);
+			throw new ExecutionException(stack, e);
 		}
 	}
 
@@ -443,6 +451,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 			return tc;
 		}
 	}
+	
 
 	private static int provenanceIDCount = 451000;
 
