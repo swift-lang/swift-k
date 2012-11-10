@@ -95,6 +95,18 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
 
+    protected void populateStructFields() {
+        for (String name : getType().getFieldNames()) {
+            try {
+                createField(name);
+            }
+            catch (NoSuchFieldException e) {
+                throw new RuntimeException("Internal inconsistency found: field '" + name 
+                    + "' is listed by the type but createField() claims it is invalid");
+            }
+        }
+    }
+
     public void init(MappingParamSet params) {
         throw new UnsupportedOperationException();
     }
@@ -214,6 +226,26 @@ public abstract class AbstractDataNode implements DSHandle {
         }
         return prefix;
     }
+    
+    public String getDeclarationLine() {
+        String line = getRoot().getParam(MappingParam.SWIFT_LINE);
+        if (line == null || line.length() == 0) {
+        	return null;
+        }
+        else {
+        	return line;
+        }
+    }
+    
+    public String getThread() {
+        String restartId = getRoot().getParam(MappingParam.SWIFT_RESTARTID);
+        if (restartId != null) {
+            return restartId.substring(0, restartId.lastIndexOf(":"));
+        }
+        else {
+            return null;
+        }
+    }
 
     public DSHandle getField(Path path) throws InvalidPathException {
         if (path.isEmpty()) {
@@ -230,7 +262,6 @@ public abstract class AbstractDataNode implements DSHandle {
             }
         }
         catch (NoSuchFieldException e) {
-            logger.warn("could not find variable: " + field.getId() + " " + path);
             throw new InvalidPathException(path, this);
         }
     }
@@ -316,7 +347,11 @@ public abstract class AbstractDataNode implements DSHandle {
             return new ArrayDataNode(f, getRoot(), this);
         }
         else {
-            return new DataNode(f, getRoot(), this);
+            DataNode dn = new DataNode(f, getRoot(), this);
+            if (field.getType().isComposite()) {
+                dn.populateStructFields();
+            }
+            return dn;
         }
 
     }
