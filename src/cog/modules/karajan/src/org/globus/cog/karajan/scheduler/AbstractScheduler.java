@@ -149,9 +149,9 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 			CopyOnWriteArrayList<StatusListener> jobListeners = listeners.get(task);
 			if (jobListeners != null) {
 				jobListeners.remove(l);
-			}
-			if (jobListeners.isEmpty()) {
-				listeners.remove(task);
+				if (jobListeners.isEmpty()) {
+					listeners.remove(task);
+				}
 			}
 		}
 	}
