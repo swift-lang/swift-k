@@ -66,8 +66,10 @@ public class Misc extends FunctionsCollection {
 			String expanded = TypeUtil.toString(PA_VALUE.getValue(stack));
 			do {
 				line = br.readLine();
-				if (line.indexOf(expanded) != -1) {
-					return true;
+				if (line != null) {
+    				if (line.indexOf(expanded) != -1) {
+    					return true;
+    				}
 				}
 			} while (line != null);
 		}
@@ -375,10 +377,10 @@ public class Misc extends FunctionsCollection {
 		setArguments("str_split", new Arg[] { PA_STRING, PA_SEPARATOR });
 	}
 
-	public List str_split(VariableStack stack) throws ExecutionException {
+	public List<String> str_split(VariableStack stack) throws ExecutionException {
 		String str = TypeUtil.toString(PA_STRING.getValue(stack));
 		String sep = TypeUtil.toString(PA_SEPARATOR.getValue(stack));
-		List list = new ArrayList();
+		List<String> list = new ArrayList<String>();
 		int index = -1;
 		int last = 0;
 		do {
@@ -436,7 +438,7 @@ public class Misc extends FunctionsCollection {
 		Pattern pattern = Pattern.compile(TypeUtil.toString(PA_REGEXP.getValue(stack)));
 		boolean invert = TypeUtil.toBoolean(OA_INVERT.getValue(stack));
 		Object[] args = Arg.VARGS.asArray(stack);
-		ArrayList ret = new ArrayList();
+		ArrayList<String> ret = new ArrayList<String>();
 		if (args.length > 1) {
 			for (int i = 0; i < args.length; i++) {
 				String value = TypeUtil.toString(args[i]);
@@ -447,7 +449,7 @@ public class Misc extends FunctionsCollection {
 			return ret.toArray();
 		}
 		else if (args.length == 1) {
-			Iterator i = TypeUtil.toIterator(args[0]);
+			Iterator<?> i = TypeUtil.toIterator(args[0]);
 			while (i.hasNext()) {
 				String value = TypeUtil.toString(i.next());
 				if (pattern.matcher(value).matches() ^ invert) {
