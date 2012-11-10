@@ -40,6 +40,7 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.scheduler.AbstractScheduler;
+import org.globus.cog.karajan.scheduler.NoSuchResourceException;
 import org.globus.cog.karajan.scheduler.ResourceConstraintChecker;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
@@ -388,6 +389,10 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 	}
 
 	protected void failTask(Task t, String message, Exception e) {
+	    if (e instanceof NoSuchResourceException) {
+	         message = "The application \"" + getTaskConstraints(t).getConstraint("tr")
+                            + "\" is not available for any site/pool in your tc.data catalog ";
+	    }
 		if (logger.isDebugEnabled()) {
 			logger.debug("Failing task " + t.getIdentity());
 		}
