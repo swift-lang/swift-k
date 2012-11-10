@@ -82,7 +82,7 @@ public class FnArg extends AbstractFunction {
 			value = P_VALUE.getValue(stack);
 		}
 		if (value == null) {
-			throw new ExecutionException("Missing command line argument: " + name);
+			throw new ExecutionException(stack, "Missing command line argument: " + name);
 		}
 		else {
 			DSHandle result = new RootDataNode(Types.STRING, value);	
