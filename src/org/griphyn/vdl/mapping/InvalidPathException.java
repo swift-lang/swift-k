@@ -20,16 +20,45 @@
  */
 package org.griphyn.vdl.mapping;
 
+
 public class InvalidPathException extends Exception {
 	public InvalidPathException(String path, DSHandle source) {
-		super("Invalid path (" + path + ") for "
-			+ source.toString());
+		super(getMessage(path, source));
 	}
 	
-	public InvalidPathException(Path path, DSHandle source) {
+	private static String getMessage(String path, DSHandle source) {
+		if (source.getType().isArray()) {
+			return "Array index '" + path + "' not found for " + getName(source) + " of size " + getSize(source);
+		}
+		else if (source.getType().isComposite()) {
+			return "Invalid field name '" + path + "' for " + getName(source) + " of type " + source.getType();
+		}
+		else {
+			return "Invalid path (" + path + ") for " + source.toString();
+		}
+    }
+
+    private static int getSize(DSHandle source) {
+        return source.getArrayValue().size();
+    }
+
+    private static String getName(DSHandle source) {
+        if (source instanceof AbstractDataNode) {
+        	return ((AbstractDataNode) source).getDisplayableName();
+        }
+        else {
+        	return source.toString();
+        }
+    }
+
+    public InvalidPathException(Path path, DSHandle source) {
 		this(path.toString(), source);
 	}
-
+    
+    public InvalidPathException(Object path, DSHandle source) {
+        this(path.toString(), source);
+    }
+    
     public InvalidPathException(String string) {
         super(string);
     }
