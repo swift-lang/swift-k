@@ -29,6 +29,10 @@ public class MappingParamSet {
     public Object get(MappingParam p) {
         return params.get(p.getName());
     }
+    
+    public Object _get(String name) {
+        return params.get(name);
+    }
 
     public boolean isPresent(MappingParam p) {
         return params.containsKey(p.getName());

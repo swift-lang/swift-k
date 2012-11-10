@@ -231,10 +231,19 @@ public class VDL2Config extends Properties {
 	public boolean getSitedirKeep() {
 		return Boolean.valueOf(getProperty(VDL2ConfigProperties.SITEDIR_KEEP, "true")).booleanValue();
 	}
+	
+	private Boolean provenanceLogCached;
 
 	public boolean getProvenanceLog() {
-		return Boolean.valueOf(getProperty(VDL2ConfigProperties.PROVENANCE_LOG, "false")).booleanValue();
+	    if (provenanceLogCached == null) {
+	        provenanceLogCached = Boolean.valueOf(getProperty(VDL2ConfigProperties.PROVENANCE_LOG, "false"));
+	    }
+		return provenanceLogCached;
 	}
+	
+	public boolean isTracingEnabled() {
+        return Boolean.valueOf(getProperty(VDL2ConfigProperties.TRACING_ENABLED, "false")).booleanValue();
+    }
 
 	public String getTickerDateFormat() { 
 		return getProperty("ticker.date.format");

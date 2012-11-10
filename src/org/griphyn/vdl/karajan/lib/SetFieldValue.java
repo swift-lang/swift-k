@@ -26,10 +26,15 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureFault;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.griphyn.vdl.karajan.DSHandleFutureWrapper;
+import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.karajan.PairIterator;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
@@ -37,7 +42,6 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.type.Type;
 
@@ -51,8 +55,15 @@ public class SetFieldValue extends VDLFunction {
 	}
 	
 	private String src, dest;
+	private Tracer tracer;
 
-	public Object function(VariableStack stack) throws ExecutionException {
+	@Override
+    protected void initializeStatic() {
+        super.initializeStatic();
+        tracer = Tracer.getTracer(this);
+    }
+
+    public Object function(VariableStack stack) throws ExecutionException {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
 		try {
 		    Path path = parsePath(OA_PATH.getValue(stack), stack);
@@ -60,11 +71,13 @@ public class SetFieldValue extends VDLFunction {
 			AbstractDataNode value = (AbstractDataNode) PA_VALUE.getValue(stack);
 			
 			if (src == null) {
-			    dest = getVarName(var);
-			    src = getVarName(value);
+			    dest = Tracer.getVarName(var);
+			    src = Tracer.getVarName(value);
 			}
 			
-			log(leaf, value);
+			if (tracer.isEnabled()) {
+			    log(leaf, value, stack);
+			}
 			    
             // TODO want to do a type check here, for runtime type checking
             // and pull out the appropriate internal value from value if it
@@ -76,6 +89,9 @@ public class SetFieldValue extends VDLFunction {
 			return null;
 		}
 		catch (FutureFault f) {
+		    if (tracer.isEnabled()) {
+		        tracer.trace(stack, var + " waiting for " + Tracer.getFutureName(f.getFuture()));
+		    }
 		    WaitingThreadsMonitor.addOutput(stack, Collections.singletonList(var));
 			throw f;
 		}
@@ -84,54 +100,8 @@ public class SetFieldValue extends VDLFunction {
 		}
 	}
 
-	private String getVarName(DSHandle var) {
-	    String name = var.getRoot().getParam(MappingParam.SWIFT_DBGNAME);
-        if (var == var.getRoot()) {
-            return name;
-        }
-        else {
-            Path p = var.getPathFromRoot();
-            if (p.isArrayIndex(0)) {
-                return name + var.getPathFromRoot();
-            }
-            else {
-                return name + "." + var.getPathFromRoot();
-            }
-        }
-    }
-
-    private void log(DSHandle leaf, DSHandle value) {
-	    if (logger.isDebugEnabled()) {
-	        logger.debug("Setting " + leaf + " to " + value);
-	    }
-	    else if (logger.isInfoEnabled()) {
-	        if (leaf instanceof AbstractDataNode) {
-	            AbstractDataNode data = (AbstractDataNode) leaf;
-	            Path path = data.getPathFromRoot();
-	            String p;
-	            if (path.isEmpty()) {
-	                p = "";
-	            }
-	            else if (path.isArrayIndex(0)) {
-	                p = path.toString();
-	            }
-	            else {
-	                p = "." + path.toString();
-	            }
-	            String name = data.getDisplayableName() + p;
-	            if (value.getType().isArray()) {
-	                if (logger.isInfoEnabled()) {
-	                    logger.info("Set: " + name + "=" + 
-                                unpackHandles(value, value.getArrayValue()));
-	                }
-	            }
-	            else {
-	                if (logger.isInfoEnabled()) {
-	                    logger.info("Set: " + name + "=" + value.getValue());
-	                }
-	            }
-	        }
-	    }
+    private void log(DSHandle leaf, DSHandle value, VariableStack stack) throws VariableNotFoundException {
+        tracer.trace(stack, dest + " = " + Tracer.unwrapHandle(value));
     }
 
 	String unpackHandles(DSHandle handle, Map<Comparable<?>, DSHandle> handles) { 

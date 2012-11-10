@@ -55,8 +55,16 @@ public class New extends VDLFunction {
 		setArguments(New.class,
 				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_DBGNAME, OA_WAITFOR});
 	}
+	
+	private Tracer tracer;
 
-	public Object function(VariableStack stack) throws ExecutionException {
+	@Override
+    protected void initializeStatic() {
+        super.initializeStatic();
+        tracer = Tracer.getTracer(this);
+    }
+
+    public Object function(VariableStack stack) throws ExecutionException {
 		String typename = TypeUtil.toString(OA_TYPE.getValue(stack));
 		Object value = OA_VALUE.getValue(stack);
 		@SuppressWarnings("unchecked")
@@ -105,6 +113,9 @@ public class New extends VDLFunction {
 			}
 			DSHandle handle;
 			if (typename.equals("external")) {
+			    if (tracer.isEnabled()) {
+			        tracer.trace(threadPrefix, dbgname + " = external");
+			    }
 				handle = new ExternalDataNode();
 			}
 			else if (type.isArray()) {
@@ -112,12 +123,18 @@ public class New extends VDLFunction {
 				handle = new RootArrayDataNode(type);
 				if (value != null) {
 					if (value instanceof RootArrayDataNode) {
+					    if (tracer.isEnabled()) {
+					        tracer.trace(threadPrefix, dbgname + " = " + Tracer.getVarName((RootDataNode) value));
+					    }
 						handle = (RootArrayDataNode) value;
 					}
 					else {
 						if (!(value instanceof List)) {
 							throw new ExecutionException("An array variable can only be initialized with a list of values");
 						}
+						if (tracer.isEnabled()) {
+                            tracer.trace(threadPrefix, dbgname + " = " + formatList((List<?>) value));
+                        }
 						int index = 0;
 						Iterator<?> i = ((List<?>) value).iterator();
 						while (i.hasNext()) {
@@ -137,17 +154,33 @@ public class New extends VDLFunction {
 					}
 					handle.closeShallow();
 				}
+				else {
+				    if (tracer.isEnabled()) {
+				        tracer.trace(threadPrefix, dbgname);
+                    }
+				}
 
 				handle.init(mps);
 			}
 			else if (value instanceof DSHandle) {
+			    if (tracer.isEnabled()) {
+			        tracer.trace(threadPrefix, dbgname + " = " + Tracer.getVarName((DSHandle) value));
+                }
 				handle = (DSHandle) value;
 			}
 			else {
 				handle = new RootDataNode(type);
 				handle.init(mps);
 				if (value != null) {
+				    if (tracer.isEnabled()) {
+				        tracer.trace(threadPrefix, dbgname + " = " + value);
+				    }
 					handle.setValue(internalValue(type, value));
+				}
+				else {
+				    if (tracer.isEnabled()) {
+                        tracer.trace(threadPrefix, dbgname + formatMPS(mps));
+                    }
 				}
 			}
 			
@@ -160,4 +193,55 @@ public class New extends VDLFunction {
 			throw new ExecutionException(e);
 		}
 	}
+
+    private String formatMPS(MappingParamSet mps) {
+        Object desc = mps.get(MappingParam.SWIFT_DESCRIPTOR);
+        if (desc == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(" <");
+        sb.append(desc);
+        sb.append("; ");
+        boolean first = true;
+        for (String name : mps.names()) {
+        	if (name.indexOf('#') >= 0) {
+        		// skip internal parameters
+        		continue;
+        	}
+            if (first) {
+                first = false;
+            }
+            else {
+                sb.append(", ");
+            }
+            sb.append(name);
+            sb.append(" = \"");
+            sb.append(Tracer.unwrapHandle(mps._get(name)));
+            sb.append("\"");
+        }
+        sb.append('>');
+        return sb.toString();
+    }
+
+    private String formatList(List<?> value) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        unfoldList(value, sb);
+        sb.append(']');
+        return sb.toString();
+    }
+
+    private void unfoldList(List<?> value, StringBuilder sb) {
+        boolean first = true;
+        for (Object v : value) {
+            if (first) {
+                first = false;
+            }
+            else {
+                sb.append(", ");
+            }
+            sb.append(v);
+        }
+    }
 }

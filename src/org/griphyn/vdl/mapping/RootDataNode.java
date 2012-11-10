@@ -25,6 +25,8 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.griphyn.vdl.karajan.lib.Tracer;
+import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
@@ -36,6 +38,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	private Mapper mapper;
 	private MappingParamSet params;
 	private AbstractDataNode waitingMapperParam;
+	
+	private static final Tracer tracer = Tracer.getTracer("VARIABLE");
 
 	public RootDataNode(Type type) {
 		super(Field.Factory.createField(null, type));
@@ -62,6 +66,10 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	    waitingMapperParam = params.getFirstOpenParamValue();
 	    if (waitingMapperParam != null) {
             waitingMapperParam.getFutureWrapper().addModificationAction(this, null);
+            if (tracer.isEnabled()) {
+                tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " wait " 
+                    + Tracer.getVarName(waitingMapperParam));
+            }
             return;
 	    }
 	    
@@ -101,6 +109,10 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	}
 
 	public void futureModified(Future f, VariableStack stack) {
+	    if (tracer.isEnabled()) {
+            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " available " 
+                    + Tracer.getFutureName(f));
+        }
 		innerInit();
 	}
 
@@ -238,5 +250,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	private synchronized void initialized() {
 		initialized = true;
 		waitingMapperParam = null;
+		if (tracer.isEnabled()) {
+            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " initialized");
+        }
 	}
 }

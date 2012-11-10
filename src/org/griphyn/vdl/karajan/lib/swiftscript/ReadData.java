@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
@@ -48,14 +49,25 @@ public class ReadData extends VDLFunction {
 	public static final Arg DEST = new Arg.Positional("dest");
 	public static final Arg SRC = new Arg.Positional("src");
 	public static boolean warning;
+	
+	public static Tracer tracer;
 
 	static {
 		setArguments(ReadData.class, new Arg[] { DEST, SRC });
 	}
+	
+	@Override
+    protected void initializeStatic() {
+        super.initializeStatic();
+        tracer = Tracer.getTracer(this);
+    }
 
-	protected Object function(VariableStack stack) throws ExecutionException {
+    protected Object function(VariableStack stack) throws ExecutionException {
 		DSHandle dest = (DSHandle) DEST.getValue(stack);
 		AbstractDataNode src = (AbstractDataNode) SRC.getValue(stack);
+		if (tracer.isEnabled()) {
+		    tracer.trace(stack, Tracer.fileName(src));
+		}
 		src.waitFor();
 		if (src.getType().equals(Types.STRING)) {
 			readData(dest, (String) src.getValue());
@@ -175,8 +187,8 @@ public class ReadData extends VDLFunction {
 		}
 		else {
 			String[] header = line.split("\\s+");
-			Set t = new HashSet(type.getFieldNames());
-			Set h = new HashSet(Arrays.asList(header));
+			Set<String> t = new HashSet<String>(type.getFieldNames());
+			Set<String> h = new HashSet<String>(Arrays.asList(header));
 			if (t.size() != h.size()) {
 				throw new ExecutionException("File header does not match type. " + "Expected "
 						+ t.size() + " whitespace separated items. Got " + h.size() + " instead.");

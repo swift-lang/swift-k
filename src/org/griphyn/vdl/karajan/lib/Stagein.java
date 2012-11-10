@@ -30,6 +30,8 @@ import org.globus.cog.karajan.arguments.NamedArguments;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.FutureFault;
+import org.globus.cog.karajan.workflow.nodes.FlowNode;
+import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
@@ -42,9 +44,20 @@ public class Stagein extends VDLFunction {
     public static final Arg VAR = new Arg.Positional("var");
     
     public static final Channel STAGEIN = new Channel("stagein");
+    
+    private Tracer tracer; 
+    private String procName;
 
     static {
         setArguments(Stagein.class, new Arg[] { VAR });
+    }
+    
+    @Override
+    protected void initializeStatic() {
+        super.initializeStatic();
+        FlowNode def = (FlowNode) getParent().getParent();
+        procName = Karajan.demangle(def.getTextualName());
+        tracer = Tracer.getTracer(def, "APPCALL");
     }
 
     private boolean isPrimitive(DSHandle var) {
@@ -61,7 +74,11 @@ public class Stagein extends VDLFunction {
                 Collection<Path> fp = var.getFringePaths();
                 try {
                     for (Path p : fp) {
-                    	((AbstractDataNode) var.getField(p)).waitFor();
+                        AbstractDataNode n = (AbstractDataNode) var.getField(p);
+                    	n.waitFor();
+                    	if (tracer.isEnabled()) {
+                    	    tracer.trace(stack, procName + " available " + Tracer.getVarName(n));
+                    	}
                     }
                 }
                 catch (DependentException e) {
@@ -72,6 +89,9 @@ public class Stagein extends VDLFunction {
                 }
             }
             catch (FutureFault f) {
+                if (tracer.isEnabled()) {
+                    tracer.trace(stack, procName + " wait " + Tracer.getFutureName(f.getFuture()));
+                }
                 throw f;
             }
             catch (MappingDependentException e) {
@@ -90,7 +110,18 @@ public class Stagein extends VDLFunction {
         }
         else {
             // we still wait until the primitive value is there
-            var.waitFor();
+            if (tracer.isEnabled()) {
+                try {
+                    var.waitFor();
+                }
+                catch (FutureFault f) {
+                    tracer.trace(stack, procName + " waiting for " + Tracer.getFutureName(f.getFuture()));
+                    throw f;
+                }
+            }
+            else {
+                var.waitFor();
+            }
         }
         return null;
     }
