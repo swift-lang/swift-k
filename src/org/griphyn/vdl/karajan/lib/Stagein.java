@@ -76,9 +76,6 @@ public class Stagein extends VDLFunction {
                     for (Path p : fp) {
                         AbstractDataNode n = (AbstractDataNode) var.getField(p);
                     	n.waitFor();
-                    	if (tracer.isEnabled()) {
-                    	    tracer.trace(stack, procName + " available " + Tracer.getVarName(n));
-                    	}
                     }
                 }
                 catch (DependentException e) {
@@ -90,7 +87,7 @@ public class Stagein extends VDLFunction {
             }
             catch (FutureFault f) {
                 if (tracer.isEnabled()) {
-                    tracer.trace(stack, procName + " wait " + Tracer.getFutureName(f.getFuture()));
+                    tracer.trace(stack, procName + " WAIT " + Tracer.getFutureName(f.getFuture()));
                 }
                 throw f;
             }
@@ -115,7 +112,7 @@ public class Stagein extends VDLFunction {
                     var.waitFor();
                 }
                 catch (FutureFault f) {
-                    tracer.trace(stack, procName + " waiting for " + Tracer.getFutureName(f.getFuture()));
+                    tracer.trace(stack, procName + " WAIT " + Tracer.getFutureName(f.getFuture()));
                     throw f;
                 }
             }

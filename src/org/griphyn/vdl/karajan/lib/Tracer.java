@@ -134,11 +134,11 @@ public class Tracer {
     }
     
     public void trace(VariableStack stack, Object msg) throws VariableNotFoundException {
-        trace(ThreadingContext.get(stack).toString(), msg);
+        trace(threadName(stack), msg);
     }
     
     public void trace(String thread, Object msg) {
-        String str = source + ", thread " + thread + ", " + msg;
+        String str = source + ", thread " + threadName(thread) + ", " + msg;
         logger.info(str);
     }
     
@@ -146,7 +146,7 @@ public class Tracer {
         if (line == null) {
             return;
         }
-        String str = name + ", line " + line + ", thread " + thread + ", "+ msg;
+        String str = name + ", line " + line + ", thread " + threadName(thread) + ", "+ msg;
         logger.info(str);
     }
     
@@ -154,12 +154,25 @@ public class Tracer {
         if (line == null) {
             return;
         }
-        String str = source + ", line " + line + ", thread " + thread + ", " + msg;
+        String str = source + ", line " + line + ", thread " + threadName(thread) + ", " + msg;
         logger.info(str);
     }
     
     public void trace(String thread) {
-        logger.info(source + ", thread " + thread);
+        logger.info(source + ", thread " + threadName(thread));
+    }
+    
+    private String threadName(String thread) {
+        if (thread.isEmpty()) {
+            return "main";
+        }
+        else {
+            return thread;
+        }
+    }
+    
+    private String threadName(VariableStack stack) throws VariableNotFoundException {
+        return threadName(ThreadingContext.get(stack).toString());
     }
     
     private static Tracer disabledTracer, enabledTracer;
@@ -245,8 +258,8 @@ public class Tracer {
     }
     
     public static Object unwrapHandle(Object o) {
-        if (o instanceof DSHandle) {
-            DSHandle h = (DSHandle) o;
+        if (o instanceof AbstractDataNode) {
+            AbstractDataNode h = (AbstractDataNode) o;
             if (h.isClosed()) {
                 if (h.getType().isPrimitive()) {
                     if (Types.STRING.equals(h.getType())) {
@@ -260,8 +273,7 @@ public class Tracer {
                     return getVarName(h);
                 }
                 else {
-                    Mapper m = h.getMapper();
-                    return "<" + m.map(h.getPathFromRoot()) + ">";
+                    return fileName(h);
                 }
             }
             else {
@@ -274,17 +286,12 @@ public class Tracer {
     }
 
     public static Object fileName(AbstractDataNode n) {
-        if (Types.STRING.equals(n.getType())) {
-            return unwrapHandle(n);
+        Mapper m = n.getActualMapper();
+        if (m == null) {
+            return "?" + getVarName(n);
         }
         else {
-            Mapper m = n.getActualMapper();
-            if (m == null) {
-                return "?" + getVarName(n);
-            }
-            else {
-                return "<" + m.map(n.getPathFromRoot()) + ">";
-            }
+            return "<" + m.map(n.getPathFromRoot()) + ">";
         }
     }
 }

@@ -67,7 +67,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	    if (waitingMapperParam != null) {
             waitingMapperParam.getFutureWrapper().addModificationAction(this, null);
             if (tracer.isEnabled()) {
-                tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " wait " 
+                tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
             }
             return;
@@ -109,10 +109,6 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	}
 
 	public void futureModified(Future f, VariableStack stack) {
-	    if (tracer.isEnabled()) {
-            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " available " 
-                    + Tracer.getFutureName(f));
-        }
 		innerInit();
 	}
 
@@ -251,7 +247,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		initialized = true;
 		waitingMapperParam = null;
 		if (tracer.isEnabled()) {
-            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " initialized");
+            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED");
         }
 	}
 }

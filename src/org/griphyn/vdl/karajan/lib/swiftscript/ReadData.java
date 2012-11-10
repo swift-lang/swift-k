@@ -50,7 +50,7 @@ public class ReadData extends VDLFunction {
 	public static final Arg SRC = new Arg.Positional("src");
 	public static boolean warning;
 	
-	public static Tracer tracer;
+	public Tracer tracer;
 
 	static {
 		setArguments(ReadData.class, new Arg[] { DEST, SRC });
@@ -59,14 +59,14 @@ public class ReadData extends VDLFunction {
 	@Override
     protected void initializeStatic() {
         super.initializeStatic();
-        tracer = Tracer.getTracer(this);
+        tracer = Tracer.getTracer(this, "SWIFTCALL");
     }
 
     protected Object function(VariableStack stack) throws ExecutionException {
 		DSHandle dest = (DSHandle) DEST.getValue(stack);
 		AbstractDataNode src = (AbstractDataNode) SRC.getValue(stack);
 		if (tracer.isEnabled()) {
-		    tracer.trace(stack, Tracer.fileName(src));
+		    tracer.trace(stack, "readData(" + Tracer.unwrapHandle(src) + ")");
 		}
 		src.waitFor();
 		if (src.getType().equals(Types.STRING)) {
