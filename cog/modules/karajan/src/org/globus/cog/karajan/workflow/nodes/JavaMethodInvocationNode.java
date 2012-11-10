@@ -14,7 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 	public static final Arg A_OBJECT = new Arg.Optional("object", null);
 	public static final Arg A_TYPES = new Arg.Optional("types");
 
-	protected static final Map TYPES = new Hashtable();
+	protected static final Map<String, Class<?>> TYPES = new HashMap<String, Class<?>>();
 
 	static {
 		TYPES.put("boolean", boolean.class);
@@ -59,16 +59,17 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 			throw new ExecutionException("No object instance to work on");
 		}
 		Object[] args = Arg.VARGS.asArray(stack);
-		Class[] argTypes = new Class[args.length];
+		Class<?>[] argTypes = new Class[args.length];
 		if (A_TYPES.isPresent(stack)) {
-			List types = TypeUtil.toList(A_TYPES.getValue(stack));
+			@SuppressWarnings({ "cast", "unchecked" })
+			List<String> types = (List<String>) TypeUtil.toList(A_TYPES.getValue(stack));
 			if (types.size() != args.length) {
 				throw new ExecutionException(
 						"The number of items in the types attribute does not match the number of arguments");
 			}
-			Iterator i = types.iterator();
+			Iterator<String> i = types.iterator();
 			for (int j = 0; j < argTypes.length; j++) {
-				String type = (String) i.next();
+				String type = i.next();
 				argTypes[j] = getClass(type);
 				if (TYPES.containsKey(type)) {
 					args[j] = convert(argTypes[j], args[j], argTypes[j].isArray());
@@ -93,7 +94,7 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 			}
 		}
 		try {
-			Class cls;
+			Class<?> cls;
 			if (o == null) {
 				cls = Class.forName(classname);
 			}
@@ -122,7 +123,7 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 		}
 	}
 
-	public static Class getClass(String type) throws ExecutionException {
+	public static Class<?> getClass(String type) throws ExecutionException {
 		boolean array = false;
 		if (type.endsWith("[]")) {
 			array = true;
@@ -130,10 +131,10 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 		}
 		if (TYPES.containsKey(type)) {
 			if (array) {
-				return Array.newInstance((Class) TYPES.get(type), 0).getClass();
+				return Array.newInstance(TYPES.get(type), 0).getClass();
 			}
 			else {
-				return (Class) TYPES.get(type);
+				return TYPES.get(type);
 			}
 		}
 		else {
@@ -151,14 +152,14 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 		}
 	}
 
-	protected static Object convert(Class type, Object src, boolean array)
+	protected static Object convert(Class<?> type, Object src, boolean array)
 			throws ExecutionException {
 		if (array) {
 			if (type.getComponentType().equals(char.class) && src instanceof String) {
 				return ((String) src).toCharArray();
 			}
 			else {
-				List l = TypeUtil.toList(src);
+				List<?> l = TypeUtil.toList(src);
 				Object ar;
 				if (l != null) {
 					ar = Array.newInstance(type.getComponentType(), l.size());
@@ -177,7 +178,7 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 		}
 	}
 
-	protected static Object convert(Class type, Object src) throws ExecutionException {
+	protected static Object convert(Class<?> type, Object src) throws ExecutionException {
 		if (type.isAssignableFrom(src.getClass())) {
 			return src;
 		}
