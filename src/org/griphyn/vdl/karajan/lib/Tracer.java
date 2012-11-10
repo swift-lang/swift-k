@@ -140,7 +140,6 @@ public class Tracer {
     public void trace(String thread, Object msg) {
         String str = source + ", thread " + thread + ", " + msg;
         logger.info(str);
-        System.out.println(str);
     }
     
     public void trace(String thread, String name, String line, Object msg) {
@@ -149,7 +148,6 @@ public class Tracer {
         }
         String str = name + ", line " + line + ", thread " + thread + ", "+ msg;
         logger.info(str);
-        System.out.println(str);
     }
     
     public void trace(String thread, String line, Object msg) {
@@ -158,12 +156,10 @@ public class Tracer {
         }
         String str = source + ", line " + line + ", thread " + thread + ", " + msg;
         logger.info(str);
-        System.out.println(str);
     }
     
     public void trace(String thread) {
         logger.info(source + ", thread " + thread);
-        System.out.println(source + ", thread " + thread);
     }
     
     private static Tracer disabledTracer, enabledTracer;
