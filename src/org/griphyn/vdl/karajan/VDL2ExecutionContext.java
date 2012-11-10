@@ -20,6 +20,8 @@
  */
 package org.griphyn.vdl.karajan;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ElementTree;
@@ -57,6 +59,13 @@ public class VDL2ExecutionContext extends ExecutionContext {
 			}
 			else {
 				getStderr().append(ProcessBulkErrors.getMessageChain(e));
+			}
+			if (e.getStack() != null) {
+			    List<String> l = Monitor.getSwiftTrace(e.getStack());
+			    for (String s : l) {
+			        getStderr().append("\n\t");
+			        getStderr().append(s);
+			    }
 			}
 			getStderr().append("\n");
 		}
