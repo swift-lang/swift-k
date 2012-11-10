@@ -61,7 +61,7 @@ public class ExecuteElement extends SequentialWithArguments {
 			FlowElement fe = (FlowElement) element;
 			stack.leave();
 			if (logger.isDebugEnabled()) {
-				threadTracker.remove(ThreadingContext.get(stack));
+				threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 			}
 			ThreadingContext.set(stack, ThreadingContext.get(stack).split(getIntProperty(UID)));
 			if (fe.isSimple()) {
@@ -97,7 +97,7 @@ public class ExecuteElement extends SequentialWithArguments {
 		stack.setVar(DefUtil.ENV, def.getEnv());
 		stack.setVar(Trace.ELEMENT, this);
 		if (logger.isDebugEnabled()) {
-			threadTracker.remove(ThreadingContext.get(stack));
+			threadTracker.remove(new FNTP(this, ThreadingContext.get(stack)));
 		}
 		def.getUde().startBody(stack, args);
 	}
