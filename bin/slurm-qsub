@@ -3,7 +3,7 @@
 now=$(date "+%Y.%m%d.%H:%M:%S")
 echo $now $0: $* >> $HOME/pbslog
 
-slurmqsub=$( which qsub )
+slurmqsub=$( which slurm-qsub-emulator )
 script=$1.slurm
 echo '#! /bin/sh' >$script
 # echo 'export PBS_NODELIST=SLURM_NODELIST'' >>$script  # FIXME: convert SLURM_NODELIST to PBS_NODEFILE here...
