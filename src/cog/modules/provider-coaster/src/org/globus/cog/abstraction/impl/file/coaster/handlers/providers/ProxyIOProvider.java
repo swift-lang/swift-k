@@ -214,15 +214,11 @@ public class ProxyIOProvider implements IOProvider {
 
     private static class CReadBuffer extends ReadBuffer {
         
-        // private Exception error;
-        // private BlockingQueue queue;
-        // private boolean seenLast;
         private int crt;
         private LinkedList<Buffers.Allocation> alloc;
 
         protected CReadBuffer(Buffers buffers, ReadBufferCallback cb) {
             super(buffers, cb, -1);
-            // queue = new LinkedBlockingQueue();
             alloc = new LinkedList<Buffers.Allocation>();
         }
 
@@ -265,18 +261,6 @@ public class ProxyIOProvider implements IOProvider {
             // not used
         }
     }
-
-    /*
-    private static class Entry {
-        public final boolean last;
-        public final ByteBuffer buf;
-
-        public Entry(boolean last, ByteBuffer buf) {
-            this.last = last;
-            this.buf = buf;
-        }
-    }
-    */
 
     private static class Reader implements IOReader, Callback {
         private CustomGetFileCmd cmd;
