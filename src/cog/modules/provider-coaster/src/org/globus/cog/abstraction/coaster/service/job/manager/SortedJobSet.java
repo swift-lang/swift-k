@@ -103,6 +103,12 @@ public class SortedJobSet implements Iterable<Job> {
     public void remove(Job job) {
         LinkedList<Job> l = sm.get(job.getMaxWallTime());
         l.remove(job);
+        // the iterator assumes that a if a list for a key exists
+        // then it must have at least one element, so make sure
+        // that empty lists are not kept
+        if (l.isEmpty()) {
+            sm.remove(job.getMaxWallTime());
+        }
         size--;
     }
 
@@ -131,8 +137,7 @@ public class SortedJobSet implements Iterable<Job> {
         return null;
     }
 
-    Job removeOne(TimeInterval key, List<Job> jobs, int cpus)
-    {
+    private Job removeOne(TimeInterval key, List<Job> jobs, int cpus) {
         Job result = null;
         for (Iterator<Job> it = jobs.iterator(); it.hasNext(); ) {
             Job job = it.next();
