@@ -45,6 +45,7 @@ public class CondorExecutor extends AbstractExecutor {
 		boolean grid = false;
 		Task task = getTask();
 		JobSpecification spec = getSpec();
+		getSpec().unpackProviderAttributes();
 		String type = (String) spec.getAttribute("jobType");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
@@ -110,6 +111,19 @@ public class CondorExecutor extends AbstractExecutor {
 			}
 		}
 		wr.write('\n');
+
+		String request_memory = (String) spec.getAttribute("request_memory");
+		if(request_memory != null) {
+			wr.write("request_memory = " + request_memory + '\n');
+		}
+		
+		String resources = (String) spec.getAttribute("condor.resource_list");
+		if (resources != null && resources.length() > 0) {
+			if (logger.isDebugEnabled())
+				logger.debug("condor.resource_list: " + resources);
+			wr.write(resources + '\n');
+		}
+		
 		wr.write("notification = Never\n");
 		wr.write("leave_in_queue = TRUE\n");
 		wr.write("queue\n");
@@ -220,7 +234,7 @@ public class CondorExecutor extends AbstractExecutor {
 				}
 			}
 			else {
-				logger.warn("Failed makr job " + jobid
+				logger.warn("Failed to mark job " + jobid
 						+ " as removable from queue: "
 						+ getOutput(p.getInputStream()));
 			}
