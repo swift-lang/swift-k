@@ -138,9 +138,11 @@ public class VariableScope {
 		// by the above if? in which case isVariableDefined should
 		// be replaced by is locally defined test.
 		if(parentScope != null && parentScope.isVariableDefined(name)) {
-			logger.warn("Variable "+name+" defined in scope "+hashCode()
-			+ " shadows variable of same name in scope "
-			+ parentScope.hashCode());
+		    if(logger.isDebugEnabled()) {
+			   logger.debug("Variable "+name+" defined in scope "+hashCode()
+			   + " shadows variable of same name in scope "
+			   + parentScope.hashCode());
+		    }
 		}
 
 		if(global && this != rootScope) {
