@@ -531,7 +531,7 @@ if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
 	
 	logstate "MOVING_OUTPUTS $OUTF"
 	
-	for O in "$OUTF"; do
+	for O in $OUTF ; do
 		if ! contains SKIPPED_OUTPUT $O ; then
 			mv "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
 			checkError 254 "Failed to move output file $O to shared directory"
