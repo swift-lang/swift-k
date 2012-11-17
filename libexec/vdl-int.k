@@ -367,7 +367,7 @@ namespace("vdl"
 			concat(
 				for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))
 					[name, file] := each(f)
-					destfile := "{jobid}-{file}"
+					destfile := concat("{jobid}-", basename(file))
 					try(
 						sequential(
 							task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=file,

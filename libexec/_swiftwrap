@@ -63,7 +63,7 @@ moveMiscFilesFromScratch() {
 	
 	if [ "X$SCRATCH" != "X" ]; then
 		if [ -f "$DIR/$STDOUT" ] || [ -f "$DIR/$STDERR" ]; then
-			mkdir -p "$WFDIR/jobs/$JOBDIR/$ID" 
+			mkdir -p "$WFDIR/jobs/$JOBDIR/$ID"
 		fi 
 		if [ -f "$DIR/$STDOUT" ]; then
 			mv "$DIR/$STDOUT" "$WFDIR/jobs/$JOBDIR/$ID/$STDOUT"
@@ -90,7 +90,7 @@ fail() {
 	closeinfo
 	
 	moveMiscFilesFromScratch
-	
+		
 	if [ "$STATUSMODE" = "files" ]; then
 		exit 0
 	else
@@ -530,7 +530,7 @@ if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
 	fi
 	
 	logstate "MOVING_OUTPUTS $OUTF"
-	
+			
 	for O in $OUTF ; do
 		if ! contains SKIPPED_OUTPUT $O ; then
 			mv "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
