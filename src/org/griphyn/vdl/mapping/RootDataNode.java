@@ -135,8 +135,9 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 					// Try to get the path in order to check that the 
 				    // path is valid - we'll get an exception if not
 					root.getField(p);
-					if (logger.isInfoEnabled()) {
-						logger.info("Found mapped data " + root + "." + p);
+					if (tracer.isEnabled()) {
+					    tracer.trace(root.getThread(), root.getDeclarationLine(), 
+					        root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
 					}
 				}
 				catch (InvalidPathException e) {
@@ -247,7 +248,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		initialized = true;
 		waitingMapperParam = null;
 		if (tracer.isEnabled()) {
-            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED");
+            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
         }
 	}
 }

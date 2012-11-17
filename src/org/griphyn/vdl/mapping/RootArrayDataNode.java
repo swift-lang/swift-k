@@ -146,7 +146,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
         initialized = true;
         waitingMapperParam = null;
         if (tracer.isEnabled()) {
-            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED");
+            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
         }
     }
 }

@@ -179,7 +179,7 @@ public class New extends VDLFunction {
 				}
 				else {
 				    if (tracer.isEnabled()) {
-                        tracer.trace(threadPrefix, dbgname + formatMPS(mps));
+                        tracer.trace(threadPrefix, dbgname + " " + mps);
                     }
 				}
 			}
@@ -193,36 +193,6 @@ public class New extends VDLFunction {
 			throw new ExecutionException(e);
 		}
 	}
-
-    private String formatMPS(MappingParamSet mps) {
-        Object desc = mps.get(MappingParam.SWIFT_DESCRIPTOR);
-        if (desc == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append(" <");
-        sb.append(desc);
-        sb.append("; ");
-        boolean first = true;
-        for (String name : mps.names()) {
-        	if (name.indexOf('#') >= 0) {
-        		// skip internal parameters
-        		continue;
-        	}
-            if (first) {
-                first = false;
-            }
-            else {
-                sb.append(", ");
-            }
-            sb.append(name);
-            sb.append(" = \"");
-            sb.append(Tracer.unwrapHandle(mps._get(name)));
-            sb.append("\"");
-        }
-        sb.append('>');
-        return sb.toString();
-    }
 
     private String formatList(List<?> value) {
         StringBuilder sb = new StringBuilder();

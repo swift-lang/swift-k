@@ -132,7 +132,7 @@ public class Tracer {
     public boolean isEnabled() {
         return enabled;
     }
-    
+        
     public void trace(VariableStack stack, Object msg) throws VariableNotFoundException {
         trace(threadName(stack), msg);
     }
