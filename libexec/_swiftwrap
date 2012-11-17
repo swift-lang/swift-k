@@ -421,7 +421,15 @@ if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
 		else
 			[ -f $WFDIR/shared/$L ]
 			checkError 254 "Could not locate input file: $L"
-			ln -s "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			# if it's a link, be careful about creating
+			# long link chains because there is a rather low 
+			# limit to how long that chain can be
+			if [ -L $WFDIR/shared/$L ]; then
+				# this might be of questionable portability
+				cp -P "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			else
+				ln -s "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			fi
 			checkError 254 "Failed to link input file $L"
 			log "Linked input: $WFDIR/shared/$L to $DIR/$L"
 		fi
