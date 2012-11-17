@@ -374,7 +374,7 @@ namespace("vdl"
 								destfile=destfile)
 							nl()
 							"    {name}: "
-							file:read(destfile)
+							strip(file:read(destfile))
 						)
 						""
 					)
