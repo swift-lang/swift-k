@@ -55,6 +55,25 @@ debug() {
 	[[ $DEBUG == 1 ]] && echo "$@" >& "$INFO"
 }
 
+moveMiscFilesFromScratch() {
+	if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
+		mkdir -p "$WFDIR/info/$JOBDIR"
+		mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
+	fi
+	
+	if [ "X$SCRATCH" != "X" ]; then
+		if [ -f "$DIR/$STDOUT" ] || [ -f "$DIR/$STDERR" ]; then
+			mkdir -p "$WFDIR/jobs/$JOBDIR/$ID" 
+		fi 
+		if [ -f "$DIR/$STDOUT" ]; then
+			mv "$DIR/$STDOUT" "$WFDIR/jobs/$JOBDIR/$ID/$STDOUT"
+		fi
+		if [ -f "$DIR/$STDERR" ]; then
+			mv "$DIR/$STDERR" "$WFDIR/jobs/$JOBDIR/$ID/$STDERR"
+		fi
+	fi
+}
+
 fail() {
 	EC=$1
 	shift
@@ -67,6 +86,11 @@ fail() {
 		
 	log $@
 	info
+	
+	closeinfo
+	
+	moveMiscFilesFromScratch
+	
 	if [ "$STATUSMODE" = "files" ]; then
 		exit 0
 	else
@@ -145,7 +169,7 @@ genScripts() {
 	for CMDARG in "${CMDARGS[@]}"; do
     	echo -n "\"$CMDARG\" " >> run.sh
 	done
-	echo "1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
+	echo "1>>\"$STDOUT\" 2>>\"$STDERR\"" >> run.sh
 	chmod +x run.sh
 }
 
@@ -372,56 +396,56 @@ log "Created job directory: $DIR"
 
 if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
 
-logstate "CREATE_INPUTDIR"
-for D in $DIRS ; do
-	mkdir -p "$DIR/$D" 2>&1 >>"$INFO"
-	checkError 254 "Failed to create input directory $D"
-	log "Created output directory: $DIR/$D"
-done
-
-logstate "LINK_INPUTS"
-for L in $INF ; do
-    CDM_POLICY="DEFAULT"
-	if [[ $CDM_FILE != "" ]]; then
-		CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
-	fi
-	if [[ $CDM_POLICY != "DEFAULT" && $CDM_POLICY != "EXTERNAL"* ]]; then
-		log "CDM_POLICY: $L -> $CDM_POLICY"
-		eval cdm_action $DIR "INPUT" $L $CDM_POLICY
-		continue
-	fi
-	if [ $COPYNOTLINK = 1 ]; then
-		cp "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
-		checkError 254 "Failed to copy input file $L"
-		log "Copied input: $WFDIR/shared/$L to $DIR/$L"
-	else
-		[ -f $WFDIR/shared/$L ]
-		checkError 254 "Could not locate input file: $L"
-		ln -s "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
-		checkError 254 "Failed to link input file $L"
-		log "Linked input: $WFDIR/shared/$L to $DIR/$L"
-	fi
-done
-
-if [[ $CDM_FILE != "" ]]; then
-    logstate "LINK_CDM_OUTPUTS"
-    SKIPPED_OUTPUT=()
-	GATHER_OUTPUT=()
-	for L in $OUTF ; do
-		CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
-		log "CDM_POLICY: $L -> $CDM_POLICY"
-		if [[ $CDM_POLICY != "DEFAULT" &&
-			  $CDM_POLICY != "BROADCAST"* ]]; then
-    	    eval cdm_action $DIR "OUTPUT" $L $CDM_POLICY
-			SKIPPED_OUTPUT=( $SKIPPED_OUTPUT $L )
+	logstate "CREATE_INPUTDIR"
+	for D in $DIRS ; do
+		mkdir -p "$DIR/$D" 2>&1 >>"$INFO"
+		checkError 254 "Failed to create input directory $D"
+		log "Created output directory: $DIR/$D"
+	done
+	
+	logstate "LINK_INPUTS"
+	for L in $INF ; do
+	    CDM_POLICY="DEFAULT"
+		if [[ $CDM_FILE != "" ]]; then
+			CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
 		fi
-		if [ $CDM_POLICY == "GATHER" ]; then
-			GATHER_OUTPUT=( $GATHER_OUTPUT $L )
-		elif [ $CDM_POLICY == "LOCAL" ]; then
-			CDM_LOCAL_OUTPUT=( $CDM_LOCAL_OUTPUT $L )
+		if [[ $CDM_POLICY != "DEFAULT" && $CDM_POLICY != "EXTERNAL"* ]]; then
+			log "CDM_POLICY: $L -> $CDM_POLICY"
+			eval cdm_action $DIR "INPUT" $L $CDM_POLICY
+			continue
+		fi
+		if [ $COPYNOTLINK = 1 ]; then
+			cp "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			checkError 254 "Failed to copy input file $L"
+			log "Copied input: $WFDIR/shared/$L to $DIR/$L"
+		else
+			[ -f $WFDIR/shared/$L ]
+			checkError 254 "Could not locate input file: $L"
+			ln -s "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			checkError 254 "Failed to link input file $L"
+			log "Linked input: $WFDIR/shared/$L to $DIR/$L"
 		fi
 	done
-fi
+	
+	if [[ $CDM_FILE != "" ]]; then
+	    logstate "LINK_CDM_OUTPUTS"
+	    SKIPPED_OUTPUT=()
+		GATHER_OUTPUT=()
+		for L in $OUTF ; do
+			CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
+			log "CDM_POLICY: $L -> $CDM_POLICY"
+			if [[ $CDM_POLICY != "DEFAULT" &&
+				  $CDM_POLICY != "BROADCAST"* ]]; then
+	    	    eval cdm_action $DIR "OUTPUT" $L $CDM_POLICY
+				SKIPPED_OUTPUT=( $SKIPPED_OUTPUT $L )
+			fi
+			if [ $CDM_POLICY == "GATHER" ]; then
+				GATHER_OUTPUT=( $GATHER_OUTPUT $L )
+			elif [ $CDM_POLICY == "LOCAL" ]; then
+				CDM_LOCAL_OUTPUT=( $CDM_LOCAL_OUTPUT $L )
+			fi
+		done
+	fi
 
 fi # PMI_RANK==0
 
@@ -447,12 +471,12 @@ if [ "$KICKSTART" == "" ]; then
 		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 			genScripts
 		fi
-		"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR"
+		"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
 	else
 		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 			genScripts
 		fi
-		"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
+		"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
 	fi
 	checkError $? "Application $EXEC failed with an exit code of $?"
 else
@@ -466,9 +490,9 @@ else
 		mkdir -p $WFDIR/kickstart/$JOBDIR
 		log "Using Kickstart ($KICKSTART)"
 		if [ "$STDIN" == "" ]; then
-			"$KICKSTART" -H -o "$STDOUT" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>"$STDERR"
+			"$KICKSTART" -H -o "$STDOUT" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>>"$STDERR"
 		else
-			"$KICKSTART" -H -o "$STDOUT" -i "$STDIN" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>"$STDERR"
+			"$KICKSTART" -H -o "$STDOUT" -i "$STDIN" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>>"$STDERR"
 		fi
 		export APPEXIT=$?
 		mv -f kickstart.xml "$WFDIR/kickstart/$JOBDIR/$ID-kickstart.xml" 2>&1 >& "$INFO"
@@ -490,41 +514,41 @@ log "Job ran successfully"
 
 if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
 
-MISSING=
-for O in $OUTF ; do
-	if [ ! -f "$DIR/$O" ]; then
-		if [ "$MISSING" == "" ]; then
-			MISSING=$O
-		else
-			MISSING="$MISSING, $O"
+	MISSING=
+	for O in $OUTF ; do
+		if [ ! -f "$DIR/$O" ]; then
+			if [ "$MISSING" == "" ]; then
+				MISSING=$O
+			else
+				MISSING="$MISSING, $O"
+			fi
 		fi
+	done
+	if [ "$MISSING" != "" ]; then
+		log $( find . )
+		fail 254 "The following output files were not created by the application: $MISSING"
 	fi
-done
-if [ "$MISSING" != "" ]; then
-	log $( find . )
-	fail 254 "The following output files were not created by the application: $MISSING"
-fi
-
-logstate "MOVING_OUTPUTS $OUTF"
-for O in $OUTF ; do
-	if ! contains SKIPPED_OUTPUT $O ; then
-		mv "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
-		checkError 254 "Failed to move output file $O to shared directory"
+	
+	logstate "MOVING_OUTPUTS $OUTF"
+	
+	for O in "$OUTF"; do
+		if ! contains SKIPPED_OUTPUT $O ; then
+			mv "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
+			checkError 254 "Failed to move output file $O to shared directory"
+		fi
+	done
+	
+	cdm_local_output $CDM_LOCAL_OUTPUT
+	cdm_gather $GATHER_OUTPUT
+	
+	logstate "RM_JOBDIR"
+	rm -rf "$DIR" 2>&1 >& "$INFO"
+	checkError 254 "Failed to remove job directory $DIR"
+	
+	if [ "$STATUSMODE" = "files" ]; then
+		logstate "TOUCH_SUCCESS"
+		touch $WFDIR/status/${JOBDIR}/${ID}-success
 	fi
-done
-
-cdm_local_output $CDM_LOCAL_OUTPUT
-cdm_gather $GATHER_OUTPUT
-
-logstate "RM_JOBDIR"
-rm -rf "$DIR" 2>&1 >& "$INFO"
-checkError 254 "Failed to remove job directory $DIR"
-
-if [ "$STATUSMODE" = "files" ]; then
-	logstate "TOUCH_SUCCESS"
-	touch $WFDIR/status/${JOBDIR}/${ID}-success
-fi
-
 else
 	# Allow rank 0 to write output
 	sleep 1
@@ -534,10 +558,7 @@ logstate "END"
 
 closeinfo
 
-if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
-	mkdir -p "$WFDIR/info/$JOBDIR"
-	mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
-fi
+moveMiscFilesFromScratch
 
 # ensure we exit with a 0 after a successful execution
 exit 0
