@@ -23,6 +23,7 @@ package org.griphyn.vdl.karajan;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
@@ -45,7 +46,7 @@ public class VDL2ExecutionContext extends ExecutionContext {
 
 	protected void printFailure(ExecutionException e) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(e.getMessage(), e);
+		    logger.debug("Karajan level error: " + getKarajanTrace(e));		
 		}
 		String msg = e.getMessage();
 		if (!"Execution completed with errors".equals(msg)) {
@@ -74,7 +75,26 @@ public class VDL2ExecutionContext extends ExecutionContext {
 		}
 	}
 
-	protected void setGlobals(VariableStack stack) {
+	private String getKarajanTrace(ExecutionException e) {
+	    StringBuilder sb = new StringBuilder();
+	    while (e != null) {
+	        sb.append(e.getMessage());
+	        if (e.getStack() != null) {
+	            sb.append(" at\n");
+	            sb.append(Trace.get(e.getStack()));
+	        }
+	        if (e.getCause() instanceof ExecutionException) {
+	            e = (ExecutionException) e.getCause();
+	            sb.append("\ncaused by: ");
+	        }
+	        else {
+	            e = null;
+	        }
+	    }
+        return sb.toString();
+    }
+
+    protected void setGlobals(VariableStack stack) {
 		super.setGlobals(stack);
 		stack.setGlobal(RUN_ID, runID);
 		stack.setGlobal(SCRIPT_NAME, scriptName);
