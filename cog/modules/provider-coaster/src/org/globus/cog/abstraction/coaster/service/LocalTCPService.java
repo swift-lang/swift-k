@@ -102,10 +102,13 @@ public class LocalTCPService implements Registering, Service, Runnable {
             channel = ServerSocketChannel.open();
             channel.configureBlocking(true);
             if(port == 0) {
-              PortRange portRange = PortRange.getTcpInstance();
-              if(portRange != null && portRange.isEnabled()) {
-                  port = portRange.getFreePort(port);
-              }
+                PortRange portRange = PortRange.getTcpInstance();
+                if(portRange != null && portRange.isEnabled()) {
+                    synchronized(portRange) {
+                        port = portRange.getFreePort(port);
+                        portRange.setUsed(port);
+                    }
+                }
             }
             channel.socket().bind(new InetSocketAddress(port));
             
@@ -189,12 +192,18 @@ public class LocalTCPService implements Registering, Service, Runnable {
         System.err.println("Irrecoverable channel exception: " + e.getMessage());
         System.exit(2);
     }
+    
+    private static int idSeq = 1;
+    
+    private synchronized static int nextId() {
+        return idSeq++;
+    }
 
     private static class WorkerConnectionHandler extends ConnectionHandler {
         public WorkerConnectionHandler(Service service, Socket socket, RequestManager requestManager)
                 throws IOException {
             super(socket, new WorkerChannel(socket, requestManager, 
-                new ChannelContext(service)), requestManager);
+                new ChannelContext("worker-" + nextId(), service)), requestManager);
         }
     }
     

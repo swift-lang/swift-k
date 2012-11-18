@@ -98,6 +98,12 @@ implements RegistrationManager, Runnable {
     */
     private static final NumberFormat SECONDS_3 =
     	new DecimalFormat("0.000");
+    
+    private static int sid;
+    
+    private synchronized static int nextSid() {
+    	return sid++;
+    }
 
     public BlockQueueProcessor(Settings settings) {
         super("Block Queue Processor");
@@ -105,7 +111,7 @@ implements RegistrationManager, Runnable {
         holding = new SortedJobSet();
         blocks = new TreeMap<String, Block>();
         tl = new HashMap<Integer, List<Job>>();
-        id = DDF.format(new Date());
+        id = DDF.format(new Date()) + nextSid();
         incoming = new ArrayList<Job>();
         metric = new OverallocatedJobDurationMetric(settings);
         queued = new SortedJobSet(metric);

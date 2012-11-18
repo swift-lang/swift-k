@@ -128,7 +128,7 @@ public class CoasterService extends GSSService {
         }
         else {
             try {
-                ConnectionHandler handler = new ConnectionHandler(this, sock,
+                ConnectionHandler handler = new ConnectionHandler("cps-" + sock.getPort(), this, sock,
                         COASTER_REQUEST_MANAGER);
                 handler.start();
             }
@@ -194,7 +194,7 @@ public class CoasterService extends GSSService {
         PipedServerChannel psc =
                 ServiceManager.getDefault().getLocalService().newPipedServerChannel();
         PipedClientChannel pcc =
-                new PipedClientChannel(COASTER_REQUEST_MANAGER, new ChannelContext(), psc);
+                new PipedClientChannel(COASTER_REQUEST_MANAGER, new ChannelContext("cpipe"), psc);
         psc.setClientChannel(pcc);
         ChannelManager.getManager().registerChannel(pcc.getChannelContext().getChannelID(), pcc);
         ChannelManager.getManager().registerChannel(psc.getChannelContext().getChannelID(), psc);
