@@ -36,7 +36,7 @@ public abstract class RequestReply {
 	
 	public static final int DEFAULT_TIMEOUT = 120 * 1000;
 	private int timeout = DEFAULT_TIMEOUT;
-
+	
 	public static final int NOID = -1;
 	private int id;
 	private String outCmd;
@@ -177,7 +177,7 @@ public abstract class RequestReply {
 		return inData;
 	}
 
-	public byte[] getInData() {
+	public synchronized byte[] getInData() {
 		if (inData == null) {
 			return null;
 		}
@@ -246,10 +246,48 @@ public abstract class RequestReply {
 	}
 	
 	public static void main(String[] args) {
-	    System.out.println(unpackLong(pack(1L)));
-	    System.out.println(unpackLong(pack(10L)));
-	    System.out.println(unpackLong(pack(1000000000L)));
-	    System.out.println(unpackLong(pack(10000000000000L)));
+		test(1L);
+		test(10L);
+		test(1000000000L);
+		test(10000000000000L);
+		testPerl(1L);
+        testPerl(10L);
+        testPerl(1000000000L);
+        testPerl(10000000000000L);
+	}
+	
+	private static void test(long l) {
+		System.out.print("Test " + l);
+		if (unpackLong(pack(l)) != l) {
+			throw new RuntimeException("Failed: " + l);
+		}
+		System.out.println(" OK");
+	}
+	
+	private static void testPerl(long l) {
+		System.out.print("Test perl " + l);
+        if (unpackLong(packPerl(l)) != l) {
+            throw new RuntimeException("Failed perl: " + l);
+        }
+        System.out.println(" OK");
+    }
+	
+	private static byte[] packPerl(long l) {
+		try {
+			Process p = Runtime.getRuntime().exec(new String[] 
+			     {"perl", "-e", "my $ts = " + l + "; print pack(\"VV\", ($ts & 0xffffffff), ($ts >> 32));"});
+			int ec = p.waitFor();
+			if (ec != 0) {
+				return new byte[8];
+			}
+			byte b[] = new byte[8];
+			p.getInputStream().read(b);
+			return b;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return new byte[8];
+		}
 	}
 
 	public boolean getInDataAsBoolean(int index) {
