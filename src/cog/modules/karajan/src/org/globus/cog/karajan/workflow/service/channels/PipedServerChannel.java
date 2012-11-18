@@ -12,10 +12,17 @@ package org.globus.cog.karajan.workflow.service.channels;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 
 public class PipedServerChannel extends AbstractPipedChannel {
-	
+    
+    private static int idSeq = 1;
+    
+    private static synchronized int nextIdSeq() {
+        return idSeq++;
+    }
+    
 	public PipedServerChannel(RequestManager requestManager, ChannelContext channelContext) {
 		super(requestManager, channelContext, false);
 		channelContext.getChannelID().setLocalID(ChannelID.newUID());
+		setName("spipe://" + nextIdSeq());
 	}
 	
 	public void setClientChannel(PipedClientChannel c) {

@@ -104,7 +104,7 @@ public class Client {
 		}
 		try {
 			if (sc == null) {
-				sc = new ChannelContext();
+				sc = new ChannelContext(contact.toString());
 				sc.setConfiguration(RemoteConfiguration.getDefault().find(contact.toString()));
 			}
 			URI c = contact;

@@ -53,6 +53,6 @@ public class TCPChannel extends AbstractTCPChannel {
 	}
 
 	public String toString() {
-		return "SC-" + getContact();
+		return "TCP-" + getContact();
 	}
 }
