@@ -212,6 +212,8 @@ public class Bootstrap {
             }
         }
         logger.log("Exit code: " + ec);
+        logger.log("Stdout from process: " + out.toString());
+        logger.log("Stderr from process: " + err.toString());
         System.out.println(out.toString());
         System.err.println(err.toString());
         if (ec != 0) {
