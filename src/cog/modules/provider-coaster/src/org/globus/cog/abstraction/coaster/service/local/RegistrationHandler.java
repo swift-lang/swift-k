@@ -48,7 +48,9 @@ public class RegistrationHandler extends RequestHandler {
         	options = Collections.emptyMap();
         }
 
-        logger.debug("registering: " + id + " " + url);
+        if (logger.isDebugEnabled()) {
+            logger.debug("registering: " + id + " " + url);
+        }
 
         KarajanChannel channel = getChannel();
         ChannelContext context = channel.getChannelContext();

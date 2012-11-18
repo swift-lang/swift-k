@@ -59,6 +59,10 @@ public class Block implements StatusListener, Comparable<Block> {
     private long lastUsed;
 
     private static int sid;
+    
+    private synchronized static int nextSID() {
+    	return sid++;
+    }
 
     private static final NumberFormat IDF = new DecimalFormat("000000");
     
@@ -72,7 +76,7 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public Block(int workers, TimeInterval walltime, BlockQueueProcessor ap) {
-        this(ap.getBQPId() + "-" + IDF.format(sid++), workers, walltime, ap);
+        this(ap.getBQPId() + "-" + IDF.format(nextSID()), workers, walltime, ap);
     }
 
     public Block(String id, int workers, TimeInterval walltime, BlockQueueProcessor ap) {
