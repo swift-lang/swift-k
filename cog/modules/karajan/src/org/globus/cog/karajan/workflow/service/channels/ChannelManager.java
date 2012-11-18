@@ -77,7 +77,7 @@ public class ChannelManager {
 				HostCredentialPair hcp = new HostCredentialPair(host, cred);
 				channel = getChannel(hcp);
 				if (channel == null) {
-					ChannelContext context = new ChannelContext();
+					ChannelContext context = new ChannelContext(host);
 					context.setConfiguration(RemoteConfiguration.getDefault().find(host));
 					context.newUserContext(cred);
 					context.setRemoteContact(host);
@@ -251,7 +251,6 @@ public class ChannelManager {
 	public KarajanChannel reserveChannel(MetaChannel meta) throws ChannelException {
 		synchronized (meta) {
 			meta.incUsageCount();
-			RemoteConfiguration.Entry config = meta.getChannelContext().getConfiguration();
 			if (meta.isOffline()) {
 				connect(meta);
 			}
@@ -503,7 +502,7 @@ public class ChannelManager {
 			if (obj instanceof HostCredentialPair) {
 				HostCredentialPair other = (HostCredentialPair) obj;
 				return host.equals(other.host)
-						&& ((DN == null && other.DN == null) || DN.equals(other.DN));
+						&& ((DN == null && other.DN == null) || ((DN != null) && DN.equals(other.DN)));
 			}
 			return false;
 		}

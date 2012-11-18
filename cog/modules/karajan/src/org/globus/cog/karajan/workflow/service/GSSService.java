@@ -105,7 +105,7 @@ public class GSSService extends BaseServer implements Service {
 		logger.debug("Got connection");
 		try {
 			ConnectionHandler handler =
-				new ConnectionHandler(this, socket, requestManager);
+				new ConnectionHandler("service-" + socket.getPort(), this, socket, requestManager);
 			handler.start();
 		}
 		catch (Exception e) {

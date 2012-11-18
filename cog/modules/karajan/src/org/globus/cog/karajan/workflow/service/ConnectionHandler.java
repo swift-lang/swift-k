@@ -32,19 +32,20 @@ public class ConnectionHandler {
 	private final KarajanChannel channel;
 	private final RequestManager requestManager;
 
-	public ConnectionHandler(Service service, Socket socket) throws IOException {
-		this(service, socket, null);
+	public ConnectionHandler(String name, Service service, Socket socket) throws IOException {
+		this(name, service, socket, null);
 	}
 
-	public ConnectionHandler(Service service, Socket socket, RequestManager requestManager) throws IOException {
+	public ConnectionHandler(String name, Service service, Socket socket, RequestManager requestManager) 
+	throws IOException {
 	    this.requestManager = requestManager == null ? new ServiceRequestManager() : requestManager;
 		this.socket = socket;
 		
 		if (socket instanceof GssSocket) {
-			channel = new GSSChannel((GssSocket) socket, this.requestManager, new ChannelContext(service));
+			channel = new GSSChannel((GssSocket) socket, this.requestManager, new ChannelContext(name, service));
 		}
 		else {
-			channel = new TCPChannel(socket, this.requestManager, new ChannelContext(service));
+			channel = new TCPChannel(socket, this.requestManager, new ChannelContext(name, service));
 		}
 	}
 	
@@ -56,9 +57,9 @@ public class ConnectionHandler {
         this.channel = channel;
 	}
 	
-	public ConnectionHandler(Service service, InputStream is, OutputStream os, RequestManager requestManager) {
+	public ConnectionHandler(String name, Service service, InputStream is, OutputStream os, RequestManager requestManager) {
 	    this.requestManager = requestManager == null ? new ServiceRequestManager() : requestManager;
-	    channel = new StreamChannel(is, os, this.requestManager, new ChannelContext(service));
+	    channel = new StreamChannel(is, os, this.requestManager, new ChannelContext(name, service));
 	}
 
 	public void start() throws Exception {

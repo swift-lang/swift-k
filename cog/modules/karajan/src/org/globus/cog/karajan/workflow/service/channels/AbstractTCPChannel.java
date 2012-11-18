@@ -14,9 +14,12 @@ import java.net.Socket;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.RequestManager;
 
 public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
+    public static final Logger logger = Logger.getLogger(AbstractTCPChannel.class);
+    
 	private Socket socket;
 	private boolean started;
 	private Exception startException;
@@ -53,13 +56,15 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 
 	public synchronized void start() throws ChannelException {
 		if (isClient()) {
-			setName("C(" + socket.getLocalAddress() + ")");
+			setName("C(" + getContact() + ")");
 		}
 		else {
 			setName("S(" + socket.getLocalAddress() + ")");
 		}
 		initialize();
-		logger.info(getContact() + "Channel started");
+		if (logger.isInfoEnabled()) {
+			logger.info("Channel started: " + this);
+		}
 		if (isClient()) {
 			try {
 				configure();

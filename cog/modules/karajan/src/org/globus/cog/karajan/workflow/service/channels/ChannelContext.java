@@ -37,6 +37,7 @@ public class ChannelContext {
 	private RemoteConfiguration.Entry configuration;
 	private ChannelID channelID;
 	private String remoteContact;
+	private final String name;
 	private UserContext userContext;
 	private int cmdseq;
 	private TagTable<Command> activeSenders;
@@ -49,21 +50,21 @@ public class ChannelContext {
 	
 	private List<ChannelListener> listeners;
 
-	public ChannelContext() {
-		this(new ServiceContext(null));
+	public ChannelContext(String name) {
+		this(name, new ServiceContext(null));
 	}
 	
-	public ChannelContext(ServiceContext sc) {
-	    attributes = new HashMap<String,Object>();
+	public ChannelContext(String name, ServiceContext sc) {
 		activeSenders = new TagTable<Command>();
 		activeReceivers = new TagTable<RequestHandler>();
 
 		channelID = new ChannelID();
 		this.serviceContext = sc;
+		this.name = name;
 	}
 	
-	public ChannelContext(Service service) {
-		this(service.getContext());
+	public ChannelContext(String name, Service service) {
+		this(name, service.getContext());
 		channelID.setClient(false);
 	}
 
@@ -134,6 +135,10 @@ public class ChannelContext {
 
 	public void setRemoteContact(String remoteContact) {
 		this.remoteContact = remoteContact;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	public ChannelID getChannelID() {
@@ -264,19 +269,21 @@ public class ChannelContext {
 	}
 	
 	public Object getData(String name) {
-	    synchronized(attributes) {
-	        return attributes.get(name);
-	    }
+	    return getAttribute(name);
 	}
 	
-	public void setAttribute(String name, Object o) {
-	    synchronized(attributes) {
-	        attributes.put(name, o);
+	public synchronized void setAttribute(String name, Object o) {
+	    if (attributes == null) {
+	        attributes = new HashMap<String, Object>();
 	    }
+	    attributes.put(name, o);
 	}
 	
-	public Object getAttribute(String name) {
-	    synchronized(attributes) {
+	public synchronized Object getAttribute(String name) {
+	    if (attributes == null) {
+	        return null;
+	    }
+	    else {
 	        return attributes.get(name);
 	    }
 	}
@@ -298,7 +305,7 @@ public class ChannelContext {
 	}
 	
 	public String toString() {
-		return System.identityHashCode(this) + ": " + attributes.toString();
+		return name;
 	}
 	
 	public synchronized void addChannelListener(ChannelListener l) {

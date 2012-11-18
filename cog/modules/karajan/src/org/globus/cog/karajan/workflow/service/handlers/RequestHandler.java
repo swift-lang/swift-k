@@ -10,7 +10,6 @@
 package org.globus.cog.karajan.workflow.service.handlers;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
