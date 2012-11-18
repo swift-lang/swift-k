@@ -29,8 +29,10 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.griphyn.vdl.karajan.VDL2ExecutionContext;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 import org.griphyn.vdl.mapping.ExternalDataNode;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
@@ -120,7 +122,8 @@ public class New extends VDLFunction {
 			}
 			else if (type.isArray()) {
 				// dealing with array variable
-				handle = new RootArrayDataNode(type);
+				handle = new RootArrayDataNode(type, 
+				    (DuplicateMappingChecker) stack.getGlobal(VDL2ExecutionContext.DM_CHECKER));
 				if (value != null) {
 					if (value instanceof RootArrayDataNode) {
 					    if (tracer.isEnabled()) {
@@ -169,7 +172,8 @@ public class New extends VDLFunction {
 				handle = (DSHandle) value;
 			}
 			else {
-				handle = new RootDataNode(type);
+				handle = new RootDataNode(type, 
+				    (DuplicateMappingChecker) stack.getGlobal(VDL2ExecutionContext.DM_CHECKER));
 				handle.init(mps);
 				if (value != null) {
 				    if (tracer.isEnabled()) {

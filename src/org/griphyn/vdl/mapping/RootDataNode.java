@@ -38,11 +38,17 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	private Mapper mapper;
 	private MappingParamSet params;
 	private AbstractDataNode waitingMapperParam;
+	private DuplicateMappingChecker dmc;
 	
 	private static final Tracer tracer = Tracer.getTracer("VARIABLE");
 
-	public RootDataNode(Type type) {
+	public RootDataNode(Type type, DuplicateMappingChecker dmc) {
 		super(Field.Factory.createField(null, type));
+		this.dmc = dmc;
+	}
+	
+	public RootDataNode(Type type) {
+	    this(type, null);
 	}
 	
 	public RootDataNode(Type type, Object value) {
@@ -99,7 +105,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 
 	private void checkInputs() {
 		try {
-			checkInputs(params, mapper, this);
+			checkInputs(params, mapper, this, dmc);
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
@@ -113,10 +119,11 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	}
 
 
-	static protected void checkInputs(MappingParamSet params, Mapper mapper, AbstractDataNode root) {
+	static protected void checkInputs(MappingParamSet params, Mapper mapper, AbstractDataNode root, 
+	        DuplicateMappingChecker dmc) {
 		String input = (String) params.get(MappingParam.SWIFT_INPUT);
 		if (input != null && Boolean.valueOf(input.trim()).booleanValue()) {
-			addExisting(mapper, root);
+			addExisting(mapper, root, dmc);
 			checkConsistency(root);
 		}
 		else if (mapper.isStatic()) {
@@ -131,10 +138,12 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		        logger.debug("mapper: " + mapper);
 		    }
 			for (Path p : mapper.existing()) {
+			    PhysicalFormat f = mapper.map(p);
 				try {
 					// Try to get the path in order to check that the 
 				    // path is valid - we'll get an exception if not
-					root.getField(p);
+					DSHandle h = root.getField(p);
+					dmc.addWrite(f, h);
 					if (tracer.isEnabled()) {
 					    tracer.trace(root.getThread(), root.getDeclarationLine(), 
 					        root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
@@ -154,12 +163,14 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		}
 	}
 
-	private static void addExisting(Mapper mapper, AbstractDataNode root) {
+	private static void addExisting(Mapper mapper, AbstractDataNode root, DuplicateMappingChecker dmc) {
 	    boolean any = false;
 		for (Path p : mapper.existing()) {
+		    PhysicalFormat f = mapper.map(p);
             try {
                 DSHandle field = root.getField(p);
                 field.closeShallow();
+                dmc.addRead(f, field);
                 if (tracer.isEnabled()) {
                     tracer.trace(root.getThread(), root.getDeclarationLine(), 
                         root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));

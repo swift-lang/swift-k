@@ -29,12 +29,14 @@ import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.functions.ProcessBulkErrors;
+import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 
 public class VDL2ExecutionContext extends ExecutionContext {
 	public static final Logger logger = Logger.getLogger(VDL2ExecutionContext.class);
 	
 	public static final String RUN_ID = "vdl:runid";
 	public static final String SCRIPT_NAME = "vdl:scriptname";
+	public static final String DM_CHECKER = "vdl:dpmchecker";
 
 	private String runID;
 	private final String scriptName;
@@ -98,6 +100,7 @@ public class VDL2ExecutionContext extends ExecutionContext {
 		super.setGlobals(stack);
 		stack.setGlobal(RUN_ID, runID);
 		stack.setGlobal(SCRIPT_NAME, scriptName);
+		stack.setGlobal(DM_CHECKER, new DuplicateMappingChecker());
 	}
 
 	public String getRunID() {

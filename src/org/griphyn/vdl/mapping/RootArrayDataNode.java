@@ -34,6 +34,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	private Mapper mapper;
 	private MappingParamSet params;
 	private AbstractDataNode waitingMapperParam;
+	private DuplicateMappingChecker dmc;
 	
 	private static final Tracer tracer = Tracer.getTracer("VARIABLE");
 
@@ -42,6 +43,11 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	 */
 	public RootArrayDataNode(Type type) {
 		super(Field.Factory.createField(null, type), null, null);
+	}
+	
+	public RootArrayDataNode(Type type, DuplicateMappingChecker dmc) {
+	    this(type);
+	    this.dmc = dmc;
 	}
 
 	public void init(MappingParamSet params) {
@@ -90,7 +96,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 
 	private void checkInputs() {
 		try {
-			RootDataNode.checkInputs(params, mapper, this);
+			RootDataNode.checkInputs(params, mapper, this, dmc);
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
