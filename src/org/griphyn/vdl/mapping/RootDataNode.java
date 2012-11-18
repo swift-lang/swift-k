@@ -155,13 +155,16 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	}
 
 	private static void addExisting(Mapper mapper, AbstractDataNode root) {
+	    boolean any = false;
 		for (Path p : mapper.existing()) {
             try {
                 DSHandle field = root.getField(p);
                 field.closeShallow();
-                if (logger.isInfoEnabled()) {
-                    logger.info("Found data " + root + "." + p);
+                if (tracer.isEnabled()) {
+                    tracer.trace(root.getThread(), root.getDeclarationLine(), 
+                        root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
                 }
+                any = true;
             }
             catch (InvalidPathException e) {
                 throw new IllegalStateException("Structure of mapped data is " +
@@ -169,6 +172,10 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
             }
         }
         root.closeDeep();
+        if (!any && tracer.isEnabled()) {
+            tracer.trace(root.getThread(), root.getDeclarationLine(), 
+                root.getDisplayableName() + " MAPPING no files found");
+        }
     }
 
     public static void checkConsistency(DSHandle handle) {
