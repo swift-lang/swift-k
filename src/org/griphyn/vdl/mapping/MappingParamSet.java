@@ -68,9 +68,8 @@ public class MappingParamSet {
             }
             sb.append(", ");
             sb.append(name);
-            sb.append(" = \"");
+            sb.append(" = ");
             sb.append(Tracer.unwrapHandle(params.get(name)));
-            sb.append("\"");
         }
         sb.append('>');
         return sb.toString();
