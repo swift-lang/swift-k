@@ -26,7 +26,6 @@ import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.lib.Tracer;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
@@ -123,8 +122,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	        DuplicateMappingChecker dmc) {
 		String input = (String) params.get(MappingParam.SWIFT_INPUT);
 		if (input != null && Boolean.valueOf(input.trim()).booleanValue()) {
-			addExisting(mapper, root, dmc);
-			checkConsistency(root);
+			addExisting(mapper, root);
+			checkConsistency(root, true, mapper, dmc);
 		}
 		else if (mapper.isStatic()) {
 		    if (root.isClosed()) {
@@ -138,12 +137,10 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		        logger.debug("mapper: " + mapper);
 		    }
 			for (Path p : mapper.existing()) {
-			    PhysicalFormat f = mapper.map(p);
 				try {
 					// Try to get the path in order to check that the 
 				    // path is valid - we'll get an exception if not
 					DSHandle h = root.getField(p);
-					dmc.addWrite(f, h);
 					if (tracer.isEnabled()) {
 					    tracer.trace(root.getThread(), root.getDeclarationLine(), 
 					        root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
@@ -159,18 +156,16 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 			if (root.isArray()) {
 			    root.closeArraySizes();
 			}
-			checkConsistency(root);
+			checkConsistency(root, false, mapper, dmc);
 		}
 	}
 
-	private static void addExisting(Mapper mapper, AbstractDataNode root, DuplicateMappingChecker dmc) {
+	private static void addExisting(Mapper mapper, AbstractDataNode root) {
 	    boolean any = false;
 		for (Path p : mapper.existing()) {
-		    PhysicalFormat f = mapper.map(p);
             try {
                 DSHandle field = root.getField(p);
                 field.closeShallow();
-                dmc.addRead(f, field);
                 if (tracer.isEnabled()) {
                     tracer.trace(root.getThread(), root.getDeclarationLine(), 
                         root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
@@ -189,12 +184,12 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
         }
     }
 
-    public static void checkConsistency(DSHandle handle) {
+    public static void checkConsistency(DSHandle handle, boolean input, Mapper mapper, DuplicateMappingChecker dmc) {
 		if (handle.getType().isArray()) {
 			// any number of indices is ok
 			try {
 			    for (DSHandle dh : handle.getFields(Path.CHILDREN)) {
-					checkConsistency(dh);
+					checkConsistency(dh, input, mapper, dmc);
 				}
 			}
 			catch (HandleOpenException e) {
@@ -209,10 +204,20 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		else {
 			// all fields must be present
 			Type type = handle.getType();
+			if (!type.isPrimitive() && !type.isComposite()) {
+			    // mapped. Feed the DMC.
+			    PhysicalFormat f = mapper.map(handle.getPathFromRoot());
+			    if (input) {
+			        dmc.addRead(f, handle);
+			    }
+			    else {
+			        dmc.addWrite(f, handle);
+			    }
+			}
 			for (String fieldName : type.getFieldNames()) {
 				Path fieldPath = Path.parse(fieldName);
 				try {
-					checkConsistency(handle.getField(fieldPath));
+					checkConsistency(handle.getField(fieldPath), input, mapper, dmc);
 				}
 				catch (InvalidPathException e) {
 					throw new RuntimeException("Data set initialization failed for " + handle
@@ -266,6 +271,9 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		initialized = true;
 		waitingMapperParam = null;
 		if (tracer.isEnabled()) {
+		    if ("sphOut".equals(getDisplayableName())) {
+		        System.out.println();
+		    }
             tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
         }
 	}
