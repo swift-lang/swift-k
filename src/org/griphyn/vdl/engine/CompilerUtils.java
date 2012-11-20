@@ -22,7 +22,13 @@ public class CompilerUtils {
             return getLine(n.getParentNode());
         }
         else {
-            return src.getNodeValue();
+            String loc = src.getNodeValue();
+            if (loc == null || loc.length() == 0) {
+                return "unknown";
+            }
+            else {
+                return loc.substring(loc.indexOf(' ') + 1);
+            }
         }
     }
 
@@ -30,12 +36,6 @@ public class CompilerUtils {
         if (src == null) {
             return null;
         }
-        String loc = src.getDomNode().getAttributes().getNamedItem("src").getNodeValue();
-        if (loc == null) {
-            return null;
-        }
-        else {
-            return loc.substring(loc.indexOf(' ') + 1);
-        }
+        return getLine(src.getDomNode());
     }
 }

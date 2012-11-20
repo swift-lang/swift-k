@@ -120,15 +120,15 @@ public class VariableScope {
 	    declaration already exists. Perhaps error in same scope and
 	    warning if it shadows an outer scope? */
 
-	public void addVariable(String name, String type, XmlObject src) throws CompilationException {
-		addVariable(name, type, false, src);
+	public void addVariable(String name, String type, String context, XmlObject src) throws CompilationException {
+		addVariable(name, type, context, false, src);
 	}
 	
 	public void inhibitClosing(String name) {
 		inhibitClosing.add(name);
 	}
 
-	public void addVariable(String name, String type, boolean global, XmlObject src) throws CompilationException {
+	public void addVariable(String name, String type, String context, boolean global, XmlObject src) throws CompilationException {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Adding variable " + name + " of type " + type + " to scope " + hashCode());
 	    }
@@ -142,7 +142,7 @@ public class VariableScope {
 		// by the above if? in which case isVariableDefined should
 		// be replaced by is locally defined test.
 		if(parentScope != null && parentScope.isVariableDefined(name)) {
-		    Warnings.warn("Variable " + name + ", defined on line " + CompilerUtils.getLine(src)
+		    Warnings.warn(context + " " + name + ", on line " + CompilerUtils.getLine(src)
 			+ ", shadows variable of same name on line " + parentScope.getDefinitionLine(name));
 		}
 

@@ -355,7 +355,7 @@ public class Karajan {
 				procST.setAttribute("arguments", paramST);
 			String type = normalize(param.getType().getLocalPart());
             checkIsTypeDefined(type);
-            innerScope.addVariable(param.getName(), type, param);
+            innerScope.addVariable(param.getName(), type, "Return parameter", param);
 		}
 		for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 			FormalParameter param = proc.getInputArray(i);
@@ -367,7 +367,7 @@ public class Karajan {
 				procST.setAttribute("arguments", paramST);
 			String type = normalize(param.getType().getLocalPart());
 			checkIsTypeDefined(type);
-			outerScope.addVariable(param.getName(), type, param);
+			outerScope.addVariable(param.getName(), type, "Parameter", param);
 		}
 		
 		Binding bind;
@@ -441,9 +441,8 @@ public class Karajan {
 	}
 
 	public void variableForSymbol(Variable var, VariableScope scope) throws CompilationException {
-
 		checkIsTypeDefined(var.getType().getLocalPart());
-		scope.addVariable(var.getName(), var.getType().getLocalPart(), var.getIsGlobal(), var);
+		scope.addVariable(var.getName(), var.getType().getLocalPart(), "Variable", var.getIsGlobal(), var);
 	}
 
 	public void variable(Variable var, VariableScope scope) throws CompilationException {
@@ -498,7 +497,7 @@ public class Karajan {
 						scope.bodyTemplate.setAttribute("declarations",variableDeclarationST);
 						StringTemplate paramValueST=expressionToKarajan(param.getAbstractExpression(),scope);
 						String paramValueType = datatype(paramValueST);
-						scope.addVariable(parameterVariableName, paramValueType, param);
+						scope.addVariable(parameterVariableName, paramValueType, "Variable", param);
 						variableDeclarationST.setAttribute("type", paramValueType);
 						StringTemplate variableReferenceST = template("id");
 						variableReferenceST.setAttribute("var",parameterVariableName);
@@ -898,7 +897,7 @@ public class Karajan {
 		VariableScope loopScope = new VariableScope(this, scope, VariableScope.ENCLOSURE_LOOP);
 		VariableScope innerScope = new VariableScope(this, loopScope, VariableScope.ENCLOSURE_LOOP);
 
-		loopScope.addVariable(iterate.getVar(), "int", iterate);
+		loopScope.addVariable(iterate.getVar(), "int", "Iteration variable", iterate);
 
 		StringTemplate iterateST = template("iterate");
 		iterateST.setAttribute("line", getLine(iterate));
@@ -938,11 +937,11 @@ public class Karajan {
 			if (itemType == null) {
 			    throw new CompilationException("You can iterate through an array structure only");
 			}
-			innerScope.addVariable(foreach.getVar(), itemType, foreach);
+			innerScope.addVariable(foreach.getVar(), itemType, "Iteration variable", foreach);
 			foreachST.setAttribute("indexVar", foreach.getIndexVar());
 			foreachST.setAttribute("indexVarType", keyType);
 			if(foreach.getIndexVar() != null) {
-				innerScope.addVariable(foreach.getIndexVar(), keyType, foreach);
+				innerScope.addVariable(foreach.getIndexVar(), keyType, "Iteration variable", foreach);
 			}
 
 			innerScope.bodyTemplate = foreachST;
