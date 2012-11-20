@@ -357,6 +357,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 // if we leave a kml file around, then a subsequent
                 // re-run will skip recompiling and cause a different
                 // error message for the user
+                if (e instanceof NullPointerException) {
+                    e.printStackTrace();
+                }
                 kml.delete();
                 throw new CompilationException(
                     "Failed to convert .swiftx to .kml for " + project, e);
