@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.griphyn.vdl.karajan.lib.Tracer;
+
 public class MappingParamSet {
     private Map<String, Object> params;
     
@@ -29,7 +31,7 @@ public class MappingParamSet {
     public Object get(MappingParam p) {
         return params.get(p.getName());
     }
-
+    
     public boolean isPresent(MappingParam p) {
         return params.containsKey(p.getName());
     }
@@ -46,5 +48,30 @@ public class MappingParamSet {
 
     public Collection<String> names() {
         return params.keySet();
+    }
+
+    @Override
+    public String toString() {
+        Object desc = get(MappingParam.SWIFT_DESCRIPTOR);
+        if (desc == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("<");
+        sb.append(desc);
+        sb.append("; ");
+        sb.append("input = " + get(MappingParam.SWIFT_INPUT));
+        for (String name : names()) {
+            if (name.indexOf('#') >= 0) {
+                // skip internal parameters
+                continue;
+            }
+            sb.append(", ");
+            sb.append(name);
+            sb.append(" = ");
+            sb.append(Tracer.unwrapHandle(params.get(name)));
+        }
+        sb.append('>');
+        return sb.toString();
     }
 }

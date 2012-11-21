@@ -64,6 +64,8 @@ import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.safehaus.uuid.UUIDGenerator;
 import org.w3c.dom.Node;
 
+import static org.griphyn.vdl.engine.CompilerUtils.*;
+
 public class Karajan {
 	public static final Logger logger = Logger.getLogger(Karajan.class);
 
@@ -172,25 +174,6 @@ public class Karajan {
 	protected StringTemplate template(String name) {
 		return m_templates.getInstanceOf(name);
 	}
-	
-	private void warn(XmlObject obj, String msg) {
-	    msg = "Warning: " + msg + ", at " + getLine(obj.getDomNode());
-	    logger.info(msg);
-	    System.err.println(msg);
-    }
-
-	private String getLine(Node n) {
-	    if (n == null) {
-	        return "line unknown";
-	    }
-        Node src = n.getAttributes().getNamedItem("src");
-        if (src == null) {
-            return getLine(n.getParentNode());
-        }
-        else {
-            return src.getNodeValue();
-        }
-    }
 
     private void processImports(Program prog) throws CompilationException {
 
@@ -351,10 +334,6 @@ public class Karajan {
 	    }
     }
 	
-	private String getLine(String src) {
-		return src.substring(src.indexOf(' ') + 1);
-	}
-	
 	private void setVariableUsed(String s) {
 	    usedVariables.add(s);
     }
@@ -364,7 +343,7 @@ public class Karajan {
 		VariableScope innerScope = new VariableScope(this, outerScope, VariableScope.ENCLOSURE_NONE);
 		StringTemplate procST = template("procedure");
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
-		procST.setAttribute("line", getLine(proc.getSrc()));
+		procST.setAttribute("line", getLine(proc));
 		procST.setAttribute("name", mangle(proc.getName()));
 		for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
 			FormalParameter param = proc.getOutputArray(i);
@@ -376,7 +355,7 @@ public class Karajan {
 				procST.setAttribute("arguments", paramST);
 			String type = normalize(param.getType().getLocalPart());
             checkIsTypeDefined(type);
-            innerScope.addVariable(param.getName(), type);
+            innerScope.addVariable(param.getName(), type, "Return parameter", param);
 		}
 		for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 			FormalParameter param = proc.getInputArray(i);
@@ -388,7 +367,7 @@ public class Karajan {
 				procST.setAttribute("arguments", paramST);
 			String type = normalize(param.getType().getLocalPart());
 			checkIsTypeDefined(type);
-			outerScope.addVariable(param.getName(), type);
+			outerScope.addVariable(param.getName(), type, "Parameter", param);
 		}
 		
 		Binding bind;
@@ -462,9 +441,8 @@ public class Karajan {
 	}
 
 	public void variableForSymbol(Variable var, VariableScope scope) throws CompilationException {
-
 		checkIsTypeDefined(var.getType().getLocalPart());
-		scope.addVariable(var.getName(), var.getType().getLocalPart(), var.getIsGlobal());
+		scope.addVariable(var.getName(), var.getType().getLocalPart(), "Variable", var.getIsGlobal(), var);
 	}
 
 	public void variable(Variable var, VariableScope scope) throws CompilationException {
@@ -472,7 +450,7 @@ public class Karajan {
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
 		variableST.setAttribute("isGlobal", Boolean.valueOf(var.getIsGlobal()));
-		variableST.setAttribute("line", getLine(var.getSrc()));
+		variableST.setAttribute("line", getLine(var));
 		variables.add(variableST);
 
 		if(!var.isNil()) {
@@ -519,7 +497,7 @@ public class Karajan {
 						scope.bodyTemplate.setAttribute("declarations",variableDeclarationST);
 						StringTemplate paramValueST=expressionToKarajan(param.getAbstractExpression(),scope);
 						String paramValueType = datatype(paramValueST);
-						scope.addVariable(parameterVariableName, paramValueType);
+						scope.addVariable(parameterVariableName, paramValueType, "Variable", param);
 						variableDeclarationST.setAttribute("type", paramValueType);
 						StringTemplate variableReferenceST = template("id");
 						variableReferenceST.setAttribute("var",parameterVariableName);
@@ -575,7 +553,7 @@ public class Karajan {
 						" to a variable of type " + datatype(varST));
 			assignST.setAttribute("var", varST);
 			assignST.setAttribute("value", valueST);
-			assignST.setAttribute("line", getLine(assign.getSrc()));
+			assignST.setAttribute("line", getLine(assign));
 			String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
 			scope.addWriter(rootvar, new Integer(callID++), rootVariableIsPartial(assign.getAbstractExpressionArray(0)));
 			scope.appendStatement(assignST);
@@ -716,7 +694,7 @@ public class Karajan {
 				("Unknown procedure invocation mode "+proc.getInvocationMode());
 			}
 			callST.setAttribute("func", mangle(procName));
-			callST.setAttribute("line", getLine(call.getSrc()));
+			callST.setAttribute("line", getLine(call));
 			/* Does number of input arguments match */
 			for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 				if (proc.getInputArray(i).isOptional())
@@ -887,7 +865,7 @@ public class Karajan {
         if (st == null) {
             return true;
         }
-        else if(st instanceof List) {
+        else if (st instanceof List) {
             l = (List<StringTemplate>) st;
         }
         else {
@@ -919,10 +897,10 @@ public class Karajan {
 		VariableScope loopScope = new VariableScope(this, scope, VariableScope.ENCLOSURE_LOOP);
 		VariableScope innerScope = new VariableScope(this, loopScope, VariableScope.ENCLOSURE_LOOP);
 
-		loopScope.addVariable(iterate.getVar(), "int");
+		loopScope.addVariable(iterate.getVar(), "int", "Iteration variable", iterate);
 
 		StringTemplate iterateST = template("iterate");
-		iterateST.setAttribute("line", getLine(iterate.getSrc()));
+		iterateST.setAttribute("line", getLine(iterate));
 
 		iterateST.setAttribute("var", iterate.getVar());
 		innerScope.bodyTemplate = iterateST;
@@ -959,11 +937,11 @@ public class Karajan {
 			if (itemType == null) {
 			    throw new CompilationException("You can iterate through an array structure only");
 			}
-			innerScope.addVariable(foreach.getVar(), itemType);
+			innerScope.addVariable(foreach.getVar(), itemType, "Iteration variable", foreach);
 			foreachST.setAttribute("indexVar", foreach.getIndexVar());
 			foreachST.setAttribute("indexVarType", keyType);
 			if(foreach.getIndexVar() != null) {
-				innerScope.addVariable(foreach.getIndexVar(), keyType);
+				innerScope.addVariable(foreach.getIndexVar(), keyType, "Iteration variable", foreach);
 			}
 
 			innerScope.bodyTemplate = foreachST;
@@ -992,7 +970,7 @@ public class Karajan {
 		StringTemplate ifST = template("if");
 		StringTemplate conditionST = expressionToKarajan(ifstat.getAbstractExpression(), scope);
 		ifST.setAttribute("condition", conditionST.toString());
-		ifST.setAttribute("line", getLine(ifstat.getSrc()));
+		ifST.setAttribute("line", getLine(ifstat));
 		if (!datatype(conditionST).equals("boolean"))
 			throw new CompilationException ("Condition in if statement has to be of boolean type.");
 
@@ -1157,7 +1135,7 @@ public class Karajan {
 	public StringTemplate function(Function func, VariableScope scope) throws CompilationException {
 		StringTemplate funcST = template("function");
 		funcST.setAttribute("name", mangle(func.getName()));
-		funcST.setAttribute("line", getLine(func.getSrc()));
+		funcST.setAttribute("line", getLine(func));
 		ProcedureSignature funcSignature =  functionsMap.get(func.getName());
 		if(funcSignature == null) {
 			throw new CompilationException("Unknown function: @"+func.getName());
@@ -1506,7 +1484,7 @@ public class Karajan {
 				/* Functions have only one output parameter */
 				st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
 				if (funcSignature.isDeprecated()) {
-				    warn(f, "Function " + name + " is deprecated");
+				    Warnings.warn(f, "Function " + name + " is deprecated");
 				}
 			} else
 				throw new CompilationException("Function " + name + " is not defined.");
@@ -1530,12 +1508,12 @@ public class Karajan {
 		        		"return value to be used in an expression.");
 		    }
 		    
-		    warn(c, "Procedure " + name + " is deprecated");
+		    Warnings.warn(c, "Procedure " + name + " is deprecated");
 
 		    StringTemplate call = template("callexpr");
 
 		    String type = funcSignature.getOutputArray(0).getType();
-		    subscope.addInternalVariable("swift#callintermediate", type);
+		    subscope.addInternalVariable("swift#callintermediate", type, null);
 
 		    call.setAttribute("datatype", type);
 		    call.setAttribute("call", call(c, subscope, true));

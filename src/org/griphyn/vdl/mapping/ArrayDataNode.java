@@ -141,7 +141,7 @@ public class ArrayDataNode extends DataNode {
                         fields, path.butFirst());
                 }
                 catch (NoSuchFieldException e) {
-                    throw new InvalidPathException("Invalid index (" + path.getKey(0) + ") for " + this);
+                    throw new InvalidPathException(path.getKey(0), this);
                 }
             }
         }

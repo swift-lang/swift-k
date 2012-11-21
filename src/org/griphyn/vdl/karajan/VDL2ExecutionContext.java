@@ -20,18 +20,23 @@
  */
 package org.griphyn.vdl.karajan;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.stack.Trace;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.functions.ProcessBulkErrors;
+import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 
 public class VDL2ExecutionContext extends ExecutionContext {
 	public static final Logger logger = Logger.getLogger(VDL2ExecutionContext.class);
 	
 	public static final String RUN_ID = "vdl:runid";
 	public static final String SCRIPT_NAME = "vdl:scriptname";
+	public static final String DM_CHECKER = "vdl:dpmchecker";
 
 	private String runID;
 	private final String scriptName;
@@ -43,7 +48,7 @@ public class VDL2ExecutionContext extends ExecutionContext {
 
 	protected void printFailure(ExecutionException e) {
 		if (logger.isDebugEnabled()) {
-			logger.debug(e.getMessage(), e);
+		    logger.debug("Karajan level error: " + getKarajanTrace(e));		
 		}
 		String msg = e.getMessage();
 		if (!"Execution completed with errors".equals(msg)) {
@@ -58,6 +63,13 @@ public class VDL2ExecutionContext extends ExecutionContext {
 			else {
 				getStderr().append(ProcessBulkErrors.getMessageChain(e));
 			}
+			if (e.getStack() != null) {
+			    List<String> l = Monitor.getSwiftTrace(e.getStack());
+			    for (String s : l) {
+			        getStderr().append("\n\t");
+			        getStderr().append(s);
+			    }
+			}
 			getStderr().append("\n");
 		}
 		else {
@@ -65,10 +77,30 @@ public class VDL2ExecutionContext extends ExecutionContext {
 		}
 	}
 
-	protected void setGlobals(VariableStack stack) {
+	private String getKarajanTrace(ExecutionException e) {
+	    StringBuilder sb = new StringBuilder();
+	    while (e != null) {
+	        sb.append(e.getMessage());
+	        if (e.getStack() != null) {
+	            sb.append(" at\n");
+	            sb.append(Trace.get(e.getStack()));
+	        }
+	        if (e.getCause() instanceof ExecutionException) {
+	            e = (ExecutionException) e.getCause();
+	            sb.append("\ncaused by: ");
+	        }
+	        else {
+	            e = null;
+	        }
+	    }
+        return sb.toString();
+    }
+
+    protected void setGlobals(VariableStack stack) {
 		super.setGlobals(stack);
 		stack.setGlobal(RUN_ID, runID);
 		stack.setGlobal(SCRIPT_NAME, scriptName);
+		stack.setGlobal(DM_CHECKER, new DuplicateMappingChecker());
 	}
 
 	public String getRunID() {

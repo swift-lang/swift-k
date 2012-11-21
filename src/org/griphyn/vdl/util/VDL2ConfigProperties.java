@@ -43,6 +43,7 @@ public class VDL2ConfigProperties {
 	public static final String SITEDIR_KEEP = "sitedir.keep";
 	public static final String PROVENANCE_LOG = "provenance.log";
 	public static final String FILE_GC_ENABLED = "file.gc.enabled";
+	public static final String TRACING_ENABLED = "tracing.enabled";
 	public static final Map<String, PropInfo> PROPERTIES;
 
 	static {
@@ -137,6 +138,11 @@ public class VDL2ConfigProperties {
 		PROPERTIES.put(FILE_GC_ENABLED, new PropInfo("<true|false>", "Allows disabling the file garbage collector. " +
 				"If set to false, files mapped by collectable mappers (such as the concurrent mapper) will not be " +
 				"deleted when their swift variables go out of scope."));
+		
+		PROPERTIES.put(TRACING_ENABLED, new PropInfo("<true|false>", "Enables execution tracing. If set to 'true', " +
+				"operations within swift such as iterations, invocations, assignments, and declarations, as well " +
+				"as data dependencies will be logged. This comes at a cost in performance. It is therefore " +
+				"disabled by default."));
 	}
 
 	public static Map<String, PropInfo> getPropertyDescriptions() {

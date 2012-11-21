@@ -17,20 +17,18 @@
 
 package org.griphyn.vdl.engine;
 
-import org.antlr.stringtemplate.StringTemplate;
-
-import org.apache.log4j.Logger;
-
-import org.griphyn.vdl.karajan.CompilationException;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.antlr.stringtemplate.StringTemplate;
+import org.apache.log4j.Logger;
+import org.apache.xmlbeans.XmlObject;
+import org.griphyn.vdl.karajan.CompilationException;
 
 
 public class VariableScope {
@@ -76,7 +74,7 @@ public class VariableScope {
 	private Set<String> inhibitClosing = new HashSet<String>();
 
 	public VariableScope(Karajan c, VariableScope parent) {
-		this(c,parent,ENCLOSURE_ALL);
+		this(c, parent, ENCLOSURE_ALL);
 	}
 
 	/** Creates a new variable scope.
@@ -87,11 +85,14 @@ public class VariableScope {
 			scopes will be handled.
 	*/
 	public VariableScope(Karajan c, VariableScope parent, int a) {
-		if(parentScope!=null) {
-			logger.debug("New scope "+hashCode()+" with parent scope "+parentScope.hashCode());
-		} else {
-			logger.debug("New scope "+hashCode()+" with no parent.");
-		}
+	    if (logger.isDebugEnabled()) {
+    		if (parentScope != null) {
+    			logger.debug("New scope " + hashCode() + " with parent scope " + parentScope.hashCode());
+    		} 
+    		else {
+    			logger.debug("New scope " + hashCode() + " with no parent.");
+    		}
+	    }
 		compiler = c;
 		parentScope = parent;
 		enclosureType = a;
@@ -105,13 +106,13 @@ public class VariableScope {
 
 	/** Set of variables (String token names) that are declared in
 	    this scope - not variables in parent scopes, though. */
-	Set<String> variables = new HashSet<String>();
+	Map<String, XmlObject> variables = new HashMap<String, XmlObject>();
 	Map<String, String> varTypes = new HashMap<String, String>();
 
 	/** Set of variables (String token names) which are global and
 	    declared in this scope (which must be a root scope). Variables
 	    in this set must also appear in the variables set. */
-	Set<String> globals = new HashSet<String>();
+	Map<String, XmlObject> globals = new HashMap<String, XmlObject>();
 
 	/** Asserts that a named variable is declared in this scope.
 	    Might also eventually contain more information about the
@@ -119,43 +120,41 @@ public class VariableScope {
 	    declaration already exists. Perhaps error in same scope and
 	    warning if it shadows an outer scope? */
 
-	public void addVariable(String name, String type) throws CompilationException {
-		addVariable(name,type,false);
+	public void addVariable(String name, String type, String context, XmlObject src) throws CompilationException {
+		addVariable(name, type, context, false, src);
 	}
 	
 	public void inhibitClosing(String name) {
 		inhibitClosing.add(name);
 	}
 
-	public void addVariable(String name, String type, boolean global) throws CompilationException {
-		logger.debug("Adding variable "+name+" of type "+type+" to scope "+hashCode());
+	public void addVariable(String name, String type, String context, boolean global, XmlObject src) throws CompilationException {
+	    if (logger.isDebugEnabled()) {
+	        logger.debug("Adding variable " + name + " of type " + type + " to scope " + hashCode());
+	    }
 		
 		if(isVariableDefined(name)) {
-			throw new CompilationException("Variable "+name+" is already defined.");
+			throw new CompilationException("Variable " + name + ", on line " 
+			    + CompilerUtils.getLine(src) + ", was already defined on line " + getDefinitionLine(name));
 		}
 
 		// TODO does this if() ever fire? or is it always taken
 		// by the above if? in which case isVariableDefined should
 		// be replaced by is locally defined test.
 		if(parentScope != null && parentScope.isVariableDefined(name)) {
-		    if(logger.isDebugEnabled()) {
-			   logger.debug("Variable "+name+" defined in scope "+hashCode()
-			   + " shadows variable of same name in scope "
-			   + parentScope.hashCode());
-		    }
+		    Warnings.warn(context + " " + name + ", on line " + CompilerUtils.getLine(src)
+			+ ", shadows variable of same name on line " + parentScope.getDefinitionLine(name));
 		}
 
 		if(global && this != rootScope) {
-			throw new CompilationException("Global "+name+" can only be declared in the root scope of a program.");
+			throw new CompilationException("Global " + name + " can only be declared in the root scope of a program.");
 		}
 
-		boolean added = variables.add(name);
+		variables.put(name, src);
 		varTypes.put(name, type);
-		if(!added) throw new CompilationException("Could not add variable "+name+" to scope.");
-
-		if(global) {
-			added = globals.add(name);
-			if(!added) throw new CompilationException("Could not add global variable "+name+" to scope.");
+		
+		if (global) {
+			globals.put(name, src);
 		}
 	}
 	
@@ -163,21 +162,46 @@ public class VariableScope {
 	 * Does pretty much the same as addVariable() except it doesn't throw
 	 * an exception if the variable is defined in a parent scope
 	 */
-	public void addInternalVariable(String name, String type) throws CompilationException {
-		logger.debug("Adding internal variable " + name + " of type " + type + " to scope " + hashCode());
+	public void addInternalVariable(String name, String type, XmlObject src) throws CompilationException {
+	    if (logger.isDebugEnabled()) {
+	        logger.debug("Adding internal variable " + name + " of type " + type + " to scope " + hashCode());
+	    }
 		
 		if(isVariableLocallyDefined(name)) {
-			throw new CompilationException("Variable " + name + " is already defined.");
+			throw new CompilationException("Variable " + name + ", on line " 
+			    + CompilerUtils.getLine(src) + ", was already defined on line " + getDefinitionLine(name));
 		}
 
-		boolean added = variables.add(name);
+		variables.put(name, src);
 		varTypes.put(name, type);
-		if(!added) throw new CompilationException("Could not add variable "+name+" to scope.");
+	}
+	
+	public String getDefinitionLine(String name) {
+	    XmlObject src = rootScope.getGlobalSrc(name);
+	    if (src == null) {
+	        src = getSrcRecursive(name);
+	    }
+	    if (src != null) {
+	        return CompilerUtils.getLine(src);
+	    }
+	    else {
+	        return "unknown";
+	    }
 	}
 
 	public boolean isVariableDefined(String name) {
 		if(rootScope.isGlobalDefined(name)) return true;
 		return isVariableDefinedRecursive(name);
+	}
+	
+	private XmlObject getSrcRecursive(String name) {
+	    XmlObject src = variables.get(name);
+	    if (src == null) {
+	        if (enclosureType != ENCLOSURE_PROCEDURE && parentScope != null) {
+	            src = parentScope.getSrcRecursive(name);
+	        }
+	    }
+	    return src;
 	}
 
 	private boolean isVariableDefinedRecursive(String name) {
@@ -187,7 +211,11 @@ public class VariableScope {
 	}
 
 	public boolean isGlobalDefined(String name) {
-		return globals.contains(name);
+		return globals.containsKey(name);
+	}
+	
+	public XmlObject getGlobalSrc(String name) {
+	    return globals.get(name);
 	}
 
 	/** note that this will return variable types for variables in
@@ -209,7 +237,7 @@ public class VariableScope {
 	public boolean isVariableWriteable(String name, boolean partialWriter) {
 		if(isVariableLocallyDefined(name)) return true;
 		if(parentScope != null && parentScope.isVariableWriteable(name, true) && enclosureType == ENCLOSURE_CONDITION) {
-		    logger.warn("Warning: variable " + name + " might have multiple writers");
+		    Warnings.warn("Variable " + name + ", defined on line " + getDefinitionLine(name) + ", might have multiple writers");
 		    return true;
 		}
 		if(parentScope != null && parentScope.isVariableWriteable(name, partialWriter) && enclosureType == ENCLOSURE_ALL) return true;
@@ -219,7 +247,7 @@ public class VariableScope {
 
 
 	public boolean isVariableLocallyDefined(String name) {
-		return variables.contains(name);
+		return variables.containsKey(name);
 	}
 
 	/** List of templates to be executed in sequence after the present
@@ -236,18 +264,22 @@ public class VariableScope {
 	public void addWriter(String variableName, Object closeID, boolean partialWriter) throws CompilationException
 	{
 		if(!isVariableDefined(variableName)) {
-			throw new CompilationException("Variable "+variableName+" is not defined");
+			throw new CompilationException("Variable " + variableName + " is not defined");
 		}
 
 		if(isVariableLocallyDefined(variableName)) {
 			StringTemplate ld = getLocalDeclaration(variableName);
-			if(ld != null) {
-				if(!partialWriter && ld.getAttribute("waitfor")!=null) {
-					throw new CompilationException("variable "+variableName+" has multiple writers.");
+			if (ld != null) {
+				if(!partialWriter && ld.getAttribute("waitfor") != null) {
+					throw new CompilationException("variable " + variableName + ", defined on line " 
+					    + getDefinitionLine(variableName) + ", has multiple writers.");
 				}
 				ld.setAttribute("waitfor", closeID);
-			} else {
-				logger.debug("Variable "+variableName+" is local but has no template.");
+			} 
+			else {
+			    if (logger.isDebugEnabled()) {
+			        logger.debug("Variable " + variableName + " is local but has no template.");
+			    }
 			}
 			outputs.add(variableName);
 			if (!inhibitClosing.contains(variableName)) {
@@ -278,10 +310,13 @@ public class VariableScope {
 				if(!statementList.contains(closeID)) {
 					statementList.add(closeID);
 				}
-				logger.debug("added "+closeID+" to variable "+variableName+" in scope "+hashCode());
+				if (logger.isDebugEnabled()) {
+				    logger.debug("added  " + closeID + " to variable " 
+				        + variableName + " in scope " + hashCode());
+				}
 			} else {
 			    isVariableWriteable(variableName, partialWriter);
-				throw new CompilationException("variable "+variableName+" is not writeable in this scope");
+				throw new CompilationException("variable " + variableName + " is not writeable in this scope");
 			}
 		}
 	}
@@ -308,15 +343,19 @@ public class VariableScope {
 		     @SuppressWarnings("unchecked")
 		     List<StringTemplate> list = (List<StringTemplate>) decls;
 		     for (StringTemplate declST : list) { 
-		         logger.debug("looking at declaration "+declST);
+		         if (logger.isDebugEnabled()) {
+		             logger.debug("looking at declaration " + declST);
+		         }
 		         try {
 		             if(declST.getAttribute("name").equals(name)) {
-		                 logger.debug("thats the declaration for "+name);
+		                 if (logger.isDebugEnabled()) {
+		                     logger.debug("thats the declaration for " + name);
+		                 }
 		                 return declST;
 		             }
-		         } catch(java.util.NoSuchElementException nse) {
-		             logger.debug
-		             ("it so definitely wasn't in that one, we got an exception.");
+		         } 
+		         catch (java.util.NoSuchElementException nse) {
+		             logger.debug("it so definitely wasn't in that one, we got an exception.");
 		             // TODO this is not a nice use of exceptions...
 		         }
 		     }
@@ -389,7 +428,7 @@ public class VariableScope {
 
     public List<String> getCleanups() {
         List<String> cleanups = new ArrayList<String>();
-        for (String var : variables) {
+        for (String var : variables.keySet()) {
             String type = getVariableType(var);
             if (!org.griphyn.vdl.type.Types.isPrimitive(type)) {
                 cleanups.add(var);

@@ -30,10 +30,11 @@ import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
 import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
 import org.griphyn.vdl.mapping.AbstractDataNode;
+import org.griphyn.vdl.mapping.DSHandle;
 
 public class DSHandleFutureWrapper implements FutureWrapper {
     private LinkedList<ListenerStackPair> listeners;
-    private AbstractDataNode node;
+    private final AbstractDataNode node;
     
     public DSHandleFutureWrapper(AbstractDataNode node) {
         this.node = node;
@@ -60,6 +61,10 @@ public class DSHandleFutureWrapper implements FutureWrapper {
         }
         // closed == true;
         notifyListeners();
+    }
+    
+    public DSHandle getHandle() {
+    	return node;
     }
 
     public void notifyListeners() {

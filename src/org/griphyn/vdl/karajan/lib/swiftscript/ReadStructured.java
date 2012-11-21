@@ -29,11 +29,11 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Types;
@@ -48,10 +48,21 @@ public class ReadStructured extends VDLFunction {
 	static {
 		setArguments(ReadStructured.class, new Arg[] { DEST, SRC });
 	}
+	
+	public Tracer tracer;
+	
+	@Override
+    protected void initializeStatic() {
+        super.initializeStatic();
+        tracer = Tracer.getTracer(this, "SWIFTCALL");
+    }
 
 	protected Object function(VariableStack stack) throws ExecutionException {
 		DSHandle dest = (DSHandle) DEST.getValue(stack);
 		AbstractDataNode src = (AbstractDataNode) SRC.getValue(stack);
+		if (tracer.isEnabled()) {
+            tracer.trace(stack, "readData2(" + Tracer.unwrapHandle(src) + ")");
+        }
         src.waitFor();
 		if (src.getType().equals(Types.STRING)) {
 			readData(dest, (String) src.getValue());

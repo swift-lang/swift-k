@@ -34,17 +34,29 @@ public class InfiniteCountingWhile extends Sequential {
     
     public static final String COUNTER_NAME = "$";
     public static final Arg.Positional VAR = new Arg.Positional("var");
+    
+    private Tracer tracer;
 
 	public InfiniteCountingWhile() {
 		setOptimize(false);
 	}
+	
+	@Override
+    protected void initializeStatic() {
+        super.initializeStatic();
+        tracer = Tracer.getTracer(this);
+    }
 
-	public void pre(VariableStack stack) throws ExecutionException {
+    public void pre(VariableStack stack) throws ExecutionException {
 		ThreadingContext tc = (ThreadingContext)stack.getVar("#thread");
 		stack.setVar("#iteratethread", tc);
 		stack.setVar("#thread", tc.split(0));
 		stack.setVar(COUNTER_NAME, Collections.singletonList(0));
-		stack.setVar((String) VAR.getStatic(this), new RootDataNode(Types.INT, 0));
+		String var = (String) VAR.getStatic(this);
+		if (tracer.isEnabled()) {
+		    tracer.trace(tc.toString(), var + " = 0");
+		}
+		stack.setVar(var, new RootDataNode(Types.INT, 0));
 		super.pre(stack);
 	}
 
@@ -69,9 +81,14 @@ public class InfiniteCountingWhile extends Sequential {
             int i = c.get(0).intValue();
             i++;
             ThreadingContext tc = (ThreadingContext)stack.getVar("#iteratethread");
-            stack.setVar("#thread", tc.split(i));
+            ThreadingContext ntc = tc.split(i);
+            stack.setVar("#thread", ntc);
             stack.setVar(COUNTER_NAME, Collections.singletonList(i));
-            stack.setVar((String) VAR.getStatic(this), new RootDataNode(Types.INT, i));
+            String var = (String) VAR.getStatic(this);
+            if (tracer.isEnabled()) {
+                tracer.trace(ntc.toString(), var + " = " + i);
+            }
+            stack.setVar(var, new RootDataNode(Types.INT, i));
 		}
 		if (index >= elementCount()) {
 			// starting new iteration

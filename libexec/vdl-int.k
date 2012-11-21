@@ -367,17 +367,16 @@ namespace("vdl"
 			concat(
 				for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))
 					[name, file] := each(f)
-					destfile := "{jobid}-{file}"
-					nl()
-					"{name}: "
+					destfile := concat("{jobid}-", basename(file))
 					try(
 						sequential(
 							task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=file,
 								destfile=destfile)
-
-							file:read(destfile)
+							nl()
+							"    {name}: "
+							strip(file:read(destfile))
 						)
-						nl()
+						""
 					)
 					maybe(file:remove(destfile))
 				)
@@ -599,11 +598,10 @@ namespace("vdl"
 							exception(
 								concat(
 									"Exception in {tr}:", nl(),
-									maybe("Arguments: ", arguments, nl()),
-									"Host: {rhost}", nl(),
-									"Directory: {tmpdir}",
-									"{outs}", nl(),
-									"----", nl(),
+									maybe("    Arguments: ", arguments, nl()),
+									"    Host: {rhost}", nl(),
+									"    Directory: {tmpdir}",
+									"{outs}",
 									kickstartRec
 								)
 								exception

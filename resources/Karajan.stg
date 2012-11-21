@@ -226,7 +226,8 @@ iterate(declarations,statements,cond,var,cleanups,trace,line) ::= <<
 >>
 
 foreach(var,in,indexVar,indexVarType,declarations,statements,line,selfClose,cleanups,trace) ::= <<
-<vdl:tparallelFor name="\$"$if(selfClose)$ selfClose="$selfClose$"$endif$ $if(trace)$ _traceline="$line$"$endif$>
+<vdl:tparallelFor name="\$"$if(selfClose)$ selfClose="$selfClose$"$endif$ $if(trace)$ _traceline="$line$"$endif$ 
+	$if(indexVar)$_kvar="$indexVar$"$endif$ _vvar="$var$">
   <getarrayiterator>$in$</getarrayiterator>
   <set names="\$\$, $var$">
     <each items="{\$}"/>

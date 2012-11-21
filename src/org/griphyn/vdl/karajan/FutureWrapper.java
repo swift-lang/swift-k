@@ -19,6 +19,7 @@ package org.griphyn.vdl.karajan;
 
 import org.globus.cog.karajan.workflow.events.EventTargetPair;
 import org.globus.cog.karajan.workflow.futures.Future;
+import org.griphyn.vdl.mapping.DSHandle;
 
 public interface FutureWrapper extends Future {
     void notifyListeners();
@@ -26,4 +27,6 @@ public interface FutureWrapper extends Future {
     int listenerCount();
 
     EventTargetPair[] getListenerEvents();
+    
+    DSHandle getHandle();
 }

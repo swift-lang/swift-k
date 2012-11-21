@@ -17,13 +17,12 @@
 
 package org.griphyn.vdl.mapping;
 
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
@@ -35,12 +34,20 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	private Mapper mapper;
 	private MappingParamSet params;
 	private AbstractDataNode waitingMapperParam;
+	private DuplicateMappingChecker dmc;
+	
+	private static final Tracer tracer = Tracer.getTracer("VARIABLE");
 
 	/**
 	 * Instantiate a root array data node with specified type.
 	 */
 	public RootArrayDataNode(Type type) {
 		super(Field.Factory.createField(null, type), null, null);
+	}
+	
+	public RootArrayDataNode(Type type, DuplicateMappingChecker dmc) {
+	    this(type);
+	    this.dmc = dmc;
 	}
 
 	public void init(MappingParamSet params) {
@@ -61,6 +68,10 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		waitingMapperParam = params.getFirstOpenParamValue();
         if (waitingMapperParam != null) {
             waitingMapperParam.getFutureWrapper().addModificationAction(this, null);
+            if (tracer.isEnabled()) {
+                tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
+                    + Tracer.getVarName(waitingMapperParam));
+            }
             return;
         }
 	    
@@ -85,7 +96,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 
 	private void checkInputs() {
 		try {
-			RootDataNode.checkInputs(params, mapper, this);
+			RootDataNode.checkInputs(params, mapper, this, dmc);
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
@@ -140,5 +151,8 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
     private synchronized void initialized() {
         initialized = true;
         waitingMapperParam = null;
+        if (tracer.isEnabled()) {
+            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
+        }
     }
 }

@@ -38,6 +38,8 @@ import org.globus.cog.karajan.workflow.futures.FutureIteratorIncomplete;
 import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
 import org.globus.cog.karajan.workflow.nodes.AbstractParallelIterator;
+import org.griphyn.vdl.karajan.Pair;
+import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class ThrottledParallelFor extends AbstractParallelIterator {
@@ -57,10 +59,24 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 	public static final String THREAD_COUNT = "#threadcount";
 
 	private int maxThreadCount = -1;
+	private Tracer forTracer, iterationTracer;
+	private String kvar, vvar;
+	
+    @Override
+    protected void initializeStatic() {
+        super.initializeStatic();
+        forTracer = Tracer.getTracer(this, "FOREACH");
+        iterationTracer = Tracer.getTracer(this, "ITERATION");
+        kvar = (String) getProperty("_kvar");
+        vvar = (String) getProperty("_vvar");
+    }
 
     protected void partialArgumentsEvaluated(VariableStack stack)
             throws ExecutionException {
         stack.setVar("selfclose", A_SELF_CLOSE.getValue(stack));
+        if (forTracer.isEnabled()) {
+            forTracer.trace(ThreadingContext.get(stack).toString());
+        }
         super.partialArgumentsEvaluated(stack);
     }
 
@@ -96,11 +112,15 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
     		    for (; j < available && i.hasNext(); j++) {
     		        VariableStack copy = stack.copy();
                     copy.enter();
-                    ThreadingContext.set(copy, ThreadingContext.get(copy).split(
-                            i.current()));
+                    ThreadingContext ntc = ThreadingContext.get(copy).split(i.current());
+                    ThreadingContext.set(copy, ntc);
                     setIndex(copy, getArgCount());
                     setArgsDone(copy);
-                    copy.setVar(var.getName(), i.next());
+                    Object value = i.next();
+                    if (iterationTracer.isEnabled()) {
+                        iterationTracer.trace(ntc.toString(), unwrap(value));
+                    }
+                    copy.setVar(var.getName(), value);
                     startElement(getArgCount(), copy);
     		    }
 		    }
@@ -137,7 +157,22 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 		}
 	}
 	
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
+	private Object unwrap(Object value) {
+        if (value instanceof Pair) {
+            Pair p = (Pair) value;
+            if (kvar != null) {
+                return kvar + "=" + p.get(0) + ", " + vvar + "=" + Tracer.unwrapHandle(p.get(1));
+            }
+            else {
+                return vvar + "=" + Tracer.unwrapHandle(p.get(1));
+            }
+        }
+        else {
+            return "!";
+        }
+    }
+
+    public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
         if (!testAndSetChildFailed(stack)) {
             if (stack.parentFrame().isDefined(VAR)) {
                 stack.leave();

@@ -180,10 +180,9 @@ namespace("vdl"
 							exception(
 								concat(
 									"Exception in {tr}:", nl(),
-									maybe("Arguments: {arguments}", nl()),
-									"Host: {rhost}", nl(),
-									"Directory: {tmpdir}", nl(),
-									"- - -", nl()
+									maybe("    Arguments: {arguments}", nl()),
+									"    Host: {rhost}", nl(),
+									"    Directory: {tmpdir}", nl(),
 								)
 								exception
 							)
