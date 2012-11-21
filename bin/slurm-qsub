@@ -7,7 +7,7 @@ slurmqsub=$( which slurm-qsub-emulator )
 script=$1.slurm
 echo '#! /bin/sh' >$script
 # echo 'export PBS_NODELIST=SLURM_NODELIST'' >>$script  # FIXME: convert SLURM_NODELIST to PBS_NODEFILE here...
-cat $1 >>$script
+cat $1 | grep -v '^#PBS' >>$script
 chmod +x $script
 
 srunargs=$(awk <$1 '
@@ -29,7 +29,7 @@ END {
 
 #   printf("-S %s -N %s -m %s -l nodes=%s:ppn=%s -l walltime=%s -q %s -o %s -e %s",
 #            shell, jobname, m, nodes, ppn, walltime, queue, sofile, sefile);
-   printf("-N %s -m %s -l nodes=%s:ppn=%s -l walltime=%s -q %s -o %s -e %s",
+   printf("-N %s -m %s -l nodes=%s:ppn=%s,walltime=%s -q %s -o %s -e %s",
              jobname, m, nodes, ppn, walltime, queue, sofile, sefile);
 
 }')

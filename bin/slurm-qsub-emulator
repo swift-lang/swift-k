@@ -81,7 +81,6 @@ my ($start_time,
 
 my $sbatch = "sbatch";
 my $salloc = "salloc";
-my $srun = "$srun";
 
 GetOptions('a=s'      => \$start_time,
 	   'A=s'      => \$account,
@@ -215,7 +214,7 @@ $command .= " --exclusive"; # MWilde: added for midway, which schedules by core.
 
 $command .= " $script";
 
-system("(echo; echo $command; echo) >> $HOME/pbslog");
+system("(echo; echo $command; echo) >> \$HOME/pbslog");
 
 system($command);
 

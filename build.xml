@@ -113,6 +113,7 @@
 				<include name="worker.sh"/>
 				<include name="workers.ranger.sh"/>
                                 <include name="slurm-qsub"/>
+                                <include name="slurm-qsub-emulator"/>
   				<include name="slurm-qdel"/>
 				<include name="slurm-qstat"/>
 			</fileset>
