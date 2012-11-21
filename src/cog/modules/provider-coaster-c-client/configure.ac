@@ -23,7 +23,7 @@ AC_PROG_RANLIB
 CXXFLAGS=
 
 # Checks for header files.
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h unistd.h getopt.h])
 
 # Libs
 AC_CHECK_LIB(pthread, pthread_create)

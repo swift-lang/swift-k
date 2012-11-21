@@ -43,4 +43,9 @@ public class VariableNotFoundException extends ExecutionException {
 	public String getMessage() {
 		return "Variable not found: " + super.getMessage();
 	}
+
+	@Override
+	public synchronized Throwable fillInStackTrace() {
+		return this;
+	}
 }

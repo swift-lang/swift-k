@@ -25,7 +25,7 @@ public class ProtocolException extends Exception {
 	}
 
 	public ProtocolException(Throwable cause) {
-		super(cause);
+		super(cause.getMessage(), cause);
 	}
 
 }

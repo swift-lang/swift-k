@@ -18,9 +18,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
-import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
-import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -71,7 +69,7 @@ public class LocalService extends GSSService implements Registering {
         logger.info("Got connection");
         try {
             ConnectionHandler handler =
-                    new ConnectionHandler(this, sock, LocalRequestManager.INSTANCE);
+                    new ConnectionHandler("service-" + sock.getPort(), this, sock, LocalRequestManager.INSTANCE);
             logger.info("Initialized connection handler");
             handler.start();
             logger.info("Connection handler started");
@@ -84,7 +82,7 @@ public class LocalService extends GSSService implements Registering {
     public void handleConnection(InputStream is, OutputStream os) {
         try {
             ConnectionHandler handler =
-                    new ConnectionHandler(this, is, os, LocalRequestManager.INSTANCE);
+                    new ConnectionHandler("service-pipe", this, is, os, LocalRequestManager.INSTANCE);
             handler.start();
         }
         catch (Exception e) {
@@ -93,7 +91,7 @@ public class LocalService extends GSSService implements Registering {
     }
     
     public PipedServerChannel newPipedServerChannel() {
-        return new PipedServerChannel(LocalRequestManager.INSTANCE, new ChannelContext(this));
+        return new PipedServerChannel(LocalRequestManager.INSTANCE, new ChannelContext("spipe", this));
     }
 
     public String waitForRegistration(Task t, String id) throws InterruptedException,

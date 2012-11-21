@@ -289,9 +289,6 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			if (b < 32 && b != 0x0a) {
 				b = '.';
 			}
-			else if (b > 128) {
-				b = '.';
-			}
 			buf[i] = b;
 		}
 		return new String(buf);
@@ -360,7 +357,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 
 	public String toString() {
-		return getName() + "[" + context + "]";
+		return getName();
 	}
 
 	public synchronized URI getCallbackURI() throws Exception {
@@ -556,5 +553,5 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
         else {
             return true;
         }
-    }
+    }	
 }

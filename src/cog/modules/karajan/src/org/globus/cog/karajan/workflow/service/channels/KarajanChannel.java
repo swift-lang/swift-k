@@ -70,7 +70,7 @@ public interface KarajanChannel {
 	void close();
 
 	void setLocalShutdown();
-
+	
 	ChannelContext getChannelContext();
 
 	void setChannelContext(ChannelContext context);
@@ -78,7 +78,7 @@ public interface KarajanChannel {
 	boolean isOffline();
 	
 	boolean isStarted();
-
+	
 	void unregisterCommand(Command cmd);
 
 	int incLongTermUsageCount();

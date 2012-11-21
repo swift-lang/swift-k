@@ -15,6 +15,7 @@ int getShort(const char* s, int len, int& ptr);
 string* getString(const char* s, int len, int& ptr, int n);
 
 RemoteCoasterException::RemoteCoasterException(const char* data, int len) {
+	// These are actual serialized java exceptions
 	/*int cnt = 1;
 	char t[8];
 	for (int i = 0; i < len; i++) {

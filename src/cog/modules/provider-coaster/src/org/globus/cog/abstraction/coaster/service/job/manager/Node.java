@@ -85,6 +85,7 @@ public class Node implements Callback, ChannelListener {
         }
         try {
             KarajanChannel channel = getChannel();
+            channel.setLocalShutdown();
             ChannelManager.getManager().reserveLongTerm(channel);
             ShutdownCommand cmd = new ShutdownCommand();
             cmd.executeAsync(channel, this);

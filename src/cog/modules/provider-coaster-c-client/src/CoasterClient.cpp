@@ -161,7 +161,7 @@ void CoasterClient::replyReceived(Command* cmd) {
 		string* remoteId = jsc->getRemoteId();
 		LogInfo << "Job " << jsc->getJob()->getIdentity() << " submitted; remoteId: " << remoteId << endl;
 		remoteJobIdMapping[*remoteId] = &jsc->getJob()->getIdentity();
-		updateJobStatus(jsc->getJob()->getIdentity(), new JobStatus(SUBMITTED));
+		updateJobStatus(*remoteId, new JobStatus(SUBMITTED));
 	}
 	delete cmd;
 }

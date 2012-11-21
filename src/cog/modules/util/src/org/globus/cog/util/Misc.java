@@ -12,13 +12,17 @@ import java.util.Enumeration;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.FileAppender;
+import org.apache.log4j.Layout;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 
 public class Misc
 {
 	/** 
-	   Set the FileAppender output from the given Logger 
-	   to the given file name
+	 * Set the FileAppender output from the given Logger 
+	 * to the given file name. If no file appender exists, one
+	 * is created.
 	 */
 	public static void setFileAppenderOutput(Logger logger, 
 	                                         String filename) {
@@ -26,8 +30,11 @@ public class Misc
 		FileAppender fa = 
 			(FileAppender) Misc.getAppender(FileAppender.class);
 		if (fa == null) {
-			logger.fatal("Failed to configure log file name");
-			System.exit(2);
+		    fa = new FileAppender();
+		    Layout l = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss,SSSZZZZZ} %-5p %c{1} %m%n");
+		    fa.setLayout(l);
+		    fa.setThreshold(Level.DEBUG);
+		    Logger.getRootLogger().addAppender(fa);
 		}
 		fa.setFile(file.getAbsolutePath());
 		fa.activateOptions();

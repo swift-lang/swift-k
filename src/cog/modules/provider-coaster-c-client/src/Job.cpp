@@ -194,6 +194,10 @@ JobStatus* Job::getStatus() {
 }
 
 void Job::setStatus(JobStatus* newStatus) {
+	// Since the client can process a job status while another
+	// status is coming in, a status cannot be deleted when a new status comes in.
+	// Instead, all statuses get chained and all get de-allocated
+	// when the job is de-allocated.
 	newStatus->setPreviousStatus(status);
 	status = newStatus;
 }

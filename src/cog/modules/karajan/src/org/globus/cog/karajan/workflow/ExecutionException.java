@@ -34,7 +34,7 @@ public class ExecutionException extends Exception {
 
 	public ExecutionException(VariableStack stack, String message, Throwable cause) {
 		this(message, cause);
-		this.stack = stack;
+		this.stack = stack.copy();
 	}
 
 	public ExecutionException(String message) {
@@ -54,48 +54,70 @@ public class ExecutionException extends Exception {
 	}
 
 	public void setStack(VariableStack stack) {
-		this.stack = stack;
+		this.stack = stack.copy();
+	}
+	
+	@Override
+	public void printStackTrace() {
+		StringBuffer sb = new StringBuffer();
+		toString(sb, true, true);
+		System.err.println(sb.toString());
 	}
 
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		toString(sb);
+		toString(sb, false, true);
 		return sb.toString();
 	}
 
-	private void toString(StringBuffer sb) {
-		sb.append(getMessage());
-		sb.append('\n');
-		if (stack != null) {
-			sb.append(Trace.get(stack));
+	private void toString(StringBuffer sb, boolean trace, boolean first) {
+		if (getMessage() != null || trace) {
+			if (!first) {
+				sb.append("Caused by: ");
+			}
+			sb.append(getMessage());
+			sb.append('\n');
 		}
-		else {
-			//sb.append("\t-- no stack --\n");
+		if (trace) {
+			if (stack != null) {
+				sb.append(Trace.get(stack));
+				sb.append('\n');
+			}
+			else {
+				//sb.append("\t-- no stack --\n");
+			}
 		}
 		Throwable cause = getCause();
 		if (cause != null) {
-			sb.append("Caused by: ");
 			if (cause instanceof ExecutionException) {
-				((ExecutionException) cause).toString(sb);
+				((ExecutionException) cause).toString(sb, trace, false);
 			}
 			else {
-				appendJavaException(sb, cause);
+				appendJavaException(sb, cause, trace);
 			}
 		}
 	}
 
-	private void appendJavaException(StringBuffer sb, Throwable cause) {
-		if (cause instanceof RuntimeException) {
+	private void appendJavaException(StringBuffer sb, Throwable cause, boolean trace) {
+		if (cause instanceof RuntimeException && trace) {
+			sb.append("Caused by: ");
 			CharArrayWriter caw = new CharArrayWriter();
 			cause.printStackTrace(new PrintWriter(caw));
 			sb.append(caw.toString());
+			sb.append('\n');
 		}
 		else {
-			sb.append(cause.toString());
+			sb.append("Caused by: ");
+			if (cause.getMessage() == null) {
+				sb.append(cause.toString());
+			}
+			else {
+				sb.append(cause.getMessage());
+			}
+			sb.append('\n');
 		}
 		if (cause.getCause() != null) {
-			sb.append("\nCaused by: ");
-			appendJavaException(sb, cause.getCause());
+			appendJavaException(sb, cause.getCause(), trace);
 		}
 	}
 	

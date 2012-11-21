@@ -76,7 +76,7 @@ public class UDPService implements Service, Runnable {
 				synchronized (channels) {
 					channel = (UDPChannel) channels.get(addr);
 					if (channel == null) {
-						ChannelContext cc = new ChannelContext(context);
+						ChannelContext cc = new ChannelContext("udp", context);
 						channel = new UDPChannel(socket, cc, rm, this, addr);
 						channels.put(addr, channel);
 						ChannelManager.getManager().registerChannel(
