@@ -182,7 +182,7 @@ namespace("vdl"
 									"Exception in {tr}:", nl(),
 									maybe("    Arguments: {arguments}", nl()),
 									"    Host: {rhost}", nl(),
-									"    Directory: {tmpdir}", nl(),
+									"    Directory: {tmpdir}", nl()
 								)
 								exception
 							)
