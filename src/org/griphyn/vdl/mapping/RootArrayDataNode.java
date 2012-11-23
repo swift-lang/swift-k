@@ -78,6 +78,11 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		String desc = (String) params.get(MappingParam.SWIFT_DESCRIPTOR);
 		if (desc == null) {
 			initialized();
+			Boolean input = (Boolean) params.get(MappingParam.SWIFT_INPUT);
+			if (input != null && input.booleanValue()) {
+			    // Empty array. Clearly only in test cases.
+			    closeDeep();
+			}
 			return;
 		}
 		try {

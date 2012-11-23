@@ -248,9 +248,17 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     private static String getMessages(Throwable e) {
         StringBuilder sb = new StringBuilder();
+        String lastMessage = null;
         while (e != null) {
-            sb.append(":\n\t");
-            sb.append(e.getMessage());
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = e.toString();
+            }
+            sb.append("\n\t");
+            if (lastMessage == null || !lastMessage.contains(msg)) {
+                sb.append(msg);
+                lastMessage = msg;
+            }
             e = e.getCause();
         }
         return sb.toString();
@@ -336,7 +344,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
         if (recompile) {
             VDLt2VDLx.compile(new FileInputStream(swiftscript),
                 new PrintStream(new FileOutputStream(xml)));
-
             try {
                 FileOutputStream f = new FileOutputStream(kml);
                 Karajan.compile(xml.getAbsolutePath(), new PrintStream(f), provenanceEnabled);

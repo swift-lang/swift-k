@@ -18,12 +18,16 @@
 package org.griphyn.vdl.engine;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.antlr.stringtemplate.StringTemplate;
 import org.apache.log4j.Logger;
@@ -32,24 +36,25 @@ import org.griphyn.vdl.karajan.CompilationException;
 
 
 public class VariableScope {
-
-	/** permit array up-assignment, but not entire variables */
-	public final static int ENCLOSURE_LOOP = 301923;
-
-	/** permit all upwards assignments */
-	public static final int ENCLOSURE_ALL = 301924;
-
-	/** permit no upwards assignments */
-	public static final int ENCLOSURE_NONE = 301925;
-
-	/** permit no access to the containing scope except for finding
-	    global variables */
-	public static final int ENCLOSURE_PROCEDURE = 301926;
-	
-	/** Override ENCLOSURE_LOOP to allow assignment inside a loop
-	 * based on some condition
-	 */
-	public static final int ENCLOSURE_CONDITION = 301927;
+    public enum EnclosureType {
+        /** permit array up-assignment, but not entire variables */
+        LOOP, 
+        /** permit all upwards assignments */
+        ALL, 
+        /** permit no upwards assignments */
+        NONE, 
+        /** permit no access to the containing scope except for finding
+        global variables */
+        PROCEDURE,
+        /** Override ENCLOSURE_LOOP to allow assignment inside a loop
+         * based on some condition
+         */
+        CONDITION;
+    }
+    
+    public enum WriteType {
+        FULL, PARTIAL
+    }
 	
 	public static final Logger logger = Logger.getLogger(VariableScope.class);
 
@@ -64,17 +69,114 @@ public class VariableScope {
 	    this will be the same as parentScope or this. */
 	VariableScope rootScope;
 
-	int enclosureType;
+	private EnclosureType enclosureType;
 
 	/** The string template in which we will store statements
 	    outputted into this scope. */
 	public StringTemplate bodyTemplate;
 	
 	private List<String> outputs = new ArrayList<String>();
-	private Set<String> inhibitClosing = new HashSet<String>();
+	private Set<String> inhibitClosing;
+	private List<VariableScope> children = new LinkedList<VariableScope>();
+	private XmlObject src;
+	
+	/** List of templates to be executed in sequence after the present
+        in-preparation statement is outputted. */
+    List<StringTemplate> presentStatementPostStatements =  new ArrayList<StringTemplate>();
+    
+    /** Set of variables (String token names) that are declared in
+        this scope - not variables in parent scopes, though. */
+    Map<String, Variable> variables;
+    
+    /**
+     * Usage (such as writing or reading) in this scope
+     */
+    Map<String, VariableUsage> variableUsage;
+    
+    /**
+     * If this is the scope of an 'else', then store a reference
+     * to the corresponding 'then'
+     */
+    private VariableScope thenScope;
+    
+    private static class Variable {
+        public final String name, type;
+        public final XmlObject src;
+        public final boolean isGlobal;
+        private XmlObject foreachSrc;
+        
+        public Variable(String name, String type, boolean isGlobal, XmlObject src) {
+            this.name = name;
+            this.type = type;
+            this.src = src;
+            this.isGlobal = isGlobal;
+        }
+    }
+    
+    /** Stores information about a variable that is referred to in this
+        scope. Should probably get used for dataset marking eventually. */
+    private static class VariableUsage {
+        private final String name;
+        private XmlObject fullWritingLoc, foreachSourceVar;
+        private List<XmlObject> partialWritingLoc;
+        private List<XmlObject> fullReadingLoc;
+        private int referenceCount;
+        
+        public VariableUsage(String name) {
+            this.name = name;
+        }
+        
+        public boolean addWritingStatement(XmlObject loc, WriteType writeType) throws CompilationException {
+            if (writeType == WriteType.PARTIAL) {
+                if (partialWritingLoc == null) {
+                    partialWritingLoc = new LinkedList<XmlObject>();
+                }
+                if (!partialWritingLoc.contains(loc)) {
+                    partialWritingLoc.add(loc);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                if (fullWritingLoc != null) {
+                    throw new CompilationException("Variable " + name + " is written to in two different locations:\n\t1. " 
+                        + CompilerUtils.info(fullWritingLoc) + "\n\t2. " + CompilerUtils.info(loc));
+                }
+                else {
+                    fullWritingLoc = loc;
+                    return true;
+                }
+            }
+        }
 
-	public VariableScope(Karajan c, VariableScope parent) {
-		this(c, parent, ENCLOSURE_ALL);
+        public boolean hasWriters() {
+            return fullWritingLoc != null || (partialWritingLoc != null && partialWritingLoc.size() > 0);
+        }
+
+        public void addFullReadingStatement(XmlObject where) {
+            if (fullReadingLoc == null) {
+                fullReadingLoc = new LinkedList<XmlObject>();
+            }
+            fullReadingLoc.add(where);
+        }
+
+        public boolean hasReaders() {
+            return fullReadingLoc != null && fullReadingLoc.size() > 0;
+        }
+
+        public XmlObject getForeachSourceVar() {
+            return foreachSourceVar;
+        }
+
+        public void setForeachSourceVar(XmlObject foreachSourceVar) {
+            this.foreachSourceVar = foreachSourceVar;
+        }
+    }
+
+	public VariableScope(Karajan c, VariableScope parent, XmlObject src) {
+		this(c, parent, EnclosureType.ALL, src);
 	}
 
 	/** Creates a new variable scope.
@@ -84,7 +186,7 @@ public class VariableScope {
 		@param a specifies how assignments to variables made in enclosing
 			scopes will be handled.
 	*/
-	public VariableScope(Karajan c, VariableScope parent, int a) {
+	public VariableScope(Karajan c, VariableScope parent, EnclosureType a, XmlObject src) {
 	    if (logger.isDebugEnabled()) {
     		if (parentScope != null) {
     			logger.debug("New scope " + hashCode() + " with parent scope " + parentScope.hashCode());
@@ -96,23 +198,29 @@ public class VariableScope {
 		compiler = c;
 		parentScope = parent;
 		enclosureType = a;
-		if(parentScope == null) {
+		if (parentScope == null) {
 			rootScope = this;
-		} else {
+		} 
+		else {
 			rootScope = parentScope.getRootScope();
+			parentScope.addChild(this);
 		}
+		this.src = src;
 	}
 
 
-	/** Set of variables (String token names) that are declared in
-	    this scope - not variables in parent scopes, though. */
-	Map<String, XmlObject> variables = new HashMap<String, XmlObject>();
-	Map<String, String> varTypes = new HashMap<String, String>();
-
-	/** Set of variables (String token names) which are global and
-	    declared in this scope (which must be a root scope). Variables
-	    in this set must also appear in the variables set. */
-	Map<String, XmlObject> globals = new HashMap<String, XmlObject>();
+	public void addChild(VariableScope scope) {
+	    children.add(scope);
+    }
+	
+	public List<VariableScope> getChildren() {
+	    return children;
+	}
+	
+	public void setThen(VariableScope thenScope) {
+	    this.thenScope = thenScope;
+	    updateBranchReferenceCounts();
+	}
 
 	/** Asserts that a named variable is declared in this scope.
 	    Might also eventually contain more information about the
@@ -124,7 +232,81 @@ public class VariableScope {
 		addVariable(name, type, context, false, src);
 	}
 	
+	private Collection<VariableUsage> getVariableUsageValues() {
+	    if (variableUsage == null) {
+	        return Collections.emptyList();
+	    }
+	    else {
+	        return variableUsage.values();
+	    }
+	}
+	
+	private Map<String, VariableUsage> getVariableUsage() {
+	    if (variableUsage == null) {
+	        variableUsage = new HashMap<String, VariableUsage>();
+	    }
+	    return variableUsage;
+	}
+	
+	/**
+	 * Get variable usage if it exists, otherwise return null
+	 */
+	protected VariableUsage getExistingUsage(String name) {
+	    if (variableUsage == null) {
+	        return null;
+	    }
+	    else {
+	        return variableUsage.get(name);
+	    }
+	}
+	
+	private Collection<String> getUsedVariableNames() {
+	    if (variableUsage == null) {
+	        return Collections.emptyList();
+	    }
+	    else {
+	        return variableUsage.keySet();
+	    }
+    }
+	
+	private Collection<String> getLocallyDeclaredVariableNames() {
+        if (variables == null) {
+            return Collections.emptyList();
+        }
+        else {
+            return variables.keySet();
+        }
+    }
+
+	
+	/**
+	 * Returns variable usage in this scope for the given name.
+	 * If no previous usage exists, create it. This method
+	 * guarantees a non-null return
+	 */
+	protected VariableUsage getUsageForUpdate(String name) {
+	    Map<String, VariableUsage> usage = getVariableUsage();
+	    VariableUsage u = usage.get(name);
+	    if (u == null) {
+	        u = new VariableUsage(name);
+	        usage.put(name, u);
+	    }
+	    return u;
+	}
+	
+	public void setForeachSourceVar(String name, XmlObject src) {
+	    getUsageForUpdate(name).setForeachSourceVar(src);
+    }
+	
+	public boolean isForeachSourceVar(String name) {
+	    VariableUsage u = getExistingUsage(name);
+	    return u != null && u.getForeachSourceVar() != null;
+    }
+	
 	public void inhibitClosing(String name) {
+	    if (inhibitClosing == null) {
+	        inhibitClosing = new HashSet<String>();
+	    }
 		inhibitClosing.add(name);
 	}
 
@@ -135,7 +317,7 @@ public class VariableScope {
 		
 		if(isVariableDefined(name)) {
 			throw new CompilationException("Variable " + name + ", on line " 
-			    + CompilerUtils.getLine(src) + ", was already defined on line " + getDefinitionLine(name));
+			    + CompilerUtils.getLine(src) + ", was already defined on line " + getDeclarationLine(name));
 		}
 
 		// TODO does this if() ever fire? or is it always taken
@@ -143,22 +325,24 @@ public class VariableScope {
 		// be replaced by is locally defined test.
 		if(parentScope != null && parentScope.isVariableDefined(name)) {
 		    Warnings.warn(context + " " + name + ", on line " + CompilerUtils.getLine(src)
-			+ ", shadows variable of same name on line " + parentScope.getDefinitionLine(name));
+			+ ", shadows variable of same name on line " + parentScope.getDeclarationLine(name));
 		}
 
-		if(global && this != rootScope) {
+		if (global && this != rootScope) {
 			throw new CompilationException("Global " + name + " can only be declared in the root scope of a program.");
 		}
-
-		variables.put(name, src);
-		varTypes.put(name, type);
 		
-		if (global) {
-			globals.put(name, src);
-		}
+		getVariablesMap().put(name, new Variable(name, type, global, src));
 	}
 	
-	/**
+	private Map<String, Variable> getVariablesMap() {
+	    if (variables == null) {
+	        variables = new HashMap<String, Variable>();
+	    }
+	    return variables;
+	}
+
+    /**
 	 * Does pretty much the same as addVariable() except it doesn't throw
 	 * an exception if the variable is defined in a parent scope
 	 */
@@ -169,16 +353,18 @@ public class VariableScope {
 		
 		if(isVariableLocallyDefined(name)) {
 			throw new CompilationException("Variable " + name + ", on line " 
-			    + CompilerUtils.getLine(src) + ", was already defined on line " + getDefinitionLine(name));
+			    + CompilerUtils.getLine(src) + ", was already defined on line " + getDeclarationLine(name));
 		}
 
-		variables.put(name, src);
-		varTypes.put(name, type);
+		getVariablesMap().put(name, new Variable(name, type, false, src));
 	}
 	
-	public String getDefinitionLine(String name) {
-	    XmlObject src = rootScope.getGlobalSrc(name);
-	    if (src == null) {
+	public String getDeclarationLine(String name) {
+	    XmlObject src;
+	    if (rootScope.isGlobalDefined(name)) {
+	        src = rootScope.getGlobalSrc(name);
+	    }
+	    else {
 	        src = getSrcRecursive(name);
 	    }
 	    if (src != null) {
@@ -191,155 +377,609 @@ public class VariableScope {
 
 	public boolean isVariableDefined(String name) {
 		if(rootScope.isGlobalDefined(name)) return true;
-		return isVariableDefinedRecursive(name);
+		return isVariableVisible(name);
+	}
+	
+	/**
+	 * Recursively find information about a variable visible in this scope.
+	 * Also, look for globals.
+	 */
+	public Variable lookup(String name) {
+	    if (variables != null) {
+	        Variable var = variables.get(name);
+	        if (var != null) {
+	            return var;
+	        }
+	    }
+	    if (enclosureType != EnclosureType.PROCEDURE && parentScope != null) {
+	        return parentScope.lookup(name);
+        }
+	    else {
+	        // if the search fails, see if there is a global with this name
+	        if (rootScope.variables != null) {
+	            Variable v = rootScope.variables.get(name);
+	            if (v != null && v.isGlobal) {
+	                return v;
+	            }
+	            else {
+	                return null;
+	            }
+	        }
+	        else {
+	            return null;
+	        }
+	    }
 	}
 	
 	private XmlObject getSrcRecursive(String name) {
-	    XmlObject src = variables.get(name);
-	    if (src == null) {
-	        if (enclosureType != ENCLOSURE_PROCEDURE && parentScope != null) {
-	            src = parentScope.getSrcRecursive(name);
-	        }
+	    Variable var = lookup(name);
+	    if (var == null) {
+	        throw new IllegalArgumentException("Variable " + name + " is not visible in this scope");
 	    }
-	    return src;
+	    return var.src;
 	}
 
-	private boolean isVariableDefinedRecursive(String name) {
-		if(isVariableLocallyDefined(name)) return true;
-		if(enclosureType != ENCLOSURE_PROCEDURE && parentScope != null && parentScope.isVariableDefined(name)) return true;
-		return false;
+	private boolean isVariableVisible(String name) {
+		if (isVariableLocallyDefined(name)) { 
+		    return true;
+		}
+		if (enclosureType != EnclosureType.PROCEDURE && parentScope != null) {
+		    return parentScope.isVariableVisible(name);
+		}
+		else {
+		    return false;
+		}
 	}
+		
+	private StringTemplate getExistingDeclaration(String name) {
+        if (isVariableLocallyDefined(name)) {
+            return getLocalDeclaration(name);
+        }
+        else if (parentScope != null) {
+            return parentScope.getExistingDeclaration(name);
+        }
+        else {
+            return null;
+        }
+    }
 
 	public boolean isGlobalDefined(String name) {
-		return globals.containsKey(name);
+	    Variable var = rootScope.lookup(name);
+	    return var != null && var.isGlobal;
 	}
 	
 	public XmlObject getGlobalSrc(String name) {
-	    return globals.get(name);
+	    Variable var = rootScope.lookup(name);
+        if (var != null && var.isGlobal) {
+            return var.src;
+        }
+        else {
+            throw new IllegalArgumentException("'" + name + "' is not a global variable");
+        }
 	}
 
-	/** note that this will return variable types for variables in
-	    containing scopes even if they are not accessible. non-null
-	    return value from this method should not be treated as an
-	    indication that the variable is in any way accessible from
-	    this scope. The isVariableDefined and isGlobalDefined methods
-	    should be used to check that. */
 	public String getVariableType(String name) {
-		if(isVariableLocallyDefined(name)) 
-			return varTypes.get(name).toString();
-		if(parentScope != null && parentScope.isVariableDefined(name)) 
-			return parentScope.getVariableType(name);
-		return null;
+	    Variable var = lookup(name);
+	    if (var != null) {
+	        return var.type;
+	    }
+	    else {
+	        throw new IllegalArgumentException("Variable " + name + " is not visible in this scope");
+	    }
 	}
 
-// TODO could also mark variable as written and catch duplicate assignments
-// in the same scope here
-	public boolean isVariableWriteable(String name, boolean partialWriter) {
-		if(isVariableLocallyDefined(name)) return true;
-		if(parentScope != null && parentScope.isVariableWriteable(name, true) && enclosureType == ENCLOSURE_CONDITION) {
-		    Warnings.warn("Variable " + name + ", defined on line " + getDefinitionLine(name) + ", might have multiple writers");
+	public boolean isVariableWriteable(String name, WriteType writeType) {
+		if (isVariableLocallyDefined(name)) {
 		    return true;
 		}
-		if(parentScope != null && parentScope.isVariableWriteable(name, partialWriter) && enclosureType == ENCLOSURE_ALL) return true;
-		if(parentScope != null && parentScope.isVariableWriteable(name, partialWriter) && enclosureType == ENCLOSURE_LOOP && partialWriter) return true;
-		return false;
+		if (parentScope == null) {
+		    // if we are the root scope and the variable is not declared here,
+		    // then there is no other place to look
+		    return false;
+		}
+		switch (enclosureType) {
+		    case CONDITION:
+		        if (parentScope.isVariableWriteable(name, WriteType.FULL)) {
+		            if (getTopmostLoopToDeclaration(name) != null) {
+		                Warnings.warn("Variable " + name + ", defined on line " + 
+		                    getDeclarationLine(name) + ", might have multiple conflicting writers");
+		            }
+		            return true;
+		        }
+		        else {
+		            return false;
+		        }
+		    case ALL:
+		        return parentScope.isVariableWriteable(name, writeType);
+		    case LOOP:
+		        return parentScope.isVariableWriteable(name, writeType) && writeType == WriteType.PARTIAL;
+		    default:
+		        return false;
+		}
 	}
 
 
-	public boolean isVariableLocallyDefined(String name) {
-		return variables.containsKey(name);
+	/**
+	 * Assumes that the variable is defined in some parent scope.
+	 * Returns the top-most loop between this scope and the declaration
+	 * or null if no such loop is found
+	 */
+	private VariableScope getTopmostLoopToDeclaration(String name) {
+        if (isVariableLocallyDefined(name)) {
+            return null;
+        }
+        else if (enclosureType == EnclosureType.LOOP) {
+            VariableScope parentLoop = parentScope.getTopmostLoopToDeclaration(name);
+            if (parentLoop != null) {
+                return parentLoop;
+            }
+            else {
+                return this;
+            }
+        }
+        else {
+            return parentScope.getTopmostLoopToDeclaration(name); 
+        }
 	}
+	
+	/**
+	 * This deals with cases like this:
+	 * a[]; a[0] = 1;
+	 * foreach v, k in a {
+	 *   if (c) {
+	 *     a[k + 1] = 1;
+	 *   }
+	 * }
+	 * ...
+	 * foreach v, k in a {
+	 *   if (c) {
+     *     a[k + 100] = 1;
+     *   }
+     * }
+	 * 
+	 * a[] can be considered closed when all of the following are true:
+	 *   1. the write reference count is equal to the number of loops
+	 *      that both iterate on and write to a
+	 *   2. none of those loops have any iterations running 
+	 *   3. there are no elements in a[] left to iterate on
+	 * These three conditions guarantee that no more writing
+	 * can happen to a[].
+	 * 
+	 *  Unfortunately, it seems horribly complicated to deal with multiple
+	 *  loops that do this. Simple reference counting doesn't work, since
+	 *  any of the conditions above can become false at any point and it is
+	 *  hard to have an absolute time for all of the loops.
+	 *  
+	 *  So engineering compromise: this is allowed for a single loop (per
+	 *  array), and that's been shown to work (the self close scheme).
+	 *  If used in more than one array, throw an error.
+	 * @throws CompilationException 
+	 */
+	private void markInVariableUsedInsideLoop(String name) throws CompilationException {
+	    if (isVariableLocallyDefined(name)) {
+	        return;
+	    }
+	    switch (enclosureType) {
+	        case PROCEDURE:
+	        case NONE:
+	            return;
+	        case LOOP:
+	            if (isForeachSourceVar(name)) {
+	                // mark as selfClosing
+	                Variable var = lookup(name);
+	                if (var.foreachSrc != null) {
+	                    throw new CompilationException("Updating of an array (" + 
+	                        name + ", line " + getDeclarationLine(name) + ") inside a " + 
+	                        "foreach loop that iterates over it is limited to a single " + 
+	                        "loop, but it is used in both " + CompilerUtils.info(var.foreachSrc) + 
+	                        " and " + CompilerUtils.info(src));
+	                }
+	                else {
+	                    setSelfClose();
+	                }
+	            }
+	            // also add partial close
+	            
+	        default:
+	            if (parentScope != null) {
+	                parentScope.markInVariableUsedInsideLoop(name);
+	            }
+	    }
+    }
 
-	/** List of templates to be executed in sequence after the present
-	    in-preparation statement is outputted. */
-	List<StringTemplate> presentStatementPostStatements =  new ArrayList<StringTemplate>();
+    private void setSelfClose() {
+        bodyTemplate.setAttribute("selfClose", "true");
+    }
 
-	Map<String, Variable> variableUsage = new HashMap<String, Variable>();
+    public boolean isVariableLocallyDefined(String name) {
+		return variables != null && variables.containsKey(name);
+	}
 
 	/** indicates that the present in-preparation statement writes to the
 	    named variable. If the variable is declared in the local scope,
 	    register a closing statement; otherwise, record that this scope
 	    writes to the variable so that the scope-embedding code (such as
 	    the foreach compiler) can handle appropriately. */
-	public void addWriter(String variableName, Object closeID, boolean partialWriter) throws CompilationException
-	{
-		if(!isVariableDefined(variableName)) {
+	public void addWriter(String variableName, WriteType writeType, 
+	        XmlObject where, StringTemplate out) throws CompilationException {
+		if (!isVariableDefined(variableName)) {
 			throw new CompilationException("Variable " + variableName + " is not defined");
 		}
+		
+		if (logger.isDebugEnabled()) {
+		    logger.debug("Writer " + variableName + " " + CompilerUtils.info(where));
+		}
 
-		if(isVariableLocallyDefined(variableName)) {
-			StringTemplate ld = getLocalDeclaration(variableName);
-			if (ld != null) {
-				if(!partialWriter && ld.getAttribute("waitfor") != null) {
-					throw new CompilationException("variable " + variableName + ", defined on line " 
-					    + getDefinitionLine(variableName) + ", has multiple writers.");
-				}
-				ld.setAttribute("waitfor", closeID);
-			} 
-			else {
-			    if (logger.isDebugEnabled()) {
-			        logger.debug("Variable " + variableName + " is local but has no template.");
-			    }
-			}
-			outputs.add(variableName);
-			if (!inhibitClosing.contains(variableName)) {
-    			StringTemplate postST = compiler.template("partialclose");
-    			postST.setAttribute("var", variableName);
-    			postST.setAttribute("closeID", closeID);
-    		
-    			presentStatementPostStatements.add(postST);
-			}
-		} else {
-
-// TODO now we have to walk up the scopes until either we find the
-// variable or we find an upwards assignment prohibition or we run
-// out of scopes
-
-// TODO so far this should find undeclared variables at compile time
-// so perhaps worth making this into a separate patch if it actually
-// works
-
-			if(isVariableWriteable(variableName, partialWriter)) {
-				Variable variable = variableUsage.get(variableName);
-				if(variable == null) {
-					variable = new Variable();
-					variableUsage.put(variableName, variable);
-				}
-
-				List<Object> statementList = variable.writingStatements;
-				if(!statementList.contains(closeID)) {
-					statementList.add(closeID);
-				}
-				if (logger.isDebugEnabled()) {
-				    logger.debug("added  " + closeID + " to variable " 
-				        + variableName + " in scope " + hashCode());
-				}
-			} else {
-			    isVariableWriteable(variableName, partialWriter);
-				throw new CompilationException("variable " + variableName + " is not writeable in this scope");
-			}
+		if (isVariableWriteable(variableName, writeType)) {
+	        setVariableWrittenToInThisScope(variableName, writeType, where, out);
+		} 
+		else {
+		    isVariableWriteable(variableName, writeType);
+			throw new CompilationException("variable " + variableName + " is not writeable in this scope");
 		}
 	}
+	
+	public void partialClose(String name, XmlObject src, StringTemplate out) {
+	    if (inhibitClosing == null || !inhibitClosing.contains(name)) {
+	        StringTemplate decl = getExistingDeclaration(name);
+	        if (decl != null) {
+	            // a function return value will result
+	            // in a missing declaration
+	            // TODO fix that
+	            incWaitCount(name);
+	        
+	            StringTemplate postST = compiler.template("partialclose");
+	            postST.setAttribute("var", name);
+	            
+	            out.setAttribute("partialClose", postST);
+	        }
+        }
+	}
+	
+	public boolean hasPartialClosing() {
+	    if (enclosureType != EnclosureType.CONDITION || thenScope != null) {
+	        throw new IllegalStateException("hasPartialClosing should only be called in a 'then' condition scope");
+	    }
+	    for (String name : getUsedVariableNames()) {
+	        VariableUsage v = getExistingUsage(name);
+	        if (v != null && v.referenceCount > 0) {
+	            return true;
+	        }
+	    }
+	    return false;
+	}
+			
+	private void setPreClose(String name, int count) {
+	    setCount("preClose", name, count, 
+	        new RefCountSetter<StringTemplate>() {
+	            @Override
+                public StringTemplate create(String name, int count) {
+	                StringTemplate t = compiler.template("partialclose");
+	                t.setAttribute("var", name);
+	                if (count != 1) {
+	                    t.setAttribute("count", count);
+	                }
+	                return t;
+                }
+	            
+                @Override
+                public void set(StringTemplate t, int count) {
+                    t.removeAttribute("count");
+                    if (count != 1) {
+                        // 1 is the default count, so no need to have it explicitly
+                        t.setAttribute("count", count);
+                    }
+                }
 
-	/** looks up the template that declared the named variable in the
+                @Override
+                public boolean matches(StringTemplate t, String name) {
+                    return t.getAttribute("var").equals(name);
+                }
+	    });
+	}
+	
+	private void setLoopReferenceCount(String name, int count) {
+        setCount("refs", name, count, new RefCountSetter<SimpleRefCountRep>() {
+            @Override
+            public SimpleRefCountRep create(String name, int count) {
+                return new SimpleRefCountRep(name, count);
+            }
+
+            @Override
+            public boolean matches(SimpleRefCountRep t, String name) {
+                return t.name.equals(name);
+            }
+
+            @Override
+            public void set(SimpleRefCountRep t, int count) {
+                t.count = count;
+            }
+        });
+    }
+	
+	private static class SimpleRefCountRep {
+	    public final String name;
+	    public int count;
+	    
+	    public SimpleRefCountRep(String name, int count) {
+	        this.name = name;
+	        this.count = count;
+	    }
+	    
+	    public String toString() {
+	        return name + " " + count;
+	    }
+	}
+	
+	private static interface RefCountSetter<T> {
+	    T create(String name, int count);
+	    void set(T o, int count);
+	    boolean matches(T t, String name);
+	}
+	
+	@SuppressWarnings("unchecked")
+    private <T> void setCount(String attrName, String name, int count, RefCountSetter<T> r) {
+   	    Object o = bodyTemplate.getAttribute(attrName);
+   	    List<T> pcs;
+   	    T matching = null;
+   	    if (o instanceof List) {
+   	        pcs = (List<T>) o;
+   	        Iterator<T> i = pcs.iterator();
+   	        while (i.hasNext()) {
+   	            T st = i.next();
+   	            if (r.matches(st, name)) {
+   	                if (count == 0) {
+   	                    i.remove();
+   	                }
+   	                else {
+   	                    matching = st;
+   	                    break;
+   	                }
+   	            }
+   	        }
+   	    }
+   	    else if (o != null) {
+   	        T st = (T) o;
+   	        if (r.matches(st, name)) {
+   	            if (count == 0) {
+   	                bodyTemplate.removeAttribute("preClose");
+   	            }
+   	            else {
+   	                matching = st;
+   	            }
+   	        }
+   	    }
+   	    if (count != 0 ) {
+   	        // add
+   	        if (matching == null) {
+   	            bodyTemplate.setAttribute(attrName, r.create(name, count));
+   	        }
+   	        else {
+	            r.set(matching, count);
+   	        }
+   	    }
+	}
+	
+	private void incWaitCountLocal(String name) {
+	    StringTemplate decl = getLocalDeclaration(name);
+	    Integer i = (Integer) decl.getAttribute("waitCount");
+	    if (i == null) {
+	        i = 1;
+	    }
+	    else {
+	        i = i + 1;
+	        decl.removeAttribute("waitCount");
+	    }
+	    decl.setAttribute("waitCount", i);
+    }
+
+    private void incWaitCount(String name) {
+	    if (this.isVariableLocallyDefined(name)) {
+	        incWaitCountLocal(name);
+	    }
+	    else {
+	        boolean propagateToParent = true;
+	        if (enclosureType == EnclosureType.CONDITION) {
+	            // due to the parsing order, the
+	            // then scopes are done before the else scopes, 
+	            // so no need to update counts in subling else scopes
+	            // if this is a then scope
+	            if (thenScope == null) {
+	                // we are then 'then' scope
+	                incVariableReferenceCount(name);
+	            }
+	            else {
+	                // else scope
+	                int myCount = incVariableReferenceCount(name);
+	                int thenCount = thenScope.getVariableReferenceCount(name);
+	                if (myCount > thenCount) {
+	                    thenScope.setPreClose(name, myCount - thenCount);
+	                    this.setPreClose(name, 0);
+	                }
+	                else {
+	                    this.setPreClose(name, thenCount - myCount);
+	                    thenScope.setPreClose(name, 0);
+	                    // this has already been accounted for in the then branch
+	                    // so skip propagating it up
+	                    propagateToParent = false;
+	                }
+	            }
+	        }
+	        else if (enclosureType == EnclosureType.LOOP) {
+	            // issue statements to dynamically increment wait
+	            // count on each iteration
+	            addLoopReferenceCount(name);
+	        }
+	        // keep going until we hit the declaration
+	        if (propagateToParent && parentScope != null) {
+	            parentScope.incWaitCount(name);
+	        }
+	    }
+    }
+    
+    /**
+     * This is only called by setThen(scope), so guaranteed to
+     * be an 'else' scope
+     */
+    private void updateBranchReferenceCounts() {
+        for (VariableUsage v : thenScope.getVariableUsageValues()) {
+            if (v.referenceCount != 0) {
+                setPreClose(v.name, v.referenceCount);
+            }
+        }
+    }
+
+    public void addReader(String name, boolean partial, XmlObject where) throws CompilationException {
+	    setVariableReadInThisScope(name, partial, where);
+	    if (!partial) {
+	        if (logger.isDebugEnabled()) {
+	            logger.debug(name + " fully read in " + CompilerUtils.info(where));
+	        }
+	    }
+	}
+	
+	private void setVariableWrittenToInThisScope(String name, WriteType writeType, XmlObject where, StringTemplate out)
+	throws CompilationException {
+	    VariableUsage variable = getUsageForUpdate(name);
+	    boolean added = variable.addWritingStatement(where, writeType);
+	    if (added) {
+	        partialClose(name, where, out);
+	        setNonInput(name);
+	    }
+	    markInVariableUsedInsideLoop(name);
+    }
+	
+	private void setNonInput(String name) {
+	    StringTemplate decl = getExistingDeclaration(name);
+	    if (decl != null) {
+	        decl.removeAttribute("input");
+	    }
+    }
+
+    private void setVariableReadInThisScope(String name, boolean partial, XmlObject where)
+    throws CompilationException {
+	    // only care about full reads, since they can only happen in
+	    // a scope higher than the closing
+	    if (partial) {
+	        return;
+	    }
+        getUsageForUpdate(name).addFullReadingStatement(where);
+    }
+	
+	private boolean isVariableWrittenToInThisScope(String name) {
+	    VariableUsage v = getExistingUsage(name);
+	    return v != null && v.hasWriters();
+	}
+	
+	private int incVariableReferenceCount(String name) {
+	    return ++getUsageForUpdate(name).referenceCount;
+    }
+	
+	private void addLoopReferenceCount(String name) {
+        int count = incVariableReferenceCount(name);
+        setLoopReferenceCount(name, count);
+    }
+	
+	private int getVariableReferenceCount(String name) {
+        VariableUsage v = getExistingUsage(name);
+        if (v == null) {
+            return 0;
+        }
+        else {
+            return v.referenceCount;
+        }
+    }
+	
+	private boolean isVariableFullyReadInThisScope(String name) {
+        VariableUsage v = getExistingUsage(name);
+        return v != null && v.hasReaders();
+    }
+	
+	private XmlObject getFirstFullRead(String name) {
+        VariableUsage v = getExistingUsage(name);
+        if (v == null) {
+            return null;
+        }
+        if (v.fullReadingLoc == null) {
+            return null;
+        }
+        if (v.fullReadingLoc.isEmpty()) {
+            return null;
+        }
+        return v.fullReadingLoc.get(0);
+    }
+	
+	private XmlObject getFirstWrite(String name) {
+        VariableUsage v = getExistingUsage(name);
+        if (v == null) {
+            return null;
+        }
+        if (v.fullWritingLoc != null) {
+            return v.fullWritingLoc;
+        }
+        if (v.partialWritingLoc == null) {
+            return null;
+        }
+        if (v.partialWritingLoc.isEmpty()) {
+            return null;
+        }
+        return v.partialWritingLoc.get(0);
+    }
+	
+	private List<XmlObject> getAllWriters(String name) {
+	    VariableUsage v = getExistingUsage(name);
+	    if (v == null) {
+	        throw new IllegalArgumentException("Variable " + name + " is not written to in this scope");
+	    }
+	    return v.partialWritingLoc;
+	}
+	
+	StringTemplate getLocalDeclaration(String name) {
+	    StringTemplate st = getLocalDeclaration(name, "declarations");
+	    /* 
+	     * procedure scopes go like this:
+         * outerScope - contains all arguments - PROCEDURE
+         * innerScope - contains all returns - NONE
+         * compoundScope - this is where the proc template lives - ALL
+         * this prevents writing to arguments, since writing upwards of NONE is prohibited,
+         * but allows writing to return values
+         */
+
+	    if (st == null && parentScope != null && parentScope.enclosureType == EnclosureType.PROCEDURE) {
+	        if (children.size() != 1) {
+	            throw new IllegalStateException("Procedure scope with more than one child found");
+	        }
+	        return children.get(0).getLocalDeclaration(name, "initWaitCounts");
+	    }
+	    else {
+	        return st;
+	    }
+	}
+
+    /** looks up the template that declared the named variable in the
 	    present scope. If such a template does not exist, returns null.
 	    TODO this should probably merge into general variable structure
 	    rather then walking the template.
 	*/
-	StringTemplate getLocalDeclaration(String name) {
+	StringTemplate getLocalDeclaration(String name, String type) {
 	    if (bodyTemplate == null) {
 	        return null;
 	    }
-		Object decls = bodyTemplate.getAttribute("declarations");
-		if(decls == null) return null;
+		Object decls = bodyTemplate.getAttribute(type);
+		if (decls == null) {
+		    return null;
+		}
 
-		if(decls instanceof StringTemplate) {
+		if (decls instanceof StringTemplate) {
 			StringTemplate declST = (StringTemplate) decls;
-			if(declST.getAttribute("name").equals(name)) {
-				logger.debug("thats the declaration for "+name);
+			if (declST.getAttribute("name").equals(name)) {
+			    if (logger.isDebugEnabled()) {
+			        logger.debug("Found declaration for " + name);
+			    }
 				return declST;
 			}
-		} else { // assume its a List of StringTemplate
+		} 
+		else { // assume its a List of StringTemplate
 		     @SuppressWarnings("unchecked")
 		     List<StringTemplate> list = (List<StringTemplate>) decls;
 		     for (StringTemplate declST : list) { 
@@ -347,9 +987,9 @@ public class VariableScope {
 		             logger.debug("looking at declaration " + declST);
 		         }
 		         try {
-		             if(declST.getAttribute("name").equals(name)) {
+		             if (declST.getAttribute("name").equals(name)) {
 		                 if (logger.isDebugEnabled()) {
-		                     logger.debug("thats the declaration for " + name);
+		                     logger.debug("Found declaration for " + name);
 		                 }
 		                 return declST;
 		             }
@@ -361,7 +1001,9 @@ public class VariableScope {
 		     }
 		}
 		
-		logger.info("UH OH - couldn't find local definition for "+name);
+		if (logger.isInfoEnabled()) {
+		    logger.info("Couldn't find local definition for " + name);
+		}
 		return null;
 	}
 
@@ -393,7 +1035,7 @@ public class VariableScope {
 		}
 		presentStatementPostStatements.clear();
 		outputs.clear();
-		inhibitClosing.clear();
+		inhibitClosing = null;
 	}
 
 	private String join(List<String> l) {
@@ -407,20 +1049,6 @@ public class VariableScope {
         }
         return sb.toString();
     }
-
-    /** Stores information about a variable that is referred to in this
-	    scope. Should probably get used for dataset marking eventually. */
-	class Variable {
-		List<Object> writingStatements =  new ArrayList<Object>();
-	}
-
-	Iterator<String> getVariableIterator() {
-		return variableUsage.keySet().iterator();
-	}
-
-	Set<String> getVariables() {
-	    return variableUsage.keySet();
-	}
 	
 	public VariableScope getRootScope() {
 		return rootScope;
@@ -428,7 +1056,7 @@ public class VariableScope {
 
     public List<String> getCleanups() {
         List<String> cleanups = new ArrayList<String>();
-        for (String var : variables.keySet()) {
+        for (String var : getLocallyDeclaredVariableNames()) {
             String type = getVariableType(var);
             if (!org.griphyn.vdl.type.Types.isPrimitive(type)) {
                 cleanups.add(var);
@@ -438,7 +1066,78 @@ public class VariableScope {
     }
     
     public String toString() {
-        return variables.toString();
+        return CompilerUtils.info(src);
+    }
+    
+    /**
+     * @throws CompilationException 
+     */
+    public void analyzeWriters() throws CompilationException {
+        // find variables that are read but not written to
+        
+        // keep a stack to account for shadowing
+        Map<String, Stack<Usage>> access = new HashMap<String, Stack<Usage>>();
+        
+        analyzeWriters(access);
+    }
+    
+    private static class Usage {
+        public VariableScope lastWriter, lastReader;
+    }
+
+    private void analyzeWriters(Map<String, Stack<Usage>> access) throws CompilationException {
+        for (String name : getLocallyDeclaredVariableNames()) {
+            declare(access, name);
+        }
+        
+        // parent first, which ensures that the topmost writer
+        // is always first
+        for (Map.Entry<String, Stack<Usage>> e : access.entrySet()) {
+            String name = e.getKey();
+            Stack<Usage> stack = e.getValue();
+            
+            boolean fullyRead = isVariableFullyReadInThisScope(name);
+                        
+            if (isVariableWrittenToInThisScope(name)) {
+                stack.peek().lastWriter = this;
+            }
+            
+            if (fullyRead && org.griphyn.vdl.type.Types.isPrimitive(getVariableType(name))) {
+                stack.peek().lastReader = this;
+            }
+        }
+        
+        for (VariableScope child : children) {
+            child.analyzeWriters(access);
+        }
+
+        for (String name : getLocallyDeclaredVariableNames()) {
+            undeclare(access, name);
+        }
+    }
+
+    private void declare(Map<String, Stack<Usage>> access, String name) {
+        Stack<Usage> s = access.get(name);
+        if (s == null) {
+            s = new Stack<Usage>();
+            access.put(name, s);
+        }
+        Usage u = new Usage();
+        s.push(u);
+    }
+    
+    private void undeclare(Map<String, Stack<Usage>> access, String name) throws CompilationException {
+        Stack<Usage> s = access.get(name);
+        if (s == null || s.isEmpty()) {
+            throw new RuntimeException("Mistmatched undeclare for " + name + " in scope " + this);
+        }
+        Usage u = s.pop();
+        if (s.isEmpty()) {
+            access.remove(name);
+        }
+        if (u.lastReader != null && u.lastWriter == null) {
+            throw new CompilationException("Uninitalized variable: " + name);
+        }
     }
 }
 

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.DSHandleFutureWrapper;
@@ -84,6 +85,7 @@ public abstract class AbstractDataNode implements DSHandle {
     private Path pathFromRoot;
     
     protected FutureWrapper wrapper;
+    private int writeRefCount;
 
     protected AbstractDataNode(Field field) {
         this.field = field;
@@ -680,5 +682,31 @@ public abstract class AbstractDataNode implements DSHandle {
         handles = null;
         value = null;
         pathFromRoot = null;
+    }
+
+    @Override
+    public synchronized void setWriteRefCount(int count) {
+        this.writeRefCount = count;
+    }
+
+    @Override
+    public synchronized int updateWriteRefCount(int delta) {
+        this.writeRefCount += delta;
+
+        if (this.writeRefCount < 0) {
+            throw new IllegalArgumentException("Reference count mismatch for " + this + ". Count is " + this.writeRefCount);
+        }
+                        
+        if (logger.isDebugEnabled()) {
+            logger.debug(this + " writeRefCount " + this.writeRefCount);
+        }
+        if (this.writeRefCount == 0) {
+            if(logger.isInfoEnabled()) {
+                logger.info("All partial closes for " + this + 
+                             " have happened. Closing fully.");
+            }
+            closeDeep();
+        }
+        return this.writeRefCount;
     }
 }

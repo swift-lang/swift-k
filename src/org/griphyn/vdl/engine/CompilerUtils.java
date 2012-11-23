@@ -14,8 +14,8 @@ import org.w3c.dom.Node;
 
 public class CompilerUtils {
     public static String getLine(Node n) {
-        if (n == null) {
-            return "line unknown";
+        if (n == null || n.getAttributes() == null) {
+            return "unknown";
         }
         Node src = n.getAttributes().getNamedItem("src");
         if (src == null) {
@@ -37,5 +37,9 @@ public class CompilerUtils {
             return null;
         }
         return getLine(src.getDomNode());
+    }
+    
+    public static String info(XmlObject src) {
+        return src.getDomNode().getLocalName() + ", line " + getLine(src);
     }
 }

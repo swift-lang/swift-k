@@ -29,7 +29,6 @@ public class MappingParam {
     public static final MappingParam SWIFT_LINE = new MappingParam("swift#line");
     public static final MappingParam SWIFT_DBGNAME = new MappingParam("swift#dbgname");
     public static final MappingParam SWIFT_RESTARTID = new MappingParam("swift#restartid");
-    public static final MappingParam SWIFT_WAITFOR = new MappingParam("swift#waitfor");
     public static final MappingParam SWIFT_BASEDIR = new MappingParam("swift#basedir");
     public static final MappingParam SWIFT_DESCRIPTOR = new MappingParam("swift#descriptor");
     public static final MappingParam SWIFT_INPUT = new MappingParam("swift#input");
