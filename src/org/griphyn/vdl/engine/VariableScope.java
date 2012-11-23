@@ -479,7 +479,7 @@ public class VariableScope {
 		}
 		switch (enclosureType) {
 		    case CONDITION:
-		        if (parentScope.isVariableWriteable(name, WriteType.FULL)) {
+		        if (parentScope.isVariableWriteable(name, WriteType.PARTIAL)) {
 		            if (getTopmostLoopToDeclaration(name) != null) {
 		                Warnings.warn("Variable " + name + ", defined on line " + 
 		                    getDeclarationLine(name) + ", might have multiple conflicting writers");
