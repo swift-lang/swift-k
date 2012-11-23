@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions name="AuthorizationService" targetNamespace="http://wsrf.globus.org/samples/authzService/service" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:binding="http://wsrf.globus.org/samples/authzService/bindings">
-  <wsdl:import namespace="http://wsrf.globus.org/samples/authzService/bindings" location="authzService_bindings.wsdl"/>
-  <wsdl:service name="AuthorizationService">
-    <wsdl:port name="AuthzServicePortTypePort" binding="binding:AuthzServicePortTypeSOAPBinding">
-      <soap:address location="http://localhost:8080/wsrf/services/"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>

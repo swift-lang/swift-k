@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions name="Registry" targetNamespace="http://www.globus.org/namespaces/2004/06/registry/service" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:binding="http://www.globus.org/namespaces/2004/06/registry/bindings">
-  <wsdl:import namespace="http://www.globus.org/namespaces/2004/06/registry/bindings" location="registry_bindings.wsdl"/>
-  <wsdl:service name="RegistryService">
-    <wsdl:port name="RegistryPortTypePort" binding="binding:RegistryPortTypeSOAPBinding">
-      <soap:address location="http://localhost:8080/wsrf/services/"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>
