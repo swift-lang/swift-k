@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions name="AuthorizationService" targetNamespace="http://www.gridforum.org/namespaces/2004/03/ogsa-authz/saml/service" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:binding="http://www.gridforum.org/namespaces/2004/03/ogsa-authz/saml/bindings">
-  <wsdl:import namespace="http://www.gridforum.org/namespaces/2004/03/ogsa-authz/saml/bindings" location="authz_bindings.wsdl"/>
-  <wsdl:service name="AuthorizationService">
-    <wsdl:port name="SAMLRequestPortTypePort" binding="binding:SAMLRequestPortTypeSOAPBinding">
-      <soap:address location="http://localhost:8080/wsrf/services/"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>

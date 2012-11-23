@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions name="Management" targetNamespace="http://management.com/service" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:binding="http://management.com/bindings">
-  <wsdl:import namespace="http://management.com/bindings" location="management_bindings.wsdl"/>
-  <wsdl:service name="ManagementService">
-    <wsdl:port name="ManagementPortPort" binding="binding:ManagementPortSOAPBinding">
-      <soap:address location="http://localhost:8080/wsrf/services/"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>
