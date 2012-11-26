@@ -108,7 +108,7 @@ public class CoasterPersistentService extends CoasterService {
                 cred = new GlobusGSSCredentialImpl(gc, GSSCredential.INITIATE_AND_ACCEPT);
             }
 
-            int port = 1984;
+            int port = 0;
             if (ap.hasValue("port")) {
                 if (ap.hasValue("portfile")) {
                     throw new ArgumentParserException("-portfile (-S) and -port are mutually exclusive");

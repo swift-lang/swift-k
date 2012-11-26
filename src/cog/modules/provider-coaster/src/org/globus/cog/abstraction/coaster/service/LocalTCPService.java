@@ -96,22 +96,41 @@ public class LocalTCPService implements Registering, Service, Runnable {
     public ServiceContext getContext() {
         return context;
     }
-    
-    public void start() {
+   
+    public boolean bindPort() {
         try {
-            channel = ServerSocketChannel.open();
-            channel.configureBlocking(true);
-            if(port == 0) {
-                PortRange portRange = PortRange.getTcpInstance();
-                if(portRange != null && portRange.isEnabled()) {
-                    synchronized(portRange) {
-                        port = portRange.getFreePort(port);
-                        portRange.setUsed(port);
-                    }
-                }
-            }
             channel.socket().bind(new InetSocketAddress(port));
-            
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+   
+    public void start() throws IOException {
+        channel = ServerSocketChannel.open();
+        channel.configureBlocking(true);
+        
+        /* When GLOBUS_TCP_PORT_RANGE is defined, find an acceptable port in that range */
+        String globusTCPPortRange = System.getenv("GLOBUS_TCP_PORT_RANGE");
+        String rangeValues[] = {"0", "0"};
+
+        if(globusTCPPortRange != null) {
+            rangeValues = globusTCPPortRange.split(",");
+        }
+   
+        port = Integer.valueOf(rangeValues[0]);
+        while(!bindPort()) {
+            port++;
+            if(port > Integer.valueOf(rangeValues[1])) {
+                String msg = "Unable to find an available port";
+                if(globusTCPPortRange != null)
+                    msg += " in the range of " + rangeValues[0] + " to " + rangeValues[1];
+                throw new IOException(msg);
+            }
+        }
+
+        try {
             if (serverThread == null) {
                 serverThread = new Thread(this);
                 serverThread.setDaemon(true);
