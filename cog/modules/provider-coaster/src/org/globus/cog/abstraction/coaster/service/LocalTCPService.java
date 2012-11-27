@@ -113,9 +113,9 @@ public class LocalTCPService implements Registering, Service, Runnable {
         
         /* When GLOBUS_TCP_PORT_RANGE is defined, find an acceptable port in that range */
         String globusTCPPortRange = System.getenv("GLOBUS_TCP_PORT_RANGE");
-        String rangeValues[] = {"0", "0"};
+        String rangeValues[] = {String.valueOf(port), String.valueOf(port)};
 
-        if(globusTCPPortRange != null) {
+        if(globusTCPPortRange != null && port == 0) {
             rangeValues = globusTCPPortRange.split(",");
         }
    
