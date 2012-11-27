@@ -189,6 +189,7 @@ if($res_opts{walltime}) {
 $command .= " --tmp=$res_opts{file}" if $res_opts{file};
 $command .= " --mem=$res_opts{mem}" if $res_opts{mem};
 $command .= " --nice=$res_opts{nice}" if $res_opts{nice};
+$command .= " --reservation=$res_opts{advres}" if $res_opts{advres};
 # Cray-specific options
 $command .= " -n$res_opts{mppwidth}"		    if $res_opts{mppwidth};
 $command .= " -w$res_opts{mppnodes}"		    if $res_opts{mppnodes};
@@ -235,6 +236,7 @@ sub parse_resource_list {
 		   'pvmem' => "",
 		   'software' => "",
 		   'vmem' => "",
+		   'advres' => "",
 		   # Cray-specific resources
 		   'mppwidth' => "",
 		   'mppdepth' => "",
@@ -246,9 +248,9 @@ sub parse_resource_list {
 	my @keys = keys(%opt);
 
 	foreach my $key (@keys) {
-		#print "$rl\n";
-		($opt{$key}) = $rl =~ m/$key=([\w:\+=+]+)/;
-
+		# print "key=$key rl=$rl\n";
+		($opt{$key}) = $rl =~ m/$key=([-\w:\+=+]+)/;
+                # print " set to $opt{$key}\n";
 	}
 	if($opt{cput}) {
 		$opt{cput} = get_minutes($opt{cput});

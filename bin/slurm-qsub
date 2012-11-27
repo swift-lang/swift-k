@@ -18,6 +18,8 @@ srunargs=$(awk <$1 '
                   sub(/nodes=/,"",nodes); sub(/:.*/,"",nodes);
                   sub(/^.*ppn=/,"",ppn);  }
 /#PBS -l walltime/ { walltime = $3; sub(/walltime=/,"",walltime);}
+#/#PBS -l advres/ { advres = "," $3; sub(/advres=/,"",advres); advres="," advres }
+/#PBS -l advres/ { advres = "," $3; }
 /#PBS -q/ { queue = $3 }
 /#PBS -o/ { sofile = $3 }
 /#PBS -e/ { sefile = $3 }
@@ -29,8 +31,8 @@ END {
 
 #   printf("-S %s -N %s -m %s -l nodes=%s:ppn=%s -l walltime=%s -q %s -o %s -e %s",
 #            shell, jobname, m, nodes, ppn, walltime, queue, sofile, sefile);
-   printf("-N %s -m %s -l nodes=%s:ppn=%s,walltime=%s -q %s -o %s -e %s",
-             jobname, m, nodes, ppn, walltime, queue, sofile, sefile);
+   printf("-N %s -m %s -l nodes=%s:ppn=%s,walltime=%s%s -q %s -o %s -e %s",
+             jobname, m, nodes, ppn, walltime, advres, queue, sofile, sefile);
 
 }')
 
