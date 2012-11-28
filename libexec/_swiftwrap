@@ -1,3 +1,4 @@
+
 #!/bin/bash
 # this script must be invoked inside of bash, not plain sh
 # note that this script modifies $IFS
@@ -475,17 +476,31 @@ if [ ! -x "$EXEC" ]; then
 	fail 254 "The executable $EXEC does not have the executable bit set"
 fi
 if [ "$KICKSTART" == "" ]; then
+
+    TIMEARGS="-o swiftapp.resources -f APP_RESOURCES=real_time:%E,real_secs:%e,kernel_secs:%S,user_secs:%U,percent_cpu:%P,max_rss:%M,avg_rss:%t,avg_tot_vm:%K,avg_priv_data:%D,avg_priv_stack:%p,avg_shared_text:%X,page_size:%Z,major_pgfaults:%F,minor_pgfaults:%R,swaps:%W,invol_context_switches:%c,vol_waits%w,fs_reads:%I,fs_writes:%O,sock_recv:%r,sock_send:%s,signals:%k,exit_status:%x,command:%C"
+
+    if [ -x /usr/bin/time ]; then
+        TIMECMD="/usr/bin/time"
+    elif [ -x $HOME/swift.time ]; then
+        TIMECMD="$HOME/swift.time"
+    else
+        TIMECMD=""
+		TIMEARGS=""
+    fi
 	if [ "$STDIN" == "" ]; then
 		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 			genScripts
 		fi
-		"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+		eval $TIMECMD $TIMEARGS "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
 	else
 		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 			genScripts
 		fi
-		"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+		eval $TIMECMD $TIMEARGS "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
 	fi
+    if [ "_$TIMECMD" != _ ]; then
+		log "$(cat swiftapp.resources)"
+    fi
 	checkError $? "Application $EXEC failed with an exit code of $?"
 else
 	if [ ! -f "$KICKSTART" ]; then
