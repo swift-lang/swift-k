@@ -118,7 +118,6 @@ public class CondorExecutor extends AbstractExecutor {
 	    for(String a : spec.getAttributeNames()) {
 	    	if(a != null && a.startsWith("condor.")) {
 	    		String attributeName[] = a.split("condor.");
-	    		System.out.println(attributeName[1] + " = " + spec.getAttribute(a));
 	    		wr.write(attributeName[1] + " = " + spec.getAttribute(a) + '\n');
 	    	}
 	    }
