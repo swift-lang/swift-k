@@ -32,20 +32,18 @@ public class CondorExecutor extends AbstractExecutor {
 		super(task, listener);
 	}
 
-	protected void writeAttr(String attrName, String arg, Writer wr)
-			throws IOException {
+	protected void writeAttr(String attrName, String arg, Writer wr) throws IOException {
 		Object value = getSpec().getAttribute(attrName);
 		if (value != null) {
 			wr.write(arg + String.valueOf(value) + '\n');
 		}
 	}
 
-	protected void writeScript(Writer wr, String exitcodefile, String stdout,
-			String stderr) throws IOException {
+	protected void writeScript(Writer wr, String exitcodefile, String stdout, String stderr) throws IOException {
 		boolean grid = false;
-		Task task = getTask();
 		JobSpecification spec = getSpec();
-		getSpec().unpackProviderAttributes();
+
+		// Handle some predefined jobTypes
 		String type = (String) spec.getAttribute("jobType");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
@@ -58,27 +56,31 @@ public class CondorExecutor extends AbstractExecutor {
 			String gridResource = (String) spec.getAttribute("gridResource");
 			wr.write("universe = grid\n");
 			wr.write("grid_resource = "+gridResource+"\n");
-
-// the below two lines are needed to cause the gridmonitor to be used
-// which is the point of all this...
+			// the below two lines are needed to cause the gridmonitor to be used
+			// which is the point of all this...
 			wr.write("stream_output = False\n");
 			wr.write("stream_error  = False\n");
-
 			wr.write("Transfer_Executable = false\n");
 		}
 		else {
-			wr.write("universe = vanilla\n");
+			if(spec.getAttribute("condor.universe") == null) {
+				wr.write("universe = vanilla\n");
+			}
 		}
+
 		if ("true".equals(spec.getAttribute("holdIsFailure"))) {
 			wr.write("periodic_remove = JobStatus == 5\n");
 		}
+		
 		writeAttr("count", "machine_count = ", wr);
+		wr.write("output = " + quote(stdout) + '\n');
+		wr.write("error = " + quote(stderr) + '\n');
+
 		if (spec.getStdInput() != null) {
 			wr.write("input = " + quote(spec.getStdInput()) + "\n");
 		}
-		wr.write("output = " + quote(stdout) + '\n');
-		wr.write("error = " + quote(stderr) + '\n');
-		Iterator i = spec.getEnvironmentVariableNames().iterator();
+
+		Iterator<String> i = spec.getEnvironmentVariableNames().iterator();
 		if (i.hasNext()) {
 			wr.write("environment = ");
 		}
@@ -99,7 +101,7 @@ public class CondorExecutor extends AbstractExecutor {
 			}
 		}
 		wr.write("executable = " + quote(spec.getExecutable()) + "\n");
-		List args = spec.getArgumentsAsList();
+		List<String> args = spec.getArgumentsAsList();
 		if (args != null && args.size() > 0) {
 			wr.write("arguments = ");
 			i = args.iterator();
@@ -112,18 +114,15 @@ public class CondorExecutor extends AbstractExecutor {
 		}
 		wr.write('\n');
 
-		String request_memory = (String) spec.getAttribute("request_memory");
-		if(request_memory != null) {
-			wr.write("request_memory = " + request_memory + '\n');
-		}
-		
-		String resources = (String) spec.getAttribute("condor.resource_list");
-		if (resources != null && resources.length() > 0) {
-			if (logger.isDebugEnabled())
-				logger.debug("condor.resource_list: " + resources);
-			wr.write(resources + '\n');
-		}
-		
+		// Handle all condor attributes specified by the user
+	    for(String a : spec.getAttributeNames()) {
+	    	if(a != null && a.startsWith("condor.")) {
+	    		String attributeName[] = a.split("condor.");
+	    		System.out.println(attributeName[1] + " = " + spec.getAttribute(a));
+	    		wr.write(attributeName[1] + " = " + spec.getAttribute(a) + '\n');
+	    	}
+	    }
+	    
 		wr.write("notification = Never\n");
 		wr.write("leave_in_queue = TRUE\n");
 		wr.write("queue\n");
