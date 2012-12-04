@@ -47,12 +47,12 @@ public abstract class AbstractExecutor implements ProcessListener {
         TRIGGERS['<'] = true;
     }
 
-    private File script;
-    private String stdout, stderr, exitcode, jobid;
-    private final JobSpecification spec;
-    private final Task task;
-    private final ProcessListener listener;
-    private Job job;
+    protected File script;
+    protected String stdout, stderr, exitcode, jobid;
+    protected final JobSpecification spec;
+    protected final Task task;
+    protected final ProcessListener listener;
+    protected Job job;
 
     protected AbstractExecutor(Task task, ProcessListener listener) {
         this.task = task;
