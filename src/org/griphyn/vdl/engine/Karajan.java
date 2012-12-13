@@ -1629,7 +1629,7 @@ public class Karajan {
 		for (String key : stringInternMap.keySet()) {
 			String variableName = stringInternMap.get(key);
 			StringTemplate st = template("sConst");
-			st.setAttribute("innervalue",escapeQuotes(key));
+			st.setAttribute("innervalue",escapeQuotesAndMarkup(key));
 			StringTemplate vt = template("globalConstant");
 			vt.setAttribute("name",variableName);
 			vt.setAttribute("expr",st);
@@ -1660,6 +1660,30 @@ public class Karajan {
 	String escapeQuotes(String in) {
 		return in.replaceAll("\"", "&quot;");
 	}
+	
+	String escapeQuotesAndMarkup(String in) {
+	    StringBuilder sb = new StringBuilder();
+	    for (int i = 0; i < in.length(); i++) {
+	        char c = in.charAt(i);
+	        switch (c) {
+	            case '<':
+	                sb.append("&lt;");
+	                break;
+	            case '>':
+	                sb.append("&gt;");
+	                break;
+	            case '"':
+	                sb.append("&quot;");
+	                break;
+	            case '&':
+	                sb.append("&amp;");
+	                break;
+	            default:
+	                sb.append(c);
+	        }
+	    }
+        return sb.toString();
+    }
 	
 	public static String normalize(String type) {
 	    return org.griphyn.vdl.type.Types.normalize(type);
