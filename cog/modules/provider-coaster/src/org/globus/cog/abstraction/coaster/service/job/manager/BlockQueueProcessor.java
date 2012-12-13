@@ -437,7 +437,10 @@ implements RegistrationManager, Runnable {
                 public int compare(Block b1, Block b2) {
                     double s1 = b1.sizeLeft();
                     double s2 = b2.sizeLeft();
-                    if (s1 < s2) {
+                    if (s1 == s2) {
+                    	return 0;
+                    }
+                    else if (s1 < s2) {
                         return -1;
                     }
                     else {
