@@ -9,12 +9,8 @@
  */
 package org.globus.cog.abstraction.impl.scheduler.condor;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,12 +20,10 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
-import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.gsi.gssapi.auth.AuthorizationException;
 
 public class CondorExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(CondorExecutor.class);
@@ -44,86 +38,10 @@ public class CondorExecutor extends AbstractExecutor {
 			wr.write(arg + String.valueOf(value) + '\n');
 		}
 	}
-
-    public void start()
-    throws AuthorizationException, IOException, ProcessException {
-    	File scriptdir = new File(".");
-        script = File.createTempFile(getName(), ".submit", scriptdir);
-        if (!logger.isDebugEnabled()) {
-            script.deleteOnExit();
-        }
-        stdout = spec.getStdOutput() == null ? script.getAbsolutePath()
-                + ".stdout" : spec.getStdOutput();
-        stderr = spec.getStdError() == null ? script.getAbsolutePath()
-                + ".stderr" : spec.getStdError();
-        exitcode = script.getAbsolutePath() + ".exitcode";
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("Writing " + getName() + " script to " + script);
-        }
-
-        String[] cmdline = buildCommandLine(scriptdir, script, exitcode,
-            stdout, stderr);
-
-        if (logger.isDebugEnabled()) {
-            logCommandLine(cmdline);
-        }
-        Process process = Runtime.getRuntime().exec(cmdline, null, null);
-
-        try {
-            process.getOutputStream().close();
-        }
-        catch (IOException e) {
-        }
-
-        try {
-            int code = process.waitFor();
-            if (code != 0) {
-                String errorText = getOutput(process.getInputStream())
-                        + getOutput(process.getErrorStream());
-                throw new ProcessException("Could not submit job ("
-                        + getProperties().getSubmitCommandName()
-                        + " reported an exit code of " + code + "). "
-                        + errorText);
-            }
-            if (logger.isDebugEnabled()) {
-                logger.debug(getProperties().getSubmitCommandName()
-                        + " done (exit code " + code + ")");
-            }
-        }
-        catch (InterruptedException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Interrupted exception while waiting for "
-                        + getProperties().getSubmitCommandName(), e);
-            }
-            if (listener != null) {
-                listener
-                    .processFailed("The submission process was interrupted");
-            }
-        }
-
-        String output = getOutput(process.getInputStream());
-        jobid = parseSubmitCommandOutput(output);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Submitted job with id '" + jobid + "'");
-        }
-
-        if (jobid.length() == 0) {
-            String errorText = getOutput(process.getErrorStream());
-            if (listener != null)
-                listener.processFailed("Received empty jobid!\n" +
-                                       output + "\n" + errorText);
-        }
-
-        process.getInputStream().close();
-
-        getQueuePoller().addJob(
-            job = createJob(jobid, stdout, spec.getStdOutputLocation(), stderr,
-                spec.getStdErrorLocation(), exitcode, this));
-    }
 	
 	protected void writeScript(Writer wr, String exitcodefile, String stdout, String stderr) throws IOException {
 		boolean grid = false;
+		boolean nonshared = false;
 		JobSpecification spec = getSpec();
 
 		// Handle some predefined jobTypes
@@ -143,6 +61,13 @@ public class CondorExecutor extends AbstractExecutor {
 			// which is the point of all this...
 			wr.write("stream_output = False\n");
 			wr.write("stream_error  = False\n");
+			wr.write("Transfer_Executable = false\n");
+		}
+		else if("nonshared".equals(type)) {
+			nonshared = true;
+			wr.write("universe = vanilla\n");
+			wr.write("should_transfer_files = YES\n");
+			wr.write("when_to_transfer_output = ON_EXIT_OR_EVICT\n");
 			wr.write("Transfer_Executable = false\n");
 		}
 		else {
@@ -177,23 +102,26 @@ public class CondorExecutor extends AbstractExecutor {
 		wr.write("\n");
 
 		if (spec.getDirectory() != null) {
-			if(!grid) {
-				wr.write("initialdir = " + quote(spec.getDirectory()) + "\n");
-			} else {
+			if(grid) {
 				wr.write("remote_initialdir = " + quote(spec.getDirectory()) + "\n");
 			}
+			else if(!nonshared) {
+				wr.write("initialdir = " + quote(spec.getDirectory()) + "\n");
+			}
 		}
-		
-        String basename[] = spec.getExecutable().split("/");		
-        FileChannel from = new FileInputStream(spec.getExecutable()).getChannel();
-        FileChannel to = new FileOutputStream(basename[basename.length-1]).getChannel();
-        to.transferFrom(from, 0, from.size());
-        from.close();
-        to.close();
         
 		spec.getExecutable();
 		wr.write("executable = " + quote(spec.getExecutable()) + "\n");
 		List<String> args = spec.getArgumentsAsList();
+		String wrapper = args.get(0);
+
+		// Use a relative path to the wrapper script
+		if(nonshared && args.size() > 1) {
+			String wrapperSplit[] = args.get(0).split("/");
+			String basename = wrapperSplit[wrapperSplit.length-1];
+			args.set(0, basename);
+		}
+		
 		if (args != null && args.size() > 0) {
 			wr.write("arguments = ");
 			i = args.iterator();
@@ -206,7 +134,14 @@ public class CondorExecutor extends AbstractExecutor {
 		}
  		wr.write('\n');
 
-		// Handle all condor attributes specified by the user
+ 		// Transfer wrapper and remove full path name from executable arguments
+ 		if(nonshared) {
+ 			if(wrapper != null) {
+ 				wr.write("transfer_input_files = " + wrapper + '\n'); 				
+ 			}
+ 		}
+
+ 		// Handle all condor attributes specified by the user
 	    for(String a : spec.getAttributeNames()) {
 	    	if(a != null && a.startsWith("condor.")) {
 	    		String attributeName[] = a.split("condor.");

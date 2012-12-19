@@ -18,7 +18,6 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
-import org.globus.cog.abstraction.interfaces.JobSpecification;
 
 public class QueuePoller extends AbstractQueuePoller {
 	public static final Logger logger = Logger.getLogger(QueuePoller.class);
