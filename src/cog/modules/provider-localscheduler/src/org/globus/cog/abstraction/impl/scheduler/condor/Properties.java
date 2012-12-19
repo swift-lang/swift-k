@@ -8,12 +8,10 @@
  * Created on Oct 20, 2005
  */
 package org.globus.cog.abstraction.impl.scheduler.condor;
-
-import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 
 public class Properties extends AbstractProperties {
-	private static Logger logger = Logger.getLogger(Properties.class);
+	private static final long serialVersionUID = 1L;
 
 	public static final String PROPERTIES = "provider-condor.properties";
 	
