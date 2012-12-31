@@ -361,6 +361,12 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
      *
      */
     protected void removeIdleBlocks() {
+    
+    	if (settings.getDisableIdleBlockCleanup()) {
+    		System.out.println("Idle block cleanup disabled");
+    		return;
+    	}
+    
         ArrayList<Block> sorted;
 
         synchronized (blocks) {

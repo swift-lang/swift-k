@@ -50,7 +50,7 @@ public class Settings {
                        "ppn", "ldLibraryPath", "workerCopies",
                        "directory", "useHashBang",
                        "providerAttributes", "parallelism", "pe",
-                       "coresPerNode"};
+                       "coresPerNode", "disableIdleBlockCleanup" };
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -156,6 +156,8 @@ public class Settings {
      * A pass-through setting for SGE, parallel environment
     */
     private String pe;
+    
+    private boolean disableIdleBlockCleanup = false;
 
     public Settings() {
         hook = new Hook();
@@ -563,6 +565,14 @@ public class Settings {
 
     public void setUseHashBang(String uhb) {
         this.useHashBang = uhb;
+    }
+    
+    public void setDisableIdleBlockCleanup(boolean disableIdleBlockCleanup) {
+    	this.disableIdleBlockCleanup = disableIdleBlockCleanup;
+    }
+    
+    public boolean getDisableIdleBlockCleanup() {
+    	return disableIdleBlockCleanup;
     }
 
     public void set(String name, String value)
