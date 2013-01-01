@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions name="NotificationConsumer" targetNamespace="http://wsrf.globus.org/core/notification/service" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:binding="http://wsrf.globus.org/core/notification/bindings">
-  <wsdl:import namespace="http://wsrf.globus.org/core/notification/bindings" location="notification_consumer_bindings.wsdl"/>
-  <wsdl:service name="NotificationConsumerService">
-    <wsdl:port name="ConsumerPort" binding="binding:ConsumerSOAPBinding">
-      <soap:address location="http://localhost:8080/wsrf/services/"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions name="SecureConversation" targetNamespace="http://wsrf.globus.org/core/2004/07/security/secconv/service" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:binding="http://wsrf.globus.org/core/2004/07/security/secconv/bindings">
-  <wsdl:import namespace="http://wsrf.globus.org/core/2004/07/security/secconv/bindings" location="secure_conversation_bindings.wsdl"/>
-  <wsdl:service name="SecureConversationService">
-    <wsdl:port name="SecureConversationPort" binding="binding:SecureConversationSOAPBinding">
-      <soap:address location="http://localhost:8080/wsrf/services/"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>

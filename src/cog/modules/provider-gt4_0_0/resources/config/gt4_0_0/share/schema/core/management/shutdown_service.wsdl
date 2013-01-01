@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions name="Shutdown" targetNamespace="http://wsrf.globus.org/core/shutdown/service" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:binding="http://wsrf.globus.org/core/shutdown/bindings">
-  <wsdl:import namespace="http://wsrf.globus.org/core/shutdown/bindings" location="shutdown_bindings.wsdl"/>
-  <wsdl:service name="ShutdownService">
-    <wsdl:port name="ShutdownPortTypePort" binding="binding:ShutdownPortTypeSOAPBinding">
-      <soap:address location="http://localhost:8080/wsrf/services/"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>
