@@ -1,53 +1,135 @@
-x86 Cluster: UC3
+UC3 (x86 cluster)
 ----------------
 
-Create a coaster-service.conf
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-To begin, copy the text below and paste it into your Swift distribution's etc
-directory. Name the file coaster-service.conf.
+Requesting Access
+~~~~~~~~~~~~~~~~~
+To request access to UC3, you must have a University of Chicago CNetID 
+and be a meimber of the UC3 group. More information about UC3 can be 
+found at https://wiki.uchicago.edu/display/uc3/UC3+Home or 
+uc3-support@lists.uchicago.edu.
+
+Connecting to a login node
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+To access the UC3 login node, you will use your CNetID and password.
 
 -----
-include::../../tests/providers/uc3/coaster-service.conf[]
+ssh -l <cnetid> uc3-sub.uchicago.edu
 -----
 
-Starting the Coaster Service
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Change directories to the location you would like to run a
-Swift script and start the coaster service with this
-command:
-
+Installing Swift
+~~~~~~~~~~~~~~~~
+Swift should be available by default on the UC3 login nodes. You can verify 
+this by running the following command:
 -----
-start-coaster-service
+swift -version
 -----
 
-This will create a configuration file that Swift needs
-called sites.xml.
+If for some reason Swift is not available, you can following the instructions at 
+http://www.ci.uchicago.edu/swift/guides/release-0.93/quickstart/quickstart.html.
+Swift 0.94 or later is required to work with the condor provider on UC3.
 
-WARNING: Any existing sites.xml files in this directory
-will be overwritten. Be sure to make a copy of any
-custom configuration files you may have.
+Creating sites.xml
+~~~~~~~~~~~~~~~~~~
+This section will provide a working configuration file which you can copy and paste 
+to get running quickly. The sites.xml file tells Swift how to submit jobs, where 
+working directories are located, and various other configuration information. 
+More information on sites.xml can be found in the Swift User’s Guide.
 
-Run Swift
-~~~~~~~~~
-
-Next, run Swift. If you do not have a particular script
-in mind, you can test Swift by using a Swift script in
-the examples/ directory.
-
-Run the following command to run the script:
+The first step is to paste the text below into a file named sites.xml:
 -----
-swift -sites.file sites.xml -tc.file tc.data yourscript.swift
+<config>
+  <pool handle="uc3">
+    <execution provider="coaster" url="uc3-sub.uchicago.edu" jobmanager="local:condor"/>
+    <profile namespace="karajan" key="jobThrottle">999.99</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <profile namespace="globus"  key="jobsPerNode">1</profile>
+    <profile namespace="globus"  key="maxWalltime">3600</profile>
+    <profile namespace="globus"  key="nodeGranularity">1</profile>
+    <profile namespace="globus"  key="highOverAllocation">100</profile>
+    <profile namespace="globus"  key="lowOverAllocation">100</profile>
+    <profile namespace="globus"  key="slots">1000</profile>
+    <profile namespace="globus"  key="maxNodes">1</profile>
+    <profile namespace="globus"  key="condor.+AccountingGroup">"group_friends.{env.USER}"</profile>
+    <profile namespace="globus"  key="jobType">nonshared</profile>
+    <filesystem provider="local" url="none" />
+    <workdirectory>.</workdirectory>
+  </pool>
+</config>
 -----
 
-Stopping the Coaster Service
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The coaster service will run indefinitely. The stop-coaster-service
-script will terminate the coaster service.
+Creating tc.data
+~~~~~~~~~~~~~~~~
+The tc.data configuration file gives information about the applications that will be called by Swift.
+More information about the format of tc.data can be found in the Swift User’s guide.
+
+Paste the following example into a file named tc.data:
+-----
+uc3 echo /bin/echo null null null
+-----
+
+Create a configuration file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A swift configuration file enables and disables some settings in Swift. More information on what
+these settings do can be found in the Swift User's guide.
+
+Paste the following lines into a file called cf:
+-----
+wrapperlog.always.transfer=false
+sitedir.keep=true
+execution.retries=0
+lazy.errors=false
+status.mode=provider
+use.provider.staging=true
+provider.staging.pin.swiftfiles=false
+use.wrapper.staging=false
+-----
+
+Creating echo.swift
+~~~~~~~~~~~~~~~~~~~
+Now we need to create a swift script to test with. Let's use a simple application that calls /bin/echo.
 
 -----
-$ stop-coaster-service
+type file;
+
+app (file o) echo (string s) {
+   echo s stdout=@o;
+}
+
+foreach i in [1:5] {
+  file output_file <single_file_mapper; file=@strcat("output/output.", i, ".txt")>;
+  output_file = echo( @strcat("This is test number ", i) );
+}
 -----
 
-This will kill the coaster service and kill the worker scripts on remote systems.
+Running Swift
+~~~~~~~~~~~~~
+Putting everything together now, run your Swift script with the following command:
+
+-----
+swift -sites.file sites.xml -tc.file tc.data -config cf echo.swift
+-----
+
+If everything runs successfully, you will see 5 files get created in the output directory.
+
+
+Controlling where jobs run
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Swift will automatically generate condor scripts for you with the basic information about
+how to run. However, condor has hundreds of commands that let you customize how things work.
+If you need one of these advanced commands, you can add it to your sites.xml. The basic
+template for this is:
+
+-----
+<profile namespace="globus" key="condor.key">value</profile>
+-----
+
+For example, let's assume that you want to control where your jobs run by adding a
+requirement. The condor command that will control the run is:
+-----
+Requirements = UidDomain == "osg-gk.mwt2.org"
+-----
+
+To have this generated by Swift, you will add a line to your sites.xml in the key/value style
+shown above.
+<profile namespace="globus" key="condor.Requirements">UidDomain == "osg-gk.mwt2.org"</profile>
 
