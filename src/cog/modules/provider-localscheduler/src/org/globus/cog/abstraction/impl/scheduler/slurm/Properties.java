@@ -8,10 +8,9 @@ public class Properties extends AbstractProperties {
 	public static final String PROPERTIES = "provider-slurm.properties";
 	
 	public static final String POLL_INTERVAL = "poll.interval";
-	public static final String QSUB = "qsub";
-	public static final String QSTAT = "qstat";
-	public static final String QDEL = "qdel";
-	public static final String USE_MPPWIDTH = "use.mppwidth";
+	public static final String SBATCH = "sbatch";
+	public static final String SQUEUE = "squeue";
+	public static final String SCANCEL = "scancel";
 
 	private static Properties properties;
 
@@ -25,23 +24,23 @@ public class Properties extends AbstractProperties {
 	
 	protected void setDefaults() {
 		setPollInterval(5);
-		setSubmitCommand("qsub");
-		setPollCommand("qstat");
-		setRemoveCommand("qdel");
+		setSubmitCommand("sbatch");
+		setPollCommand("squeue");
+		setRemoveCommand("scancel");
 	}
 
 
 	public String getPollCommandName() {
-		return QSTAT;
+		return SQUEUE;
 	}
 
 
 	public String getRemoveCommandName() {
-		return QDEL;
+		return SCANCEL;
 	}
 
 
 	public String getSubmitCommandName() {
-		return QSUB;
+		return SBATCH;
 	}
 }
