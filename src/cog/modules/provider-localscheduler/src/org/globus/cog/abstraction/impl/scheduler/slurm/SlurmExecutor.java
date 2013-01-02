@@ -129,19 +129,21 @@ public class SlurmExecutor extends AbstractExecutor {
 		writeNonEmptyAttr("project", "--account", wr);
 		writeNonEmptyAttr("queue", "--partition", wr);
 		writeWallTime(wr);
-		wr.write("\n");
-
-		for (String name : spec.getEnvironmentVariableNames()) {
-			wr.write("export " + name + '=' + quote(spec.getEnvironmentVariable(name)) + '\n');
-		}
-
+		
 		// Handle all slurm attributes specified by the user
 		for (String a : spec.getAttributeNames()) {
 			if (a != null && a.startsWith("slurm.")) {
 				String attributeName[] = a.split("slurm.");
-				wr.write("#SBATCH --" + attributeName[1] + " = " + spec.getAttribute(a) + '\n');
+				wr.write("#SBATCH --" + attributeName[1] + "=" + spec.getAttribute(a) + '\n');
 			}
 		}
+		
+		wr.write("\n");
+		for (String name : spec.getEnvironmentVariableNames()) {
+			wr.write("export " + name + '=' + quote(spec.getEnvironmentVariable(name)) + '\n');
+		}
+
+
 
 		String type = (String) spec.getAttribute("jobType");
 		if (logger.isDebugEnabled())
