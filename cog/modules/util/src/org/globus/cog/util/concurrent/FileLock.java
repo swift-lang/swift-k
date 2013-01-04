@@ -94,7 +94,6 @@ public class FileLock {
     	    return (Integer) pid_method.invoke(mgmt);
     	}
     	catch (Exception e) {
-    		e.printStackTrace();
     		return -1;
     	}
     }
