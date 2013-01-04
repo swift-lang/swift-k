@@ -55,8 +55,18 @@ public class FileLock {
         dir.mkdirs();
         this.myId = getId();
     }
-
+    
     private int getId() {
+    	int id = getIdMgmt();
+    	if (id == -1) {
+    		return getIdProc();
+    	}
+    	else {
+    		return id;
+    	}
+    }
+
+    private int getIdProc() {
         try {
             return Integer.parseInt(new File("/proc/self").getCanonicalFile().getName());
         }
@@ -71,6 +81,22 @@ public class FileLock {
                 return new Random().nextInt() & 0x7fffffff;
             }
         }
+    }
+    
+    private int getIdMgmt() {
+    	try {
+    	    java.lang.management.RuntimeMXBean runtime = java.lang.management.ManagementFactory.getRuntimeMXBean();
+    	    java.lang.reflect.Field jvm = runtime.getClass().getDeclaredField("jvm");
+    	    jvm.setAccessible(true);
+    	    sun.management.VMManagement mgmt = (sun.management.VMManagement) jvm.get(runtime);
+    	    java.lang.reflect.Method pid_method = mgmt.getClass().getDeclaredMethod("getProcessId");
+    	    pid_method.setAccessible(true);
+    	    return (Integer) pid_method.invoke(mgmt);
+    	}
+    	catch (Exception e) {
+    		e.printStackTrace();
+    		return -1;
+    	}
     }
     
     public void lock() throws IOException, InterruptedException {
