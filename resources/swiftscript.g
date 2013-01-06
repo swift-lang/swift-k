@@ -1147,7 +1147,7 @@ constant returns [StringTemplate code=null]
     | s:STRING_LITERAL
       {
         code=template("sConst");
-        code.setAttribute("value",quote(s.getText()));
+        code.setAttribute("value",quote(escape(s.getText())));
       }
     | t:"true"
       {
