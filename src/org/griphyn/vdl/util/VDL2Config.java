@@ -115,6 +115,7 @@ public class VDL2Config extends Properties {
 		
 		put("cdm.broadcast.mode", "file");
 		put("use.provider.staging", "false");
+		put("use.wrapper.staging", "false");
 		put("ticker.date.format", "");
 		put("ticker.prefix", "Progress:  time:");
 		
