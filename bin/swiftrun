@@ -47,7 +47,7 @@ while [ $# -gt 0 ]
 do
    case "$1" in
       -site|-sites|-s) SITES=$2; verify_not_null sites $SITES; shift ;;
-      -config|-c) CONFIG=$2; verify_nul_null config $CONFIG; shift ;;
+      -config|-c) CONFIG=$2; verify_not_null config $CONFIG; shift ;;
       *) if [ -z "$args" ]; then script="$1"
          else args+="$1"
          fi ;;
