@@ -47,6 +47,7 @@ while [ $# -gt 0 ]
 do
    case "$1" in
       -site|-sites|-s) SITES=$2; verify_not_null sites $SITES; shift ;;
+      -config|-c) CONFIG=$2; verify_nul_null config $CONFIG; shift ;;
       *) if [ -z "$args" ]; then script="$1"
          else args+="$1"
          fi ;;
@@ -64,7 +65,11 @@ IFS=","
 echo "<config>" > $rundir/sites.xml
 for site in $SITES
 do
-   gensites -l $site >> $rundir/sites.xml
+   if [ -f "$CONFIG" ]; then
+      gensites -p $CONFIG -l $site >> $rundir/sites.xml
+   else
+      gensites -l $site >> $rundir/sites.xml
+   fi
 done
 echo "</config>" >> $rundir/sites.xml
 

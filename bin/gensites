@@ -212,4 +212,10 @@ do
    fi
    SED_COMMAND+="-e s@"\_$value\_"@${!value}@g "
 done
-$SED_COMMAND $TEMPLATE_PATH
+len=$( echo $SED_COMMAND |wc -w )
+if [ $len -gt 1 ]; then
+   $SED_COMMAND $TEMPLATE_PATH
+else
+   cat $TEMPLATE_PATH
+fi
+
