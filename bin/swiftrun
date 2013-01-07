@@ -12,6 +12,34 @@ verify_not_null()
    fi
 }
 
+# crash: Report a problem and exit
+crash()
+{
+    MSG=$1
+    echo ${MSG}  >&2
+    exit 1
+}
+
+# Create .swift structure
+create_dotswift()
+{
+   if [ ! -d "$HOME/.swift" ]; then
+      mkdir $HOME/.swift || crash "Unable to mkdir $HOME/.swift"
+   fi
+
+   if [ ! -d "$HOME/.swift/runs" ]; then
+      mkdir $HOME/.swift/runs || crash "Unable to mkdir $HOME/.swift/runs"
+   fi
+
+   if [ ! -d "$HOME/.swift/runs/current" ]; then
+      mkdir $HOME/.swift/runs/current || crash "Unable to mkdir $HOME/.swift/runs/current"
+   fi
+
+  if [ ! -d "$HOME/.swift/runs/completed" ]; then
+     mkdir $HOME/.swift/runs/completed || crash "Unable to mkdir $HOME/.swift/runs/completed"
+  fi
+}
+
 # Parse command line arguments
 args=""
 script=""
@@ -27,6 +55,7 @@ do
 done
 
 # Create run directory
+create_dotswift
 rundir=$( echo run??? | sed -e 's/^.*run//' | awk '{ printf("run%03d\n", $1+1)}' )
 mkdir $rundir
 
@@ -51,4 +80,7 @@ fi
 
 # Run
 cd $rundir
+timestamp=$( date +%s )
+ln -s $PWD $HOME/.swift/runs/current/$rundir.$timestamp 
 time swift -sites.file sites.xml -tc.file tc.data $script $args 2>&1 | tee swift.out
+mv $HOME/.swift/runs/current/$rundir.$timestamp $HOME/.swift/runs/completed
