@@ -60,31 +60,27 @@ create_dotswift
 rundir=$( echo run??? | sed -e 's/^.*run//' | awk '{ printf("run%03d\n", $1+1)}' )
 mkdir $rundir
 
-# Create sites.xml
-IFS=","
-echo "<config>" > $rundir/sites.xml
-for site in $SITES
-do
-   if [ -f "$CONFIG" ]; then
-      gensites -p $CONFIG -l $site >> $rundir/sites.xml
-   else
-      gensites -l $site >> $rundir/sites.xml
-   fi
-done
-echo "</config>" >> $rundir/sites.xml
-
-# tc.data
-if [ -f "tc.data" ]; then
-   cp tc.data $rundir
-fi
-
 # Swift script
 if [ -f "$script" ]; then 
    cp $script $rundir
 fi
 
-# Run
+# Create sites.xml
 cd $rundir
+IFS=","
+echo "<config>" > sites.xml
+for site in $SITES
+do
+   if [ -f "$CONFIG" ]; then
+      gensites -p $CONFIG $site >> sites.xml
+   else
+      gensites $site >> sites.xml
+   fi
+done
+echo "</config>" >> sites.xml
+
+
+# Run
 timestamp=$( date +%s )
 ln -s $PWD $HOME/.swift/runs/current/$rundir.$timestamp 
 time swift -sites.file sites.xml -tc.file tc.data $script $args 2>&1 | tee swift.out
