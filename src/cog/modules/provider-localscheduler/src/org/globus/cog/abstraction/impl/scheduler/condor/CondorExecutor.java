@@ -38,9 +38,10 @@ public class CondorExecutor extends AbstractExecutor {
 			wr.write(arg + String.valueOf(value) + '\n');
 		}
 	}
-
+	
 	protected void writeScript(Writer wr, String exitcodefile, String stdout, String stderr) throws IOException {
 		boolean grid = false;
+		boolean nonshared = false;
 		JobSpecification spec = getSpec();
 
 		// Handle some predefined jobTypes
@@ -60,6 +61,13 @@ public class CondorExecutor extends AbstractExecutor {
 			// which is the point of all this...
 			wr.write("stream_output = False\n");
 			wr.write("stream_error  = False\n");
+			wr.write("Transfer_Executable = false\n");
+		}
+		else if("nonshared".equals(type)) {
+			nonshared = true;
+			wr.write("universe = vanilla\n");
+			wr.write("should_transfer_files = YES\n");
+			wr.write("when_to_transfer_output = ON_EXIT_OR_EVICT\n");
 			wr.write("Transfer_Executable = false\n");
 		}
 		else {
@@ -94,14 +102,26 @@ public class CondorExecutor extends AbstractExecutor {
 		wr.write("\n");
 
 		if (spec.getDirectory() != null) {
-			if(!grid) {
-				wr.write("initialdir = " + quote(spec.getDirectory()) + "\n");
-			} else {
+			if(grid) {
 				wr.write("remote_initialdir = " + quote(spec.getDirectory()) + "\n");
 			}
+			else if(!nonshared) {
+				wr.write("initialdir = " + quote(spec.getDirectory()) + "\n");
+			}
 		}
+        
+		spec.getExecutable();
 		wr.write("executable = " + quote(spec.getExecutable()) + "\n");
 		List<String> args = spec.getArgumentsAsList();
+		String wrapper = args.get(0);
+
+		// Use a relative path to the wrapper script
+		if(nonshared && args.size() > 1) {
+			String wrapperSplit[] = args.get(0).split("/");
+			String basename = wrapperSplit[wrapperSplit.length-1];
+			args.set(0, basename);
+		}
+		
 		if (args != null && args.size() > 0) {
 			wr.write("arguments = ");
 			i = args.iterator();
@@ -112,9 +132,16 @@ public class CondorExecutor extends AbstractExecutor {
 				}
 			}
 		}
-		wr.write('\n');
+ 		wr.write('\n');
 
-		// Handle all condor attributes specified by the user
+ 		// Transfer wrapper and remove full path name from executable arguments
+ 		if(nonshared) {
+ 			if(wrapper != null) {
+ 				wr.write("transfer_input_files = " + wrapper + '\n'); 				
+ 			}
+ 		}
+
+ 		// Handle all condor attributes specified by the user
 	    for(String a : spec.getAttributeNames()) {
 	    	if(a != null && a.startsWith("condor.")) {
 	    		String attributeName[] = a.split("condor.");

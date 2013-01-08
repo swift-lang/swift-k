@@ -87,7 +87,7 @@ public class PartialArgumentsContainer extends AbstractSequentialWithArguments {
 		}
 	}
 	
-	private class PartialResume implements FutureListener {
+	public class PartialResume implements FutureListener {
 		public void futureModified(Future f, VariableStack stack) {
 			try {
 				partialArgumentsEvaluated(stack);

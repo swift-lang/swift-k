@@ -8,6 +8,7 @@ import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -19,142 +20,96 @@ public class QueuePoller extends AbstractQueuePoller {
 	public static final Logger logger = Logger.getLogger(QueuePoller.class);
 	public static final int FULL_LIST_THRESHOLD = 16;
 
-	private Set processed;
+	private Set<String> processed;
 
 	public QueuePoller(AbstractProperties properties) {
-		super("PBS provider queue poller", properties);
-		processed = new HashSet();
+		super("Slurm provider queue poller", properties);
+		processed = new HashSet<String>();
 	}
 
 	private static String[] CMDARRAY;
 
 	protected synchronized String[] getCMDArray() {
-	    if (getJobs().size() <= FULL_LIST_THRESHOLD) {
-	        String[] cmda = new String[2 + getJobs().size()];
-	        cmda[0] = getProperties().getPollCommand();
-	        cmda[1] = "-f";
-	        int i = 2;
-	        for (Job j : getJobs().values()) {
-	            cmda[i++] = j.getJobID();
-	        }
-	        return cmda;
-	    }
-	    else {
-	        if (CMDARRAY == null) {
-	            CMDARRAY = new String[] { getProperties().getPollCommand(), "-f" };
-	        }
-	    }
+		if(CMDARRAY == null) {
+			if (getJobs().size() <= FULL_LIST_THRESHOLD) {
+				CMDARRAY = new String[4];
+				CMDARRAY[0] = getProperties().getPollCommand();
+				CMDARRAY[1] = "--noheader";
+				CMDARRAY[2] = "--jobs";
+				boolean first=true;
+				for (Job j : getJobs().values()) {
+					if(first) {
+						CMDARRAY[3] = j.getJobID();
+						first=false;
+					} else { 
+						CMDARRAY[3] += "," + j.getJobID();
+					}
+				}
+			} else {
+				CMDARRAY = new String[] { getProperties().getPollCommand(), "--noheader" };
+			}			
+		}
+		
 		return CMDARRAY;
 	}
 
 	@Override
-    protected int getError(int ec, String stderr) {
-	    if (ec != 0) {
-    	    BufferedReader sr = new BufferedReader(new StringReader(stderr));
-    	    try {
-        	    String line = sr.readLine();
-        	    while (line != null) {
-        	        if (!line.contains("Unknown Job Id")) {
-        	            return ec;
-        	        }
-        	        line = sr.readLine();
-        	    }
-    	    }
-    	    catch (IOException e) {
-    	        // should not occur while reading from a string reader
-    	        e.printStackTrace();
-    	    }
-    	    return 0;
-	    }
-	    else {
-	        return ec;
-	    }
-    }
+	protected int getError(int ec, String stderr) {
+		if (ec != 0) {
+			BufferedReader sr = new BufferedReader(new StringReader(stderr));
+			try {
+				String line = sr.readLine();
+				while (line != null) {
+					if (!line.contains("Unknown Job Id")) {
+						return ec;
+					}
+					line = sr.readLine();
+				}
+			} catch (IOException e) {
+				// should not occur while reading from a string reader
+				e.printStackTrace();
+			}
+			return 0;
+		} else {
+			return ec;
+		}
+	}
 
-    protected void processStdout(InputStream is) throws IOException {
+	protected void processStdout(InputStream is) throws IOException {
+		
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
-		processed.clear();
 		String line;
-		String currentJobID = null;
-		Job currentJob = null;
+		processed.clear();
+		
 		do {
 			line = br.readLine();
-			if (line != null) {
-				try {
-					line = line.trim();
-					if (line.startsWith("Job Id: ")) {
-						currentJobID = line.substring("Job Id: ".length());
-						processed.add(currentJobID);
-						currentJob = getJob(currentJobID);
-						continue;
-					}
-					if (currentJob != null) {
-						if (line.startsWith("job_state = ")) {
-						    if (logger.isDebugEnabled()) {
-						        logger.debug("Status line: " + line);
-						    }
-							switch (line.substring("job_state = ".length())
-									.charAt(0)) {
-								case 'Q': {
-									if (logger.isDebugEnabled()) {
-										logger.debug("Status for "
-												+ currentJobID + " is Q");
-									}
-									currentJob.setState(Job.STATE_QUEUED);
-									break;
-								}
-								case 'R': {
-									if (logger.isDebugEnabled()) {
-										logger.debug("Status for "
-												+ currentJobID + " is R");
-									}
-									currentJob.setState(Job.STATE_RUNNING);
-									break;
-								}
-								case 'C': {
-									// for sites where keep_completed is there,
-									// don't wait
-									// for the job to be removed from the queue
-									if (logger.isDebugEnabled()) {
-										logger.debug("Status for "
-												+ currentJobID + " is C");
-									}
-									addDoneJob(currentJob.getJobID());
-									break;
-								}
-							}
-						}
-						else if (line.startsWith("exit_status = ")) {
-							try {
-								int ec = Integer.parseInt(line.substring(
-										"exit_status = ".length()).trim());
-								currentJob.setExitcode(ec);
-							}
-							catch (Exception e) {
-								if (logger.isDebugEnabled()) {
-									logger.debug("Could not parse exit_status",
-											e);
-								}
-							}
-						}
-					}
+			if(line != null) {
+				String words[] = line.split("\\s+");
+				String jobid = words[0].trim();
+				String state = words[4].trim();
+				if (jobid == null || jobid.equals("") || state == null || state.equals("")) {
+					throw new IOException("Failed to parse squeue line: " + line);
 				}
-				catch (Exception e) {
-					logger.warn("Exception caught while handling "
-							+ getProperties().getPollCommandName()
-							+ " output: " + line, e);
+								
+				Job job = getJob(jobid);
+				if (job == null){ continue; }
+				processed.add(jobid);
+				
+				if (state.equals("PD")) {
+					job.setState(Job.STATE_QUEUED);
+				}
+				else if(state.equals("R")) {
+					job.setState(Job.STATE_RUNNING);
 				}
 			}
 		} while (line != null);
-		Iterator i = getJobs().entrySet().iterator();
+		
+		Iterator<Entry<String, Job>> i = getJobs().entrySet().iterator();
 		while (i.hasNext()) {
-			Map.Entry e = (Map.Entry) i.next();
-			String id = (String) e.getKey();
+			Map.Entry<String, Job> e = i.next();
+			String id = e.getKey();
 			if (!processed.contains(id)) {
-				Job job = (Job) e.getValue();
-				if (logger.isDebugEnabled()) {
-					logger.debug("Status for " + id + " is Done");
-				}
+				Job job = e.getValue();
 				job.setState(Job.STATE_DONE);
 				if (job.getState() == Job.STATE_DONE) {
 					addDoneJob(id);
@@ -162,7 +117,7 @@ public class QueuePoller extends AbstractQueuePoller {
 			}
 		}
 	}
-
+	
 	protected void processStderr(InputStream is) throws IOException {
 	}
 }
