@@ -117,7 +117,7 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
             }
             else {
                 int count = Integer.parseInt(st.nextToken());
-                l.add(new StaticRefCount(name, count));
+                l.add(new StaticRefCount(name.toLowerCase(), count));
             }
             flip = !flip;
         }
