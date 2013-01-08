@@ -120,8 +120,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 
 	static protected void checkInputs(MappingParamSet params, Mapper mapper, AbstractDataNode root, 
 	        DuplicateMappingChecker dmc) {
-		String input = (String) params.get(MappingParam.SWIFT_INPUT);
-		if (input != null && Boolean.valueOf(input.trim()).booleanValue()) {
+		Boolean input = (Boolean) params.get(MappingParam.SWIFT_INPUT);
+		if (input != null && input.booleanValue()) {
 			addExisting(mapper, root);
 			checkConsistency(root, true, mapper, dmc);
 		}

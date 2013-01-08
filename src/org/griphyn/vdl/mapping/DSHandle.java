@@ -103,4 +103,8 @@ public interface DSHandle {
     public String getIdentifyingString();
 
     public boolean isRestartable();
+    
+    public void setWriteRefCount(int count);
+    
+    public int updateWriteRefCount(int delta);
 }

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -43,17 +44,17 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class ThrottledParallelFor extends AbstractParallelIterator {
-	public static final Logger logger = Logger
-			.getLogger(ThrottledParallelFor.class);
+	public static final Logger logger = Logger.getLogger(ThrottledParallelFor.class);
 	
 	public static final int DEFAULT_MAX_THREADS = 1024;
 
 	public static final Arg A_NAME = new Arg.Positional("name");
 	public static final Arg A_IN = new Arg.Positional("in");
-	public static final Arg A_SELF_CLOSE = new Arg.Optional("selfclose", Boolean.FALSE);
+	public static final Arg O_SELFCLOSE = new Arg.Optional("selfclose", Boolean.FALSE);
+	public static final Arg O_REFS = new Arg.Optional("refs", null);
 
 	static {
-		setArguments(ThrottledParallelFor.class, new Arg[] { A_NAME, A_IN, A_SELF_CLOSE });
+		setArguments(ThrottledParallelFor.class, new Arg[] { A_NAME, A_IN, O_SELFCLOSE, O_REFS });
 	}
 
 	public static final String THREAD_COUNT = "#threadcount";
@@ -61,6 +62,35 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 	private int maxThreadCount = -1;
 	private Tracer forTracer, iterationTracer;
 	private String kvar, vvar;
+	private List<StaticRefCount> srefs;
+	
+	private static class StaticRefCount {
+	    public final String name;
+        public final int count;
+        
+        public StaticRefCount(String name, int count) {
+            this.name = name;
+            this.count = count;
+        }
+	}
+	
+	private static class RefCount {
+	    public final DSHandle var;
+	    public final int count;
+	    
+	    public RefCount(DSHandle var, int count) {
+	        this.var = var;
+	        this.count = count;
+	    }
+	    
+	    public void inc() {
+	        
+	    }
+	    
+	    public void dec() {
+	        
+	    }
+	}
 	
     @Override
     protected void initializeStatic() {
@@ -69,11 +99,44 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
         iterationTracer = Tracer.getTracer(this, "ITERATION");
         kvar = (String) getProperty("_kvar");
         vvar = (String) getProperty("_vvar");
+        srefs = buildStaticRefs();
+    }
+
+    private List<StaticRefCount> buildStaticRefs() {
+        String refs = (String) O_REFS.getStatic(this);
+        if (refs == null) {
+            return null;
+        }
+        List<StaticRefCount> l = new ArrayList<StaticRefCount>();
+        String name = null;
+        boolean flip = true;
+        StringTokenizer st = new StringTokenizer(refs);
+        while (st.hasMoreTokens()) {
+            if (flip) {
+                name = st.nextToken();
+            }
+            else {
+                int count = Integer.parseInt(st.nextToken());
+                l.add(new StaticRefCount(name.toLowerCase(), count));
+            }
+            flip = !flip;
+        }
+        return l;
+    }
+
+    private List<RefCount> buildRefs(VariableStack stack) throws VariableNotFoundException {
+        if (srefs == null) {
+            return null;
+        }
+        List<RefCount> l = new ArrayList<RefCount>(srefs.size());
+        for (StaticRefCount s : srefs) {
+            l.add(new RefCount((DSHandle) stack.getVar(s.name), s.count));
+        }
+        return l;
     }
 
     protected void partialArgumentsEvaluated(VariableStack stack)
             throws ExecutionException {
-        stack.setVar("selfclose", A_SELF_CLOSE.getValue(stack));
         if (forTracer.isEnabled()) {
             forTracer.trace(ThreadingContext.get(stack).toString());
         }
@@ -89,8 +152,7 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 			stack.setVar(VAR, var);
 			setChildFailed(stack, false);
 			stack.setCaller(this);
-			initThreadCount(stack, TypeUtil.toBoolean(stack.currentFrame().getVar("selfclose")), i);
-			stack.currentFrame().deleteVar("selfclose");
+			initThreadCount(stack, TypeUtil.toBoolean(O_SELFCLOSE.getStatic(this)), i);
 			citerate(stack, var, i);
 		}
 		else {
@@ -110,34 +172,17 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 		    int j = 0;
 		    try {
     		    for (; j < available && i.hasNext(); j++) {
-    		        VariableStack copy = stack.copy();
-                    copy.enter();
-                    ThreadingContext ntc = ThreadingContext.get(copy).split(i.current());
-                    ThreadingContext.set(copy, ntc);
-                    setIndex(copy, getArgCount());
-                    setArgsDone(copy);
-                    Object value = i.next();
-                    if (iterationTracer.isEnabled()) {
-                        iterationTracer.trace(ntc.toString(), unwrap(value));
-                    }
-                    copy.setVar(var.getName(), value);
-                    startElement(getArgCount(), copy);
+    		        startIteration(tc, var, i.current(), i.next(), stack);
     		    }
 		    }
 		    finally {
 		        tc.add(j);
 		    }
 			while (i.hasNext()) {
-				Object value = tc.tryIncrement();
-				VariableStack copy = stack.copy();
-				copy.enter();
-				ThreadingContext.set(copy, ThreadingContext.get(copy).split(
-						i.current()));
-				setIndex(copy, getArgCount());
-				setArgsDone(copy);
-				copy.setVar(var.getName(), value);
-				startElement(getArgCount(), copy);
+			    startIteration(tc, var, i.current(), tc.tryIncrement(), stack);
 			}
+			
+			decRefs(tc.rc);
 			
 			int left;
 			synchronized(tc) {
@@ -157,7 +202,38 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 		}
 	}
 	
-	private Object unwrap(Object value) {
+	private void startIteration(ThreadCount tc, Identifier var, int id, Object value,
+            VariableStack stack) throws ExecutionException {
+	    incRefs(tc.rc);
+        VariableStack copy = stack.copy();
+        copy.enter();
+        ThreadingContext ntc = ThreadingContext.get(copy).split(id);
+        ThreadingContext.set(copy, ntc);
+        setIndex(copy, 2);
+        if (iterationTracer.isEnabled()) {
+            iterationTracer.trace(ntc.toString(), unwrap(value));
+        }
+        copy.setVar(var.getName(), value);
+        startElement(1, copy);
+    }
+
+    private void decRefs(List<RefCount> rcs) throws ExecutionException {
+	    if (rcs != null) {
+	        for (RefCount rc : rcs) {
+	            rc.var.updateWriteRefCount(-rc.count);
+	        }
+	    }
+	}
+	
+	private void incRefs(List<RefCount> rcs) throws ExecutionException {
+        if (rcs != null) {
+            for (RefCount rc : rcs) {
+                rc.var.updateWriteRefCount(rc.count);
+            }
+        }
+    }
+
+    private Object unwrap(Object value) {
         if (value instanceof Pair) {
             Pair p = (Pair) value;
             if (kvar != null) {
@@ -169,6 +245,28 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
         }
         else {
             return "!";
+        }
+    }
+	
+    @Override
+    public void completed(VariableStack stack) throws ExecutionException {
+        int index = preIncIndex(stack) - 1;
+        if (index == 1) {
+            // iterator
+            stack.currentFrame().deleteVar(QUOTED);
+            processArguments(stack);
+            try {
+                partialArgumentsEvaluated(stack);
+            }
+            catch (FutureFault e) {
+                e.getFuture().addModificationAction(new PartialResume(), stack);
+            }
+        }
+        else if (index == elementCount()) {
+            iterationCompleted(stack);
+        }
+        else {
+            startElement(index, stack);
         }
     }
 
@@ -191,16 +289,21 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 		synchronized(tc) {
 		    closed = tc.isClosed();
 		    running = tc.decrement();
-		    iteratorHasValues = !tc.selfClose || tc.iteratorHasValues();
+		    iteratorHasValues = tc.iteratorHasValues();
 		}
+		boolean done = false;
 		if (running == 0) {
-		    if (closed || !iteratorHasValues) {
+		    if (closed) {
+		        complete(stack);
+		    }
+		    if (tc.selfClose && !iteratorHasValues) {
+		        decRefs(tc.rc);
 		        complete(stack);
 		    }
 		}
 	}
 
-	private void initThreadCount(VariableStack stack, boolean selfClose, KarajanIterator i) {
+	private void initThreadCount(VariableStack stack, boolean selfClose, KarajanIterator i) throws VariableNotFoundException {
 		if (maxThreadCount < 0) {
 			try {
 				maxThreadCount = TypeUtil.toInt(VDL2Config.getConfig()
@@ -210,7 +313,7 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 				maxThreadCount = DEFAULT_MAX_THREADS;
 			}
 		}
-		stack.setVar(THREAD_COUNT, new ThreadCount(maxThreadCount, selfClose, i));
+		stack.setVar(THREAD_COUNT, new ThreadCount(maxThreadCount, selfClose, i, buildRefs(stack)));
 	}
 
 	private ThreadCount getThreadCount(VariableStack stack)
@@ -224,20 +327,27 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
     }
 
     private static class ThreadCount implements FutureIterator {
-		private int maxThreadCount;
+		public boolean selfClose;
+        private int maxThreadCount;
 		private int crt;
-		private boolean selfClose, closed;
+		private boolean closed;
 		private List<ListenerStackPair> listeners;
 		private KarajanIterator i;
+		private final List<RefCount> rc;
 
-		public ThreadCount(int maxThreadCount, boolean selfClose, KarajanIterator i) {
+		public ThreadCount(int maxThreadCount, boolean selfClose, KarajanIterator i, List<RefCount> rc) {
 			this.maxThreadCount = maxThreadCount;
-			this.selfClose = selfClose;
 			this.i = i;
 			crt = 0;
+			this.selfClose = selfClose;
+			this.rc = rc;
 		}
 		
-		public boolean iteratorHasValues() {
+		public boolean raiseWaiting() {
+            return false;
+        }
+
+        public boolean iteratorHasValues() {
             try {
                 return i.hasNext();
             }
@@ -245,10 +355,6 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
                 return false;
             }
         }
-
-        public boolean isSelfClose() {
-		    return selfClose;
-		}
         
         public synchronized int available() {
             return maxThreadCount - crt;

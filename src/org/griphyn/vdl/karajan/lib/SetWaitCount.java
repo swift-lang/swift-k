@@ -24,28 +24,24 @@ import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.mapping.DSHandle;
 
-public class PartialCloseDataset extends VDLFunction {
+public class SetWaitCount extends VDLFunction {
 	public static final Logger logger = Logger.getLogger(CloseDataset.class);
 
 	public static final Arg OA_COUNT = new Arg.Optional("count", 1);
 
 	static {
-		setArguments(PartialCloseDataset.class, new Arg[] { PA_VAR, OA_COUNT });
+		setArguments(SetWaitCount.class, new Arg[] { PA_VAR, OA_COUNT });
 	}
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
-		if (logger.isDebugEnabled()) {
-			logger.debug("Partially closing " + var);
-		}
 
 		if (var.isClosed()) {
-			logger.debug("variable already closed - skipping partial close processing");
-			return null;
+			throw new ExecutionException("Attempted to set a wait count for a closed variable " + var);
 		}
 		
 		int count = TypeUtil.toInt(OA_COUNT.getValue(stack));
-		var.updateWriteRefCount(-count);
+		var.setWriteRefCount(count);
 		return null;
 	}
 }

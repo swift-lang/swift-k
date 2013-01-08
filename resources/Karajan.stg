@@ -57,7 +57,7 @@ memberdefinition(type,name,sourcelocation) ::= <<
    <xs:element name="$name$" type="$type$"/>
 >>
 
-procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,config,line,cleanups) ::= <<
+procedure(name, outputs, inputs, arguments, optargs, binding, declarations, statements, config, line, initWaitCounts, cleanups, closes) ::= <<
 <element name="$name$"$if(arguments)$ arguments="$proc_args(args=arguments)$"$endif$$if(optargs)$ optargs="$proc_args(args=optargs)$"$endif$ _defline="$line$">
   $optargs:default_arg();separator="\n"$
   $inputs:vdl_log_input();separator="\n"$
@@ -65,21 +65,27 @@ procedure(name,outputs,inputs,arguments,optargs,binding,declarations,statements,
 $if(binding)$
   $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name,line=line)$
 $else$
-  $compound(outputs=outputs,inputs=inputs,declarations=declarations,statements=statements,name=name,cleanups=cleanups)$
+  $compound(outputs=outputs, inputs=inputs, declarations=declarations, statements=statements, name=name, initWaitCounts=initWaitCounts, cleanups=cleanups)$
 $endif$
 </element>
 
 >>
 
-compound(outputs,inputs,declarations,statements,config,name,cleanups) ::= <<
+compound(outputs, inputs, declarations, statements, config, name, initWaitCounts, cleanups) ::= <<
 <unitStart name="$name$" type="COMPOUND" outputs="$outputs:list();separator=","$"/>
+$if(initWaitCounts)$
+$initWaitCounts;separator="\n"$
+$endif$
 $declarations;separator="\n"$
 $if(statements)$
 $parallel(statements=statements)$
 $endif$
+
 $outputs:vdl_closedataset();separator="\n"$
+
 $cleanups:vdl_cleandataset();separator="\n"$
 <unitEnd name="$name$" type="COMPOUND"/>
+
 >>
 
 proc_args(args) ::= <<
@@ -225,26 +231,29 @@ iterate(declarations,statements,cond,var,cleanups,trace,line) ::= <<
 </vdl:infinitecountingwhile>
 >>
 
-foreach(var,in,indexVar,indexVarType,declarations,statements,line,selfClose,cleanups,trace) ::= <<
-<vdl:tparallelFor name="\$"$if(selfClose)$ selfClose="$selfClose$"$endif$ $if(trace)$ _traceline="$line$"$endif$ 
-	$if(indexVar)$_kvar="$indexVar$"$endif$ _vvar="$var$">
-  <getarrayiterator>$in$</getarrayiterator>
-  <set names="\$\$, $var$">
-    <each items="{\$}"/>
-  </set>
+foreach(var, in, indexVar, indexVarType, declarations, statements, line, refs, selfClose, cleanups, trace) ::= <<
+<vdl:tparallelFor name="\$"$if(trace)$ _traceline="$line$"$endif$$if(indexVar)$_kvar="$indexVar$"$endif$ _vvar="$var$"$if(selfClose)$ selfClose="true"$endif$$if(refs)$ refs="$refs;separator=" "$"$endif$>
+$! The iterator !$
+	<getarrayiterator>
+		$in$
+	</getarrayiterator>
+$! Body !$
+	<set names="\$\$, $var$">
+		<each items="{\$}"/>
+	</set>
 $if(indexVar)$
-    <set name="$indexVar$">
-      <vdl:new type="$indexVarType$" value="{\$\$}"/>
-    </set>
+	<set name="$indexVar$">
+		<vdl:new type="$indexVarType$" value="{\$\$}"/>
+	</set>
+	
 $endif$
-	<unitStart line="$line$" type="FOREACH_IT"/>
-
-    $declarations;separator="\n"$
-    $if(statements)$
-      $parallel(statements=statements)$
-      $cleanups:vdl_cleandataset();separator="\n"$
-    $endif$
-    <unitEnd line="$line$" type="FOREACH_IT"/>
+<unitStart line="$line$" type="FOREACH_IT"/>
+	$declarations;separator="\n"$
+$if(statements)$
+	$parallel(statements=statements)$
+	$cleanups:vdl_cleandataset();separator="\n"$
+$endif$
+	<unitEnd line="$line$" type="FOREACH_IT"/>
 </vdl:tparallelFor>
 >>
 
@@ -296,13 +305,16 @@ callInternal_log_output() ::= <<
 </sequential>
 >>
 
-callUserDefined(func, outputs, inputs, line, serialize) ::= <<
+callUserDefined(func, outputs, inputs, line, serialize, partialClose) ::= <<
 <$func$ _traceline="$line$">
   $if(!serialize)$<parallel>$endif$
     $outputs;separator="\n"$
     $inputs;separator="\n"$
   $if(!serialize)$</parallel>$endif$
 </$func$>
+$if(partialClose)$
+$partialClose$
+$endif$
 >>
 
 call_arg(bind, expr, datatype) ::= <<
@@ -321,19 +333,19 @@ globalConstant(name, expr, datatype) ::= <<
 </global>
 >>
 
-variable(name,type,expr,mapping,nil,file,waitfor,datatype,isGlobal,line) ::= <<
+variable(name, type, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line) ::= <<
 $if(isGlobal)$<global name="$name$">$else$<set name="$name$">$endif$
   $if(mapping)$
-  <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$ _defline="$line$">
-    $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
+  <vdl:new type="$type$" dbgname="$name$"$if(waitCount)$ waitCount="$waitCount$"$endif$ _defline="$line$"$if(input)$ input="true"$endif$>
+    $vdl_mapping(mapping=mapping, file=file)$
   </vdl:new>
   $else$
     $if(file)$
-      <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$ _defline="$line$">
-        $vdl_mapping(mapping=mapping,file=file,waitfor=waitfor)$
+      <vdl:new type="$type$" dbgname="$name$"$if(waitCount)$ waitCount="$waitCount$"$endif$ _defline="$line$"$if(input)$ input="true"$endif$>
+        $vdl_mapping(mapping=mapping, file=file)$
       </vdl:new>
     $else$
-      <vdl:new type="$type$" dbgname="$name$"$if(waitfor)$ waitfor="$waitfor;separator=" "$"$endif$ _defline="$line$"/>
+      <vdl:new type="$type$" dbgname="$name$"$if(waitCount)$ waitCount="$waitCount$"$endif$ _defline="$line$"$if(input)$ input="true"$endif$/>
     $endif$
   $endif$
 $if(isGlobal)$</global>$else$</set>$endif$
@@ -349,21 +361,15 @@ variable_log() ::= <<
 	</parameterlog>
 >>
 
-vdl_mapping(mapping,file,waitfor) ::= <<
+vdl_mapping(mapping, file) ::= <<
 $if(file)$
 <vdl:mapping descriptor="single_file_mapper">
   <vdl:parameter name="file" value="$file.name$"/>
   $if(file.params)$$file.params;separator="\n"$$endif$
-  $if(!waitfor)$
-  <vdl:parameter name="swift#input" value="true" />
-  $endif$
 </vdl:mapping>
 $else$
 <vdl:mapping descriptor="$mapping.descriptor$">
   $mapping.params;separator="\n"$
-  $if(!waitfor)$
-  <vdl:parameter name="swift#input" value="true" />
-  $endif$
 </vdl:mapping>
 $endif$
 >>
@@ -372,21 +378,27 @@ vdl_parameter(name,expr) ::= <<
 <vdl:parameter name="$name$">$expr$</vdl:parameter>
 >>
 
-assign(var,value,line) ::= <<
+assign(var, value, line, partialClose) ::= <<
    <vdl:setfieldvalue $if(line)$_traceline="$line$"$else$_traceline="-1"$endif$>
        $var$
        $value$
    </vdl:setfieldvalue>
+   $if(partialClose)$
+$partialClose$
+   $endif$
 >>
 
-append(array, value) ::= <<
+append(array, value, partialClose) ::= <<
 	<vdl:appendArray>
 		$array$
 		$value$
 	</vdl:appendArray>
+	$if(partialClose)$
+$partialClose$
+    $endif$
 >>
 
-callexpr(call, datatype, callID, prefix) ::= <<
+callexpr(call, datatype, prefix) ::= <<
 <sequential>
 	<set name="swift#callintermediate">
 		<vdl:new type="$datatype$" dbgname="swift#callintermediate">
@@ -408,25 +420,17 @@ array(elements, datatype) ::= <<
 </vdl:createarray>
 >>
 
-range(from,to,step,datatype) ::= <<
-<sequential>
- <set name="swift#from">$from$</set>
- <set name="swift#to">$to$</set>
- $if(step)$
- <set name="swift#step">$step$</set>
- $endif$
- <set name="swift#rangeout">
-  <vdl:range>
-    <argument name="from"><variable>swift#from</variable></argument>
-    <argument name="to"><variable>swift#to</variable></argument>
-    $if(step)$
-    <argument name="step"><variable>swift#step</variable></argument>
-    $endif$
-  </vdl:range>
- </set>
- $range_log()$
- <variable>swift#rangeout</variable>
-</sequential>
+range(from, to, step, datatype) ::= <<
+	<sequential>
+		<vdl:range>
+			<argument name="from">$from$</argument>
+			<argument name="to">$to$</argument>
+$if(step)$
+			<argument name="step">$step$</argument>
+$endif$
+		</vdl:range>
+		$range_log()$
+	</sequential> 
 >>
 
 range_log() ::= <<
@@ -452,21 +456,25 @@ range_log() ::= <<
 
 if(condition,vthen,velse,line,trace) ::= <<
 <if $if(trace)$ _traceline="$line$"$endif$>
-  <vdl:getfieldvalue>$condition$</vdl:getfieldvalue>
-  <then>
-  	<unitStart type="CONDITION_BLOCK"/>
-    $vthen$
-  </then>
-  $if(velse)$
-  <else>
-  	<unitStart type="CONDITION_BLOCK"/>
-    $velse$
-  </else>
-  $endif$
+	<vdl:getfieldvalue>$condition$</vdl:getfieldvalue>
+	<then>
+		<unitStart type="CONDITION_BLOCK"/>
+		$vthen$
+	</then>
+$if(velse)$
+	<else>
+		<unitStart type="CONDITION_BLOCK"/>
+		$velse$
+	</else>
+$endif$
+
 </if>
 >>
 
-sub_comp(declarations,statements,cleanups) ::= <<
+sub_comp(declarations, statements, cleanups, preClose) ::= <<
+$if(preClose)$
+$preClose;separator="\n"$
+$endif$
 $declarations;separator="\n"$
 $if(statements)$
 $parallel(statements=statements)$
@@ -511,8 +519,12 @@ sequential(statements) ::= <<
 >>
 
 
-partialclose(var, closeID) ::= <<
-  <partialCloseDataset var="{$var$}" closeID="$closeID$" />
+partialclose(var, count) ::= <<
+<partialCloseDataset var="{$var$}"$if(count)$ count="$count$"$endif$/>
+>>
+
+setWaitCount(name, waitCount) ::= <<
+<setWaitCount var="{$name$}"$if(waitCount)$ count="$waitCount$"$endif$/>
 >>
 
 unitStart(type, outputs) ::= <<

@@ -10,18 +10,16 @@ include::overview[]
 
 include::prereqs[]
 
-include::pads[]
+include::beagle[]
 
 include::fusion[]
 
-include::beagle[]
+include::futuregrid[]
+
+include::grid[]
 
 include::intrepid[]
 
-include::futuregrid[]
-
 include::mcs[]
-
-include::grid[]
 
 include::uc3[]

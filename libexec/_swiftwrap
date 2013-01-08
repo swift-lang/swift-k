@@ -477,7 +477,7 @@ if [ ! -x "$EXEC" ]; then
 fi
 if [ "$KICKSTART" == "" ]; then
 
-    TIMEARGS=(-o swiftapp.resources -f APP_RESOURCES=real_time:%E,real_secs:%e,kernel_secs:%S,user_secs:%U,percent_cpu:%P,max_rss:%M,avg_rss:%t,avg_tot_vm:%K,avg_priv_data:%D,avg_priv_stack:%p,avg_shared_text:%X,page_size:%Z,major_pgfaults:%F,minor_pgfaults:%R,swaps:%W,invol_context_switches:%c,vol_waits%w,fs_reads:%I,fs_writes:%O,sock_recv:%r,sock_send:%s,signals:%k,exit_status:%x,command:%C)
+    TIMEARGS=(-o swiftapp.resources -f APP_RESOURCES=real_secs:%e,kernel_secs:%S,user_secs:%U,percent_cpu:%P,max_rss:%M,avg_rss:%t,avg_tot_vm:%K,avg_priv_data:%D,avg_priv_stack:%p,avg_shared_text:%X,page_size:%Z,major_pgfaults:%F,minor_pgfaults:%R,swaps:%W,invol_context_switches:%c,vol_waits:%w,fs_reads:%I,fs_writes:%O,sock_recv:%r,sock_send:%s,signals:%k,exit_status:%x)
 
     if [ -x /usr/bin/time ]; then
         TIMECMD="/usr/bin/time"

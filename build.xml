@@ -113,9 +113,9 @@
 				<include name="worker.sh"/>
 				<include name="workers.ranger.sh"/>
                                 <include name="slurm-qsub"/>
+                                <include name="slurm-qsub-emulator"/>
   				<include name="slurm-qdel"/>
 				<include name="slurm-qstat"/>
-                                <include name="slurm-qsub-emulator"/>
 			</fileset>
 		</chmod>
 		<chmod perm="+x">

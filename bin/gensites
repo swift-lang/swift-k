@@ -10,11 +10,18 @@ crash()
 
 # get_value: Return the right hand side of an equals
 # statment in swift.properties format: #site sitename option=value
-# will return bar
 get_value()
 {
    for last; do true; done
-   eval echo $last |cut -d "=" -f2
+   eval echo $last |cut -d'=' -f2
+}
+
+# get_variable: Return the left hand side of an equals
+# statement in swift.properties format: #site sitename option=value
+get_variable()
+{
+   for last; do true; done
+   eval echo $last | cut -d'=' -f1
 }
 
 # Verify an argument is not null
@@ -156,41 +163,10 @@ if [ -f "$PROPERTIES_FILE" ]; then
    while read line
    do
       case "$line" in
-         "#site $TEMPLATE work="*|'#site work='*) 
-            WORK=`get_value $line`
-            ;;
-         "#site $TEMPLATE globus_hostname="*|'#site globus_hostname=') 
-            GLOBUS_HOSTNAME=`get_value $line`
-            ;;
-         "#site $TEMPLATE nodes="*|'#site nodes='*)
-            NODES=`get_value $line`
-            ;;
-         "#site $TEMPLATE project="*|'#site project='*)
-            PROJECT=`get_value $line`
-            ;;
-         "#site $TEMPLATE queue="*|'#site queue='*)
-            QUEUE=`get_value $line`
-            ;;
-         "#site $TEMPLATE n_gran="*|'#site n_gran='*)
-            N_GRAN=`get_value $line`
-            ;;
-         "#site $TEMPLATE n_max="*|'#site n_max='*)
-            MAXTIME=`get_value $line`
-            ;;
-         "#site $TEMPLATE slots="*|'#site slots='*)
-            SLOTS=`get_value $line`
-            ;;
-         "#site $TEMPLATE execution_url="*|'#site execution_url='*)
-            EXECUTION_URL=`get_value $line`
-           ;;
-         "#site $TEMPLATE internalhostname="*|'#site internalhostname='*)
-            INTERNALHOSTNAME=`get_value $line`
-            ;;
-         "#site $TEMPLATE jobs_per_node="*|'#site jobs_per_node='*)
-            JOBS_PER_NODE=`get_value $line`
-            ;;
-         "#site $TEMPLATE job_throttle="*|'#site job_throttle='*)
-            JOB_THROTTLE=`get_value $line`
+         "#site $TEMPLATE "*)
+            var=$( get_variable $line | tr '[a-z]' '[A-Z]' )
+            val=$( get_value $line )
+            eval $( echo $var )=$val
             ;;
          '#app'*)
             if [ `echo $line | wc -w` == 2 ]; then
@@ -226,41 +202,20 @@ if [ -f "$PROPERTIES_FILE" ]; then
    done < $PROPERTIES_FILE
 fi
 
-# Verify that the variables by the template are defined
-for TOKEN in NODES HOST WORK PROJECT QUEUE N_GRAN N_MAX SLOTS INTERNALHOSTNAME MAXTIME EXECUTION_URL JOBS_PER_NODE JOB_THROTTLE
-do
-   # Test for HOST/GLOBUS_HOSTNAME - the only values which don't match
-   if [ "$TOKEN" == "HOST" ]; then
-      if [ -z "$GLOBUS_HOSTNAME" ]; then
-         GLOBUS_HOSTNAME=$( hostname -f )
-      fi
-   elif grep _${TOKEN}_ $TEMPLATE_PATH > /dev/null; then
-      if [ -z "${!TOKEN}" ]; then
-         crash "Not specified: ${TOKEN}"
-      fi
-   fi
-done
-
 # Replace values
-SEDFILE=`mktemp tmp.XXXXXXXXXX`
-{
-  echo "s/_NODES_/${NODES}/"
-  echo "s/_HOST_/${GLOBUS_HOSTNAME}/"
-  echo "s@_WORK_@${WORK}@"
-  echo "s/_PROJECT_/${PROJECT}/"
-  echo "s/_QUEUE_/${QUEUE}/"
-  echo "s/_N_GRAN_/${N_GRAN}/"
-  echo "s/_N_MAX_/${N_MAX}/"
-  echo "s/_SLOTS_/${SLOTS}/"
-  echo "s/_INTERNALHOSTNAME_/${INTERNALHOSTNAME}/"
-  echo "s/_MAXTIME_/${MAXTIME}/"
-  echo "s@_EXECUTION_URL_@${EXECUTION_URL}@"
-  echo "s@_SERVICE_COASTERS_@${SERVICE_COASTERS:-NO_URL_GIVEN}@"
-  echo "s@_SERVICE_PORT_@${SERVICE_PORT:-NO_PORT_GIVEN}@"
-  echo "s@_JOBS_PER_NODE_@${JOBS_PER_NODE}@"
-  echo "s@_JOB_THROTTLE_@${JOB_THROTTLE}@"
-} > $SEDFILE
+VALUES_TO_REPLACE=$( sed -n 's/.*_\(.*\)_.*/\1/p' $TEMPLATE_PATH )
+SED_COMMAND="sed "
+for value in $VALUES_TO_REPLACE
+do
+   if [ -z "${!value}" ]; then
+      crash "$value not defined"
+   fi
+   SED_COMMAND+="-e s@"\_$value\_"@${!value}@g "
+done
+len=$( echo $SED_COMMAND |wc -w )
+if [ $len -gt 1 ]; then
+   $SED_COMMAND $TEMPLATE_PATH
+else
+   cat $TEMPLATE_PATH
+fi
 
-
-sed -f $SEDFILE < $TEMPLATE_PATH
-rm $SEDFILE

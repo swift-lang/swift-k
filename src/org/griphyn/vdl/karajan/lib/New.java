@@ -51,11 +51,12 @@ public class New extends VDLFunction {
 	public static final Arg OA_MAPPING = new Arg.Optional("mapping", null);
 	public static final Arg OA_VALUE = new Arg.Optional("value", null);
 	public static final Arg OA_DBGNAME = new Arg.Optional("dbgname", null);
-	public static final Arg OA_WAITFOR = new Arg.Optional("waitfor", null);
+	public static final Arg OA_WAITCOUNT = new Arg.Optional("waitcount", null);
+	public static final Arg OA_INPUT = new Arg.Optional("input", Boolean.FALSE);
 
 	static {
 		setArguments(New.class,
-				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_DBGNAME, OA_WAITFOR});
+				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_DBGNAME, OA_WAITCOUNT, OA_INPUT});
 	}
 	
 	private Tracer tracer;
@@ -73,7 +74,8 @@ public class New extends VDLFunction {
         Map<String,Object> mapping = 
 		    (Map<String,Object>) OA_MAPPING.getValue(stack);
 		String dbgname = TypeUtil.toString(OA_DBGNAME.getValue(stack));
-		String waitfor = (String) OA_WAITFOR.getValue(stack);
+		String waitCount = (String) OA_WAITCOUNT.getValue(stack);
+		boolean input = TypeUtil.toBoolean(OA_INPUT.getValue(stack));
 		String line = (String) getProperty("_defline");
 		
 		MappingParamSet mps = new MappingParamSet();
@@ -81,6 +83,10 @@ public class New extends VDLFunction {
 
 		if (dbgname != null) {
 			mps.set(MappingParam.SWIFT_DBGNAME, dbgname);
+		}
+		
+		if (input) {
+		    mps.set(MappingParam.SWIFT_INPUT, true);
 		}
 		
 		if (line != null) {
@@ -91,8 +97,14 @@ public class New extends VDLFunction {
 
 		mps.set(MappingParam.SWIFT_RESTARTID, threadPrefix + ":" + dbgname);
 
-		if (waitfor != null) {
-			mps.set(MappingParam.SWIFT_WAITFOR, waitfor);
+		// input means never written to, but read at least once
+		int initialWriteRefCount;
+		boolean noWriters = input;
+		if (waitCount != null) {
+			initialWriteRefCount = Integer.parseInt(waitCount);
+		}
+		else {
+		    initialWriteRefCount = 0;
 		}
 
 		if (typename == null && value == null) {
@@ -157,7 +169,7 @@ public class New extends VDLFunction {
 					}
 					handle.closeShallow();
 				}
-				else {
+				else {			    
 				    if (tracer.isEnabled()) {
 				        tracer.trace(threadPrefix, dbgname);
                     }
@@ -191,6 +203,7 @@ public class New extends VDLFunction {
 			if (AbstractDataNode.provenance && logger.isDebugEnabled()) {
 			    logger.debug("NEW id=" + handle.getIdentifier());
 			}
+			handle.setWriteRefCount(initialWriteRefCount);
 			return handle;
 		}
 		catch (Exception e) {
