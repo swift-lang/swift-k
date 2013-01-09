@@ -134,3 +134,137 @@ shown above.
 -----
 <profile namespace="globus" key="condor.Requirements">UidDomain == "osg-gk.mwt2.org"</profile>
 -----
+
+Installing Application Scripts on HDFS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+NOTE: This section will only work if the application you want to use is an interpreted script (bash,
+python, perl, etc). HDFS does not have the ability to give programs an execution bit and run them. If
+the application you want to run on UC3 is a compiled executable, skip this section and read ahead.
+
+Once your simple echo test is running, you'll want to start using your own applications. One way
+to go about doing this is by using the Hadoop filesystem. This filesystem is only available on
+the UC3 Seeder Cluster. In order to limit yourself to machines that can access this filesystem,
+add the following line to your sites.xml file:
+
+-----
+<profile namespace="globus" key="condor.Requirements">UidDomain == "osg-gk.mwt2.org" &amp;&amp; regexp("uc3-c*", Machine)</profile>
+-----
+
+Now you can install your script somewhere under the directory /mnt/hadoop/users/<yourusername>.
+Here is an example with putting everything together.
+
+.sites.xml
+-----
+<config>
+  <pool handle="uc3">
+    <execution provider="coaster" url="uc3-sub.uchicago.edu" jobmanager="local:condor"/>
+    <profile namespace="karajan" key="jobThrottle">999.99</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <profile namespace="globus"  key="jobsPerNode">1</profile>
+    <profile namespace="globus"  key="maxWalltime">3600</profile>
+    <profile namespace="globus"  key="nodeGranularity">1</profile>
+    <profile namespace="globus"  key="highOverAllocation">100</profile>
+    <profile namespace="globus"  key="lowOverAllocation">100</profile>
+    <profile namespace="globus"  key="slots">1000</profile>
+    <profile namespace="globus"  key="maxNodes">1</profile>
+    <profile namespace="globus"  key="condor.+AccountingGroup">"group_friends.{env.USER}"</profile>
+    <profile namespace="globus"  key="jobType">nonshared</profile>
+    <profile namespace="globus" key="condor.Requirements">UidDomain == "osg-gk.mwt2.org" &amp;&amp; regexp("uc3-c*", Machine)</profile>
+    <filesystem provider="local" url="none" />
+    <workdirectory>.</workdirectory>
+  </pool>
+</config>
+-----
+
+.tc.data
+-----
+uc3 bash /bin/bash null null null
+-----
+
+.myscript.swift
+-----
+type file;
+
+app (file o) myscript ()
+{
+   bash "/mnt/hadoop/users/<yourusername>/myscript.sh" stdout=@o;
+}
+
+file out[]<simple_mapper; location="outdir", prefix="myscript.",suffix=".out">;
+int ntasks = @toInt(@arg("n","1"));
+
+foreach n in [1:ntasks] {
+   out[n] = myscript();
+}
+-----
+
+./mnt/hadoop/users/<yourusername>/myscript.sh
+-----
+#!/bin/bash
+
+echo This is my script
+-----
+
+.cf
+-----
+wrapperlog.always.transfer=false
+sitedir.keep=true
+execution.retries=0
+lazy.errors=false
+status.mode=provider
+use.provider.staging=true
+provider.staging.pin.swiftfiles=false
+use.wrapper.staging=false
+-----
+
+.Example run
+-----
+$ swift -sites.file sites.xml -tc.file tc.data -config cf myscript.swift -n=10
+Swift trunk swift-r6146 cog-r3544
+
+RunID: 20130109-1657-tf01jpaa
+Progress:  time: Wed, 09 Jan 2013 16:58:00 -0600
+Progress:  time: Wed, 09 Jan 2013 16:58:30 -0600  Submitted:10
+Progress:  time: Wed, 09 Jan 2013 16:59:00 -0600  Submitted:10
+Progress:  time: Wed, 09 Jan 2013 16:59:12 -0600  Stage in:1  Submitted:9
+Final status: Wed, 09 Jan 2013 16:59:12 -0600  Finished successfully:10
+$ ls outdir/*
+outdir/myscript.0001.out  outdir/myscript.0003.out  outdir/myscript.0005.out  outdir/myscript.0007.out  outdir/myscript.0009.out
+outdir/myscript.0002.out  outdir/myscript.0004.out  outdir/myscript.0006.out  outdir/myscript.0008.out  outdir/myscript.0010.out
+-----
+
+Staging in Applications with Coaster Provider Staging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you want your application to be as portable as possible, you can use
+coaster provider staging to send your application(s) to a remote node.
+By removing the condor requirements in the previous section, you will
+have more cores available. Here is a simple script that stages in and
+executes a shell script.
+
+-----
+type file;
+
+app (file o) sleep (file script, int delay)
+{
+   # chmod +x script.sh ; ./script.sh delay
+   bash "-c" @strcat("chmod +x ./", @script, " ; ./", @script, " ", delay) stdout=@o;
+}
+
+file sleep_script <"sleep.sh">;
+
+foreach i in [1:5] {
+  file o <single_file_mapper; file=@strcat("output/output.", i, ".txt")>;
+  o = sleep(sleep_script, 10);
+}
+-----
+
+Mapping our script to a file and passing it as an argument to an app function
+causes the application to be staged in. The only thing we need on the worker
+node is /bin/bash.
+
+TIP: If the program you are staging in is an executable, statically compiling it
+will increase the chances of a successful run.
+
+TIP: If the application you are staging is more complex, with multiple files,
+add everything you need into just one compressed tar file, then extract on the
+worker node.
