@@ -84,9 +84,9 @@ public class QueuePoller extends AbstractQueuePoller {
 		do {
 			line = br.readLine();
 			if(line != null) {
-				String words[] = line.split("\\s+");
-				String jobid = words[0].trim();
-				String state = words[4].trim();
+				String words[] = line.trim().split("\\s+");
+				String jobid = words[0];
+				String state = words[4];
 				if (jobid == null || jobid.equals("") || state == null || state.equals("")) {
 					throw new IOException("Failed to parse squeue line: " + line);
 				}

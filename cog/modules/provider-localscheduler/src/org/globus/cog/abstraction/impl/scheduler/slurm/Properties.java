@@ -9,6 +9,7 @@ public class Properties extends AbstractProperties {
 	
 	public static final String POLL_INTERVAL = "poll.interval";
 	public static final String SBATCH = "sbatch";
+	public static final String SRUN = "srun";
 	public static final String SQUEUE = "squeue";
 	public static final String SCANCEL = "scancel";
 
@@ -27,18 +28,28 @@ public class Properties extends AbstractProperties {
 		setSubmitCommand("sbatch");
 		setPollCommand("squeue");
 		setRemoveCommand("scancel");
+		setRunCommand("srun");
 	}
 
+	public void setRunCommand(String val) {
+		setProperty(getRunCommandName(), val);
+	}
 
+	public String getRunCommandName() {
+		return SRUN;
+	}
+
+	public String getRunCommand() {
+		return getProperty(getRunCommandName());
+	}
+	
 	public String getPollCommandName() {
 		return SQUEUE;
 	}
 
-
 	public String getRemoveCommandName() {
 		return SCANCEL;
 	}
-
 
 	public String getSubmitCommandName() {
 		return SBATCH;
