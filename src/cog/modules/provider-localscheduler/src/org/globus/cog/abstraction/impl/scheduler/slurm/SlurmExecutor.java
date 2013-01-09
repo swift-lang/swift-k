@@ -9,7 +9,7 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
-import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
+import org.globus.cog.abstraction.impl.scheduler.slurm.Properties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
@@ -166,7 +166,7 @@ public class SlurmExecutor extends AbstractExecutor {
 			}
 		}
 		
-		wr.write("srun /bin/bash -c \'");
+		wr.write(getProperties().getRunCommand() + " /bin/bash -c \'");
 		if (spec.getDirectory() != null) {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
@@ -199,7 +199,7 @@ public class SlurmExecutor extends AbstractExecutor {
 	}
 
 	@Override
-	protected AbstractProperties getProperties() {
+	protected Properties getProperties() {
 		return Properties.getProperties();
 	}
 
