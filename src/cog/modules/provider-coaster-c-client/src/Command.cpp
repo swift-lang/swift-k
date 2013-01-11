@@ -24,7 +24,7 @@ void Command::send(CoasterChannel* channel, CommandCallback* pcb) {
 
 	list<Buffer*>* od = getOutData();
 
-	channel->send(tag, Buffer::wrap(name), od->empty() ? FLAG_FINAL : 0, this);
+	channel->send(tag, Buffer::wrap(name), od->empty() ? FLAG_FINAL + FLAG_INITIAL : FLAG_INITIAL, this);
 
 	while (od->size() > 0) {
 		Buffer* b = od->front();
