@@ -30,26 +30,24 @@ public class QueuePoller extends AbstractQueuePoller {
 	private static String[] CMDARRAY;
 
 	protected synchronized String[] getCMDArray() {
-		if(CMDARRAY == null) {
-			if (getJobs().size() <= FULL_LIST_THRESHOLD) {
-				CMDARRAY = new String[4];
-				CMDARRAY[0] = getProperties().getPollCommand();
-				CMDARRAY[1] = "--noheader";
-				CMDARRAY[2] = "--jobs";
-				boolean first=true;
-				for (Job j : getJobs().values()) {
-					if(first) {
-						CMDARRAY[3] = j.getJobID();
-						first=false;
-					} else { 
-						CMDARRAY[3] += "," + j.getJobID();
-					}
+		if (getJobs().size() <= FULL_LIST_THRESHOLD) {
+			CMDARRAY = new String[4];
+			CMDARRAY[0] = getProperties().getPollCommand();
+			CMDARRAY[1] = "--noheader";
+			CMDARRAY[2] = "--jobs";
+			boolean first = true;
+			for (Job j : getJobs().values()) {
+				if (first) {
+					CMDARRAY[3] = j.getJobID();
+					first = false;
+				} else {
+					CMDARRAY[3] += "," + j.getJobID();
 				}
-			} else {
-				CMDARRAY = new String[] { getProperties().getPollCommand(), "--noheader" };
-			}			
+			}
+		} else {
+			CMDARRAY = new String[] { getProperties().getPollCommand(),
+					"--noheader" };
 		}
-		
 		return CMDARRAY;
 	}
 
