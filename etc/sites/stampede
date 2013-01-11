@@ -1,0 +1,18 @@
+
+  <pool handle="stampede">
+    <execution provider="coaster" url="stampede.tacc.utexas.edu" jobmanager="ssh-cl:slurm"/>
+    <filesystem provider="local"/>
+    <profile namespace="globus"  key="jobsPerNode">16</profile>
+    <profile namespace="globus"  key="ppn">16</profile>
+    <profile namespace="globus"  key="maxTime">43200</profile>
+    <profile namespace="globus"  key="maxwalltime">00:05:00</profile>
+    <profile namespace="globus"  key="lowOverallocation">100</profile>
+    <profile namespace="globus"  key="highOverallocation">100</profile>
+    <profile namespace="globus"  key="queue">normal</profile>
+    <profile namespace="globus"  key="nodeGranularity">1</profile>
+    <profile namespace="globus"  key="project">TG-ASC090068</profile>
+    <profile namespace="karajan" key="jobThrottle">100</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>{env.SCRATCH}</workdirectory>
+  </pool>
+
