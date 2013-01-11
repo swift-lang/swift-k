@@ -107,6 +107,7 @@ use constant {
 	ERROR_FLAG => 0x00000004,
 	PROGRESSIVE_FLAG => 0x00000008,
 	SIGNAL_FLAG => 0x00000010,
+	INITIAL_FLAG => 0x00000020,
 };
 
 use constant {
@@ -588,7 +589,14 @@ sub nextArrayData {
 	if ($index > $#$data) {
 		dieNicely("Index out of bounds in nextArrayData");
 	}
-	return ($index >= $#$data ? FINAL_FLAG : 0, $$data[$index], CONTINUE);
+	my $flags = 0;
+	if ($index == 0) {
+		$flags = INITIAL_FLAG;
+	}
+	if ($index >= $#$data) {
+		$flags += FINAL_FLAG;
+	}
+	return ($flags, $$data[$index], CONTINUE);
 }
 
 sub arrayData {
@@ -610,7 +618,7 @@ sub nextFileData {
 
 	if ($s == PUT_START) {
 		$$state{"state"} = $s + 1;
-		return (0, $$state{"cmd"}, CONTINUE);
+		return (INITIAL_FLAG, $$state{"cmd"}, CONTINUE);
 	}
 	elsif ($s == PUT_CMD_SENT) {
 		$$state{"state"} = $s + 1;
