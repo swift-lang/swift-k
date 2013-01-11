@@ -110,8 +110,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 		if (channel == null) {
 			throw new ProtocolException("Unregistered command");
 		}
-		boolean fin = (outData == null) || (outData.size() == 0);
-
+		
 		if (logger.isDebugEnabled()) {
 			logger.debug(ppOutData("CMD"));
 		}
@@ -123,7 +122,16 @@ public abstract class Command extends RequestReply implements SendCallback {
 			if (id == NOID) {
 				logger.warn("Command has NOID: " + this, new Throwable());
 			}
-			channel.sendTaggedData(id, fin, getOutCmd().getBytes(), fin ? this : null);
+			int flags;
+			boolean fin = (outData == null) || (outData.size() == 0);
+			if (fin) {
+				flags = KarajanChannel.FINAL_FLAG + KarajanChannel.INITIAL_FLAG;;
+			}
+			else {
+				flags = KarajanChannel.INITIAL_FLAG;;
+			}
+
+			channel.sendTaggedData(id, flags, getOutCmd().getBytes(), fin ? this : null);
 			if (!fin) {
 				Iterator<byte[]> i = outData.iterator();
 				while (i.hasNext()) {

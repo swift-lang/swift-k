@@ -479,9 +479,16 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 					return;
 				}
 				try {
-					handler = getRequestManager().handleInitialRequest(tag, data);
-					handler.setId(tag);
-					registerHandler(handler, tag);
+					if (flagIsSet(flags, INITIAL_FLAG)) {
+						handler = getRequestManager().handleInitialRequest(tag, data);
+						handler.setId(tag);
+						registerHandler(handler, tag);
+					}
+					else {
+						if (logger.isInfoEnabled()) {
+							logger.info("Received spurious request data, tag: " + tag + ", len: " + len);
+						}
+					}
 				}
 				catch (NoSuchHandlerException e) {
 					if (!getChannelContext().isIgnoredRequest(tag)) {
