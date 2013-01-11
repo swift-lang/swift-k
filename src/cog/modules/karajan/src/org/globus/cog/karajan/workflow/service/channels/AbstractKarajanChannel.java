@@ -488,6 +488,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 						if (logger.isInfoEnabled()) {
 							logger.info("Received spurious request data, tag: " + tag + ", len: " + len);
 						}
+						return;
 					}
 				}
 				catch (NoSuchHandlerException e) {
