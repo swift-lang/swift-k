@@ -26,6 +26,7 @@ public interface KarajanChannel {
 	public static final int ERROR_FLAG = 0x00000004;
 	public static final int COMPRESSED_FLAG = 0x00000008;
 	public static final int SIGNAL_FLAG = 0x00000010;
+	public static final int INITIAL_FLAG = 0x00000020;
 
 	void sendTaggedData(int i, boolean fin, byte[] bytes);
 
