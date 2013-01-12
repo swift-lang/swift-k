@@ -72,7 +72,7 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
         if (logger.isDebugEnabled()) {
             logger.debug(this + ", src: " + src + ", dest: " + dest + ", size: " + size);
         }
-        channel.sendTaggedData(getId(), false, getOutCmd().getBytes());
+        channel.sendTaggedData(getId(), KarajanChannel.INITIAL_FLAG, getOutCmd().getBytes());
         channel.sendTaggedData(getId(), false, pack(size));
         channel.sendTaggedData(getId(), false, src.getBytes());
         channel.sendTaggedData(getId(), size == 0, dest.getBytes());
