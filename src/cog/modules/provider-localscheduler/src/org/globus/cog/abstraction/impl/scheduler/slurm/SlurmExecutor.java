@@ -165,8 +165,9 @@ public class SlurmExecutor extends AbstractExecutor {
 				logger.debug("Wrapper after variable substitution: " + wrapper);
 			}
 		}
-		
-		wr.write(getProperties().getRunCommand() + " /bin/bash -c \'");
+	        
+                wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
+		wr.write("$RUNCOMMAND /bin/bash -c \'");
 		if (spec.getDirectory() != null) {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
