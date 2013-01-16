@@ -104,16 +104,6 @@ public class GetFileCommand extends Command implements WriteBufferCallback {
         }
         this.queued = queued;
     }
-
-    @Override
-    public long getLastTime() {
-        if (queued) {
-            return Long.MAX_VALUE;
-        }
-        else {
-            return super.getLastTime();
-        }
-    }
     
     public void errorReceived(String msg, Exception t) {
     	if (logger.isInfoEnabled()) {
