@@ -182,7 +182,6 @@ public class ProxyIOProvider implements IOProvider {
 
         public void resume() {
             synchronized(this) {
-                setLastTime(System.currentTimeMillis());
                 suspended = false;
             }
             getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, PutFileHandler.CONTINUE);
@@ -191,16 +190,6 @@ public class ProxyIOProvider implements IOProvider {
         public void suspend() {
             suspended = true;
             getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, PutFileHandler.STOP);
-        }
-        
-        @Override
-        public synchronized long getLastTime() {
-            if (suspended) {
-                return Long.MAX_VALUE;
-            }
-            else {
-                return super.getLastTime();
-            }
         }
 
         protected ReadBuffer createBuffer() throws FileNotFoundException, InterruptedException {
@@ -433,18 +422,6 @@ public class ProxyIOProvider implements IOProvider {
                 getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, GetFileHandler.SUSPEND.getBytes());
             }
         }
-
-        @Override
-        public long getLastTime() {
-            if (suspended) {
-                return Long.MAX_VALUE;
-            }
-            else {
-                return super.getLastTime();
-            }
-        }
-        
-        
     }
 
     private static class CWriteBuffer extends WriteBuffer {

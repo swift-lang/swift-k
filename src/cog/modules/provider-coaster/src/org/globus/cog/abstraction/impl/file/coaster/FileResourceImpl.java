@@ -90,6 +90,9 @@ public class FileResourceImpl extends AbstractFileResource {
             catch (IOException e) {
                 throw new IrrecoverableResourceException(e);
             }
+            catch (InterruptedException e) {
+            	throw new FileResourceException(e);
+            }
         }
         catch (ChannelException e) {
             throw new IrrecoverableResourceException(e);

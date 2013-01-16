@@ -80,7 +80,6 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
         if (logger.isDebugEnabled()) {
             logger.debug(this + " data sent");
         }
-    	setLastTime(System.currentTimeMillis());
         reader.dataSent();
     }
 

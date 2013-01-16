@@ -452,7 +452,6 @@ public class ServiceManager implements StatusListener {
                             ChannelManager.getManager().reserveChannel(url, (GSSCredential) cred);
                     logger.debug("Got channel " + channel);
                     ServiceShutdownCommand ssc = new ServiceShutdownCommand();
-                    ssc.setTimeout(10000);
                     ssc.setMaxRetries(0);
                     ssc.executeAsync(channel, this);
                     ChannelManager.getManager().releaseChannel(channel);

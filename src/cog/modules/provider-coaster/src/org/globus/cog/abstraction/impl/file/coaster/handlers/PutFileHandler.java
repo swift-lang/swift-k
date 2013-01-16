@@ -125,7 +125,6 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
             if (done) {
                 return;
             }
-            setLastTime(System.currentTimeMillis());
             suspended = false;
         }
         int tag = getId();
@@ -160,7 +159,6 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
     public void error(IOHandle op, Exception e) {
         try {
         	logger.info("Failed to write file data", e);
-        	getChannel().ignoreRequest(this, 60 * 1000);
             sendError("Failed to write file data: " + e.getMessage());
         }
         catch (ProtocolException ee) {
@@ -183,7 +181,6 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
                 logger.warn("Failed to abort transfer", ee);
             }
         }
-        this.getChannel().ignoreRequest(this, 60 * 1000);
         super.sendError(error, e);
     }
 
@@ -208,22 +205,11 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
         }
         else if (Arrays.equals(data, CONTINUE)) {
         	synchronized(this) {
-        	    setLastTime(System.currentTimeMillis());
         	    suspended = false;
         	}
         }
         else {
         	logger.warn("Unhandled signal: " + String.valueOf(data));
-        }
-    }
-
-    @Override
-    public synchronized long getLastTime() {
-        if (suspended) {
-        	return Long.MAX_VALUE;
-        }
-        else {
-        	return super.getLastTime();
         }
     }
 }

@@ -65,10 +65,6 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
             throw new ProtocolException("Unregistered command");
         }
         
-        long now = System.currentTimeMillis();
-        setSendReqTime(now);
-        setLastTime(now);
-
         if (logger.isDebugEnabled()) {
             logger.debug(this + ", src: " + src + ", dest: " + dest + ", size: " + size);
         }
