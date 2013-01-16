@@ -10,7 +10,6 @@
 package org.globus.cog.karajan.workflow.service.channels;
 
 import java.io.IOException;
-import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
@@ -39,6 +38,11 @@ public class MetaChannel extends AbstractKarajanChannel {
 	public synchronized void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
 		current.sendTaggedData(tag, flags, data, cb);
 	}
+	
+	@Override
+    public void configureTimeoutChecks() {
+        // only for the actual channels
+    }
 
 	public void registerCommand(Command cmd) throws ProtocolException {
 		current.registerCommand(cmd);
@@ -112,13 +116,9 @@ public class MetaChannel extends AbstractKarajanChannel {
 				ChannelManager.getManager().unregisterChannel(MetaChannel.this);
 			}
 		};
-		getTimer().schedule(deactivator, (long) seconds * 1000);
+		Timer.schedule(deactivator, (long) seconds * 1000);
 	}
 	
-	public Timer getTimer() {
-		return getChannelContext().getTimer();
-	}
-
 	public synchronized void poll(final int seconds) {
 		if (poller != null) {
 			return;
@@ -152,7 +152,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 			}
 		};
 		long interval = (long) seconds * 1000;
-		getTimer().schedule(poller, interval, interval);
+		Timer.schedule(poller, interval, interval);
 	}
 
 	public String toString() {

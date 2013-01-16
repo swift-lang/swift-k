@@ -39,8 +39,6 @@ public abstract class Command extends RequestReply implements SendCallback {
 	private String errorMsg;
 	private Exception exception;
 	private int retries;
-	private long sendTime;
-	private long sendReqTime;
 
 	public Command() {
 		setId(NOID);
@@ -55,23 +53,10 @@ public abstract class Command extends RequestReply implements SendCallback {
 		this.cb = cb;
 	}
 
-	public void waitForReply() throws TimeoutException {
+	public void waitForReply() throws InterruptedException {
 		synchronized (this) {
-			if (!this.isInDataReceived()) {
-				long left = getTimeout();
-				while (!this.isInDataReceived()) {
-					if (left <= 0) {
-						throw new TimeoutException();
-					}
-					try {
-						wait(left);
-					}
-					catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					left = sendTime == 0 ? 1000 : getTimeout()
-							- (System.currentTimeMillis() - sendTime);
-				}
+			while (!this.isInDataReceived()) {
+				wait(0);
 			}
 		}
 	}
@@ -139,8 +124,6 @@ public abstract class Command extends RequestReply implements SendCallback {
 					channel.sendTaggedData(id, !i.hasNext(), buf, !i.hasNext() ? this : null);
 				}
 			}
-			sendReqTime = System.currentTimeMillis();
-			setLastTime(sendReqTime);
 		}
 		catch (ChannelIOException e) {
 			reexecute(e.getMessage(), e);
@@ -148,14 +131,11 @@ public abstract class Command extends RequestReply implements SendCallback {
 	}
 
 	public void dataSent() {
-		sendTime = System.currentTimeMillis();
-		//when using the piped channels the reply will arrive before this method is called
-		setLastTime(sendTime);
 	}
 	
 	private static boolean shutdownMsg;
 
-	public byte[] execute(KarajanChannel channel) throws ProtocolException, IOException {
+	public byte[] execute(KarajanChannel channel) throws ProtocolException, IOException, InterruptedException {
 		send(channel);
 		waitForReply();
 		if (errorMsg != null) {
@@ -255,28 +235,6 @@ public abstract class Command extends RequestReply implements SendCallback {
 				reexecute(e.getMessage(), ex);
 			}
 		}
-	}
-	
-	public void handleTimeout() {
-		if (isInDataReceived()) {
-			return;
-		}
-		TimeoutException t = new TimeoutException(this, "Reply timeout");
-		logger.warn(t.getMessage());
-		errorReceived(t.getMessage(), t);
-		getChannel().unregisterCommand(this);
-	}
-
-	public long getSendReqTime() {
-		return sendReqTime;
-	}
-	
-	public long getSendTime() {
-	    return sendTime;
-	}
-	
-	protected void setSendReqTime(long sendReqTime) {
-		this.sendReqTime = sendReqTime;
 	}
 
 	public String toString() {

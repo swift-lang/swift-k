@@ -46,6 +46,11 @@ public class AbstractPipedChannel extends AbstractKarajanChannel {
 		// no heart beat for these
 	}
 
+	@Override
+	public void configureTimeoutChecks() {
+		// no timeouts either
+	}
+
 	public boolean isOffline() {
 		return false;
 	}
