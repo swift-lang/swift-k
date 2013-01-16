@@ -120,7 +120,8 @@ use constant {
 
 my $TAG = int(rand(10000));
 use constant RETRIES => 3;
-use constant REPLYTIMEOUT => 180;
+use constant CHANNEL_TIMEOUT => 180;
+use constant HEARTBEAT_INTERVAL => 60;
 use constant MAXFRAGS => 16;
 # TODO: Make this configurable (#537)
 use constant MAX_RECONNECT_ATTEMPTS => 3;
@@ -135,11 +136,6 @@ my $JOB_COUNT = 0;
 use constant BUFSZ => 2048;
 use constant IOBUFSZ => 32768;
 use constant IOBLOCKSZ => 8;
-
-# 60 seconds by default. Note that since there is no configuration handshake
-# this would have to match the default interval in the service in order to avoid
-# "lost heartbeats".
-use constant HEARTBEAT_INTERVAL => 30;
 
 # If true, enable a profile result that is written to the log
 my $PROFILE = 0;
@@ -196,6 +192,8 @@ my %REPLIES  = ();
 
 my %SUSPENDED_TRANSFERS = ();
 
+my $LAST_RECEIVE_TIME = 0;
+
 # partial message being sent when
 # writing to the socket would have blocked
 my %partialSend;
@@ -244,7 +242,6 @@ my %partialSend;
 #
 #
 #
-#	time:  last communication time (used to determine timeouts)
 #
 
 my $LOG = logfilename($LOGDIR, $BLOCKID);
@@ -867,38 +864,11 @@ sub process {
 	return 1;
 }
 
-sub checkTimeouts2 {
-	my ($hash) = @_;
-
-	my $now = time();
-	my @del = ();
-
-	my $k;
-	my $v;
-
-	while (($k, $v) = each(%$hash)) {
-		if ($now - $$v[1] > REPLYTIMEOUT) {
-			push(@del, $k);
-			my $cont = $$v[0];
-			$$cont{"dataIn"}($cont, $k, 1, 0, 0, "Reply timeout");
-		}
-	}
-
-	foreach $k (@del) {
-		delete $$hash{$k};
-	}
-}
-
-my $LASTTIMEOUTCHECK = 0;
-
 sub checkTimeouts {
 	my $time = time();
-	if ($time - $LASTTIMEOUTCHECK < 1) {
-		return;
+	if ($time - $LAST_RECEIVE_TIME > CHANNEL_TIMEOUT) {
+		crash("Channel timed out. Last receive time: $LAST_RECEIVE_TIME, now: $time");
 	}
-	$LASTTIMEOUTCHECK = $time;
-	checkTimeouts2(\%REQUESTS);
-	checkTimeouts2(\%REPLIES);
 }
 
 my $DATA = "";
@@ -909,6 +879,7 @@ sub recvOne {
 	my $buf;
 	$SOCK->recv($buf, 20 - length($DATA));
 	if (length($buf) > 0) {
+		$LAST_RECEIVE_TIME = time();
 		$DATA = $DATA . $buf;
 		if (length($DATA) == 20) {
 			# wlog DEBUG, "Received " . unpackData($DATA) . "\n";
