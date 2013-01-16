@@ -15,7 +15,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
-import java.util.Collection;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
@@ -24,8 +23,8 @@ import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
 import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
 import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.RequestReply;
 import org.globus.cog.karajan.workflow.service.Service;
+import org.globus.cog.karajan.workflow.service.TimeoutException;
 import org.globus.cog.karajan.workflow.service.UserContext;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
@@ -38,7 +37,8 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	public static final int DEFAULT_HBI_SPREAD = 10;
 	
 	public static final int TIMEOUT_CHECK_INTERVAL = 1;
-
+	public static final int TIMEOUT = 120;
+	
 	private ChannelContext context;
 	private volatile int usageCount, longTermUsageCount;
 	private RequestManager requestManager;
@@ -47,6 +47,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	private String name;
 	private Service callbackService;
 	private final boolean client;
+	private long lastTime;
 
 	protected AbstractKarajanChannel(RequestManager requestManager, ChannelContext channelContext,
 			boolean client) {
@@ -58,6 +59,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		this.client = client;
 		configureHeartBeat();
 		configureTimeoutChecks();
+		updateLastTime();
 	}
 
 	protected void configureHeartBeat() {
@@ -99,47 +101,45 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	public void scheduleHeartbeats(int heartBeatInterval) {
 	    TimerTask heartBeatTask;
 	    heartBeatTask = new HeartBeatTask(this);
-	    context.getTimer().schedule(heartBeatTask, 
-        heartBeatInterval + (int) (Math.random() * DEFAULT_HBI_INITIAL_SPREAD * 1000), 
-        heartBeatInterval + (int) (Math.random() * DEFAULT_HBI_SPREAD * 1000));
+	    Timer.schedule(heartBeatTask, 
+	    		heartBeatInterval + (int) (Math.random() * DEFAULT_HBI_INITIAL_SPREAD * 1000), 
+	    		heartBeatInterval + (int) (Math.random() * DEFAULT_HBI_SPREAD * 1000));
 	}
 	
 	public void scheduleHeartbeatCheck(int heartBeatInterval) {
 	    TimerTask heartBeatTask;
 	    int mult = 2;
 	    heartBeatTask = new HeartBeatCheckTask(this, heartBeatInterval, mult);
-        context.getTimer().schedule(heartBeatTask, mult * heartBeatInterval,
-        		mult * heartBeatInterval);
+        Timer.every(mult * heartBeatInterval, heartBeatTask);
 	}
 	
 	public void configureTimeoutChecks() {
-	    context.getTimer().schedule(new TimerTask() {
+		Timer.every(TIMEOUT_CHECK_INTERVAL * 1000, new TimerTask() {
 			public void run() {
 			    checkTimeouts();
-			}},
-	        TIMEOUT_CHECK_INTERVAL * 1000, TIMEOUT_CHECK_INTERVAL * 1000);
+			}}
+		);
 	}
 	
 	protected void checkTimeouts() {
-	    checkTimeouts(context.getActiveCommands());
-	    checkTimeouts(context.getActiveHandlers());
-	    getChannelContext().removeOldIgnoredRequests();
+		long now = System.currentTimeMillis();
+		long lastTime = getLastTime();
+		if (now - lastTime > TIMEOUT * 1000) {
+		    lastTime = Long.MAX_VALUE;
+		    TimeoutException e = new TimeoutException(this, "Channel timed out", lastTime);
+			context.notifyRegisteredCommandsAndHandlers(e);
+			handleChannelException(e);
+		}
 	}
 	
-	private void checkTimeouts(Collection<? extends RequestReply> l) {
-	    long now = System.currentTimeMillis();
-	    for (RequestReply r : l) {
-	    	if (now - r.getLastTime() > r.getTimeout()) {
-	    		try {
-	    			r.handleTimeout();
-	    		}
-	    		catch (Exception e) {
-	    			logger.warn("Error handling timeout", e);
-	    		}
-	    	}
-	    }
+	protected synchronized void updateLastTime() {
+		lastTime = System.currentTimeMillis();
 	}
-
+	
+	protected synchronized long getLastTime() {
+	    return lastTime;
+	}
+	
 	protected boolean clientControlsHeartbeats() {
 	    return true;
 	}
@@ -386,6 +386,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 					flagIsSet(flags, FINAL_FLAG) + ", err = " + flagIsSet(flags, ERROR_FLAG)
 					+ ", datalen = " + len + ", data = " + ppByteBuf(data));
 		}
+		updateLastTime();
 		Command cmd = getChannelContext().getRegisteredCommand(tag);
 		if (cmd != null) {
 			try {
@@ -446,6 +447,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 					flagIsSet(flags, FINAL_FLAG) + ", err = " + flagIsSet(flags, ERROR_FLAG)
 					+ ", datalen = " + len + ", data = " + ppByteBuf(data));
 		}
+		updateLastTime();
 		RequestHandler handler = getChannelContext().getRegisteredHandler(tag);
 		boolean fin = finalFlagIsSet(flags);
 		boolean err = errorFlagIsSet(flags);
@@ -492,9 +494,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 					}
 				}
 				catch (NoSuchHandlerException e) {
-					if (!getChannelContext().isIgnoredRequest(tag)) {
-						logger.warn(getName() + "Could not handle request", e);
-					}
+					logger.warn(getName() + "Could not handle request", e);
 				}
 
 			}
@@ -545,11 +545,6 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	@Override
 	public SelectableChannel getNIOChannel() {
 		return null;
-	}
-
-	@Override
-	public void ignoreRequest(RequestHandler h, int timeout) {
-		getChannelContext().ignoreRequest(h.getId(), timeout);
 	}
 
 	public synchronized boolean handleChannelException(Exception e) {

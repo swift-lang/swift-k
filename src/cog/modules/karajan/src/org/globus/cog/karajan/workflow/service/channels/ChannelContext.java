@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.events.EventBus;
@@ -42,8 +41,6 @@ public class ChannelContext {
 	private int cmdseq;
 	private TagTable<Command> activeSenders;
 	private TagTable<RequestHandler> activeReceivers;
-	private TagTable<Long> ignoredRequests;
-	private static Timer timer;
 	private ServiceContext serviceContext;
 	private int reconnectionAttempts;
 	private long lastHeartBeat;
@@ -224,7 +221,7 @@ public class ChannelContext {
 
 	public void notifyRegisteredCommandsAndHandlers(Exception e) {
 		if (logger.isInfoEnabled()) {
-			logger.info("Notifying commands and handlers about exception");
+			logger.info("Notifying commands and handlers about exception", e);
 		}
 		notifyListeners(activeReceivers, e);
 		notifyListeners(activeSenders, e);
@@ -240,15 +237,6 @@ public class ChannelContext {
 				logger.info("=> " + r);
 			}
 			r.errorReceived(null, t);
-		}
-	}
-
-	public Timer getTimer() {
-		synchronized (ChannelContext.class) {
-			if (timer == null) {
-				timer = new Timer();
-			}
-			return timer;
 		}
 	}
 
@@ -334,37 +322,5 @@ public class ChannelContext {
 	        }
 	    }
 	}
-
-	public synchronized void ignoreRequest(int tag, int timeout) {
-		if (ignoredRequests == null) {
-			ignoredRequests = new TagTable<Long>();
-		}
-		ignoredRequests.put(tag, System.currentTimeMillis() + timeout);
-	}
-
-	public synchronized boolean isIgnoredRequest(int tag) {
-		if (ignoredRequests == null) {
-			return false;
-		}
-		else {
-			return ignoredRequests.containsKey(tag); 
-		}
-	}
-
-	public synchronized void removeOldIgnoredRequests() {
-		if (ignoredRequests == null) {
-			return;
-		}
-		long now = System.currentTimeMillis();
-		for (Integer i : ignoredRequests.keys()) {
-			if (ignoredRequests.get(i) < now) {
-				ignoredRequests.remove(i);
-			}
-		}
-		if (ignoredRequests.isEmpty()) {
-			ignoredRequests = null;
-		}
-	}
-	
 	
 }

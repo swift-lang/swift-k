@@ -128,7 +128,7 @@ public class Client {
 		}
 	}
 
-	public void execute(Command command) throws IOException, ProtocolException {
+	public void execute(Command command) throws IOException, ProtocolException, InterruptedException {
 		command.execute(channel);
 	}
 

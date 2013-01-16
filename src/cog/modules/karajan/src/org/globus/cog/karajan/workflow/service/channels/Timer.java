@@ -21,4 +21,16 @@ public class Timer {
 			}			
 		}, interval, interval);
 	}
+	
+	public static void every(final long interval, final TimerTask task) {
+		TIMER.scheduleAtFixedRate(task, interval, interval);
+	}
+
+	public static void schedule(TimerTask task, long delay, long period) {
+		TIMER.schedule(task, delay, period);
+	}
+
+	public static void schedule(TimerTask task, long delay) {
+		TIMER.schedule(task, delay);
+	}
 }

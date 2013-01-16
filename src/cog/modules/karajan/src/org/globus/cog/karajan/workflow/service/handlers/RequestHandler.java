@@ -15,7 +15,6 @@ import java.util.Iterator;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.RequestReply;
-import org.globus.cog.karajan.workflow.service.TimeoutException;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public abstract class RequestHandler extends RequestReply {
@@ -35,7 +34,6 @@ public abstract class RequestHandler extends RequestReply {
 	}
 	
 	protected void sendReply() throws ProtocolException {
-	    setLastTime(System.currentTimeMillis());
 		send();
 		replySent = true;
 	}
@@ -117,15 +115,5 @@ public abstract class RequestHandler extends RequestReply {
 
 	public String toString() {
 		return "Handler(tag: " + getId() + ", " + getInCmd() + ")";
-	}
-
-	public void handleTimeout() {
-		if (isInDataReceived()) {
-			return;
-		}
-		setLastTime(Long.MAX_VALUE);
-		TimeoutException t = new TimeoutException(this, "Timed out receiving request");
-		logger.info(t.getMessage());
-		errorReceived(t.getMessage(), t);
 	}
 }

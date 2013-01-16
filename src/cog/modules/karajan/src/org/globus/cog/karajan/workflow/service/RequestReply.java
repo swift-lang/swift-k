@@ -33,10 +33,7 @@ import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
 public abstract class RequestReply {
 	public static final Logger logger = Logger.getLogger(RequestReply.class);
-	
-	public static final int DEFAULT_TIMEOUT = 120 * 1000;
-	private int timeout = DEFAULT_TIMEOUT;
-	
+		
 	public static final int NOID = -1;
 	private int id;
 	private String outCmd;
@@ -45,10 +42,7 @@ public abstract class RequestReply {
 	private List<byte[]> inData;
 	private boolean inDataReceived;
 	private KarajanChannel channel;
-	private long lastTime = Long.MAX_VALUE;
-
-	// private static final byte[] NO_EXCEPTION = new byte[0];
-
+	
 	protected String getInCmd() {
 		return inCmd;
 	}
@@ -152,7 +146,6 @@ public abstract class RequestReply {
 	public abstract void send(boolean err) throws ProtocolException;
 	
 	protected void dataReceived(boolean fin, boolean error, byte[] data) throws ProtocolException {
-		setLastTime(System.currentTimeMillis());
 	}
 		
 	protected synchronized void addInData(boolean fin, boolean err, byte[] data) {
@@ -404,27 +397,6 @@ public abstract class RequestReply {
 
 	protected Object getInObject(int index) {
 		return deserialize(getInData(index));
-	}
-
-	public long getLastTime() {
-		return lastTime;
-	}
-
-	public void setLastTime(long lastTime) {
-		this.lastTime = lastTime;
-	}
-	
-	public int getTimeout() {
-		return timeout;
-	}
-
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
-	}
-
-	public void handleTimeout() {
-		logger.warn("Unhandled timeout", new Throwable());
-		setLastTime(Long.MAX_VALUE);
 	}
 	
 	public void handleSignal(byte[] data) {

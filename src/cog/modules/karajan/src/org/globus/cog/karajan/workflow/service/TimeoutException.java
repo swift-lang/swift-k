@@ -13,39 +13,18 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 
-public class TimeoutException extends ProtocolException {
-	private static final long serialVersionUID = -6781619140427115780L;
-
+public class TimeoutException extends Exception {
 	public static final DateFormat DF = new SimpleDateFormat("yyMMdd-HHmmss.SSS");
 	
-	public TimeoutException(Command c, String msg) {
-	    super(c + " " + msg + ". sendReqTime="
-                    + DF.format(new Date(c.getSendReqTime())) + ", lastSendTime=" + DF.format(new Date(c.getSendTime()))
-                    + ", now=" + DF.format(new Date()) + ", channel=" + c.getChannel());
+	public TimeoutException(String msg) {
+	    super(msg);
     }
 	
-	public TimeoutException(RequestHandler h, String msg) {
-        super(h + " " + msg + ". lastTime="
-                    + DF.format(new Date(h.getLastTime()))
-                    + ", now=" + DF.format(new Date()) + ", channel=" + h.getChannel());
+	public TimeoutException(KarajanChannel channel, String msg, long lastTime) {
+        super(msg + ". lastTime="
+                    + DF.format(new Date(lastTime))
+                    + ", now=" + DF.format(new Date()) + ", channel=" + channel);
     }
-	
-	public TimeoutException() {
-		super();
-	}
-	
-	public TimeoutException(String message) {
-		super(message);
-	}
-
-	public TimeoutException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	public TimeoutException(Throwable cause) {
-		super(cause);
-	}
 }
