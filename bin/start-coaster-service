@@ -13,7 +13,7 @@ start-workers-futuregrid()
 {
    # Setup environment
    PORT=$1
-   EXECUTION_URL=http://localhost:$PORT
+   EXECUTIONURL=http://localhost:$PORT
    export EC2_ACCESS_KEY=$FUTUREGRID_IAAS_ACCESS_KEY
    export EC2_SECRET_KEY=$FUTUREGRID_IAAS_SECRET_KEY
 
@@ -73,7 +73,7 @@ start-workers-futuregrid()
          echo $! >> $PID_FILE
       else
          echo "Starting worker on $MACHINE"
-         ssh $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
+         ssh $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTIONURL $MACHINE $LOG_DIR" &
          echo $! >> $PID_FILE
       fi
 
@@ -84,7 +84,7 @@ start-workers-futuregrid()
 start-workers-gp()
 {
    PORT=$1
-   EXECUTION_URL=http://localhost:$PORT
+   EXECUTIONURL=http://localhost:$PORT
 
    if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/bin/gp-instance-create" ]; then
       crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
@@ -129,7 +129,7 @@ start-workers-gp()
       # Copy and start worker script
       scp -q -o StrictHostKeyChecking=no $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
       echo "Starting worker on $MACHINE"
-      ssh -q -o StrictHostKeyChecking=no $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" &
+      ssh -q -o StrictHostKeyChecking=no $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTIONURL $MACHINE $LOG_DIR" &
       echo $! >> $PID_FILE
    done
 }
@@ -138,7 +138,7 @@ start-workers-gp()
 start-workers-ec2()
 {
    PORT=$1
-   EXECUTION_URL=http://localhost:$PORT
+   EXECUTIONURL=http://localhost:$PORT
    if [ ! -d "$SWIFTVMBOOT_DIR" ] || [ ! -x "$SWIFTVMBOOT_DIR/ec2/bin/ec2-run-instances" ]; then
       crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
    fi
@@ -193,7 +193,7 @@ start-workers-ec2()
          echo $! >> $PID_FILE
       else
          echo "Starting worker on $MACHINE"
-         ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $LOG_DIR" > /dev/null 2>&1 &
+         ssh $SSH_OPTS $WORKER_USERNAME@$MACHINE "$WORKER_LOCATION/$WORKER $EXECUTIONURL $MACHINE $LOG_DIR" > /dev/null 2>&1 &
          echo $! >> $PID_FILE
       fi
 
@@ -207,7 +207,7 @@ start-workers-ec2()
 start-workers-ssh()
 {
    PORT=$1
-   EXECUTION_URL=http://$IPADDR:$PORT
+   EXECUTIONURL=http://$IPADDR:$PORT
    if [ -z "$PORT" ]; then
       crash "start-workers-ssh: Port number not specified, giving up"
    fi
@@ -229,14 +229,14 @@ start-workers-ssh()
          ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
          ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST "scp /tmp/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION" > /dev/null 2>&1
          echo Starting worker on $MACHINE
-         ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $WORKER_LOG_DIR" &
+         ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTIONURL $MACHINE $WORKER_LOG_DIR" &
          echo $! >> $PID_FILE
       # Connect directly
       else
          ssh $WORKER_USERNAME@$MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
          scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
          echo Starting worker on $MACHINE
-         ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTION_URL $MACHINE $WORKER_LOG_DIR" &
+         ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTIONURL $MACHINE $WORKER_LOG_DIR" &
          echo $! >> $PID_FILE
       fi
    done
@@ -247,12 +247,12 @@ start-workers-ssh()
 start-workers-local()
 {
    PORT=$1
-   EXECUTION_URL=http://$IPADDR:$PORT
+   EXECUTIONURL=http://$IPADDR:$PORT
    if [ -z "$PORT" ]; then
       crash "start-workers-local: Port number not specified, giving up"
    fi
    echo Starting worker on local machine
-   $WORKER $EXECUTION_URL LOCAL $LOG_DIR &
+   $WORKER $EXECUTIONURL LOCAL $LOG_DIR &
    echo $! >> $PID_FILE
    return 0
 }
@@ -261,7 +261,7 @@ start-workers-local()
 start-workers-condor()
 {
    PORT=$1
-   EXECUTION_URL=http://$IPADDR:$PORT
+   EXECUTIONURL=http://$IPADDR:$PORT
    if [ -z "$PORT" ]; then
       crash "start-workers-local: Port number not specified, giving up"
    fi
@@ -279,7 +279,7 @@ cat <<EOF > start_workers.submit
 output = workers.stdout
 error = workers.stderr
 executable = $WORKER_LOCATION/$WORKER
-arguments = $EXECUTION_URL node .
+arguments = $EXECUTIONURL node .
 notification = Never
 leave_in_queue = FALSE
 machine_count = $CONDOR_MACHINE_COUNT
@@ -296,11 +296,51 @@ EOF
    fi
 }
 
+# Start condor workers
+start-workers-slurm()
+{
+   PORT=$1
+   EXECUTIONURL=http://$IPADDR:$PORT
+   if [ -z "$PORT" ]; then
+      crash "start-workers-local: Port number not specified, giving up"
+   fi
+   echo Starting workers
+
+   if [ -z "$MACHINE_COUNT" ]; then
+      export MACHINE_COUNT=1
+   fi
+
+cat <<EOF > start_workers.submit
+#!/bin/bash
+
+#SBATCH --output=start_workers.stdout
+#SBATCH --error=start_workers.stderr
+#SBATCH --nodes=$MACHINE_COUNT
+#SBATCH --exclusive
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=12
+#SBATCH --partition=normal
+#SBATCH --time=11:59:00
+#SBATCH -A TG-ASC090068
+export WORKER_LOGGING_LEVEL=NONE
+ibrun $WORKER_LOCATION/$WORKER $EXECUTIONURL node .
+EOF
+
+   if [ -n "$WORKER_RELAY_HOST" ]; then
+      scp start_workers.submit $WORKER_USERNAME@$WORKER_RELAY_HOST:
+      scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$WORKER_RELAY_HOST:$WORKER_LOCATION > /dev/null 2>&1
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "sbatch start_workers.submit"
+   else
+      sbatch start_workers.submit
+   fi
+}
+
+
 # Start GWMS workers
 start-workers-gwms()
 {
    PORT=$1
-   EXECUTION_URL=http://$IPADDR:$PORT
+   EXECUTIONURL=http://$IPADDR:$PORT
 
    if [ -z "$PORT" ]; then
       crash "start-workers-local: Port number not specified, giving up"
@@ -318,10 +358,10 @@ start-workers-gwms()
    if [ -n "$WORKER_RELAY_HOST" ]; then
       ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "mkdir -p condor"
       ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "grid-proxy-init"
-      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "WORKER_INIT_CMD='$WORKER_INIT_CMD' WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS" 
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "WORKER_INIT_CMD='$WORKER_INIT_CMD' WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL run-gwms-workers $EXECUTIONURL $CONDOR_WORKERS" 
    else
       mkdir -p condor
-      run-gwms-workers $EXECUTION_URL $CONDOR_WORKERS
+      run-gwms-workers $EXECUTIONURL $CONDOR_WORKERS
    fi
 }
 
@@ -332,7 +372,7 @@ start-workers-cobalt()
   if [ -z "$PORT" ]; then
       crash "start-workers-cobalt: Port number not specified, giving up"
   fi
-  EXECUTION_URL=http://$IPADDR:$PORT
+  EXECUTIONURL=http://$IPADDR:$PORT
   TIMESTAMP=$(date "+%Y.%m%d.%H%M%S")
   R=${RANDOM}
   ID="${TIMESTAMP}.${R}"
@@ -346,7 +386,7 @@ start-workers-cobalt()
         -E cobalt.${$}.stderr \
         -o cobalt.${$}.stdout \
         -e "WORKER_LOGGING_LEVEL=DEBUG:ZOID_ENABLE_NAT=true" \
-        $SWIFT_BIN/$WORKER $EXECUTION_URL $ID $PWD/$LOG_DIR
+        $SWIFT_BIN/$WORKER $EXECUTIONURL $ID $PWD/$LOG_DIR
 
   echo $! >> $PID_FILE
   return 0
@@ -477,7 +517,7 @@ echo Service port: $SERVICE_PORT
 echo Local port: $LOCAL_PORT
 
 # Generate sites.xml
-export EXECUTION_URL="http://$IPADDR:$SERVICE_PORT"
+export EXECUTIONURL="http://$IPADDR:$SERVICE_PORT"
 echo Generating sites.xml
 if [ -f "gensites.template" ]; then
    gensites `cat gensites.template` -p $CONFIG_FILE > $RUN_DIR/sites.xml
@@ -517,6 +557,9 @@ case $WORKER_MODE in
       ;;
    gwms)
       start-workers-gwms $LOCAL_PORT
+      ;;
+   slurm)
+      start-workers-slurm $LOCAL_PORT
       ;;
    *)
       crash "Unknown WORKER_MODE. Please modify coaster-service.conf"
