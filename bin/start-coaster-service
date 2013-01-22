@@ -428,8 +428,10 @@ source $CONFIG_FILE
 if [ -z "$IPADDR" ]; then
    if [ "$SSH_TUNNELING" == "yes" ]; then
       IPADDR=localhost
+   elif [ -n "$GLOBUS_HOSTNAME" ]; then
+      IPADDR=$GLOBUS_HOSTNAME
    elif [ -x "/sbin/ifconfig" ]; then
-      IPADDR=$( /sbin/ifconfig | grep 'inet addr' | grep -v 127.0.0.1 | cut -d ':' -f 2 | awk '{print $1}' |head -1)
+      IPADDR=$( /sbin/ifconfig 2>/dev/null | grep 'inet addr' | grep -v 127.0.0.1 | cut -d ':' -f 2 | awk '{print $1}' |head -1)
    else
       crash "Unable to determine IP address of system. Please add to coaster-service.conf"
    fi
