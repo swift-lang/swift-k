@@ -48,6 +48,9 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	private Service callbackService;
 	private final boolean client;
 	private long lastTime;
+	private final Object lastTimeLock = new Object();
+	
+	private TimerTask timeoutCheckTask;
 
 	protected AbstractKarajanChannel(RequestManager requestManager, ChannelContext channelContext,
 			boolean client) {
@@ -114,7 +117,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 	
 	public void configureTimeoutChecks() {
-		Timer.every(TIMEOUT_CHECK_INTERVAL * 1000, new TimerTask() {
+		Timer.every(TIMEOUT_CHECK_INTERVAL * 1000, timeoutCheckTask = new TimerTask() {
 			public void run() {
 			    checkTimeouts();
 			}}
@@ -129,15 +132,20 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		    TimeoutException e = new TimeoutException(this, "Channel timed out", lastTime);
 			context.notifyRegisteredCommandsAndHandlers(e);
 			handleChannelException(e);
+			timeoutCheckTask.cancel();
 		}
 	}
 	
-	protected synchronized void updateLastTime() {
-		lastTime = System.currentTimeMillis();
+	protected void updateLastTime() {
+		synchronized(lastTimeLock) {
+			lastTime = System.currentTimeMillis();
+		}
 	}
 	
-	protected synchronized long getLastTime() {
-	    return lastTime;
+	protected long getLastTime() {
+		synchronized(lastTimeLock) {
+			return lastTime;
+	    }
 	}
 	
 	protected boolean clientControlsHeartbeats() {
