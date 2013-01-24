@@ -46,7 +46,7 @@ import org.griphyn.vdl.util.VDL2Config;
 public class ThrottledParallelFor extends AbstractParallelIterator {
 	public static final Logger logger = Logger.getLogger(ThrottledParallelFor.class);
 	
-	public static final int DEFAULT_MAX_THREADS = 1024;
+	public static final int DEFAULT_MAX_THREADS = 10000000;
 
 	public static final Arg A_NAME = new Arg.Positional("name");
 	public static final Arg A_IN = new Arg.Positional("in");
