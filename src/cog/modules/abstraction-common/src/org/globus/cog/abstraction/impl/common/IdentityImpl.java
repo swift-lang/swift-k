@@ -23,8 +23,12 @@ public class IdentityImpl implements Identity {
     private String value;
     private static long count = System.currentTimeMillis();
     
-    protected static synchronized String nextId() {
-    	return String.valueOf(count++);
+    protected static String nextId() {
+    	long id;
+    	synchronized(IdentityImpl.class) {
+    		id = count++;
+    	}
+    	return String.valueOf(id);
     }
 
     /**
@@ -75,7 +79,16 @@ public class IdentityImpl implements Identity {
     }
 
     public boolean equals(Identity id) {
-        return this.toString().equalsIgnoreCase(id.toString());
+        return compare(value, id.getValue()) && compare(nameSpace, id.getNameSpace());
+    }
+
+    private boolean compare(String s1, String s2) {
+        if (s1 == null) {
+            return s2 == null;
+        }
+        else {
+            return s1.equals(s2);
+        }
     }
 
     public boolean equals(Object object) {

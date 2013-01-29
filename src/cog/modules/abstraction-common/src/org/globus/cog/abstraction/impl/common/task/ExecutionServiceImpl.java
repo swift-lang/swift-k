@@ -40,6 +40,6 @@ public class ExecutionServiceImpl extends ServiceImpl implements
     
     public String toString() {
         return getServiceContact().toString() + 
-               "(" + getProvider() + " " + jobManager + ")";
+               "(" + getProvider() + (jobManager == null ? "" : "/" + jobManager) + ")";
     }
 }

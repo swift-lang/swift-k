@@ -39,6 +39,9 @@ public class ServiceImpl implements Service {
             SecurityContext securityContext) {
         this();
         this.provider = provider;
+        if (serviceContact == null) {
+            throw new NullPointerException("serviceContact");
+        }
         this.serviceContact = serviceContact;
         this.securityContext = securityContext;
     }
@@ -47,6 +50,9 @@ public class ServiceImpl implements Service {
             ServiceContact serviceContact, SecurityContext securityContext) {
         this(type);
         this.provider = provider;
+        if (serviceContact == null) {
+            throw new NullPointerException("serviceContact");
+        }
         this.serviceContact = serviceContact;
         this.securityContext = securityContext;
     }
