@@ -17,8 +17,8 @@ import java.util.Iterator;
 /**
  * This is a simple/generic cache used by:
  * <ul>
- *  <li>{@link org.globus.cog.karajan.workflow.nodes.CacheNode}, which is the implementation of sys:cache</li>
- *  <li>{@link org.globus.cog.karajan.workflow.nodes.Once}</li>
+ *  <li>{@link org.globus.cog.karajan.compiled.nodes.CacheNode}, which is the implementation of sys:cache</li>
+ *  <li>{@link org.globus.cog.karajan.compiled.nodes.Once}</li>
  * </ul>
  */
 public class Cache implements Serializable {

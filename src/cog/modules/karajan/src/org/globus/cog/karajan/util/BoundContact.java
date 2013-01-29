@@ -35,7 +35,7 @@ public class BoundContact extends Contact {
 
 	private int activeTasks;
 	
-	private Map<String,Object> properties;
+	private Map<String, Object> properties;
 
 	public static final BoundContact LOCALHOST = new Localhost();
 
@@ -168,9 +168,9 @@ public class BoundContact extends Contact {
 	}
 
 	private static class TypeProviderPair {
-		public int type;
+		public final int type;
 
-		public String provider;
+		public final String provider;
 
 		public TypeProviderPair(int type, String provider) {
 			this.type = type;
@@ -235,7 +235,7 @@ public class BoundContact extends Contact {
 		}
 	}
 
-	public Map<String,Object> getProperties() {
+	public Map<String, Object> getProperties() {
 		return properties;
 	}
 
@@ -254,5 +254,12 @@ public class BoundContact extends Contact {
 		else {
 			return properties.get(name);
 		}
+	}
+	
+	public void addProperty(String name, Object value) {
+		if (properties == null) {
+			properties = new HashMap<String, Object>();
+		}
+		properties.put(name, value);
 	}
 }

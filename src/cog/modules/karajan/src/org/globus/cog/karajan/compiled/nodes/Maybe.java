@@ -7,24 +7,43 @@
 /*
  * Created on Oct 26, 2005
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
 
-public class Maybe extends SequentialChoice {
-    
-    public void completed(VariableStack stack) throws ExecutionException {
-        startNext(stack);
+
+public class Maybe extends Try {
+	
+	public void run(LWThread thr) {
+        int i = thr.checkSliceAndPopState();
+        int fc = thr.popIntState();
+        Stack stack = thr.getStack();
+        int ec = childCount();
+        try {
+        	switch (i) {
+        		case 0:
+        			fc = stack.frameCount();
+        			i++;
+        		default:
+        			addBuffers(stack);
+        			try {
+        				for (; i <= ec; i++) {
+        					runChild(i - 1, thr);
+        				}
+        				commitBuffers(stack);
+        			}
+        			catch (ExecutionException e) {
+        				stack.dropToFrame(fc);
+        			}
+        	}
+        }
+        catch (Yield y) {
+            y.getState().push(fc);
+            y.getState().push(i);
+            throw y;
+        }
     }
-    
-    
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		complete(stack);
-	}
-
-	public void post(VariableStack stack) throws ExecutionException {
-        commitBuffers(stack);
-		complete(stack);
-	}
 }

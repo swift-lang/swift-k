@@ -7,30 +7,29 @@
 /*
  * Created on Feb 22, 2005
  */
-package org.globus.cog.karajan.workflow.futures;
+package org.globus.cog.karajan.futures;
 
-public class FutureFault extends RuntimeException {
+import k.rt.ConditionalYield;
+import k.rt.FutureValue;
+
+public class FutureFault extends ConditionalYield {
 	private static final long serialVersionUID = -6674574531012966783L;
 	
-	private Future f;
+	private FutureValue fv;
 	public static long count;
 
-	public FutureFault(Future f) {
+	public FutureFault(FutureValue f) {
 		this(f, null);
 		count++;
 	}
 	
-	public FutureFault(Future f, String op) {
-		super(op);
-		this.f = f;
+	public FutureFault(FutureValue f, String op) {
+		super(f);
+		this.fv = f;
 		count++;
 	}
 	
-	public Future getFuture() {
-		return f;
-	}
-
-	public synchronized Throwable fillInStackTrace() {
-		return this;
-	}
+	public FutureValue getFutureValue() {
+		return fv;
+	}	
 }

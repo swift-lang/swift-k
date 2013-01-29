@@ -18,7 +18,7 @@ import java.util.TreeSet;
 
 import org.globus.cog.karajan.util.BoundContact;
 
-public class WeightedHostSet {
+public class WeightedHostSet implements Iterable<WeightedHost> {
 	private TreeSet<WeightedHost> scores;
 	private Map<BoundContact, WeightedHost> weightedHosts;
 	private double sum;
@@ -62,22 +62,18 @@ public class WeightedHostSet {
 		}
 	}
 	
-	public double factorScore(WeightedHost wh, double factor) {
+	public double changeScoreDelta(WeightedHost wh, double delta) {
 		synchronized (scores) {
+			double old = wh.getScore();
 			scores.remove(wh);
 			sum -= wh.getTScore();
-			double newScore = factor(wh.getScore(), factor);
-			wh.setScore(newScore);
+			wh.setScore(old + delta);
 			weightedHosts.put(wh.getHost(), wh);
 			scores.add(wh);
 			sum += wh.getTScore();
 			checkOverloaded(wh);
-			return newScore;
+			return old + delta;
 		}
-	}
-	
-	protected final double factor(double score, double factor) {
-		return score + factor;
 	}
 
 	public void changeLoad(WeightedHost wh, int dl) {

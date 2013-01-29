@@ -4,100 +4,71 @@
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import java.util.Iterator;
+import k.rt.ExecutionException;
+import k.rt.KRunnable;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.ThreadSet;
+import k.thr.Yield;
 
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ThreadingContext;
-import org.globus.cog.karajan.workflow.ExecutionException;
 
-public class Parallel extends FlowContainer {
-
-	public void pre(VariableStack stack) throws ExecutionException {
-		super.pre(stack);
-		int count = elementCount();
-		if (count == 0) {
-			complete(stack);
-			return;
-		}
-		// Avoid terminating before all elements are started
-		setRunning(stack, count + 1);
-		stack.setCaller(this);
-		setChildFailed(stack, false);
-	}
-
-	public void executeChildren(VariableStack stack) throws ExecutionException {
-		if (elementCount() == 0) {
-			return;
-		}
-		int index = 0;
-		Iterator i = elements().iterator();
-		initializeChannelBuffers(stack);
-		synchronized (this) {
-			while (i.hasNext()) {
-				FlowElement fe = (FlowElement) i.next();
-				VariableStack copy = stack.copy();
-				copy.enter();
-				ThreadingContext.set(copy, ThreadingContext.get(stack).split(index));
-				addChannelBuffers(copy);
-				startElement(fe, copy);
-				index++;
-			}
-			// Check if all children are done
-			if (preDecRunning(stack) == 0) {
-				if (!getChildFailed(stack)) {
-					post(stack);
-				}
-			}
-		}
-	}
-
-	protected void initializeChannelBuffers(VariableStack stack) throws ExecutionException {
-		ArgUtil.initializeChannelBuffers(stack);
-	}
-
-	protected void addChannelBuffers(VariableStack stack) throws ExecutionException {
-		ArgUtil.addChannelBuffers(stack);
-	}
-
-	protected void closeBuffers(VariableStack stack) throws ExecutionException {
-		ArgUtil.closeBuffers(stack);
-	}
-
-	protected final void setRunning(VariableStack stack, int running) {
-		stack.getRegs().setIB(running);
-	}
-
-	protected final int preDecRunning(VariableStack stack) {
-		return stack.getRegs().preDecIB();
-	}
-
-	protected final synchronized int preIncRunning(VariableStack stack) {
-		return stack.getRegs().preIncIB();
-	}
-
-	public void completed(VariableStack stack) throws ExecutionException {
-		synchronized(this) {
-			closeBuffers(stack);
-			stack.leave();
-			if (preDecRunning(stack) == 0) {
-				if (!getChildFailed(stack)) {
-					post(stack);
-				}
+public class Parallel extends OrderedChannelsNode {
+	
+	@Override
+	public void run(LWThread thr) {
+		int state = thr.checkSliceAndPopState();
+		Stack stack = thr.getStack();
+		ThreadSet ts = (ThreadSet) thr.popState();
+		int fc = thr.popIntState();
+		try {
+			switch (state) {
+				case 0:
+					fc = stack.frameCount();
+					state++;
+				case 1:
+					final ThreadSet tsf = new ThreadSet();
+					ts = tsf;
+					final int fcf = fc;
+					int ec = childCount();
+					for (int i = 0; i < ec; i++) {
+						final int fi = i;
+						LWThread ct = thr.fork(new KRunnable() {
+							@Override
+							public void run(LWThread thr) {
+								try {
+									runChild(fi, thr);
+									tsf.threadDone(thr, null);
+								}
+								catch (ExecutionException e) {
+									Stack stack = thr.getStack();
+									stack.dropToFrame(fcf);
+									tsf.threadDone(thr, e);
+									tsf.abortAll();
+								}
+								catch (RuntimeException e) {
+									Stack stack = thr.getStack();
+									stack.dropToFrame(fcf);
+									tsf.threadDone(thr, new ExecutionException(Parallel.this, e));
+									tsf.abortAll();
+								}
+							}
+						});
+						tsf.add(ct);
+						initializeBuffers(i, stack);
+					}
+					ts.startAll();
+					state++;
+				case 2:
+					ts.waitFor();
 			}
 		}
-	}
-
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		closeBuffers(stack);
-		stack.leave();
-		synchronized(this) {
-			if (!getChildFailed(stack)) {
-				setChildFailed(stack, true);
-				super.failed(stack, e);
-			}
+		catch (Yield y) {
+			y.getState().push(fc);
+			y.getState().push(ts);
+			y.getState().push(state);
+			throw y;
 		}
 	}
 }

@@ -7,33 +7,33 @@
 /*
  * Created on Apr 26, 2005
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
+import k.rt.Context;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.util.Cache;
-import org.globus.cog.karajan.workflow.ExecutionException;
 
 public class Once extends CacheNode {
-	public static final String CACHE = "##cache";
-
-	public static final Arg A_VALUE = new Arg.Positional("value", 0);
-
-	static {
-		setArguments(Once.class, new Arg[] { A_VALUE });
+	public static final String CACHE = "#once#cache";
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params("on", block("body")));
 	}
-
-	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		cpre(A_VALUE.getValue(stack), Boolean.FALSE, stack);
-	}
-
-	protected synchronized Cache getCache(VariableStack stack, Boolean staticdef) throws ExecutionException {
-		Cache cache = (Cache) stack.getGlobal(CACHE);
-		if (cache == null) {
-			cache = new Cache();
-			cache.setMaxCacheSize(-1);
-			stack.setGlobal(CACHE, cache);
+	
+	protected Cache getCache(Stack stack, boolean staticdef) throws ExecutionException {
+		Context ctx = this.context.getValue(stack);
+		synchronized(ctx) {
+			Cache c = (Cache) ctx.getAttribute(CACHE);
+			if (c == null) {
+				c = new Cache();
+				c.setMaxCacheSize(-1);
+				ctx.setAttribute(CACHE, c);
+			}
+			return c;
 		}
-		return cache;
 	}
 }

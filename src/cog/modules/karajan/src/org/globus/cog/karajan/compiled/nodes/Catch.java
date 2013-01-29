@@ -7,29 +7,50 @@
 /*
  * Created on Nov 8, 2005
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import java.util.LinkedList;
 
-public class Catch extends AbstractRegexpFailureHandler {
-	public static final Arg A_MATCH = new Arg.Positional("match", 0);
+import k.rt.ExecutionException;
+import k.thr.LWThread;
+
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.parser.WrapperNode;
+
+public class Catch extends InternalFunction {
+	private String name;
+	private Node body;
 	
-	static {
-		setArguments(Catch.class, new Arg[] { A_MATCH });
+	private VarRef<ExecutionException> exception;
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params(identifier("name"), block("body")));
 	}
-
-	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		ExecutionException error = (ExecutionException) stack.getVar("exception");
-		String match = TypeUtil.toString(getArgument(A_MATCH, stack));
-		if (matches(match, error)) {
-			super.partialArgumentsEvaluated(stack);
-			startRest(stack);
-		}
-		else {
-			failImmediately(stack, (ExecutionException) stack.getVar(SequentialChoice.LAST_FAILURE));
-		}
+	
+	
+	@Override
+	protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
+			Scope scope) throws CompilationException {
+		Var exv = scope.lookup(Try.EXCEPTION_VAR_NAME);
+		exception = scope.getVarRef(exv);
+		scope.addAlias(exv, name);
+		super.compileBlocks(w, sig, blocks, scope);
 	}
+	
+	@Override
+	protected void runBody(LWThread thr) {
+		if (body == null) {
+			return;
+		}
+		if (CompilerSettings.PERFORMANCE_COUNTERS) {
+			startCount++;
+		}
+		body.run(thr);
+	}	
 }

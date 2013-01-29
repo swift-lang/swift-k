@@ -7,78 +7,100 @@
 /*
  * Created on Dec 9, 2005
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.LinkedList;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.nodes.functions.VariableArgumentsOperator;
+import k.rt.ExecutionException;
+import k.rt.OutputStreamSink;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
 
-public class FileWrite extends PartialArgumentsContainer {
-	private static final String STREAM = "##stream";
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.parser.WrapperNode;
 
-	public static final Arg A_NAME = new Arg.Positional("name", 0);
-	public static final Arg A_APPEND = new Arg.Optional("append", Boolean.FALSE);
+public class FileWrite extends InternalFunction {
+	private ArgRef<String> name;
+	private ArgRef<Boolean> append;
+	private Node body;
+	private ChannelRef<Object> c_vargs;
 
-	static {
-		setArguments(FileWrite.class, new Arg[] { A_NAME, A_APPEND });
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params("name", optional("append", Boolean.FALSE), block("body")));
 	}
 
-	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		File file = TypeUtil.toFile(stack, A_NAME);
+	@Override
+	protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
+			Scope scope) throws CompilationException {
+		Var.Channel vargs = scope.addChannel("...");
+		vargs.appendDynamic();
+		c_vargs = scope.getChannelRef(vargs);
+		super.compileBlocks(w, sig, blocks, scope);
+	}
+
+	@Override
+	protected void runBody(LWThread thr) {
+		int i = thr.checkSliceAndPopState();
+		BufferedOutputStream os = (BufferedOutputStream) thr.popState();
 		try {
-			final BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file,
-					TypeUtil.toBoolean(A_APPEND.getValue(stack))));
-			stack.setVar(STREAM, os);
-			super.partialArgumentsEvaluated(stack);
-			ArgUtil.setVariableArguments(stack, new VariableArgumentsOperator() {
-				protected Object initialValue() {
-					return null;
-				}
-
-				protected Object update(Object oldvalue, Object item) {
-					if (item != null) {
-						try {
-							os.write(TypeUtil.toString(item).getBytes());
-						}
-						catch (IOException e) {
-							throw new KarajanRuntimeException(e);
-						}
+			switch (i) {
+				case 0:
+					os = openStream(thr);
+					c_vargs.set(thr.getStack(), new OutputStreamSink(os));
+					i++;
+				case 1:
+					if (CompilerSettings.PERFORMANCE_COUNTERS) {
+						startCount++;
 					}
-					return null;
-				}
+					body.run(thr);
+					closeStream(os);
+			}
+		}
+		catch (Yield y) {
+			y.getState().push(os);
+			y.getState().push(i);
+			throw y;
+		}
+		catch (RuntimeException e) {
+			closeStream(os);
+			throw e;
+		}
+	}
 
-				public boolean isCommutative() {
-					return false;
-				}
-			});
+	protected BufferedOutputStream openStream(LWThread thr) {
+		Stack stack = thr.getStack();
+		String name = this.name.getValue(stack);
+		boolean append = this.append.getValue(stack);
+		
+		try {
+			return new BufferedOutputStream(new FileOutputStream(name, append));
 		}
 		catch (FileNotFoundException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
-		startRest(stack);
 	}
+	
+	
 
-	protected void _finally(VariableStack stack) throws ExecutionException {
-		super._finally(stack);
-		OutputStream os = (OutputStream) stack.currentFrame().getVar(STREAM);
-		if (os != null) {
-			try {
-				os.close();
-			}
-			catch (IOException e) {
-				STDERR.ret(stack, this.toString() + ": Warning. Failed to close file.");
-			}
+	protected void closeStream(OutputStream os) {
+		try {
+			os.close();
+		}
+		catch (IOException e) {
+			throw new ExecutionException(this, e);
 		}
 	}
 }

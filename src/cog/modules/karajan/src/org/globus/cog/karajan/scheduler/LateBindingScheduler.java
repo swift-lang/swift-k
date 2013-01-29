@@ -61,9 +61,9 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	public static final int DEFAULT_MAX_FILE_OPERATIONS = 64;
 
 	private static final Logger logger = Logger.getLogger(LateBindingScheduler.class);
-
+	
 	private Map<Contact, BoundContact> virtualContacts;
-	private boolean done, started;
+	private boolean done, started, sleeping;
 	private int running;
 
 	protected final Map<String, TaskHandler> executionHandlers;
@@ -71,9 +71,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	private TaskHandler transferHandler;
 
 	private TaskHandler fileOperationHandler;
-
-	private final Map<Task, TaskHandler> handlers;
-	private final Map<Task, Contact[]> taskContacts;
 
 	private int jobsPerCPU, maxTransfers, currentTransfers, sshInitialRate, maxFileOperations,
 			currentFileOperations, currentJobs;
@@ -85,12 +82,10 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	public LateBindingScheduler() {
 		virtualContacts = Collections.synchronizedMap(new HashMap<Contact, BoundContact>());
 		executionHandlers = new HashMap<String, TaskHandler>();
-		taskContacts = new HashMap<Task, Contact[]>();
 		jobsPerCPU = DEFAULT_JOBS_PER_CPU;
 		maxTransfers = DEFAULT_MAX_TRANSFERS;
 		maxFileOperations = DEFAULT_MAX_FILE_OPERATIONS;
 		sshInitialRate = DEFAULT_SSH_INITIAL_RATE;
-		handlers = new HashMap<Task, TaskHandler>();
 		submitQueue = new InstanceSubmitQueue();
 		addFailureHandler(new SSHThrottlingFailureHandler());
 	}
@@ -173,12 +168,12 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	protected abstract BoundContact getNextContact(TaskConstraints constraints)
 			throws NoFreeResourceException;
 
-	protected BoundContact getNextContact(Task t) throws NoFreeResourceException {
-		return getNextContact(getTaskConstraints(t));
+	protected BoundContact getNextContact(Entry e) throws NoFreeResourceException {
+		return getNextContact(getTaskConstraints(e));
 	}
 
-	protected TaskConstraints getTaskConstraints(Task t) {
-		Object constraints = super.getConstraints(t);
+	protected TaskConstraints getTaskConstraints(Entry e) {
+		Object constraints = e.constraints;
 		if (constraints instanceof Contact[]) {
 			Contact[] c = (Contact[]) constraints;
 			if (c.length > 0 && c[0] != null) {
@@ -188,18 +183,21 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		return null;
 	}
 
-	public void enqueue(Task task, Object constraints) {
-		if (constraints != null) {
-			setConstraints(task, constraints);
-		}
+	public void enqueue(Task task, Object constraints, StatusListener l) {
 		synchronized (this) {
-			if (!started) {
-				start();
-				started = true;
+			Entry e = new Entry(task, constraints, l);
+			setEntry(task, e);
+			getJobQueue().enqueue(e);
+			if (sleeping) {
+				notify();
 			}
-			getJobQueue().enqueue(task);
-			notify();
 		}
+	}
+	
+	@Override
+	public synchronized void start() {
+		super.start();
+		started = true;
 	}
 
 	public boolean isDone() {
@@ -249,8 +247,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	@Override
 	public void run() {
-		Queue queue = getJobQueue();
-		Queue.Cursor c = queue.cursor();
+		Queue<Entry> queue = getJobQueue();
+		Queue.Cursor<Entry> c = queue.cursor();
 		while (!isDone()) {
 			while (queue.isEmpty()) {
 				synchronized (this) {
@@ -264,19 +262,20 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				c.reset();
 			}
 			while (c.hasNext()) {
-				Task t = (Task) c.next();
+				Entry e = c.next();
 				boolean remove = true;
 				try {
-					submitUnbound(t);
+					submitUnbound(e);
 				}
-				catch (NoSuchResourceException e) {
-				   failTask(t, "No suitable site found for task", e);
+				catch (NoSuchResourceException ex) {
+				    failTask(e, "The application \"" + getTaskConstraints(e).getConstraint("tr")
+							+ "\" is not available in the given site/pool in your tc.data catalog ", ex);
 				}
-				catch (NoFreeResourceException e) {
+				catch (NoFreeResourceException ex) {
 					remove = false;
 				}
-				catch (Exception e) {
-					failTask(t, "The scheduler could not execute the task", e);
+				catch (Exception ex) {
+					failTask(e, "The scheduler could not execute the task", ex);
 				}
 				if (remove) {
 					c.remove();
@@ -300,7 +299,9 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	private boolean sleep() {
 		try {
-			wait(500);
+			sleeping = true;
+			wait(100);
+			sleeping = false;
 			return true;
 		}
 		catch (InterruptedException e) {
@@ -313,31 +314,32 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		done = true;
 	}
 
-	protected void failTask(Task t, String message, Exception e) {
+	protected void failTask(Entry e, String message, Exception ex) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("Failing task " + t + " because of " + message, e);
+			logger.debug("Failing task " + e.task + " because of " + message, ex);
 		}
 		Status s = new StatusImpl();
-		s.setPrevStatusCode(t.getStatus().getStatusCode());
+		s.setPrevStatusCode(e.task.getStatus().getStatusCode());
 		s.setStatusCode(Status.FAILED);
 		s.setMessage(message);
-		s.setException(e);
-		t.setStatus(s);
-		fireJobStatusChangeEvent(t, s);
+		s.setException(ex);
+		e.task.setStatus(s);
+		fireJobStatusChangeEvent(e, s);
 	}
 
 	private List<Contact> contactTran = new ArrayList<Contact>();
 
-	void submitUnbound(Task t) throws NoFreeResourceException {
+	void submitUnbound(Entry e) throws NoFreeResourceException {
 		try {
-			if (t == null) {
+			if (e == null) {
 				return;
 			}
+			Task t = e.task;
 			checkTaskLoadConditions(t);
 			contactTran.clear();
 			Service[] services = new Service[t.getRequiredServices()];
 			Contact[] contacts;
-			Object constraints = getConstraints(t);
+			Object constraints = e.constraints;
 			if (constraints != null) {
 				contacts = (Contact[]) constraints;
 			}
@@ -345,7 +347,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				contacts = new Contact[t.getRequiredServices()];
 				for (int i = 0; i < t.getRequiredServices(); i++) {
 					if (t.getService(i) == null) {
-						contacts[i] = this.getNextContact(t);
+						contacts[i] = this.getNextContact(e);
 						contactTran.add(contacts[i]);
 					}
 				}
@@ -353,13 +355,13 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 			for (int i = 0; i < services.length; i++) {
 				if (contacts[i] != null && contacts[i].isVirtual()) {
-					contacts[i] = resolveContact(t, contacts[i]);
+					contacts[i] = resolveContact(e, contacts[i]);
 					contactTran.add(contacts[i]);
 				}
 				try {
 					services[i] = t.getService(i);
 				}
-				catch (IndexOutOfBoundsException e) {
+				catch (IndexOutOfBoundsException ex) {
 					// Means there's no such service.
 					// TODO An alternative way should be provided by core
 				}
@@ -380,30 +382,30 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				}
 			}
 
-			submitBoundToServices(t, contacts, services);
+			submitBoundToServices(e, contacts, services);
 			logger.debug("No host specified");
 		}
-		catch (NoFreeResourceException e) {
+		catch (NoFreeResourceException ex) {
 			for (Contact c : contactTran) {
 				releaseContact(c);
 			}
-			throw e;
+			throw ex;
 		}
-		catch (Exception e) {
-			e.printStackTrace();
+		catch (Exception ex) {
+			ex.printStackTrace();
 			if (logger.isDebugEnabled()) {
-				logger.debug("Scheduler exception: job =" + t.getIdentity().getValue()
-						+ ", status = " + t.getStatus(), e);
+				logger.debug("Scheduler exception: job =" + e.task.getIdentity().getValue()
+						+ ", status = " + e.task.getStatus(), ex);
 			}
-			failTask(t, e.toString(), e);
+			failTask(e, ex.toString(), ex);
 			return;
 		}
 	}
 
-	public BoundContact resolveContact(Task t, Contact contact) throws NoFreeResourceException {
+	public BoundContact resolveContact(Entry e, Contact contact) throws NoFreeResourceException {
 		BoundContact boundContact;
 		if (contact == null) {
-			boundContact = getNextContact(t);
+			boundContact = getNextContact(e);
 		}
 		else {
 			if (contact.isVirtual()) {
@@ -470,16 +472,16 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		}
 	}
 
-	public void submitBoundToServices(Task t, Contact[] contacts, Service[] services)
+	public void submitBoundToServices(Entry e, Contact[] contacts, Service[] services)
 			throws TaskSubmissionException {
+		Task t = e.task;
 		if (t instanceof ContactAllocationTask) {
 			((ContactAllocationTask) t).setContact((BoundContact) contacts[0]);
-			removeConstraints(t);
 			Status status = t.getStatus();
 			status.setPrevStatusCode(status.getStatusCode());
 			status.setStatusCode(Status.COMPLETED);
 			StatusEvent se = new StatusEvent(t, status);
-			fireJobStatusChangeEvent(se);
+			fireJobStatusChangeEvent(se, e);
 			return;
 		}
 		for (int i = 0; i < contacts.length; i++) {
@@ -496,8 +498,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		try {
 			handler = findTaskHandler(t, services);
 		}
-		catch (Exception e) {
-			throw new TaskSubmissionException("Cannot submit task", e);
+		catch (Exception ex) {
+			throw new TaskSubmissionException("Cannot submit task", ex);
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("Submitting task " + t);
@@ -509,10 +511,9 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		queues[2] = shq;
 		queues[3] = shq.getProviderQueue(t.getService(0).getProvider(), sshInitialRate, 2,
 				".*throttled.*");
-		synchronized (this) {
-			taskContacts.put(t, contacts);
-		    handlers.put(t, handler);
-		}
+		e.contacts = contacts;
+		e.handler = handler;
+		
 		NonBlockingSubmit nbs = new NonBlockingSubmit(handler, t, queues);
 		nbs.go();
 		synchronized(this) {
@@ -535,24 +536,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	protected int getJobsPerCPU() {
 		return jobsPerCPU;
-	}
-
-	protected TaskHandler getHandler(Task t) {
-		synchronized(handlers) {
-			return handlers.get(t);
-		}
-	}
-
-	protected void setHandler(Task t, TaskHandler th) {
-		synchronized(handlers) {
-			handlers.put(t, th);
-		}
-	}
-
-	protected void removeHandler(Task t) {
-		synchronized(handlers) {
-			handlers.remove(t);
-		}
 	}
 
 	@Override
@@ -581,20 +564,65 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		}
 	}
 
-	public void statusChanged(StatusEvent e) {
+	public void statusChanged(StatusEvent se, Entry e) {
 		try {
-			Task task = (Task) e.getSource();
-			Status status = e.getStatus();
+			Task task = e.task;
+			Status status = se.getStatus();
 			int code = status.getStatusCode();
 			if (code == Status.COMPLETED) {
 				logComplete(task);
 			}
 			if (status.isTerminal()) {
-				synchronized (this) {
-					Contact[] contacts = taskContacts.remove(task);
-					if (contacts == null) {
-						logger.warn("Task had no contacts " + task);
+				Contact[] contacts = e.contacts;
+				if (contacts == null) {
+					logger.warn("Task had no contacts " + task);
+				}
+				
+				if (contacts != null) {
+					for (int i = 0; i < contacts.length; i++) {
+						BoundContact c = (BoundContact) contacts[i];
+						c.setActiveTasks(c.getActiveTasks() - 1);
 					}
+				}
+				
+				
+				if (e.handler == null) {
+				    logger.warn("No handler found for task " + task);
+				}
+				else {
+					try {
+						e.handler.remove(task);
+					}
+					catch (ActiveTaskException e1) {
+						/*
+						 * I think this is the out of order status events
+						 * phenomenon, where a task gets in an ACTIVE state
+						 * after being COMPLETED. The good news is that it
+						 * should only once get into the state of ACTIVE
+						 */
+						task.getStatus().setStatusCode(code);
+						try {
+							e.handler.remove(task);
+						}
+						catch (ActiveTaskException e2) {
+							// now it's really weird
+							e1.printStackTrace();
+							Throwable t = new RuntimeException("Something is wrong here", e1);
+							t.printStackTrace();
+						}
+					}
+				}
+			
+				if (code == Status.FAILED) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("(" + task.getIdentity().getValue() + ") Failed: ",
+								se.getStatus().getException());
+					}
+					if (runFailureHandlers(e)) {
+						return;
+					}
+				}
+				synchronized (this) {	
 					tasksFinished = true;
 					decRunning();
 					task.removeStatusListener(this);
@@ -607,62 +635,16 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					if (task.getType() == Task.JOB_SUBMISSION) {
 						currentJobs--;
 					}
-
-					if (contacts != null) {
-						for (int i = 0; i < contacts.length; i++) {
-							BoundContact c = (BoundContact) contacts[i];
-							c.setActiveTasks(c.getActiveTasks() - 1);
-						}
-					}
-
-					TaskHandler handler = getHandler(task);
-					if (handler == null) {
-					    logger.warn("No handler found for task " + task);
-					}
-					else {
-    					try {
-    						handler.remove(task);
-    					}
-    					catch (ActiveTaskException e1) {
-    						/*
-    						 * I think this is the out of order status events
-    						 * phenomenon, where a task gets in an ACTIVE state
-    						 * after being COMPLETED. The good news is that it
-    						 * should only once get into the state of ACTIVE
-    						 */
-    						task.getStatus().setStatusCode(code);
-    						try {
-    							handler.remove(task);
-    						}
-    						catch (ActiveTaskException e2) {
-    							// now it's really weird
-    							e1.printStackTrace();
-    							Throwable t = new RuntimeException("Something is wrong here", e1);
-    							t.printStackTrace();
-    						}
-    					}
+					if (sleeping) {
+						notify();
 					}
 				}
-				if (code == Status.FAILED) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("(" + task.getIdentity().getValue() + ") Failed: ",
-								e.getStatus().getException());
-					}
-					if (runFailureHandlers(task)) {
-						return;
-					}
-				}
-				synchronized(this) {
-					removeHandler(task);
-					removeConstraints(task);
-					notify();
-                }
 			}
 		}
 		catch (Exception ee) {
 			logger.warn("Exception caught while processing event", ee);
 		}
-		fireJobStatusChangeEvent(e);
+		fireJobStatusChangeEvent(se, e);
 	}
 
 	void logComplete(Task task) {
@@ -684,9 +666,9 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	public void cancelTask(Task task, String message) {
-		TaskHandler handler = getHandler(task);
-		if (handler != null) {
-			new NonBlockingCancel(handler, task, message).go();
+		Entry e = getEntry(task);
+		if (e.handler != null) {
+			new NonBlockingCancel(e.handler, task, message).go();
 		}
 	}
 
@@ -709,12 +691,10 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		return propertyNames;
 	}
 
-	protected synchronized Contact[] getContacts(Task t) {
-		return taskContacts.get(t);
-	}
-
 	protected synchronized void raiseTasksFinished() {
 		this.tasksFinished = true;
-		notify();
+		if (sleeping) {
+			notify();
+		}
 	}
 }

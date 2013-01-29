@@ -8,45 +8,76 @@
  * Created on Jun 6, 2003
  *  
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.ForwardArgumentFuture;
-import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
-import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
+import k.rt.ExecutionException;
+import k.rt.FutureObject;
+import k.rt.KRunnable;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
 
-public class FutureNode extends SequentialWithArguments {
-	private String name, channel;
-	private Object value;
-	private String[] names;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Param;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.futures.FutureEvaluationException;
+import org.globus.cog.karajan.parser.WrapperNode;
 
-	static {
-		setArguments(FutureNode.class, new Arg[] { Arg.VARGS });
-	}
-
-	public void executeChildren(VariableStack stack) throws ExecutionException {
-		VariableStack copy = stack.copy();
-		FutureVariableArguments vargs = (FutureVariableArguments) ArgUtil.getVariableArguments(stack);
-		ret(stack, new ForwardArgumentFuture(vargs, 0));
-		super.executeChildren(copy);
-		complete(stack);
-	}
+public class FutureNode extends FramedInternalFunction {
+	private ArgRef<Object> value;
+	private ChannelRef<Object> cr_vargs;
 	
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		FutureVariableArguments fva = (FutureVariableArguments) ArgUtil.getVariableArguments(e.getStack());
-        fva.fail(new FutureEvaluationException(e));
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params("value"), returns(channel("...", 1)));
+	}
+		
+	@Override
+	public void runBody(LWThread thr) {
+		int ec = childCount();
+        int i = thr.checkSliceAndPopState();
+        Stack stack = thr.getStack();
+        try {
+	        switch (i) {
+	        	case 0:
+	        		initializeArgs(stack);
+	        		i++;
+	        	default:
+			            for (; i <= ec; i++) {
+			            	runChild(i - 1, thr);
+			            }
+		    }
+        }
+        catch (Yield y) {
+            y.getState().push(i);
+            throw y;
+        }
 	}
 
-	public void post(VariableStack stack) throws ExecutionException {
-		FutureVariableArguments fva = (FutureVariableArguments) ArgUtil.getVariableArguments(stack);
-		fva.close();
-	}
-
-	protected VariableArguments newVariableArguments() {
-		return new FutureVariableArguments();
+	@Override
+	public void run(LWThread thr) {
+		final FutureObject fo = new FutureObject();
+		LWThread nt = thr.fork(new KRunnable() {
+			@Override
+			public void run(LWThread thr) {
+				Stack stack = thr.getStack();
+				try {
+	    			runBody(thr);
+	    			fo.setValue(value.getValue(stack));
+	    		}
+	    		catch (Exception e) {
+	    			fo.fail(new FutureEvaluationException(e));
+	    		}
+			}
+		});
+		Stack ns = thr.getStack().copy();
+		enter(ns);
+		cr_vargs.append(ns, fo);
+		nt.setStack(ns);
+		nt.start();
 	}
 }

@@ -15,16 +15,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.parser.ParseTree;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.KarajanRuntimeException;
+import k.rt.Channel;
+import k.rt.ExecutionException;
 
 /**
  * A set of type conversion classes used by the implicit
@@ -46,11 +43,11 @@ public class TypeUtil {
 				return ((Number) obj).doubleValue();
 			}
 			else {
-				throw new KarajanRuntimeException("Could not convert value to number: " + obj);
+				throw new IllegalArgumentException("Could not convert value to number: " + obj);
 			}
 		}
 		catch (Exception e) {
-			throw new KarajanRuntimeException("Could not convert value to number: " + obj, e);
+			throw new IllegalArgumentException("Could not convert value to number: " + obj, e);
 		}
 	}
 
@@ -63,11 +60,11 @@ public class TypeUtil {
 				return (Number) obj;
 			}
 			else {
-				throw new KarajanRuntimeException("Could not convert value to number: " + obj);
+				throw new IllegalArgumentException("Could not convert value to number: " + obj);
 			}
 		}
 		catch (Exception e) {
-			throw new KarajanRuntimeException("Could not convert value to number: " + obj, e);
+			throw new IllegalArgumentException("Could not convert value to number: " + obj, e);
 		}
 	}
 
@@ -80,11 +77,11 @@ public class TypeUtil {
 				return ((Number) obj).intValue();
 			}
 			else {
-				throw new KarajanRuntimeException("Could not convert value to integer: " + obj);
+				throw new IllegalArgumentException("Could not convert value to integer: " + obj);
 			}
 		}
 		catch (Exception e) {
-			throw new KarajanRuntimeException("Could not convert value to number: " + obj, e);
+			throw new IllegalArgumentException("Could not convert value to number: " + obj, e);
 		}
 	}
 	
@@ -97,20 +94,17 @@ public class TypeUtil {
 				return ((Number) obj).longValue();
 			}
 			else {
-				throw new KarajanRuntimeException("Could not convert value to integer: " + obj);
+				throw new IllegalArgumentException("Could not convert value to integer: " + obj);
 			}
 		}
 		catch (Exception e) {
-			throw new KarajanRuntimeException("Could not convert value to number: " + obj, e);
+			throw new IllegalArgumentException("Could not convert value to number: " + obj, e);
 		}
 	}
 
 
 	public static boolean toBoolean(Object obj) {
 		try {
-			if (obj instanceof ParseTree) {
-				obj = ((ParseTree) obj).execute(null);
-			}
 			if (obj instanceof String) {
 				if (obj.equals("true") || obj.equals("yes")) {
 					return true;
@@ -124,23 +118,24 @@ public class TypeUtil {
 				return ((Boolean) obj).booleanValue();
 			}
 			else {
-				throw new KarajanRuntimeException("Could not convert value to boolean: " + obj);
+				throw new IllegalArgumentException("Could not convert value to boolean: " + obj);
 			}
 		}
 		catch (Exception e) {
-			throw new KarajanRuntimeException("Could not convert value to boolean: " + obj, e);
+			throw new IllegalArgumentException("Could not convert value to boolean: " + obj, e);
 		}
 	}
 
-	public static List toList(final Object obj) {
+	@SuppressWarnings("unchecked")
+	public static List<?> toList(final Object obj) {
 		try {
 			if (obj instanceof List) {
-				return (List) obj;
+				return (List<?>) obj;
 			}
-			if (obj instanceof VariableArguments) {
-				return ((VariableArguments) obj).getAll();
+			if (obj instanceof Channel) {
+				return ((Channel<Object>) obj).getAll();
 			}
-			ArrayList l = new ArrayList();
+			ArrayList<Object> l = new ArrayList<Object>();
 			if (obj instanceof String) {
 				StringTokenizer st = new StringTokenizer((String) obj, ",");
 				while (st.hasMoreTokens()) {
@@ -149,37 +144,35 @@ public class TypeUtil {
 				return l;
 			}
 			if (obj == null) {
-				throw new KarajanRuntimeException("Expected list but got " + null);
+				throw new IllegalArgumentException("Expected list but got " + null);
 			}
-			throw new KarajanRuntimeException("Expected list but got " + obj.getClass() + ": "
+			throw new IllegalArgumentException("Expected list but got " + obj.getClass() + ": "
 					+ obj);
 		}
 		catch (Exception e) {
-			throw new KarajanRuntimeException("Could not convert value to list: " + obj, e);
+			throw new IllegalArgumentException("Could not convert value to list: " + obj, e);
 		}
 	}
 
-	public static KarajanIterator toIterator(final Object obj) throws ExecutionException {
+	@SuppressWarnings("unchecked")
+	public static Iterator<Object> toIterator(final Object obj) {
 		try {
-			if (obj instanceof KarajanIterator) {
-				return (KarajanIterator) obj;
+			if (obj instanceof Iterator) {
+				return (Iterator<Object>) obj;
 			}
-			if (obj instanceof List) {
-				return new ListKarajanIterator((List) obj);
+			if (obj instanceof Iterable) {
+				return ((Iterable<Object>) obj).iterator();
 			}
-			if (obj instanceof VariableArguments) {
-				return (KarajanIterator) ((VariableArguments) obj).iterator();
-			}
-			List l = new ArrayList();
+			List<Object> l = new ArrayList<Object>();
 			if (obj instanceof String) {
 				StringTokenizer st = new StringTokenizer((String) obj, ",");
 				while (st.hasMoreTokens()) {
 					l.add(st.nextToken().trim());
 				}
-				return new ListKarajanIterator(l);
+				return l.iterator();
 			}
 			if (obj instanceof Map) {
-				return new MapKeyKarajanIterator((Map) obj);
+				return ((Map<Object, Object>) obj).keySet().iterator();
 			}
 			if (obj == null) {
 				throw new ExecutionException("Expected iterator but got null");
@@ -187,16 +180,44 @@ public class TypeUtil {
 			throw new ExecutionException("Expected iterator but got " + obj.getClass() + ": " + obj);
 		}
 		catch (Exception e) {
-			throw new ExecutionException("Could not convert value to iterator: " + obj, e);
+			throw new IllegalArgumentException("Could not convert value to iterator: " + obj, e);
 		}
 	}
+	
+	@SuppressWarnings("unchecked")
+    public static <T> KarajanIterator<T> toKarajanIterator(final Object obj) {
+        try {
+            if (obj instanceof KarajanIterator) {
+                return (KarajanIterator<T>) obj;
+            }
+            if (obj instanceof List) {
+                return new ListKarajanIterator((List<Object>) obj);
+            }
+            List<Object> l = new ArrayList<Object>();
+            if (obj instanceof String) {
+                StringTokenizer st = new StringTokenizer((String) obj, ",");
+                while (st.hasMoreTokens()) {
+                    l.add(st.nextToken().trim());
+                }
+                return new ListKarajanIterator(l);
+            }
+            if (obj instanceof Map) {
+                return new MapKeyKarajanIterator((Map<Object, Object>) obj);
+            }
+            if (obj == null) {
+                throw new ExecutionException("Expected iterator but got null");
+            }
+            throw new ExecutionException("Expected iterator but got " + obj.getClass() + ": " + obj);
+        }
+        catch (Exception e) {
+            throw new IllegalArgumentException("Could not convert value to iterator: " + obj, e);
+        }
+    }
+
 
 	public static String toString(final Object obj) {
 		if (obj instanceof String) {
 			return (String) obj;
-		}
-		if (obj instanceof ParseTree) {
-			return ((ParseTree) obj).getUnparsed();
 		}
 		if (obj instanceof Number) {
 			final Number d = (Number) obj;
@@ -206,9 +227,6 @@ public class TypeUtil {
 			else {
 				return d.toString();
 			}
-		}
-		if (obj instanceof Identifier) {
-			return ((Identifier) obj).getName();
 		}
 		if (obj instanceof Throwable) {
 			if (obj instanceof ExecutionException) {
@@ -262,37 +280,7 @@ public class TypeUtil {
 			}
 			return array;
 		}
-		throw new KarajanRuntimeException("Could not convert value to string array: " + obj);
-	}
-
-	public static final Identifier[] EMPTY_IDENTIFIER_ARRAY = new Identifier[0];
-
-	public static Identifier[] toIdentifierArray(final Object obj) {
-		if (obj == null) {
-			return EMPTY_IDENTIFIER_ARRAY;
-		}
-		if (obj instanceof Identifier[]) {
-			return (Identifier[]) obj;
-		}
-		if (obj instanceof String) {
-			final StringTokenizer st = new StringTokenizer((String) obj, " ,;");
-			final Identifier[] array = new Identifier[st.countTokens()];
-			for (int i = 0; st.hasMoreTokens(); i++) {
-				array[i] = new Identifier(st.nextToken());
-			}
-			return array;
-		}
-		throw new KarajanRuntimeException("Could not convert value to identifier array: " + obj);
-	}
-
-	public static Identifier toIdentifier(final Object obj) {
-		if (obj instanceof Identifier) {
-			return (Identifier) obj;
-		}
-		if (obj instanceof String) {
-			return new Identifier((String) obj);
-		}
-		throw new KarajanRuntimeException("Invalid identifier: " + obj);
+		throw new IllegalArgumentException("Could not convert value to string array: " + obj);
 	}
 
 	public static String[] toLowerStringArray(final String arg) {
@@ -303,7 +291,7 @@ public class TypeUtil {
 		return sa;
 	}
 
-	public static String listToString(final List l) {
+	public static String listToString(final List<?> l) {
 		if (l == null) {
 			return "null";
 		}
@@ -327,11 +315,10 @@ public class TypeUtil {
 		return buf.toString();
 	}
 	
-	public static File toFile(VariableStack stack, Arg arg) throws ExecutionException {
-		String fileName = TypeUtil.toString(arg.getValue(stack));
+	public static File toFile(String fileName, String cwd) {
         File file = new File(fileName);
         if (!file.isAbsolute()) {
-            file = new File(stack.getExecutionContext().getCwd() + File.separator + fileName); 
+            file = new File(cwd + File.separator + fileName); 
         }
         return file;
 	}

@@ -11,10 +11,10 @@ package org.globus.cog.karajan.util;
 
 import java.util.Iterator;
 
-public interface KarajanIterator extends Iterator {
+public interface KarajanIterator<T> extends Iterator<T> {
 	int current();
 	
 	int count();
 	
-	Object peek();
+	T peek();
 }

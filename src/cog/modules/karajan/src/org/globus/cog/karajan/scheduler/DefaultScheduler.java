@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Service;
-import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.ContactSet;
@@ -112,17 +111,21 @@ public class DefaultScheduler extends LateBindingScheduler implements Scheduler,
 	public String[] getPropertyNames() {
 		return propertyNames;
 	}
+	
+	
 
-	public void submitBoundToServices(Task t, Contact[] contacts, Service[] services)
+	@Override
+	public void submitBoundToServices(Entry e, Contact[] contacts, Service[] services)
 			throws TaskSubmissionException {
-		super.submitBoundToServices(t, contacts, services);
+		super.submitBoundToServices(e, contacts, services);
 		if (showTaskList) {
 			tl.update(getJobQueue().size(), getRunning());
 		}
 	}
 
-	public void statusChanged(StatusEvent e) {
-		super.statusChanged(e);
+	@Override
+	public void statusChanged(StatusEvent se, Entry e) {
+		super.statusChanged(se, e);
 		if (showTaskList) {
 			tl.update(getJobQueue().size(), getRunning());
 		}

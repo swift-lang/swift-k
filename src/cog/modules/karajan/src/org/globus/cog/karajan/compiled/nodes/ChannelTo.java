@@ -7,39 +7,72 @@
 /*
  * Created on Feb 8, 2005
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.Identifier;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import java.util.LinkedList;
 
-public class ChannelTo extends PartialArgumentsContainer {
-	public static final Arg A_NAME = new Arg.Positional("name", 0);
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
 
-	static {
-		setArguments(ChannelTo.class, new Arg[] { A_NAME, Arg.VARGS });
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.parser.WrapperNode;
+
+public class ChannelTo extends InternalFunction {
+	private ChannelRef<Object> dst;
+	private ChannelRef<Object> c_vargs;
+	private String name;
+	private Node body;
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params(identifier("name"), block("body")));
 	}
 	
-	public ChannelTo() {
-		setQuotedArgs(true);
+	@Override
+	protected void runBody(LWThread thr) {
+		if (body != null) {
+			if (CompilerSettings.PERFORMANCE_COUNTERS) {
+				startCount++;
+			}
+			body.run(thr);
+		}
 	}
 
-	public void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		Identifier to = TypeUtil.toIdentifier(A_NAME.getValue(stack));
-		Arg.Channel cto = new Arg.Channel(to.getName());
-		VariableArguments args;
-		if (ArgUtil.isReceiverPresent(stack, cto)) {
-			args = ArgUtil.getChannelReturn(stack, cto);
+	@Override
+	public Node compile(WrapperNode w, Scope scope) throws CompilationException {
+		return super.compile(w, scope);
+	}
+	
+	
+
+	@Override
+	public void run(LWThread thr) {
+		super.run(thr);
+	}
+
+	@Override
+	protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
+			Scope scope) throws CompilationException {
+		Var.Channel cdst = scope.parent.lookupChannel(name, this);
+		Var.Channel csrc = scope.addChannel("...");
+		c_vargs = new ChannelRef.Redirect<Object>("...", csrc.getIndex(), cdst.getIndex());
+		csrc.setValue(cdst.getValue());
+		super.compileBlocks(w, sig, blocks, scope);
+	}
+
+	@Override
+	protected void initializeArgs(Stack stack) {
+		try {
+			c_vargs.create(stack);
 		}
-		else {
-			throw new ExecutionException("No such channel: " + to);
+		catch (RuntimeException e) {
+			throw new ExecutionException(this, e);
 		}
-		super.partialArgumentsEvaluated(stack);
-		ArgUtil.setVariableArguments(stack, args);
-		startRest(stack);
 	}
 }

@@ -8,7 +8,7 @@
 /*
  * Created on May 7, 2004
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 
 public class JavaMethodInvocationArgument {

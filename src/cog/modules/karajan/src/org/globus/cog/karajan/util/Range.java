@@ -11,62 +11,76 @@ package org.globus.cog.karajan.util;
 
 import java.util.NoSuchElementException;
 
-public class RangeIterator implements KarajanIterator {
-	private final int start, end, step;
-	private int crt;
+public class Range implements Iterable<Number> {
 
-	public RangeIterator(int start, int end, int step) {
+	private final int start, end, step;
+	
+	public Range(int start, int end, int step) {
 		if (step == 0) {
 			throw new IllegalArgumentException("Step must be greater than 0");
 		}
 		this.start = start;
 		this.end = end;
-		this.crt = start;
 		this.step = step;
 	}
-
-	public RangeIterator(int start, int end) {
+	
+	public Range(int start, int end) {
 		this(start, end, 1);
 	}
-
-	public int count() {
-		return (end - start) / step + 1;
+	
+	@Override
+	public java.util.Iterator<Number> iterator() {
+		return new Iterator();
 	}
 
-	public int remaining() {
-		return (end - crt) / step + 1;
-	}
 
-	public int current() {
-		return crt;
-	}
 
-	public void remove() {
-		throw new RuntimeException("Unsupported operation");
-	}
-
-	public boolean hasNext() {
-		return crt <= end;
-	}
-
-	public Object next() {
-		if (crt > end) {
-			throw new NoSuchElementException();
+	private class Iterator implements KarajanIterator<Number> {
+		private int crt;
+		
+		protected Iterator() {
+			this.crt = start;
 		}
-		try {
+
+		public int count() {
+			return (end - start) / step + 1;
+		}
+
+		public int remaining() {
+			return (end - crt) / step + 1;
+		}
+
+		public int current() {
+			return crt;
+		}
+
+		public void remove() {
+			throw new RuntimeException("Unsupported operation");
+		}
+
+		public boolean hasNext() {
+			return crt <= end;
+		}
+
+		public Number next() {
+			if (crt > end) {
+				throw new NoSuchElementException();
+			}
+			try {
+				return new Double(crt);
+			}
+			finally {
+				crt += step;
+			}
+		}
+
+		public Number peek() {
 			return new Double(crt);
 		}
-		finally {
-			crt += step;
+
+		public boolean isClosed() {
+			return false;
 		}
-	}
-
-	public Object peek() {
-		return new Double(crt);
-	}
-
-	public boolean isClosed() {
-		return false;
 	}
 
 	public String toString() {

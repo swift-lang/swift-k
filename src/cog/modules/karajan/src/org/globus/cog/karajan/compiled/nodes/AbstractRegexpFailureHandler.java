@@ -7,14 +7,15 @@
 /*
  * Created on Nov 24, 2006
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
 
-public abstract class AbstractRegexpFailureHandler extends PartialArgumentsContainer {
+import org.apache.log4j.Logger;
+
+public abstract class AbstractRegexpFailureHandler extends InternalFunction {
 	public static final Logger logger = Logger.getLogger(AbstractRegexpFailureHandler.class);
 	
 	protected static boolean matches(String str, String msg) {

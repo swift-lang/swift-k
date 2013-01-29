@@ -7,9 +7,11 @@
 /*
  * Created on Feb 6, 2006
  */
-package org.globus.cog.karajan.workflow.futures;
+package org.globus.cog.karajan.futures;
 
-import org.globus.cog.karajan.stack.VariableStack;
+import k.rt.Future;
+import k.rt.FutureListener;
+import k.rt.FutureMemoryChannel;
 
 /**
  * This class allows splitting of a channel into multiple copies.
@@ -19,34 +21,32 @@ import org.globus.cog.karajan.stack.VariableStack;
  * @author Mihael Hategan
  *
  */
-public class ChannelSplitter implements FutureListener {
-	private final FutureVariableArguments vargs;
-	private final FutureVariableArguments[] out;
+public class ChannelSplitter<T> implements FutureListener {
+	private final FutureMemoryChannel<T> c;
+	private final FutureMemoryChannel<T>[] out;
 	
-	public ChannelSplitter(FutureVariableArguments vargs, int count) {
-		this.vargs = vargs;
-		vargs.addModificationAction(this, null);
-		out = new FutureVariableArguments[count];
+	@SuppressWarnings("unchecked")
+	public ChannelSplitter(FutureMemoryChannel<T> c, int count) {
+		this.c = c;
+		out = new FutureMemoryChannel[count];
 		for (int i = 0; i < count; i++) {
-			out[i] = new FutureVariableArguments();
+			out[i] = new FutureMemoryChannel<T>();
 		}
+		c.addListener(this);
 	}
 	
-	public FutureVariableArguments[] getOuts() {
+	public FutureMemoryChannel<T>[] getOuts() {
 		return out;
 	}
-	
-	
 
-	public void futureModified(Future f, VariableStack stack) {
-		FutureVariableArguments in = (FutureVariableArguments) f;
-		while(in.available() > 0) {
-			Object o = in.removeFirst();
+	public void futureUpdated(Future f) {
+		while(c.available() > 0) {
+			T o = c.removeFirst();
 			for (int i = 0; i < out.length; i++) {
-				out[i].append(o);
+				out[i].add(o);
 			}
 		}
-		if (in.isClosed()) {
+		if (c.isClosed()) {
 			for (int i = 0; i < out.length; i++) {
 				out[i].close();
 			}

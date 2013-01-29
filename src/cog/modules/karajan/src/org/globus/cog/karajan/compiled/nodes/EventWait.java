@@ -7,7 +7,7 @@
 /*
  * Created on Oct 14, 2004
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,42 +15,57 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ConditionalYield;
+import k.rt.ExecutionException;
+import k.rt.FutureCounter;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
 
-public class EventWait extends SequentialWithArguments implements ActionListener, WindowListener {
-	private static final Logger logger = Logger.getLogger(EventWait.class);
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
 
-	private final Map groups, stacks, rstacks;
+public class EventWait extends InternalFunction {
+	private ChannelRef<Object> c_vargs;
 
-	public EventWait() {
-		groups = new HashMap();
-		stacks = new HashMap();
-		rstacks = new HashMap();
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params("..."));
 	}
 
-	static {
-		setArguments(EventWait.class, new Arg[] { Arg.VARGS });
+	@Override
+	public synchronized void runBody(LWThread thr) {
+		int i = thr.checkSliceAndPopState();
+		Stack stack = thr.getStack();
+		try {
+			switch (i) {
+				case 0:
+					super.runBody(thr);
+					i++;
+				case 1:
+					waitForEvent(thr, stack);
+					break;
+				case 2:
+			}
+		}
+		catch (Yield y) {
+			y.getState().push(i);
+			throw y;
+		}
 	}
-
-	public synchronized void post(VariableStack stack) throws ExecutionException {
-		Object[] vargs = Arg.VARGS.asArray(stack);
-		Map group = new HashMap();
-		for (int i = 0; i < vargs.length; i++) {
-			Object arg = vargs[i];
+		
+		
+	private void waitForEvent(LWThread thr, Stack stack) {
+		k.rt.Channel<Object> vargs = c_vargs.get(stack);
+		
+		FutureCounter counter = new FutureCounter(vargs.size()); 
+		for (Object arg : vargs) {
 			if (!(arg instanceof List)) {
 				throw new ExecutionException("Each argument must be a list");
 			}
-			List list = (List) arg;
+			List<?> list = (List<?>) arg;
 			if (list.size() != 3) {
 				throw new ExecutionException("Each argument must be a list containing 3 items");
 			}
@@ -58,40 +73,24 @@ public class EventWait extends SequentialWithArguments implements ActionListener
 				String ret = (String) list.get(0);
 				String type = (String) list.get(1);
 				Object source = list.get(2);
-				group.put(source, ret);
-				List grlist;
-				if (groups.containsKey(source)) {
-					grlist = (List) groups.get(source);
-				}
-				else {
-					grlist = new LinkedList();
-				}
-				grlist.add(group);
-				groups.put(source, grlist);
 				if ("java.awt.events.ActionEvent".equals(type)) {
-					addListener(source, "addActionListener", ActionListener.class);
+					addListener(source, "addActionListener", ActionListener.class, counter);
 				}
 				else if ("java.awt.events.WindowEvent".equals(type)) {
-					addListener(source, "addWindowListener", WindowListener.class);
+					addListener(source, "addWindowListener", WindowListener.class, counter);
 				}
 				else {
 					throw new ExecutionException("Unknown event type: " + type);
 				}
 			}
-			catch (ExecutionException e) {
-				throw e;
-			}
 			catch (Exception e) {
 				throw new ExecutionException("Exception caught while adding listener", e);
 			}
 		}
-		stacks.put(group, stack);
-		rstacks.put(stack, group);
-		stack.getExecutionContext().getStateManager().registerElement(this, stack);
+		throw new ConditionalYield(2, counter);
 	}
 
-	protected void addListener(Object source, String methodName, Class argType)
-			throws ExecutionException {
+	protected void addListener(Object source, String methodName, Class<?> argType, FutureCounter counter) {
 		try {
 			Method method = source.getClass().getMethod(methodName, new Class[] { argType });
 			method.invoke(source, new Object[] { this });
@@ -103,7 +102,7 @@ public class EventWait extends SequentialWithArguments implements ActionListener
 			throw new ExecutionException("Object does not have a " + methodName + "("
 					+ argType.toString() + ") method", e);
 		}
-		catch (IllegalArgumentException e) {
+		catch (ExecutionException e) {
 			throw new ExecutionException("Unsupported event type: " + argType.getName(), e);
 		}
 		catch (IllegalAccessException e) {
@@ -114,65 +113,38 @@ public class EventWait extends SequentialWithArguments implements ActionListener
 			throw new ExecutionException(methodName + " threw an exception", e);
 		}
 	}
-
-	protected synchronized void processEvent(Object source) {
-		if (groups.containsKey(source)) {
-			List grlist = (List) groups.get(source);
-			Iterator i = grlist.iterator();
-			while (i.hasNext()) {
-				Map group = (Map) i.next();
-				i.remove();
-				VariableStack stack = (VariableStack) stacks.remove(group);
-				rstacks.remove(stack);
-				if (stack != null) {
-					Object ret = group.get(source);
-					try {
-						// TODO remove listeners
-						ArgUtil.getVariableReturn(stack).append(ret);
-							stack.getExecutionContext().getStateManager().unregisterElement(this,
-									stack);
-							complete(stack);
-					}
-					catch (ExecutionException ex) {
-						failImmediately(stack, ex);
-					}
-				}
-			}
+	
+	public static class Listener implements ActionListener, WindowListener {
+		private FutureCounter counter;
+		
+		public Listener(FutureCounter counter) {
+			this.counter = counter;
 		}
-	}
 
-	public synchronized void actionPerformed(ActionEvent e) {
-		processEvent(e.getSource());
-	}
-
-	public void windowActivated(WindowEvent e) {
-	}
-
-	public void windowClosed(WindowEvent e) {
-	}
-
-	public void windowClosing(WindowEvent e) {
-		processEvent(e.getSource());
-	}
-
-	public void windowDeactivated(WindowEvent e) {
-	}
-
-	public void windowDeiconified(WindowEvent e) {
-	}
-
-	public void windowIconified(WindowEvent e) {
-	}
-
-	public void windowOpened(WindowEvent e) {
-	}
-
-	public synchronized void abort(VariableStack stack) throws ExecutionException {
-		stack.getExecutionContext().getStateManager().unregisterElement(this, stack);
-		Object group = rstacks.get(stack);
-		groups.remove(group);
-		stacks.remove(group);
-		rstacks.remove(stack);
-		super.abort(stack);
+		public synchronized void actionPerformed(ActionEvent e) {
+			counter.dec();
+		}
+	
+		public void windowActivated(WindowEvent e) {
+		}
+	
+		public void windowClosed(WindowEvent e) {
+		}
+	
+		public void windowClosing(WindowEvent e) {
+			counter.dec();
+		}
+	
+		public void windowDeactivated(WindowEvent e) {
+		}
+	
+		public void windowDeiconified(WindowEvent e) {
+		}
+	
+		public void windowIconified(WindowEvent e) {
+		}
+	
+		public void windowOpened(WindowEvent e) {
+		}
 	}
 }

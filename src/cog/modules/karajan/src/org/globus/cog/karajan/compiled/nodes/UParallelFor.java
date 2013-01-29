@@ -8,16 +8,112 @@
 /*
  * Created on Jul 7, 2003
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.arguments.Arg;
+import java.util.Iterator;
+import java.util.LinkedList;
+
+import k.rt.ExecutionException;
+import k.rt.KRunnable;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.ThreadSet;
+import k.thr.Yield;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.ContainerScope;
+import org.globus.cog.karajan.analyzer.DynamicScope;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.parser.WrapperNode;
 
 
-public class UParallelFor extends AbstractUParallelIterator {
-	public static final Arg A_NAME = new Arg.Positional("name");
-	public static final Arg A_IN = new Arg.Positional("in");
+public class UParallelFor extends InternalFunction {
+	protected String name;
+	protected ArgRef<Iterable<Object>> in;
+	protected Node body;
 	
-	static {
-		setArguments(UParallelFor.class, new Arg[] { A_NAME, A_IN });
+	protected VarRef<Object> var;
+	
+	protected int frameSize;
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params(identifier("name"), "in", block("body")));
 	}
+	
+	@Override
+	protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
+			Scope scope) throws CompilationException {
+		DynamicScope ds = new DynamicScope(w, scope);
+		ContainerScope cs = new ContainerScope(w, ds);
+		Var v = cs.addVar(name);
+		var = cs.getVarRef(v);
+		
+		super.compileBlocks(w, sig, blocks, cs);
+		
+		frameSize = cs.size();
+		
+		ds.close();
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	protected void runBody(final LWThread thr) {		
+		int i = thr.checkSliceAndPopState();
+		Iterator<Object> it = (Iterator<Object>) thr.popState();
+		ThreadSet ts = (ThreadSet) thr.popState();
+		Stack stack = thr.getStack();
+		try {
+			switch(i) {
+				case 0:
+					it = in.getValue(stack).iterator();
+					ts = new ThreadSet();
+					ts.lock();
+					i++;
+				case 1:
+					final ThreadSet tsf = ts;
+					ts.checkFailed();
+					
+					while (it.hasNext()) {
+						LWThread ct = thr.fork(new KRunnable() {
+							@Override
+							public void run(LWThread thr2) {
+								try {
+									if (CompilerSettings.PERFORMANCE_COUNTERS) {
+										startCount++;
+									}
+									body.run(thr2);
+									tsf.threadDone(thr2, null);
+								}
+								catch (Exception e) {
+									tsf.threadDone(thr2, new ExecutionException(UParallelFor.this, e));
+									tsf.abortAll();
+									thr.awake();
+								}
+							}
+						});
+						if(ts.add(ct)) {
+							break;
+						}
+						Stack cs = ct.getStack();
+						cs.enter(this, frameSize);
+						var.setValue(cs, it.next());
+						ct.start();
+					}
+					ts.unlock();
+					ts.waitFor();
+			}
+		}
+		catch (Yield y) {
+			y.getState().push(ts);
+			y.getState().push(it);
+			y.getState().push(i);
+			throw y;
+		}
+	}	
 }

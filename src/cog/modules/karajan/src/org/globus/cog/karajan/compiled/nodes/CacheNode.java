@@ -7,180 +7,199 @@
 /*
  * Created on Apr 26, 2005
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.Arguments;
-import org.globus.cog.karajan.arguments.TrackingNamedArguments;
-import org.globus.cog.karajan.arguments.TrackingVariableArguments;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
+import k.rt.Context;
+import k.rt.ExecutionException;
+import k.rt.FutureObject;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.util.Cache;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
 
-public class CacheNode extends PartialArgumentsContainer {
-	public static final Arg A_ON = new Arg.Optional("on");
-	public static final Arg A_STATIC = new Arg.Optional("static");
+public class CacheNode extends BufferedInternalFunction {
+	private ArgRef<Object> on;
+	private Node body;
+	
+	public static final String KEY = "#cachekey";
+	public static final String CACHE = "#cache#cache";
+	
+	private VarRef<Object> key;
+	protected VarRef<Context> context;
 
-	public static final String KEY = "##cachekey";
-	public static final String STATICDEF = "##staticdef";
-
-	private static final Map instances;
-
-	static {
-		setArguments(CacheNode.class, new Arg[] { A_ON });
-		instances = new HashMap();
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params("on", block("body")));
+	}
+	
+	@Override
+	protected void addLocals(Scope scope) {
+		super.addLocals(scope);
+		Var vkey = scope.addVar(KEY);
+		key = scope.getVarRef(vkey);
+		
+		context = scope.getVarRef("#context");
 	}
 
-	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		cpre(A_ON.getValue(stack, getProperty(UID)), Boolean.valueOf(!A_ON.isPresent(stack)), stack);
-	}
-
-	protected void cpre(Object key, Boolean staticdef, VariableStack stack)
-			throws ExecutionException {
-		stack.setVar(KEY, key);
-		stack.setVar(STATICDEF, staticdef);
-		Cache cache = getCache(stack, staticdef);
-		Arguments cached = null;
-		synchronized (cache) {
-			if (cache.isCached(key)) {
-				cached = (Arguments) cache.getCachedValue(key);
-			}
-			else {
-    			synchronized (instances) {
-    				List inst = (List) instances.get(key);
-    				if (inst == null) {
-    					inst = new LinkedList();
-    					instances.put(key, inst);
-    				}
-    				else {
-    					inst.add(stack);
-    					return;
-    				}
-    			}
-			}
-		}
-		if (cached != null) {
-			returnCachedArguments(stack, cached);
-		    complete(stack);
-            return;
-		}
-		super.partialArgumentsEvaluated(stack);
-		addTrackingArguments(stack);
-		startRest(stack);
-	}
-
-	public void post(VariableStack stack) throws ExecutionException {
-		Arguments ret = getTrackingArguments(stack);
-		Object key = stack.currentFrame().getVar(KEY);
-		Boolean staticdef = (Boolean) stack.currentFrame().getVar(STATICDEF);
-		Cache cache = getCache(stack, staticdef);
-		synchronized (cache) {
-			cache.addValue(key, ret);
-
-			synchronized (instances) {
-				if (instances.containsKey(key)) {
-					List l = (List) instances.get(key);
-					while (l.size() > 0) {
-						VariableStack st = (VariableStack) l.remove(0);
-						returnCachedArguments(st, ret);
-						complete(st);
+	@Override
+	protected void runBody(LWThread thr) {
+		int i = thr.checkSliceAndPopState();
+		int frame = thr.popIntState();
+		Stack stack = thr.getStack();
+		try {
+			switch (i) {
+				case 0:
+					frame = stack.frameCount();
+					i++;
+				case 1:
+					boolean shouldContinue = checkCached(stack);
+					if (!shouldContinue) {
+						break;
 					}
-					instances.remove(key);
-				}
+					i++;
+				case 2:
+					if (CompilerSettings.PERFORMANCE_COUNTERS) {
+						startCount++;
+					}
+					body.run(thr);
+					setValue(stack);
 			}
 		}
-		super.post(stack);
+		catch (Yield y) {
+			y.getState().push(frame);
+			y.getState().push(i);
+			throw y;
+		}
+		catch (ExecutionException e) {
+			stack.dropToFrame(frame);
+			setException(thr.getStack(), e);
+			throw e;
+		}
 	}
 
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		Object key = stack.currentFrame().getVar(KEY);
-		List l = null;
-		synchronized (instances) {
-			if (instances.containsKey(key)) {
-				l = (List) instances.remove(key);
+	protected boolean checkCached(Stack stack) {
+		Object on = this.on.getValue(stack);
+		if (on == null) {
+			on = this;
+		}
+		key.setValue(stack, on);
+		return initialize(on, stack);
+	}
+
+	protected boolean initialize(Object key, Stack stack) {
+		Cache cache = getCache(stack, key == this);
+		FutureObject fv;
+		boolean initial = false;
+		synchronized (cache) {
+			fv = (FutureObject) cache.getCachedValue(key);
+			if (fv == null) {
+				fv = new FutureObject();
+				cache.addValue(key, fv);
+				initial = true;
 			}
 		}
-		if (l != null) {
-			failAll(l, e);
+		if (initial) {
+			addBuffers(stack);
+			return true;
 		}
-		super.failed(stack, e);
-	}
-
-	protected void failAll(List l, ExecutionException e) throws ExecutionException {
-		Iterator i = l.iterator();
-		while (i.hasNext()) {
-			VariableStack stack = (VariableStack) i.next();
-			super.failed(stack, e);
+		else {
+			Returns r = (Returns) fv.getValue();
+			returnCachedValues(stack, r);
+			return false;
 		}
 	}
 
-	private void addTrackingArguments(VariableStack stack) throws ExecutionException {
-		try {
-			ArgUtil.setNamedArguments(stack, new TrackingNamedArguments(
-					ArgUtil.getNamedReturn(stack)));
-		}
-		catch (VariableNotFoundException e) {
-		}
-		try {
-			ArgUtil.setVariableArguments(stack, new TrackingVariableArguments(
-					ArgUtil.getVariableReturn(stack)));
-		}
-		catch (VariableNotFoundException e1) {
-		}
-		Set channels = ArgUtil.getDefinedChannels(stack);
-		Iterator i = channels.iterator();
-		while (i.hasNext()) {
-			Arg.Channel channel = (Arg.Channel) i.next();
-			ArgUtil.createChannel(stack, channel, new TrackingVariableArguments(
-					ArgUtil.getChannelReturn(stack, channel)));
+	public void setValue(Stack stack) throws ExecutionException {
+		Returns ret = getReturnValues(stack);
+		returnCachedValues(stack, ret);
+		Object key = this.key.getValue(stack);
+		Cache cache = getCache(stack, key == this);
+		synchronized (cache) {
+			FutureObject f = (FutureObject) cache.getCachedValue(key);
+			f.setValue(ret);
 		}
 	}
 
-	private Arguments getTrackingArguments(VariableStack stack) throws VariableNotFoundException {
-		Arguments args = new Arguments();
-		args.setNamed(ArgUtil.getNamedArguments(stack));
-		args.setVargs(ArgUtil.getVariableArguments(stack));
-		Set channels = ArgUtil.getDefinedChannels(stack);
-		Iterator i = channels.iterator();
-		while (i.hasNext()) {
-			Arg.Channel channel = (Arg.Channel) i.next();
-			args.addChannel(channel, ArgUtil.getChannelArguments(stack, channel));
+	public void setException(Stack stack, RuntimeException e) {
+		Object key = this.key.getValue(stack);
+        Cache cache = getCache(stack, key == this);
+		synchronized (cache) {
+            FutureObject f = (FutureObject) cache.getCachedValue(key);
+            f.fail(e);
 		}
-		return args;
 	}
 
-	private void returnCachedArguments(VariableStack stack, Arguments ret)
-			throws VariableNotFoundException {
-		ArgUtil.getNamedReturn(stack).addAll(ret.getNamed().getAll());
-		ArgUtil.getVariableReturn(stack).appendAll(ret.getVargs().getAll());
-		Iterator i = ret.getChannels().keySet().iterator();
-		while (i.hasNext()) {
-			Arg.Channel channel = (Arg.Channel) i.next();
-			ArgUtil.getChannelReturn(stack, channel).merge(
-					(VariableArguments) ret.getChannels().get(channel));
+	private Returns getReturnValues(Stack stack) {
+		Returns r = new Returns();
+		if (getChannelBuffers() != null) {
+			for (ChannelRef.Buffer<Object> c : getChannelBuffers()) {
+				r.channels.add(c.get(stack));
+			}
+		}
+		if (getArgBuffers() != null) {
+			for (VarRef.Buffer<Object> a : getArgBuffers()) {
+				r.args.add(a.getValue(stack));
+			}
+		}
+		return r;
+	}
+
+	private void returnCachedValues(Stack stack, Returns ret) {
+		if (getChannelBuffers() != null) {
+			Iterator<ChannelRef.Buffer<Object>> i1 = getChannelBuffers().iterator();
+			Iterator<k.rt.Channel<Object>> i2 = ret.channels.iterator();
+			while (i1.hasNext()) {
+				i1.next().commit(stack, i2.next());
+			}
+		}
+		
+		if (getArgBuffers() != null) {
+			Iterator<VarRef.Buffer<Object>> i1 = getArgBuffers().iterator();
+			Iterator<Object> i2 = ret.args.iterator();
+			while (i1.hasNext()) {
+				i1.next().setValue(stack, i2.next());
+			}
 		}
 	}
 
 	private static final Cache scache = new Cache();
 
-	protected Cache getCache(VariableStack stack, Boolean staticdef) throws ExecutionException {
-		boolean _static = TypeUtil.toBoolean(A_STATIC.getValue(stack, staticdef));
-		if (_static) {
+	protected Cache getCache(Stack stack, boolean staticdef) throws ExecutionException {
+		if (staticdef) {
 			return scache;
 		}
 		else {
-			return stack.getExecutionContext().getCache();
+			Context ctx = this.context.getValue(stack);
+			synchronized(ctx) {
+				Cache c = (Cache) ctx.getAttribute(CACHE);
+				if (c == null) {
+					c = new Cache();
+					ctx.setAttribute(CACHE, c);
+				}
+				return c;
+			}
+		}
+	}
+	
+	private static class Returns {
+		public final List<k.rt.Channel<Object>> channels;
+		public final List<Object> args;
+		
+		public Returns() {
+			channels = new LinkedList<k.rt.Channel<Object>>();
+			args = new LinkedList<Object>();
 		}
 	}
 }

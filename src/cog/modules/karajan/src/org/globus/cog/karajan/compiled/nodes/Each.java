@@ -7,31 +7,40 @@
 /*
  * Created on Mar 27, 2006
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 import java.util.Iterator;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
 
-public class Each extends AbstractSequentialWithArguments {
-	public static final Arg A_ITEMS = new Arg.Positional("items", 0);
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
 
-	static {
-		setArguments(Each.class, new Arg[] { A_ITEMS });
+public class Each extends InternalFunction {
+	private ArgRef<Iterable<Object>> items;
+	private ChannelRef<Object> cr_vargs;
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params("items"), returns(channel("...", DYNAMIC)));
 	}
 
-	protected void post(VariableStack stack) throws ExecutionException {
-		Iterator i = TypeUtil.toIterator(A_ITEMS.getValue(stack));
-		VariableArguments vr = ArgUtil.getVariableReturn(stack);
+	@Override
+	public void run(LWThread thr) throws ExecutionException {
+		super.run(thr);
+	}
+
+	@Override
+	protected void runBody(LWThread thr) {
+		Stack stack = thr.getStack();
+		Iterable<Object> items = this.items.getValue(stack);
+		Iterator<Object> i = items.iterator();
 		while (i.hasNext()) {
-			vr.append(i.next());
+			cr_vargs.append(stack, i.next());
 		}
-		super.post(stack);
 	}
 
 }

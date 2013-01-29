@@ -13,12 +13,12 @@ import java.util.Iterator;
 
 
 public abstract class AbstractKarajanIterator implements KarajanIterator {
-	private Iterator iterator;
+	private Iterator<Object> iterator;
 	private int crt;
 	private Object next;
 	private boolean nextValid;
 	
-	public AbstractKarajanIterator(Iterator iterator) {
+	public AbstractKarajanIterator(Iterator<Object> iterator) {
 		this.iterator = iterator;
 	}
 	
@@ -55,7 +55,7 @@ public abstract class AbstractKarajanIterator implements KarajanIterator {
 		iterator.remove();
 	}
 	
-	protected void setIterator(Iterator i) {
+	protected void setIterator(Iterator<Object> i) {
 		this.iterator = i;
 		crt = 0;
 	}

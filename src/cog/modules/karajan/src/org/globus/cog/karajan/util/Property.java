@@ -12,14 +12,14 @@ package org.globus.cog.karajan.util;
 
 import java.util.Map;
 
-public class Property implements Map.Entry {
-	private String name, type;
+public class Property implements Map.Entry<String, Object> {
+	private String name;
 	private Object value;
 
 	public Property() {
 	}
 
-	public Property(String name, String value, String type) {
+	public Property(String name, Object value) {
 		this.name = name;
 		this.value = value;
 	}
@@ -40,42 +40,7 @@ public class Property implements Map.Entry {
 		this.value = value;
 	}
 
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
-	
-	/*public Object getTypedValue() {
-		if (type == null) {
-			return value;
-		}
-		else if (type.equalsIgnoreCase("String")) {
-			return value;
-		}
-		else if (type.equalsIgnoreCase("Integer")) {
-			return Integer.valueOf(value);
-		}
-		else if (type.equalsIgnoreCase("Double")) {
-			return Double.valueOf(value);
-		}
-		else if (type.equalsIgnoreCase("Float")) {
-			return Float.valueOf(value);
-		}
-		else if (type.equalsIgnoreCase("Boolean")) {
-			return Boolean.valueOf(value);
-		}
-		else if (type.equalsIgnoreCase("Long")) {
-			return Long.valueOf(value);
-		}
-		else {
-			return value;
-		}
-	}*/
-
-	public Object getKey() {
+	public String getKey() {
 		return name;
 	}
 

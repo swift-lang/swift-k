@@ -12,26 +12,26 @@ package org.globus.cog.karajan;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 
+import k.rt.Context;
+import k.rt.Executor;
+import k.thr.LWThread;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.translator.KarajanTranslator;
-import org.globus.cog.karajan.util.Cache;
-import org.globus.cog.karajan.util.Monitor;
-import org.globus.cog.karajan.util.serialization.XMLConverter;
-import org.globus.cog.karajan.workflow.ElementTree;
-import org.globus.cog.karajan.workflow.ExecutionContext;
-import org.globus.cog.karajan.workflow.PrintStreamChannel;
-import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.futures.FutureFault;
-import org.globus.cog.karajan.workflow.futures.FuturesMonitor;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
-import org.globus.cog.karajan.workflow.nodes.FlowNode;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.RootScope;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.Main;
+import org.globus.cog.karajan.futures.FutureFault;
+import org.globus.cog.karajan.parser.NativeParser;
+import org.globus.cog.karajan.parser.ParsingException;
+import org.globus.cog.karajan.parser.WrapperNode;
+import org.globus.cog.karajan.util.KarajanProperties;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 
@@ -64,7 +64,7 @@ public class Loader {
 		try {
 			ap.parse(argv);
 
-			Map arguments = new Hashtable();
+			Map<String, String> arguments = new HashMap<String, String>();
 			if (ap.isPresent(ARG_HELP)) {
 				ap.usage();
 				System.exit(0);
@@ -73,12 +73,7 @@ public class Loader {
 				Configuration.getDefault().set(Configuration.SHOW_STATISTICS, true);
 			}
 			if (ap.isPresent(ARG_DEBUG)) {
-				FlowNode.debug = true;
-				FuturesMonitor.debug = true;
-				installKeyboardHooks();
-			}
-			if (ap.isPresent(ARG_MONITOR)) {
-				new Monitor().start();
+				new ConsoleDebugger().start();
 			}
 			if (ap.isPresent(ARG_DUMPSTATE)) {
 				Configuration.getDefault().set(Configuration.DUMP_STATE_ON_ERROR, true);
@@ -111,7 +106,7 @@ public class Loader {
 		boolean runerror = false;
 
 		try {
-			ElementTree tree;
+			WrapperNode tree;
 			if (project != null) {
 				tree = load(project);
 			}
@@ -119,59 +114,28 @@ public class Loader {
 				project = "_";
 				tree = loadFromString(source);
 			}
+			
+			tree.setProperty(WrapperNode.FILENAME, project);
+			
+			Context context = new Context();
+			context.setArguments(ap.getArguments());
+			
+			Main root = compile(tree, context);
+			
+			root.dump(new File(project + ".compiled"));
 
-			Cache cc = null;
-			if (cache) {
-				if (source != null) {
-					error("Cannot use -" + ARG_CACHE + " with -" + ARG_EXECUTE);
-				}
-				File f = new File(project);
-				File c = new File(project + ".cache");
-				try {
-					if (f.lastModified() < c.lastModified()) {
-						FileReader fr = new FileReader(project + ".cache");
-						cc = (Cache) XMLConverter.readObject(fr);
-						fr.close();
-					}
-				}
-				catch (Exception e) {
-					c.delete();
-				}
-			}
-			tree.setName(project);
-			tree.getRoot().setProperty(FlowElement.FILENAME, project);
-		
-			ExecutionContext ec = new ExecutionContext(tree);
-			ec.setDumpState(Configuration.getDefault().getFlag(
-					Configuration.DUMP_STATE_ON_ERROR));
-			if (ap.isPresent(ARG_CSTDOUT)) {
-				ec.setStdout(new PrintStreamChannel(System.out, true));
-			}
-			ec.setArguments(ap.getArguments());
-			ec.setCache(cc);
-			ec.start();
-			/*
-			 * Strange thing here. For even slightly not so short programs,
-			 * by the time control flow reaches this point. the execution is
-			 * already done.
-			 */
+			Executor ec = new Executor(root);
+			
+			ec.start(context);
+			
 			ec.waitFor();
 			if (ec.isFailed()) {
 				runerror = true;
 			}
 		
-			if (cache) {
-				try {
-					FileWriter fw = new FileWriter(project + ".cache");
-					XMLConverter.serializeObject(cc, fw);
-					fw.close();
-				}
-				catch (Exception e) {
-					logger.warn("Failed to save cache", e);
-				}
-			}
 		}
 		catch (Exception e) {
+			e.printStackTrace();
 			logger.debug("Detailed exception:", e);
 			error("Could not start execution.\n\t" + e.getMessage());
 		}
@@ -180,54 +144,42 @@ public class Loader {
 		if (Configuration.getDefault().getFlag(Configuration.SHOW_STATISTICS)) {
 			System.out.println("Done.");
 			System.out.println("Total execution time: " + ((double) (end - start) / 1000) + " s");
-			System.out.println("Total elements executed: " + FlowNode.startCount);
+			System.out.println("Total elements executed: " + Node.startCount);
 			System.out.println("Average element execution rate: "
-					+ (int) ((double) FlowNode.startCount / (end - start) * 1000)
+					+ (int) ((double) Node.startCount / (end - start) * 1000)
 					+ " elements/second");
-			System.out.println("Total events: " + EventBus.eventCount);
-			System.out.println("Avarage event rate: "
-					+ (int) ((double) EventBus.eventCount * 1000 / (end - start))
-					+ " events/second");
 			System.out.println("Total future faults: " + FutureFault.count);
 			System.out.println("Memory in use at termination: "
 					+ (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
 					/ 1024 + "KB");
 			System.out.println("Free memory at termination: " + (Runtime.getRuntime().freeMemory())
 					/ 1024 + "KB");
+			System.out.println("Context switches: " + LWThread.contextSwitches);
 		}
 
 		System.exit(runerror ? 2 : 0);
 	}
 
-	public static ElementTree load(String project) throws SpecificationException, IOException {
+	private static Main compile(WrapperNode n, Context context) throws CompilationException {
+		return (Main) n.compile(null, new RootScope(KarajanProperties.getDefault(), 
+				(String) n.getProperty(WrapperNode.FILENAME), context));
+	}
+
+	public static WrapperNode load(String project) throws IOException, ParsingException {
 		BufferedReader br = new BufferedReader(new FileReader(project));
-		return load(project, br, project.endsWith(".xml") || project.endsWith(".kml"));
+		return load(project, br);
 	}
 
-	public static ElementTree loadFromString(String source) throws SpecificationException {
+	public static WrapperNode loadFromString(String source) throws ParsingException, IOException {
 		BufferedReader br = new BufferedReader(new StringReader(source));
-		return load("_", br, source.startsWith("<"));
+		return load("_", br);
 	}
 
-	private static ElementTree load(String name, Reader reader, boolean xml)
-			throws SpecificationException {
-		try {
-			if (!EventBus.isInitialized()) {
-				EventBus.initialize();
-			}
-			ElementTree source;
-			if (xml) {
-				source = XMLConverter.readSourceNoUIDs(reader, name);
-			}
-			else {
-				source = XMLConverter.readSourceNoUIDs(new KarajanTranslator(reader, name).translate(),
-						name, false);
-			}
-			return source;
-		}
-		catch (Exception e) {
-			throw new SpecificationException("Error reading source: " + e.getMessage(), e);
-		}
+	private static WrapperNode load(String name, Reader reader) throws ParsingException, IOException {
+		NativeParser p = new NativeParser(name, reader);
+		WrapperNode n = p.parse();
+		n.setProperty(WrapperNode.FILENAME, name);
+		return n;
 	}
 
 	private static ArgumentParser buildArgumentParser() {
@@ -262,32 +214,5 @@ public class Loader {
 	protected static void error(final String err) {
 		System.err.println(err);
 		System.exit(1);
-	}
-
-	private static void installKeyboardHooks() {
-		new Thread() {
-			public void run() {
-				try {
-					while (true) {
-						while (System.in.available() == 0) {
-							Thread.sleep(250);
-						}
-						int c = System.in.read();
-						if (c == 'f') {
-							System.out.println("Futures: " + FuturesMonitor.monitor);
-						}
-						if (c == 't') {
-							System.out.println("Threads: " + FlowNode.threadTracker);
-						}
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				catch (InterruptedException e) {
-					return;
-				}
-			}
-		}.start();
 	}
 }

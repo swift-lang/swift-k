@@ -7,24 +7,13 @@
 /*
  * Created on Oct 6, 2006
  */
-package org.globus.cog.karajan.workflow.futures;
-
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.KarajanRuntimeException;
+package org.globus.cog.karajan.futures;
 
 
-public class FutureEvaluationException extends KarajanRuntimeException {
-	private Throwable fault;
 
-	public FutureEvaluationException(Exception fne) {
-		this.fault = new ExecutionException(fne);
-	}
-	
-	public FutureEvaluationException(Throwable fault) {
-		this.fault = fault;
-	}
 
-	public Throwable getFault() {
-		return fault;
+public class FutureEvaluationException extends RuntimeException {
+	public FutureEvaluationException(Throwable t) {
+		super(t);
 	}
 }

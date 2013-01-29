@@ -14,23 +14,22 @@ package org.globus.cog.karajan.util;
  * @author Mihael Hategan
  *
  */
-public final class Queue {
-	private Entry head;
+public final class Queue<T> {
+	private Entry<T> head;
 	private int size;
 
 	public Queue() {
-		head = new Entry(null, null, null);
+		head = new Entry<T>(null, null, null);
 		head.prev = head;
 		head.next = head;
 		size = 0;
 	}
 
-	public synchronized void enqueue(Object o) {
-		Entry e = new Entry(o, head.prev, head);
+	public synchronized void enqueue(T o) {
+		Entry<T> e = new Entry<T>(o, head.prev, head);
 		head.prev.next = e;
 		head.prev = e;
 		size++;
-		notifyAll();
 	}
 	
 	public synchronized Object dequeue() { 
@@ -39,13 +38,6 @@ public final class Queue {
 		head.next = head.next.next;
 		size--;
 		return o;
-	}
-	
-	public synchronized Object take() throws InterruptedException {
-		while (size == 0) {
-			wait();
-		}	
-		return dequeue();
 	}
 
 	public boolean isEmpty() {
@@ -56,14 +48,14 @@ public final class Queue {
 		return size;
 	}
 
-	public Cursor cursor() {
+	public Cursor<T> cursor() {
 		return new C();
 	}
 	
 	public String toString() {
 	    StringBuffer sb = new StringBuffer();
 	    sb.append('[');
-	    Cursor c = cursor();
+	    Cursor<T> c = cursor();
 	    while (c.hasNext()) {
 	        sb.append(c.next());
 	        if (c.hasNext()) {
@@ -74,11 +66,11 @@ public final class Queue {
 	    return sb.toString();
 	}
 
-	private class Entry {
-		private final Object obj;
-		private Entry next, prev;
+	private class Entry<S> {
+		private final S obj;
+		private Entry<S> next, prev;
 
-		public Entry(Object obj, Entry prev, Entry next) {
+		public Entry(S obj, Entry<S> prev, Entry<S> next) {
 			this.obj = obj;
 			this.next = next;
 			this.prev = prev;
@@ -89,18 +81,18 @@ public final class Queue {
 		}
 	}
 
-	public interface Cursor {
+	public interface Cursor<T> {
 		boolean hasNext();
 
 		void remove();
 
-		Object next();
+		T next();
 
 		void reset();
 	}
 
-	private class C implements Cursor {
-		private Entry crt;
+	private class C implements Cursor<T> {
+		private Entry<T> crt;
 
 		public C() {
 			reset();
@@ -110,7 +102,7 @@ public final class Queue {
 			return crt.next != head;
 		}
 
-		public Object next() {
+		public T next() {
 			synchronized(Queue.this) {
 				crt = crt.next;
 				return crt.obj;
@@ -123,7 +115,7 @@ public final class Queue {
 			}
 		}
 
-		private void remove(Entry e) {
+		private void remove(Entry<T> e) {
 			size--;
 			e.next.prev = e.prev;
 			e.prev.next = e.next;
@@ -135,11 +127,11 @@ public final class Queue {
 	}
 
 	public static void main(String[] args) {
-		Queue q = new Queue();
+		Queue<String> q = new Queue<String>();
 		q.enqueue("a");
 		q.enqueue("b");
 		q.enqueue("c");
-		Cursor c = q.cursor();
+		Cursor<String> c = q.cursor();
 		System.err.println("" + c.next() + c.next() + c.next());
 		c.reset();
 		c.next();

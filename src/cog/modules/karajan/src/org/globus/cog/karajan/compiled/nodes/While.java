@@ -7,72 +7,92 @@
 /*
  * Created on Jul 2, 2004
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.Condition;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.LinkedList;
 
-public class While extends Sequential {
-	public While() {
-		setOptimize(false);
+import k.rt.SingleValueChannel;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.DynamicScope;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.parser.WrapperNode;
+
+public class While extends InternalFunction {
+	private String name;
+	private ArgRef<Object> initial;
+	
+	private Node body;
+	private ChannelRef.DynamicSingleValued<Object> c_next;
+	
+	private VarRef<Object> var;
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params(identifier("name"), "initial", block("body")));
 	}
 
-	public void pre(VariableStack stack) throws ExecutionException {
-		stack.setVar("#condition", new Condition());
-		super.pre(stack);
+	@Override
+	protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
+			Scope scope) throws CompilationException {
+		Var v = scope.addVar(name);
+		var = scope.getVarRef(v);
+		Var.Channel next = scope.addChannel("next");
+		c_next = new ChannelRef.DynamicSingleValued<Object>("next", next.getIndex());
+		DynamicScope ds = new DynamicScope(w, scope);
+		super.compileBlocks(w, sig, blocks, ds);
+		ds.close();
 	}
 
-	protected void startNext(VariableStack stack) throws ExecutionException {
-		if (stack.isDefined("#abort")) {
-			abort(stack);
-			return;
+	@Override
+	public void dump(PrintStream ps, int level) throws IOException {
+		super.dump(ps, level);
+		if (body != null) {
+			body.dump(ps, level + 1);
 		}
-		int index = getIndex(stack);
-		if (elementCount() == 0) {
-			post(stack);
-			return;
-		}
-		FlowElement fn = null;
-
-		Condition condition = (Condition) stack.getVar("#condition");
-		if (condition.getValue() != null) {
-			boolean cond = TypeUtil.toBoolean(condition.getValue());
-			if (!cond) {
-				post(stack);
-				return;
-			}
-		}
-		if (index >= elementCount()) {
-			setIndex(stack, 1);
-			fn = (FlowElement) getElement(0);
-		}
-		else {
-			fn = (FlowElement) getElement(index++);
-			setIndex(stack, index);
-		}
-		startElement(fn, stack);
 	}
 	
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		if (e instanceof Break) {
-			complete(e.getStack());
+	@Override
+	public void runBody(LWThread thr) {
+		if (body == null) {
 			return;
 		}
-		if (e instanceof Continue) {
-			setIndex(e.getStack(), 0);
-			startNext(e.getStack());
-			return;
-		}
-		super.failed(stack, e);
-	}
-	
-	public static class Break extends ExecutionException {
-		
-	}
-	
-	public static class Continue extends ExecutionException {
-		
+	    int i = thr.checkSliceAndPopState();
+	    @SuppressWarnings("unchecked")
+		SingleValueChannel<Object> next = (SingleValueChannel<Object>) thr.popState();
+	    Stack stack = thr.getStack();
+	    try {
+	    	switch(i) {
+	    		case 0:
+	    			var.setValue(stack, initial.getValue(stack));
+	    			c_next.create(stack);
+	    			next = (SingleValueChannel<Object>) c_next.get(stack);
+	    			i++;
+	    		case 1:
+	    			while (true) {
+	    				body.run(thr);
+	    				if (next.isEmpty()) {
+	    					break;
+	    				}
+	    				Object val = next.removeFirst();
+	    				var.setValue(stack, val);
+	    			}
+	    	}
+	    }
+	    catch (Yield y) {
+	    	y.getState().push(next);
+	    	y.getState().push(i);
+	    	throw y;
+	    }
 	}
 }

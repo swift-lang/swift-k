@@ -7,7 +7,9 @@
 /*
  * Created on Feb 16, 2005
  */
-package org.globus.cog.karajan.workflow.futures;
+package org.globus.cog.karajan.futures;
+
+import k.rt.Future;
 
 public class FutureIteratorIncomplete extends FutureNotYetAvailable {
 	private static final long serialVersionUID = 32776920138779658L;

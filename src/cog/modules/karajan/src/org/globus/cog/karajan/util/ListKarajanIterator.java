@@ -13,9 +13,9 @@ import java.util.List;
 
 
 public class ListKarajanIterator extends AbstractKarajanIterator {
-	private final List list;
+	private final List<Object> list;
 
-	public ListKarajanIterator(List l) {
+	public ListKarajanIterator(List<Object> l) {
 		super(l.iterator());
 		this.list = l;
 	}
@@ -24,7 +24,7 @@ public class ListKarajanIterator extends AbstractKarajanIterator {
 		return list.size();
 	}
 
-	public List getList() {
+	public List<Object> getList() {
 		return list;
 	}
 	

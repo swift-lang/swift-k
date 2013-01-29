@@ -4,53 +4,37 @@
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
 
-public class Print extends SequentialWithArguments {
-	private static final Logger logger = Logger.getLogger(Print.class);
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
 
-	public static final Arg A_MESSAGE = new Arg.Positional("message", 0);
-	public static final Arg A_NL = new Arg.Optional("nl", Boolean.TRUE);
-
-	static {
-		setArguments(Print.class, new Arg[] { A_MESSAGE, A_NL, Arg.VARGS });
+public class Print extends InternalFunction {
+	private ArgRef<Boolean> nl;
+	private ChannelRef<Object> c_vargs;
+	private ChannelRef<Object> cr_stdout;
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(
+				params(optional("nl", Boolean.TRUE), "..."),
+				returns(channel("stdout", DYNAMIC))
+		);
 	}
 
-	public Print() {
-		setAcceptsInlineText(true);
-	}
-
-	public void post(VariableStack stack) throws ExecutionException {
-		String message;
-		if (A_MESSAGE.isPresent(stack)) {
-			Object[] vargs = Arg.VARGS.asArray(stack);
-			message = TypeUtil.toString(A_MESSAGE.getValue(stack));
-			if (vargs != null && vargs.length > 0) {
-				StringBuffer sb = new StringBuffer();
-				sb.append(message);
-				for (int i = 0; i < vargs.length; i++) {
-					sb.append(TypeUtil.toString(vargs[i]));
-				}
-				message = sb.toString();
-			}
+	public void runBody(LWThread thr) {
+		Stack stack = thr.getStack();
+		k.rt.Channel<Object> c = c_vargs.get(stack);
+		k.rt.Channel<Object> stdout = cr_stdout.get(stack);
+		for (Object o : c) {
+			stdout.add(o);
 		}
-		else {
-			message = "";
+		if (nl.getValue(stack)) {
+			stdout.add("\n");
 		}
-		if (TypeUtil.toBoolean(A_NL.getValue(stack))) {
-			message += '\n';
-		}
-		print(stack, message);
-		super.post(stack);
-	}
-
-	protected void print(VariableStack stack, String message) throws ExecutionException {
-		STDOUT.ret(stack, message);
 	}
 }

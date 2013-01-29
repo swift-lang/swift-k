@@ -7,26 +7,24 @@
 /*
  * Created on Feb 6, 2006
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.Future;
+import k.thr.LWThread;
 
-public class ChannelClose extends AbstractSequentialWithArguments {
-    public static final Arg A_NAME = new Arg.Positional("name", 0);
-    
-	static {
-		setArguments(ChannelClose.class, new Arg[] { A_NAME });
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+
+public class ChannelClose extends InternalFunction {
+	private ArgRef<k.rt.Channel<?>> channel;
+	
+	
+    @Override
+	protected Signature getSignature() {
+		return new Signature(params("channel"));
 	}
 
-	protected void argumentsEvaluated(VariableStack stack) throws ExecutionException {
-		VariableArguments vargs = (VariableArguments) checkClass(A_NAME.getValue(stack),
-				VariableArguments.class, "name");
-		if (vargs instanceof Future) {
-			((Future) vargs).close();
-		}
+	@Override
+	protected void runBody(LWThread thr) {
+		channel.getValue(thr.getStack()).close();
 	}
 }

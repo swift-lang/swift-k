@@ -7,7 +7,7 @@
 /*
  * Created on Jul 31, 2003
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
@@ -19,18 +19,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
+import k.rt.ExecutionException;
+import k.rt.Stack;
 
-public class JavaMethodInvocationNode extends AbstractFunction {
-	public static final Arg A_METHOD = new Arg.Positional("method", 0);
-	public static final Arg A_STATIC = new Arg.Optional("static", Boolean.FALSE);
-	public static final Arg A_CLASSNAME = new Arg.Optional("classname", null);
-	public static final Arg A_OBJECT = new Arg.Optional("object", null);
-	public static final Arg A_TYPES = new Arg.Optional("types");
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractMultiValuedFunction;
+import org.globus.cog.karajan.util.TypeUtil;
+
+public class JavaMethodInvocationNode extends AbstractMultiValuedFunction {
+	private ArgRef<String> method;
+	private ArgRef<String> classname;
+	private ArgRef<Object> object;
+	private ArgRef<Object> types;
+	private ChannelRef<Object> c_vargs;
 
 	protected static final Map<String, Class<?>> TYPES = new HashMap<String, Class<?>>();
 
@@ -44,33 +47,33 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 		TYPES.put("String", String.class);
 	}
 
-	static {
-		setArguments(JavaMethodInvocationNode.class, new Arg[] { A_METHOD, A_STATIC, A_CLASSNAME,
-				A_OBJECT, A_TYPES, Arg.VARGS });
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params("method", optional("classname", null), optional("object", null), optional("types", null), "..."), 
+				returns(channel("...", DYNAMIC)));
 	}
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		String method = TypeUtil.toString(A_METHOD.getValue(stack));
-		boolean static_ = TypeUtil.toBoolean(A_STATIC.getValue(stack));
-		String classname = TypeUtil.toString(A_CLASSNAME.getValue(stack));
-		static_ |= classname != null;
-		Object o = A_OBJECT.getValue(stack);
-		if ((o == null) && !static_) {
-			throw new ExecutionException("No object instance to work on");
+	public Object function(Stack stack) {
+		String method = this.method.getValue(stack);
+		String classname = this.classname.getValue(stack);
+		Object o = this.object.getValue(stack);
+		Object otypes = this.types.getValue(stack);
+		if (classname != null && o != null) {
+			throw new ExecutionException(this, "Only one of 'classname' and 'object' can be specified");
 		}
-		Object[] args = Arg.VARGS.asArray(stack);
+		Object[] args = c_vargs.get(stack).toArray();
 		Class<?>[] argTypes = new Class[args.length];
-		if (A_TYPES.isPresent(stack)) {
-			@SuppressWarnings({ "cast", "unchecked" })
-			List<String> types = (List<String>) TypeUtil.toList(A_TYPES.getValue(stack));
+		if (otypes != null) {
+			List<?> types = TypeUtil.toList(otypes);
 			if (types.size() != args.length) {
-				throw new ExecutionException(
+				throw new ExecutionException(this, 
 						"The number of items in the types attribute does not match the number of arguments");
 			}
-			Iterator<String> i = types.iterator();
+			Iterator<?> i = types.iterator();
 			for (int j = 0; j < argTypes.length; j++) {
-				String type = i.next();
-				argTypes[j] = getClass(type);
+				String type = (String) i.next();
+				argTypes[j] = getClass(this, type);
 				if (TYPES.containsKey(type)) {
 					args[j] = convert(argTypes[j], args[j], argTypes[j].isArray());
 				}
@@ -104,18 +107,18 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 			return cls.getMethod(method, argTypes).invoke(o, args);
 		}
 		catch (InvocationTargetException e) {
-			throw new ExecutionException(e.getTargetException().getClass().getName()
+			throw new ExecutionException(this, e.getTargetException().getClass().getName()
 					+ " caught while invoking Java method: " + e.getTargetException().getMessage(),
 					e.getTargetException());
 		}
 		catch (Exception e) {
 			if (o == null) {
-				throw new ExecutionException("Could not invoke static java method " + method
+				throw new ExecutionException(this, "Could not invoke static java method " + method
 						+ " with arguments " + prettyPrintArray(args) + " on class " + classname
 						+ " because of: " + e.getClass().getName() + ":" + e.getMessage(), e);
 			}
 			else {
-				throw new ExecutionException("Could not invoke java method " + method
+				throw new ExecutionException(this, "Could not invoke java method " + method
 						+ " with arguments " + prettyPrintArray(args) + " on an instance of class "
 						+ o.getClass() + " because of: " + e.getClass().getName() + ":"
 						+ e.getMessage(), e);
@@ -123,7 +126,7 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 		}
 	}
 
-	public static Class<?> getClass(String type) throws ExecutionException {
+	public static Class<?> getClass(Node fn, String type) {
 		boolean array = false;
 		if (type.endsWith("[]")) {
 			array = true;
@@ -147,13 +150,12 @@ public class JavaMethodInvocationNode extends AbstractFunction {
 				}
 			}
 			catch (ClassNotFoundException e1) {
-				throw new ExecutionException("Invalid type: " + type);
+				throw new ExecutionException(fn, "Invalid type: " + type);
 			}
 		}
 	}
 
-	protected static Object convert(Class<?> type, Object src, boolean array)
-			throws ExecutionException {
+	protected static Object convert(Class<?> type, Object src, boolean array) {
 		if (array) {
 			if (type.getComponentType().equals(char.class) && src instanceof String) {
 				return ((String) src).toCharArray();

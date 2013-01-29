@@ -8,188 +8,225 @@
  * Created on Jun 6, 2003
  *  
  */
-package org.globus.cog.karajan.workflow.nodes.user;
+package org.globus.cog.karajan.compiled.nodes.user;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-import org.apache.log4j.Logger;
-import org.globus.cog.karajan.stack.Trace;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.DefUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.EventListener;
-import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
+import k.rt.ExecutionException;
+import k.rt.ReadOnlyChannel;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
 
-public class UDEWrapper extends AbstractSequentialWithArguments implements EventListener {
-	//public static final ControlEventType EXECUTE_DEF = new ControlEventType("EXECUTE_DEF", 3);
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Param;
+import org.globus.cog.karajan.analyzer.ParamWrapperVar;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.parser.WrapperNode;
 
-	private static final Logger logger = Logger.getLogger(UDEWrapper.class);
-	private static int count = 0;
+public class InvocationWrapper extends InternalFunction {
+	
+	private final Function fn;
+	
+	private List<ChannelRef<Object>> referencedChannels;
+	private List<VarRef<Object>> referencedNames;
+	private Object[] staticArgs;
+	private int firstIndex, argCount;
 
-	private UDEDefinition cachedDef;
-
-	private Hashtable arguments;
-
-	private boolean initialized, named;
-
-	private Set argumentNames;
-
-	private String[] sortedArgs;
-
-	public UDEWrapper() {
-		this(null);
+	public InvocationWrapper(Function fn) {
+		this.fn = fn;
 	}
 
-	public UDEWrapper(UDEDefinition def) {
-		setOptimize(false);
-		setAcceptsInlineText(true);
-		this.cachedDef = def;
-		if (def != null) {
-			initialize(def);
-		}
+	@Override
+	protected Signature getSignature() {
+		return fn.getSignature().copy();
 	}
 	
-	public String toString() {
-		return super.toString();
+	@Override
+    public void run(LWThread thr) {
+        int ec = childCount();
+        int i = thr.checkSliceAndPopState();
+        Stack stack = thr.getStack();
+        try {
+            switch (i) {
+                case 0:
+                    initializeArgs(stack);
+                    i++;
+                default:
+                        for (; i <= ec; i++) {
+                            runChild(i - 1, thr);
+                        }
+                        try {
+                            runBody(thr);
+                        }
+                        catch (ExecutionException e) {
+                            throw e;
+                        }
+                        catch (RuntimeException e) {
+                            throw new ExecutionException(this, e);
+                        }
+            }
+        }
+        catch (Yield y) {
+            y.getState().addTraceElement(this);
+            y.getState().push(i);
+            throw y;
+        }
+    }
+
+	@Override
+	protected ParamWrapperVar.IndexRange addParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
+			List<Param> optional, List<Param> positional) throws CompilationException {
+		prepareChannelParams(scope, channels);
+		firstIndex = scope.addParams(channels, optional, positional);
+		argCount = channels.size() + optional.size() + positional.size();
+		return null;
 	}
 
-	private synchronized void initialize(UDEDefinition def) {
-		if (initialized) {
-			return;
+	@SuppressWarnings("unchecked")
+	@Override
+	protected void setArg(WrapperNode w, Param r, Object value) throws CompilationException {
+		if (value instanceof ArgRef.Static) {
+			setStaticArg(r.index, ((ArgRef.Static<Object>) value).getValue());
 		}
-
-		initializeDefArgs(def.getUde());
-		super.initializeStatic();
-
-		initialized = true;
-	}
-
-	public void pre(VariableStack stack) throws ExecutionException {
-		UDEDefinition uded = getDef(stack);
-		stack.setVar(Trace.ELEMENT, this);
-		uded.getUde().startInstance(stack, this, uded.getEnv());
-	}
-
-	protected UDEDefinition getDefInternal(VariableStack stack) throws ExecutionException {
-		Object def = DefUtil.getDef(stack, getElementType(), getParent()).getDef();
-		if (def == null) {
-			throw new ExecutionException("Definition for " + getElementType() + " not found");
+		else if (value instanceof ArgRef.DynamicOptional) {
+			setStaticArg(r.index, ((ArgRef.DynamicOptional<Object>) value).getValue());
 		}
+	}
 
-		if (def instanceof UDEDefinition) {
-			return (UDEDefinition) def;
+	private void setStaticArg(int index, Object value) {
+	    index -= firstIndex;
+		if (staticArgs == null) {
+			staticArgs = new Object[index + 1];
+		}
+		else if (staticArgs.length <= index) {
+			Object[] nsa = new Object[index + 1];
+			System.arraycopy(staticArgs, 0, nsa, 0, staticArgs.length);
+			staticArgs = nsa;
+		}
+		staticArgs[index] = value;
+	}
+
+	@Override
+	protected void setChannelArg(WrapperNode w, Param r, Object value) throws CompilationException {
+	}
+
+	@Override
+	protected void setChannelReturn(WrapperNode w, Param r, Object value) throws CompilationException {
+	}
+
+	
+	@Override
+	protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+			throws CompilationException {
+		if (fn.isRecursive()) {
+			fn.resolveReferencesLater(this, scope);
 		}
 		else {
-			throw new ExecutionException("Unrecognized definition for " + getElementType() + ": "
-					+ def);
+			resolveReferencedChannels(w, scope);
+			resolveReferencedParams(w, scope);
+		}
+		return this;
+	}
+
+
+	protected void resolveReferencedParams(WrapperNode w, Scope scope) throws CompilationException {
+		Map<String, List<Node>> nrs = fn.getParamReturns();
+		if (nrs != null) {
+			referencedNames = new LinkedList<VarRef<Object>>();
+			for (String nr : nrs.keySet()) {
+				try {
+					Var v = scope.lookupParam(nr, this);
+					v.setDynamic();
+					referencedNames.add(new VarRef.DynamicLocal<Object>(nr, v.getIndex()));
+				}
+				catch (IllegalArgumentException e) {
+					throw new CompilationException(w, "Parameter '" + nr + "' not found. Referenced by:\n" 
+							+ getParamReferenceChain(nr, nrs.get(nr), 0, new StringBuilder()));
+				}
+			}
 		}
 	}
 
-	public synchronized UDEDefinition getDef(VariableStack stack) throws ExecutionException {
-		// for now, we optimize
-		if (cachedDef != null) {
-			return cachedDef;
+	protected void resolveReferencedChannels(WrapperNode w, Scope scope) throws CompilationException {
+		Map<String, List<Node>> crs = fn.getChannelReturns();
+		if (crs != null) {
+			referencedChannels = new LinkedList<ChannelRef<Object>>();
+			for (String cr : crs.keySet()) {
+				try {
+					Var.Channel c = scope.lookupChannel(cr, this);
+					c.appendDynamic();
+					referencedChannels.add(scope.getChannelRef(c));
+				}
+				catch (IllegalArgumentException e) {
+					throw new CompilationException(w, "Channel '" + cr + "' not found. Referenced by:\n" 
+							+ getChannelReferenceChain(cr, crs.get(cr), 0, new StringBuilder()));
+				}
+			}
 		}
-
-		UDEDefinition def = getDefInternal(stack);
-
-		if (def != cachedDef) {
-			cachedDef = def;
-			initialize(def);
-		}
-		return def;
-	}
-
-	public void executeChildren(VariableStack stack) throws ExecutionException {
-
-	}
-
-	public void executeWrapper(VariableStack stack) throws ExecutionException {
-		stack.enter();
-		stack.setCaller(this);
-		super.executeChildren(stack);
 	}
 	
-
-	/*
-	 * Override to give the def access
-	 */
-	protected void setNestedArgs(boolean nestedArgs) {
-		super.setNestedArgs(nestedArgs);
+	private StringBuilder getChannelReferenceChain(String name, List<Node> l, int depth, StringBuilder sb) {
+		for (Node n : l) {
+			for (int i = 0; i <= depth; i++) {
+				sb.append("\t");
+			}
+			sb.append(n.toString());
+			sb.append('\n');
+			if (n instanceof InvocationWrapper) {
+				List<Node> ll = ((InvocationWrapper) n).fn.getChannelReturns().get(name);
+				if (ll != null) {
+					getChannelReferenceChain(name, ll, depth + 1, sb);
+				}
+			}
+		}
+		return sb;
+	}
+	
+	private StringBuilder getParamReferenceChain(String name, List<Node> l, int depth, StringBuilder sb) {
+		for (Node n : l) {
+			for (int i = 0; i <= depth; i++) {
+				sb.append("\t");
+			}
+			sb.append(n.toString());
+			sb.append('\n');
+			if (n instanceof InvocationWrapper) {
+				List<Node> ll = ((InvocationWrapper) n).fn.getParamReturns().get(name);
+				if (ll != null) {
+					getParamReferenceChain(name, ll, depth + 1, sb);
+				}
+			}
+		}
+		return sb;
 	}
 
-	/*
-	 * Override to give the def access
-	 */
-	protected void setHasVargs(boolean hasVargs) {
-		super.setHasVargs(hasVargs);
+	@Override
+	protected ChannelRef<?> makeStaticChannel(int index, List<Object> values) {
+		return new ChannelRef.DynamicPreset<Object>(index, new ReadOnlyChannel<Object>(values));
 	}
 
-	/*
-	 * Override to give the def access Is this proper design? It doesn't really
-	 * look like it. Or maybe it is. Anyway, it gets the job done.
-	 */
-	protected void initializeArgs(VariableStack stack) throws ExecutionException {
+	@Override
+	protected void initializeArgs(Stack stack) {
+	    if (staticArgs != null) {
+            System.arraycopy(staticArgs, 0, stack.top().getAll(), firstIndex, staticArgs.length);
+        }
 		super.initializeArgs(stack);
 	}
 
-	/*
-	 * Override to give the def access
-	 */
-	protected List getNonpropargs() {
-		return super.getNonpropargs();
+	@Override
+	protected void runBody(LWThread thr) {
+		fn.runBody(thr, referencedChannels, referencedNames, firstIndex, argCount);
 	}
 
-	protected boolean checkArgument(String name, UserDefinedElement def) {
-		// return def.getValidArguments().contains(name);
-		return true;
-	}
-
-	protected void checkArguments() {
-		// let the definition do the checks
-	}
-
-	public Object getArgument(String name) {
-		if (arguments == null) {
-			return null;
-		}
-		else {
-			return arguments.get(name);
-		}
-	}
-
-	public boolean hasArgument(String name) {
-		if (arguments == null) {
-			return false;
-		}
-		else {
-			return arguments.containsKey(name);
-		}
-	}
-
-	public void setArgument(String name, Object value) {
-		if (arguments == null) {
-			arguments = new Hashtable();
-		}
-		arguments.put(name, value);
-	}
-
-	protected Set getArgumentNames() {
-		return argumentNames;
-	}
-
-	protected String[] getSortedArgs() {
-		return sortedArgs;
-	}
-
-	private void initializeDefArgs(UserDefinedElement def) {
-		sortedArgs = def.getArguments();
-		argumentNames = new HashSet();
-		argumentNames.addAll(Arrays.asList(def.getArguments()));
-		argumentNames.addAll(Arrays.asList(def.getOptargs()));
+	public void updateReferenced(Function fn) {
 	}
 }

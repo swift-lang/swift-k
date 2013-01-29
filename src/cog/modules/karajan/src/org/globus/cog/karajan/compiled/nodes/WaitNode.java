@@ -7,60 +7,60 @@
 /*
  * Created on Nov 6, 2003
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ThreadingContext;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.rt.WaitYield;
+import k.thr.LWThread;
+import k.thr.Yield;
 
-public class WaitNode extends SequentialWithArguments {
-	public static final Logger logger = Logger.getLogger(WaitNode.class);
-	
-	public static final Arg A_DELAY = new Arg.Optional("delay");
-	public static final Arg A_UNTIL = new Arg.Optional("until");
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 
-	private static Timer timer;
-	private Set tasks = new HashSet();
-
-	static {
-		setArguments(WaitNode.class, new Arg[] { A_DELAY, A_UNTIL });
+public class WaitNode extends InternalFunction {
+	private ArgRef<Number> delay;
+	private ArgRef<String> until;
+		
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params(optional("delay", null), optional("until", null)));
 	}
 
-	public void post(VariableStack stack) throws ExecutionException {
-		logger.debug("Executing wait");
-		if (stack.isDefined("#abort")) {
-			logger.debug("Aborting wait");
-			abort(stack);
-			return;
-		}
-		logger.debug("Stateful element count: "
-				+ stack.getExecutionContext().getStateManager().getExecuting().size());
-
-		stack.getExecutionContext().getStateManager().registerElement(this, stack);
-		synchronized (WaitNode.class) {
-			if (timer == null) {
-				timer = new Timer();
+	@Override
+	protected void runBody(LWThread thr) {
+		int i = thr.checkSliceAndPopState();
+		Stack stack = thr.getStack();
+		try {
+			switch (i) {
+				case 0:
+					wait(thr, stack);
+					break;
+				case 1:
 			}
 		}
-		if (A_DELAY.isPresent(stack)) {
-			timer.schedule(newTask(stack), TypeUtil.toInt(A_DELAY.getValue(stack)));
+		catch (WaitYield y) {
+			throw y;
 		}
-		else if (A_UNTIL.isPresent(stack)) {
-			String until = TypeUtil.toString(A_UNTIL.getValue(stack));
+		catch (Yield y) {
+			y.getState().push(i);
+			throw y;
+		}
+	}
+		
+	private void wait(LWThread thr, Stack stack) {
+		Number delay = this.delay.getValue(stack);
+		if (delay != null) {
+			throw new WaitYield(1, delay.intValue());
+		}
+		String until = this.until.getValue(stack);
+		if (until != null) {
 			try {
-				timer.schedule(newTask(stack), DateFormat.getDateTimeInstance().parse(until));
+				throw new WaitYield(1, DateFormat.getDateTimeInstance().parse(until));
 			}
 			catch (ParseException e) {
 				try {
@@ -70,7 +70,7 @@ public class WaitNode extends SequentialWithArguments {
 					cal.set(Calendar.MINUTE, 0);
 					cal.set(Calendar.SECOND, 0);
 					cal.set(Calendar.MILLISECOND, 0);
-					timer.schedule(newTask(stack), DateFormat.getDateInstance().parse(until));
+					throw new WaitYield(1, DateFormat.getDateInstance().parse(until));
 				}
 				catch (ParseException e1) {
 					try {
@@ -83,64 +83,14 @@ public class WaitNode extends SequentialWithArguments {
 						if (cal.before(now)) {
 							cal.add(Calendar.DAY_OF_MONTH, 1);
 						}
-						timer.schedule(newTask(stack), cal.getTime());
+						throw new WaitYield(1, cal.getTime());
 					}
 					catch (ParseException e2) {
-						throw new ExecutionException("Could not parse date/time: " + until, e);
+						throw new ExecutionException(this, "Could not parse date/time: " + until, e);
 					}
 				}
 			}
 		}
+		throw new ExecutionException(this, "Missing both 'delay' and 'until' parameters");
 	}
-	
-	private synchronized Task newTask(VariableStack stack) {
-		Task t = new Task(this, stack);
-		tasks.add(t);
-		return t;
-	}
-
-	public synchronized void delayElapsed(VariableStack stack, Task task) throws ExecutionException {
-		tasks.remove(task);
-		stack.getExecutionContext().getStateManager().unregisterElement(this, stack);
-		logger.debug("Delay elapsed");
-		try {
-			complete(stack);
-		}
-		catch (Exception e) {
-			logger.debug("Failed to complete");
-			failImmediately(stack, e.getMessage());
-		}
-	}
-
-	public synchronized void abort(VariableStack stack) throws ExecutionException {
-		for (Iterator i = tasks.iterator(); i.hasNext();) {
-			Task task = (Task) i.next();
-			if (ThreadingContext.get(task.stack).equals(ThreadingContext.get(stack))) {
-				i.remove();
-				task.cancel();
-				stack.getExecutionContext().getStateManager().unregisterElement(this, stack);
-				super.abort(stack);
-			}
-		}
-	}
-
-	private class Task extends TimerTask {
-		public final VariableStack stack;
-		private final WaitNode node;
-
-		public Task(WaitNode node, VariableStack stack) {
-			this.node = node;
-			this.stack = stack;
-		}
-
-		public void run() {
-			try {
-				node.delayElapsed(stack, this);
-			}
-			catch (ExecutionException e) {
-				logger.error("Exception caught ", e);
-			}
-		}
-	}
-
 }

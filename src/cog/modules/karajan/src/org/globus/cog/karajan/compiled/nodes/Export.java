@@ -7,82 +7,60 @@
 /*
  * Created on Aug 19, 2005
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import java.util.Collection;
-import java.util.Iterator;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.NamedValue;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.analyzer.Scope.Def;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.parser.WrapperNode;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.DefList;
-import org.globus.cog.karajan.util.ElementDefinition;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+public class Export extends InternalFunction {
+	private ChannelRef<NamedValue> cr_export;
+	private String name;
+	private ArgRef<Object> value;
+	
+	private VarRef<String> nsprefix;
+	private VarRef<Object> expv;
+	
 
-public class Export extends Define {
-	public static final Arg A_RESTRICTED = new Arg.Optional("restricted", Boolean.FALSE);
-	public static final Arg.Channel DEF_CHANNEL = new Arg.Channel("defs");
-
-	private static Definer definer = new Definer();
-
-	static {
-		setArguments(Export.class, new Arg[] { A_NAME, A_VALUE, A_RESTRICTED });
+	@Override
+	protected Signature getSignature() {
+		return new Signature(
+				params(identifier("name"), "value"),
+				returns(channel("export"))
+		);
 	}
 
-	protected Define.Definer getDefiner() {
-		return definer;
-	}
-
-	public void restart(VariableStack stack) throws ExecutionException {
-		super.restart(stack);
-	}
-
-
-
-	public static class Definer extends Define.Definer {
-		protected void define(VariableStack stack, String name, String nsprefix, Object def)
-				throws ExecutionException {
-			DEF_CHANNEL.ret(stack, new ElementDefinition(nsprefix, name, def, isRestricted(stack)));
-			super.define(stack, name, nsprefix, def);
-		}
-
-		private boolean isRestricted(VariableStack stack) {
-			try {
-				return TypeUtil.toBoolean(A_RESTRICTED.getValue(stack));
+	@Override
+	public Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
+		nsprefix = scope.getVarRef(Namespace.VAR_NAME);
+		
+		Var.Channel export = scope.lookupChannel("export");
+		if (value.isStatic()) {
+			Object v = value.getValue();
+			if (v instanceof NamedValue) {
+				NamedValue nv = (NamedValue) v;
+				v = nv.value;
 			}
-			catch (ExecutionException e) {
-				throw new RuntimeException(e);
+			
+			export.append(new NamedValue(nsprefix.getValue(), name, v));
+			if (v instanceof Def) {
+				scope.parent.addDef(nsprefix.getValue(), name, (Def) v);
 			}
-		}
-	}
-
-	public void post(VariableStack stack) throws ExecutionException {
-		if (!A_NAME.isPresent(stack)) {
-			/*
-			 * A hack to simplify porting old code All definitions on current
-			 * frame are exported
-			 */
-			// TODO Deal with cases when a deflist also contains things with the
-			// same name but different prefix.
-			Collection names = stack.currentFrame().names();
-			Iterator i = names.iterator();
-			while (i.hasNext()) {
-				String name = (String) i.next();
-				Object value = stack.currentFrame().getVar(name);
-				if (value instanceof DefList) {
-					DefList defList = (DefList) value;
-					String[] prefixes = defList.currentPrefixes();
-					for (int j = 0; j < prefixes.length; j++) {
-						String nsprefix = prefixes[j];
-						DEF_CHANNEL.ret(stack, new ElementDefinition(nsprefix, defList.getName(),
-								defList.get(nsprefix), false));
-					}
-				}
+			else {
+				scope.parent.addVar(name, v);
 			}
-			complete(stack);
+			return null;
 		}
 		else {
-			super.post(stack);
+			export.append(new NamedValue(nsprefix.getValue(), name, null));
+			return this;
 		}
 	}
 }

@@ -10,12 +10,37 @@ import java.util.List;
 
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.util.BoundContact;
+import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.TaskHandlerWrapper;
 
 public interface Scheduler {
+	
+	public static class Entry {
+		public final Task task;
+		
+		public Object constraints;
+		public TaskHandler handler;
+		public Contact[] contacts;
+		public StatusListener listener; 
+		
+		public Entry(Task task) {
+			this.task = task;
+		}
+		
+		public Entry(Task task, Object constraints) {
+			this.task = task;
+			this.constraints = constraints;
+		}
+		
+		public Entry(Task task, Object constraints, StatusListener listener) {
+			this.task = task;
+			this.constraints = constraints;
+			this.listener = listener;
+		}
+	}
+
 
 	/**
 	 * Adds a task to the queue.
@@ -27,7 +52,7 @@ public interface Scheduler {
 	 *            to handle at least constraints of the type Contact.
 	 * @see org.globus.cog.karajan.util.Contact
 	 */
-	void enqueue(Task task, Object constraints);
+	void enqueue(Task task, Object constraints, StatusListener listener);
 
 	/**
 	 * Attempt to allocate a host. The returned object should be used later by
@@ -56,17 +81,6 @@ public interface Scheduler {
 	ContactSet getResources();
 
 	/**
-	 * Allows the addition of a status listener that will be invoked whenever
-	 * the status of the given task changes.
-	 */
-	void addJobStatusListener(StatusListener l, Task task);
-
-	/**
-	 * Removes a status listener added using <tt>addJobStatusListener</tt>
-	 */
-	void removeJobStatusListener(StatusListener l, Task task);
-
-	/**
 	 * Makes the scheduler aware of a task handler implementation. The scheduler
 	 * can then make use of any of the task handlers that were added.
 	 * 
@@ -77,7 +91,7 @@ public interface Scheduler {
 	/**
 	 * Returns a list of all the task handlers that were added to the scheduler
 	 */
-	List getTaskHandlers();
+	List<TaskHandlerWrapper> getTaskHandlers();
 
 	/**
 	 * Sets a scheduler property. The supported property names can be queried
@@ -105,6 +119,8 @@ public interface Scheduler {
 	 * Allows handling task failures at the scheduler level
 	 */
 	void addFailureHandler(FailureHandler handler);
+
+	Object getConstraints(Task t);
 	
-	Object getConstraints(Task task);
+	void start();
 }

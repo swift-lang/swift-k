@@ -7,80 +7,105 @@
 /*
  * Created on Apr 26, 2005
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ConditionalYield;
+import k.rt.ExecutionException;
+import k.rt.FutureObject;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
 
-public class Exclusive extends PartialArgumentsContainer {
-	public static final String LOCKS = "#exclusive:locks";
-	public static final String ON = "#on";
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.Signature;
 
-	public static final Arg A_ON = new Arg.Optional("on");
+public class Exclusive extends InternalFunction {
+	private ArgRef<Object> on;
+	private Node body;
+	
+	private static Map<Object, LinkedList<FutureObject>> locks = new HashMap<Object, LinkedList<FutureObject>>();
 
-	static {
-		setArguments(Exclusive.class, new Arg[] { A_ON });
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params("on", block("body")));
 	}
 
-	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		super.pre(stack);
-		Map locks = getLocks(stack);
-		Object on = A_ON.getValue(stack, Object.class);
-		stack.setVar(ON, on);
-		if (testAndAdd(locks, on, stack)) {
-			startRest(stack);
+	@Override
+	public void runBody(LWThread thr) {
+		int i = thr.checkSliceAndPopState();
+		int fc = thr.popIntState();
+		Object on = thr.popState();
+		Stack stack = thr.getStack();
+		try {
+			switch (i) {
+				case 0:
+					on = this.on.getValue(stack);
+					if (on == null) {
+						on = this;
+					}
+					monitorEnter(thr, on);
+					fc = stack.frameCount();
+					i++;
+				case 1:
+					if (CompilerSettings.PERFORMANCE_COUNTERS) {
+						startCount++;
+					}
+					body.run(thr);
+					monitorExit(thr, on);
+			}
+		}
+		catch (ExecutionException e) {
+			stack.dropToFrame(fc);
+			monitorExit(thr, on);
+			throw e;
+		}
+		catch (Yield y) {
+			y.getState().push(on);
+			y.getState().push(fc);
+			y.getState().push(i);
+			throw y;
 		}
 	}
 
-	protected boolean testAndAdd(Map locks, Object on, VariableStack stack) {
+	protected void monitorEnter(LWThread thr, Object on) {	
+		int i = thr.checkSliceAndPopState();
+		Stack stack = thr.getStack();
+
+    	switch (i) {
+    		case 0:
+				synchronized(locks) {
+					LinkedList<FutureObject> waiting = locks.get(on);
+					if (waiting == null) {
+						// first thread to get here
+						locks.put(on, new LinkedList<FutureObject>());
+					}
+					else {
+						// not the first thread; add a future object to the list and wait
+						FutureObject fo = new FutureObject();
+						waiting.add(fo);
+						throw new ConditionalYield(1, fo);
+					}
+				}
+    		default:
+    			// awaken
+    	}
+	}
+
+	protected void monitorExit(LWThread thr, Object on) {
 		synchronized (locks) {
-			LinkedList stacks = (LinkedList) locks.get(on);
-			boolean first;
-			if (stacks == null) {
-				first = true;
-				stacks = new LinkedList();
-				locks.put(on, stacks);
-			}
-			else {
-				first = false;
-				stacks.add(stack);
-			}
-			return first;
-		}
-	}
-
-	private Map getLocks(VariableStack stack) {
-		synchronized (stack.getExecutionContext()) {
-			Map locks = (Map) stack.getGlobal(LOCKS);
-			if (locks == null) {
-				locks = new HashMap();
-				stack.setGlobal(LOCKS, locks);
-			}
-			return locks;
-		}
-	}
-
-	protected void _finally(VariableStack stack) throws ExecutionException {
-		Map locks = getLocks(stack);
-		VariableStack next = null;
-		synchronized (locks) {
-			Object on = stack.currentFrame().getVar(ON);
-			LinkedList instances = (LinkedList) locks.get(on);
-			if (instances.size() > 0) {
-				next = (VariableStack) instances.removeFirst();
-			}
-			else {
+			LinkedList<FutureObject> waiting = locks.get(on);
+			if (waiting.isEmpty()) {
 				locks.remove(on);
 			}
+			else {
+				FutureObject fo = waiting.removeFirst();
+				fo.setValue(Boolean.TRUE);
+			}
 		}
-		if (next != null) {
-			pre(next);
-		}
-		super._finally(stack);
 	}
 }

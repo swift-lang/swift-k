@@ -7,30 +7,27 @@
 /*
  * Created on Sep 22, 2004
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ThreadingContext;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.KRunnable;
+import k.thr.LWThread;
+
 
 public class UnsynchronizedNode extends Sequential {
-	
-	public UnsynchronizedNode() {
-		setOptimize(false);
-	}
-	
-	public void pre(VariableStack stack) throws ExecutionException {
-		VariableStack copy = stack.copy();
-		complete(stack);
-		copy.enter();
-		ThreadingContext.set(copy, ThreadingContext.get(copy).split(getIntProperty(UID)));
-		super.pre(copy);
-		super.executeChildren(copy);
-	}
-	
-	protected void executeChildren(VariableStack stack) throws ExecutionException {
-	}
-	
-	public void post(VariableStack stack) throws ExecutionException {
+		
+	@Override
+	public void run(LWThread thr) {
+		LWThread nt = thr.fork(new KRunnable() {
+			@Override
+			public void run(LWThread thr) {
+				try {
+	    			UnsynchronizedNode.super.run(thr);
+	    		}
+	    		catch (ExecutionException e) {
+	    		}
+			}
+		});
+		nt.start();
 	}
 }

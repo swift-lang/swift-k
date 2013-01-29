@@ -7,10 +7,13 @@
 /*
  * Created on Feb 15, 2005
  */
-package org.globus.cog.karajan.workflow.futures;
+package org.globus.cog.karajan.futures;
+
+import k.rt.ConditionalYield;
+import k.rt.Future;
 
 
-public class FutureNotYetAvailable extends FutureFault {
+public class FutureNotYetAvailable extends ConditionalYield {
 	private static final long serialVersionUID = -6211457624313265733L;
 
 	public FutureNotYetAvailable(Future f) {
@@ -18,6 +21,6 @@ public class FutureNotYetAvailable extends FutureFault {
 	}
 
 	public FutureNotYetAvailable(Future f, String op) {
-		super(f, null);
+		super(f);
 	}
 }

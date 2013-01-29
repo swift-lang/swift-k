@@ -8,89 +8,155 @@
  * Created on Jun 6, 2003
  *  
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.StackFrame;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.Identifier;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
 
-public class SetVarK extends SequentialWithArguments {
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.NamedValue;
+import org.globus.cog.karajan.analyzer.Pure;
+import org.globus.cog.karajan.analyzer.RecursiveFunctionChannel;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Scope.Def;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.Var.Channel;
+import org.globus.cog.karajan.parser.WrapperNode;
 
-	static {
-		setArguments(SetVarK.class, new Arg[] { Arg.VARGS });
+public class SetVarK extends CompoundNode {
+	private int startIndex, endIndex;
+	private ChannelRef.ArgMapping<Object> values;
+
+	@Override
+	public void run(LWThread thr) throws ExecutionException {
+        int i = thr.checkSliceAndPopState();
+        Stack stack = thr.getStack();
+        try {
+	        switch (i) {
+	        	case 0:
+	        		if (startIndex >= 0) {
+	        			values.create(stack);
+	        		}
+	        		i++;
+	        	default:
+	        		int nc = childCount();
+	        		for (; i <= nc; i++) {
+	        			runChild(i - 1, thr);
+	        		}
+		    }
+        }
+        catch (Yield y) {
+            y.getState().push(i);
+            throw y;
+        }
 	}
 
-	public void pre(VariableStack stack) throws ExecutionException {
-		super.pre(stack);
-		stack.setVar("#quoted", true);
-	}
-
-	public void post(VariableStack stack) throws ExecutionException {
-		VariableArguments vargs = Arg.VARGS.get(stack);
-		if (vargs.size() == 0) {
-			throw new ExecutionException("Missing identifier(s)");
+	@Override
+	protected Node compileChildren(WrapperNode wn, Scope scope) throws CompilationException {
+		LinkedList<String> vars = getIdents(wn, scope);
+		int initialSize = vars.size();
+		startIndex = scope.parent.reserveRange(initialSize);
+		
+		Var.Channel svalues = scope.addChannel("...");
+		//System.out.println(wn + " ... at " + svalues.getIndex());
+		
+		if (wn.getNode(1).getNodeType().equals("function")) {
+			if (vars.size() != 1) {
+				throw new CompilationException(wn, "Expected a single identifier");
+			}
+			svalues.setValue(new RecursiveFunctionChannel(wn, scope.parent, vars.get(0)));
 		}
-		Object ident = vargs.removeFirst();
-		if (ident instanceof List) {
-			setMultiple((List) ident, vargs, stack);
+		
+		Node cn = wn.getNode(1).compile(this, scope);
+		
+		if (svalues.size() > vars.size()) {
+			throw new CompilationException(wn, "Spurious values in assignment");
 		}
-		else if (ident instanceof Identifier) {
-			setSingle((Identifier) ident, vargs, stack);
+		if (!svalues.isDynamic() && (svalues.size() < vars.size())) {
+			throw new CompilationException(wn, "Insufficient values in assignment");
 		}
-		else {
-			throw new ExecutionException(
-					"First argument must be an identifier or a list of identifiers");
-		}
-		super.post(stack);
-	}
-
-	protected final void setMultiple(List idents, VariableArguments vargs, VariableStack stack)
-			throws ExecutionException {
-		if (idents.size() != vargs.size()) {
-			throw new ExecutionException("Argument size mismatch. Got " + idents.size()
-					+ " names and " + vargs.size() + " values");
-		}
-		for (int i = 0; i < idents.size(); i++) {
-			Object next = idents.get(i);
-			if (next instanceof Identifier) {
-				getFrame(stack).setVar(checkName(((Identifier) next).getName()), vargs.get(i));
+		
+		addStatic(vars, svalues, scope);
+		
+		scope.parent.releaseRange(startIndex + vars.size(), startIndex + initialSize - 1);
+		
+		if (vars.isEmpty()) {
+			startIndex = -1;
+			if (cn instanceof Pure) {
+				return null;
 			}
 			else {
-				throw new ExecutionException(
-						"Expected a list of identifiers. The element with index " + i
-								+ " in the list is not.");
+				return cn;
 			}
 		}
+		
+		int index = startIndex;
+		for (String name : vars) {
+			Var v = new Var(name);
+			v.setDynamic();
+			scope.parent.addVar(v, index++);
+		}
+		
+		values = new ChannelRef.ArgMappingFixed<Object>(startIndex, vars.size(), svalues.getIndex());
+		if (CompilerSettings.DEBUG) {
+			values.setNamesS(vars);
+		}
+		addChild(cn);
+		return this;
 	}
 
-	protected final void setSingle(Identifier ident, VariableArguments vargs, VariableStack stack)
-			throws ExecutionException {
-		if (vargs.size() != 1) {
-			throw new ExecutionException("Got one name (" + ident + ") and " + vargs.size() + " values: " + vargs);
+	private void addStatic(List<String> vars, Channel svalues, Scope scope) {
+		Iterator<String> i1 = vars.iterator();
+		Iterator<Object> i2 = svalues.getAll().iterator();
+		while (i2.hasNext()) {
+			Object value = i2.next();
+			String name = i1.next();
+			if (value instanceof NamedValue) {
+				// function
+				NamedValue nv = (NamedValue) value;
+				scope.parent.addDef(nv.ns, name, (Def) nv.value);
+			}
+			else if (value != null) {
+				scope.parent.addVar(name, value);
+			}
+			else {
+				return;
+			}
+			i1.remove();
+			i2.remove();
+		}
+	}
+
+	private LinkedList<String> getIdents(WrapperNode wn, Scope scope) throws CompilationException {
+		if (wn.nodeCount() < 2) {
+			throw new CompilationException(wn, "Expected indentifier(s)");
+		}
+		LinkedList<String> l = new LinkedList<String>();
+		WrapperNode cn = wn.getNode(0);
+		if (cn.getNodeType().equals("k:var")) {
+			l.add(cn.getText());
+		}
+		else if (cn.getNodeType().equals("k:sequential")) {
+			for (WrapperNode ccn : cn.nodes()) {
+				if (ccn.getNodeType().equals("k:var")) {
+					l.add(ccn.getText());
+				}
+				else {
+					throw new CompilationException(ccn, "Expected identifier");
+				}
+			}
 		}
 		else {
-			getFrame(stack).setVar(checkName(((Identifier) ident).getName()), vargs.get(0));
+			throw new CompilationException(cn, "Expected identifier");
 		}
-	}
-
-	private String checkName(String name) throws ExecutionException {
-		if (name.startsWith("#")) {
-			throw new ExecutionException("Invalid character ('#') in identifier: " + name);
-		}
-		return name;
-	}
-
-	protected StackFrame getFrame(VariableStack stack) throws ExecutionException {
-		return stack.parentFrame();
-	}
-
-	public void completed(VariableStack stack) throws ExecutionException {
-		stack.currentFrame().deleteVar("#quoted");
-		super.completed(stack);
+		return l;
 	}
 }

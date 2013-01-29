@@ -7,37 +7,27 @@
 /*
  * Created on Feb 8, 2005
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ChannelIdentifier;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Param;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.parser.WrapperNode;
 
-public class Channel extends SequentialWithArguments {
-	public static final Arg A_NAME = new Arg.Positional("name", 0);
-	public static final Arg A_COMMUTATIVE = new Arg.Optional("commutative", Boolean.FALSE);
-	
-	private String to, from;
-
-	static {
-		setArguments(Channel.class, new Arg[] { A_NAME });
-	}
-	
-	public Channel() {
-		setQuotedArgs(true);
-	}
-
-	public void post(VariableStack stack) throws ExecutionException {
-		boolean comm = TypeUtil.toBoolean(A_COMMUTATIVE.getValue(stack));
-		if (A_NAME.isPresent(stack)) {
-			ret(stack, new ChannelIdentifier(TypeUtil.toString(A_NAME.getValue(stack))));
+public class Channel extends Node {
+	@Override
+	public Node compile(WrapperNode w, Scope scope) throws CompilationException {
+		Var.Channel r = scope.lookupChannel("...");
+		for (WrapperNode c : w.nodes()) {
+			if (c.getNodeType().equals("k:var")) {
+				r.append(new Param((String) c.getProperty(WrapperNode.TEXT), 
+						Param.Type.CHANNEL));
+			}
+			else {
+				throw new CompilationException(c, "Expected identifier");
+			}
 		}
-		else {
-			ret(stack, new FutureVariableArguments());
-		}
-		super.post(stack);
+		return null;
 	}
 }

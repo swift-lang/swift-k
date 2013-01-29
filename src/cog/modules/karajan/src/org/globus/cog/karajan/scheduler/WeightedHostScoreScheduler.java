@@ -25,7 +25,6 @@ import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 
 public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	private static final Logger logger = Logger.getLogger(WeightedHostScoreScheduler.class);
@@ -67,6 +66,8 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	private boolean cachedLoadState;
 	private int hits;
 	private OverloadedHostMonitor monitor;
+	
+	private final Object lock = new Object();
 
 	public WeightedHostScoreScheduler() {
 		policy = POLICY_WEIGHTED_RANDOM;
@@ -110,9 +111,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			return;
 		}
 		sorted = new WeightedHostSet(scoreHighCap, monitor);
-		Iterator i = grid.getContacts().iterator();
-		while (i.hasNext()) {
-			BoundContact contact = (BoundContact) i.next();
+		for (BoundContact contact : grid.getContacts()) {
 			float thisJobThrottle = defaultJobThrottle;
 			double thisDelayBase = defaultDelayBase;
 			double thisInitialScore = 0;
@@ -141,32 +140,35 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	}
 
 	protected void factorScore(WeightedHost wh, double factor) {
+		double score = wh.getScore();
 		if (logger.isDebugEnabled()) {
 			logger.debug("multiplyScore(" + wh + ", " + factor + ")");
 		}
-		double score = wh.getScore();
-		double ns = sorted.factorScore(wh, factor);
+		double ns = sorted.changeScoreDelta(wh, factor);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Old score: " + WeightedHost.D4.format(score) + ", new score: "
 					+ WeightedHost.D4.format(ns));
 		}
 	}
 
-	protected synchronized void factorScoreLater(WeightedHost wh, double factor) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("factorLater(" + wh + ", " + factor + ")");
+	protected void factorScoreLater(WeightedHost wh, double factor) {
+		synchronized(lock) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("factorLater(" + wh + ", " + factor + ")");
+			}
+			wh.setDelayedDelta(wh.getDelayedDelta() + factor);
 		}
-		wh.setDelayedDelta(wh.getDelayedDelta() + factor);
 	}
 
-	protected synchronized BoundContact getNextContact(TaskConstraints t)
+	protected final double factor(double score, double factor) {
+		return score + factor;
+	}
+
+	protected BoundContact getNextContact(TaskConstraints t)
 			throws NoFreeResourceException {
 		checkGlobalLoadConditions();
 
-		if (!change && cachedLoadState && cachedConstraints.equals(t)) {
-			hits++;
-			throw new NoFreeResourceException();
-		}
+		earlyCheckCache(t);
 
 		BoundContact contact;
 
@@ -182,15 +184,8 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		if (s.isEmpty()) {
 			throw new NoSuchResourceException();
 		}
-		else if (s.allOverloaded()) {
-			change = false;
-			cachedLoadState = true;
-			cachedConstraints = t;
-			hits = 0;
-			throw new NoFreeResourceException();
-		}
 		else {
-			cachedLoadState = false;
+			updateChachedState(s, t);
 		}
 
 		s = removeOverloaded(s);
@@ -200,25 +195,22 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		}
 		else if (s.size() == 1) {
 			selected = s.iterator().next();
-			if (logger.isInfoEnabled()) {
-				logger.info("Sorted: " + s);
-			}
 		}
 		else {
 			double sum = s.getSum();
 			if (policy == POLICY_WEIGHTED_RANDOM) {
 				double rand = Math.random() * sum;
-				if (logger.isInfoEnabled() && !s.isEmpty()) {
-					logger.info("Sorted: " + s);
+				if (logger.isDebugEnabled() && !s.isEmpty()) {
+					logger.debug("Sorted: " + s);
 				}
 				if (logger.isDebugEnabled()) {
 					logger.debug("Rand: " + rand + ", sum: " + sum);
 				}
-				Iterator i = s.iterator();
+				Iterator<WeightedHost> i = s.iterator();
 
 				sum = 0;
 				while (i.hasNext()) {
-					WeightedHost wh = (WeightedHost) i.next();
+					WeightedHost wh = i.next();
 					sum += wh.getTScore();
 					if (sum >= rand) {
 						selected = wh;
@@ -233,7 +225,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 				selected = s.last();
 			}
 			else {
-				throw new KarajanRuntimeException("Invalid policy number: " + policy);
+				throw new RuntimeException("Invalid policy number: " + policy);
 			}
 		}
 		if (logger.isDebugEnabled()) {
@@ -243,39 +235,72 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		sorted.changeLoad(selected, 1);
 		selected.setDelayedDelta(successFactor);
 		selected.notifyUsed();
-		if (logger.isInfoEnabled()) {
-			logger.info("CONTACT_SELECTED host=" + selected.getHost() + ", score="
+		if (logger.isDebugEnabled()) {
+			logger.debug("CONTACT_SELECTED host=" + selected.getHost() + ", score="
 					+ WeightedHost.D4.format(selected.getTScore()));
 		}
 		return selected.getHost();
 	}
 	
-	public synchronized boolean allOverloaded() {
-		return sorted.allOverloaded();
+	private void updateChachedState(WeightedHostSet s, TaskConstraints t) throws NoFreeResourceException {
+		synchronized(lock) {
+			if (s.allOverloaded()) {
+				change = false;
+				cachedLoadState = true;
+				cachedConstraints = t;
+				hits = 0;
+				throw new NoFreeResourceException();
+			}
+			else {
+				cachedLoadState = false;
+			}
+		}
+	}
+
+	private void earlyCheckCache(TaskConstraints t) throws NoFreeResourceException {
+		synchronized(lock) {
+			if (!change && cachedLoadState && cachedConstraints.equals(t)) {
+				hits++;
+				throw new NoFreeResourceException();
+			}
+		}
+	}
+
+	public boolean allOverloaded() {
+		synchronized(lock) {
+		    if (sorted == null) {
+		        return false;
+		    }
+		    else {
+		    	return sorted.allOverloaded();
+		    }
+		}
 	}
 
 	public void releaseContact(Contact contact) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Releasing contact " + contact);
-		}
-		BoundContact bc = this.getBoundContact(contact);
-		super.releaseContact(contact);
-
-		if (bc == null) {
-			logger.warn("Trying to release previously released contact: " + contact);
-		}
-		else {
-			WeightedHost wh = sorted.findHost(bc);
-			if (wh != null) {
-				change = true;
-				sorted.changeLoad(wh, -1);
-				if (logger.isDebugEnabled()) {
-					logger.debug("commitDelayedScore(" + wh + ", " + wh.getDelayedDelta());
-				}
-				sorted.changeScore(wh, wh.getScore() + wh.getDelayedDelta());
+		synchronized(lock) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Releasing contact " + contact);
+			}
+			BoundContact bc = this.getBoundContact(contact);
+			super.releaseContact(contact);
+	
+			if (bc == null) {
+				logger.warn("Trying to release previously released contact: " + contact);
 			}
 			else {
-				logger.warn("ghost contact (" + contact + ") in releaseContact");
+				WeightedHost wh = sorted.findHost(bc);
+				if (wh != null) {
+					change = true;
+					sorted.changeLoad(wh, -1);
+					if (logger.isDebugEnabled()) {
+						logger.debug("commitDelayedScore(" + wh + ", " + wh.getDelayedDelta());
+					}
+					sorted.changeScore(wh, wh.getScore() + wh.getDelayedDelta());
+				}
+				else {
+					logger.warn("ghost contact (" + contact + ") in releaseContact");
+				}
 			}
 		}
 	}
@@ -293,9 +318,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 	protected WeightedHostSet removeOverloaded(WeightedHostSet s) {
 		if (s == sorted) {
 			WeightedHostSet ns = new WeightedHostSet(scoreHighCap);
-			Iterator i = s.iterator();
-			while (i.hasNext()) {
-				WeightedHost wh = (WeightedHost) i.next();
+			for (WeightedHost wh : s) {
 				if (wh.isOverloaded() == 0) {
 					ns.add(wh);
 				}
@@ -303,9 +326,9 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			return ns;
 		}
 		else {
-			Iterator i = s.iterator();
+			Iterator<WeightedHost> i = s.iterator();
 			while (i.hasNext()) {
-				WeightedHost wh = (WeightedHost) i.next();
+				WeightedHost wh = i.next();
 				if (wh.isOverloaded() != 0) {
 					i.remove();
 				}
@@ -319,10 +342,10 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			FACTOR_CONNECTION_REFUSED, FACTOR_CONNECTION_TIMEOUT, FACTOR_SUBMISSION_TASK_LOAD,
 			FACTOR_TRANSFER_TASK_LOAD, FACTOR_FILEOP_TASK_LOAD, FACTOR_FAILURE, FACTOR_SUCCESS,
 			SCORE_HIGH_CAP, JOB_THROTTLE, MAX_SUBMISSION_TIME };
-	private static Set propertyNamesSet;
+	private static Set<String> propertyNamesSet;
 
 	static {
-		propertyNamesSet = new HashSet();
+		propertyNamesSet = new HashSet<String>();
 		for (int i = 0; i < myPropertyNames.length; i++) {
 			propertyNamesSet.add(myPropertyNames[i]);
 		}
@@ -349,7 +372,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 					policy = POLICY_BEST_SCORE;
 				}
 				else {
-					throw new KarajanRuntimeException("Unknown policy type: " + value);
+					throw new RuntimeException("Unknown policy type: " + value);
 				}
 			}
 			else if (JOB_THROTTLE.equals(name)) {
@@ -370,7 +393,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 					}
 				}
 				catch (Exception e) {
-					throw new KarajanRuntimeException("Failed to set property '" + name + "'", e);
+					throw new RuntimeException("Failed to set property '" + name + "'", e);
 				}
 			}
 			updateInternal();
@@ -380,23 +403,25 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		}
 	}
 
-	public void submitBoundToServices(Task t, Contact[] contacts, Service[] services)
+	@Override
+	public void submitBoundToServices(Entry e, Contact[] contacts, Service[] services)
 			throws TaskSubmissionException {
-		factorSubmission(t, contacts, 1);
-		super.submitBoundToServices(t, contacts, services);
+	    factorSubmission(e.task, contacts, 1);
+		super.submitBoundToServices(e, contacts, services);
 	}
 
-	public void statusChanged(StatusEvent e) {
+	@Override
+	public void statusChanged(StatusEvent se, Entry e) {
 		try {
-			Task t = (Task) e.getSource();
-			int code = e.getStatus().getStatusCode();
-			Contact[] contacts = getContacts(t);
+			Task t = e.task;
+			int code = se.getStatus().getStatusCode();
+			Contact[] contacts = e.contacts;
 
 			if (contacts == null) {
 				return;
 			}
 
-			checkSubmissionTime(code, e.getStatus(), t, contacts);
+			checkSubmissionTime(code, se.getStatus(), t, contacts);
 
 			if (code == Status.SUBMITTED) {
 				// this isn't reliable
@@ -408,7 +433,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			}
 			else if (code == Status.FAILED) {
 				factorMultipleLater(contacts, failureFactor);
-				Exception ex = e.getStatus().getException();
+				Exception ex = se.getStatus().getException();
 				if (ex != null) {
 					String exs = ex.toString();
 					if (exs.indexOf("Connection refused") >= 0
@@ -425,7 +450,7 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			logger.warn("Scheduler threw exception while processing task status change", ex);
 		}
 		finally {
-			super.statusChanged(e);
+			super.statusChanged(se, e);
 		}
 	}
 
@@ -507,8 +532,10 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		raiseTasksFinished();
 	}
 
-	protected synchronized void raiseTasksFinished() {
-		change = true;
-		super.raiseTasksFinished();
+	protected void raiseTasksFinished() {
+		synchronized(lock) {
+			change = true;
+			super.raiseTasksFinished();
+		}
 	}
 }

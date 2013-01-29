@@ -10,17 +10,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
-import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
-import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.util.BoundContact;
@@ -29,10 +26,8 @@ import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.Queue;
 import org.globus.cog.karajan.util.TaskHandlerWrapper;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.util.CopyOnWriteArrayList;
 
 public abstract class AbstractScheduler extends Thread implements Scheduler {
-
 	private static final Logger logger = Logger.getLogger(AbstractScheduler.class);
 	
 	public static final int THROTTLE_OFF = Integer.MAX_VALUE;
@@ -43,15 +38,13 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 
 	private int maxSimultaneousJobs;
 
-	private final Queue jobs;
+	private final Queue<Entry> jobs;
 
-	private final Map<ExecutableObject, CopyOnWriteArrayList<StatusListener>> listeners;
+	private final Map<Task, Entry> entries;
 
 	private ContactSet grid;
 
 	private final Map<String, Object> properties;
-
-	private final Map<Task, Object> constraints;
 
 	private List<TaskTransformer> taskTransformers;
 	private List<FailureHandler> failureHandlers;
@@ -60,13 +53,12 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 
 	public AbstractScheduler() {
 		super("Scheduler");
-		jobs = new Queue();
-		listeners = new HashMap<ExecutableObject, CopyOnWriteArrayList<StatusListener>>();
+		jobs = new Queue<Entry>();
+		entries = new HashMap<Task, Entry>();
 		handlerMap = new HashMap<Integer, Map<String, TaskHandlerWrapper>>();
 		grid = new ContactSet();
 		maxSimultaneousJobs = 65536;
 		properties = new HashMap<String, Object>();
-		constraints = new HashMap<Task, Object>();
 		taskTransformers = new LinkedList<TaskTransformer>();
 		failureHandlers = new LinkedList<FailureHandler>();
 
@@ -131,52 +123,38 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 	public ContactSet getResources() {
 		return grid;
 	}
-
-	public void addJobStatusListener(StatusListener l, Task task) {
-		CopyOnWriteArrayList<StatusListener> jobListeners;
-		synchronized (listeners) {
-			jobListeners = listeners.get(task);
-			if (jobListeners == null) {
-				jobListeners = new CopyOnWriteArrayList<StatusListener>();
-				listeners.put(task, jobListeners);
-			}
-		}
-		jobListeners.add(l);
-	}
-
-	public void removeJobStatusListener(StatusListener l, Task task) {
-		synchronized (listeners) {
-			CopyOnWriteArrayList<StatusListener> jobListeners = listeners.get(task);
-			if (jobListeners != null) {
-				jobListeners.remove(l);
-				if (jobListeners.isEmpty()) {
-					listeners.remove(task);
-				}
-			}
+	
+	protected void setEntry(Task t, Entry e) {
+		synchronized(entries) {
+			entries.put(t, e);
 		}
 	}
-
-	public void fireJobStatusChangeEvent(StatusEvent e) {
-		CopyOnWriteArrayList<StatusListener> jobListeners = null;
-		synchronized (listeners) {
-			jobListeners = listeners.get(e.getSource());
+	
+	protected Entry removeEntry(Task t) {
+		synchronized(entries) {
+			return entries.remove(t);
 		}
-		if (jobListeners != null) {
-			Iterator<StatusListener> i = jobListeners.iterator();
-			try {
-				while (i.hasNext()) {
-					i.next().statusChanged(e);
-				}
-			}
-			finally {
-				jobListeners.release(i);
-			}
+	}
+	
+	protected Entry getEntry(Task t) {
+		synchronized(entries) {
+			return entries.get(t);
+		}
+	}
+	
+	public Object getConstraints(Task t) {
+		return getEntry(t).constraints;
+	}
+
+	public void fireJobStatusChangeEvent(final StatusEvent ev, Entry e) {
+		if (e.listener != null) {
+			e.listener.statusChanged(ev);
 		}
 	}
 
-	public void fireJobStatusChangeEvent(Task source, Status status) {
-		StatusEvent jsce = new StatusEvent(source, status);
-		fireJobStatusChangeEvent(jsce);
+	public void fireJobStatusChangeEvent(Entry e, Status status) {
+		StatusEvent jsce = new StatusEvent(e.task, status);
+		fireJobStatusChangeEvent(jsce, e);
 	}
 
 	public int getMaxSimultaneousJobs() {
@@ -187,7 +165,7 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 		maxSimultaneousJobs = i;
 	}
 
-	public Queue getJobQueue() {
+	public Queue<Entry> getJobQueue() {
 		return jobs;
 	}
 
@@ -237,24 +215,6 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 		return combined;
 	}
 
-	public void setConstraints(Task task, Object constraint) {
-		synchronized (constraints) {
-			constraints.put(task, constraint);
-		}
-	}
-
-	public Object getConstraints(Task task) {
-		synchronized (constraints) {
-			return constraints.get(task);
-		}
-	}
-
-	protected void removeConstraints(Task task) {
-		synchronized (constraints) {
-			constraints.remove(task);
-		}
-	}
-
 	public void addTaskTransformer(TaskTransformer taskTransformer) {
 		this.taskTransformers.add(taskTransformer);
 	}
@@ -269,9 +229,9 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 		}
 	}
 
-	protected boolean runFailureHandlers(Task t) {
+	protected boolean runFailureHandlers(Entry e) {
 		for (FailureHandler fh : failureHandlers) {
-			if (fh.handleFailure(t, this)) {
+			if (fh.handleFailure(e, this)) {
 				return true;
 			}
 		}
@@ -298,13 +258,27 @@ public abstract class AbstractScheduler extends Thread implements Scheduler {
 			return constraintChecker.checkConstraints(resource, tc);
 		}
 	}
-
-	protected List checkConstraints(List resources, TaskConstraints tc) {
-		if (constraintChecker == null) {
-			return resources;
+	
+	public final void statusChanged(StatusEvent se) {
+		Task task = (Task) se.getSource();
+		if (task == null) {
+			logger.warn("Got status event with no task " + se);
+			return;
+		}
+		Entry e;
+		if (se.getStatus().isTerminal()) {
+			e = removeEntry(task);
 		}
 		else {
-			return constraintChecker.checkConstraints(resources, tc);
+			e = getEntry(task);
 		}
+		
+		if (e == null) {
+			logger.warn("Got status event for task with no entry" + task);
+			return;
+		}
+		statusChanged(se, e);
 	}
+	
+	protected abstract void statusChanged(StatusEvent se, Entry e);
 }

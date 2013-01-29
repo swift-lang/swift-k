@@ -9,10 +9,9 @@
  */
 package org.globus.cog.karajan.scheduler;
 
-import org.globus.cog.abstraction.interfaces.Task;
 
 public interface FailureHandler {
-	boolean handleFailure(Task t, Scheduler s);
+	boolean handleFailure(AbstractScheduler.Entry e, Scheduler s);
 	
 	void setProperty(String name, String value);
 }

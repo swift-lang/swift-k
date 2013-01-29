@@ -7,36 +7,57 @@
 /*
  * Created on Jul 31, 2003
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import java.util.Iterator;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.LinkedList;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.NonCacheable;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.thr.LWThread;
 
-public class Namespace extends PartialArgumentsContainer implements NonCacheable {
-	public static final Arg A_PREFIX = new Arg.Positional("prefix", 0);
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.Pure;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.parser.WrapperNode;
+
+public class Namespace extends InternalFunction implements Pure {
+	public static final String VAR_NAME = "#namespaceprefix";
 	
-	static {
-		setArguments(Namespace.class, new Arg[] {A_PREFIX});
+	private String prefix;
+	private Node body;
+	
+
+	@Override
+	protected Signature getSignature() {
+		return new Signature(
+				params(identifier("prefix"), block("body"))
+		);
+	}
+	
+	@Override
+	protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
+			Scope scope) throws CompilationException {
+		scope.addVar(VAR_NAME, prefix);
+		super.compileBlocks(w, sig, blocks, scope);
 	}
 
-	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		stack.setVar("#namespaceprefix", A_PREFIX.getValue(stack));
-		super.partialArgumentsEvaluated(stack);
-		startRest(stack);
-	}
-
-	public void post(VariableStack stack) throws ExecutionException {
-		Iterator i = stack.currentFrame().names().iterator();
-		while (i.hasNext()) {
-			String name = (String) i.next();
-			if (name.startsWith("#def#")) {
-				stack.parentFrame().setVar(name, stack.currentFrame().getVar(name));
+	@Override
+	protected void runBody(LWThread thr) {
+		if (body != null) {
+			if (CompilerSettings.PERFORMANCE_COUNTERS) {
+				startCount++;
 			}
+			body.run(thr);
 		}
-		super.post(stack);
-	}	
+	}
+
+	@Override
+	public void dump(PrintStream ps, int level) throws IOException {
+		super.dump(ps, level);
+		if (body != null) {
+			body.dump(ps, level + 1);
+		}
+	}
 }

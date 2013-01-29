@@ -5,9 +5,9 @@
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 
-public abstract class PassiveNode extends FlowNode {
+public abstract class PassiveNode extends Node {
 
 }

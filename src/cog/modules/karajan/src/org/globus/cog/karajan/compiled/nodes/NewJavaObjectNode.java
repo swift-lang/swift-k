@@ -7,39 +7,50 @@
 /*
  * Created on Jul 31, 2003
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
 import java.util.Iterator;
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
 
-public class NewJavaObjectNode extends AbstractFunction {
-    public static final Arg A_CLASSNAME = new Arg.Positional("classname", 0);
-    public static final Arg A_TYPES = new Arg.Optional("types");
-    
-	static {
-		setArguments(NewJavaObjectNode.class, new Arg[] { A_CLASSNAME, A_TYPES, Arg.VARGS });
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Param;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
+import org.globus.cog.karajan.parser.WrapperNode;
+import org.globus.cog.karajan.util.TypeUtil;
+
+public class NewJavaObjectNode extends AbstractSingleValuedFunction {
+	
+	private ArgRef<String> classname;
+	private ArgRef<Object> types;
+	private ChannelRef<Object> c_vargs;
+
+	@Override
+	protected Param[] getParams() {
+		return params("classname", optional("types", null), "...");
 	}
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		String className = TypeUtil.toString(A_CLASSNAME.getValue(stack));
-		Object[] args = Arg.VARGS.asArray(stack);
-		Class[] argTypes = new Class[args.length];
-		if (A_TYPES.isPresent(stack)) {
-			List types = TypeUtil.toList(A_TYPES.getValue(stack));
-			if (types.size() != args.length) {
+	public Object function(Stack stack) {
+		String className = classname.getValue(stack);
+		Object[] args = c_vargs.get(stack).toArray();
+		Class<?>[] argTypes = new Class[args.length];
+		Object types = this.types.getValue(stack);
+		if (types != null) {
+			List<?> typesl = TypeUtil.toList(types);
+			if (typesl.size() != args.length) {
 				throw new ExecutionException(
 						"The number of items in the types attribute does not match the number of arguments");
 			}
-			Iterator i = types.iterator();
+			Iterator<?> i = typesl.iterator();
 			for (int j = 0; j < argTypes.length; j++) {
 				String type = (String) i.next();
-				argTypes[j] = JavaMethodInvocationNode.getClass(type);
+				argTypes[j] = JavaMethodInvocationNode.getClass(this, type);
 				if (JavaMethodInvocationNode.TYPES.containsKey(type)) {
 					args[j] = JavaMethodInvocationNode.convert(argTypes[j], args[j],
 							argTypes[j].isArray());
@@ -65,11 +76,11 @@ public class NewJavaObjectNode extends AbstractFunction {
 			}
 		}
 		try {
-			Class c = Class.forName(className);
+			Class<?> c = Class.forName(className);
 			return c.getConstructor(argTypes).newInstance(args);
 		}
 		catch (Exception e) {
-			throw new ExecutionException("Could not instantiate " + className + " with arguments "
+			throw new ExecutionException(this, "Could not instantiate " + className + " with arguments "
 					+ JavaMethodInvocationNode.prettyPrintArray(args) + " ("
 					+ e.getClass().getName() + ": " + e.getMessage() + ")", e);
 		}

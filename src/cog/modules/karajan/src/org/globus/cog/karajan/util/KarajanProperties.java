@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -27,7 +28,7 @@ public class KarajanProperties extends Properties {
 
 	private static KarajanProperties def, restricted;
 
-	private final List defaultIncludeDirs;
+	private final List<String> defaultIncludeDirs;
 
 	public synchronized static KarajanProperties getDefault() {
 		if (def == null) {
@@ -62,9 +63,8 @@ public class KarajanProperties extends Properties {
 			throw new Exception("Invalid resource: " + name);
 		}
 		properties.defaultIncludeDirs.clear();
-		Enumeration e = properties.propertyNames();
-		while (e.hasMoreElements()) {
-			String propName = (String) e.nextElement();
+		for (Map.Entry<Object, Object> e : properties.entrySet()) {
+			String propName = (String) e.getKey();
 			if (propName.equals("include.dirs")) {
 				properties.addDefaultIncludeDirs(properties.getProperty(propName));
 			}
@@ -113,10 +113,10 @@ public class KarajanProperties extends Properties {
 	}
 
 	public KarajanProperties() {
-		this.defaultIncludeDirs = new LinkedList();
+		this.defaultIncludeDirs = new LinkedList<String>();
 	}
 
-	public List getDefaultIncludeDirs() {
+	public List<String> getDefaultIncludeDirs() {
 		return defaultIncludeDirs;
 	}
 

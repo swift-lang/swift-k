@@ -7,7 +7,9 @@
 /*
  * Created on Feb 15, 2005
  */
-package org.globus.cog.karajan.workflow.futures;
+package org.globus.cog.karajan.futures;
+
+import k.rt.Future;
 
 
 public interface FutureList extends Future {

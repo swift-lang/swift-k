@@ -7,83 +7,62 @@
 /*
  * Created on Jul 23, 2003
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import java.util.Iterator;
-import java.util.List;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
 
-import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.Signature;
 
 public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
-	public static final Logger logger = Logger.getLogger(RestartOnErrorNode.class);
-
-	public static final Arg A_MATCH = new Arg.Positional("match", 0);
-	public static final Arg A_TIMES = new Arg.Positional("times", 1);
-
-	private static final String MATCH = "##match";
-
-	static {
-		setArguments(RestartOnErrorNode.class, new Arg[] { A_MATCH, A_TIMES });
+	private ArgRef<String> match;
+	private ArgRef<Number> times;
+	private Node body;
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params(optional("match", null), "times", block("body")));
 	}
 
-	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		if (A_MATCH.isPresent(stack)) {
-			stack.setVar(MATCH, A_MATCH.getValue(stack));
-		}
-		else {
-			stack.setVar(MATCH, ".*");
-		}
-		stack.setVar("#restartTimes", new Integer(TypeUtil.toInt(A_TIMES.getValue(stack))));
-		super.partialArgumentsEvaluated(stack);
-		startRest(stack);
-	}
-
-	public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-		if (!matches(stack, e)) {
-			super.failed(stack, e);
-			return;
-		}
-		int itimes = stack.currentFrame().preDecrementAtomic("#restartTimes");
-		if (itimes >= 0) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Restarting. " + itimes + " times left.");
-				logger.debug("Stack size: " + stack.frameCount());
-			}
-			this.startRest(stack);
-			return;
-		}
-		else {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Failed too many times.");
-			}
-			super.failed(stack, e);
-			return;
-		}
-	}
-
-
-	protected boolean matches(VariableStack stack, ExecutionException e) {
-		if (!stack.currentFrame().isDefined(MATCH)) {
-			return false;
-		}
-		else {
-			Object match = stack.currentFrame().getVar(MATCH);
-			if (match instanceof List) {
-				Iterator i = ((List) match).iterator();
-				while (i.hasNext()) {
-					if (matches(TypeUtil.toString(i.next()), e)) {
-						return true;
-					}
+	protected void runBody(LWThread thr) {
+        int i = thr.checkSliceAndPopState();
+        int fc = thr.popIntState();
+        int times = thr.popIntState();
+        Stack stack = thr.getStack();
+        int ec = childCount();
+        if (i == 0) {
+            fc = stack.frameCount();
+            times = this.times.getValue(stack).intValue();
+            i++;
+        }
+        while (true) {
+	        try {
+	        	if (CompilerSettings.PERFORMANCE_COUNTERS) {
+					startCount++;
 				}
-				return false;
-			}
-			else {
-				return matches(TypeUtil.toString(match), e);
-			}
-		}
-	}
+	            body.run(thr);
+	            break;
+	        }
+	        catch (Yield y) {
+	        	y.getState().push(times);
+	        	y.getState().push(fc);
+	            y.getState().push(i);
+	            throw y;
+	        }
+	        catch (ExecutionException e) {
+	        	stack.dropToFrame(fc);
+	        	String match = this.match.getValue(stack);
+	            if (match == null || matches(match, e)) {
+	                times--;
+	            }
+	            if (times < 0) {
+	                throw e;
+	            }
+	        }
+        }
+    }
 }

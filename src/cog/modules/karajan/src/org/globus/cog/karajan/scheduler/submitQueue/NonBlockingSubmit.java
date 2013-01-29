@@ -18,7 +18,6 @@ import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
-import org.globus.cog.karajan.workflow.events.EventBus;
 
 /**
  * A class that makes <code>submit()</code> calls asynchronous. This is required
@@ -31,10 +30,27 @@ import org.globus.cog.karajan.workflow.events.EventBus;
  */
 public class NonBlockingSubmit implements Runnable {
 	private static final Logger logger = Logger.getLogger(NonBlockingSubmit.class);
+	
+	private static final ExecutorService pool = Executors.newFixedThreadPool(
+                        Runtime.getRuntime().availableProcessors(), new DaemonThreadFactory(
+                                        Executors.defaultThreadFactory()));
+	
+	static class DaemonThreadFactory implements ThreadFactory {
+		private ThreadFactory delegate;
+        private int id;
 
-	private static ExecutorService pool = Executors.newFixedThreadPool(
-			EventBus.DEFAULT_WORKER_COUNT, new DaemonThreadFactory(
-					Executors.defaultThreadFactory()));
+        public DaemonThreadFactory(ThreadFactory delegate) {
+                this.delegate = delegate;
+        }
+
+        public Thread newThread(Runnable r) {
+                Thread t = delegate.newThread(r);
+                t.setName("NBS" + (id++));
+                t.setDaemon(true);
+                return t;
+        }
+    }
+
 
 	private final TaskHandler taskHandler;
 	private final Task task;
@@ -119,21 +135,5 @@ public class NonBlockingSubmit implements Runnable {
 
 	public TaskHandler getTaskHandler() {
 		return taskHandler;
-	}
-
-	static class DaemonThreadFactory implements ThreadFactory {
-		private ThreadFactory delegate;
-		private int id;
-
-		public DaemonThreadFactory(ThreadFactory delegate) {
-			this.delegate = delegate;
-		}
-
-		public Thread newThread(Runnable r) {
-			Thread t = delegate.newThread(r);
-			t.setName("NBS" + (id++));
-			t.setDaemon(true);
-			return t;
-		}
 	}
 }

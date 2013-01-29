@@ -19,10 +19,11 @@ public class SSHThrottlingFailureHandler implements FailureHandler {
 
 	private int maxRestarts = DEFAULT_MAX_RESTARTS;
 
-	public boolean handleFailure(Task t, Scheduler s) {
-		Exception e = t.getStatus().getException();
-		if (e == null
-				|| e.getMessage() == null || !e.getMessage().matches(
+	public boolean handleFailure(AbstractScheduler.Entry e, Scheduler s) {
+		Task t = e.task;
+		Exception ex = t.getStatus().getException();
+		if (ex == null
+				|| ex.getMessage() == null || !ex.getMessage().matches(
 						".*SSH Connection failed.*server throttled the connection.*")) {
 			return false;
 		}
@@ -42,7 +43,7 @@ public class SSHThrottlingFailureHandler implements FailureHandler {
 			//logic to handle out-of-order status events
 			status.setStatusCode(Status.UNSUBMITTED);
 			t.setStatus(status);
-			s.enqueue(t, s.getConstraints(t));
+			s.enqueue(t, e.constraints, e.listener);
 			return true;
 		}
 	}

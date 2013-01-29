@@ -7,51 +7,54 @@
 /*
  * Created on Feb 6, 2006
  */
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import java.util.Iterator;
+import k.rt.FutureMemoryChannel;
+import k.rt.MemoryChannel;
+import k.rt.Stack;
+import k.thr.LWThread;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.arguments.VariableArgumentsImpl;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.ChannelSplitter;
-import org.globus.cog.karajan.workflow.futures.FutureVariableArguments;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.futures.ChannelSplitter;
 
-public class ChannelFork extends AbstractSequentialWithArguments {
-	public static final Arg A_NAME = new Arg.Positional("name", 0);
-	public static final Arg A_COUNT = new Arg.Positional("count", 1);
+public class ChannelFork extends InternalFunction {
+    private ArgRef<k.rt.Channel<Object>> channel;
+    private ArgRef<Number> count;
+    
+    private ChannelRef<k.rt.Channel<Object>> cr_vargs;
 	
-	static {
-		setArguments(ChannelFork.class, new Arg[] { A_NAME, A_COUNT });
+	@Override
+	protected Signature getSignature() {
+		return new Signature(params("channel", "count"), returns(channel("...", DYNAMIC)));
 	}
 
-	protected void argumentsEvaluated(VariableStack stack) throws ExecutionException {
-		int count = TypeUtil.toInt(A_COUNT.getValue(stack));
-		VariableArguments channel = (VariableArguments) checkClass(A_NAME.getValue(stack),
-				VariableArguments.class, "name");
-		VariableArguments[] ret;
-		if (channel instanceof FutureVariableArguments) {
-			ChannelSplitter mux = new ChannelSplitter((FutureVariableArguments) channel, count);
-			ret = mux.getOuts();
+
+
+	@Override
+	protected void runBody(LWThread thr) {
+	    Stack stack = thr.getStack();
+	    int count = this.count.getValue(stack).intValue();
+		
+	    k.rt.Channel<Object> channel = this.channel.getValue(stack);
+	    k.rt.Channel<k.rt.Channel<Object>> ret = cr_vargs.get(stack);
+		
+		if (channel instanceof FutureMemoryChannel) {
+			ChannelSplitter<Object> mux = new ChannelSplitter<Object>((FutureMemoryChannel<Object>) channel, count);
+			
+			for (k.rt.Channel<Object> r : mux.getOuts()) {
+			    ret.add(r);
+			}
 		}
 		else {
-			ret = new VariableArguments[count];
-			for (int i = 0; i < ret.length; i++) {
-				ret[i] = new VariableArgumentsImpl();
+			for (int i = 0; i < count; i++) {
+			    MemoryChannel<Object> r = new MemoryChannel<Object>();
+			    
+			    r.addAll(channel);
+			    
+			    ret.add(r);
 			}
-			Iterator i = channel.iterator();
-			while (i.hasNext()) {
-				Object o = i.next();
-				for (int j = 0; j < ret.length; j++) {
-					ret[j].append(o);
-				}
-			}
-		}
-		for (int i = 0; i < ret.length; i++) {
-			ret(stack, ret[i]);
 		}
 	}
 }

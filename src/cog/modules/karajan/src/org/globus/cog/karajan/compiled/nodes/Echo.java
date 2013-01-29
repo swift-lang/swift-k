@@ -4,33 +4,43 @@
 // This message may not be removed or altered.
 // ----------------------------------------------------------------------
 
-package org.globus.cog.karajan.workflow.nodes;
+package org.globus.cog.karajan.compiled.nodes;
 
-import java.io.PrintStream;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.parser.WrapperNode;
+import org.globus.cog.karajan.util.TypeUtil;
 
-public class Echo extends Print {
-	public static final Arg A_STREAM = new Arg.Optional("stream");
-
-	static {
-		setArguments(Echo.class, new Arg[] { A_MESSAGE, A_NL, A_STREAM, Arg.VARGS });
+public class Echo extends InternalFunction {
+	
+	private ArgRef<Boolean> nl;
+	private ChannelRef<Object> c_vargs;
+	
+	@Override
+	protected Signature getSignature() {
+		return new Signature(
+				params(optional("nl", Boolean.TRUE), "...")
+		);
 	}
 
-	public Echo() {
-		setAcceptsInlineText(true);
-	}
-
-	public void print(VariableStack stack, String message) throws ExecutionException {
-		if (A_STREAM.isPresent(stack)) {
-			PrintStream ps = (PrintStream) checkClass(A_STREAM.getValue(stack), PrintStream.class,
-					"stream");
-			ps.print(message);
+	public void runBody(LWThread thr) {
+		Stack stack = thr.getStack();
+		k.rt.Channel<Object> c = c_vargs.get(stack);
+		for (Object o : c) {
+			waitFor(o);
 		}
-		else {
-			echo(message, false);
+		for (Object o : c) {
+			System.out.print(TypeUtil.toString(o));
 		}
-	}
+		if (nl.getValue(stack)) {
+			System.out.println();
+		}
+	}	
 }
