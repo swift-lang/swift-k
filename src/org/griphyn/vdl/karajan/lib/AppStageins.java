@@ -23,34 +23,41 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.LinkedList;
 import java.util.List;
 
+import k.rt.Stack;
+import k.thr.LWThread;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
 import org.globus.swift.data.Director;
 import org.globus.swift.data.policy.Policy;
 import org.griphyn.vdl.mapping.AbsFile;
 
-public class AppStageins extends AbstractSequentialWithArguments {
+public class AppStageins extends InternalFunction {
+	private ArgRef<String> jobid;
+	private ArgRef<List<String>> files;
+	private ArgRef<String> dir;
+	private ArgRef<String> stagingMethod;
+	
+	private ChannelRef<List<String>> cr_stagein;
 
     static Logger logger = Logger.getLogger(AppStageins.class);
     
-    public static final Arg JOBID = new Arg.Positional("jobid");
-    public static final Arg FILES = new Arg.Positional("files");
-    public static final Arg DIR = new Arg.Positional("dir");
-    public static final Arg STAGING_METHOD = new Arg.Positional("stagingMethod");
-    public static final Arg.Channel STAGEIN = new Arg.Channel("stagein");
-
-    static {
-        setArguments(AppStageins.class, new Arg[] { JOBID, FILES, DIR,
-                STAGING_METHOD });
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("jobid", "files", "dir", "stagingMethod"), returns(channel("stagein")));
     }
 
-    protected void post(VariableStack stack) throws ExecutionException {
-        List files = TypeUtil.toList(FILES.getValue(stack));
+    
+    protected void runBody(LWThread thr) {
+    	Stack stack = thr.getStack();
+    	List<String> files = this.files.getValue(stack);
+    	String stagingMethod = this.stagingMethod.getValue(stack);
+    	String dir = this.dir.getValue(stack);
         for (Object f : files) {
             AbsFile file = new AbsFile(TypeUtil.toString(f));
             Policy policy = Director.lookup(file.toString());
@@ -61,7 +68,7 @@ public class AppStageins extends AbstractSequentialWithArguments {
                                         
             String protocol = file.getProtocol();
             if (protocol.equals("file")) {
-                protocol = TypeUtil.toString(STAGING_METHOD.getValue(stack));
+                protocol = stagingMethod;
             }
             String path = file.getDir().equals("") ? file.getName() : file
                 .getDir()
@@ -70,11 +77,10 @@ public class AppStageins extends AbstractSequentialWithArguments {
             if (logger.isDebugEnabled()) {
                 logger.debug("will stage in: " + relpath + " via: " + protocol);
             }
-            ArgUtil.getChannelReturn(stack, STAGEIN).append(
+            cr_stagein.append(stack,
                 makeList(protocol + "://" + file.getHost() + "/" + path,
-                    TypeUtil.toString(DIR.getValue(stack)) + "/" + relpath));
+                    dir + "/" + relpath));
         }
-        super.post(stack);
     }
 
     private List<String> makeList(String s1, String s2) {

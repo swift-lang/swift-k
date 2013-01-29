@@ -28,12 +28,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.Tracer;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -43,32 +44,24 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
-public class ReadData extends VDLFunction {
+public class ReadData extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(ReadData.class);
-
-	public static final Arg DEST = new Arg.Positional("dest");
-	public static final Arg SRC = new Arg.Positional("src");
-	public static boolean warning;
 	
-	public Tracer tracer;
+	private ArgRef<AbstractDataNode> dest;
+	private ArgRef<AbstractDataNode> src;
 
-	static {
-		setArguments(ReadData.class, new Arg[] { DEST, SRC });
-	}
-	
 	@Override
-    protected void initializeStatic() {
-        super.initializeStatic();
-        tracer = Tracer.getTracer(this, "SWIFTCALL");
+    protected Signature getSignature() {
+        return new Signature(params("dest", "src"));
     }
 
-    protected Object function(VariableStack stack) throws ExecutionException {
-		DSHandle dest = (DSHandle) DEST.getValue(stack);
-		AbstractDataNode src = (AbstractDataNode) SRC.getValue(stack);
-		if (tracer.isEnabled()) {
-		    tracer.trace(stack, "readData(" + Tracer.unwrapHandle(src) + ")");
-		}
-		src.waitFor();
+	public static boolean warning;
+
+	@Override
+	public Object function(Stack stack) {
+		AbstractDataNode dest = this.dest.getValue(stack);
+		AbstractDataNode src = this.src.getValue(stack);
+		src.waitFor(this);
 		if (src.getType().equals(Types.STRING)) {
 			readData(dest, (String) src.getValue());
 		}
@@ -116,7 +109,7 @@ public class ReadData extends VDLFunction {
 			}
 		}
 		catch (IOException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 
@@ -154,7 +147,7 @@ public class ReadData extends VDLFunction {
 			}
 		}
 		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 
@@ -175,7 +168,7 @@ public class ReadData extends VDLFunction {
 			}
 		}
 		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 
@@ -218,7 +211,7 @@ public class ReadData extends VDLFunction {
 			}
 		}
 		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 

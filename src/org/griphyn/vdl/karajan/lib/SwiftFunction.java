@@ -17,6 +17,7 @@
 
 package org.griphyn.vdl.karajan.lib;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,28 +26,27 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
+
+import k.rt.Channel;
+import k.rt.Context;
+import k.rt.ExecutionException;
+import k.rt.MemoryChannel;
+import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.StackFrame;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractFunction;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.util.BoundContact;
-import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
-import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.transformation.File;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.karajan.AssertFailedException;
-import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
@@ -64,100 +64,67 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.FQN;
+import org.griphyn.vdl.util.VDL2Config;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 
-public abstract class VDLFunction extends SequentialWithArguments {
-	public static final Logger logger = Logger.getLogger(VDLFunction.class);
+public abstract class SwiftFunction extends AbstractFunction {
+	public static final Logger logger = Logger.getLogger(SwiftFunction.class);
+	
+	public static final boolean PROVENANCE_ENABLED;
+    
+    static {
+        boolean v;
+        try {
+            v = VDL2Config.getConfig().getProvenanceLog();
+        }
+        catch (IOException e) {
+            v = false;
+        }
+        PROVENANCE_ENABLED = v;
+    }
 
-	public static final Arg.Channel ERRORS = new Arg.Channel("errors");
 
-	public static final Arg OA_PATH = new Arg.Optional("path", "");
-	public static final Arg PA_PATH = new Arg.Positional("path");
-	public static final Arg PA_VAR = new Arg.Positional("var"); 
-	public static final Arg OA_ISARRAY = new Arg.Optional("isArray", Boolean.FALSE);
+	private VarRef<Context> context;
+	
+    @Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        context = scope.getVarRef("#context");
+    }
 
-	public final void post(VariableStack stack) throws ExecutionException {
+    @Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+        returnDynamic(scope);
+        return super.compileBody(w, argScope, scope);
+    }
+    
+    
+
+    @Override
+    public void runBody(LWThread thr) {
 		try {
-			Object o = function(stack);
-			if (o != null) {
-				ret(stack, o);
-			}
-			super.post(stack);
+		    Stack stack = thr.getStack();
+		    ret(stack, function(stack));
 		}
 		catch (AssertFailedException e) { 
-		    logger.fatal("swift: assert failed: " + e.getMessage());
-		    stack.getExecutionContext().failedQuietly(stack, e);
-		}
-		catch (ExecutionException e) {
-            if (e.getStack() == null) {
-                e.setStack(stack);
-            }
+            logger.fatal("swift: assert failed: " + e.getMessage());
             throw e;
         }
-		catch (DependentException e) {
-			// This would not be the primal fault so in non-lazy errors mode it
-			// should not matter
-			throw new ExecutionException(stack, e);
-		}
-	}
-
-	protected void ret(VariableStack stack, final Object value) throws ExecutionException {
-		if (value != null) {
-			final VariableArguments vret = ArgUtil.getVariableReturn(stack);
-			if (value.getClass().isArray()) {
-				if (value.getClass().getComponentType().isPrimitive()) {
-					vret.append(value);
-				}
-				else {
-					Object[] array = (Object[]) value;
-                    for (int i = 0; i < array.length; i++) {
-                        vret.append(array[i]);
-                    }
-				}
-			}
-			else {
-				vret.append(value);
-			}
-		}
-	}
-
-	protected abstract Object function(VariableStack stack) throws ExecutionException;
-
+        catch (DependentException e) {
+            // This would not be the primal fault so in non-lazy errors mode it
+            // should not matter
+            throw new ExecutionException("Wrapping a dependent exception in VDLFunction.post() - errors in data dependencies",e);
+        }
+    }
+	
 	/*
 	 * This will likely break if the engine changes in fundamental ways. It also
 	 * depends on the fact that iteration variable is named '$' in this
 	 * particular implementation.
 	 */
-	public static String getThreadPrefix(VariableStack stack) throws ExecutionException {
-		stack = stack.copy();
-		ThreadingContext last = ThreadingContext.get(stack);
-		Stack<Object> s = new Stack<Object>();
-		while (stack.frameCount() > 1) {
-			StackFrame frame = stack.currentFrame();
-			if (frame.isDefined("$")) {
-				List<?> itv = (List<?>) frame.getVar("$");
-				s.push(itv.get(0));
-				stack.leave();
-				last = ThreadingContext.get(stack);
-			}
-			else {
-				ThreadingContext tc = ThreadingContext.get(stack);
-				if (!last.equals(tc)) {
-					s.push(String.valueOf(last.getLastID()));
-					last = tc;
-				}
-				stack.leave();
-			}
-		}
-
-		StringBuffer sb = new StringBuffer();
-		while (!s.isEmpty()) {
-			sb.append(s.pop());
-			if (!s.isEmpty()) {
-				sb.append('-');
-			}
-		}
-		return sb.toString();
+	public static String getThreadPrefix() throws ExecutionException {
+		return LWThread.currentThread().getName();
 	}
 
 	// TODO - is this needed any more? its doing some type inferencing and
@@ -191,14 +158,6 @@ public abstract class VDLFunction extends SequentialWithArguments {
 
 	public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-	public static String[] filename(VariableStack stack) throws ExecutionException {
-		DSHandle handle = (DSHandle)PA_VAR.getValue(stack);
-		return filename(stack, handle);
-	}
-	
-	public static String[] filename(VariableStack stack, DSHandle handle) throws ExecutionException {
-        return filename(handle);
-	}
 
 	public static String[] filename(DSHandle var) throws ExecutionException {
 		try {
@@ -345,15 +304,6 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected static Map getLogData(VariableStack stack) throws ExecutionException {
-		try {
-			return (Map) stack.getDeepVar(RestartLog.LOG_DATA);
-		}
-		catch (VariableNotFoundException e) {
-			throw new ExecutionException("No log data found. Missing restartLog()?");
-		}
-	}
-
 	protected boolean compatible(Type expectedType, Type actualType) {
 		if (expectedType.equals(Types.FLOAT)) {
 			if (actualType.equals(Types.FLOAT) || actualType.equals(Types.INT)) {
@@ -380,8 +330,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 
-	protected void closeChildren(VariableStack stack, AbstractDataNode handle) throws ExecutionException,
-			InvalidPathException {
+	protected void closeChildren(AbstractDataNode handle) throws InvalidPathException {
 		// Close the future
 		handle.closeShallow();
 		// Mark all leaves
@@ -390,41 +339,61 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		}
 	}
 		
-	public static AbstractDataNode[] waitForAllVargs(VariableStack stack) throws ExecutionException {
-	    AbstractDataNode[] args = SwiftArg.VARGS.asDataNodeArray(stack);
-
-        for (int i = 0; i < args.length; i++) {
-            args[i].waitFor();
-        }
-        
-        return args;
+	public static void waitForAll(Node who, Channel<AbstractDataNode> vargs) throws ExecutionException {
+	    for (AbstractDataNode n : vargs) {
+	    	n.waitFor(who);
+	    }
 	}
+	
+	public static Map<Comparable<?>, DSHandle> waitForArray(Node who, AbstractDataNode n) throws ExecutionException {
+		n.waitFor(who);
+		Map<Comparable<?>, DSHandle> v = n.getArrayValue();
+        for (DSHandle h : v.values()) {
+        	((AbstractDataNode) h).waitFor(who);
+        }
+        return v;
+    }
+	
+	public static Channel<Object> unwrapAll(Node who, Channel<AbstractDataNode> vargs) throws ExecutionException {
+		waitForAll(who, vargs);
+		MemoryChannel<Object> mc = new MemoryChannel<Object>();
+        for (AbstractDataNode n : vargs) {
+            mc.add(n.getValue());
+        }
+        return mc;
+    }
+	
+	@SuppressWarnings("unchecked")
+    public static <T> T unwrap(Node who, AbstractDataNode n) throws ExecutionException {
+        n.waitFor(who);
+        return (T) n.getValue();
+    }
 
-	public static Path parsePath(Object o, VariableStack stack) throws ExecutionException {
+	public static Path parsePath(Object o) {
 		if (o instanceof Path) {
 			return (Path) o;
 		}
 		else {
-			return Path.parse(TypeUtil.toString(o));
+			return Path.parse((String) o);
 		}
 	}
 
-	private static Set warnset = new HashSet();
+	private static Set<List<Object>> warnset = new HashSet<List<Object>>();
 
 	protected TCEntry getTCE(TCCache tc, FQN fqn, BoundContact bc) {
-		List l;
+		List<TCEntry> l;
 		try {
 			l = tc.getTCEntries(fqn, bc.getHost(), TCType.INSTALLED);
 		}
 		catch (Exception e) {
-			throw new KarajanRuntimeException(e);
+			throw new ExecutionException(this, e);
 		}
 		if (l == null || l.isEmpty()) {
 			return null;
 		}
 		if (l.size() > 1) {
 			synchronized (warnset) {
-				LinkedList wl = new LinkedList();
+				LinkedList<Object> wl = new LinkedList<Object>();
 				wl.add(fqn);
 				wl.add(bc);
 				if (!warnset.contains(wl)) {
@@ -434,24 +403,24 @@ public abstract class VDLFunction extends SequentialWithArguments {
 				}
 			}
 		}
-		return (TCEntry) l.get(0);
+		return l.get(0);
 	}
 
 	public static final String TC = "vdl:TC";
 
-	public static TCCache getTC(VariableStack stack) throws ExecutionException {
-		synchronized (stack.firstFrame()) {
-			TCCache tc = (TCCache) stack.firstFrame().getVar(TC);
+	public TCCache getTC(Stack stack) throws ExecutionException {
+	    Context c = this.context.getValue(stack);
+		synchronized (c) {
+			TCCache tc = (TCCache) c.getAttribute(TC);
 			if (tc == null) {
-				String prop = ConfigProperty.getProperty(VDL2ConfigProperties.TC_FILE, stack);
+				String prop = ConfigProperty.getProperty(VDL2ConfigProperties.TC_FILE, (VDL2Config) c.getAttribute("SWIFT:CONFIG"));
 				Loader.debugText("TC", new java.io.File(prop));
 				tc = new TCCache(File.getNonSingletonInstance(prop));
-				stack.firstFrame().setVar(TC, tc);
+				c.setAttribute(TC, tc);
 			}
 			return tc;
 		}
 	}
-	
 
 	private static int provenanceIDCount = 451000;
 
@@ -459,16 +428,14 @@ public abstract class VDLFunction extends SequentialWithArguments {
 		return provenanceIDCount++;
 	}
 
-	public static void logProvenanceResult(int id, DSHandle result, 
-	        String name) 
-	throws ExecutionException {
+	public static void logProvenanceResult(int id, DSHandle result, String name) {
 	    if (logger.isDebugEnabled())
 	        logger.debug("FUNCTION id="+id+" name="+name+" result="+result.getIdentifier());
 	    else if (logger.isInfoEnabled())
 	        logger.info("FUNCTION: " + name + "()");
 	}
 
-	public static void logProvenanceParameter(int id, DSHandle parameter, String paramName) throws ExecutionException {
+	public static void logProvenanceParameter(int id, DSHandle parameter, String paramName) {
 	    if (logger.isDebugEnabled())
 	        logger.debug("FUNCTIONPARAMETER id="+id+" input="+parameter.getIdentifier()+" name="+paramName);
 	}

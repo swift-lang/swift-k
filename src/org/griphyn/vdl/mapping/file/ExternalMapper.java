@@ -25,14 +25,13 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
@@ -48,7 +47,7 @@ public class ExternalMapper extends AbstractMapper {
 
 	private static final String[] STRING_ARRAY = new String[0];
 
-	public void setParams(MappingParamSet params) {
+	public void setParams(MappingParamSet params) throws HandleOpenException {
 		super.setParams(params);
 		map = new HashMap<Path, AbsFile>();
 		rmap = new HashMap<String, Path>();

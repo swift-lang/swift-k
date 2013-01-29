@@ -21,44 +21,77 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.util.BoundContact;
 import org.griphyn.vdl.karajan.lib.cache.CacheReturn;
 import org.griphyn.vdl.karajan.lib.cache.File;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
 import org.griphyn.vdl.mapping.AbsFile;
 
 public class CacheUnlockFiles extends CacheFunction {
-	public static final Arg FILE = new Arg.Positional("files");
-	public static final Arg DIR = new Arg.Positional("dir");
-	public static final Arg HOST = new Arg.Positional("host");
-	public static final Arg FORCE = new Arg.Optional("force", Boolean.TRUE);
+    private ArgRef<List<?>> file;
+    private ArgRef<String> dir;
+    private ArgRef<BoundContact> host;
+    private ArgRef<Boolean> force;
+    private Node body;
+    
+    private VarRef<List<?>> cacheFilesToRemove;
 
-	static {
-		setArguments(CacheUnlockFiles.class, new Arg[] { FILE, DIR, HOST, FORCE });
-	}
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("file", "dir", "host", optional("force", Boolean.TRUE), block("body")));
+    }
+    
+	@Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        cacheFilesToRemove = scope.getVarRef(scope.addVar(CACHE_FILES_TO_REMOVE));
+    }
 
-	public void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		List pairs = TypeUtil.toList(FILE.getValue(stack));
-		String dir = TypeUtil.toString(DIR.getValue(stack));
-		Object host = HOST.getValue(stack);
-		VDLFileCache cache = getCache(stack);
-		List rem = new ArrayList();
-		
-		Iterator i = pairs.iterator();
-		while (i.hasNext()) {
-			String file = (String) i.next();
-			File f = new File(new AbsFile(file).getPath(), dir, host, 0);
-			CacheReturn cr = cache.unlockEntry(f, TypeUtil.toBoolean(FORCE.getValue(stack)));
-			rem.addAll(cr.remove);
-		}
-		super.partialArgumentsEvaluated(stack);
-		stack.setVar(CACHE_FILES_TO_REMOVE, rem);
-		startRest(stack);
-	}
+    @Override
+    protected void runBody(LWThread thr) {
+        int i = thr.checkSliceAndPopState();
+        try {
+            switch (i) {
+                case 0:
+                    remove(thr.getStack());
+                    i++;
+                case 1:
+                    body.run(thr);
+            }
+        }
+        catch (Yield y) {
+            y.getState().push(i);
+            throw y;
+        }
+    }
+
+    public void remove(Stack stack) {
+        List<?> pairs = this.file.getValue(stack);
+        String dir = this.dir.getValue(stack);
+        Object host = this.host.getValue(stack);
+        VDLFileCache cache = getCache(stack);
+        List<Object> rem = new ArrayList<Object>();
+        
+        boolean force = this.force.getValue(stack);
+        
+        for (Object o : pairs) {
+            String file = (String) o;
+            File f = new File(new AbsFile(file).getPath(), dir, host, 0);
+            CacheReturn cr = cache.unlockEntry(f, force);
+            rem.addAll(cr.remove);
+        }
+        
+        cacheFilesToRemove.setValue(stack, rem);
+    }
 }

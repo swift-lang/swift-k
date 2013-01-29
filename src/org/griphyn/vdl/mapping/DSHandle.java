@@ -47,7 +47,7 @@ public interface DSHandle {
      */
     public Type getType();
 
-    public void init(MappingParamSet params);
+    public void init(MappingParamSet params) throws HandleOpenException;
 
     public DSHandle getRoot();
 

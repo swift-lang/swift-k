@@ -23,9 +23,10 @@ package org.griphyn.vdl.mapping;
 import java.util.List;
 import java.util.Map;
 
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureList;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import k.rt.Future;
+
+import org.globus.cog.karajan.futures.FutureList;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.ArrayIndexFutureList;
 import org.griphyn.vdl.karajan.FutureTracker;
 import org.griphyn.vdl.type.Field;

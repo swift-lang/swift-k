@@ -25,29 +25,33 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.util.BoundContact;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.swift.catalog.types.Os;
 import org.griphyn.vdl.util.FQN;
 
-public class SiteProfile extends VDLFunction {
+public class SiteProfile extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(SiteProfile.class);
     
-	public static final Arg PA_HOST = new Arg.Positional("host");
-	public static final Arg PA_FQN = new Arg.Positional("fqn");
-	public static final Arg OA_DEFAULT = new Arg.Optional("default", null);
+    private ArgRef<BoundContact> host;
+    private ArgRef<String> fqn;
+    private ArgRef<Object> _default;
+    private ChannelRef<Object> cr_vargs;
+    
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("host", "fqn", optional("default", null)), returns(channel("...", 1)));
+    }
 
-	static {
-		setArguments(SiteProfile.class, new Arg[] { PA_HOST, PA_FQN, OA_DEFAULT });
-	}
-
-	public Object function(VariableStack stack) throws ExecutionException {
-		BoundContact bc = (BoundContact) PA_HOST.getValue(stack);
-		return getSingle(stack, bc, new FQN(TypeUtil.toString(PA_FQN.getValue(stack))), OA_DEFAULT.getValue(stack));
+	public Object function(Stack stack) throws ExecutionException {
+		BoundContact bc = host.getValue(stack);
+		return getSingle(bc, new FQN(fqn.getValue(stack)), _default.getValue(stack));
 	}
 	
 	public static final FQN SWIFT_WRAPPER_INTERPRETER = new FQN("swift:wrapperInterpreter");
@@ -70,7 +74,6 @@ public class SiteProfile extends VDLFunction {
 		osm.put(fqn, value);
 	}
 	
-	@SuppressWarnings("unused")
 	private static boolean hasDefault(Os os, FQN fqn) {
 	    Map<FQN,Object> osm = DEFAULTS.get(os);
 		if (osm == null) {
@@ -104,7 +107,7 @@ public class SiteProfile extends VDLFunction {
 		addDefault(null, SWIFT_CLEANUP_COMMAND_OPTIONS, new String[] {"-rf"});
 	}
 	
-	private Object getSingle(VariableStack stack, BoundContact bc, FQN fqn, Object defval) 
+	private Object getSingle(BoundContact bc, FQN fqn, Object defval) 
 	    throws ExecutionException {
             String value = getProfile(bc, fqn);
             if (value == null) {
@@ -119,7 +122,7 @@ public class SiteProfile extends VDLFunction {
                     return defval;
                 }
                 else {
-                	throw new ExecutionException(stack, "Missing profile: " + fqn);
+                	throw new ExecutionException(this, "Missing profile: " + fqn);
                 }
             }
             else {
@@ -145,7 +148,7 @@ public class SiteProfile extends VDLFunction {
     	else {
     		String[] p = o.toString().split("::");
     		if (p.length < 2) {
-    			throw new IllegalArgumentException("Invalid sysinfo for " + bc + ": " + o);
+    			throw new ExecutionException("Invalid sysinfo for " + bc + ": " + o);
     		}
     		return Os.fromString(p[1]);
     	}

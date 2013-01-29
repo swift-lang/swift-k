@@ -17,8 +17,8 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.LinkedList;
-import java.util.List;
+import k.rt.AbstractFuture;
+import k.rt.Future;
 
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.FileTransferSpecificationImpl;
@@ -35,21 +35,14 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
-import org.globus.cog.karajan.workflow.futures.FuturesMonitor;
-import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
+import org.globus.cog.karajan.futures.FutureEvaluationException;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
-public class FileCopier implements Future, StatusListener {
+public class FileCopier extends AbstractFuture implements Future, StatusListener {
     private static final TaskHandler fth = new FileTransferTaskHandler();
 
     private FileTransferTask task;
-    private List<ListenerStackPair> actions;
     private Exception exception;
     private boolean closed;
 
@@ -72,46 +65,9 @@ public class FileCopier implements Future, StatusListener {
         task.addStatusListener(this);
     }
 
-    public synchronized void addModificationAction(FutureListener target,
-            VariableStack stack) {
-        if (actions == null) {
-            actions = new LinkedList<ListenerStackPair>();
-        }
-        ListenerStackPair etp = new ListenerStackPair(target, stack);
-        if (FuturesMonitor.debug) {
-            FuturesMonitor.monitor.add(etp, this);
-        }
-        synchronized (actions) {
-            actions.add(etp);
-        }
-        if (closed) {
-            actions();
-        }
-    }
-
-    public List<ListenerStackPair> getModificationActions() {
-        return actions;
-    }
-
-    private void actions() {
-        if (actions != null) {
-            synchronized (actions) {
-                java.util.Iterator<ListenerStackPair> i = actions.iterator();
-                while (i.hasNext()) {
-                    ListenerStackPair etp = i.next();
-                    if (FuturesMonitor.debug) {
-                        FuturesMonitor.monitor.remove(etp);
-                    }
-                    i.remove();
-                    etp.listener.futureModified(this, etp.stack);
-                }
-            }
-        }
-    }
-
     public void fail(FutureEvaluationException e) {
         this.exception = e;
-        actions();
+        notifyListeners();
     }
 
     public Object getValue() {
@@ -130,7 +86,7 @@ public class FileCopier implements Future, StatusListener {
 
     public void close() {
         closed = true;
-        actions();
+        notifyListeners();
     }
 
     public void statusChanged(StatusEvent event) {

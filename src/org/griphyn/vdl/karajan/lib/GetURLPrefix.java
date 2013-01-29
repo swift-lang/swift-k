@@ -20,30 +20,43 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
+import k.rt.Context;
+import k.rt.Stack;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
+import org.globus.cog.karajan.analyzer.Param;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
+import org.griphyn.vdl.util.VDL2Config;
 
-public class GetURLPrefix extends AbstractSequentialWithArguments {
+public class GetURLPrefix extends AbstractSingleValuedFunction {
+    private VarRef<Context> context;
+    private VarRef<String> cwd;
     
     @Override
-    protected void post(VariableStack stack) throws ExecutionException {
+    protected Param[] getParams() {
+        return params();
+    }
+
+    @Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        context = scope.getVarRef("#context");
+        cwd = scope.getVarRef("CWD");
+    }
+
+    @Override
+    public Object function(Stack stack) {
+        Context ctx = this.context.getValue(stack);
+        String localServerBase = ConfigProperty.getProperty("wrapper.staging.local.server", 
+            (VDL2Config) ctx.getAttribute("SWIFT:CONFIG"));
+        String cwd = this.cwd.getValue(stack);
         
-        String localServerBase = ConfigProperty.getProperty("wrapper.staging.local.server", stack);
-        
-        String cwd = stack.getExecutionContext().getCwd();
         if (cwd.endsWith("/.")) {
             cwd = cwd.substring(0, cwd.length() - 2);
         }
         
-        ret(stack, localServerBase + cwd);
-        
-        super.post(stack);
+        return localServerBase + cwd;
     }
 }

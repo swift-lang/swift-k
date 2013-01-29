@@ -20,22 +20,19 @@
  */
 package org.griphyn.vdl.karajan;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
-import org.globus.cog.karajan.workflow.futures.FutureIterator;
-import org.globus.cog.karajan.workflow.futures.FutureIteratorIncomplete;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import k.rt.FutureListener;
+import k.thr.LWThread;
+
+import org.globus.cog.karajan.futures.FutureEvaluationException;
+import org.globus.cog.karajan.futures.FutureIterator;
+import org.globus.cog.karajan.futures.FutureIteratorIncomplete;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 
 public class FuturePairIterator implements FutureIterator {
 	private ArrayIndexFutureList array;
 	private int crt;
 
 	public FuturePairIterator(ArrayIndexFutureList array) {
-		this.array = array;
-	}
-
-	public FuturePairIterator(ArrayIndexFutureList array, VariableStack stack) {
 		this.array = array;
 	}
 
@@ -108,11 +105,15 @@ public class FuturePairIterator implements FutureIterator {
 	public Object getValue() {
 		return this;
 	}
+	
+	
 
-	public synchronized void addModificationAction(FutureListener target, VariableStack stack) {
-		WaitingThreadsMonitor.addThread(stack, array.getHandle());
-		array.addModificationAction(target, stack);
-	}
+	@Override
+    public void addListener(FutureListener l) {
+		WaitingThreadsMonitor.addThread(LWThread.currentThread(), array.getHandle());
+		array.addListener(l);
+		
+    }
 	
 	private static volatile int cnt = 0;
 

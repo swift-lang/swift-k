@@ -18,7 +18,7 @@
 
 package org.griphyn.vdl.karajan;
 
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
 
 /** 
  * Generated only by SwiftScript @assert(). 

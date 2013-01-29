@@ -28,10 +28,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.Future;
+import k.thr.Yield;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.DSHandleFutureWrapper;
 import org.griphyn.vdl.karajan.FutureTracker;
 import org.griphyn.vdl.karajan.FutureWrapper;
@@ -109,7 +111,7 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
 
-    public void init(MappingParamSet params) {
+    public void init(MappingParamSet params) throws HandleOpenException {
         throw new UnsupportedOperationException();
     }
     
@@ -623,12 +625,33 @@ public abstract class AbstractDataNode implements DSHandle {
         return DATASET_URI_PREFIX + datasetIDPartialID + ":" + datasetIDCounter;
     }
        
-    public synchronized void waitFor() {
+    public synchronized void waitFor(Node who) {
         if (!closed) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Waiting for " + this);
             }
-            throw new FutureNotYetAvailable(getFutureWrapper());
+            
+            Yield y = new FutureNotYetAvailable(getFutureWrapper());
+            y.getState().addTraceElement(who);
+            throw y;
+        }
+        else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Do not need to wait for " + this);
+            }
+            if (value instanceof RuntimeException) {
+                throw (RuntimeException) value;
+            }
+        }
+    }
+    
+    public synchronized void waitFor() throws OOBYield {
+        if (!closed) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Waiting for " + this);
+            }
+            
+            throw new OOBYield(new FutureNotYetAvailable(getFutureWrapper()), this);
         }
         else {
             if (logger.isDebugEnabled()) {

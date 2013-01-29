@@ -38,9 +38,9 @@ import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
+import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.scheduler.AbstractScheduler;
-import org.globus.cog.karajan.scheduler.NoSuchResourceException;
 import org.globus.cog.karajan.scheduler.ResourceConstraintChecker;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
@@ -61,10 +61,10 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 	private static Timer timer;
 
 	private TCCache tc;
-	private LinkedList<Object[]> dq;
+	private LinkedList<Entry> dq;
 	private int clusteringQueueDelay = 1;
 	private int minClusterTime = 60;
-	private Map<Task, List<Object[]>> tasks;
+	private Map<Task, List<Entry>> tasks;
 	private boolean clusteringEnabled;
 	private int clusterId;
 	
@@ -75,8 +75,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 	private Map<Service, BoundContact> serviceContactMapping;
 
 	public VDSAdaptiveScheduler() {
-		dq = new LinkedList<Object[]>();
-		tasks = new HashMap<Task, List<Object[]>>();
+		dq = new LinkedList<Entry>();
+		tasks = new HashMap<Task, List<Entry>>();
 		serviceContactMapping = new HashMap<Service, BoundContact>();
 	}
 
@@ -115,18 +115,19 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 		}
 	}
 
-	public void enqueue(Task task, Object constraints) {
+	@Override
+	public void enqueue(Task task, Object constraints, StatusListener l) {
 		if (shouldBeClustered(task, constraints)) {
 			startTimer();
 			if (logger.isDebugEnabled()) {
 				logger.debug("Adding task to clustering queue: " + task.getIdentity());
 			}
 			synchronized (dq) {
-				dq.addLast(new Object[] { task, constraints });
+				dq.addLast(new Entry(task, constraints, l));
 			}
 		}
 		else {
-			super.enqueue(task, constraints);
+			super.enqueue(task, constraints, l);
 		}
 	}
 
@@ -192,23 +193,23 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 		synchronized (dq) {
 			while (!dq.isEmpty()) {
 				int clusterTime = 0;
-				LinkedList<Object[]> cluster = new LinkedList<Object[]>();
+				LinkedList<Entry> cluster = new LinkedList<Entry>();
 				Map<String, String> env = new HashMap<String, String>();
 				Map<String, Object> attrs = new HashMap<String, Object>();
 				Object constraints = null;
 				String dir = null;
 
-				Iterator<Object[]> dqi = dq.iterator();
+				Iterator<Entry> dqi = dq.iterator();
 				while (clusterTime < minClusterTime && dqi.hasNext()) {
-					Object[] h = dqi.next();
-					Task task = (Task) h[0];
+					Entry e = dqi.next();
+					Task task = e.task;
 
 					JobSpecification js = (JobSpecification) task.getSpecification();
 
 					if (constraints == null) {
-						constraints = ((Object[]) h[1])[0];
+						constraints = ((Object[]) e.constraints)[0];
 					}
-					else if (!constraints.equals(((Object[]) h[1])[0])) {
+					else if (!constraints.equals(((Object[]) e.constraints)[0])) {
 						continue;
 					}
 
@@ -230,7 +231,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 					merge(js, env, attrs);
 
 					clusterTime += getMaxWallTime(task);
-					cluster.addLast(h);
+					cluster.addLast(e);
 				}
 
 				if (logger.isDebugEnabled()) {
@@ -241,8 +242,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 					continue;
 				}
 				else if (cluster.size() == 1) {
-					Object[] h = cluster.removeFirst();
-					super.enqueue((Task) h[0], h[1]);
+					Entry e = cluster.removeFirst();
+					super.enqueue(e.task, e.constraints, e.listener);
 				}
 				else if (cluster.size() > 1) {
 					Task t = new TaskImpl();
@@ -264,8 +265,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 						logger.info("Creating cluster " + t.getIdentity() + " with size " + cluster.size());
 					}
 
-					for (Object[] h : cluster) {
-						Task st = (Task) h[0];
+					for (Entry e : cluster) {
+						Task st = e.task;
 						if (logger.isInfoEnabled()) {
 							logger.info("Task " + st.getIdentity() + " clustered in " + t.getIdentity());
 						}
@@ -292,7 +293,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 					synchronized (tasks) {
 						tasks.put(t, cluster);
 					}
-					super.enqueue(t, new Contact[] { (Contact) constraints });
+					super.enqueue(t, new Contact[] { (Contact) constraints }, null);
 				}
 			}
 		}
@@ -388,59 +389,58 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 		sb.append(String.valueOf(value));
 	}
 
-	protected void failTask(Task t, String message, Exception e) {
-	    if (e instanceof NoSuchResourceException) {
-	         message = "The application \"" + getTaskConstraints(t).getConstraint("tr")
-                            + "\" is not available for any site/pool in your tc.data catalog ";
-	    }
+	@Override
+	protected void failTask(Entry e, String message, Exception ex) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("Failing task " + t.getIdentity());
+			logger.debug("Failing task " + e.task.getIdentity());
 		}
-		List<Object[]> cluster = null;
+		Task t = e.task;
+		List<Entry> cluster = null;
 		synchronized (tasks) {
 			cluster = tasks.get(t);
 		}
 		if (cluster != null) {
-		    for (Object[] h : cluster) {
-				super.failTask((Task) h[0], message, e);
+		    for (Entry e1 : cluster) {
+				super.failTask(e1, message, ex);
 			}
 		}
 		else {
-			super.failTask(t, message, e);
+			super.failTask(e, message, ex);
 		}
 
 	}
 
-	public void statusChanged(StatusEvent e) {
-		Task t = (Task) e.getSource();
+	@Override
+	public void statusChanged(StatusEvent se, Entry e) {
+		Task t = e.task;
 		try {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Got task status change for " + t.getIdentity());
 			}
-			List<Object[]> cluster = null;
+			List<Entry> cluster = null;
 			synchronized (tasks) {
 				cluster = tasks.get(t);
 			}
 
 			if (cluster == null) {
-				super.statusChanged(e);
+				super.statusChanged(se, e);
 			}
 			else {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Got cluster status change for " + t.getIdentity());
 				}
 
-				Status clusterMemberStatus = e.getStatus();
+				Status clusterMemberStatus = se.getStatus();
 				if(clusterMemberStatus.getStatusCode() == Status.FAILED) {
 					clusterMemberStatus = new StatusImpl(Status.COMPLETED);
 				}
-				for (Object[] h : cluster) {
-					Task ct = (Task) h[0];
+				for (Entry e1 : cluster) {
+					Task ct = e1.task;
 					StatusEvent nse = new StatusEvent(ct, clusterMemberStatus);
 					ct.setStatus(clusterMemberStatus);
-					fireJobStatusChangeEvent(nse);
+					fireJobStatusChangeEvent(nse, e1);
 				}
-				if (e.getStatus().isTerminal()) {
+				if (se.getStatus().isTerminal()) {
 					if (logger.isInfoEnabled()) {
 						logger.info("Removing cluster " + t.getIdentity());
 					}
@@ -451,7 +451,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 			}
 		}
 		catch (Exception ex) {
-			failTask(t, ex.getMessage(), ex);
+			failTask(e, ex.getMessage(), ex);
 		}
 	}
 	

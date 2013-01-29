@@ -24,48 +24,62 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.globus.cog.karajan.stack.VariableStack;
+import k.rt.FutureListener;
+import k.thr.LWThread;
+
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class WaitingThreadsMonitor {
-	private static Map<VariableStack, DSHandle> threads = new HashMap<VariableStack, DSHandle>();
-	private static Map<VariableStack, List<DSHandle>> outputs = new HashMap<VariableStack, List<DSHandle>>();;
+	private static Map<LWThread, DSHandle> threads = new HashMap<LWThread, DSHandle>();
+	private static Map<LWThread, List<DSHandle>> outputs = new HashMap<LWThread, List<DSHandle>>();;
 	
-	public static void addThread(VariableStack stack, DSHandle waitingOn) {
-	    if (stack != null) {
+	public static void addThread(FutureListener fl, DSHandle waitingOn) {
+	    if (fl instanceof LWThread.Listener) {
+	        addThread(((LWThread.Listener) fl).getThread(), waitingOn);
+	    }
+	}
+	
+	public static void removeThread(FutureListener fl) {
+        if (fl instanceof LWThread.Listener) {
+            removeThread(((LWThread.Listener) fl).getThread());
+        }
+    }
+	
+	public static void addThread(LWThread thr, DSHandle waitingOn) {
+	    if (thr != null) {
 	        synchronized(threads) {
-	            threads.put(stack, waitingOn);
+	            threads.put(thr, waitingOn);
 	        }
 	    }
 	}
 		
-	public static void removeThread(VariableStack stack) {
+	public static void removeThread(LWThread thr) {
 	    synchronized(threads) {
-	        threads.remove(stack);
+	        threads.remove(thr);
 	    }
 	}
 	
-	public static Map<VariableStack, DSHandle> getAllThreads() {
+	public static Map<LWThread, DSHandle> getAllThreads() {
 	    synchronized(threads) {
-	        return new HashMap<VariableStack, DSHandle>(threads);
+	        return new HashMap<LWThread, DSHandle>(threads);
 	    }
 	}
 
-    public static void addOutput(VariableStack stack, List<DSHandle> outputs) {
+    public static void addOutput(LWThread thr, List<DSHandle> outputs) {
         synchronized(WaitingThreadsMonitor.outputs) {
-            WaitingThreadsMonitor.outputs.put(stack, outputs);
+            WaitingThreadsMonitor.outputs.put(thr, outputs);
         }
     }
 
-    public static void removeOutput(VariableStack stack) {
+    public static void removeOutput(LWThread thr) {
         synchronized(outputs) {
-            outputs.remove(stack);
+            outputs.remove(thr);
         }
     }
     
-    public static Map<VariableStack, List<DSHandle>> getOutputs() {
+    public static Map<LWThread, List<DSHandle>> getOutputs() {
         synchronized(outputs) {
-            return new HashMap<VariableStack, List<DSHandle>>(outputs);
+            return new HashMap<LWThread, List<DSHandle>>(outputs);
         }
     }
 }

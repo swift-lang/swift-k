@@ -20,19 +20,24 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 
-public class IsFileBound extends VDLFunction {
-	static {
-		setArguments(IsFileBound.class, new Arg[] { PA_VAR });
-	}
+public class IsFileBound extends SwiftFunction {
+    private ArgRef<DSHandle> var;
+    
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("var"));
+    }
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+    @Override
+	public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 		if (var instanceof AbstractDataNode) {
 			return Boolean.valueOf(!((AbstractDataNode) var).isPrimitive());
 		}

@@ -20,11 +20,11 @@
  */
 package org.griphyn.vdl.mapping;
 
+import k.rt.Future;
+import k.rt.FutureListener;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
@@ -56,21 +56,23 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	    setValue(value);
 	}
 
-	public void init(MappingParamSet params) {
+	public void init(MappingParamSet params) throws HandleOpenException {
 		this.params = params;
-		if(this.params == null) { 
+		if (this.params == null) { 
 			initialized();
-		} else {
+		} 
+		else {
 			innerInit();
 		}
 	}
 
 	/** must have this.params set to the appropriate parameters before
-	    being called. */
-	private synchronized void innerInit() {
+	    being called. 
+	 * @throws HandleOpenException */
+	private synchronized void innerInit() throws HandleOpenException {
 	    waitingMapperParam = params.getFirstOpenParamValue();
 	    if (waitingMapperParam != null) {
-            waitingMapperParam.getFutureWrapper().addModificationAction(this, null);
+            waitingMapperParam.getFutureWrapper().addListener(this);
             if (tracer.isEnabled()) {
                 tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
@@ -113,8 +115,16 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		}
 	}
 
-	public void futureModified(Future f, VariableStack stack) {
-		innerInit();
+	public void futureUpdated(Future f) {
+		try {
+            innerInit();
+        }
+        catch (OOBYield e) {
+            throw e.wrapped();
+        }
+        catch (HandleOpenException e) {
+            e.printStackTrace();
+        }
 	}
 
 
@@ -271,9 +281,6 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		initialized = true;
 		waitingMapperParam = null;
 		if (tracer.isEnabled()) {
-		    if ("sphOut".equals(getDisplayableName())) {
-		        System.out.println();
-		    }
             tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
         }
 	}

@@ -25,9 +25,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.globus.cog.karajan.stack.VariableStack;
+import k.rt.Stack;
+
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
+
+import com.sun.org.apache.xpath.internal.VariableStack;
 
 public class SystemState {
 	private Map<StatefulItemClass, StatefulItemClassSet<? extends StatefulItem>> classes;
@@ -35,7 +38,7 @@ public class SystemState {
     private Map<String, Stats> stats;
     private int total, completed;
     private long start;
-    private VariableStack stack;
+    private Stack stack;
     private String projectName;
 
 	public SystemState(String projectName) {
@@ -132,11 +135,11 @@ public class SystemState {
         return start;
     }
 
-    public VariableStack getStack() {
+    public Stack getStack() {
         return stack;
     }
 
-    public void setStack(VariableStack stack) {
+    public void setStack(Stack stack) {
         this.stack = stack;
     }
 

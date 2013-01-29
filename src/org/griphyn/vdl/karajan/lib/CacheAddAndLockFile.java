@@ -20,35 +20,54 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import java.util.List;
+
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
+import org.globus.cog.karajan.util.BoundContact;
 import org.griphyn.vdl.karajan.lib.cache.CacheReturn;
 import org.griphyn.vdl.karajan.lib.cache.File;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
 
 public class CacheAddAndLockFile extends CacheFunction {
-	public static final String PFILE = "#pfile";
+	private ArgRef<String> file;
+	private ArgRef<String> dir;
+	private ArgRef<BoundContact> host;
+	private ArgRef<Number> size;
+	private Node body;
+	
+	private VarRef<File> pfile;
+	private VarRef<List<?>> cacheFilesToRemove;
+	
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("file", "dir", "host", "size", block("body")));
+    }
+ 
+    @Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        pfile = scope.getVarRef(scope.addVar("#pfile"));
+        cacheFilesToRemove = scope.getVarRef(scope.addVar(CACHE_FILES_TO_REMOVE));
+    }
 
-	public static final Arg FILE = new Arg.Positional("file");
-	public static final Arg DIR = new Arg.Positional("dir");
-	public static final Arg HOST = new Arg.Positional("host");
-	public static final Arg SIZE = new Arg.Positional("size");
-
-	static {
-		setArguments(CacheAddAndLockFile.class, new Arg[] { FILE, DIR, HOST, SIZE });
-	}
-
-	protected void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		String file = TypeUtil.toString(FILE.getValue(stack));
-		String dir = TypeUtil.toString(DIR.getValue(stack));
-		Object host = HOST.getValue(stack);
-		long size = TypeUtil.toLong(SIZE.getValue(stack));
-		VDLFileCache cache = CacheFunction.getCache(stack);
+    protected boolean lock(Stack stack) {
+		String file = this.file.getValue(stack);
+		String dir = this.dir.getValue(stack);
+		BoundContact host = this.host.getValue(stack);
+		long size = this.size.getValue(stack).longValue();
+		VDLFileCache cache = getCache(stack);
 		File f = new File(file, dir, host, size);
-		stack.setVar(PFILE, f);
+		pfile.setValue(stack, f);
 		CacheReturn cr = cache.addAndLockEntry(f);
 		if (cr.alreadyCached) {
 			if (cr.cached.isLockedForProcessing()) {
@@ -56,32 +75,60 @@ public class CacheAddAndLockFile extends CacheFunction {
 				throw new FutureNotYetAvailable(cr.cached);
 			}
 			else {
-				complete(stack);
+				return false;
 			}
 		}
 		else {
-			super.partialArgumentsEvaluated(stack);
-			stack.setVar(CACHE_FILES_TO_REMOVE, cr.remove);
-			startRest(stack);
+		    cacheFilesToRemove.setValue(stack, cr.remove);
+			return true;
 		}
 	}
+    
+	@Override
+    protected void runBody(LWThread thr) {
+	    int i = thr.checkSliceAndPopState();
+	    int fc = thr.popIntState();
+	    Stack stack = thr.getStack();
+	    try {
+	        switch (i) {
+	            case 0:
+	                fc = stack.frameCount();
+	                i++;
+	            case 1:
+	                if (!lock(stack)) {
+	                    break;
+	                }
+	                i++;
+	            case 2:
+	                body.run(thr);
+	                unlock(stack);
+	        }
+	    }
+	    catch (ExecutionException e) {
+	        stack.dropToFrame(fc);
+	        removeEntry(stack);
+	        throw e;
+	    }
+	    catch (Yield y) {
+	        y.getState().push(fc);
+	        y.getState().push(i);
+	        throw y;
+	    }
+    }
 
-	protected void post(VariableStack stack) throws ExecutionException {
-		File f = (File) stack.currentFrame().getVar(PFILE);
+    protected void unlock(Stack stack) {
+		File f = pfile.getValue(stack);
 		if (f == null) {
 			throw new ExecutionException("Weird inconsistency in " + this
 					+ ". The file was not found on the current frame.");
 		}
-		VDLFileCache cache = CacheFunction.getCache(stack);
+		VDLFileCache cache = getCache(stack);
 		cache.unlockFromProcessing(f);
-		super.post(stack);
 	}
 	
 	
-    public void failed(VariableStack stack, ExecutionException e)
-            throws ExecutionException {
-    	VDLFileCache cache = CacheFunction.getCache(stack);
-        cache.entryRemoved((File) stack.currentFrame().getVar(PFILE));
-        super.failed(stack, e);
+    public void removeEntry(Stack stack) {
+    	VDLFileCache cache = getCache(stack);
+        cache.entryRemoved(pfile.getValue(stack));
     }
 }

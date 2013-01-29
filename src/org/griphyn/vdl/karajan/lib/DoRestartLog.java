@@ -20,40 +20,52 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.Collection;
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
+import k.rt.Channel;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 
-public class DoRestartLog extends AbstractSequentialWithArguments {
-    public static final Arg RESTARTOUTS = new Arg.Positional("restartouts");
-
-    static {
-        setArguments(DoRestartLog.class, new Arg[] { RESTARTOUTS });
+public class DoRestartLog extends InternalFunction {
+    
+    private ArgRef<List<List<Object>>> restartouts;
+    private ChannelRef<Object> cr_vargs;
+    private ChannelRef<Object> cr_restartLog;
+   
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("restartouts"), returns(channel("...", DYNAMIC), channel("restartLog", DYNAMIC)));
     }
 
     @Override
-    protected void post(VariableStack stack) throws ExecutionException {
-        List files = TypeUtil.toList(RESTARTOUTS.getValue(stack));
-        VariableArguments ret = ArgUtil.getVariableReturn(stack);
+    protected void runBody(LWThread thr) {
+        Stack stack = thr.getStack();
+        Collection<List<Object>> files = restartouts.getValue(stack);
+        Channel<Object> ret = cr_vargs.get(stack);
+        Channel<Object> log = cr_restartLog.get(stack);
         try {
-            for (Object f : files) {
-                List pv = TypeUtil.toList(f);
+            for (List<Object> pv : files) {
                 Path p = (Path) pv.get(0);
                 DSHandle handle = (DSHandle) pv.get(1);
-                LogVar.logVar(stack, handle, p);
+                LogVar.logVar(log, handle, p);
             }
         }
         catch (Exception e) {
-            throw new ExecutionException(e);
+            throw new ExecutionException(this, e);
         }
-        super.post(stack);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 }

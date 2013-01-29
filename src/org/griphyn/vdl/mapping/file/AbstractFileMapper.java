@@ -31,6 +31,7 @@ import org.globus.cog.util.Base64;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
@@ -71,6 +72,8 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	public static final MappingParam PARAM_PATTERN = new MappingParam("pattern", null);
 	public static final MappingParam PARAM_LOCATION = new MappingParam("location", null);
 	public static final MappingParam PARAM_NOAUTO = new MappingParam("noauto", "false");
+	
+	private String location, prefix, suffix, pattern; 
 
 	public static final Logger logger = Logger.getLogger(AbstractFileMapper.class);
 
@@ -82,6 +85,8 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 
 		this.elementMapper = elementMapper;
 	}
+	
+	
 
 	/** Creates an AbstractFileMapper without specifying a
 	  * FileNameElementMapper. The elementMapper must be specified
@@ -99,7 +104,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		this.elementMapper = elementMapper;
 	}
 
-	public void setParams(MappingParamSet params) {
+	public void setParams(MappingParamSet params) throws HandleOpenException {
 		super.setParams(params);
 		if (PARAM_SUFFIX.isPresent(this)) {
 			String suffix = PARAM_SUFFIX.getStringValue(this);
@@ -109,22 +114,23 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 						". Value set was '" + noauto + "'");
 			}
 			if (!suffix.startsWith(".") && noauto.equals("false")) {
-				PARAM_SUFFIX.setValue(this, "." + suffix);
+			    params.set(PARAM_SUFFIX, "." + suffix);
 			}
 		}
 		if (PARAM_PATTERN.isPresent(this)) {
 			String pattern = PARAM_PATTERN.getStringValue(this);
-			PARAM_PATTERN.setValue(this, replaceWildcards(pattern));
+			params.set(PARAM_PATTERN, replaceWildcards(pattern));
 		}
+		location = PARAM_LOCATION.getStringValue(this);
+        prefix = PARAM_PREFIX.getStringValue(this);
+        suffix = PARAM_SUFFIX.getStringValue(this);
+        pattern = PARAM_PATTERN.getStringValue(this);
 	}
 
 	public PhysicalFormat map(Path path) {
 		if(logger.isDebugEnabled())
 			logger.debug("mapper id="+this.hashCode()+" starting to map "+path);
 		StringBuffer sb = new StringBuffer();
-		final String location = PARAM_LOCATION.getStringValue(this);
-		final String prefix = PARAM_PREFIX.getStringValue(this);
-		final String suffix = PARAM_SUFFIX.getStringValue(this);
 		maybeAppend(sb, location);
 		if (location != null && !location.endsWith("/")) {
 			sb.append('/');
@@ -215,10 +221,6 @@ public abstract class AbstractFileMapper extends AbstractMapper {
     public Collection<Path> existing() {
 		if(logger.isDebugEnabled())
 			logger.debug("list existing paths for mapper id="+this.hashCode());
-		final String location = PARAM_LOCATION.getStringValue(this);
-		final String prefix = PARAM_PREFIX.getStringValue(this);
-		final String suffix = PARAM_SUFFIX.getStringValue(this);
-		final String pattern = PARAM_PATTERN.getStringValue(this);
 
 		List<Path> result = new ArrayList<Path>();
 		final AbsFile f;
@@ -287,21 +289,20 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	public Path rmap(String name) {
 		logger.debug("rmap "+name);
 
-		final String prefix = PARAM_PREFIX.getStringValue(this);
-
-		if(prefix!=null) {
-			if(name.startsWith(prefix)) {
+		if(prefix != null) {
+			if (name.startsWith(prefix)) {
 				name = name.substring(prefix.length());
-			} else {
+			} 
+			else {
 				throw new RuntimeException("filename '"+name+"' does not begin with prefix '"+prefix+"'");
 			}
 		}
 
-		final String suffix = PARAM_SUFFIX.getStringValue(this);
-		if(suffix!=null) {
-			if(name.endsWith(suffix)) {
+		if(suffix != null) {
+			if (name.endsWith(suffix)) {
 				name = name.substring(0,name.length() - suffix.length());
-			} else {
+			}
+			else {
 				throw new RuntimeException("filename '"+name+"' does not end with suffix '"+suffix+"'");
 			}
 		}
@@ -353,11 +354,11 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	}
 
 	public String getLocation() {
-		return PARAM_LOCATION.getStringValue(this);
+		return location;
 	}
 
 	public String getPrefix() {
-		return PARAM_PREFIX.getStringValue(this);
+		return prefix;
 	}
 
 

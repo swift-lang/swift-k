@@ -54,9 +54,7 @@ public interface Mapper {
      */
     boolean isStatic();
 
-    void setParams(MappingParamSet params);
-
-    void setParam(MappingParam p, Object value);
+    void setParams(MappingParamSet params) throws HandleOpenException;
 
     Object getParam(MappingParam name);
 

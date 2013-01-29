@@ -22,21 +22,24 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.Channel;
+import k.rt.Stack;
 
-public class Flatten extends VDLFunction {
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.util.TypeUtil;
+
+public class Flatten extends SwiftFunction {
+	private ChannelRef<?> c_vargs;
     
-    static {
-        setArguments(Flatten.class, new Arg[] { Arg.VARGS });
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("..."));
     }
 
     @Override
-    protected Object function(VariableStack stack) throws ExecutionException {
-        VariableArguments v = Arg.VARGS.get(stack);
+    public Object function(Stack stack) {
+        Channel<?> v = c_vargs.get(stack);
         if (v.isEmpty()) {
             return "";
         }
@@ -48,10 +51,10 @@ public class Flatten extends VDLFunction {
         }
     }
 
-    private void flatten(StringBuilder sb, List l) {
+    private void flatten(StringBuilder sb, List<?> l) {
         for (Object o : l) {
             if (o instanceof List) {
-                flatten(sb, (List) o);
+                flatten(sb, (List<?>) o);
             }
             else {
                 sb.append(TypeUtil.toString(o));

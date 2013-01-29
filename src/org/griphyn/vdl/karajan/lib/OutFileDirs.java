@@ -22,51 +22,53 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 
-public class OutFileDirs extends VDLFunction {
-    public static final Arg STAGEOUTS = new Arg.Positional("stageouts");
-
-    static {
-        setArguments(OutFileDirs.class, new Arg[] { STAGEOUTS });
+public class OutFileDirs extends SwiftFunction {
+	
+	private ArgRef<List<List<Object>>> stageouts;
+    private ChannelRef<Object> cr_vargs;
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("stageouts"), returns(channel("...", DYNAMIC)));
     }
 
+
     @Override
-    public Object function(VariableStack stack) throws ExecutionException {
-        List files = TypeUtil.toList(STAGEOUTS.getValue(stack));
-        VariableArguments ret = ArgUtil.getVariableReturn(stack);
+    public Object function(Stack stack) {
+        List<List<Object>> files = stageouts.getValue(stack);
         try {
-            for (Object f : files) {
-                List pv = TypeUtil.toList(f);
-                Path p = parsePath(pv.get(0), stack);
+            for (List<Object> pv : files) {
+                Path p = parsePath(pv.get(0));
                 DSHandle handle = (DSHandle) pv.get(1);
                 DSHandle leaf = handle.getField(p);
-                String fname = VDLFunction.filename(leaf)[0];
+                String fname = SwiftFunction.filename(leaf)[0];
                 AbsFile af = new AbsFile(fname);
                 if ("file".equals(af.getProtocol())) {
                     String dir = af.getDir();
                     if (dir.startsWith("/") && dir.length() != 1) {
-                        ret.append(dir.substring(1));
+                        cr_vargs.append(stack, dir.substring(1));
                     }
                     else if (dir.length() != 0) {
-                        ret.append(dir);
+                        cr_vargs.append(stack, dir);
                     }
                 }
                 else {
-                	ret.append(af.getHost() + "/" + af.getDir());
+                	cr_vargs.append(stack, af.getHost() + "/" + af.getDir());
                 }
             }
         }
         catch (Exception e) {
-            throw new ExecutionException(e);
+            throw new ExecutionException(this, e);
         }
         return null;
     }

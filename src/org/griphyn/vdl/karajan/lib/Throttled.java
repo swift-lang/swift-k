@@ -23,55 +23,69 @@ package org.griphyn.vdl.karajan.lib;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import org.globus.cog.karajan.stack.VariableStack;
+import k.rt.ConditionalYield;
+import k.rt.FutureObject;
+import k.thr.LWThread;
+import k.thr.Yield;
+
+import org.globus.cog.karajan.compiled.nodes.Sequential;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.Sequential;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class Throttled extends Sequential {
     public static final int DEFAULT_MAX_THREADS = 1000000;
     
-    private LinkedList<VariableStack> waiting;
+    private LinkedList<FutureObject> waiting;
     private int maxThreadCount, current;
     
     public Throttled() {
         try {
             maxThreadCount = TypeUtil.toInt(VDL2Config.getConfig()
-                            .getProperty("exec.throttle", String.valueOf(DEFAULT_MAX_THREADS)));
+                            .getProperty("max.threads", String.valueOf(DEFAULT_MAX_THREADS)));
         }
         catch (IOException e) {
             maxThreadCount = DEFAULT_MAX_THREADS;
         }
         current = 0;
-        waiting = new LinkedList<VariableStack>();
+        waiting = new LinkedList<FutureObject>();
     }
-
+    
     @Override
-    protected void executeChildren(VariableStack stack)
-            throws ExecutionException {
-        synchronized(this) {
-            if (current == maxThreadCount) {
-                waiting.addLast(stack);
-                return;
-            }
-            else {
-                current++;
+    public void run(LWThread thr) {
+        int i = thr.checkSliceAndPopState();
+        try {
+            switch (i) {
+                case 0:
+                    tryIncCurrent();
+                    i++;
+                default:
+                    super.run(thr);
+                    decCurrent();
             }
         }
-        super.executeChildren(stack);
-    }
-
-    @Override
-    protected void post(VariableStack stack) throws ExecutionException {
-        synchronized(this) {
-            if (!waiting.isEmpty()) {
-                super.executeChildren(waiting.removeFirst());
-            }
-            else {
-                current--;
-            }
+        catch (Yield y) {
+            y.getState().push(i);
+            throw y;
         }
-        super.post(stack);
-    }    
+        catch (RuntimeException e) {
+            decCurrent();
+            throw e;
+        }
+    }
+    
+    private synchronized void decCurrent() {
+        current--;
+        if (!waiting.isEmpty()) {
+            waiting.removeFirst().setValue(Boolean.TRUE);
+        }
+    }
+    
+    private synchronized void tryIncCurrent() {
+        if (current == maxThreadCount) {
+            FutureObject fo = new FutureObject();
+            waiting.addLast(fo);
+            throw new ConditionalYield(fo);
+        }
+        current++;
+    }
 }

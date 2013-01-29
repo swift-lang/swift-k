@@ -22,55 +22,86 @@ package org.griphyn.vdl.karajan.functions;
 
 import java.io.IOException;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
-import org.griphyn.vdl.util.VDL2Config;
-import org.globus.cog.karajan.util.BoundContact;
+import k.rt.Context;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Param;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
+import org.globus.cog.karajan.parser.WrapperNode;
+import org.globus.cog.karajan.util.BoundContact;
+import org.griphyn.vdl.util.VDL2Config;
 
-public class ConfigProperty extends AbstractFunction {
-    public static final Arg NAME = new Arg.Positional("name");
-    public static final Arg INSTANCE = new Arg.Optional("instance", Boolean.TRUE);
-    public static final Arg HOST = new Arg.Optional("host",null);
-
-    static {
-        setArguments(ConfigProperty.class, new Arg[] { NAME, INSTANCE, HOST });
+public class ConfigProperty extends AbstractSingleValuedFunction {
+    private ArgRef<String> name;
+    private ArgRef<Boolean> instance;
+    private ArgRef<BoundContact> host;
+    
+    private VDL2Config instanceConfig;
+    private VarRef<Context> context;
+    
+    
+    @Override
+    protected Param[] getParams() {
+        return params("name", optional("instance", Boolean.TRUE), optional("host", null));
     }
 
-    public static final String INSTANCE_CONFIG_FILE = "vdl:instanceconfigfile";
-    public static final String INSTANCE_CONFIG = "vdl:instanceconfig";
+    public static final String INSTANCE_CONFIG = "SWIFT_CONFIG";
 
     public static final Logger logger = Logger.getLogger(ConfigProperty.class);
+    
+    
+    @Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+        context = scope.getVarRef("#context");
+        return super.compileBody(w, argScope, scope);
+    }
 
-    public Object function(VariableStack stack) throws ExecutionException {
-        String name = TypeUtil.toString(NAME.getValue(stack));
-        boolean instance = TypeUtil.toBoolean(INSTANCE.getValue(stack));
-        Object host = HOST.getValue(stack);
-        if(logger.isDebugEnabled()) {
-            logger.debug("Getting property "+name+" with host "+host);
+    @Override
+    public Object function(Stack stack) {
+        String name = this.name.getValue(stack);
+        boolean instance = this.instance.getValue(stack);
+        BoundContact host = this.host.getValue(stack);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Getting property " + name + " with host " + host);
         }
-        if(host!= null) {
+        if (host != null) {
             // see if the host has this property defined, and if so
             // get its value
-            BoundContact h = (BoundContact)host;
-            String prop = (String) h.getProperty(name);
-            if(prop != null) {
-                logger.debug("Found property "+name+" in BoundContact");
+            String prop = (String) host.getProperty(name);
+            if (prop != null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Found property " + name + " in BoundContact");
+                }
                 return prop;
             }
-            logger.debug("Could not find property "+name+" in BoundContact");
+            if (logger.isDebugEnabled()) {
+                logger.debug("Could not find property " + name + " in BoundContact");
+            }
         }
-        return getProperty(name, instance, stack);
+        return getProperty(name, instance, getInstanceConfig(stack));
     }
 
-    public static String getProperty(String name, VariableStack stack) throws ExecutionException {
-        return getProperty(name, true, stack);
+    private synchronized VDL2Config getInstanceConfig(Stack stack) {
+        if (instanceConfig == null) {
+            Context ctx = this.context.getValue(stack);
+            instanceConfig = (VDL2Config) ctx.getAttribute("SWIFT:CONFIG");
+        }
+        return instanceConfig;
     }
 
-    public static String getProperty(String name, boolean instance, VariableStack stack) throws ExecutionException {
+    public static String getProperty(String name, VDL2Config instanceConfig) {
+        return getProperty(name, true, instanceConfig);
+    }
+
+    public static String getProperty(String name, boolean instance, VDL2Config instanceConfig) {
         try {
             VDL2Config conf;
             String prop;
@@ -79,20 +110,8 @@ public class ConfigProperty extends AbstractFunction {
                 prop = conf.getProperty(name);
             }
             else {
-                synchronized (stack.firstFrame()) {
-                    conf = (VDL2Config) stack.getGlobal(INSTANCE_CONFIG);
-                    if (conf == null) {
-                        String confFile = (String) stack.getGlobal(INSTANCE_CONFIG_FILE);
-                        if (confFile == null) {
-                            conf = VDL2Config.getConfig();
-                        }
-                        else {
-                            conf = VDL2Config.getConfig(confFile);
-                        }
-                        stack.setGlobal(INSTANCE_CONFIG, conf);
-                    }
-                    prop = conf.getProperty(name);
-                }
+                conf = instanceConfig;
+                prop = conf.getProperty(name);
             }
             if (prop == null) {
                 throw new ExecutionException("Swift config property \"" + name + "\" not found in "

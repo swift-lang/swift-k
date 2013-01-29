@@ -20,47 +20,53 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DataDependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 
-public class SetFutureFault extends VDLFunction {
+public class SetFutureFault extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(SetFutureFault.class);
+	
+	private ArgRef<DSHandle> var;
+	private ArgRef<Object> path;
+	private ArgRef<Exception> exception;
+	private ArgRef<Boolean> mapping;
 
-	public static final Arg OA_EXCEPTION = new Arg.Optional("exception", null);
-	public static final Arg OA_MAPPING = new Arg.Optional("mapping", Boolean.FALSE);
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("var", optional("path", Path.EMPTY_PATH), 
+            optional("exception", null), optional("mapping", false)));
+    }
 
-	static {
-		setArguments(SetFutureFault.class, new Arg[] { OA_PATH, PA_VAR, OA_EXCEPTION, OA_MAPPING });
-	}
-
-	public Object function(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
-		boolean mapping = TypeUtil.toBoolean(OA_MAPPING.getValue(stack));
+	@Override
+	public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
+		boolean mapping = this.mapping.getValue(stack);
 		try {
-			Path path = parsePath(OA_PATH.getValue(stack), stack);
+			Path path = parsePath(this.path.getValue(stack));
 			DSHandle leaf = var.getField(path);
 			if (logger.isInfoEnabled()) {
 				logger.info("Failing " + leaf + " (mapping=" + mapping + ")");
 			}
 			synchronized (leaf) {
-				Object value = OA_EXCEPTION.getValue(stack);
+				Exception e = this.exception.getValue(stack);
 				if (mapping) {
-					leaf.setValue(new MappingDependentException(leaf, (Exception) value));
+					leaf.setValue(new MappingDependentException(leaf, e));
 				}
 				else {
-					leaf.setValue(new DataDependentException(leaf, (Exception) value));
+					leaf.setValue(new DataDependentException(leaf, e));
 				}
 			}
 		}
 		catch (Exception e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 		return null;
 	}

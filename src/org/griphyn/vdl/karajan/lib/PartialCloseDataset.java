@@ -17,24 +17,27 @@
 
 package org.griphyn.vdl.karajan.lib;
 
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.DSHandle;
 
-public class PartialCloseDataset extends VDLFunction {
+public class PartialCloseDataset extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(CloseDataset.class);
+	
+	private ArgRef<DSHandle> var;
+	private ArgRef<Number> count;
 
-	public static final Arg OA_COUNT = new Arg.Optional("count", 1);
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("var", optional("count", 1)));
+    }
 
-	static {
-		setArguments(PartialCloseDataset.class, new Arg[] { PA_VAR, OA_COUNT });
-	}
-
-	public Object function(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+	@Override
+	public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Partially closing " + var);
 		}
@@ -44,7 +47,7 @@ public class PartialCloseDataset extends VDLFunction {
 			return null;
 		}
 		
-		int count = TypeUtil.toInt(OA_COUNT.getValue(stack));
+		int count = this.count.getValue(stack).intValue();
 		var.updateWriteRefCount(-count);
 		return null;
 	}

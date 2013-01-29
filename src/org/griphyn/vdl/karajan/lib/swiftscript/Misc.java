@@ -22,14 +22,19 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import k.rt.Channel;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractFunction;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
-import org.griphyn.vdl.karajan.lib.SwiftArg;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -40,424 +45,571 @@ import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
 
-public class Misc extends FunctionsCollection {
+public class Misc {
 
 	private static final Logger logger = Logger.getLogger(Misc.class);
-
-	public static final SwiftArg PA_INPUT = new SwiftArg.Positional("input");
-	public static final SwiftArg PA_PATTERN = new SwiftArg.Positional("regexp");
-	public static final SwiftArg PA_TRANSFORM = new SwiftArg.Positional("transform");
-	public static final SwiftArg PA_FILE = new SwiftArg.Positional("file");
-	public static final SwiftArg PA_ARRAY = new SwiftArg.Positional("array");
-
+	
+	public static final boolean PROVENANCE_ENABLED;
+	
 	static {
-        setArguments("swiftscript_dirname", new Arg[] { PA_FILE });
-	    setArguments("swiftscript_exists", new Arg[] { Arg.VARGS });
-        setArguments("swiftscript_existsfile", new Arg[] { PA_FILE });
-        setArguments("swiftscript_format", new Arg[] { PA_INPUT, PA_TRANSFORM });
-        setArguments("swiftscript_length", new Arg[] { PA_ARRAY });
-        setArguments("swiftscript_pad", new Arg[] { PA_INPUT, PA_TRANSFORM });
-        setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
-        setArguments("swiftscript_strcat",  new Arg[] { Arg.VARGS });
-        setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
-        setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
-        setArguments("swiftscript_strjoin", new Arg[] { PA_ARRAY, PA_INPUT });
-        setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
-		setArguments("swiftscript_trace", new Arg[] { Arg.VARGS });
-        setArguments("swiftscript_to_int", new Arg[] { PA_INPUT });
-		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
-        setArguments("swiftscript_to_float", new Arg[] { PA_INPUT });
-		setArguments("swiftscript_tofloat", new Arg[] { PA_INPUT });
-        setArguments("swiftscript_to_string", new Arg[] { PA_INPUT });
-        setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
-	}
-
-	private static final Logger traceLogger =
-	    Logger.getLogger("org.globus.swift.trace");
-	public DSHandle swiftscript_trace(VariableStack stack)
-	throws ExecutionException {
-
-		AbstractDataNode[] args = VDLFunction.waitForAllVargs(stack);
-
-		StringBuilder buf = new StringBuilder();
-		buf.append("SwiftScript trace: ");
-		for (int i = 0; i < args.length; i++) {
-			DSHandle handle = args[i];
-			if (i != 0) {
-			    buf.append(", ");
-			}
-			Object v = args[i].getValue();
-			//buf.append(v == null ? args[i] : v);
-			prettyPrint(buf, args[i]);
-		}
-		traceLogger.warn(buf);
-		return null;
-	}
-
-	private void prettyPrint(StringBuilder buf, DSHandle h) {
-	    Object o = h.getValue();
-	    if (o == null) {
-	        buf.append(h);
-	    }
-	    else {
-    	    if (h.getType().isPrimitive()) {
-    	        if (h.getType().equals(Types.INT)) {
-    	            buf.append(((Number) o).intValue());
-    	        }
-    	        else {
-    	            buf.append(o);
-    	        }
-    	    }
-    	    else if (h.getType().isArray()) {
-    	        buf.append('{');
-    	        boolean first = true;
-    	        for (Map.Entry<Comparable<?>, DSHandle> e : h.getArrayValue().entrySet()) {
-    	            if (first) {
-    	                first = false;
-    	            }
-    	            else {
-    	                buf.append(", ");
-    	            }
-    	            buf.append(e.getKey());
-    	            buf.append(" = ");
-    	            prettyPrint(buf, e.getValue());
-    	        }
-    	        buf.append('}');
-    	    }
-    	    else {
-    	        buf.append(h);
-    	    }
-	    }
-    }
-
-    public DSHandle swiftscript_strcat(VariableStack stack) throws ExecutionException {
-		Object[] args = SwiftArg.VARGS.asArray(stack);
-		int provid = VDLFunction.nextProvenanceID();
-		StringBuffer buf = new StringBuffer();
-		
-		for (int i = 0; i < args.length; i++) {
-			buf.append(TypeUtil.toString(args[i]));
-		}
-		
-		DSHandle handle = new RootDataNode(Types.STRING, buf.toString());
-
+		boolean v;
 		try {
-			if(VDL2Config.getConfig().getProvenanceLog()) {
-				DSHandle[] provArgs = SwiftArg.VARGS.asDSHandleArray(stack);
-				for (int i = 0; i < provArgs.length; i++) {
-					VDLFunction.logProvenanceParameter(provid, provArgs[i], ""+i);
-				}
-				VDLFunction.logProvenanceResult(provid, handle, "strcat");
-			}
-		} catch(IOException ioe) {
-			throw new ExecutionException("When logging provenance for strcat", ioe);
-		}
-		return handle;
-	}
-
-	public DSHandle swiftscript_exists(VariableStack stack)
-	throws ExecutionException {
-		logger.debug(stack);
-		Object[] args = SwiftArg.VARGS.asArray(stack);
-		int provid = VDLFunction.nextProvenanceID();
-
-		if (args.length != 1)
-		    throw new ExecutionException
-			("Wrong number of arguments to @exists()");
-
-		String filename = TypeUtil.toString(args[0]);
-
-		AbsFile file = new AbsFile(filename);
-		logger.debug("exists: " + file);
-		DSHandle handle = new RootDataNode(Types.BOOLEAN, file.exists());
-
-		try {
-			if(VDL2Config.getConfig().getProvenanceLog()) {
-				DSHandle[] provArgs =
-				    SwiftArg.VARGS.asDSHandleArray(stack);
-				for (int i = 0; i < provArgs.length; i++) {
-					VDLFunction.logProvenanceParameter
-					    (provid, provArgs[i], ""+i);
-				}
-				VDLFunction.logProvenanceResult
-				    (provid, handle, "exists");
-			}
-		} catch (IOException ioe) {
-			throw new ExecutionException
-			    ("When logging provenance for exists",
-			     ioe);
-		}
-
-		return handle;
-	}
-
-	public DSHandle swiftscript_strcut(VariableStack stack)
-	throws ExecutionException {
-		int provid = VDLFunction.nextProvenanceID();
-		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
-		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
-		if (logger.isDebugEnabled()) {
-			logger.debug("strcut will match '" + inputString + "' with pattern '" + pattern + "'");
-		}
-
-		String group;
-		try {
-			Pattern p = Pattern.compile(pattern);
-			// TODO probably should memoize this?
-
-			Matcher m = p.matcher(inputString);
-			m.find();
-			group = m.group(1);
-		}
-		catch (IllegalStateException e) {
-			throw new ExecutionException("@strcut could not match pattern " + pattern
-					+ " against string " + inputString, e);
-		}
-		if (logger.isDebugEnabled()) {
-			logger.debug("strcut matched '" + group + "'");
-		}
-		DSHandle handle = new RootDataNode(Types.STRING, group);
-
-		VDLFunction.logProvenanceResult(provid, handle, "strcut");
-		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "input");
-		VDLFunction.logProvenanceParameter(provid, PA_PATTERN.getRawValue(stack), "pattern");
-		return handle;
-	}
-
-    public DSHandle swiftscript_strstr(VariableStack stack)
-    throws ExecutionException {
-        String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
-        String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
-        if (logger.isDebugEnabled()) {
-            logger.debug("strstr will search '" + inputString +
-                "' for pattern '" + pattern + "'");
+            v = VDL2Config.getConfig().getProvenanceLog();
         }
-        int result = inputString.indexOf(pattern);
-        return new RootDataNode(Types.INT, result);
-    }
+        catch (IOException e) {
+            v = false;
+        }
+        PROVENANCE_ENABLED = v;
+	}
 
-	public DSHandle swiftscript_strsplit(VariableStack stack)
-	throws ExecutionException, InvalidPathException {
+	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
+	
+	public static class Trace extends InternalFunction {
+		private ChannelRef<AbstractDataNode> c_vargs;
 
-		String str = TypeUtil.toString(PA_INPUT.getValue(stack));
-		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("..."));
+        }
 
-		String[] split = str.split(pattern);
+        @Override
+        protected void runBody(LWThread thr) {
+        	Channel<AbstractDataNode> vargs = c_vargs.get(thr.getStack());
+            SwiftFunction.waitForAll(this, vargs);
 
-		DSHandle handle = new RootArrayDataNode(Types.STRING.arrayType());
-		for (int i = 0; i < split.length; i++) {
-			DSHandle el = handle.getField(Path.EMPTY_PATH.addFirst(i, true));
-			el.setValue(split[i]);
-		}
-		handle.closeDeep();
-		int provid=VDLFunction.nextProvenanceID();
-		VDLFunction.logProvenanceResult(provid, handle, "strsplit");
-		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "input");
-		VDLFunction.logProvenanceParameter(provid, PA_PATTERN.getRawValue(stack), "pattern");
-		return handle;
+            StringBuilder buf = new StringBuilder();
+            buf.append("SwiftScript trace: ");
+            boolean first = true;
+            for (AbstractDataNode n : vargs) {
+                if (!first) {
+                    buf.append(", ");
+                }
+                else {
+                	first = false;
+                }
+                //buf.append(v == null ? args[i] : v);
+                prettyPrint(buf, n);
+            }
+            traceLogger.warn(buf);
+        }
 	}
 	
+	private static void prettyPrint(StringBuilder buf, DSHandle h) {
+        Object o = h.getValue();
+        if (o == null) {
+            buf.append(h);
+        }
+        else {
+            if (h.getType().isPrimitive()) {
+                if (h.getType().equals(Types.INT)) {
+                    buf.append(((Number) o).intValue());
+                }
+                else {
+                    buf.append(o);
+                }
+            }
+            else if (h.getType().isArray()) {
+                buf.append('{');
+                boolean first = true;
+                for (Map.Entry<Comparable<?>, DSHandle> e : h.getArrayValue().entrySet()) {
+                    if (first) {
+                        first = false;
+                    }
+                    else {
+                        buf.append(", ");
+                    }
+                    buf.append(e.getKey());
+                    buf.append(" = ");
+                    prettyPrint(buf, e.getValue());
+                }
+                buf.append('}');
+            }
+            else {
+                buf.append(h);
+            }
+        }
+    }
+	
+	public static class StrCat extends AbstractFunction {
+        private ChannelRef<AbstractDataNode> c_vargs;
+
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("..."));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            Channel<AbstractDataNode> vargs = c_vargs.get(stack);
+            Channel<Object> args = SwiftFunction.unwrapAll(this, vargs);
+            
+            StringBuffer buf = new StringBuffer();
+            
+            for (Object o : args) {
+                buf.append(TypeUtil.toString(o));
+            }
+            
+            DSHandle handle = new RootDataNode(Types.STRING, buf.toString());
+    
+            if (PROVENANCE_ENABLED) {
+            	int provid = SwiftFunction.nextProvenanceID();
+            	int index = 0;
+                for (AbstractDataNode dn : vargs) {
+                    SwiftFunction.logProvenanceParameter(provid, dn, String.valueOf(index++));
+                }
+                SwiftFunction.logProvenanceResult(provid, handle, "strcat");
+            }
+            return handle;
+        }
+	}
+	
+	public static class Exists extends AbstractFunction {
+        private ArgRef<AbstractDataNode> file;
+
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("file"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+        	AbstractDataNode dn = file.getValue(stack);
+            String filename = SwiftFunction.unwrap(this, dn);
+
+            AbsFile file = new AbsFile(filename);
+            if (logger.isDebugEnabled()) {
+                logger.debug("exists: " + file);
+            }
+            DSHandle handle = new RootDataNode(Types.BOOLEAN, file.exists());
+    
+            if (PROVENANCE_ENABLED) {
+            	int provid = SwiftFunction.nextProvenanceID();
+            	SwiftFunction.logProvenanceParameter(provid, dn, "file");
+                SwiftFunction.logProvenanceResult(provid, handle, "exists");
+            }
+    
+            return handle;
+        }
+    }
+	
+	public static class StrCut extends AbstractFunction {
+        private ArgRef<AbstractDataNode> input;
+        private ArgRef<AbstractDataNode> pattern;
+
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("input", "pattern"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+        	AbstractDataNode hinput = this.input.getValue(stack);
+        	String input = SwiftFunction.unwrap(this, hinput);
+        	AbstractDataNode hpattern = this.pattern.getValue(stack);
+            String pattern = SwiftFunction.unwrap(this, hpattern);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("strcut will match '" + input + "' with pattern '" + pattern + "'");
+            }
+
+            String group;
+            try {
+                Pattern p = Pattern.compile(pattern);
+                // TODO probably should memoize this?
+    
+                Matcher m = p.matcher(input);
+                m.find();
+                group = m.group(1);
+            }
+            catch (IllegalStateException e) {
+                throw new ExecutionException("@strcut could not match pattern " + pattern
+                        + " against string " + input, e);
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("strcut matched '" + group + "'");
+            }
+            DSHandle handle = new RootDataNode(Types.STRING, group);
+    
+            if (PROVENANCE_ENABLED) {
+            	int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceResult(provid, handle, "strcut");
+                SwiftFunction.logProvenanceParameter(provid, hinput, "input");
+                SwiftFunction.logProvenanceParameter(provid, hpattern, "pattern");
+            }
+            return handle;
+        }
+	}
+	
+	public static class StrStr extends AbstractFunction {
+        private ArgRef<AbstractDataNode> input;
+        private ArgRef<AbstractDataNode> pattern;
+
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("input", "pattern"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode hinput = this.input.getValue(stack);
+            String input = SwiftFunction.unwrap(this, hinput);
+            AbstractDataNode hpattern = this.pattern.getValue(stack);
+            String pattern = SwiftFunction.unwrap(this, hpattern);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("strstr will search '" + input + "' for pattern '" + pattern + "'");
+            }
+            
+            DSHandle result = new RootDataNode(Types.INT, input.indexOf(pattern));
+
+            
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceResult(provid, result, "strstr");
+                SwiftFunction.logProvenanceParameter(provid, hinput, "input");
+                SwiftFunction.logProvenanceParameter(provid, hpattern, "pattern");
+            }
+            return result;
+        }
+    }
+	
+	public static class StrSplit extends AbstractFunction {
+        private ArgRef<AbstractDataNode> input;
+        private ArgRef<AbstractDataNode> pattern;
+
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("input", "pattern"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode hinput = this.input.getValue(stack);
+            String input = SwiftFunction.unwrap(this, hinput);
+            AbstractDataNode hpattern = this.pattern.getValue(stack);
+            String pattern = SwiftFunction.unwrap(this, hpattern);
+
+            String[] split = input.split(pattern);
+
+            DSHandle handle = new RootArrayDataNode(Types.STRING.arrayType());
+            for (int i = 0; i < split.length; i++) {
+                DSHandle el;
+                try {
+                    el = handle.getField(Path.EMPTY_PATH.addFirst(i, true));
+                    el.setValue(split[i]);
+                }
+                catch (InvalidPathException e) {
+                    throw new ExecutionException(this, e);
+                }
+            }
+            handle.closeDeep();
+                       
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceResult(provid, handle, "strsplit");
+                SwiftFunction.logProvenanceParameter(provid, hinput, "input");
+                SwiftFunction.logProvenanceParameter(provid, hpattern, "pattern");
+            }
+            return handle;
+        }
+    }
+	
 	/**
-	 * swiftscript_strjoin (@strjoin) - Combine elements of an array into a single string with a specified delimiter
+	 * StrJoin (@strjoin) - Combine elements of an array into a single string with a specified delimiter
 	 * @param stack
 	 * @return DSHandle representing the resulting string
 	 * @throws ExecutionException
 	 */
-    public DSHandle swiftscript_strjoin(VariableStack stack) throws ExecutionException 
-    {
-        AbstractDataNode array = (AbstractDataNode) PA_ARRAY.getRawValue(stack);
-        String delim = TypeUtil.toString(PA_INPUT.getValue(stack));
-        String result = "";
+	public static class StrJoin extends AbstractFunction {
+        private ArgRef<AbstractDataNode> array;
+        private ArgRef<AbstractDataNode> delim;
 
-        array.waitFor();
-
-        Map<?, ?> arrayValues = array.getArrayValue();
-        for (Object value : arrayValues.values()) {
-            if (result == "") { result += ((DSHandle) value).getValue(); }
-            else { result += delim + ((DSHandle) value).getValue(); }
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("array", optional("delim", new RootDataNode(Types.STRING, ", "))));
         }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode harray = this.array.getValue(stack);
+            Map<Comparable<?>, DSHandle> arrayValues = SwiftFunction.waitForArray(this, harray);
+            AbstractDataNode hdelim = this.delim.getValue(stack);
+            String delim = SwiftFunction.unwrap(this, hdelim);
 
-        DSHandle handle = new RootDataNode(Types.STRING, result);
-        return handle;
+            StringBuilder result = new StringBuilder();
+            
+            boolean first = true;
+            for (DSHandle h : arrayValues.values()) {
+            	if (first) {
+            		first = false;
+            	}
+            	else {
+            		result.append(delim);
+            	}
+            	result.append(h.getValue());
+            }
+
+            DSHandle handle = new RootDataNode(Types.STRING, result.toString());
+                       
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceResult(provid, handle, "strjoin");
+                SwiftFunction.logProvenanceParameter(provid, harray, "array");
+                SwiftFunction.logProvenanceParameter(provid, hdelim, "delim");
+            }
+            return handle;
+        }
     }
+    
+	public static class Regexp extends AbstractFunction {
+        private ArgRef<AbstractDataNode> input;
+        private ArgRef<AbstractDataNode> pattern;
+        private ArgRef<AbstractDataNode> transform;
 
-	public DSHandle swiftscript_regexp(VariableStack stack)
-	throws ExecutionException {
-		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
-		String pattern = TypeUtil.toString(PA_PATTERN.getValue(stack));
-		String transform = TypeUtil.toString(PA_TRANSFORM.getValue(stack));
-		if (logger.isDebugEnabled()) {
-			logger.debug("regexp will match '" + inputString + "' with pattern '" + pattern + "'");
-		}
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("input", "pattern", "transform"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode hinput = this.input.getValue(stack);
+            String input = SwiftFunction.unwrap(this, hinput);
+            AbstractDataNode hpattern = this.pattern.getValue(stack);
+            String pattern = SwiftFunction.unwrap(this, hpattern);
+            AbstractDataNode htransform = this.transform.getValue(stack);
+            String transform = SwiftFunction.unwrap(this, htransform);
 
-		String group;
-		try {
-			Pattern p = Pattern.compile(pattern);
-			// TODO probably should memoize this?
+            if (logger.isDebugEnabled()) {
+                logger.debug("regexp will match '" + input + "' with pattern '" + pattern + "'");
+            }
+    
+            String group;
+            try {
+                Pattern p = Pattern.compile(pattern);
+    
+                Matcher m = p.matcher(input);
+                m.find();
+                group = m.replaceFirst(transform);
+            }
+            catch (IllegalStateException e) {
+                throw new ExecutionException("@regexp could not match pattern " + pattern
+                        + " against string " + input, e);
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("regexp replacement produced '" + group + "'");
+            }
+            DSHandle handle = new RootDataNode(Types.STRING);
+            handle.setValue(group);
+            handle.closeShallow();
 
-			Matcher m = p.matcher(inputString);
-			m.find();
-			group = m.replaceFirst(transform);
-		}
-		catch (IllegalStateException e) {
-			throw new ExecutionException("@regexp could not match pattern " + pattern
-					+ " against string " + inputString, e);
-		}
-		if (logger.isDebugEnabled()) {
-			logger.debug("regexp replacement produced '" + group + "'");
-		}
-		DSHandle handle = new RootDataNode(Types.STRING);
-		handle.setValue(group);
-		handle.closeShallow();
-
-		int provid=VDLFunction.nextProvenanceID();
-		VDLFunction.logProvenanceResult(provid, handle, "regexp");
-		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "input");
-		VDLFunction.logProvenanceParameter(provid, PA_PATTERN.getRawValue(stack), "pattern");
-		VDLFunction.logProvenanceParameter(provid, PA_TRANSFORM.getRawValue(stack), "transform");
-		return handle;
-	}
-
-	public DSHandle swiftscript_toint(VariableStack stack) 
-	throws ExecutionException {
-	    return swiftscript_to_int(stack);
-	}
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceResult(provid, handle, "regexp");
+                SwiftFunction.logProvenanceParameter(provid, hinput, "input");
+                SwiftFunction.logProvenanceParameter(provid, hpattern, "pattern");
+                SwiftFunction.logProvenanceParameter(provid, htransform, "transform");
+            }
+            return handle;
+        }
+    }
 	
-	public DSHandle swiftscript_to_int(VariableStack stack)
-	throws ExecutionException {
-		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
-		
-		DSHandle handle = new RootDataNode(Types.INT, new Double(inputString).intValue());
+	public static class ToInt extends AbstractFunction {
+        private ArgRef<AbstractDataNode> str;
 
-		int provid=VDLFunction.nextProvenanceID();
-		VDLFunction.logProvenanceResult(provid, handle, "toint");
-		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "string");
-		return handle;
-	}
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("str"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode hstr = str.getValue(stack);
+            String str = SwiftFunction.unwrap(this, hstr);
+            
+            DSHandle handle = new RootDataNode(Types.INT, Integer.valueOf(str));
 
-	public DSHandle swiftscript_tofloat(VariableStack stack)
-	throws ExecutionException {
-	    return swiftscript_to_float(stack);
-	}
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceParameter(provid, hstr, "str");
+                SwiftFunction.logProvenanceResult(provid, handle, "toint");
+            }
+    
+            return handle;
+        }
+    }
+	
+	public static class ToFloat extends AbstractFunction {
+        private ArgRef<AbstractDataNode> str;
 
-	public DSHandle swiftscript_to_float(VariableStack stack)
-	throws ExecutionException {
-		String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
-		DSHandle handle = new RootDataNode(Types.FLOAT);
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("str"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode hstr = str.getValue(stack);
+            String str = SwiftFunction.unwrap(this, hstr);
+            
+            DSHandle handle = new RootDataNode(Types.FLOAT, Double.valueOf(str));
 
-		try
-		{
-		    handle.setValue(new Double(inputString));
-		}
-		catch(NumberFormatException e)
-		{
-		    throw new ExecutionException(stack, "Could not convert value \""+inputString+"\" to type float");
-		}
-		handle.closeShallow();
-		int provid=VDLFunction.nextProvenanceID();
-		VDLFunction.logProvenanceResult(provid, handle, "tofloat");
-		VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "string");
-		return handle;
-	}
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceParameter(provid, hstr, "str");
+                SwiftFunction.logProvenanceResult(provid, handle, "tofloat");
+            }
+    
+            return handle;
+        }
+    }
 
 	/*
 	 * Takes in a float and formats to desired precision and returns a string
 	 */
-	public DSHandle swiftscript_format(VariableStack stack)
-	throws ExecutionException {
-	    String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
-	    String inputFormat = TypeUtil.toString(PA_TRANSFORM.getValue(stack));
-	    DSHandle handle = new RootDataNode(Types.STRING);
+	public static class Format extends AbstractFunction {
+        private ArgRef<AbstractDataNode> format;
+        private ArgRef<AbstractDataNode> value;
 
-	    String output = String.format("%."+inputFormat+"f", Double.parseDouble(inputString));
-	    handle.setValue(output);
-	    handle.closeShallow();
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("format", "value"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode hformat = this.format.getValue(stack);
+            String format = SwiftFunction.unwrap(this, hformat);
+            AbstractDataNode hvalue = this.value.getValue(stack);
+            Double value = SwiftFunction.unwrap(this, hvalue);
+            
+            DSHandle handle = new RootDataNode(Types.STRING, 
+            		String.format("%." + format + "f", value));
 
-	    int provid=VDLFunction.nextProvenanceID();
-	    VDLFunction.logProvenanceResult(provid, handle, "format");
-	    VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "float");
-	    VDLFunction.logProvenanceParameter(provid, PA_TRANSFORM.getRawValue(stack), "float");
-	    return handle;
-	}
-
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceResult(provid, handle, "format");
+                SwiftFunction.logProvenanceParameter(provid, hformat, "format");
+                SwiftFunction.logProvenanceParameter(provid, hvalue, "value");
+            }
+            return handle;
+        }
+    }
+	
 	/*
 	 * Takes in an int and pads zeros to the left and returns a string
 	 */
-	public DSHandle swiftscript_pad(VariableStack stack)
-	throws ExecutionException {
-	    String inputString = TypeUtil.toString(PA_INPUT.getValue(stack));
-	    String inputFormat = TypeUtil.toString(PA_TRANSFORM.getValue(stack));
-	    DSHandle handle = new RootDataNode(Types.STRING);
+	public static class Pad extends AbstractFunction {
+        private ArgRef<AbstractDataNode> size;
+        private ArgRef<AbstractDataNode> value;
 
-	    int num_length = inputString.length();
-	    int zeros_to_pad = Integer.parseInt(inputFormat);
-	    zeros_to_pad += num_length;
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("size", "value"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode hsize = this.size.getValue(stack);
+            Integer size = SwiftFunction.unwrap(this, hsize);
+            AbstractDataNode hvalue = this.value.getValue(stack);
+            Integer value = SwiftFunction.unwrap(this, hvalue);
+            
+            DSHandle handle = new RootDataNode(Types.STRING, 
+                    String.format("%0" + size + "d", value));
 
-	    String output = String.format("%0"+zeros_to_pad+"d",
-	                                  Integer.parseInt(inputString));
-	    handle.setValue(output);
-	    handle.closeShallow();
-
-	    int provid=VDLFunction.nextProvenanceID();
-	    VDLFunction.logProvenanceResult(provid, handle, "pad");
-	    VDLFunction.logProvenanceParameter(provid, PA_INPUT.getRawValue(stack), "int");
-	    VDLFunction.logProvenanceParameter(provid, PA_TRANSFORM.getRawValue(stack), "int");
-	    return handle;
-	}
-
-	public DSHandle swiftscript_tostring(VariableStack stack)
-	throws ExecutionException {
-	    return swiftscript_to_string(stack);
-	}
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceResult(provid, handle, "pad");
+                SwiftFunction.logProvenanceParameter(provid, hsize, "size");
+                SwiftFunction.logProvenanceParameter(provid, hvalue, "value");
+            }
+            return handle;
+        }
+    }
 	
-	public DSHandle swiftscript_to_string(VariableStack stack)
-	throws ExecutionException {
-	    Object input = PA_INPUT.getValue(stack);
-	    DSHandle handle = new RootDataNode(Types.STRING);
-	    if (input instanceof DSHandle) {
-	        StringBuilder sb = new StringBuilder();
-	        prettyPrint(sb, (DSHandle) input);
-	        handle.setValue(sb.toString());
-	    }
-	    else {
-	        handle.setValue(String.valueOf(input));
-	    }
-	    handle.closeShallow();
-	    return handle;
-	}
+	public static class ToString extends AbstractFunction {
+        private ArgRef<AbstractDataNode> value;
 
-	public DSHandle swiftscript_dirname(VariableStack stack)
-	throws ExecutionException {
-	    AbstractDataNode n = (AbstractDataNode) PA_FILE.getRawValue(stack);
-	    n.waitFor();
-        String name = VDLFunction.filename(n)[0];
-        String result = new AbsFile(name).getDir();
-        return new RootDataNode(Types.STRING, result);
-	}
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("value"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode hvalue = this.value.getValue(stack);
+            
+            StringBuilder sb = new StringBuilder();
+            prettyPrint(sb, hvalue);
+            DSHandle handle = new RootDataNode(Types.STRING, sb.toString());
 
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceParameter(provid, hvalue, "value");
+                SwiftFunction.logProvenanceResult(provid, handle, "tostring");
+            }
+    
+            return handle;
+        }
+    }
+	
 	/*
-	 * This is copied from swiftscript_dirname.
-	 * Both the functions could be changed to be more readable.
-	 * Returns length of an array.
-	 * Good for debugging because array needs to be closed
-	 *   before the length is determined
-	 */
-	public DSHandle swiftscript_length(VariableStack stack)
-	throws ExecutionException {
-	    AbstractDataNode array = (AbstractDataNode) PA_ARRAY.getRawValue(stack);
-	    array.waitFor();
-	    Map<?, ?> n = array.getArrayValue();
-	    return new RootDataNode(Types.INT, Integer.valueOf(n.size()));
-	}
+     * This is copied from swiftscript_dirname.
+     * Both the functions could be changed to be more readable.
+     * Returns length of an array.
+     * Good for debugging because array needs to be closed
+     *   before the length is determined
+     */
+	public static class Dirname extends AbstractFunction {
+        private ArgRef<AbstractDataNode> file;
 
-	public DSHandle swiftscript_existsfile(VariableStack stack)
-    throws ExecutionException {
-	    DSHandle result = null;
-	    Object[] args = SwiftArg.VARGS.asArray(stack);
-	    String arg = (String) args[0];
-	    AbsFile file = new AbsFile(arg);
-	    return new RootDataNode(Types.BOOLEAN, file.exists());
-	}
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("file"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode dn = file.getValue(stack);
+            String name = SwiftFunction.filename(dn)[0];
+
+            String result = new AbsFile(name).getDir();
+            DSHandle handle = new RootDataNode(Types.BOOLEAN, result);
+    
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceParameter(provid, dn, "file");
+                SwiftFunction.logProvenanceResult(provid, handle, "dirname");
+            }
+    
+            return handle;
+        }
+    }
+		
+	public static class Length extends AbstractFunction {
+        private ArgRef<AbstractDataNode> array;
+
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("array"));
+        }
+        
+        @Override
+        public Object function(Stack stack) {
+            AbstractDataNode harray = this.array.getValue(stack);
+            harray.waitFor(this);
+            
+            DSHandle handle = new RootDataNode(Types.INT, Integer.valueOf(harray.getArrayValue().size()));
+                       
+            if (PROVENANCE_ENABLED) {
+                int provid = SwiftFunction.nextProvenanceID();
+                SwiftFunction.logProvenanceResult(provid, handle, "length");
+                SwiftFunction.logProvenanceParameter(provid, harray, "array");
+            }
+            return handle;
+        }
+    }
 }
 
 /*

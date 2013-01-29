@@ -24,34 +24,32 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.Arg.Channel;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.NamedArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.DataNode;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 
-public class Stageout extends VDLFunction {
+public class Stageout extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(Stageout.class);
 
-    public static final Arg VAR = new Arg.Positional("var");
-
-    public static final Channel STAGEOUT = new Channel("stageout");
-    public static final Channel RESTARTOUT = new Channel("restartout");
-
-    static {
-        setArguments(Stageout.class, new Arg[] { VAR });
-    }
-
-    private boolean isPrimitive(DSHandle var) {
-        return (var instanceof AbstractDataNode && ((AbstractDataNode) var)
-            .isPrimitive());
+    private ArgRef<AbstractDataNode> var;
+    private ChannelRef<Object> cr_stageout;
+    private ChannelRef<Object> cr_restartout;
+    private VarRef<Boolean> r_deperror;
+    private VarRef<Boolean> r_mdeperror;
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("var"), returns("deperror", "mdeperror", 
+            channel("stageout", DYNAMIC), channel("restartout", DYNAMIC)));
     }
     
     private List<?> list(Path p, DSHandle var) {
@@ -61,8 +59,9 @@ public class Stageout extends VDLFunction {
         return l;
     }
 
-    protected Object function(VariableStack stack) throws ExecutionException {
-        AbstractDataNode var = (AbstractDataNode) VAR.getValue(stack);
+    @Override
+    public Object function(Stack stack) {
+        AbstractDataNode var = this.var.getValue(stack);
         boolean deperr = false;
         boolean mdeperr = false;
         // currently only static arrays are supported as app returns
@@ -71,14 +70,14 @@ public class Stageout extends VDLFunction {
         // race conditions (e.g. if this array's mapper had some parameter
         // dependencies that weren't closed at the time the app was started).
         if (var.getType().isArray()) {
-            var.waitFor();
+            var.waitFor(this);
         }
         try {
-            if (!isPrimitive(var)) {
-                retPaths(STAGEOUT, stack, var);
+            if (var.isPrimitive()) {
+                retPaths(cr_stageout.get(stack), var);
             }
             if (var.isRestartable()) {
-                retPaths(RESTARTOUT, stack, var);
+                retPaths(cr_restartout.get(stack), var);
             }
         }
         catch (MappingDependentException e) {
@@ -86,23 +85,24 @@ public class Stageout extends VDLFunction {
             deperr = true;
             mdeperr = true;
         }
-        if (deperr || mdeperr) {
-            NamedArguments named = ArgUtil.getNamedReturn(stack);
-            named.add("deperror", deperr);
-            named.add("mdeperror", mdeperr);
+        if (deperr) {
+            this.r_deperror.setValue(stack, true);
+        }
+        if (mdeperr) {
+            this.r_mdeperror.setValue(stack, true);
         }
         return null;
     }
 
-    private void retPaths(Channel channel, VariableStack stack, DSHandle var) throws ExecutionException {
+    private void retPaths(k.rt.Channel<Object> channel, DSHandle var) throws ExecutionException {
         try {
             Collection<Path> fp = var.getFringePaths();
             for (Path p : fp) {
-                channel.ret(stack, list(p, var));
+                channel.add(list(p, var));
             }
         }
         catch (Exception e) {
-            throw new ExecutionException(e);
+            throw new ExecutionException(this, e);
         }
     }
 }

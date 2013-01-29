@@ -41,15 +41,6 @@ public abstract class DependentException extends RuntimeException {
 	public DSHandle getHandle() {
 		return handle;
 	}
-	
-	public String getVariableName() {
-	    if (handle instanceof AbstractDataNode) {
-	        return ((AbstractDataNode) handle).getDisplayableName();
-	    }
-	    else {
-	        return handle.toString();
-	    }
-	}
 
 	public String toString() {
 		return getMessage();

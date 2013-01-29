@@ -48,7 +48,7 @@ public abstract class AbstractMapper implements Mapper {
 		}
 	}
 
-	public void setParams(MappingParamSet params) {
+	public void setParams(MappingParamSet params) throws HandleOpenException {
 		this.params = params;
 	}
 

@@ -22,34 +22,41 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.Collection;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import k.rt.ExecutionException;
+import k.rt.Future;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.Path;
 
-public class FringePaths extends VDLFunction {
+public class FringePaths extends SwiftFunction {
+    private ArgRef<DSHandle> var;
+    private ArgRef<Object> path; 
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("var", optional("path", Path.EMPTY_PATH)));
+    }
 
-	static {
-		setArguments(FringePaths.class, new Arg[] { PA_VAR, OA_PATH });
-	}
-
-	public Object function(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+    @Override
+	public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 		DSHandle root = var.getRoot();
 		try {
-			var = var.getField(parsePath(OA_PATH.getValue(stack), stack));
-			Collection c;
+			var = var.getField(parsePath(path.getValue(stack)));
+			Collection<Path> c;
 			synchronized(root) {
 				c = var.getFringePaths();
 			}
 			return c;
 		}
 		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 		catch (HandleOpenException e) {
 			throw new FutureNotYetAvailable((Future) e.getSource());

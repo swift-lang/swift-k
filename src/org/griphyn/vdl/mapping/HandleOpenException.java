@@ -24,11 +24,17 @@ public class HandleOpenException extends Exception {
 	private DSHandle source;
 
 	public HandleOpenException(DSHandle source) {
-		super("Handle open: " + source.getType() + " " + source.toString());
 		this.source = source;
 	}
 
 	public DSHandle getSource() {
 		return source;
 	}
+
+    @Override
+    public String getMessage() {
+        return "Handle open: " + source.getType() + " " + source.toString();
+    }
+	
+	
 }

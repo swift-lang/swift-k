@@ -17,11 +17,15 @@
 
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
+import k.rt.Channel;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -47,63 +51,49 @@ import org.griphyn.vdl.type.Types;
       %k: Variable sKipped, no output. <br>
       %q: Array output
  */
-public class Sprintf extends VDLFunction {
+public class Sprintf extends SwiftFunction {
 
-    private static final Logger logger = 
-        Logger.getLogger(Sprintf.class);
+    private static final Logger logger = Logger.getLogger(Sprintf.class);
     
-    static {
-        setArguments(Sprintf.class, new Arg[] { Arg.VARGS });
+    private ArgRef<AbstractDataNode> spec;
+    private ChannelRef<AbstractDataNode> c_vargs;
+
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("spec", "..."));
     }
+
     
     @Override
-    protected Object function(VariableStack stack) 
-    throws ExecutionException {
-        AbstractDataNode[] args = waitForAllVargs(stack);
+    public Object function(Stack stack) {
+    	AbstractDataNode hspec = this.spec.getValue(stack);
+        hspec.waitFor(this);
+        Channel<AbstractDataNode> args = c_vargs.get(stack);
+        waitForAll(this, args);
+        String spec = (String) hspec.getValue();
         
-        String msg = format(args); 
-        logger.debug("generated: " + msg);
+        String msg = format(spec, args);
+        if (logger.isDebugEnabled()) {
+            logger.debug("generated: " + msg);
+        }
         
         DSHandle result = new RootDataNode(Types.STRING);
         result.setValue(msg);
         return result;
     }
 
-    public static String format(DSHandle[] args) 
-    throws ExecutionException {
-        if (! (args[0].getType() == Types.STRING))
-            throw new ExecutionException
-            ("First argument to sprintf() must be a string!"); 
-
-        String spec = (String) args[0].getValue(); 
+    public static String format(String spec, Channel<AbstractDataNode> args) {
         logger.debug("spec: " + spec);
-        DSHandle[] vars = copyArray(args, 1, args.length-1);
-        
         StringBuilder output = new StringBuilder();
-        format(spec, vars, output);
-        
+        format(spec, args, output);        
         return output.toString();
-    }
-
-    public static DSHandle[] copyArray(DSHandle[] src, 
-                                       int offset, int length)
-    {
-        DSHandle[] result = new DSHandle[length];
-        
-        for (int i = 0; i < length; i++)
-            result[i] = src[i+offset];
-        
-        return result;
     }
     
     /** 
        This method can be targeted as a helper function 
        (by @sprintf(), etc.)
      */
-    public static void format(String spec, DSHandle[] vars, 
-                              StringBuilder output)
-    throws ExecutionException
-    {
+    public static void format(String spec, Channel<AbstractDataNode> vars, StringBuilder output) {
         int i = 0; 
         int arg = 0; 
         while (i < spec.length()) {
@@ -123,53 +113,48 @@ public class Sprintf extends VDLFunction {
         }
     }
        
-    private static int append(char c, int arg, DSHandle[] vars, 
-                       StringBuilder output) 
-    throws ExecutionException {
+    private static int append(char c, int arg, Channel<AbstractDataNode> vars, StringBuilder output) {
         if (c == '%') {
             output.append('%');
             return arg;
         }
-        if (arg >= vars.length) {
-            throw new ExecutionException
-            ("tracef(): too many specifiers!");
+        if (arg >= vars.size()) {
+            throw new IllegalArgumentException("tracef(): too many specifiers!");
         }
         if (c == 'M') {
-            append_M(vars[arg], output);
+            append_M(vars.get(arg), output);
         }
         else if (c == 'b') { 
-            append_b(vars[arg], output);
+            append_b(vars.get(arg), output);
         }
         else if (c == 'f') {
-            append_f(vars[arg], output);
+            append_f(vars.get(arg), output);
         }
         else if (c == 'i') {
-            append_i(vars[arg], output);
+            append_i(vars.get(arg), output);
         }
         else if (c == 'p') {
-            output.append(vars[arg].toString());
+            output.append(vars.get(arg).toString());
         }
         else if (c == 's') {
-            append_s(vars[arg], output);
+            append_s(vars.get(arg), output);
         }
         else if (c == 'q') {
-            append_q(vars[arg], output);
+            append_q(vars.get(arg), output);
         }
         else if (c == 'k') {
             ;
         }
         else {
-            throw new ExecutionException
-            ("tracef(): Unknown format: %" + c);
+            throw new IllegalArgumentException("tracef(): Unknown format: %" + c);
         }
         return arg+1;
     }
 
-    private static void append_M(DSHandle arg, StringBuilder output)
-    throws ExecutionException {
+    private static void append_M(DSHandle arg, StringBuilder output) {
         try {
             synchronized (arg.getRoot()) { 
-                String[] names = VDLFunction.filename(arg);
+                String[] names = SwiftFunction.filename(arg);
                 if (names.length > 1)
                     output.append(names);
                 else 
@@ -177,8 +162,7 @@ public class Sprintf extends VDLFunction {
             }
         }
         catch (Exception e) { 
-            throw new ExecutionException
-            ("tracef(%M): Could not lookup: " + arg); 
+            throw new IllegalArgumentException("tracef(%M): Could not lookup: " + arg); 
         }
     }
     
@@ -188,36 +172,33 @@ public class Sprintf extends VDLFunction {
             output.append(arg.getValue());
         }
         else {
-            throw new ExecutionException
-            ("tracef(): %b requires a boolean! " + dshandleDescription(arg));
+            throw new IllegalArgumentException("tracef(): %b requires a boolean! " 
+            		+ dshandleDescription(arg));
         }
     }
     
-    private static void append_f(DSHandle arg, StringBuilder output) 
-    throws ExecutionException {
+    private static void append_f(DSHandle arg, StringBuilder output) {
         if (arg.getType() == Types.FLOAT) {
             output.append(arg.getValue());
         }
         else {
-            throw new ExecutionException
-            ("tracef(): %f requires a float! " + dshandleDescription(arg));
+            throw new IllegalArgumentException("tracef(): %f requires a float! " 
+            		+ dshandleDescription(arg));
         }
     }
 
-    private static void append_i(DSHandle arg, StringBuilder output) 
-    throws ExecutionException {
+    private static void append_i(DSHandle arg, StringBuilder output) {
         if (arg.getType() == Types.INT) {
         	Integer d = (Integer) arg.getValue();
             output.append(d);
         }
         else {
-            throw new ExecutionException
-            ("tracef(): %i requires an int! " + dshandleDescription(arg));
+            throw new IllegalArgumentException("tracef(): %i requires an int! " 
+            		+ dshandleDescription(arg));
         }
     }
     
-    private static void append_q(DSHandle arg, StringBuilder output) 
-    throws ExecutionException {
+    private static void append_q(DSHandle arg, StringBuilder output) {
         if (arg instanceof ArrayDataNode) {
             ArrayDataNode node = (ArrayDataNode) arg;
             output.append("[");
@@ -234,25 +215,24 @@ public class Sprintf extends VDLFunction {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                throw new ExecutionException
-                ("trace(%q): Could not get children of: " + arg);
+                throw new IllegalArgumentException("trace(%q): Could not get children of: " 
+                		+ arg);
             }
             output.append("]");
         }
         else {
-            throw new ExecutionException
-            ("tracef(): %q requires an array! " + dshandleDescription(arg));
+            throw new IllegalArgumentException("tracef(): %q requires an array! " 
+            		+ dshandleDescription(arg));
         }        
     }
     
-    private static void append_s(DSHandle arg, StringBuilder output) 
-    throws ExecutionException {
+    private static void append_s(DSHandle arg, StringBuilder output) {
         if (arg.getType() == Types.STRING) {
             output.append(arg.getValue());
         }
         else {
-            throw new ExecutionException
-            ("tracef(): %s requires a string! " + dshandleDescription(arg));
+            throw new IllegalArgumentException("tracef(): %s requires a string! " 
+            		+ dshandleDescription(arg));
         }
     }
     
@@ -273,8 +253,7 @@ public class Sprintf extends VDLFunction {
             output.append('\t');
         }
         else {
-            throw new ExecutionException
-            ("tracef(): unknown backslash escape sequence! " + 
+            throw new IllegalArgumentException("tracef(): unknown backslash escape sequence! " + 
             		    "(\\" + c + ")\n" + 
             		    "\t in " + spec + " character: " + i);
         }

@@ -20,24 +20,25 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.file.FileGarbageCollector;
 
-public class CleanDataset extends VDLFunction {
-	public static final Logger logger = Logger.getLogger(CleanDataset.class);
-	
-	public static final Arg.Optional OA_SHUTDOWN = new Arg.Optional("shutdown");
-	
-	static {
-		setArguments(CleanDataset.class, new Arg[] { PA_VAR, OA_SHUTDOWN });
-	}
+public class CleanDataset extends SwiftFunction {
+	private ArgRef<AbstractDataNode> var;
+	private ArgRef<Boolean> shutdown;
 
-	public Object function(VariableStack stack) throws ExecutionException {
-	    if (OA_SHUTDOWN.isPresent(stack)) {
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("var", optional("shutdown", Boolean.FALSE)));
+    }
+
+    public Object function(Stack stack) {
+    	boolean shutdown = this.shutdown.getValue(stack);
+	    if (shutdown) {
 	        // signals that everything is done and the main program should wait for the
 	        // garbage collector to finish everything
 	        try {
@@ -48,7 +49,7 @@ public class CleanDataset extends VDLFunction {
             }
 	    }
 	    else {
-    		AbstractDataNode var = (AbstractDataNode) PA_VAR.getValue(stack);
+    		AbstractDataNode var = this.var.getValue(stack);
     		if (logger.isInfoEnabled()) {
     		    logger.info("Cleaning " + var);
     		}

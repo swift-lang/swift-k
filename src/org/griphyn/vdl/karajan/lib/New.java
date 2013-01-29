@@ -24,18 +24,25 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.Context;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.VDL2ExecutionContext;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 import org.griphyn.vdl.mapping.ExternalDataNode;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
+import org.griphyn.vdl.mapping.OOBYield;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
@@ -43,40 +50,55 @@ import org.griphyn.vdl.mapping.file.ConcurrentMapper;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
-public class New extends VDLFunction {
-
+public class New extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(New.class);
-
-	public static final Arg OA_TYPE = new Arg.Optional("type", null);
-	public static final Arg OA_MAPPING = new Arg.Optional("mapping", null);
-	public static final Arg OA_VALUE = new Arg.Optional("value", null);
-	public static final Arg OA_DBGNAME = new Arg.Optional("dbgname", null);
-	public static final Arg OA_WAITCOUNT = new Arg.Optional("waitcount", null);
-	public static final Arg OA_INPUT = new Arg.Optional("input", Boolean.FALSE);
-
-	static {
-		setArguments(New.class,
-				new Arg[] { OA_TYPE, OA_MAPPING, OA_VALUE, OA_DBGNAME, OA_WAITCOUNT, OA_INPUT});
+	
+	private ArgRef<String> type;
+	private ArgRef<Map<String, Object>> mapping;
+	private ArgRef<Object> value;
+	private ArgRef<String> dbgname;
+	private ArgRef<Number> waitCount;
+	private ArgRef<Boolean> input;
+	private ArgRef<String> _defline;
+	
+	private VarRef<Context> context;
+	private VarRef<String> cwd;
+	
+	@Override
+	protected Signature getSignature() {
+	    return new Signature(params("type", optional("mapping", null), optional("value", null), 
+	        optional("dbgname", null), optional("waitCount", null), optional("input", Boolean.FALSE), optional("_defline", null)));
 	}
 	
 	private Tracer tracer;
 
-	@Override
-    protected void initializeStatic() {
-        super.initializeStatic();
+    @Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        context = scope.getVarRef("#context");
+        cwd = scope.getVarRef("CWD");
+    }
+   
+    @Override
+    public Node compile(WrapperNode w, Scope scope)
+            throws CompilationException {
+        Node fn = super.compile(w, scope);
+        if (_defline.getValue() != null) {
+            setLine(Integer.parseInt(_defline.getValue()));
+        }
         tracer = Tracer.getTracer(this);
+        return fn;
     }
 
-    public Object function(VariableStack stack) throws ExecutionException {
-		String typename = TypeUtil.toString(OA_TYPE.getValue(stack));
-		Object value = OA_VALUE.getValue(stack);
-		@SuppressWarnings("unchecked")
-        Map<String,Object> mapping = 
-		    (Map<String,Object>) OA_MAPPING.getValue(stack);
-		String dbgname = TypeUtil.toString(OA_DBGNAME.getValue(stack));
-		String waitCount = (String) OA_WAITCOUNT.getValue(stack);
-		boolean input = TypeUtil.toBoolean(OA_INPUT.getValue(stack));
-		String line = (String) getProperty("_defline");
+    @Override
+    public Object function(Stack stack) {
+		String typename = this.type.getValue(stack);
+		Object value = this.value.getValue(stack);
+        Map<String,Object> mapping = this.mapping.getValue(stack);
+		String dbgname = this.dbgname.getValue(stack);
+		Number waitCount = this.waitCount.getValue(stack);
+		boolean input = this.input.getValue(stack);
+		String line = this._defline.getValue(stack);
 		
 		MappingParamSet mps = new MappingParamSet();
 		mps.setAll(mapping);
@@ -93,7 +115,7 @@ public class New extends VDLFunction {
 		    mps.set(MappingParam.SWIFT_LINE, line);
 		}
 		
-		String threadPrefix = getThreadPrefix(stack);
+		String threadPrefix = getThreadPrefix();
 
 		mps.set(MappingParam.SWIFT_RESTARTID, threadPrefix + ":" + dbgname);
 
@@ -101,7 +123,7 @@ public class New extends VDLFunction {
 		int initialWriteRefCount;
 		boolean noWriters = input;
 		if (waitCount != null) {
-			initialWriteRefCount = Integer.parseInt(waitCount);
+			initialWriteRefCount = waitCount.intValue();
 		}
 		else {
 		    initialWriteRefCount = 0;
@@ -115,7 +137,7 @@ public class New extends VDLFunction {
 		if ("concurrent_mapper".equals(mapper)) {
 		    mps.set(ConcurrentMapper.PARAM_THREAD_PREFIX, threadPrefix);
 		}
-		mps.set(MappingParam.SWIFT_BASEDIR, stack.getExecutionContext().getBasedir());
+		mps.set(MappingParam.SWIFT_BASEDIR, cwd.getValue(stack));
 		
 		try {
 			Type type;
@@ -134,8 +156,7 @@ public class New extends VDLFunction {
 			}
 			else if (type.isArray()) {
 				// dealing with array variable
-				handle = new RootArrayDataNode(type, 
-				    (DuplicateMappingChecker) stack.getGlobal(VDL2ExecutionContext.DM_CHECKER));
+				handle = new RootArrayDataNode(type, getDMChecker(stack));
 				if (value != null) {
 					if (value instanceof RootArrayDataNode) {
 					    if (tracer.isEnabled()) {
@@ -184,8 +205,7 @@ public class New extends VDLFunction {
 				handle = (DSHandle) value;
 			}
 			else {
-				handle = new RootDataNode(type, 
-				    (DuplicateMappingChecker) stack.getGlobal(VDL2ExecutionContext.DM_CHECKER));
+				handle = new RootDataNode(type, getDMChecker(stack));
 				handle.init(mps);
 				if (value != null) {
 				    if (tracer.isEnabled()) {
@@ -206,10 +226,18 @@ public class New extends VDLFunction {
 			handle.setWriteRefCount(initialWriteRefCount);
 			return handle;
 		}
+		catch (OOBYield y) {
+		    throw y.wrapped(this);
+		}
 		catch (Exception e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
+
+    private DuplicateMappingChecker getDMChecker(Stack stack) {
+        Context ctx = this.context.getValue(stack);
+        return (DuplicateMappingChecker) ctx.getAttribute("SWIFT:DM_CHECKER");
+    }
 
     private String formatList(List<?> value) {
         StringBuilder sb = new StringBuilder();

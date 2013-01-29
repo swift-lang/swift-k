@@ -20,25 +20,17 @@
  */
 package org.griphyn.vdl.karajan.lib.cache;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import k.rt.AbstractFuture;
+import k.rt.Future;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
-import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
+import org.globus.cog.karajan.futures.FutureEvaluationException;
 
-public class File implements Future {
+public class File extends AbstractFuture implements Future {
 	private String path;
 	private Object host;
 	private long size, lastAccess;
 	private int locked;
 	private boolean processingLock;
-	private List<ListenerStackPair> listeners;
 
 	public File(String file, String dir, Object host, long size) {
 		if (dir.endsWith("/")) {
@@ -164,31 +156,6 @@ public class File implements Future {
 
 	public boolean isLockedForProcessing() {
 		return processingLock;
-	}
-
-	public void notifyListeners() {
-		if (listeners != null) {
-			Iterator<ListenerStackPair> i = listeners.iterator();
-			while (i.hasNext()) {
-				final ListenerStackPair etp = i.next();
-				i.remove();
-				EventBus.post(new Runnable() {
-                    public void run() {
-                        etp.listener.futureModified(File.this, etp.stack);
-                    }
-				});
-			}
-		}
-	}
-
-	public synchronized void addModificationAction(FutureListener target, VariableStack stack) {
-		if (listeners == null) {
-			listeners = new LinkedList<ListenerStackPair>();
-		}
-		listeners.add(new ListenerStackPair(target, stack));
-		if (isClosed()) {
-			notifyListeners();
-		}
 	}
 
 	public void close() {

@@ -22,33 +22,36 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.restartLog.LogChannelOperator;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.Path;
 
-public class IsDone extends VDLFunction {
-    public static final Arg STAGEOUT = new Arg.Positional("stageout");
+public class IsDone extends SwiftFunction {
+    private ArgRef<Iterable<List<Object>>> stageout;
     
-    static {
-        setArguments(IsDone.class, new Arg[] { STAGEOUT });
-    }
+    private ChannelRef<String> cr_restartLog;
 
     @Override
-    protected Object function(VariableStack stack) throws ExecutionException {
-        List files = TypeUtil.toList(STAGEOUT.getValue(stack));
-        for (Object f : files) {
-            List pv = TypeUtil.toList(f);
+    protected Signature getSignature() {
+        return new Signature(params("stageout"), returns(channel("...", 1), channel("restartLog")));
+    }
+    
+    @Override
+    public Object function(Stack stack) {
+        Iterable<List<Object>> files = stageout.getValue(stack);
+        for (List<Object> pv : files) {
             Path p = (Path) pv.get(0);
             DSHandle handle = (DSHandle) pv.get(1);
-            if (!IsLogged.isLogged(stack, handle, p)) {
+            if (!IsLogged.isLogged((LogChannelOperator) cr_restartLog.get(stack), handle, p)) {
                 return Boolean.FALSE;
             }
         }
-        if (files.isEmpty()) {
+        if (!files.iterator().hasNext()) {
             return Boolean.FALSE;
         }
         return Boolean.TRUE;

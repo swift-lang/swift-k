@@ -13,13 +13,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import k.rt.Future;
+import k.thr.LWThread;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ThreadingContext;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
-import org.globus.cog.karajan.workflow.nodes.FlowNode;
+import org.globus.cog.karajan.analyzer.VariableNotFoundException;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.mapping.AbstractDataNode;
@@ -56,7 +55,7 @@ public class Tracer {
         this.enabled = enabled;
     }
     
-    private Tracer(FlowNode fe, String name) {
+    private Tracer(Node fe, String name) {
         source = buildSource(fe, name);
         if (source == null) {
             enabled = false;
@@ -76,11 +75,11 @@ public class Tracer {
         enabled = true;
     }
     
-    private Tracer(FlowNode fe) {
+    private Tracer(Node fe) {
         this(fe, null);
     }
     
-    private String buildSource(FlowNode fe, String name) {
+    private String buildSource(Node fe, String name) {
         String line = findLine(fe);
         if (line == null) {
             return null;
@@ -99,7 +98,7 @@ public class Tracer {
         return sb.toString();
     }
 
-    private String getType(FlowNode fe) {
+    private String getType(Node fe) {
         String t = Karajan.demangle(fe.getTextualName());
         String nt = NAME_MAPPINGS.get(t);
         if (nt == null) {
@@ -110,31 +109,16 @@ public class Tracer {
         }
     }
 
-    private String findLine(FlowElement fe) {
-        String line;
-        if (fe.hasProperty("_traceline")) {
-            line = (String) fe.getProperty("_traceline");
-        }
-        else if (fe.hasProperty("_defline")) {
-            line = (String) fe.getProperty("_defline");
-        }
-        else {
-            line = null;
-        }
-        if (line == null || line.equals("-1") || line.equals("")) {
-            return null;
-        }
-        else {
-            return line;
-        }
+    private String findLine(Node fe) {
+        return String.valueOf(fe.getLine());
     }
 
     public boolean isEnabled() {
         return enabled;
     }
         
-    public void trace(VariableStack stack, Object msg) throws VariableNotFoundException {
-        trace(threadName(stack), msg);
+    public void trace(LWThread thr, Object msg) throws VariableNotFoundException {
+        trace(threadName(thr), msg);
     }
     
     public void trace(String thread, Object msg) {
@@ -158,7 +142,7 @@ public class Tracer {
         logger.info(str);
     }
     
-    public void trace(String thread) {
+    public void trace(LWThread thread) {
         logger.info(source + ", thread " + threadName(thread));
     }
     
@@ -171,17 +155,17 @@ public class Tracer {
         }
     }
     
-    private String threadName(VariableStack stack) throws VariableNotFoundException {
-        return threadName(ThreadingContext.get(stack).toString());
+    private String threadName(LWThread thr) throws VariableNotFoundException {
+        return thr.getName();
     }
     
     private static Tracer disabledTracer, enabledTracer;
     
-    public static Tracer getTracer(FlowNode fe) {
+    public static Tracer getTracer(Node fe) {
         return getTracer(fe, null);
     }
     
-    public static Tracer getTracer(FlowNode fe, String name) {
+    public static Tracer getTracer(Node fe, String name) {
         if (globalTracingEnabled) {
             return new Tracer(fe, name);
         }

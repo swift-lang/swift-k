@@ -31,27 +31,29 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import k.rt.Context;
+import k.rt.ExecutionException;
+import k.thr.LWThread;
+import k.thr.Scheduler;
+
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.analyzer.VariableNotFoundException;
+import org.globus.cog.karajan.compiled.nodes.grid.SchedulerNode;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ThreadingContext;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.nodes.grid.SchedulerNode;
 import org.griphyn.vdl.mapping.DSHandle;
+
+import com.sun.org.apache.xpath.internal.VariableStack;
 
 public class HangChecker extends TimerTask {
     public static final Logger logger = Logger.getLogger(HangChecker.class);
     
-    public static final int CHECK_INTERVAL = 10000;
+    public static final int CHECK_INTERVAL = 1000;
     public static final int MAX_CYCLES = 10;
     private Timer timer;
-    private long lastEventCount;
-    private VariableStack stack;
+    private Context context;
     
-    public HangChecker(VariableStack stack) throws ExecutionException {
-        this.stack = stack;
+    public HangChecker(Context context) throws ExecutionException {
+    	this.context = context;
     }
 
     public void start() {
@@ -61,11 +63,11 @@ public class HangChecker extends TimerTask {
 
     public void run() {
         try {
-            WeightedHostScoreScheduler s = (WeightedHostScoreScheduler) stack.getGlobal(SchedulerNode.SCHEDULER);
+            WeightedHostScoreScheduler s = (WeightedHostScoreScheduler) context.getAttribute(SchedulerNode.CONTEXT_ATTR_NAME);
             if (s != null) {
                 int running = s.getRunning();
                 boolean allOverloaded = s.allOverloaded();
-                if (running == 0 && EventBus.eventCount == lastEventCount && !allOverloaded) {
+                if (running == 0 && !Scheduler.getScheduler().isAnythingRunning() && !allOverloaded) {
                     logger.warn("No events in " + (CHECK_INTERVAL / 1000) + "s.");
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     PrintStream ps = new PrintStream(os);
@@ -84,7 +86,6 @@ public class HangChecker extends TimerTask {
                     ps.close();
                 }
             }
-            lastEventCount = EventBus.eventCount;
         }
         catch (Exception e) {
             logger.warn("Exception caught during hang check", e);
@@ -92,10 +93,10 @@ public class HangChecker extends TimerTask {
     }
     
     private void findThreadsToBlame(PrintStream ps, Graph g) {
-        Map<VariableStack, DSHandle> wt = WaitingThreadsMonitor.getAllThreads();
-        Set<VariableStack> sl = g.nodeSet();
-        Set<VariableStack> loners = new HashSet<VariableStack>(wt.keySet());
-        for (VariableStack s : sl) {
+        Map<LWThread, DSHandle> wt = WaitingThreadsMonitor.getAllThreads();
+        Set<LWThread> sl = g.nodeSet();
+        Set<LWThread> loners = new HashSet<LWThread>(wt.keySet());
+        for (LWThread s : sl) {
             for (Graph.Edge e : g.getEdgesFrom(s)) {
                 loners.remove(e.to);
             }
@@ -103,7 +104,7 @@ public class HangChecker extends TimerTask {
         if (!loners.isEmpty()) {
             ps.println();
             ps.println("The following threads are independently hung:");
-            for (VariableStack s : loners) {
+            for (LWThread s : loners) {
                 Monitor.dumpThread(ps, s, wt.get(s));
                 ps.println();
             }
@@ -112,14 +113,14 @@ public class HangChecker extends TimerTask {
     }
 
     private Graph buildGraph() throws VariableNotFoundException {
-        Map<VariableStack, List<DSHandle>> ot = WaitingThreadsMonitor.getOutputs();
-        Map<VariableStack, DSHandle> wt = WaitingThreadsMonitor.getAllThreads();
-        Map<DSHandle, List<VariableStack>> rwt = new HashMap<DSHandle, List<VariableStack>>();
+        Map<LWThread, List<DSHandle>> ot = WaitingThreadsMonitor.getOutputs();
+        Map<LWThread, DSHandle> wt = WaitingThreadsMonitor.getAllThreads();
+        Map<DSHandle, List<LWThread>> rwt = new HashMap<DSHandle, List<LWThread>>();
         
-        for (Map.Entry<VariableStack, DSHandle> e : wt.entrySet()) {
-            List<VariableStack> l = rwt.get(e.getValue());
+        for (Map.Entry<LWThread, DSHandle> e : wt.entrySet()) {
+            List<LWThread> l = rwt.get(e.getValue());
             if (l == null) {
-                l = new LinkedList<VariableStack>();
+                l = new LinkedList<LWThread>();
                 rwt.put(e.getValue(), l);
             }
             l.add(e.getKey());
@@ -128,21 +129,20 @@ public class HangChecker extends TimerTask {
         Graph g = new Graph();
 
         // if n1 -> n2, then n1 produces an output that is used by n2
-        for (Map.Entry<VariableStack, List<DSHandle>> e : ot.entrySet()) {
+        for (Map.Entry<LWThread, List<DSHandle>> e : ot.entrySet()) {
             for (DSHandle h : e.getValue()) {
-                List<VariableStack> sl = rwt.get(h);
+                List<LWThread> sl = rwt.get(h);
                 if (sl != null) {
-                    for (VariableStack s : sl) {
+                    for (LWThread s : sl) {
                         g.addEdge(e.getKey(), s, h);
                     }
                 }
             }
             
-            ThreadingContext tc;
             
-            tc = ThreadingContext.get(e.getKey()); 
-            for (VariableStack stk : ot.keySet()) {
-                if (tc.isStrictlySubContext(ThreadingContext.get(stk))) {
+            LWThread tc = e.getKey(); 
+            for (LWThread stk : ot.keySet()) {
+                if (isStrictlyChildOf(tc, stk)) {
                     g.addEdge(e.getKey(), stk, null);
                 }
             }
@@ -151,14 +151,28 @@ public class HangChecker extends TimerTask {
         return g;
     }
 
+    private boolean isStrictlyChildOf(LWThread child, LWThread parent) {
+        if (child == parent) {
+        	return false;
+        }
+        child = child.getParent();
+        while (child != null) {
+        	if (child == parent) {
+        		return true;
+        	}
+        	child = child.getParent();
+        }
+        return false;
+    }
+
     private static boolean findCycles(PrintStream ps, Graph g) {                
         System.out.print("Finding dependency loops...");
         System.out.flush();
         
-        Set<VariableStack> seen = new HashSet<VariableStack>();
+        Set<LWThread> seen = new HashSet<LWThread>();
         LinkedList<Object> cycle = new LinkedList<Object>();
         List<LinkedList<Object>> cycles = new ArrayList<LinkedList<Object>>();
-        for (VariableStack t : g.nodeSet()) {
+        for (LWThread t : g.nodeSet()) {
             seen.clear();
             cycle.clear();
             findLoop(t, g, seen, cycle, cycles);
@@ -195,7 +209,7 @@ public class HangChecker extends TimerTask {
                     else {
                         ps.println("\tthe above must complete before the block below can complete:");
                     }
-                    for (String t : Monitor.getSwiftTrace((VariableStack) o)) {
+                    for (String t : Monitor.getSwiftTrace((LWThread) o)) {
                         ps.println("\t\t" + t);
                     }
                 }
@@ -258,8 +272,8 @@ public class HangChecker extends TimerTask {
         if (a == null || b == null) {
             return a == b;
         }
-        VariableStack sa = (VariableStack) a;
-        VariableStack sb = (VariableStack) b;
+        LWThread sa = (LWThread) a;
+        LWThread sb = (LWThread) b;
         
         List<Object> ta = Monitor.getSwiftTraceElements(sa);
         List<Object> tb = Monitor.getSwiftTraceElements(sb);
@@ -276,7 +290,7 @@ public class HangChecker extends TimerTask {
         return true;
     }
 
-    private static void findLoop(VariableStack t, Graph g, Set<VariableStack> seen, LinkedList<Object> cycle, List<LinkedList<Object>> cycles) {
+    private static void findLoop(LWThread t, Graph g, Set<LWThread> seen, LinkedList<Object> cycle, List<LinkedList<Object>> cycles) {
         if (cycles.size() > MAX_CYCLES) {
             return;
         }
@@ -310,18 +324,18 @@ public class HangChecker extends TimerTask {
     
     public static class Graph {
         public static class Edge {
-            public final VariableStack to;
+            public final LWThread to;
             public final DSHandle contents;
             
-            public Edge(VariableStack to, DSHandle contents) {
+            public Edge(LWThread to, DSHandle contents) {
                 this.to = to;
                 this.contents = contents;
             }
         }
         
-        private Map<VariableStack, List<Edge>> outEdges = new HashMap<VariableStack, List<Edge>>();
+        private Map<LWThread, List<Edge>> outEdges = new HashMap<LWThread, List<Edge>>();
 
-        public void addEdge(VariableStack from, VariableStack to, DSHandle contents) {
+        public void addEdge(LWThread from, LWThread to, DSHandle contents) {
             List<Edge> l = outEdges.get(from);
             if (l == null) {
                 l = new ArrayList<Edge>();
@@ -331,7 +345,7 @@ public class HangChecker extends TimerTask {
         }
 
         public void dump(PrintStream ps) {
-            for (Map.Entry<VariableStack, List<Edge>> e : outEdges.entrySet()) {
+            for (Map.Entry<LWThread, List<Edge>> e : outEdges.entrySet()) {
                 for (Edge edge : e.getValue()) {
                     String tcf = getThreadingContext(e.getKey());
                     String tct = getThreadingContext(edge.to);
@@ -340,16 +354,16 @@ public class HangChecker extends TimerTask {
             }
         }
 
-        private String getThreadingContext(VariableStack s) {
+        private String getThreadingContext(LWThread s) {
             try {
-                return String.valueOf(ThreadingContext.get(s));
+                return String.valueOf(s);
             }
             catch (VariableNotFoundException e) {
                 return "?";
             }
         }
 
-        public List<Edge> getEdgesFrom(VariableStack t) {
+        public List<Edge> getEdgesFrom(LWThread t) {
             List<Edge> l = outEdges.get(t);
             if (l == null) {
                 return Collections.emptyList();
@@ -359,7 +373,7 @@ public class HangChecker extends TimerTask {
             }
         }
 
-        public Set<VariableStack> nodeSet() {
+        public Set<LWThread> nodeSet() {
             return outEdges.keySet();
         }
     }

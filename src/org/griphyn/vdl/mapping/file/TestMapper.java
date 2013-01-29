@@ -22,8 +22,10 @@ import java.util.Collections;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
@@ -35,15 +37,27 @@ public class TestMapper extends AbstractMapper {
     public static final MappingParam PARAM_STATIC = new MappingParam("static", true);
     
     private PhysicalFormat remap, map;
+    
+    private boolean remappable, temp, _static;
+    private String file;
+
+    @Override
+    public void setParams(MappingParamSet params) throws HandleOpenException {
+        super.setParams(params);
+        remappable = PARAM_REMAPPABLE.getBooleanValue(this);
+        temp = PARAM_TEMP.getBooleanValue(this);
+        _static = PARAM_STATIC.getBooleanValue(this);
+        file = PARAM_FILE.getStringValue(this);
+    }
 
     @Override
     public boolean canBeRemapped(Path path) {
-        return PARAM_REMAPPABLE.getBooleanValue(this);
+        return remappable;
     }
 
     @Override
     public void remap(Path path, Mapper sourceMapper, Path sourcePath) {
-        if (PARAM_REMAPPABLE.getBooleanValue(this)) {
+        if (remappable) {
             remap = sourceMapper.map(sourcePath);
             System.out.println("Remapping " + path + " -> " + remap);
             ensureCollectionConsistency(sourceMapper, sourcePath);
@@ -56,7 +70,7 @@ public class TestMapper extends AbstractMapper {
     @Override
     public void clean(Path path) {
         PhysicalFormat pf = map(path);
-        if (PARAM_TEMP.getBooleanValue(this)) {
+        if (temp) {
             System.out.println("Cleaning file " + pf);
             FileGarbageCollector.getDefault().decreaseUsageCount(pf);
         }
@@ -67,13 +81,13 @@ public class TestMapper extends AbstractMapper {
 
     @Override
     public boolean isPersistent(Path path) {
-        return !PARAM_TEMP.getBooleanValue(this);
+        return !temp;
     }
 
     public PhysicalFormat map(Path path) {
         if (remap == null) {
             if (map == null) {
-                map = new AbsFile(PARAM_FILE.getStringValue(this));
+                map = new AbsFile(file);
             }
             return map;
         }
@@ -87,6 +101,6 @@ public class TestMapper extends AbstractMapper {
     }
 
     public boolean isStatic() {
-        return PARAM_STATIC.getBooleanValue(this);
+        return _static;
     }
 }

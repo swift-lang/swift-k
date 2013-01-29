@@ -19,37 +19,39 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureFault;
-import org.griphyn.vdl.mapping.AbstractDataNode;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.futures.FutureFault;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
+import org.griphyn.vdl.mapping.OOBYield;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
-public class CreateArray extends VDLFunction {
-
+public class CreateArray extends SetFieldValue {
 	public static final Logger logger = Logger.getLogger(CreateArray.class);
-
-	public static final Arg PA_VALUE = new Arg.Positional("value");
 	
-	static {
-		setArguments(CreateArray.class, new Arg[] { PA_VALUE });
-	}
+	private ArgRef<Object> value;
 
-    public Object function(VariableStack stack) throws ExecutionException {
-		Object value = PA_VALUE.getValue(stack);
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("value"));
+    }
+
+    public Object function(Stack stack) {
+		Object value = this.value.getValue(stack);
 		try {
 
 			if (!(value instanceof List)) {
-				throw new RuntimeException(
-					"An array variable can only be initialized with a list of values");
+				throw new RuntimeException("An array variable can only be initialized with a list of values");
 			}
 
 			Type type = checkTypes((List<?>) value);
@@ -59,12 +61,7 @@ public class CreateArray extends VDLFunction {
 			    setMapper(handle);
 			}
 
-			/*
-			 *  The reason this is disabled without provenance is that the identifier
-			 *  is essentially a random number plus a counter. It does not help
-			 *  in debugging problems.  
-			 */
-			if (AbstractDataNode.provenance && logger.isInfoEnabled()) {
+			if (logger.isInfoEnabled()) {
 			    logger.info("CREATEARRAY START array=" + handle.getIdentifier());
 			}
 
@@ -79,9 +76,9 @@ public class CreateArray extends VDLFunction {
 				
 				DSHandle dst = handle.getField(p);
 
-				SetFieldValue.deepCopy(dst, n, stack, 1);
+				deepCopy(dst, n, stack);
 				
-				if (AbstractDataNode.provenance && logger.isInfoEnabled()) {
+				if (logger.isInfoEnabled()) {
 				    logger.info("CREATEARRAY MEMBER array=" + handle.getIdentifier() 
 				        + " index=" + index + " member=" + n.getIdentifier());
 				}
@@ -90,7 +87,7 @@ public class CreateArray extends VDLFunction {
 			
 			handle.closeShallow();
 			
-			if (AbstractDataNode.provenance && logger.isInfoEnabled()) {
+			if (logger.isInfoEnabled()) {
 			    logger.info("CREATEARRAY COMPLETED array=" + handle.getIdentifier());
 			}
 
@@ -100,7 +97,7 @@ public class CreateArray extends VDLFunction {
 		    throw e;
 		}
 		catch (Exception e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 
@@ -109,7 +106,15 @@ public class CreateArray extends VDLFunction {
         MappingParamSet params = new MappingParamSet();
         params.set(MappingParam.SWIFT_DESCRIPTOR, "concurrent_mapper");
         params.set(MappingParam.SWIFT_DBGNAME, "arrayexpr");
-        handle.init(params);
+        try {
+            handle.init(params);
+        }
+        catch (OOBYield y) {
+            throw y.wrapped(this);
+        }
+        catch (HandleOpenException e) {
+            throw new ExecutionException(this, "Plain HandleOpenException caught", e);
+        }
     }
 
     private boolean hasMappableFields(Type type) {

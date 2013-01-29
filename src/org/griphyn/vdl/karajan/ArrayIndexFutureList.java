@@ -27,22 +27,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.events.EventTargetPair;
-import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
-import org.globus.cog.karajan.workflow.futures.FutureIterator;
-import org.globus.cog.karajan.workflow.futures.FutureList;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
+import k.rt.FutureListener;
+
+import org.globus.cog.karajan.futures.FutureEvaluationException;
+import org.globus.cog.karajan.futures.FutureIterator;
+import org.globus.cog.karajan.futures.FutureList;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class ArrayIndexFutureList implements FutureList, FutureWrapper {    
     private ArrayList<Object> keys;
     private Map<?, ?> values;
-    private List<ListenerStackPair> listeners;
+    private LinkedList<FutureListener> listeners;
     private ArrayDataNode node;
     private boolean purged;
 
@@ -86,10 +83,6 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
         return new FuturePairIterator(this);
     }
 
-    public FutureIterator futureIterator(VariableStack stack) {
-        return new FuturePairIterator(this, stack);
-    }
-
     public void close() {
         throw new UnsupportedOperationException("Not used here");
     }
@@ -122,52 +115,38 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
         return node;
     }
 
-    public void addModificationAction(FutureListener target, VariableStack stack) {
-        synchronized(node) {
+    @Override
+    public void addListener(FutureListener l) {
+        boolean closed;
+        synchronized(this) {
             if (listeners == null) {
-                listeners = new LinkedList<ListenerStackPair>();
+                listeners = new LinkedList<FutureListener>();
             }
-            listeners.add(new ListenerStackPair(target, stack));
-            WaitingThreadsMonitor.addThread(stack, node);
-            if (!node.isClosed()) {
-                return;
-            }
+            listeners.add(l);
+            closed = isClosed();
         }
-        // closed == true;
-        notifyListeners();
+        if (closed) {
+            notifyListeners();
+        }
     }
-
+    
     public void notifyListeners() {
-        List<ListenerStackPair> l;
-        synchronized(node) {
+        List<FutureListener> ls;
+        synchronized(this) {
             if (listeners == null) {
                 return;
             }
-            
-            l = listeners;
+            ls = listeners;
             listeners = null;
         }
-        
-        for (final ListenerStackPair lsp : l) {
-            WaitingThreadsMonitor.removeThread(lsp.stack);
-            EventBus.post(new Runnable() {
-                @Override
-                public void run() {
-                    lsp.listener.futureModified(ArrayIndexFutureList.this, lsp.stack);
-                }
-            });
+        for (FutureListener l : ls) {
+            l.futureUpdated(this);
         }
     }
-
-    public EventTargetPair[] getListenerEvents() {
-        synchronized(node) {
-            if (listeners != null) {
-                return listeners.toArray(new EventTargetPair[0]);
-            }
-            else {
-                return null;
-            }
-        }
+    
+    @Override
+    public synchronized List<FutureListener> getListeners() {
+        return new LinkedList<FutureListener>(listeners);
     }
 
     public int size() {

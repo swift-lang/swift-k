@@ -20,6 +20,7 @@
  */
 package org.griphyn.vdl.mapping.file;
 
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 
@@ -30,7 +31,7 @@ public class SimpleFileMapper extends AbstractFileMapper {
 		super();
 	}
 
-	public void setParams(MappingParamSet params) {
+	public void setParams(MappingParamSet params) throws HandleOpenException {
 		super.setParams(params);
 		int precision = PARAM_PADDING.getIntValue(this);
 		setElementMapper(new DefaultFileNameElementMapper(precision));

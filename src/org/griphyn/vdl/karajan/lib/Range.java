@@ -28,12 +28,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
@@ -41,29 +42,33 @@ import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
-public class Range extends VDLFunction {
-	public static final SwiftArg PA_FROM = new SwiftArg.Positional("from");
-	public static final SwiftArg PA_TO = new SwiftArg.Positional("to");
-	public static final SwiftArg OA_STEP = new SwiftArg.Optional("step", new Double(1), Types.FLOAT);
+public class Range extends SwiftFunction {
+    private ArgRef<DSHandle> from;
+    private ArgRef<DSHandle> to;
+    private ArgRef<DSHandle> step;
+    
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("from", "to", optional("step", new RootDataNode(Types.FLOAT, 1))));
+    }
 
-	static {
-		setArguments(Range.class, new Arg[] { PA_FROM, PA_TO, OA_STEP });
-	}
-
-	public Object function(final VariableStack stack) throws ExecutionException {
+	@Override
+	public Object function(Stack stack) {
 		// TODO: deal with expression
-		final Type type = PA_FROM.getType(stack);
-		final double start = PA_FROM.getDoubleValue(stack);
-		final double stop = PA_TO.getDoubleValue(stack);
-		final double incr = OA_STEP.getDoubleValue(stack);
+	    DSHandle from = this.from.getValue(stack);
+	    DSHandle to = this.to.getValue(stack);
+	    DSHandle step = this.step.getValue(stack);
+		final Type type = from.getType();
+		final double start = ((Number) from.getValue()).doubleValue();
+		final double stop = ((Number) to.getValue()).doubleValue();
+		final double incr = ((Number) step.getValue()).doubleValue();
 
 		// only deal with int and float
 		try {
 			final AbstractDataNode handle;
 
 			handle = new RootArrayDataNode(type.arrayType()) {
-				final DSHandle h = this;
-				
+				final DSHandle h = this;				
 				{
 				    closeShallow();
 				}
@@ -78,10 +83,7 @@ public class Range extends VDLFunction {
 					}
 					else {
 						int index = (Integer) path.getFirst();
-						DSHandle value = new RootDataNode(type);
-						value.init(null);
-						value.setValue(new Double(start + incr * index));
-						value.closeShallow();
+						DSHandle value = new RootDataNode(type, new Double(start + incr * index));
 						return Collections.singletonList(value);
 					}
 				}
@@ -106,15 +108,12 @@ public class Range extends VDLFunction {
 													private int key;
 													
 													{
-														value = new RootDataNode(type);
-														value.init(null);
 														if (type == Types.INT) {
-														    value.setValue(new Integer((int) crt));
+														    value = new RootDataNode(Types.INT, new Integer((int) crt));
 														}
 														else {
-														    value.setValue(new Double(crt));
+														    value = new RootDataNode(Types.FLOAT, new Double(crt));
 														}
-														value.closeShallow();
 														key = index;
 													}
 
@@ -159,7 +158,7 @@ public class Range extends VDLFunction {
 			return handle;
 		}
 		catch (Exception e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 }

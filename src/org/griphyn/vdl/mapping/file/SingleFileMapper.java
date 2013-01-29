@@ -23,7 +23,9 @@ import java.util.Collections;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
@@ -32,13 +34,21 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 public class SingleFileMapper extends AbstractMapper {
 
 	public static final MappingParam PARAM_FILE = new MappingParam("file");
+	
+	private AbsFile file;
 
 	public SingleFileMapper() {
 		super();
 	}
 
-	public Collection<Path> existing() {
-		if (new AbsFile(PARAM_FILE.getStringValue(this)).exists()) {
+	@Override
+    public void setParams(MappingParamSet params) throws HandleOpenException {
+        super.setParams(params);
+        file = new AbsFile(PARAM_FILE.getStringValue(this));
+    }
+
+    public Collection<Path> existing() {
+		if (file.exists()) {
 			return Arrays.asList(new Path[] {Path.EMPTY_PATH});
 		}
 		else {
@@ -47,7 +57,7 @@ public class SingleFileMapper extends AbstractMapper {
 	}
 
 	public PhysicalFormat map(Path path) {
-		return new AbsFile(PARAM_FILE.getStringValue(this));
+		return file;
 	}
 
 	public boolean isStatic() {

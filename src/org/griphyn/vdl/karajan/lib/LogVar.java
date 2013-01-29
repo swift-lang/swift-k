@@ -20,37 +20,44 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
+import k.rt.Channel;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
-public class LogVar extends VDLFunction {
+public class LogVar extends SwiftFunction {
+    private ArgRef<DSHandle> var;
+    private ArgRef<Object> path;
+    private ChannelRef<Object> cr_restartlog;
+    
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("var", "path"), returns(channel("restartlog", 1)));
+    }
 
-	static {
-		setArguments(LogVar.class, new Arg[] { PA_VAR, PA_PATH });
-	}
-
-	public Object function(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+    @Override
+	public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 		Path path;
-        Object p = PA_PATH.getValue(stack);
+        Object p = this.path.getValue(stack);
         if (p instanceof Path) {
             path = (Path) p;
         }
         else {
             path = Path.parse(TypeUtil.toString(p));
         }
-        logVar(stack, var, path);
+        logVar(cr_restartlog.get(stack), var, path);
 		return null;
 	}
 	
-	public static void logVar(VariableStack stack, DSHandle var, Path path) throws VariableNotFoundException {
+	public static void logVar(Channel<Object> log, DSHandle var, Path path) throws VariableNotFoundException {
 	    path = var.getPathFromRoot().append(path);
         String annotation;
         if(var.getMapper() != null) {
@@ -58,7 +65,7 @@ public class LogVar extends VDLFunction {
         } else {
             annotation = "unmapped";
         }
-        RestartLog.LOG_CHANNEL.ret(stack, var.getRoot().getParam(MappingParam.SWIFT_RESTARTID)
+        log.add(var.getRoot().getParam(MappingParam.SWIFT_RESTARTID)
                 + "." + path.stringForm() + "!" + annotation);
 	}
 }

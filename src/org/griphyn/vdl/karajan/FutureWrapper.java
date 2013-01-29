@@ -17,16 +17,19 @@
 
 package org.griphyn.vdl.karajan;
 
-import org.globus.cog.karajan.workflow.events.EventTargetPair;
-import org.globus.cog.karajan.workflow.futures.Future;
+import java.util.List;
+
+import k.rt.Future;
+import k.rt.FutureListener;
+
 import org.griphyn.vdl.mapping.DSHandle;
 
 public interface FutureWrapper extends Future {
-    void notifyListeners();
-
     int listenerCount();
-
-    EventTargetPair[] getListenerEvents();
+    
+    List<FutureListener> getListeners();
+    
+    void notifyListeners();
     
     DSHandle getHandle();
 }

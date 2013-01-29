@@ -20,16 +20,12 @@ package org.griphyn.vdl.karajan;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.futures.Future;
+import k.rt.Future;
+
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class FutureTracker {
     public static final String VAR_NAME = "#swift:futureTracker";
-
-    public static FutureTracker get(VariableStack stack) {
-        return (FutureTracker) stack.firstFrame().getVar(VAR_NAME);
-    }
     
     private static final FutureTracker ft = new FutureTracker();
     

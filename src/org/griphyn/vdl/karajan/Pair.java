@@ -37,5 +37,4 @@ public class Pair extends AbstractList<Object> {
 	public int size() {
 		return 2;
 	}
-
 }

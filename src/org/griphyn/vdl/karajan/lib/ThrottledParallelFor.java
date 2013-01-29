@@ -23,87 +23,99 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import k.rt.ExecutionException;
+import k.rt.KRunnable;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.ThreadSet;
+import k.thr.ThrottledThreadSet;
+import k.thr.Yield;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.Identifier;
-import org.globus.cog.karajan.util.KarajanIterator;
-import org.globus.cog.karajan.util.ThreadingContext;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.UParallelFor;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureEvaluationException;
-import org.globus.cog.karajan.workflow.futures.FutureFault;
-import org.globus.cog.karajan.workflow.futures.FutureIterator;
-import org.globus.cog.karajan.workflow.futures.FutureIteratorIncomplete;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
-import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
-import org.globus.cog.karajan.workflow.nodes.AbstractParallelIterator;
 import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.util.VDL2Config;
 
-public class ThrottledParallelFor extends AbstractParallelIterator {
-	public static final Logger logger = Logger.getLogger(ThrottledParallelFor.class);
+public class ThrottledParallelFor extends UParallelFor {
+	public static final Logger logger = Logger
+			.getLogger(ThrottledParallelFor.class);
 	
-	public static final int DEFAULT_MAX_THREADS = 10000000;
+	public static final int DEFAULT_MAX_THREADS = 1024;
 
-	public static final Arg A_NAME = new Arg.Positional("name");
-	public static final Arg A_IN = new Arg.Positional("in");
-	public static final Arg O_SELFCLOSE = new Arg.Optional("selfclose", Boolean.FALSE);
-	public static final Arg O_REFS = new Arg.Optional("refs", null);
-
-	static {
-		setArguments(ThrottledParallelFor.class, new Arg[] { A_NAME, A_IN, O_SELFCLOSE, O_REFS });
-	}
-
-	public static final String THREAD_COUNT = "#threadcount";
+	private ArgRef<Boolean> selfClose;
+	private ArgRef<String> refs;
+	private ArgRef<String> _kvar;
+	private ArgRef<String> _vvar;
+	private ArgRef<String> _traceline;
+	    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(
+            params(
+                identifier("name"), "in", 
+                optional("selfClose", Boolean.FALSE), optional("refs", null),
+                optional("_kvar", null), optional("_vvar", null), optional("_traceline", null),
+                block("body")
+            )
+        );
+    }
 
 	private int maxThreadCount = -1;
 	private Tracer forTracer, iterationTracer;
-	private String kvar, vvar;
-	private List<StaticRefCount> srefs;
-	
-	private static class StaticRefCount {
-	    public final String name;
+    private List<StaticRefCount> srefs;
+
+    private static class StaticRefCount {
+        public final VarRef<?> ref;
         public final int count;
-        
-        public StaticRefCount(String name, int count) {
-            this.name = name;
+
+        public StaticRefCount(VarRef<?> ref, int count) {
+            this.ref = ref;
             this.count = count;
         }
-	}
-	
-	private static class RefCount {
-	    public final DSHandle var;
-	    public final int count;
-	    
-	    public RefCount(DSHandle var, int count) {
-	        this.var = var;
-	        this.count = count;
-	    }
-	    
-	    public void inc() {
-	        
-	    }
-	    
-	    public void dec() {
-	        
-	    }
-	}
-	
-    @Override
-    protected void initializeStatic() {
-        super.initializeStatic();
-        forTracer = Tracer.getTracer(this, "FOREACH");
-        iterationTracer = Tracer.getTracer(this, "ITERATION");
-        kvar = (String) getProperty("_kvar");
-        vvar = (String) getProperty("_vvar");
-        srefs = buildStaticRefs();
     }
 
-    private List<StaticRefCount> buildStaticRefs() {
-        String refs = (String) O_REFS.getStatic(this);
+    private static class RefCount {
+        public final DSHandle var;
+        public final int count;
+
+        public RefCount(DSHandle var, int count) {
+            this.var = var;
+            this.count = count;
+        }
+
+        public void inc() {
+
+        }
+
+        public void dec() {
+
+        }
+    }
+    
+    @Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+        srefs = buildStaticRefs(scope);
+        if (_traceline.getValue() != null) {
+            setLine(Integer.parseInt(_traceline.getValue()));
+        }
+        forTracer = Tracer.getTracer(this, "FOREACH");
+        iterationTracer = Tracer.getTracer(this, "ITERATION");
+        return super.compileBody(w, argScope, scope);
+    }
+    
+     private List<StaticRefCount> buildStaticRefs(Scope scope) {
+        String refs = this.refs.getValue();
         if (refs == null) {
             return null;
         }
@@ -117,115 +129,141 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
             }
             else {
                 int count = Integer.parseInt(st.nextToken());
-                l.add(new StaticRefCount(name.toLowerCase(), count));
+                l.add(new StaticRefCount(scope.getVarRef(name), count));
             }
             flip = !flip;
         }
         return l;
     }
 
-    private List<RefCount> buildRefs(VariableStack stack) throws VariableNotFoundException {
+    private List<RefCount> buildRefs(Stack stack) {
         if (srefs == null) {
             return null;
         }
         List<RefCount> l = new ArrayList<RefCount>(srefs.size());
         for (StaticRefCount s : srefs) {
-            l.add(new RefCount((DSHandle) stack.getVar(s.name), s.count));
+            l.add(new RefCount((DSHandle) s.ref.getValue(stack), s.count));
         }
         return l;
     }
 
-    protected void partialArgumentsEvaluated(VariableStack stack)
-            throws ExecutionException {
-        if (forTracer.isEnabled()) {
-            forTracer.trace(ThreadingContext.get(stack).toString());
-        }
-        super.partialArgumentsEvaluated(stack);
-    }
-
-    public void iterate(VariableStack stack, Identifier var, KarajanIterator i)
-			throws ExecutionException {
-		if (elementCount() > 0) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("iterateParallel: " + stack.parentFrame());
-			}
-			stack.setVar(VAR, var);
-			setChildFailed(stack, false);
-			stack.setCaller(this);
-			initThreadCount(stack, TypeUtil.toBoolean(O_SELFCLOSE.getStatic(this)), i);
-			citerate(stack, var, i);
-		}
-		else {
-			complete(stack);
-		}
-	}
-
-	protected void citerate(VariableStack stack, Identifier var,
-			KarajanIterator i) throws ExecutionException {
-		ThreadCount tc = getThreadCount(stack);
-		
-		// we can bulk operations at the start to avoid contention
-		// on the counter since at least as many
-		// threads as reported by available() are available
-		int available = tc.available();
-		try {
-		    int j = 0;
-		    try {
-    		    for (; j < available && i.hasNext(); j++) {
-    		        startIteration(tc, var, i.current(), i.next(), stack);
-    		    }
-		    }
-		    finally {
-		        tc.add(j);
-		    }
-			while (i.hasNext()) {
-			    startIteration(tc, var, i.current(), tc.tryIncrement(), stack);
-			}
-			
-			decRefs(tc.rc);
-			
-			int left;
-			synchronized(tc) {
-			    // can only have closed and running = 0 in one place
-			    tc.close();
-			    left = tc.current();
-			}
-			if (left == 0) {
-				complete(stack);
-			}
-		}
-		catch (FutureIteratorIncomplete fii) {
-			synchronized (stack.currentFrame()) {
-                stack.setVar(ITERATOR, i);
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void runBody(final LWThread thr) {        
+        int i = thr.checkSliceAndPopState();
+        Iterator<Object> it = (Iterator<Object>) thr.popState();
+        ThrottledThreadSet ts = (ThrottledThreadSet) thr.popState();
+        int fc = thr.popIntState();
+        List<RefCount> drefs = (List<RefCount>) thr.popState();
+        Stack stack = thr.getStack();
+        try {
+            switch(i) {
+                case 0:
+                    it = in.getValue(stack).iterator();
+                    ts = new ThrottledThreadSet(getMaxThreads());
+                    drefs = buildRefs(stack);
+                    ts.lock();
+                    fc = stack.frameCount() + 1;
+                    
+                    if (forTracer.isEnabled()) {
+                        forTracer.trace(thr);
+                    }
+                    
+                    i++;
+                case 1:
+                    final ThreadSet tsf = ts;
+                    
+                    ts.checkFailed();
+                    
+                    startBulk(thr, ts, it, fc, drefs);
+                    startRest(thr, ts, it, fc, drefs);
+                    
+                    ts.unlock();
+                    decRefs(drefs);
+                    ts.waitFor();
             }
-            fii.getFutureIterator().addModificationAction(this, stack);
-		}
-	}
-	
-	private void startIteration(ThreadCount tc, Identifier var, int id, Object value,
-            VariableStack stack) throws ExecutionException {
-	    incRefs(tc.rc);
-        VariableStack copy = stack.copy();
-        copy.enter();
-        ThreadingContext ntc = ThreadingContext.get(copy).split(id);
-        ThreadingContext.set(copy, ntc);
-        setIndex(copy, 2);
-        if (iterationTracer.isEnabled()) {
-            iterationTracer.trace(ntc.toString(), unwrap(value));
         }
-        copy.setVar(var.getName(), value);
-        startElement(1, copy);
+        catch (Yield y) {
+            y.getState().push(drefs);
+            y.getState().push(fc);
+            y.getState().push(ts);
+            y.getState().push(it);
+            y.getState().push(i);
+            throw y;
+        }
     }
 
-    private void decRefs(List<RefCount> rcs) throws ExecutionException {
-	    if (rcs != null) {
-	        for (RefCount rc : rcs) {
-	            rc.var.updateWriteRefCount(-rc.count);
-	        }
-	    }
-	}
+	private boolean startBulk(LWThread thr, ThrottledThreadSet ts, Iterator<Object> it, int fcf, List<RefCount> refs) {
+	    int available = ts.freeSlots();
+	    int j = 0;
+	    Stack stack = thr.getStack();
+	    for (; j < available && it.hasNext(); j++) {
+	        if (startOne(thr, ts, it.next(), fcf, refs)) {
+                // aborted
+                return true;
+            }
+        }
+        return false;
+    }
 	
-	private void incRefs(List<RefCount> rcs) throws ExecutionException {
+	private boolean startRest(LWThread thr, ThrottledThreadSet ts, Iterator<Object> it, int fcf, List<RefCount> refs) {
+        Stack stack = thr.getStack();
+        while (it.hasNext()) {
+            ts.waitForSlot();
+            if (startOne(thr, ts, it.next(), fcf, refs)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean startOne(final LWThread thr, final ThreadSet ts, final Object value, final int fcf, List<RefCount> refs) {
+        incRefs(refs);
+        LWThread ct = thr.fork(new KRunnable() {
+            @Override
+            public void run(LWThread thr2) {
+                try {
+                    if (iterationTracer.isEnabled()) {
+                        iterationTracer.trace(thr2, unwrap(value));
+                    }
+
+                    if (CompilerSettings.PERFORMANCE_COUNTERS) {
+                        startCount++;
+                    }
+                    body.run(thr2);
+                    ts.threadDone(thr2, null);
+                }
+                catch (ExecutionException e) {
+                    throw e;
+                }
+                catch (Exception e) {
+                    thr2.getStack().dropToFrame(fcf);
+                    ts.threadDone(thr2, new ExecutionException(ThrottledParallelFor.this, e));
+                    ts.abortAll();
+                    thr.awake();
+                }
+            }
+        });
+        if(ts.add(ct)) {
+            return true;
+        }
+        
+        Stack cs = ct.getStack();
+        cs.enter(this, frameSize);
+        this.var.setValue(cs, value);
+        ct.start();
+        return false;
+    }
+    
+    private void decRefs(List<RefCount> rcs) throws ExecutionException {
+            if (rcs != null) {
+                for (RefCount rc : rcs) {
+                    rc.var.updateWriteRefCount(-rc.count);
+                }
+            }
+        }
+
+    private void incRefs(List<RefCount> rcs) throws ExecutionException {
         if (rcs != null) {
             for (RefCount rc : rcs) {
                 rc.var.updateWriteRefCount(rc.count);
@@ -233,218 +271,38 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
         }
     }
 
-    private Object unwrap(Object value) {
+	
+	private int getMaxThreads() {
+	    if (maxThreadCount < 0) {
+            try {
+                maxThreadCount = TypeUtil.toInt(VDL2Config.getConfig()
+                        .getProperty("foreach.max.threads", String.valueOf(DEFAULT_MAX_THREADS)));
+            }
+            catch (IOException e) {
+                maxThreadCount = DEFAULT_MAX_THREADS;
+            }
+        }
+	    return maxThreadCount;
+	}
+	
+	protected Object unwrap(Object value) {
         if (value instanceof Pair) {
             Pair p = (Pair) value;
-            if (kvar != null) {
-                return kvar + "=" + p.get(0) + ", " + vvar + "=" + Tracer.unwrapHandle(p.get(1));
+            if (_kvar.getValue() != null) {
+                return _kvar.getValue() + "=" + p.get(0) + ", " + _vvar.getValue() + "=" + Tracer.unwrapHandle(p.get(1));
             }
             else {
-                return vvar + "=" + Tracer.unwrapHandle(p.get(1));
+                return _vvar.getValue() + "=" + Tracer.unwrapHandle(p.get(1));
             }
         }
         else {
             return "!";
         }
     }
-	
-    @Override
-    public void completed(VariableStack stack) throws ExecutionException {
-        int index = preIncIndex(stack) - 1;
-        if (index == 1) {
-            // iterator
-            stack.currentFrame().deleteVar(QUOTED);
-            processArguments(stack);
-            try {
-                partialArgumentsEvaluated(stack);
-            }
-            catch (FutureFault e) {
-                e.getFuture().addModificationAction(new PartialResume(), stack);
-            }
-        }
-        else if (index == elementCount()) {
-            iterationCompleted(stack);
-        }
-        else {
-            startElement(index, stack);
-        }
-    }
 
-    public void failed(VariableStack stack, ExecutionException e) throws ExecutionException {
-        if (!testAndSetChildFailed(stack)) {
-            if (stack.parentFrame().isDefined(VAR)) {
-                stack.leave();
-            }
-            failImmediately(stack, e);
-        }
-    }
 
-	protected void iterationCompleted(VariableStack stack)
-			throws ExecutionException {
-		stack.leave();
-		ThreadCount tc = getThreadCount(stack);
-		int running;
-		boolean closed;
-		boolean iteratorHasValues;
-		synchronized(tc) {
-		    closed = tc.isClosed();
-		    running = tc.decrement();
-		    iteratorHasValues = tc.iteratorHasValues();
-		}
-		boolean done = false;
-		if (running == 0) {
-		    if (closed) {
-		        complete(stack);
-		    }
-		    if (tc.selfClose && !iteratorHasValues) {
-		        decRefs(tc.rc);
-		        complete(stack);
-		    }
-		}
-	}
-
-	private void initThreadCount(VariableStack stack, boolean selfClose, KarajanIterator i) throws VariableNotFoundException {
-		if (maxThreadCount < 0) {
-			try {
-				maxThreadCount = TypeUtil.toInt(VDL2Config.getConfig()
-						.getProperty("foreach.max.threads", String.valueOf(DEFAULT_MAX_THREADS)));
-			}
-			catch (IOException e) {
-				maxThreadCount = DEFAULT_MAX_THREADS;
-			}
-		}
-		stack.setVar(THREAD_COUNT, new ThreadCount(maxThreadCount, selfClose, i, buildRefs(stack)));
-	}
-
-	private ThreadCount getThreadCount(VariableStack stack)
-			throws VariableNotFoundException {
-		return (ThreadCount) stack.getVar(THREAD_COUNT);
-	}
-	
 	@Override
     public String getTextualName() {
         return "foreach";
     }
-
-    private static class ThreadCount implements FutureIterator {
-		public boolean selfClose;
-        private int maxThreadCount;
-		private int crt;
-		private boolean closed;
-		private List<ListenerStackPair> listeners;
-		private KarajanIterator i;
-		private final List<RefCount> rc;
-
-		public ThreadCount(int maxThreadCount, boolean selfClose, KarajanIterator i, List<RefCount> rc) {
-			this.maxThreadCount = maxThreadCount;
-			this.i = i;
-			crt = 0;
-			this.selfClose = selfClose;
-			this.rc = rc;
-		}
-		
-		public boolean raiseWaiting() {
-            return false;
-        }
-
-        public boolean iteratorHasValues() {
-            try {
-                return i.hasNext();
-            }
-            catch (FutureFault e) {
-                return false;
-            }
-        }
-        
-        public synchronized int available() {
-            return maxThreadCount - crt;
-        }
-        
-        public synchronized void add(int count) {
-            crt += count;
-        }
-
-		public synchronized Object tryIncrement() {
-		    // there is no way that both crt == 0 and i has no values outside this critical section
-			if (crt < maxThreadCount) {
-				Object o = i.next();
-				crt++;
-				return o;
-			}
-			else {
-				throw new FutureIteratorIncomplete(this, this);
-			}
-		}
-
-		public synchronized int decrement() {
-			crt--;
-			notifyListeners();
-			return crt;
-		}
-
-		private void notifyListeners() {
-			if (listeners != null) {
-				Iterator<ListenerStackPair> i = listeners.iterator();
-				listeners = null;
-				while (i.hasNext()) {
-					ListenerStackPair etp = i.next();
-					i.remove();
-					etp.listener.futureModified(this, etp.stack);
-				}
-			}
-		}
-
-		public boolean hasAvailable() {
-			return false;
-		}
-
-		public int count() {
-			return 0;
-		}
-
-		public synchronized int current() {
-			return crt;
-		}
-
-		public Object peek() {
-			return null;
-		}
-
-		public boolean hasNext() {
-			return false;
-		}
-
-		public Object next() {
-			return null;
-		}
-
-		public void remove() {
-		}
-
-		public synchronized void addModificationAction(FutureListener target,
-				VariableStack stack) {
-			if (listeners == null) {
-				listeners = new ArrayList<ListenerStackPair>();
-			}
-			listeners.add(new ListenerStackPair(target, stack));
-			if (crt < maxThreadCount) {
-				notifyListeners();
-			}
-		}
-
-		public synchronized void close() {
-		    this.closed = true;
-		}
-
-		public void fail(FutureEvaluationException e) {
-		}
-
-		public Object getValue() {
-			return null;
-		}
-
-		public synchronized boolean isClosed() {
-		    return closed;
-		}
-	}
 }

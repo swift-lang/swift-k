@@ -33,6 +33,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.GeneralizedFileFormat;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParam;
@@ -68,15 +69,23 @@ public class CSVMapper extends AbstractMapper {
 
 	/** whether the CSV file has been read already. */
 	private boolean read = false;
+	
+	private String delim, hdelim;
+	private boolean header;
+	private int skip;
 
-	public void setParams(MappingParamSet params) {
+	public void setParams(MappingParamSet params) throws HandleOpenException {
 		super.setParams(params);
 		if (!PARAM_FILE.isPresent(this)) {
 			throw new InvalidMappingParameterException("CSV mapper must have a file parameter.");
 		}
 		if (!PARAM_HDELIMITER.isPresent(this)) {
-			PARAM_HDELIMITER.setValue(this, PARAM_DELIMITER.getValue(this));
+		    params.set(PARAM_HDELIMITER, PARAM_DELIMITER.getRawValue(this));
 		}
+		delim = PARAM_DELIMITER.getStringValue(this);
+        hdelim = PARAM_HDELIMITER.getStringValue(this);
+        header = PARAM_HEADER.getBooleanValue(this);
+        skip = PARAM_SKIP.getIntValue(this);
 	}
 
 	private synchronized void readFile() {
@@ -86,10 +95,6 @@ public class CSVMapper extends AbstractMapper {
 		
 		String file = getCSVFile(); 
 		
-		String delim = PARAM_DELIMITER.getStringValue(this);
-		String hdelim = PARAM_HDELIMITER.getStringValue(this);
-		boolean header = PARAM_HEADER.getBooleanValue(this);
-		int skip = PARAM_SKIP.getIntValue(this);
 		try {
 			BufferedReader br = 
 			    new BufferedReader(new FileReader(file));
