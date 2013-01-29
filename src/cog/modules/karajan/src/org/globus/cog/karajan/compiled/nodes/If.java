@@ -69,7 +69,13 @@ public class If extends CompoundNode {
 		if (welse != null) {
 			belse = compileBranch(welse, scope, false);
 		}
-		return this;
+		if (bthen == null && belse == null) {
+			// TODO side-effects in condition
+			return null;
+		}
+		else {
+			return this;
+		}
 	}
 
 	private Node compileBranch(WrapperNode branch, Scope scope, boolean staticScope) throws CompilationException {
@@ -155,7 +161,9 @@ public class If extends CompoundNode {
 						if (CompilerSettings.PERFORMANCE_COUNTERS) {
 							startCount++;
 						}
-						bthen.run(thr);
+						if (bthen != null) {
+							bthen.run(thr);
+						}
 					}
 					else if (belse != null) {
 						if (CompilerSettings.PERFORMANCE_COUNTERS) {
@@ -179,7 +187,15 @@ public class If extends CompoundNode {
 	@Override
 	public void dump(PrintStream ps, int level) throws IOException {
 		super.dump(ps, level);
-		bthen.dump(ps, level + 1);
+		if (bthen != null) {
+			bthen.dump(ps, level + 1);
+		}
+		else {
+			for (int i = 0; i < level; i++) {
+				ps.print("\t");
+			}
+			ps.println("-");
+		}
 		if (belse != null) {
 			belse.dump(ps, level + 1);
 		}
