@@ -20,6 +20,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
+import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.AbstractFileResource;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
@@ -46,13 +47,15 @@ public class FileResourceImpl extends AbstractFileResource {
 
     /** This object is used to prevent non-threadsafe use of File.mkdirs. */
     private static Object mkdirsLock = new Object();
+    
+    private static File CWD = new File(".").getAbsoluteFile(); 
 
     public FileResourceImpl() {
         this(null);
     }
 
     public FileResourceImpl(String name) {
-        super(name, "local", null, null);
+        super(name, "local", new ServiceContactImpl("localhost"), null);
     }
     
     protected FileResourceImpl(String name, String protocol) {
@@ -62,7 +65,7 @@ public class FileResourceImpl extends AbstractFileResource {
     /** set user's home directory as the current directory */
     public void start() throws IllegalHostException,
             InvalidSecurityContextException, FileResourceException {
-        setCurrentDirectory(new File(".").getAbsoluteFile());
+        setCurrentDirectory(CWD);
         setStarted(true);
     }
 

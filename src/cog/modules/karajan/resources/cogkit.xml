@@ -1,4 +1,0 @@
-<karajan>
-	<import file="sys.xml" export="true"/>
-	<import file="task.xml" export="true"/>
-</karajan>

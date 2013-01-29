@@ -51,7 +51,7 @@ public abstract class AbstractQueuePoller implements Runnable {
 
     public void start() {
         if (logger.isDebugEnabled()) {
-            logger.debug("Starring " + name + " poll thread.");
+            logger.debug("Starting " + name + " poll thread.");
         }
         Thread t = new Thread(this);
         t.setName(name);

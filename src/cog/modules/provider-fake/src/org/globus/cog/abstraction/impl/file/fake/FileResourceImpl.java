@@ -19,6 +19,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
+import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.AbstractFileResource;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
@@ -30,6 +31,7 @@ import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
+import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 /**
  * enables access to local file system through the file resource interface
@@ -37,6 +39,7 @@ import org.globus.cog.abstraction.interfaces.ProgressMonitor;
  */
 public class FileResourceImpl extends AbstractFileResource {
     public static final String PROTOCOL = "local";
+    public static final ServiceContact LOCALHOST = new ServiceContactImpl("localhost");
     
     public static final Logger logger = Logger
             .getLogger(FileResourceImpl.class);
@@ -46,7 +49,7 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     public FileResourceImpl(String name) {
-        super(name, PROTOCOL, null, null);
+        super(name, PROTOCOL, LOCALHOST, null);
     }
 
     /** set user's home directory as the current directory */

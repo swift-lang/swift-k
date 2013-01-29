@@ -8,6 +8,7 @@ package org.globus.cog.abstraction.impl.execution.fake;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
@@ -23,8 +24,31 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler {
     private static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
 
-
-    public static final Timer TIMER = new Timer();
+    public static volatile int jobsRun;
+    
+    private static final LinkedBlockingQueue<Task> ender;
+    
+    static {
+        ender = new LinkedBlockingQueue<Task>();
+        new Thread() {
+            {
+                setName("Fake provider");
+            }
+            
+            public void run() {
+                while (true) {
+                    try {
+                        Task t = ender.take();
+                        jobsRun++;
+                        t.setStatus(Status.COMPLETED);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+    }
     
     public void submit(final Task task) throws IllegalSpecException, InvalidSecurityContextException,
             InvalidServiceContactException, TaskSubmissionException {
@@ -51,10 +75,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler {
                         task.setStatus(Status.COMPLETED);
                     }
                     else {
-                        TIMER.schedule(new TimerTask() {
-                        public void run() {
-                            task.setStatus(Status.COMPLETED);
-                        }}, delay * 1000);
+                        ender.put(task);
                     }
                 }
             }
