@@ -479,19 +479,27 @@ if [ "$KICKSTART" == "" ]; then
 
     TIMEARGS=(-o swiftapp.resources -f APP_RESOURCES=real_secs:%e,kernel_secs:%S,user_secs:%U,percent_cpu:%P,max_rss:%M,avg_rss:%t,avg_tot_vm:%K,avg_priv_data:%D,avg_priv_stack:%p,avg_shared_text:%X,page_size:%Z,major_pgfaults:%F,minor_pgfaults:%R,swaps:%W,invol_context_switches:%c,vol_waits:%w,fs_reads:%I,fs_writes:%O,sock_recv:%r,sock_send:%s,signals:%k,exit_status:%x)
 
-    if [ -x /usr/bin/time ]; then
+    if [[ "$OSTYPE" == *darwin* ]]; then
+        TIMECMD=
+        TIMEARGS=
+    elif [ -x /usr/bin/time ]; then
         TIMECMD="/usr/bin/time"
     elif [ -x $HOME/swift.time ]; then
         TIMECMD="$HOME/swift.time"
     else
         TIMECMD=""
-		TIMEARGS=""
+	TIMEARGS=""
     fi
 	if [ "$STDIN" == "" ]; then
 		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 			genScripts
 		fi
-        "$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+                
+                if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
+                   "$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+                else
+                   "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+                fi
 	else
 		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 			genScripts
