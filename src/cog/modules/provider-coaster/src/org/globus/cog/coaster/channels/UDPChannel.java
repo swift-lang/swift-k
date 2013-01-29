@@ -7,7 +7,7 @@
 /*
  * Created on Jul 21, 2006
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -22,11 +22,11 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.ServiceContext;
-import org.globus.cog.karajan.workflow.service.UDPService;
+import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.ServiceContext;
+import org.globus.cog.coaster.UDPService;
 
-public class UDPChannel extends AbstractKarajanChannel {
+public class UDPChannel extends AbstractCoasterChannel {
 	public static final Logger logger = Logger.getLogger(UDPChannel.class);
 
 	public static final int BUFFER_SIZE = 2048;

@@ -7,7 +7,7 @@
 /*
  * Created on Apr 7, 2012
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,8 +21,8 @@ import org.apache.log4j.Logger;
 class Multiplexer extends Thread {
 	public static final Logger logger = Logger.getLogger(Multiplexer.class);
 
-	private Set<KarajanChannel> channels;
-	private List<KarajanChannel> remove, add;
+	private Set<CoasterChannel> channels;
+	private List<CoasterChannel> remove, add;
 	private boolean terminated;
 	private int id;
 
@@ -30,12 +30,12 @@ class Multiplexer extends Thread {
 		super("Channel multiplexer " + id);
 		this.id = id;
 		setDaemon(true);
-		channels = new HashSet<KarajanChannel>();
-		remove = Collections.synchronizedList(new ArrayList<KarajanChannel>());
-		add = Collections.synchronizedList(new ArrayList<KarajanChannel>());
+		channels = new HashSet<CoasterChannel>();
+		remove = Collections.synchronizedList(new ArrayList<CoasterChannel>());
+		add = Collections.synchronizedList(new ArrayList<CoasterChannel>());
 	}
 
-	public synchronized void register(AbstractStreamKarajanChannel channel) {
+	public synchronized void register(AbstractStreamCoasterChannel channel) {
 		add.add(channel);
 		if (logger.isInfoEnabled()) {
 			logger.info("(" + id + ") Scheduling " + channel + " for addition");
@@ -52,14 +52,14 @@ class Multiplexer extends Thread {
 		try {
 			while (true) {
 				any = false;
-				if (this == AbstractStreamKarajanChannel.multiplexer[0]) {
-					AbstractStreamKarajanChannel.savail = 0;
-					AbstractStreamKarajanChannel.cnt = 0;
+				if (this == AbstractStreamCoasterChannel.multiplexer[0]) {
+					AbstractStreamCoasterChannel.savail = 0;
+					AbstractStreamCoasterChannel.cnt = 0;
 				}
-				Iterator<KarajanChannel> i = channels.iterator();
+				Iterator<CoasterChannel> i = channels.iterator();
 				while (i.hasNext()) {
-					AbstractStreamKarajanChannel channel = 
-						(AbstractStreamKarajanChannel) i.next();
+					AbstractStreamCoasterChannel channel = 
+						(AbstractStreamCoasterChannel) i.next();
 					if (channel.isClosed()) {
 						if (logger.isInfoEnabled()) {
 							logger.info("Channel is closed. Removing.");
@@ -87,17 +87,17 @@ class Multiplexer extends Thread {
 					}
 					i = add.iterator();
 					while (i.hasNext()) {
-						KarajanChannel a = i.next();
+						CoasterChannel a = i.next();
 						channels.add(a);
 					}
 					remove.clear();
 					add.clear();
 				}
-				if (this == AbstractStreamKarajanChannel.multiplexer[0]) {
+				if (this == AbstractStreamCoasterChannel.multiplexer[0]) {
 					long now = System.currentTimeMillis();
 					if (now - last > 10000) {
-						if (AbstractStreamKarajanChannel.cnt > 0) {
-							logger.info("Avg stream buf: " + (AbstractStreamKarajanChannel.savail / AbstractStreamKarajanChannel.cnt));
+						if (AbstractStreamCoasterChannel.cnt > 0) {
+							logger.info("Avg stream buf: " + (AbstractStreamCoasterChannel.savail / AbstractStreamCoasterChannel.cnt));
 						}
 						else {
 							logger.info("No streams");
@@ -124,14 +124,14 @@ class Multiplexer extends Thread {
 		}
 	}
 
-	public synchronized void unregister(AbstractStreamKarajanChannel channel) {
+	public synchronized void unregister(AbstractStreamCoasterChannel channel) {
 		if (logger.isInfoEnabled()) {
 			logger.info("Unregistering channel " + channel);
 		}
 		remove.add(channel);
 	}
 
-	private void shutdown(AbstractStreamKarajanChannel channel, Exception e) {
+	private void shutdown(AbstractStreamCoasterChannel channel, Exception e) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Channel exception caught", e);
 		}

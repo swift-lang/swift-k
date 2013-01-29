@@ -16,8 +16,8 @@ import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.interfaces.Status;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class JobStatusHandler extends RequestHandler {
     public static final Logger logger = Logger.getLogger(JobStatusHandler.class);

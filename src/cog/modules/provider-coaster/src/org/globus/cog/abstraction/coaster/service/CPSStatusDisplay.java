@@ -24,8 +24,8 @@ import java.util.Map;
 import org.globus.cog.abstraction.coaster.service.job.manager.Block;
 import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.abstraction.coaster.service.job.manager.Cpu;
-import org.globus.cog.karajan.workflow.service.channels.PerformanceDiagnosticInputStream;
-import org.globus.cog.karajan.workflow.service.channels.PerformanceDiagnosticOutputStream;
+import org.globus.cog.coaster.channels.PerformanceDiagnosticInputStream;
+import org.globus.cog.coaster.channels.PerformanceDiagnosticOutputStream;
 
 public class CPSStatusDisplay {
 private static final String CLS = ((char) (27)) + "[2J";

@@ -7,7 +7,7 @@
 /*
  * Created on Oct 3, 2009
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 public interface SendCallback {
 	void dataSent();

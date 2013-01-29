@@ -7,18 +7,18 @@
 /*
  * Created on Feb 14, 2008
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.net.URI;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.GSSChannel;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
-import org.globus.cog.karajan.workflow.service.channels.UDPChannel;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.channels.GSSChannel;
+import org.globus.cog.coaster.channels.TCPChannel;
+import org.globus.cog.coaster.channels.UDPChannel;
 import org.gridforum.jgss.ExtendedGSSManager;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
@@ -31,9 +31,9 @@ public class ChannelFactory {
 	private static GSSCredential cachedCredential;
 	private static long credentialTime;
 
-	public static KarajanChannel newChannel(URI contact, ChannelContext context, RequestManager rm)
+	public static CoasterChannel newChannel(URI contact, ChannelContext context, RequestManager rm)
 			throws ChannelException {
-		KarajanChannel channel;
+		CoasterChannel channel;
 		try {
 			if (contact.getScheme() == null || contact.getScheme().equals("tcps")) {
 				ensureCredentialPresent(context);

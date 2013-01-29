@@ -10,8 +10,8 @@
 package org.globus.cog.abstraction.coaster.rlog;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class RemoteLogHandler extends RequestHandler {
     public static final Logger logger = Logger.getLogger(RemoteLogHandler.class);

@@ -7,11 +7,11 @@
 /*
  * Created on Feb 14, 2008
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.net.URI;
 
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public interface Service {
 
@@ -21,5 +21,5 @@ public interface Service {
 
 	ServiceContext getContext();
 
-	void irrecoverableChannelError(KarajanChannel channel, Exception e);
+	void irrecoverableChannelError(CoasterChannel channel, Exception e);
 }

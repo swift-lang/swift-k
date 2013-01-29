@@ -20,7 +20,7 @@ import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.coaster.service.job.manager.SortedJobSet;
 import org.globus.cog.abstraction.coaster.service.job.manager.Time;
 import org.globus.cog.abstraction.coaster.service.job.manager.TimeInterval;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.commands.Command;
 
 public class BQPStatusCommand extends Command {
 

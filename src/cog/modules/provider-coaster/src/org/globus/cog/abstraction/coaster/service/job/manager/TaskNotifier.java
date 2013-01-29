@@ -20,11 +20,11 @@ import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
 
 public class TaskNotifier implements StatusListener, Callback {
     public static final Logger logger = Logger.getLogger(TaskNotifier.class);
@@ -33,7 +33,7 @@ public class TaskNotifier implements StatusListener, Callback {
 
     private ChannelContext channelContext;
     private Task task;
-    private KarajanChannel channel;
+    private CoasterChannel channel;
     private static int notacknowledged;
     private static LinkedList<Entry> queue;
 

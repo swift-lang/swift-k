@@ -7,7 +7,7 @@
 /*
  * Created on Jan 16, 2011
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.io.InputStream;

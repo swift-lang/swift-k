@@ -7,17 +7,17 @@
 /*
  * Created on Sep 6, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.net.URI;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.FallbackAuthorization;
-import org.globus.cog.karajan.workflow.service.GSSService;
-import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.UserContext;
-import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
+import org.globus.cog.coaster.FallbackAuthorization;
+import org.globus.cog.coaster.GSSService;
+import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.UserContext;
+import org.globus.cog.coaster.commands.ShutdownCommand;
 import org.globus.gsi.GSIConstants;
 import org.globus.gsi.gssapi.GSSConstants;
 import org.globus.gsi.gssapi.GlobusGSSManagerImpl;

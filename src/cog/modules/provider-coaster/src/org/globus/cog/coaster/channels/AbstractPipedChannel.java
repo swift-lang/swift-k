@@ -7,15 +7,15 @@
 /*
  * Created on Oct 30, 2009
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration.Entry;
-import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.UserContext;
+import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.UserContext;
+import org.globus.cog.coaster.RemoteConfiguration.Entry;
 
 /**
  * A channel implementation for which the other endpoint lives in the
@@ -24,7 +24,7 @@ import org.globus.cog.karajan.workflow.service.UserContext;
  * @author Mihael Hategan
  *
  */
-public class AbstractPipedChannel extends AbstractKarajanChannel {
+public class AbstractPipedChannel extends AbstractCoasterChannel {
 	public static final Logger logger = Logger.getLogger(AbstractPipedChannel.class);
 
 	private AbstractPipedChannel s;
@@ -93,13 +93,13 @@ public class AbstractPipedChannel extends AbstractKarajanChannel {
 	private static class Sender extends Thread {
 		public static final Logger logger = Logger.getLogger(Sender.class);
 
-		private BlockingQueue queue;
+		private BlockingQueue<SendEntry> queue;
 		private boolean dead;
 
 		public Sender() {
 			super("Piped Channel Sender");
 			setDaemon(true);
-			queue = new LinkedBlockingQueue();
+			queue = new LinkedBlockingQueue<SendEntry>();
 			start();
 		}
 
@@ -110,7 +110,7 @@ public class AbstractPipedChannel extends AbstractKarajanChannel {
 		public void run() {
 			try {
 				while (true) {
-					SendEntry se = (SendEntry) queue.take();
+					SendEntry se = queue.take();
 					try {
 						((AbstractPipedChannel) se.channel).actualSend(se.tag, se.flags, se.data,
 								se.cb);
@@ -129,10 +129,10 @@ public class AbstractPipedChannel extends AbstractKarajanChannel {
 	private static class SendEntry {
 		public final int tag, flags;
 		public final byte[] data;
-		public final AbstractKarajanChannel channel;
+		public final AbstractCoasterChannel channel;
 		public final SendCallback cb;
 
-		public SendEntry(int tag, int flags, byte[] data, AbstractKarajanChannel channel,
+		public SendEntry(int tag, int flags, byte[] data, AbstractCoasterChannel channel,
 				SendCallback cb) {
 			this.tag = tag;
 			this.flags = flags;

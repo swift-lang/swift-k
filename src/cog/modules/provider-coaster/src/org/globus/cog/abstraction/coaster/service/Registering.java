@@ -11,11 +11,11 @@ package org.globus.cog.abstraction.coaster.service;
 
 import java.util.Map;
 
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public interface Registering {
-    String registrationReceived(String id, String url, KarajanChannel channel, Map<String, String> options) throws ChannelException;
+    String registrationReceived(String id, String url, CoasterChannel channel, Map<String, String> options) throws ChannelException;
 
     void unregister(String id);
 }

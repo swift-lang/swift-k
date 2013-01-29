@@ -12,13 +12,13 @@ package org.globus.cog.abstraction.coaster.service;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.abstraction.impl.execution.coaster.WorkerShellCommand;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class WorkerShellHandler extends RequestHandler implements Callback {
     public static final Logger logger = Logger.getLogger(WorkerShellHandler.class);
@@ -33,8 +33,8 @@ public class WorkerShellHandler extends RequestHandler implements Callback {
                 getService()).getJobQueue().getCoasterQueueProcessor();
         try {
             ChannelManager manager = ChannelManager.getManager();
-            KarajanChannel worker = bqp.getWorkerChannel(workerId);
-            KarajanChannel reserved = manager.reserveChannel(worker);
+            CoasterChannel worker = bqp.getWorkerChannel(workerId);
+            CoasterChannel reserved = manager.reserveChannel(worker);
             wsc.executeAsync(reserved, this);
         }
         catch (ChannelException e) {

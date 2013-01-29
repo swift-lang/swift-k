@@ -7,7 +7,7 @@
 /*
  * Created on Sep 9, 2008
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.util.TimerTask;
 
@@ -16,10 +16,10 @@ import org.apache.log4j.Logger;
 public class HeartBeatCheckTask extends TimerTask {
 	public static final Logger logger = Logger.getLogger(HeartBeatCheckTask.class);
 
-	private KarajanChannel channel;
+	private CoasterChannel channel;
 	private int multiplier, interval;
 
-	public HeartBeatCheckTask(KarajanChannel channel, int interval, int multiplier) {
+	public HeartBeatCheckTask(CoasterChannel channel, int interval, int multiplier) {
 		this.channel = channel;
 		this.multiplier = multiplier;
 		this.interval = interval;

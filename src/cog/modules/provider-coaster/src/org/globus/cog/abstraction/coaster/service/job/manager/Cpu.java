@@ -20,9 +20,9 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
 
 public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     public static final Logger logger = Logger.getLogger(Cpu.class);
@@ -261,7 +261,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         }
         task.setStatus(Status.SUBMITTING);
         try {
-            KarajanChannel channel = node.getChannel();
+            CoasterChannel channel = node.getChannel();
             SubmitJobCommand cmd = new SubmitJobCommand(task);
             cmd.setCompression(false);
             cmd.setSimple(true);

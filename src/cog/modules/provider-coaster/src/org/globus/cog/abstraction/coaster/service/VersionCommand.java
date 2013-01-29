@@ -10,7 +10,7 @@
 package org.globus.cog.abstraction.coaster.service;
 
 import org.globus.cog.abstraction.coaster.service.local.VersionHandler;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.commands.Command;
 
 
 public class VersionCommand extends Command {

@@ -7,44 +7,39 @@
 /*
  * Created on Jul 20, 2005
  */
-package org.globus.cog.karajan.workflow.service.commands;
+package org.globus.cog.coaster.commands;
 
 import java.nio.ByteBuffer;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public abstract class GroupCommand extends Command {
-	private final List members;
+	private final List<Command> members;
 
 	public GroupCommand(String cmd) {
 		super(cmd);
-		members = new LinkedList();
+		members = new LinkedList<Command>();
 	}
 
 	public void add(Command cmd) {
 		members.add(cmd);
 	}
 
-	public void executeAsync(KarajanChannel channel) throws ProtocolException {
+	public void executeAsync(CoasterChannel channel) throws ProtocolException {
 		channel.registerCommand(this);
 		byte[] btags = new byte[members.size() * 4];
 		ByteBuffer tags = ByteBuffer.wrap(btags);
-		Iterator i = members.iterator();
-		while (i.hasNext()) {
-			Command cmd = (Command) i.next();
+		for (Command cmd : members) {
 			channel.registerCommand(cmd);
 			tags.putInt(cmd.getId());
 		}
 		addOutData(btags);
 		send();
 		
-		i = members.iterator();
-		while (i.hasNext()) {
-			Command cmd = (Command) i.next();
+		for (Command cmd : members) {
 			cmd.send();
 		}
 	}

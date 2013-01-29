@@ -7,7 +7,7 @@
 /*
  * Created on Aug 17, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,7 +31,7 @@ public class RemoteConfiguration {
 	public static final String BUFFER = "buffer";
 	public static final String HEARTBEAT = "heartbeat";
 
-	private List entries;
+	private List<Entry> entries;
 	private static final Entry DEFAULT;
 	static {
 		DEFAULT = new Entry(".*", "CALLBACK, POLL(120)");
@@ -47,9 +47,9 @@ public class RemoteConfiguration {
 	}
 
 	public RemoteConfiguration() {
-		entries = new LinkedList();
+		entries = new LinkedList<Entry>();
 		TextFileLoader tfl = new TextFileLoader();
-		String conf = tfl.loadFromResource("remote.properties");
+		String conf = TextFileLoader.loadFromResource("remote.properties");
 		StringTokenizer st = new StringTokenizer(conf, "\n");
 		while (st.hasMoreTokens()) {
 			String line = st.nextToken().trim();
@@ -77,9 +77,7 @@ public class RemoteConfiguration {
 
 	public Entry find(String host) {
 		logger.info("Find: " + host);
-		Iterator i = entries.iterator();
-		while (i.hasNext()) {
-			Entry e = (Entry) i.next();
+		for (Entry e : entries) {
 			logger.info("Find: " + e.getUnparsed() + " - " + host);
 			if (e.compiled.matcher(host).matches()) {
 				return e;
@@ -92,9 +90,9 @@ public class RemoteConfiguration {
 		private final String regexp;
 		private String unparsed;
 		private Pattern compiled;
-		private final Map options;
+		private final Map<String, String> options;
 
-		public Entry(String regexp, Map options, String unparsed) {
+		public Entry(String regexp, Map<String, String> options, String unparsed) {
 			this.regexp = regexp;
 			this.options = options;
 			this.unparsed = unparsed;
@@ -109,7 +107,7 @@ public class RemoteConfiguration {
 				this.compiled = Pattern.compile(regexp);
 			}
 			this.unparsed = options;
-			this.options = new HashMap();
+			this.options = new HashMap<String, String>();
 			StringTokenizer ot = new StringTokenizer(options, ",");
 			while (ot.hasMoreTokens()) {
 				String opt = ot.nextToken().trim().toLowerCase();
@@ -130,12 +128,12 @@ public class RemoteConfiguration {
 			}
 		}
 
-		public Collection getOptions() {
+		public Collection<String> getOptions() {
 			return options.keySet();
 		}
 
 		public String getArg(String option) {
-			return (String) options.get(option);
+			return options.get(option);
 		}
 
 		public boolean hasOption(String option) {
@@ -159,9 +157,9 @@ public class RemoteConfiguration {
 		public synchronized String getUnparsed() {
 			if (unparsed == null) {
 				StringBuffer sb = new StringBuffer();
-				Iterator i = options.entrySet().iterator();
+				Iterator<Map.Entry<String, String>> i = options.entrySet().iterator();
 				while (i.hasNext()) {
-					Map.Entry entry = (Map.Entry) i.next();
+					Map.Entry<String, String> entry = i.next();
 					sb.append(entry.getKey());
 					if (entry.getValue() != null) {
 						sb.append('(');

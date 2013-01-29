@@ -42,11 +42,11 @@ import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
 import org.ietf.jgss.GSSCredential;
 
 public class FileResourceImpl extends AbstractFileResource {
@@ -78,7 +78,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     private void run(Command cmd) throws FileResourceException {
         try {
-            KarajanChannel channel = ChannelManager.getManager().reserveChannel(
+            CoasterChannel channel = ChannelManager.getManager().reserveChannel(
                     url, (GSSCredential) getSecurityContext().getCredentials(),
                     LocalRequestManager.INSTANCE);
             try {

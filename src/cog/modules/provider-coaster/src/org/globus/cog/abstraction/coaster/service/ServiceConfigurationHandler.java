@@ -14,8 +14,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceConfigurationCommand;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class ServiceConfigurationHandler extends RequestHandler {
     public static final Logger logger = Logger.getLogger(ServiceConfigurationHandler.class);

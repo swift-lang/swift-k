@@ -7,7 +7,7 @@
 /*
  * Created on Sep 30, 2005
  */
-package org.globus.cog.karajan.workflow.service.test;
+package org.globus.cog.coaster.test;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -21,12 +21,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.TestCommand;
-import org.globus.cog.karajan.workflow.service.handlers.TestHandler;
-import org.globus.cog.karajan.workflow.service.handlers.TestHandler.TestCallback;
+import org.globus.cog.coaster.RemoteConfiguration;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.TestCommand;
+import org.globus.cog.coaster.handlers.TestHandler;
+import org.globus.cog.coaster.handlers.TestHandler.TestCallback;
 
 public class ChannelTest implements TestCallback {
 	private final static Logger logger = Logger.getLogger(ChannelTest.class);
@@ -67,7 +67,7 @@ public class ChannelTest implements TestCallback {
 		this.index = i;
 	}
 
-	public synchronized void done(KarajanChannel ochannel) {
+	public synchronized void done(CoasterChannel ochannel) {
 		try {
 			logger.info("=========================== " + index + " ===========================");
 			if (seq > 0) {
@@ -81,7 +81,7 @@ public class ChannelTest implements TestCallback {
 				RemoteConfiguration.Entry entry = new RemoteConfiguration.Entry(
 						".*localhost:50001", "keepalive(600), reconnect");
 				RemoteConfiguration.getDefault().prepend(entry);
-				KarajanChannel channel = ChannelManager.getManager().reserveChannel(
+				CoasterChannel channel = ChannelManager.getManager().reserveChannel(
 						"https://localhost:50001", null);
 				ChannelManager.getManager().reserveLongTerm(channel);
 				logger.debug("Channel config: " + channel.getChannelContext().getConfiguration());
@@ -99,7 +99,7 @@ public class ChannelTest implements TestCallback {
 				RemoteConfiguration.Entry entry = new RemoteConfiguration.Entry(
 						".*localhost:50002", "poll(10)");
 				RemoteConfiguration.getDefault().prepend(entry);
-				KarajanChannel channel = ChannelManager.getManager().reserveChannel(
+				CoasterChannel channel = ChannelManager.getManager().reserveChannel(
 						"https://localhost:50002", null);
 				ChannelManager.getManager().reserveLongTerm(channel);
 				logger.debug("Channel config: " + channel.getChannelContext().getConfiguration());
@@ -116,7 +116,7 @@ public class ChannelTest implements TestCallback {
 				RemoteConfiguration.Entry entry = new RemoteConfiguration.Entry(
 						".*localhost:50003", "callback");
 				RemoteConfiguration.getDefault().prepend(entry);
-				KarajanChannel channel = ChannelManager.getManager().reserveChannel(
+				CoasterChannel channel = ChannelManager.getManager().reserveChannel(
 						"https://localhost:50003", null);
 				ChannelManager.getManager().reserveLongTerm(channel);
 				logger.debug("Channel config: " + channel.getChannelContext().getConfiguration());

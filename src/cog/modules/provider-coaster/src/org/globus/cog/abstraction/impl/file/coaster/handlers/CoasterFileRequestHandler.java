@@ -12,8 +12,8 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers;
 import java.io.File;
 
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
 public abstract class CoasterFileRequestHandler extends RequestHandler {
     // private static final String HOME = System.getProperty("user.home");

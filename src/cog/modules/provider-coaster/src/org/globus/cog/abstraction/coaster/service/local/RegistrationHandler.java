@@ -16,11 +16,11 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.AbstractStreamKarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.AbstractStreamCoasterChannel;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class RegistrationHandler extends RequestHandler {
 
@@ -52,14 +52,14 @@ public class RegistrationHandler extends RequestHandler {
             logger.debug("registering: " + id + " " + url);
         }
 
-        KarajanChannel channel = getChannel();
+        CoasterChannel channel = getChannel();
         ChannelContext context = channel.getChannelContext();
         Registering ls = (Registering) context.getService();
         try {
             String rid = ls.registrationReceived(id, url, channel, options);
-            if (channel instanceof AbstractStreamKarajanChannel) {
-                AbstractStreamKarajanChannel askc =
-                    (AbstractStreamKarajanChannel) channel;
+            if (channel instanceof AbstractStreamCoasterChannel) {
+                AbstractStreamCoasterChannel askc =
+                    (AbstractStreamCoasterChannel) channel;
                 String s = id + (rid == null ? "" : "-" + rid);
                 URI uri = new URI(s);
             	askc.setContact(uri);

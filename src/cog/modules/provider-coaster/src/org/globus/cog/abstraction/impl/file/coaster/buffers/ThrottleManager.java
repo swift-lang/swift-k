@@ -15,7 +15,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.WriteIOCallback;
-import org.globus.cog.karajan.workflow.service.channels.PerformanceDiagnosticInputStream;
+import org.globus.cog.coaster.channels.PerformanceDiagnosticInputStream;
 
 public class ThrottleManager {
     public static final Logger logger = Logger.getLogger(ThrottleManager.class);

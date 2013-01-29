@@ -11,7 +11,7 @@ package org.globus.cog.abstraction.coaster.service;
 
 import java.util.Map;
 
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelContext;
 
 public interface RegistrationManager {
 

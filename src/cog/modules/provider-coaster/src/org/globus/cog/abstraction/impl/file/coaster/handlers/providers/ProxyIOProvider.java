@@ -30,12 +30,12 @@ import org.globus.cog.abstraction.impl.file.coaster.commands.GetFileCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.PutFileCommand;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
 
 // import edu.emory.mathcs.backport.java.util.concurrent.BlockingQueue;
 // import edu.emory.mathcs.backport.java.util.concurrent.LinkedBlockingQueue;
@@ -71,7 +71,7 @@ public class ProxyIOProvider implements IOProvider {
         
         private CustomPutFileCmd cmd;
         private WriteIOCallback cb;
-        private KarajanChannel channel;
+        private CoasterChannel channel;
         private String src, dst;
         private boolean done, suspended;
 
@@ -184,12 +184,12 @@ public class ProxyIOProvider implements IOProvider {
             synchronized(this) {
                 suspended = false;
             }
-            getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, PutFileHandler.CONTINUE);
+            getChannel().sendTaggedData(getId(), CoasterChannel.SIGNAL_FLAG, PutFileHandler.CONTINUE);
         }
 
         public void suspend() {
             suspended = true;
-            getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, PutFileHandler.STOP);
+            getChannel().sendTaggedData(getId(), CoasterChannel.SIGNAL_FLAG, PutFileHandler.STOP);
         }
 
         protected ReadBuffer createBuffer() throws FileNotFoundException, InterruptedException {
@@ -254,7 +254,7 @@ public class ProxyIOProvider implements IOProvider {
     private static class Reader implements IOReader, Callback {
         private CustomGetFileCmd cmd;
         private ReadIOCallback cb;
-        private KarajanChannel channel;
+        private CoasterChannel channel;
         private boolean done;
         private String src;
 
@@ -400,7 +400,7 @@ public class ProxyIOProvider implements IOProvider {
             // but didn't make it through, so make sure things
             // get cleaned up
             cwb.releaseAll();
-            getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, GetFileHandler.ABORT.getBytes());
+            getChannel().sendTaggedData(getId(), CoasterChannel.SIGNAL_FLAG, GetFileHandler.ABORT.getBytes());
         }
 
         public void resume() {
@@ -409,7 +409,7 @@ public class ProxyIOProvider implements IOProvider {
                     logger.info(this + " resuming");
                 }
                 suspended = false;
-                getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, GetFileHandler.RESUME.getBytes());
+                getChannel().sendTaggedData(getId(), CoasterChannel.SIGNAL_FLAG, GetFileHandler.RESUME.getBytes());
             }
         }
 
@@ -419,7 +419,7 @@ public class ProxyIOProvider implements IOProvider {
                     logger.info(this + " suspending");
                 }
                 suspended = true;
-                getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, GetFileHandler.SUSPEND.getBytes());
+                getChannel().sendTaggedData(getId(), CoasterChannel.SIGNAL_FLAG, GetFileHandler.SUSPEND.getBytes());
             }
         }
     }

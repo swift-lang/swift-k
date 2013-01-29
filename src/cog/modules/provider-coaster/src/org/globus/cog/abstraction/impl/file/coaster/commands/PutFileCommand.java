@@ -20,9 +20,9 @@ import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.ReadBufferCallback;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
 
 public class PutFileCommand extends Command implements ReadBufferCallback {
     public static final Logger logger = Logger.getLogger(PutFileCommand.class);
@@ -57,7 +57,7 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
     }
 
     public void send() throws ProtocolException {
-        KarajanChannel channel = getChannel();
+        CoasterChannel channel = getChannel();
         if (logger.isInfoEnabled()) {
             logger.info("Sending " + this + " on " + channel);
         }
@@ -68,7 +68,7 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
         if (logger.isDebugEnabled()) {
             logger.debug(this + ", src: " + src + ", dest: " + dest + ", size: " + size);
         }
-        channel.sendTaggedData(getId(), KarajanChannel.INITIAL_FLAG, getOutCmd().getBytes());
+        channel.sendTaggedData(getId(), CoasterChannel.INITIAL_FLAG, getOutCmd().getBytes());
         channel.sendTaggedData(getId(), false, pack(size));
         channel.sendTaggedData(getId(), false, src.getBytes());
         channel.sendTaggedData(getId(), size == 0, dest.getBytes());
@@ -89,7 +89,7 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
         if (logger.isDebugEnabled()) {
             logger.debug(this + " data read, last = " + last);
         }
-        getChannel().sendTaggedData(getId(), last ? KarajanChannel.FINAL_FLAG : 0, buf, this);
+        getChannel().sendTaggedData(getId(), last ? CoasterChannel.FINAL_FLAG : 0, buf, this);
         if (last) {
             done = true;
             closeBuffer();
@@ -97,7 +97,7 @@ public class PutFileCommand extends Command implements ReadBufferCallback {
     }
 
     public void queued() {
-        getChannel().sendTaggedData(getId(), KarajanChannel.SIGNAL_FLAG, QUEUED.getBytes());
+        getChannel().sendTaggedData(getId(), CoasterChannel.SIGNAL_FLAG, QUEUED.getBytes());
     }
 
     private void closeBuffer() {

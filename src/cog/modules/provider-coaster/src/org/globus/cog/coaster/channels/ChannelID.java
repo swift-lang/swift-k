@@ -7,7 +7,7 @@
 /*
  * Created on Oct 14, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.rmi.server.UID;
 

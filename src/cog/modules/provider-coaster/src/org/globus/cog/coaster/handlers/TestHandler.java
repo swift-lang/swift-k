@@ -7,30 +7,22 @@
 /*
  * Created on Jul 21, 2005
  */
-package org.globus.cog.karajan.workflow.service.handlers;
+package org.globus.cog.coaster.handlers;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.TestCommand;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.TestCommand;
 
 public class TestHandler extends RequestHandler {
 	private static final Logger logger = Logger.getLogger(TestHandler.class);
 
 	private static Timer timer = new Timer(true);
-
-	private static Map listeners;
-
-	static {
-		listeners = new HashMap();
-	}
 
 	private static TestCallback callback;
 
@@ -46,7 +38,7 @@ public class TestHandler extends RequestHandler {
 			timer.schedule(new TimerTask() {
 				public void run() {
 					TestCommand done = new TestCommand(false);
-					KarajanChannel channel = null;
+					CoasterChannel channel = null;
 					try {
 						channel = ChannelManager.getManager().reserveChannel(cc);
 						done.execute(channel);
@@ -67,6 +59,6 @@ public class TestHandler extends RequestHandler {
 	}
 
 	public static interface TestCallback {
-		void done(KarajanChannel channel);
+		void done(CoasterChannel channel);
 	}
 }

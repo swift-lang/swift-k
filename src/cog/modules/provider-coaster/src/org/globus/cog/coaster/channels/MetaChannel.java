@@ -7,21 +7,21 @@
 /*
  * Created on Sep 18, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
-public class MetaChannel extends AbstractKarajanChannel {
+public class MetaChannel extends AbstractCoasterChannel {
 	private static final Logger logger = Logger.getLogger(MetaChannel.class);
 
-	private KarajanChannel current;
+	private CoasterChannel current;
 	private TimerTask deactivator, poller;
 	private boolean polling;
 	private int tag;
@@ -60,7 +60,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 		current.unregisterHandler(tag);
 	}
 
-	public synchronized void bind(KarajanChannel channel) throws ChannelException {
+	public synchronized void bind(CoasterChannel channel) throws ChannelException {
 		if (channel != null) {
 			if (channel.getChannelContext() != this.getChannelContext() && channel.getChannelContext() != null) {
 				throw new ChannelException("Trying to bind invalid channel (" + channel + ") to " + this);
@@ -167,7 +167,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 	}
 
 	public boolean isStarted() {
-		KarajanChannel crt = current;
+		CoasterChannel crt = current;
 		if (crt != null) {
 			return crt.isStarted();
 		}
@@ -179,7 +179,7 @@ public class MetaChannel extends AbstractKarajanChannel {
 	public void start() throws ChannelException {
 	}
 	
-	public KarajanChannel current() {
+	public CoasterChannel current() {
 		return current;
 	}
 

@@ -24,8 +24,8 @@ import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class BlockQueueProcessor
 extends AbstractQueueProcessor
@@ -905,7 +905,7 @@ implements RegistrationManager, Runnable {
     /**
        Get the KarajanChannel for the worker with given id
      */
-    public KarajanChannel getWorkerChannel(String id) {
+    public CoasterChannel getWorkerChannel(String id) {
         return null;
     }
 

@@ -21,8 +21,8 @@ import org.globus.cog.abstraction.coaster.service.job.manager.SortedJobSet;
 import org.globus.cog.abstraction.coaster.service.job.manager.SwingBQPMonitor;
 import org.globus.cog.abstraction.coaster.service.job.manager.Time;
 import org.globus.cog.abstraction.coaster.service.job.manager.TimeInterval;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class BQPStatusHandler extends RequestHandler {
     public static final Logger logger = Logger.getLogger(BQPStatusHandler.class);

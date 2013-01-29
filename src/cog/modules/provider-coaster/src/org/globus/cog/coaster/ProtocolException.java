@@ -7,7 +7,7 @@
 /*
  * Created on Jul 19, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 public class ProtocolException extends Exception {
 	private static final long serialVersionUID = 4306559370282886369L;

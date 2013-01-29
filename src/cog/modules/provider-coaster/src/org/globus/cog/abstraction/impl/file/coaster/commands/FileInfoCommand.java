@@ -14,7 +14,7 @@ import java.io.File;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.interfaces.GridFile;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.commands.Command;
 
 public class FileInfoCommand extends Command {
     public static final String NAME = "FILEINFO"; 

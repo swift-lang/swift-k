@@ -7,7 +7,7 @@
 /*
  * Created on Jul 18, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -22,7 +22,7 @@ import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 import org.globus.cog.util.GridMap;
@@ -282,7 +282,7 @@ public class GSSService extends BaseServer implements Service {
 		}
 	}
 
-	public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
+	public void irrecoverableChannelError(CoasterChannel channel, Exception e) {
 		System.err.println("Irrecoverable channel exception: " + e.getMessage());
 		System.exit(2);
 	}

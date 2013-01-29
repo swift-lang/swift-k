@@ -7,7 +7,7 @@
 /*
  * Created on Jul 20, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 public class NoSuchHandlerException extends Exception {
 	private static final long serialVersionUID = -3733405556778308146L;

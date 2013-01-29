@@ -9,7 +9,7 @@
  */
 package org.globus.cog.abstraction.coaster.rlog;
 
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.commands.Command;
 
 public class RemoteLogCommand extends Command {
     public static final String NAME = "RLOG";

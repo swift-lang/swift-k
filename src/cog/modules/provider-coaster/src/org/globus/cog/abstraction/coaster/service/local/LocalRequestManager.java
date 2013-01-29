@@ -16,9 +16,9 @@ import org.globus.cog.abstraction.coaster.service.ResourceUpdateHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.BQPStatusHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
-import org.globus.cog.karajan.workflow.service.AbstractRequestManager;
-import org.globus.cog.karajan.workflow.service.handlers.ChannelConfigurationHandler;
-import org.globus.cog.karajan.workflow.service.handlers.HeartBeatHandler;
+import org.globus.cog.coaster.AbstractRequestManager;
+import org.globus.cog.coaster.handlers.ChannelConfigurationHandler;
+import org.globus.cog.coaster.handlers.HeartBeatHandler;
 
 public class LocalRequestManager extends AbstractRequestManager {
     public static final LocalRequestManager INSTANCE = new LocalRequestManager();

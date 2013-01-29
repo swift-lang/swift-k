@@ -7,7 +7,7 @@
 /*
  * Created on Jul 19, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,21 +15,18 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.GSSChannel;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.StreamChannel;
-import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.channels.GSSChannel;
+import org.globus.cog.coaster.channels.StreamChannel;
+import org.globus.cog.coaster.channels.TCPChannel;
 import org.globus.gsi.gssapi.net.GssSocket;
-import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSException;
 
 public class ConnectionHandler {
 	private static final Logger logger = Logger.getLogger(ConnectionHandler.class);
 
 	private Socket socket;
-	private final KarajanChannel channel;
+	private final CoasterChannel channel;
 	private final RequestManager requestManager;
 
 	public ConnectionHandler(String name, Service service, Socket socket) throws IOException {
@@ -49,7 +46,7 @@ public class ConnectionHandler {
 		}
 	}
 	
-	protected ConnectionHandler(Socket socket, KarajanChannel channel, 
+	protected ConnectionHandler(Socket socket, CoasterChannel channel, 
 			RequestManager requestManager) throws IOException {
 		assert requestManager != null;
 		this.requestManager = requestManager;

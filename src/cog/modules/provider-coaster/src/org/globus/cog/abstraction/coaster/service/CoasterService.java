@@ -25,17 +25,17 @@ import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceManager;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
-import org.globus.cog.karajan.workflow.service.ConnectionHandler;
-import org.globus.cog.karajan.workflow.service.GSSService;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
-import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.ServiceRequestManager;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.PipedClientChannel;
-import org.globus.cog.karajan.workflow.service.channels.PipedServerChannel;
+import org.globus.cog.coaster.ConnectionHandler;
+import org.globus.cog.coaster.GSSService;
+import org.globus.cog.coaster.RemoteConfiguration;
+import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.ServiceRequestManager;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.channels.PipedClientChannel;
+import org.globus.cog.coaster.channels.PipedServerChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 import org.ietf.jgss.GSSCredential;
 
@@ -57,7 +57,7 @@ public class CoasterService extends GSSService {
     private boolean suspended;
     private static Timer watchdogs = new Timer();
     private boolean local;
-    private KarajanChannel channelToClient;
+    private CoasterChannel channelToClient;
     private boolean ignoreIdleTime;
 
     public CoasterService() throws IOException {
@@ -190,7 +190,7 @@ public class CoasterService extends GSSService {
         }
     }
 
-    private KarajanChannel createLocalChannel() throws IOException, ChannelException {
+    private CoasterChannel createLocalChannel() throws IOException, ChannelException {
         PipedServerChannel psc =
                 ServiceManager.getDefault().getLocalService().newPipedServerChannel();
         PipedClientChannel pcc =
@@ -226,7 +226,7 @@ public class CoasterService extends GSSService {
     }
 
     @Override
-    public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
+    public void irrecoverableChannelError(CoasterChannel channel, Exception e) {
         logger.warn("irrecoverable channel error!\n\t" + e);
         stop(e);
     }

@@ -7,12 +7,12 @@
 /*
  * Created on Oct 6, 2005
  */
-package org.globus.cog.karajan.workflow.service.test;
+package org.globus.cog.coaster.test;
 
 import java.io.IOException;
 
-import org.globus.cog.karajan.workflow.service.GSSService;
-import org.globus.cog.karajan.workflow.service.Service;
+import org.globus.cog.coaster.GSSService;
+import org.globus.cog.coaster.Service;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 
 public class Services {

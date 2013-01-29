@@ -10,7 +10,7 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelContext;
 
 public interface QueueProcessor {
 

@@ -19,9 +19,9 @@ import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProvide
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProviderFactory;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOReader;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.ReadIOCallback;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.SendCallback;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.channels.SendCallback;
 
 public class GetFileHandler extends CoasterFileRequestHandler implements SendCallback, ReadIOCallback {
     public static final Logger logger = Logger.getLogger(GetFileHandler.class);
@@ -53,7 +53,7 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
     }
 
     public void send() throws ProtocolException {
-        KarajanChannel channel = getChannel();
+        CoasterChannel channel = getChannel();
         String src = getInDataAsString(0);
         String dst = getInDataAsString(1);
         if (channel == null) {
@@ -120,7 +120,7 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
         if (logger.isInfoEnabled()) {
             logger.info(this + " sending queued signal (input throttled)");
         }
-        getChannel().sendTaggedReply(getId(), QUEUED.getBytes(), KarajanChannel.SIGNAL_FLAG, null);
+        getChannel().sendTaggedReply(getId(), QUEUED.getBytes(), CoasterChannel.SIGNAL_FLAG, null);
     }
 
     public void info(String msg) {
@@ -141,11 +141,11 @@ public class GetFileHandler extends CoasterFileRequestHandler implements SendCal
 
     public void error(IOHandle op, Exception e) {
         if (e == null) {
-            getChannel().sendTaggedReply(getId(), "Unknown error".getBytes(), KarajanChannel.FINAL_FLAG + KarajanChannel.ERROR_FLAG);
+            getChannel().sendTaggedReply(getId(), "Unknown error".getBytes(), CoasterChannel.FINAL_FLAG + CoasterChannel.ERROR_FLAG);
         }
         else {
             getChannel().sendTaggedReply(getId(), e.getMessage() != null ? e.getMessage().getBytes() : e.toString().getBytes(), 
-        		KarajanChannel.FINAL_FLAG + KarajanChannel.ERROR_FLAG);
+        		CoasterChannel.FINAL_FLAG + CoasterChannel.ERROR_FLAG);
         }
     }
 

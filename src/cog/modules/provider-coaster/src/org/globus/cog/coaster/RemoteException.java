@@ -7,7 +7,7 @@
 /*
  * Created on Dec 8, 2006
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 
 public class RemoteException extends Exception {

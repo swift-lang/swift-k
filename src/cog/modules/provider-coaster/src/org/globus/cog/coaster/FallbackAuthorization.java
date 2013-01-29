@@ -7,7 +7,7 @@
 /*
  * Created on Jul 19, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import org.globus.gsi.gssapi.auth.Authorization;
 import org.globus.gsi.gssapi.auth.AuthorizationException;

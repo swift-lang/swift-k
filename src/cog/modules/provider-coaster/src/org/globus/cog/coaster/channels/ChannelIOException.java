@@ -7,7 +7,7 @@
 /*
  * Created on Oct 11, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 public class ChannelIOException extends RuntimeException {
 	private static final long serialVersionUID = 8369798703703264224L;

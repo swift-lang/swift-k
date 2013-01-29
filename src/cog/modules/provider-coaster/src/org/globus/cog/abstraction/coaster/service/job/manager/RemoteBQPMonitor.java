@@ -10,10 +10,10 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
 
 public class RemoteBQPMonitor implements BQPMonitor, Callback {
     public static final Logger logger = Logger.getLogger(RemoteBQPMonitor.class);
@@ -29,7 +29,7 @@ public class RemoteBQPMonitor implements BQPMonitor, Callback {
             BQPStatusCommand bsc =
                     new BQPStatusCommand(bqp.getSettings(), bqp.getJobs(), bqp.getBlocks().values(),
                         bqp.getQueued());
-            KarajanChannel channel =
+            CoasterChannel channel =
                     ChannelManager.getManager().reserveChannel(bqp.getClientChannelContext());
             bsc.executeAsync(channel, this);
         }

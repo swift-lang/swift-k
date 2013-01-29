@@ -7,7 +7,7 @@
 /*
  * Created on Apr 7, 2012
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,25 +30,25 @@ class NIOSender extends Thread {
     
 	private Map<SelectableChannel, BlockingQueue<NIOSendEntry>> queues;
 	private Selector selector;
-	private BlockingQueue<AbstractStreamKarajanChannel> add;
+	private BlockingQueue<AbstractStreamCoasterChannel> add;
 	private Map<Channel, BlockingQueue<NIOSendEntry>> registered;
 	
 	public NIOSender() {
 		super("NIO Sender");
 		setDaemon(true);
 		queues = new HashMap<SelectableChannel, BlockingQueue<NIOSendEntry>>();
-		add = new LinkedBlockingQueue<AbstractStreamKarajanChannel>();
+		add = new LinkedBlockingQueue<AbstractStreamCoasterChannel>();
 		registered = new HashMap<Channel, BlockingQueue<NIOSendEntry>>();
 		try {
 			selector = Selector.open();
 		}
 		catch (IOException e) {
-			AbstractStreamKarajanChannel.logger.warn("Could not create selector", e);
+			AbstractStreamCoasterChannel.logger.warn("Could not create selector", e);
 		}
 	}
 	
 	public void enqueue(int tag, int flags, byte[] data,
-			AbstractStreamKarajanChannel channel, SendCallback cb) {
+			AbstractStreamCoasterChannel channel, SendCallback cb) {
 	    if (data == null) {
 	        throw new NullPointerException();
 	    }
@@ -77,7 +77,7 @@ class NIOSender extends Thread {
 	}
 	
 	private ByteBuffer makeHeader(int tag, int flags, byte[] data) {
-		ByteBuffer bb = ByteBuffer.allocate(AbstractStreamKarajanChannel.HEADER_LEN);
+		ByteBuffer bb = ByteBuffer.allocate(AbstractStreamCoasterChannel.HEADER_LEN);
 		
 		byte[] buf = bb.array();
 		Sender.makeHeader(tag, flags, data, bb.array());
@@ -90,7 +90,7 @@ class NIOSender extends Thread {
 			try {
 				int ready = selector.select();
 				while (!add.isEmpty()) {
-					AbstractStreamKarajanChannel channel = add.poll();
+					AbstractStreamCoasterChannel channel = add.poll();
 					SelectableChannel c = channel.getNIOChannel();
 					BlockingQueue<NIOSendEntry> q;
 					synchronized(queues) {
@@ -173,9 +173,9 @@ class NIOSender extends Thread {
         public ByteBuffer data;
         public ByteBuffer crt;
         public final SendCallback cb;
-        public final AbstractStreamKarajanChannel channel;
+        public final AbstractStreamCoasterChannel channel;
         
-        public NIOSendEntry(ByteBuffer header, ByteBuffer data, AbstractStreamKarajanChannel channel, SendCallback cb) {
+        public NIOSendEntry(ByteBuffer header, ByteBuffer data, AbstractStreamCoasterChannel channel, SendCallback cb) {
             this.data = data;
             crt = header;
             this.cb = cb;

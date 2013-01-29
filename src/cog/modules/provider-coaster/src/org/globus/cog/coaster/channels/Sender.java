@@ -7,7 +7,7 @@
 /*
  * Created on Apr 7, 2012
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,11 +33,11 @@ class Sender extends Thread {
 		this.name = name;
 		queue = new LinkedBlockingQueue<SendEntry>();
 		setDaemon(true);
-		shdr = new byte[AbstractStreamKarajanChannel.HEADER_LEN];
+		shdr = new byte[AbstractStreamCoasterChannel.HEADER_LEN];
 	}
 
 	public void enqueue(int tag, int flags, byte[] data,
-			AbstractStreamKarajanChannel channel, SendCallback cb) {
+			AbstractStreamCoasterChannel channel, SendCallback cb) {
 		try {
 			queue.put(new SendEntry(tag, flags, data, channel, cb));
 		}
@@ -96,7 +96,7 @@ class Sender extends Thread {
 		}
 	}
 
-	public void purge(KarajanChannel source, KarajanChannel channel) {
+	public void purge(CoasterChannel source, CoasterChannel channel) {
 		SendEntry e;
 		synchronized (this) {
 			Iterator<SendEntry> i = queue.iterator();
@@ -111,16 +111,16 @@ class Sender extends Thread {
 	}
 	
 	public static void makeHeader(int tag, int flags, byte[] data, byte[] hdr) {
-	    AbstractStreamKarajanChannel.pack(hdr, 0, tag);
-        AbstractStreamKarajanChannel.pack(hdr, 4, flags);
-        AbstractStreamKarajanChannel.pack(hdr, 8, data.length);
-        AbstractStreamKarajanChannel.pack(hdr, 12, tag ^ flags ^ data.length);
+	    AbstractStreamCoasterChannel.pack(hdr, 0, tag);
+        AbstractStreamCoasterChannel.pack(hdr, 4, flags);
+        AbstractStreamCoasterChannel.pack(hdr, 8, data.length);
+        AbstractStreamCoasterChannel.pack(hdr, 12, tag ^ flags ^ data.length);
         if (PAYLOAD_CHECKSUM) {
         	Adler32 csum = new Adler32();
         	csum.update(data);
-        	AbstractStreamKarajanChannel.pack(hdr, 16, (int) csum.getValue());
+        	AbstractStreamCoasterChannel.pack(hdr, 16, (int) csum.getValue());
         }
-        AbstractStreamKarajanChannel.pack(hdr, 16, 0);
+        AbstractStreamCoasterChannel.pack(hdr, 16, 0);
 	}
 
 	private void send(int tag, int flags, byte[] data, OutputStream os) throws IOException {
@@ -128,7 +128,7 @@ class Sender extends Thread {
 		synchronized (os) {
 			os.write(shdr);
 			os.write(data);
-			if ((flags & AbstractStreamKarajanChannel.FINAL_FLAG) != 0) {
+			if ((flags & AbstractStreamCoasterChannel.FINAL_FLAG) != 0) {
 				os.flush();
 			}
 		}
@@ -137,10 +137,10 @@ class Sender extends Thread {
 	private static class SendEntry {
 		public final int tag, flags;
 		public final byte[] data;
-		public final AbstractStreamKarajanChannel channel;
+		public final AbstractStreamCoasterChannel channel;
 		public final SendCallback cb;
 
-        public SendEntry(int tag, int flags, byte[] data, AbstractStreamKarajanChannel channel, SendCallback cb) {
+        public SendEntry(int tag, int flags, byte[] data, AbstractStreamCoasterChannel channel, SendCallback cb) {
             this.tag = tag;
             this.flags = flags;
             this.data = data;

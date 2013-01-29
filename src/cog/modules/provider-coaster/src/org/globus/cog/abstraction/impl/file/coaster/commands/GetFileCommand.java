@@ -20,7 +20,7 @@ import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBufferCallback;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.commands.Command;
 
 public class GetFileCommand extends Command implements WriteBufferCallback {
     Logger logger = Logger.getLogger(GetFileCommand.class);

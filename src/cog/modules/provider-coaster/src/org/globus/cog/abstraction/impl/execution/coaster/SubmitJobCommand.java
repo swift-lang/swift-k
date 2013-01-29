@@ -30,8 +30,8 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry.Mode;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.commands.Command;
 
 public class SubmitJobCommand extends Command {
     public static final Logger logger = Logger.getLogger(SubmitJobCommand.class);

@@ -7,9 +7,9 @@
 /*
  * Created on Jul 20, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
 public interface RequestManager {
 	RequestHandler handleInitialRequest(int tag, byte[] data)

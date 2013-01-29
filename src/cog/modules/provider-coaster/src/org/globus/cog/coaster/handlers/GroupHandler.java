@@ -7,13 +7,13 @@
 /*
  * Created on Jul 21, 2005
  */
-package org.globus.cog.karajan.workflow.service.handlers;
+package org.globus.cog.coaster.handlers;
 
 import java.nio.ByteBuffer;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.NoSuchHandlerException;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.coaster.NoSuchHandlerException;
+import org.globus.cog.coaster.ProtocolException;
 
 public abstract class GroupHandler extends RequestHandler {
 	private static final Logger logger = Logger.getLogger(GroupHandler.class);
@@ -63,7 +63,7 @@ public abstract class GroupHandler extends RequestHandler {
 			if (crtHandler == null) {
 				try {
 					crtHandler = this.getChannel().getRequestManager().handleInitialRequest(getId(), data);
-					crtHandler.register(getChannel());
+					crtHandler.setChannel(getChannel());
 					crtHandler.setId(membertags[index++]);
 				}
 				catch (NoSuchHandlerException e) {

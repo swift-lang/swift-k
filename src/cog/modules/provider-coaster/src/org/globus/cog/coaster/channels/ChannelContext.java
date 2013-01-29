@@ -7,7 +7,7 @@
 /*
  * Created on Aug 1, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,15 +17,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.events.EventBus;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
-import org.globus.cog.karajan.workflow.service.RequestReply;
-import org.globus.cog.karajan.workflow.service.Service;
-import org.globus.cog.karajan.workflow.service.ServiceContext;
-import org.globus.cog.karajan.workflow.service.UserContext;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.RemoteConfiguration;
+import org.globus.cog.coaster.RequestReply;
+import org.globus.cog.coaster.Service;
+import org.globus.cog.coaster.ServiceContext;
+import org.globus.cog.coaster.UserContext;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.handlers.RequestHandler;
 import org.ietf.jgss.GSSCredential;
 
 public class ChannelContext {
@@ -113,9 +112,6 @@ public class ChannelContext {
 	}
 
 	public synchronized void initialize() {
-		if (!initialized) {
-			EventBus.initialize();
-		}
 	}
 
 	public RemoteConfiguration.Entry getConfiguration() {

@@ -14,9 +14,9 @@ import java.util.Map;
 
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
 import org.globus.cog.abstraction.coaster.service.ResourceUpdateCommand;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class PassiveQueueProcessor extends BlockQueueProcessor {
     private final URI callbackURI;
@@ -33,7 +33,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
     @Override
     public void setClientChannelContext(ChannelContext channelContext) {
         super.setClientChannelContext(channelContext);
-        KarajanChannel channel;
+        CoasterChannel channel;
         try {
             channel = ChannelManager.getManager().reserveChannel(channelContext);
             RemoteLogCommand cmd = new RemoteLogCommand(RemoteLogCommand.Type.STDERR,
@@ -70,7 +70,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
                     String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
             }
             try {
-                KarajanChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
+                CoasterChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
                 wsc.executeAsync(channel);
                 ChannelManager.getManager().releaseChannel(channel);
             }
@@ -106,7 +106,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
                 String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
         }
         try {
-            KarajanChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
+            CoasterChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
             wsc.executeAsync(channel);
             ChannelManager.getManager().releaseChannel(channel);
         }

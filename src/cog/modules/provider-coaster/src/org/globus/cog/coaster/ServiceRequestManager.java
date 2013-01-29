@@ -7,33 +7,21 @@
 /*
  * Created on Jul 20, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
-import org.globus.cog.karajan.workflow.service.handlers.ChannelConfigurationHandler;
-import org.globus.cog.karajan.workflow.service.handlers.EchoHandler;
-import org.globus.cog.karajan.workflow.service.handlers.HeartBeatHandler;
-import org.globus.cog.karajan.workflow.service.handlers.ShutdownHandler;
-import org.globus.cog.karajan.workflow.service.handlers.StartGroupHandler;
-import org.globus.cog.karajan.workflow.service.handlers.StartHandler;
-import org.globus.cog.karajan.workflow.service.handlers.SubmitHandler;
-import org.globus.cog.karajan.workflow.service.handlers.UploadHandler;
-import org.globus.cog.karajan.workflow.service.handlers.VargHandler;
-import org.globus.cog.karajan.workflow.service.handlers.VersionHandler;
-import org.globus.cog.karajan.workflow.service.management.handlers.StatHandler;
+import org.globus.cog.coaster.handlers.ChannelConfigurationHandler;
+import org.globus.cog.coaster.handlers.EchoHandler;
+import org.globus.cog.coaster.handlers.HeartBeatHandler;
+import org.globus.cog.coaster.handlers.ShutdownHandler;
+import org.globus.cog.coaster.handlers.VersionHandler;
 
 public class ServiceRequestManager extends AbstractRequestManager {
 	public ServiceRequestManager() {
 		addHandler("VERSION", VersionHandler.class);
-		addHandler("UPLOAD", UploadHandler.class);
-		addHandler("START", StartHandler.class);
 		addHandler("CHANNELCONFIG", ChannelConfigurationHandler.class);
-		addHandler("STARTGROUP", StartGroupHandler.class);
 		addHandler("ECHO", EchoHandler.class);
 		//addHandler("TEST", TestHandler.class);
-		addHandler("VARG", VargHandler.class);
 		addHandler("SHUTDOWN", ShutdownHandler.class);
-		addHandler("STAT", StatHandler.class);
-		addHandler("SUBMIT", SubmitHandler.class);
 		addHandler(HeartBeatHandler.NAME, HeartBeatHandler.class);
 	}
 }

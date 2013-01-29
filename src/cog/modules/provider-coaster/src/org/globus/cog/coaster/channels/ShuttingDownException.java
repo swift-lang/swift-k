@@ -7,7 +7,7 @@
 /*
  * Created on Oct 7, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 public class ShuttingDownException extends ChannelException {
 	private static final long serialVersionUID = -2932192906651305794L;

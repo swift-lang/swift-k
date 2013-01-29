@@ -23,12 +23,12 @@ import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.ConnectionHandler;
-import org.globus.cog.karajan.workflow.service.GSSService;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.PipedServerChannel;
+import org.globus.cog.coaster.ConnectionHandler;
+import org.globus.cog.coaster.GSSService;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.channels.PipedServerChannel;
 import org.globus.gsi.GlobusCredentialException;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 import org.ietf.jgss.GSSCredential;
@@ -145,7 +145,7 @@ public class LocalService extends GSSService implements Registering {
         }
     }
 
-    public String registrationReceived(String id, String url, KarajanChannel channel, 
+    public String registrationReceived(String id, String url, CoasterChannel channel, 
     		Map<String, String> options) {
         if (logger.isDebugEnabled()) {
             logger.debug("Received registration from service " + id + ": " + url);

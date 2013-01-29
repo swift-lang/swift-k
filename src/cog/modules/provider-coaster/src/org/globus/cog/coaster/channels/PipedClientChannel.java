@@ -7,9 +7,9 @@
 /*
  * Created on Oct 30, 2009
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
-import org.globus.cog.karajan.workflow.service.RequestManager;
+import org.globus.cog.coaster.RequestManager;
 
 public class PipedClientChannel extends AbstractPipedChannel {
 

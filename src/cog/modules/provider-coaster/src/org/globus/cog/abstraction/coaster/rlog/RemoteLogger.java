@@ -10,11 +10,11 @@
 package org.globus.cog.abstraction.coaster.rlog;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
 
 public class RemoteLogger implements Callback {
     public static final Logger logger = Logger.getLogger(RemoteLogger.class);
@@ -31,7 +31,7 @@ public class RemoteLogger implements Callback {
         }
         RemoteLogCommand rlc = new RemoteLogCommand(msg);
         try {
-            KarajanChannel channel = ChannelManager.getManager().reserveChannel(ctx);
+            CoasterChannel channel = ChannelManager.getManager().reserveChannel(ctx);
             rlc.executeAsync(channel, this);
         }
         catch (Exception e) {

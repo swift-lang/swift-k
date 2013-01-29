@@ -7,7 +7,7 @@
 /*
  * Created on Jul 20, 2005
  */
-package org.globus.cog.karajan.workflow.service.commands;
+package org.globus.cog.coaster.commands;
 
 
 public class VersionCommand extends Command {

@@ -7,7 +7,7 @@
 /*
  * Created on Jul 21, 2006
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -15,8 +15,8 @@ import java.net.Socket;
 import java.net.URI;
 import java.nio.channels.SocketChannel;
 
-import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.UserContext;
+import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.UserContext;
 
 public class TCPChannel extends AbstractTCPChannel {
 	private URI contact;

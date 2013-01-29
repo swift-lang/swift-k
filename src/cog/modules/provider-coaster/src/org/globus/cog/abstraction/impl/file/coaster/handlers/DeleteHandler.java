@@ -12,7 +12,7 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers;
 import java.io.File;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.coaster.ProtocolException;
 
 public class DeleteHandler extends CoasterFileRequestHandler {
     public static final Logger logger = Logger.getLogger(DeleteHandler.class);

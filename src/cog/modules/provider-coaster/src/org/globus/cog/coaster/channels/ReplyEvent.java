@@ -7,7 +7,7 @@
 /*
  * Created on Dec 23, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 
 public class ReplyEvent {

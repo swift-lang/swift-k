@@ -7,12 +7,9 @@
 /*
  * Created on Aug 1, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 
@@ -20,7 +17,6 @@ public class UserContext {
 
 	private String name;
 	private GSSCredential credential;
-	private final Map instances;
 	private final ChannelContext channelContext;
 	
 	public UserContext(ChannelContext channelContext) {
@@ -30,7 +26,6 @@ public class UserContext {
 	public UserContext(GSSCredential cred, ChannelContext channelContext) {
 	    this.credential = cred;
 	    this.name = getName(cred);
-		instances = new HashMap();
 		this.channelContext = channelContext;
 		if (channelContext == null) {
 			throw new IllegalArgumentException("channelContext cannot be null");
@@ -66,60 +61,11 @@ public class UserContext {
 		return name;
 	}
 
-	public InstanceContext newInstanceContext() {
-		return new InstanceContext(this);
-	}
-
-	public InstanceContext newInstanceContext(String remoteID) {
-		synchronized (instances) {
-			if (instances.containsKey(remoteID)) {
-				throw new IllegalStateException("Instance already exists in user context: "
-						+ remoteID);
-			}
-			InstanceContext ic = new InstanceContext(this);
-			ic.setServerID(remoteID);
-			instances.put(ic.getID(), ic);
-			return ic;
-		}
-	}
-
-	public void registerInstanceContext(InstanceContext ic) {
-		synchronized (instances) {
-			instances.put(ic.getID(), ic);
-		}
-	}
-
-	public InstanceContext getInstanceContext(String id) {
-		synchronized (instances) {
-			return (InstanceContext) instances.get(id);
-		}
-	}
 
 	/**
 	 * Returns the channel context of the channel that created this user context
 	 */
 	public ChannelContext getChannelContext() {
 		return channelContext;
-	}
-
-	public int instanceContextCount() {
-		synchronized (instances) {
-			return instances.size();
-		}
-	}
-
-	public void removeInstanceContext(InstanceContext ic) {
-		synchronized (instances) {
-			instances.remove(ic.getID());
-			if (instances.size() == 0 && !(channelContext.getServiceContext() == null)) {
-				channelContext.getServiceContext().unregisterUserContext(this);
-			}
-		}
-	}
-
-	public Map getInstances() {
-		synchronized (instances) {
-			return new HashMap(instances);
-		}
 	}
 }

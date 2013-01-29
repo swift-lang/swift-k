@@ -7,9 +7,9 @@
 /*
  * Created on Jul 21, 2005
  */
-package org.globus.cog.karajan.workflow.service.handlers;
+package org.globus.cog.coaster.handlers;
 
-import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.coaster.ProtocolException;
 
 
 public class UnknownCommandHandler extends RequestHandler {

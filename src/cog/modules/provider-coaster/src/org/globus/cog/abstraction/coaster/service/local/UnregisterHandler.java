@@ -10,8 +10,8 @@
 package org.globus.cog.abstraction.coaster.service.local;
 
 import org.globus.cog.abstraction.coaster.service.Registering;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
 
 public class UnregisterHandler extends RequestHandler {

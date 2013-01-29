@@ -7,10 +7,10 @@
 /*
  * Created on Sep 22, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 
 public interface Purgeable {
-	void purge(KarajanChannel channel) throws IOException;
+	void purge(CoasterChannel channel) throws IOException;
 }

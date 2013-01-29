@@ -7,7 +7,7 @@
 /*
  * Created on Apr 7, 2012
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -24,22 +24,22 @@ class NIOMultiplexer extends Thread {
 	public static final Logger logger = Logger.getLogger(NIOMultiplexer.class);
 	
 	private Selector selector;
-	private BlockingQueue<AbstractStreamKarajanChannel> add;
+	private BlockingQueue<AbstractStreamCoasterChannel> add;
 	
 	public NIOMultiplexer() {
 		super("NIO Multiplexer");
 		setDaemon(true);
-		add = new LinkedBlockingQueue<AbstractStreamKarajanChannel>();
+		add = new LinkedBlockingQueue<AbstractStreamCoasterChannel>();
 		try {
 			selector = Selector.open();
 		}
 		catch (IOException e) {
-			AbstractStreamKarajanChannel.logger.error("Failed to open selector", e);
+			AbstractStreamCoasterChannel.logger.error("Failed to open selector", e);
 			throw new RuntimeException(e);
 		}
 	}
 
-	public void register(AbstractStreamKarajanChannel channel) {
+	public void register(AbstractStreamCoasterChannel channel) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Registering " + channel);
 		}
@@ -47,7 +47,7 @@ class NIOMultiplexer extends Thread {
 		selector.wakeup();
 	}
 
-	public void unregister(AbstractStreamKarajanChannel channel) {
+	public void unregister(AbstractStreamCoasterChannel channel) {
 		channel.getNIOChannel().keyFor(selector).cancel();
 	}
 	
@@ -72,7 +72,7 @@ class NIOMultiplexer extends Thread {
 			int ready = selector.select();
 			
 			while (!add.isEmpty()) {
-				AbstractStreamKarajanChannel channel = add.poll();
+				AbstractStreamCoasterChannel channel = add.poll();
 				try {
 					channel.getNIOChannel().register(selector, SelectionKey.OP_READ, channel);
 				}
@@ -94,10 +94,10 @@ class NIOMultiplexer extends Thread {
 				ReadableByteChannel c = (ReadableByteChannel) key.channel();
 				
 				try {
-					((AbstractStreamKarajanChannel) key.attachment()).stepNIO();
+					((AbstractStreamCoasterChannel) key.attachment()).stepNIO();
 				}
 				catch (IOException e) {
-					((AbstractStreamKarajanChannel) key.attachment()).handleChannelException(e);
+					((AbstractStreamCoasterChannel) key.attachment()).handleChannelException(e);
 					key.cancel();
 				}
 				i.remove();

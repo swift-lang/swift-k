@@ -7,7 +7,7 @@
 /*
  * Created on Jul 19, 2005
  */
-package org.globus.cog.karajan.workflow.service.commands;
+package org.globus.cog.coaster.commands;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -15,13 +15,12 @@ import java.util.Iterator;
 import java.util.Timer;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.RequestReply;
-import org.globus.cog.karajan.workflow.service.TimeoutException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelIOException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.SendCallback;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.RequestReply;
+import org.globus.cog.coaster.channels.ChannelIOException;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.channels.SendCallback;
 
 public abstract class Command extends RequestReply implements SendCallback {
 	private static final Logger logger = Logger.getLogger(Command.class);
@@ -87,7 +86,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 	        // probably channel died in-between registration and send, so don't bother
 	        return;
 	    }
-		KarajanChannel channel = getChannel();
+		CoasterChannel channel = getChannel();
 		if (logger.isDebugEnabled()) {
 			logger.debug("Sending " + this + " on " + channel);
 		}
@@ -110,10 +109,10 @@ public abstract class Command extends RequestReply implements SendCallback {
 			int flags;
 			boolean fin = (outData == null) || (outData.size() == 0);
 			if (fin) {
-				flags = KarajanChannel.FINAL_FLAG + KarajanChannel.INITIAL_FLAG;;
+				flags = CoasterChannel.FINAL_FLAG + CoasterChannel.INITIAL_FLAG;;
 			}
 			else {
-				flags = KarajanChannel.INITIAL_FLAG;;
+				flags = CoasterChannel.INITIAL_FLAG;;
 			}
 
 			channel.sendTaggedData(id, flags, getOutCmd().getBytes(), fin ? this : null);
@@ -135,7 +134,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 	
 	private static boolean shutdownMsg;
 
-	public byte[] execute(KarajanChannel channel) throws ProtocolException, IOException, InterruptedException {
+	public byte[] execute(CoasterChannel channel) throws ProtocolException, IOException, InterruptedException {
 		send(channel);
 		waitForReply();
 		if (errorMsg != null) {
@@ -147,16 +146,16 @@ public abstract class Command extends RequestReply implements SendCallback {
 		return getInData();
 	}
 
-	public void executeAsync(KarajanChannel channel, Callback cb) throws ProtocolException {
+	public void executeAsync(CoasterChannel channel, Callback cb) throws ProtocolException {
 		this.cb = cb;
 		send(channel);
 	}
 
-	public void executeAsync(KarajanChannel channel) throws ProtocolException {
+	public void executeAsync(CoasterChannel channel) throws ProtocolException {
 		send(channel);
 	}
 
-	protected void send(KarajanChannel channel) throws ProtocolException {
+	protected void send(CoasterChannel channel) throws ProtocolException {
 		channel.registerCommand(this);
 		send();
 	}
@@ -220,7 +219,7 @@ public abstract class Command extends RequestReply implements SendCallback {
 			logger.info(this + ": re-sending");
 			logger.warn(this + "fault was: " + message, ex);
 			try {
-				KarajanChannel channel = ChannelManager.getManager().reserveChannel(
+				CoasterChannel channel = ChannelManager.getManager().reserveChannel(
 						getChannel().getChannelContext());
 				setChannel(channel);
 				if (getId() == NOID) {

@@ -22,15 +22,15 @@ import java.nio.channels.SocketChannel;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ConnectionHandler;
-import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.Service;
-import org.globus.cog.karajan.workflow.service.ServiceContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.TCPChannel;
+import org.globus.cog.coaster.ConnectionHandler;
+import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.Service;
+import org.globus.cog.coaster.ServiceContext;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.channels.TCPChannel;
 import org.globus.common.CoGProperties;
 import org.globus.net.PortRange;
 
@@ -63,7 +63,7 @@ public class LocalTCPService implements Registering, Service, Runnable {
     }
 
     public String registrationReceived(String blockid, String url, 
-           KarajanChannel channel, Map<String, String> options) throws ChannelException {
+           CoasterChannel channel, Map<String, String> options) throws ChannelException {
         if (logger.isInfoEnabled()) {
             logger.info("Received registration: blockid = " +
                         blockid + ", url = " + url);
@@ -96,41 +96,22 @@ public class LocalTCPService implements Registering, Service, Runnable {
     public ServiceContext getContext() {
         return context;
     }
-   
-    public boolean bindPort() {
+    
+    public void start() {
         try {
-            channel.socket().bind(new InetSocketAddress(port));
-            return true;
-        }
-        catch (Exception e) {
-            return false;
-        }
-    }
-   
-    public void start() throws IOException {
-        channel = ServerSocketChannel.open();
-        channel.configureBlocking(true);
-        
-        /* When GLOBUS_TCP_PORT_RANGE is defined, find an acceptable port in that range */
-        String globusTCPPortRange = System.getenv("GLOBUS_TCP_PORT_RANGE");
-        String rangeValues[] = {String.valueOf(port), String.valueOf(port)};
-
-        if(globusTCPPortRange != null && port == 0) {
-            rangeValues = globusTCPPortRange.split(",");
-        }
-   
-        port = Integer.valueOf(rangeValues[0]);
-        while(!bindPort()) {
-            port++;
-            if(port > Integer.valueOf(rangeValues[1])) {
-                String msg = "Unable to find an available port";
-                if(globusTCPPortRange != null)
-                    msg += " in the range of " + rangeValues[0] + " to " + rangeValues[1];
-                throw new IOException(msg);
+            channel = ServerSocketChannel.open();
+            channel.configureBlocking(true);
+            if(port == 0) {
+                PortRange portRange = PortRange.getTcpInstance();
+                if(portRange != null && portRange.isEnabled()) {
+                    synchronized(portRange) {
+                        port = portRange.getFreePort(port);
+                        portRange.setUsed(port);
+                    }
+                }
             }
-        }
-
-        try {
+            channel.socket().bind(new InetSocketAddress(port));
+            
             if (serverThread == null) {
                 serverThread = new Thread(this);
                 serverThread.setDaemon(true);
@@ -207,7 +188,7 @@ public class LocalTCPService implements Registering, Service, Runnable {
         return false;
     }
 
-    public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
+    public void irrecoverableChannelError(CoasterChannel channel, Exception e) {
         System.err.println("Irrecoverable channel exception: " + e.getMessage());
         System.exit(2);
     }

@@ -14,7 +14,7 @@ import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.interfaces.GridFile;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.coaster.ProtocolException;
 
 public class ListHandler extends CoasterFileRequestHandler {
     public static final Logger logger = Logger.getLogger(ListHandler.class);

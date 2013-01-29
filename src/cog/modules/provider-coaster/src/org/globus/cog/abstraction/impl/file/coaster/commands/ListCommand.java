@@ -17,8 +17,8 @@ import java.util.List;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.interfaces.GridFile;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.commands.Command;
 
 public class ListCommand extends Command {
     public static final String NAME = "LIST";

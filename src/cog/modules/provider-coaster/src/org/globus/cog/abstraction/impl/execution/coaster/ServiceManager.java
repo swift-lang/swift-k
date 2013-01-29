@@ -49,11 +49,11 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.IrrecoverableException;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.channels.IrrecoverableException;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
 import org.globus.common.CoGProperties;
 import org.ietf.jgss.GSSCredential;
 
@@ -252,7 +252,7 @@ public class ServiceManager implements StatusListener {
                 if (url != null) {
                     GSSCredential cred =
                             (GSSCredential) t.getService(0).getSecurityContext().getCredentials();
-                    KarajanChannel channel =
+                    CoasterChannel channel =
                             ChannelManager.getManager().getExistingChannel(url, cred);
                     if (channel != null) {
                         channel.getChannelContext().notifyRegisteredCommandsAndHandlers(
@@ -448,7 +448,7 @@ public class ServiceManager implements StatusListener {
                 Object cred = credentials.get(url);
                 try {
                     logger.info("Shutting down service at " + url);
-                    KarajanChannel channel =
+                    CoasterChannel channel =
                             ChannelManager.getManager().reserveChannel(url, (GSSCredential) cred);
                     logger.debug("Got channel " + channel);
                     ServiceShutdownCommand ssc = new ServiceShutdownCommand();

@@ -18,8 +18,6 @@ import java.util.Map;
 
 import org.globus.cog.karajan.compiled.nodes.Node;
 
-import com.sun.org.apache.xpath.internal.VariableStack;
-
 public class ExecutionException extends RuntimeException {
 	private static final long serialVersionUID = 4975303013364072936L;
 
@@ -166,10 +164,5 @@ public class ExecutionException extends RuntimeException {
 			sb.append("\nCaused by: ");
 			appendJavaException(sb, cause.getCause());
 		}
-	}
-	
-	//TODO
-	public VariableStack getInitialStack() {
-		return null;
 	}
 }

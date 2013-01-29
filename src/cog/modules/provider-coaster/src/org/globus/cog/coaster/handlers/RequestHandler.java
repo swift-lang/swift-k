@@ -7,15 +7,15 @@
 /*
  * Created on Jul 21, 2005
  */
-package org.globus.cog.karajan.workflow.service.handlers;
+package org.globus.cog.coaster.handlers;
 
 import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.RequestReply;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.RequestReply;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public abstract class RequestHandler extends RequestReply {
 	private static final Logger logger = Logger.getLogger(RequestHandler.class);
@@ -57,7 +57,7 @@ public abstract class RequestHandler extends RequestReply {
 	}
 	
 	public void send(boolean err) throws ProtocolException {   
-		KarajanChannel channel = getChannel();
+		CoasterChannel channel = getChannel();
 		Collection<byte[]> outData = getOutData();
 		if (channel == null) {
 			throw new ProtocolException("Unregistered command");

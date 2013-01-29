@@ -7,12 +7,12 @@
 /*
  * Created on Jul 29, 2006
  */
-package org.globus.cog.karajan.workflow.service.commands;
+package org.globus.cog.coaster.commands;
 
 import java.io.File;
 import java.rmi.server.UID;
 
-import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.coaster.ProtocolException;
 
 public class SubmitCommand extends Command {
 	private String file, id, username;

@@ -7,11 +7,11 @@
 /*
  * Created on Jul 20, 2005
  */
-package org.globus.cog.karajan.workflow.service.commands;
+package org.globus.cog.coaster.commands;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.handlers.HeartBeatHandler;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.handlers.HeartBeatHandler;
 
 
 public class HeartBeatCommand extends Command {

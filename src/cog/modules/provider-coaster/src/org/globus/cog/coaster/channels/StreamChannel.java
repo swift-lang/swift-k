@@ -7,15 +7,15 @@
 /*
  * Created on Oct 30, 2009
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.UserContext;
+import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.UserContext;
 
-public class StreamChannel extends AbstractStreamKarajanChannel {
+public class StreamChannel extends AbstractStreamCoasterChannel {
 	private boolean started;	
 
 	public StreamChannel(InputStream is, OutputStream os, RequestManager requestManager,

@@ -34,12 +34,12 @@ import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
 import org.ietf.jgss.GSSCredential;
 
 public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements Callback {
@@ -55,7 +55,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         configuring = new HashSet<Object>();
     }
 
-    private static boolean checkConfigured(KarajanChannel channel) throws InterruptedException {
+    private static boolean checkConfigured(CoasterChannel channel) throws InterruptedException {
         Object key = channel.getChannelContext();
         synchronized (configuring) {
             while (configuring.contains(key)) {
@@ -69,7 +69,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    private static void setConfigured(KarajanChannel channel) {
+    private static void setConfigured(CoasterChannel channel) {
         Object key = channel.getChannelContext();
         synchronized (configuring) {
             configuring.remove(key);
@@ -101,7 +101,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         validateTaskSettings();
         task.setStatus(Status.SUBMITTING);
         try {
-            KarajanChannel channel = getChannel(task);
+            CoasterChannel channel = getChannel(task);
             configureService(channel, task);
             submitJob(channel, task);
         }
@@ -110,7 +110,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    private KarajanChannel getChannel(Task task) throws InvalidServiceContactException,
+    private CoasterChannel getChannel(Task task) throws InvalidServiceContactException,
             IllegalSpecException, TaskSubmissionException, InvalidSecurityContextException,
             ChannelException {
         if (autostart) {
@@ -124,7 +124,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         return ChannelManager.getManager().reserveChannel(url, cred, LocalRequestManager.INSTANCE);
     }
 
-    private void configureService(KarajanChannel channel, Task task) throws InterruptedException,
+    private void configureService(CoasterChannel channel, Task task) throws InterruptedException,
             ProtocolException, IOException {
         if (!checkConfigured(channel)) {
             ServiceConfigurationCommand scc = new ServiceConfigurationCommand(task);
@@ -146,7 +146,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    private void submitJob(KarajanChannel channel, Task task) throws ProtocolException {
+    private void submitJob(CoasterChannel channel, Task task) throws ProtocolException {
         jsc = new SubmitJobCommand(task);
         jsc.executeAsync(channel, this);
     }
@@ -191,7 +191,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         // TODO shouldn't this be setting the task status?
         try {
             if (jobid != null) {
-                KarajanChannel channel =
+                CoasterChannel channel =
                         ChannelManager.getManager().reserveChannel(url, cred,
                             LocalRequestManager.INSTANCE);
                 CancelJobCommand cc = new CancelJobCommand(jobid);

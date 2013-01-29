@@ -24,7 +24,7 @@ import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelContext;
 
 public class Block implements StatusListener, Comparable<Block> {
     public static final Logger logger = Logger.getLogger(Block.class);

@@ -7,33 +7,32 @@
 /*
  * Created on Jul 19, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.ChannelConfigurationCommand;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.VersionCommand;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.VersionCommand;
 
 public class Client {
 	private static final Logger logger = Logger.getLogger(Client.class);
 
 	private final URI contact;
-	private KarajanChannel channel;
+	private CoasterChannel channel;
 	private RequestManager requestManager;
 	private ChannelContext sc;
 	private static Service callback;
 	private boolean connected, connecting;
 	private Exception e;
 
-	private static Map clients = new Hashtable();
+	private static Map<String, Client> clients = new HashMap<String, Client>();
 	private static Service service;
 
 	public static Client getClient(String contact) throws Exception {
@@ -43,7 +42,7 @@ public class Client {
 				client = new Client(contact);
 				clients.put(contact, client);
 			}
-			client = (Client) clients.get(contact);
+			client = clients.get(contact);
 		}
 		try {
 			synchronized (client) {
@@ -140,7 +139,7 @@ public class Client {
 		channel.close();
 	}
 
-	public KarajanChannel getChannel() {
+	public CoasterChannel getChannel() {
 		return channel;
 	}
 

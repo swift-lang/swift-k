@@ -15,8 +15,8 @@ import java.io.StringWriter;
 
 import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.interfaces.Status;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.commands.Command;
 
 public class JobStatusCommand extends Command {
     public static final String NAME = "JOBSTATUS";

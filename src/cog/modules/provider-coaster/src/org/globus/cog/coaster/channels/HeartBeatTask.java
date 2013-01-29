@@ -7,22 +7,22 @@
 /*
  * Created on Sep 9, 2008
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.HeartBeatCommand;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.HeartBeatCommand;
+import org.globus.cog.coaster.commands.Command.Callback;
 
 public class HeartBeatTask extends TimerTask implements Callback {
 	public static final Logger logger = Logger.getLogger(HeartBeatTask.class);
 
-	private KarajanChannel channel;
+	private CoasterChannel channel;
 
-	public HeartBeatTask(KarajanChannel channel) {
+	public HeartBeatTask(CoasterChannel channel) {
 		this.channel = channel;
 	}
 

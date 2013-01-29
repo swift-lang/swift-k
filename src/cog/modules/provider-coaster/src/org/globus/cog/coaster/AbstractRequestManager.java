@@ -7,14 +7,14 @@
 /*
  * Created on Aug 24, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.handlers.RequestHandler;
-import org.globus.cog.karajan.workflow.service.handlers.UnknownCommandHandler;
+import org.globus.cog.coaster.handlers.RequestHandler;
+import org.globus.cog.coaster.handlers.UnknownCommandHandler;
 
 public abstract class AbstractRequestManager implements RequestManager {
     public static final Logger logger = Logger.getLogger(AbstractRequestManager.class);

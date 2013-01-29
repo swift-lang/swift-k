@@ -7,14 +7,14 @@
 /*
  * Created on Jul 28, 2006
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelContext;
 import org.ietf.jgss.GSSCredential;
 
 public class ServiceContext {

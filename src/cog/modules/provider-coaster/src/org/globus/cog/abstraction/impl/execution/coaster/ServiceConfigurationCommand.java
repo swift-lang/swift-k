@@ -12,7 +12,7 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 import org.globus.cog.abstraction.coaster.service.job.manager.Job;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.commands.Command;
 
 public class ServiceConfigurationCommand extends Command {
     public static final String NAME = "CONFIGSERVICE";

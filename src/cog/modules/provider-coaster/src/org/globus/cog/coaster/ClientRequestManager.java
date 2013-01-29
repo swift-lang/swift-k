@@ -7,16 +7,14 @@
 /*
  * Created on Jul 21, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
-import org.globus.cog.karajan.workflow.service.handlers.EchoHandler;
-import org.globus.cog.karajan.workflow.service.handlers.VargHandler;
-import org.globus.cog.karajan.workflow.service.handlers.VersionHandler;
+import org.globus.cog.coaster.handlers.EchoHandler;
+import org.globus.cog.coaster.handlers.VersionHandler;
 
 public class ClientRequestManager extends AbstractRequestManager {
 	public ClientRequestManager() {
 		addHandler("VERSION", VersionHandler.class);
-		addHandler("VARG", VargHandler.class);
 		addHandler("ECHO", EchoHandler.class);
 		//addHandler("TEST", TestHandler.class);
 	}

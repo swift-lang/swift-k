@@ -7,7 +7,7 @@
 /*
  * Created on Aug 22, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -15,12 +15,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.Client;
-import org.globus.cog.karajan.workflow.service.ClientRequestManager;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
-import org.globus.cog.karajan.workflow.service.RequestManager;
-import org.globus.cog.karajan.workflow.service.Service;
-import org.globus.cog.karajan.workflow.service.UserContext;
+import org.globus.cog.coaster.Client;
+import org.globus.cog.coaster.ClientRequestManager;
+import org.globus.cog.coaster.RemoteConfiguration;
+import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.Service;
+import org.globus.cog.coaster.UserContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 
@@ -52,7 +52,7 @@ public class ChannelManager {
 		this.clientRequestManager = crm;
 	}
 
-	public KarajanChannel getExistingChannel(String host, GSSCredential cred) {
+	public CoasterChannel getExistingChannel(String host, GSSCredential cred) {
 		MetaChannel channel;
 		if (host == null) {
 			throw new NullPointerException("Host is null");
@@ -115,7 +115,7 @@ public class ChannelManager {
 		return sb.toString();
 	}
 
-	public void registerChannel(String url, GSSCredential cred, KarajanChannel channel)
+	public void registerChannel(String url, GSSCredential cred, CoasterChannel channel)
 			throws ChannelException {
 		synchronized (channels) {
 			HostCredentialPair hcp = new HostCredentialPair(url, cred);
@@ -146,7 +146,7 @@ public class ChannelManager {
 		return meta;
 	}
 
-	public void registerChannel(ChannelID id, KarajanChannel channel) throws ChannelException {
+	public void registerChannel(ChannelID id, CoasterChannel channel) throws ChannelException {
 		if (channel == null) {
 			throw new ChannelException("Cannot register null channel");
 		}
@@ -200,29 +200,29 @@ public class ChannelManager {
 		return o1 == null ? o2 == null : o1.equals(o2);
 	}
 
-	private String getName(KarajanChannel channel) {
+	private String getName(CoasterChannel channel) {
 		UserContext uc = channel.getChannelContext().getUserContext();
 		return uc == null ? null : uc.getName();
 	}
 
-	public KarajanChannel reserveChannel(String host, GSSCredential cred, RequestManager rm)
+	public CoasterChannel reserveChannel(String host, GSSCredential cred, RequestManager rm)
 			throws ChannelException {
 		MetaChannel channel = getClientChannel(host, cred, rm);
 		reserveChannel(channel);
 		return channel;
 	}
 
-	public KarajanChannel reserveChannel(String host, GSSCredential cred) throws ChannelException {
+	public CoasterChannel reserveChannel(String host, GSSCredential cred) throws ChannelException {
 		MetaChannel channel = getClientChannel(host, cred, null);
 		reserveChannel(channel);
 		return channel;
 	}
 
-	public KarajanChannel reserveChannel(KarajanChannel channel) throws ChannelException {
+	public CoasterChannel reserveChannel(CoasterChannel channel) throws ChannelException {
 		return reserveChannel(getMetaChannel(channel));
 	}
 
-	public KarajanChannel reserveChannel(ChannelContext context) throws ChannelException {
+	public CoasterChannel reserveChannel(ChannelContext context) throws ChannelException {
 		return reserveChannel(getMetaChannel(context));
 	}
 
@@ -248,7 +248,7 @@ public class ChannelManager {
 		}
 	}
 
-	public KarajanChannel reserveChannel(MetaChannel meta) throws ChannelException {
+	public CoasterChannel reserveChannel(MetaChannel meta) throws ChannelException {
 		synchronized (meta) {
 			meta.incUsageCount();
 			if (meta.isOffline()) {
@@ -262,7 +262,7 @@ public class ChannelManager {
 	 * Returns <code>true</code> if this channel can still transmit after this
 	 * exception
 	 */
-	public boolean handleChannelException(KarajanChannel channel, Exception e) {
+	public boolean handleChannelException(CoasterChannel channel, Exception e) {
 		logger.info(channel + " handling channel exception", e == null ? new Throwable() : e);
 		if (channel.isOffline()) {
 			logger.info("Channel already shut down");
@@ -294,7 +294,7 @@ public class ChannelManager {
 		return canContinue;
 	}
 
-	private void asyncReconnect(final KarajanChannel channel, final Exception e) {
+	private void asyncReconnect(final CoasterChannel channel, final Exception e) {
 		final ChannelContext ctx = channel.getChannelContext();
 		final RemoteConfiguration.Entry config = ctx.getConfiguration();
 		Thread t = new Thread() {
@@ -330,7 +330,7 @@ public class ChannelManager {
 		t.start();
 	}
 
-	public void releaseChannel(KarajanChannel channel) {
+	public void releaseChannel(CoasterChannel channel) {
 		if (channel == null) {
 			return;
 		}
@@ -364,7 +364,7 @@ public class ChannelManager {
 		}
 	}
 
-	public void unregisterChannel(KarajanChannel channel) throws ChannelException {
+	public void unregisterChannel(CoasterChannel channel) throws ChannelException {
 		unregisterChannel(getMetaChannel(channel));
 	}
 	
@@ -417,7 +417,7 @@ public class ChannelManager {
 		}
 	}
 
-	public void shutdownChannel(KarajanChannel channel) throws ChannelException {
+	public void shutdownChannel(CoasterChannel channel) throws ChannelException {
 		unregisterChannel(getMetaChannel(channel));
 	}
 
@@ -425,7 +425,7 @@ public class ChannelManager {
 		unregisterChannel(getMetaChannel(ctx));
 	}
 
-	private MetaChannel getMetaChannel(KarajanChannel channel) throws ChannelException {
+	private MetaChannel getMetaChannel(CoasterChannel channel) throws ChannelException {
 		if (channel instanceof MetaChannel) {
 			return (MetaChannel) channel;
 		}
@@ -468,11 +468,11 @@ public class ChannelManager {
 		}
 	}
 
-	public void reserveLongTerm(KarajanChannel channel) throws ChannelException {
+	public void reserveLongTerm(CoasterChannel channel) throws ChannelException {
 		getMetaChannel(channel).incLongTermUsageCount();
 	}
 
-	public void releaseLongTerm(KarajanChannel channel) throws ChannelException {
+	public void releaseLongTerm(CoasterChannel channel) throws ChannelException {
 		getMetaChannel(channel).decLongTermUsageCount();
 	}
 
@@ -517,7 +517,7 @@ public class ChannelManager {
 
 	}
 
-	private void buffer(KarajanChannel channel) throws ChannelException {
+	private void buffer(CoasterChannel channel) throws ChannelException {
 		MetaChannel meta = getMetaChannel(channel);
 		meta.bind(new BufferingChannel(channel.getChannelContext()));
 	}

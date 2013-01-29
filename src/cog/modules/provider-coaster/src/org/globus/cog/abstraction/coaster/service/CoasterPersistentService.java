@@ -18,7 +18,7 @@ import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.channels.Timer;
+import org.globus.cog.coaster.channels.Timer;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 import org.globus.cog.util.Misc;
@@ -108,7 +108,7 @@ public class CoasterPersistentService extends CoasterService {
                 cred = new GlobusGSSCredentialImpl(gc, GSSCredential.INITIATE_AND_ACCEPT);
             }
 
-            int port = 0;
+            int port = 1984;
             if (ap.hasValue("port")) {
                 if (ap.hasValue("portfile")) {
                     throw new ArgumentParserException("-portfile (-S) and -port are mutually exclusive");

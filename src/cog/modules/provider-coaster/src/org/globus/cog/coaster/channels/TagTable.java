@@ -7,7 +7,7 @@
 /*
  * Created on Oct 11, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.util.ArrayList;
 import java.util.Collection;

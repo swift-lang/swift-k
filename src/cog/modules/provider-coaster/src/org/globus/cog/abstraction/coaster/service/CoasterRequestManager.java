@@ -32,11 +32,11 @@ import org.globus.cog.abstraction.impl.file.coaster.handlers.MkdirHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.RenameHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.RmdirHandler;
-import org.globus.cog.karajan.workflow.service.AbstractRequestManager;
-import org.globus.cog.karajan.workflow.service.handlers.ChannelConfigurationHandler;
-import org.globus.cog.karajan.workflow.service.handlers.HeartBeatHandler;
-import org.globus.cog.karajan.workflow.service.handlers.ShutdownHandler;
-import org.globus.cog.karajan.workflow.service.handlers.VersionHandler;
+import org.globus.cog.coaster.AbstractRequestManager;
+import org.globus.cog.coaster.handlers.ChannelConfigurationHandler;
+import org.globus.cog.coaster.handlers.HeartBeatHandler;
+import org.globus.cog.coaster.handlers.ShutdownHandler;
+import org.globus.cog.coaster.handlers.VersionHandler;
 
 public class CoasterRequestManager extends AbstractRequestManager {   
     public CoasterRequestManager() {

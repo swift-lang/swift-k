@@ -7,7 +7,7 @@
 /*
  * Created on Oct 4, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 public class ChannelDataHandler {
 

@@ -19,7 +19,7 @@ import org.globus.cog.abstraction.coaster.service.RegistrationManager;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelContext;
 
 public class JobQueue implements RegistrationManager {
     public static final Logger logger = Logger.getLogger(JobQueue.class);

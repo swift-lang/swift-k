@@ -7,7 +7,7 @@
 /*
  * Created on Jul 9, 2011
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 public interface ChannelListener {
 

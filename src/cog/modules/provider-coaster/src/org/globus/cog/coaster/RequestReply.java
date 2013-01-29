@@ -7,29 +7,22 @@
 /*
  * Created on Jul 21, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.Inflater;
-import java.util.zip.InflaterInputStream;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.util.serialization.XMLConverter;
-import org.globus.cog.karajan.workflow.service.channels.AbstractKarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.channels.AbstractCoasterChannel;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public abstract class RequestReply {
 	public static final Logger logger = Logger.getLogger(RequestReply.class);
@@ -41,7 +34,7 @@ public abstract class RequestReply {
 	private List<byte[]> outData;
 	private List<byte[]> inData;
 	private boolean inDataReceived;
-	private KarajanChannel channel;
+	private CoasterChannel channel;
 	
 	protected String getInCmd() {
 		return inCmd;
@@ -62,7 +55,7 @@ public abstract class RequestReply {
 	/**
 	 * @deprecated Use setChannel
 	 */
-	public void register(KarajanChannel channel) {
+	public void register(CoasterChannel channel) {
 		this.channel = channel;
 	}
 
@@ -216,7 +209,7 @@ public abstract class RequestReply {
 		byte[] b = getInData(index);
 		if (b.length != 4) {
 			throw new IllegalArgumentException("Wrong data size: " + b.length + ". Data was "
-					+ AbstractKarajanChannel.ppByteBuf(b));
+					+ AbstractCoasterChannel.ppByteBuf(b));
 		}
 		return b[0] + (b[1] << 8) + (b[2] << 16) + (b[3] << 24);
 	}
@@ -228,7 +221,7 @@ public abstract class RequestReply {
 	public static long unpackLong(byte[] b) {
 		if (b.length != 8) {
 			throw new IllegalArgumentException("Wrong data size: " + b.length + ". Data was "
-					+ AbstractKarajanChannel.ppByteBuf(b));
+					+ AbstractCoasterChannel.ppByteBuf(b));
 		}
 		long l = 0;
 		for (int i = 7; i >=0 ; i--) {
@@ -306,11 +299,11 @@ public abstract class RequestReply {
 		return inDataReceived;
 	}
 
-	public KarajanChannel getChannel() {
+	public CoasterChannel getChannel() {
 		return channel;
 	}
 
-	public void setChannel(KarajanChannel channel) {
+	public void setChannel(CoasterChannel channel) {
 		this.channel = channel;
 	}
 
@@ -354,7 +347,7 @@ public abstract class RequestReply {
 			Iterator<byte[]> i = data.iterator();
 			while (i.hasNext()) {
 				byte[] buf = i.next();
-				sb.append(AbstractKarajanChannel.ppByteBuf(buf));
+				sb.append(AbstractCoasterChannel.ppByteBuf(buf));
 				if (i.hasNext()) {
 					sb.append(", ");
 				}
@@ -367,39 +360,23 @@ public abstract class RequestReply {
 	public void channelClosed() {
 	}
 
-	public static byte[] serialize(Object obj) throws ProtocolException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		Deflater deflater = new Deflater(Deflater.BEST_SPEED);
-		OutputStreamWriter osw = new OutputStreamWriter(new DeflaterOutputStream(baos, deflater));
-		try {
-			XMLConverter.serializeObject(obj, osw);
-			osw.close();
-			baos.close();
-		}
-		catch (IOException e) {
-			throw new ProtocolException("Could not serialize instance", e);
-		}
-		return baos.toByteArray();
-	}
-
-	public static Object deserialize(byte[] data) {
-		Inflater inflater = new Inflater();
-		InputStreamReader isr = new InputStreamReader(new InflaterInputStream(
-				new ByteArrayInputStream(data), inflater));
-		// TODO on a shared service deserialization should always be restricted.
-		// Always!!
-		return XMLConverter.readObject(isr);
-	}
-
 	protected void addOutObject(Object obj) throws ProtocolException {
 		addOutData(serialize(obj));
 	}
 
-	protected Object getInObject(int index) {
+	private byte[] serialize(Object obj) {
+        throw new UnsupportedOperationException();
+    }
+
+    protected Object getInObject(int index) {
 		return deserialize(getInData(index));
 	}
 	
-	public void handleSignal(byte[] data) {
+	private Object deserialize(byte[] buf) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void handleSignal(byte[] data) {
 		
 	}
 }

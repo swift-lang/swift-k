@@ -10,7 +10,7 @@
 package org.globus.cog.abstraction.coaster.service;
 
 import org.globus.cog.abstraction.coaster.service.local.RegistrationHandler;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.commands.Command;
 
 /**
  * Informs the client that the CoasterService is ready  

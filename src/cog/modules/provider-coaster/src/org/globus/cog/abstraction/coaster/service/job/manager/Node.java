@@ -14,14 +14,14 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelListener;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.commands.Command;
-import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
-import org.globus.cog.karajan.workflow.service.commands.ShutdownCommand;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelListener;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.ShutdownCommand;
+import org.globus.cog.coaster.commands.Command.Callback;
 
 public class Node implements Callback, ChannelListener {
     public static final Logger logger = Logger.getLogger(Node.class);
@@ -30,7 +30,7 @@ public class Node implements Callback, ChannelListener {
     private final List<Cpu> cpus;
     private Block block;
     private final ChannelContext channelContext;
-    private KarajanChannel channel;
+    private CoasterChannel channel;
     private boolean shutdown;
     private final String hostname;
 
@@ -84,7 +84,7 @@ public class Node implements Callback, ChannelListener {
             }
         }
         try {
-            KarajanChannel channel = getChannel();
+            CoasterChannel channel = getChannel();
             channel.setLocalShutdown();
             ChannelManager.getManager().reserveLongTerm(channel);
             ShutdownCommand cmd = new ShutdownCommand();
@@ -130,7 +130,7 @@ public class Node implements Callback, ChannelListener {
         return cpus;
     }
 
-    public synchronized KarajanChannel getChannel() throws ChannelException {
+    public synchronized CoasterChannel getChannel() throws ChannelException {
         if (channel == null) {
             channel = ChannelManager.getManager().reserveChannel(channelContext);
             ChannelManager.getManager().reserveLongTerm(channel);

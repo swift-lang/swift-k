@@ -15,7 +15,7 @@ import java.util.Date;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.coaster.ProtocolException;
 
 public class FileInfoHandler extends CoasterFileRequestHandler {
 

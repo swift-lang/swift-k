@@ -7,19 +7,19 @@
 /*
  * Created on Jul 21, 2005
  */
-package org.globus.cog.karajan.workflow.service.handlers;
+package org.globus.cog.coaster.handlers;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelID;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.RemoteConfiguration;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelID;
+import org.globus.cog.coaster.channels.ChannelManager;
 
 public class ChannelConfigurationHandler extends RequestHandler {
 	private static final Logger logger = Logger.getLogger(ChannelConfigurationHandler.class);
@@ -54,11 +54,11 @@ public class ChannelConfigurationHandler extends RequestHandler {
 		}
 	}
 
-	private Map translate(RemoteConfiguration.Entry conf) {
-		Map newopts = new HashMap();
-		Iterator i = conf.getOptions().iterator();
+	private Map<String, String> translate(RemoteConfiguration.Entry conf) {
+		Map<String, String> newopts = new HashMap<String, String>();
+		Iterator<String> i = conf.getOptions().iterator();
 		while (i.hasNext()) {
-			String opt = (String) i.next();
+			String opt = i.next();
 			if (opt.equals(RemoteConfiguration.POLL) || opt.equals(RemoteConfiguration.RECONNECT)) {
 				newopts.put(RemoteConfiguration.BUFFER, null);
 			}

@@ -7,11 +7,10 @@
 /*
  * Created on Sep 30, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
-import org.globus.cog.karajan.workflow.service.UserContext;
 
-public class NullChannel extends AbstractKarajanChannel {
+public class NullChannel extends AbstractCoasterChannel {
 	private boolean sink;
 
 	protected NullChannel() {

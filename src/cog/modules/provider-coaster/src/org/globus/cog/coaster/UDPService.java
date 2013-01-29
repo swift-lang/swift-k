@@ -7,7 +7,7 @@
 /*
  * Created on Jul 18, 2005
  */
-package org.globus.cog.karajan.workflow.service;
+package org.globus.cog.coaster;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -19,11 +19,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
-import org.globus.cog.karajan.workflow.service.channels.UDPChannel;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.channels.UDPChannel;
 
 public class UDPService implements Service, Runnable {
 	private static final Logger logger = Logger.getLogger(Service.class);
@@ -33,7 +33,7 @@ public class UDPService implements Service, Runnable {
 	private ServiceContext context = new ServiceContext(this);
 	private Thread serverThread;
 	private boolean restricted;
-	private Map channels;
+	private Map<InetSocketAddress, CoasterChannel> channels;
 	private DatagramSocket socket;
 	private RequestManager rm;
 	private byte[] recvbuf;
@@ -42,7 +42,7 @@ public class UDPService implements Service, Runnable {
 
 	public UDPService(RequestManager rm) throws IOException {
 		this.rm = rm;
-		channels = new HashMap();
+		channels = new HashMap<InetSocketAddress, CoasterChannel>();
 	}
 
 	public URI getContact() {
@@ -123,20 +123,7 @@ public class UDPService implements Service, Runnable {
 		}
 	}
 
-	public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
+	public void irrecoverableChannelError(CoasterChannel channel, Exception e) {
 		e.printStackTrace();
-	}
-
-	public static void main(String[] args) {
-		try {
-			RequestManager rm = new ServiceRequestManager();
-			UDPService s = new UDPService(new ServiceRequestManager());
-			s.start();
-			System.err.println(s.getContact());
-			Thread.sleep(100000000);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 }

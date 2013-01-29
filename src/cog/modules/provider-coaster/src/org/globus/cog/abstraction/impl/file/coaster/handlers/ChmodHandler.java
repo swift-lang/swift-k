@@ -9,7 +9,7 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster.handlers;
 
-import org.globus.cog.karajan.workflow.service.ProtocolException;
+import org.globus.cog.coaster.ProtocolException;
 
 public class ChmodHandler extends CoasterFileRequestHandler {
 

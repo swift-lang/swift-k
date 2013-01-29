@@ -7,7 +7,7 @@
 /*
  * Created on Feb 23, 2008
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 public interface ChannelAttributes {
 	public Object getValue(String name);

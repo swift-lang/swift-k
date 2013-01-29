@@ -48,7 +48,6 @@ public class Loader {
 
 	public static final String ARG_SHOWSTATS = "showstats";
 	public static final String ARG_HELP = "help";
-	public static final String ARG_DEBUG = "debug";
 	public static final String ARG_MONITOR = "monitor";
 	public static final String ARG_DUMPSTATE = "dumpstate";
 	public static final String ARG_INTERMEDIATE = "intermediate";
@@ -71,9 +70,6 @@ public class Loader {
 			}
 			if (ap.isPresent(ARG_SHOWSTATS)) {
 				Configuration.getDefault().set(Configuration.SHOW_STATISTICS, true);
-			}
-			if (ap.isPresent(ARG_DEBUG)) {
-				new ConsoleDebugger().start();
 			}
 			if (ap.isPresent(ARG_DUMPSTATE)) {
 				Configuration.getDefault().set(Configuration.DUMP_STATE_ON_ERROR, true);
@@ -193,10 +189,6 @@ public class Loader {
 		ap.addAlias(ARG_EXECUTE, "e");
 		ap.addFlag(ARG_SHOWSTATS, "Show various execution statistics at the end of the "
 				+ "execution");
-		ap.addFlag(ARG_DEBUG,
-				"Enable debugging. This will enable a number of internal tests at the "
-						+ "expense of speed. You should not use this since it is useful only "
-						+ "for catching subtle consistency issues with the interpreter.");
 		ap.addFlag(ARG_MONITOR, "Shows resource monitor");
 		ap.addFlag(ARG_DUMPSTATE, "If specified, in case of a fatal error, the interpreter will "
 				+ "dump the state in a file");

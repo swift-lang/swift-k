@@ -7,16 +7,15 @@
 /*
  * Created on Jul 20, 2005
  */
-package org.globus.cog.karajan.workflow.service.commands;
+package org.globus.cog.coaster.commands;
 
 import java.net.URI;
-import java.rmi.server.UID;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.RemoteConfiguration;
-import org.globus.cog.karajan.workflow.service.channels.ChannelContext;
-import org.globus.cog.karajan.workflow.service.channels.ChannelID;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.RemoteConfiguration;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelID;
 
 
 public class ChannelConfigurationCommand extends Command {

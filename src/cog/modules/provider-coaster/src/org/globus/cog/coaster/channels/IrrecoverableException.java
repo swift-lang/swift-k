@@ -7,7 +7,7 @@
 /*
  * Created on May 24, 2009
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 public class IrrecoverableException extends Exception {
 

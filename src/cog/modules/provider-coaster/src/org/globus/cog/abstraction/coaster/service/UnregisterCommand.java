@@ -10,7 +10,7 @@
 package org.globus.cog.abstraction.coaster.service;
 
 import org.globus.cog.abstraction.coaster.service.local.UnregisterHandler;
-import org.globus.cog.karajan.workflow.service.commands.Command;
+import org.globus.cog.coaster.commands.Command;
 
 public class UnregisterCommand extends Command {
 	public UnregisterCommand(String id) {

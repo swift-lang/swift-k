@@ -20,8 +20,8 @@ import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProvide
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOProviderFactory;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.IOWriter;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.WriteIOCallback;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class PutFileHandler extends CoasterFileRequestHandler implements WriteIOCallback {
     public static final Logger logger = Logger.getLogger(PutFileHandler.class);
@@ -116,7 +116,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
             logger.debug(this + " suspending");
         }
         suspended = true;
-        getChannel().sendTaggedReply(tag, STOP, KarajanChannel.SIGNAL_FLAG);
+        getChannel().sendTaggedReply(tag, STOP, CoasterChannel.SIGNAL_FLAG);
         writer.suspend();
     }
     
@@ -131,7 +131,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
         if (logger.isDebugEnabled()) {
             logger.debug(this + " resuming");
         }
-        getChannel().sendTaggedReply(tag, CONTINUE, KarajanChannel.SIGNAL_FLAG);
+        getChannel().sendTaggedReply(tag, CONTINUE, CoasterChannel.SIGNAL_FLAG);
         writer.resume();
     }
 

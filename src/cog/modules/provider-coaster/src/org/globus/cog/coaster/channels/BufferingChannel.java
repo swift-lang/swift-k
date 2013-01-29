@@ -7,7 +7,7 @@
 /*
  * Created on Sep 6, 2005
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import java.util.List;
  * means that reply timeouts should be a channel thing, and should 
  * be considered from the time of the actual send
  */
-public class BufferingChannel extends AbstractKarajanChannel implements Purgeable {
+public class BufferingChannel extends AbstractCoasterChannel implements Purgeable {
 	private List<DataEntry> buffer;
 
 	public BufferingChannel(ChannelContext channelContext) {
@@ -53,7 +53,7 @@ public class BufferingChannel extends AbstractKarajanChannel implements Purgeabl
 		}		
 	}
 	
-	public void purge(KarajanChannel channel) throws IOException {
+	public void purge(CoasterChannel channel) throws IOException {
 	    for (DataEntry de : buffer) {
 			channel.sendTaggedData(de.getTag(), de.getFlags(), de.getData());
 		}

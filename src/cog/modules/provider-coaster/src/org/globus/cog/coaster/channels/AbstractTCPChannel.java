@@ -7,7 +7,7 @@
 /*
  * Created on Jul 21, 2006
  */
-package org.globus.cog.karajan.workflow.service.channels;
+package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -15,9 +15,9 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.service.RequestManager;
+import org.globus.cog.coaster.RequestManager;
 
-public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
+public abstract class AbstractTCPChannel extends AbstractStreamCoasterChannel {
     public static final Logger logger = Logger.getLogger(AbstractTCPChannel.class);
     
 	private Socket socket;
