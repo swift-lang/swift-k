@@ -47,7 +47,6 @@ import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.execution.fake.JobSubmissionTaskHandler;
 import org.globus.cog.karajan.compiled.nodes.Main;
 import org.globus.cog.karajan.compiled.nodes.grid.AbstractGridNode;
 import org.globus.cog.karajan.parser.WrapperNode;
@@ -217,7 +216,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ec.start(context);
             ec.waitFor();
             long end = System.currentTimeMillis();
-            System.out.println(JobSubmissionTaskHandler.jobsRun + " jobs, " + JobSubmissionTaskHandler.jobsRun * 1000 / (end - start) + " j/s");
+            //System.out.println(JobSubmissionTaskHandler.jobsRun + " jobs, " + JobSubmissionTaskHandler.jobsRun * 1000 / (end - start) + " j/s");
             if (ec.isFailed()) {
                 runerror = true;
             }

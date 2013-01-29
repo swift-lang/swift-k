@@ -33,6 +33,7 @@ import java.util.TimerTask;
 
 import k.rt.Context;
 import k.rt.ExecutionException;
+import k.rt.Stack;
 import k.thr.LWThread;
 import k.thr.Scheduler;
 
@@ -41,8 +42,6 @@ import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.globus.cog.karajan.compiled.nodes.grid.SchedulerNode;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.griphyn.vdl.mapping.DSHandle;
-
-import com.sun.org.apache.xpath.internal.VariableStack;
 
 public class HangChecker extends TimerTask {
     public static final Logger logger = Logger.getLogger(HangChecker.class);
@@ -202,7 +201,7 @@ public class HangChecker extends TimerTask {
             }
             Object prev = c.getLast();
             for (Object o : c) {
-                if (o instanceof VariableStack) {
+                if (o instanceof Stack) {
                     if (prev != null) {
                         ps.println("\t" + Monitor.varWithLine((DSHandle) prev) + " is needed by: ");
                     }

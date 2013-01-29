@@ -54,6 +54,7 @@ import k.rt.ConditionalYield;
 import k.rt.Future;
 import k.rt.FutureListener;
 import k.rt.FutureValue;
+import k.rt.Stack;
 import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.VariableNotFoundException;
@@ -65,8 +66,6 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
-
-import com.sun.org.apache.xpath.internal.VariableStack;
 
 public class Monitor implements ActionListener, MouseListener {
 	public static final int VARS = 0;
@@ -469,7 +468,7 @@ public class Monitor implements ActionListener, MouseListener {
 			}
 			else if (crtdisp == THREADS) {
 				Object o = wt.get(row);
-				if (o instanceof VariableStack) {
+				if (o instanceof Stack) {
 					displayPopup("Stack trace for " + t.getValueAt(row, 0), " N/A");
 				}
 			}
