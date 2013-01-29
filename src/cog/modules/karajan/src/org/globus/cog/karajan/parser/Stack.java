@@ -13,7 +13,7 @@ import java.util.EmptyStackException;
 
 import org.apache.log4j.Logger;
 
-public class Stack extends java.util.Stack {
+public class Stack<T> extends java.util.Stack<T> {
 	private static final long serialVersionUID = 1686310114363996922L;
 	
 	private final static Logger logger = Logger.getLogger(Stack.class);
@@ -50,7 +50,7 @@ public class Stack extends java.util.Stack {
 		if (len <2) {
 			throw new EmptyStackException();
 		}
-		Object top = get(len - 1);
+		T top = get(len - 1);
 		set(len - 1, get(len - 2));
 		set(len - 2, top);
 	}

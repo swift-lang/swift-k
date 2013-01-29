@@ -30,4 +30,6 @@ public interface Lexer {
 	
 	Object mark();
 	void reset(Object mark);
+	int getColumn();
+    String region(Object b);
 }
