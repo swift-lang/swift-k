@@ -33,32 +33,33 @@ import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class UnitStart extends InternalFunction {
-	public static final Logger uslogger = Logger.getLogger(UnitStart.class);
+    public static final Logger uslogger = Logger.getLogger(UnitStart.class);
     // keep compatibility with log()
     public static final Logger logger = Logger.getLogger("swift");
-    
+
     private ArgRef<String> type;
     private ArgRef<String> name;
     private ArgRef<String> line;
     private ArgRef<String> arguments;
     private ArgRef<String> outputs;
-    
+
     @Override
     protected Signature getSignature() {
-        return new Signature(params("type", optional("name", null), optional("line", null), 
+        return new Signature(params("type", optional("name", null),
+            optional("line", null),
             optional("outputs", null), optional("arguments", null)));
     }
-    
+
     private static class NamedRef {
         public final String name;
         public final VarRef<DSHandle> ref;
-        
+
         public NamedRef(String name, VarRef<DSHandle> ref) {
             this.name = name;
             this.ref = ref;
         }
     }
-    
+
     private Tracer tracer;
     private List<NamedRef> inputArgs, outputArgs;
 
@@ -84,7 +85,7 @@ public class UnitStart extends InternalFunction {
         if (outs != null && outs.length() > 0) {
             outputArgs = new ArrayList<NamedRef>();
             for (String name : outs.split(",")) {
-                VarRef<DSHandle> ref = scope.getVarRef(name); 
+                VarRef<DSHandle> ref = scope.getVarRef(name);
                 outputArgs.add(new NamedRef(name, ref));
                 outNames.add(name);
             }
@@ -106,27 +107,27 @@ public class UnitStart extends InternalFunction {
         else {
             inputArgs = null;
         }
-        
-    }    
-    
-    
+
+    }
+
     @Override
     protected void runBody(LWThread thr) {
         String type = this.type.getValue();
         String name = this.name.getValue();
         String line = this.line.getValue();
-        
+
         if (tracer != null && tracer.isEnabled()) {
-            tracer.trace(thr, Karajan.demangle(name) + "(" + formatArguments(thr.getStack()) + ")");
+            tracer.trace(thr, Karajan.demangle(name) + "("
+                    + formatArguments(thr.getStack()) + ")");
         }
-        
+
         log(true, type, thr, name, line);
-        
+
         if (outputArgs != null) {
             trackOutputs(thr);
         }
     }
-    
+
     private String formatArguments(Stack stack) {
         if (inputArgs != null) {
             StringBuilder sb = new StringBuilder();
@@ -153,39 +154,55 @@ public class UnitStart extends InternalFunction {
 
     private void trackOutputs(LWThread thr) {
         Stack stack = thr.getStack();
-    	if (!outputArgs.isEmpty()) {
+        if (!outputArgs.isEmpty()) {
             List<DSHandle> l = new LinkedList<DSHandle>();
             for (NamedRef nr : outputArgs) {
                 l.add(nr.ref.getValue(stack));
             }
             WaitingThreadsMonitor.addOutput(thr, l);
-    	}
+        }
     }
 
-    protected static void log(boolean start, String type, LWThread thread, String name, String line) {
-        if (type.equals("COMPOUND")) {
-            logger.info((start ? "START" : "END") + type + " thread=" + thread.getName() + " name=" + name);
-        }
-        else if (type.equals("PROCEDURE")) {
-            if (start) {
-                logger.debug("PROCEDURE line=" + line + " thread=" + thread.getName() + " name=" + name);
+    protected static void log(boolean start, String type, LWThread thread,
+            String name, String line) {
+        if (logger.isInfoEnabled()) {
+            if (type.equals("COMPOUND")) {
+                logger.info((start ? "START" : "END") + type + " thread="
+                        + thread.getName() + " name=" + name);
             }
             else {
-                logger.debug("PROCEDURE_END line=" + line + " thread=" + thread.getName() + " name=" + name);
-            }
-        }
-        else if (type.equals("FOREACH_IT")) {
-            logger.debug("FOREACH_IT_" + (start ? "START" : "END") + " line=" + line + " thread=" + thread.getName());
-            if (start) {
-                logger.debug("SCOPE thread=" + thread.getName());
-            }
-        }
-        else if (type.equals("INTERNALPROC")) {
-            logger.debug("INTERNALPROC_" + (start ? "START" : "END") + " thread=" + thread.getName() + " name=" + name);
-        }
-        else if (type.equals("CONDITION_BLOCK")) {
-            if (start) {
-                logger.debug("SCOPE thread=" + thread.getName());
+                if (logger.isDebugEnabled()) {
+                    if (type.equals("PROCEDURE")) {
+                        if (start) {
+                            logger.debug("PROCEDURE line=" + line + " thread="
+                                    + thread.getName() + " name=" + name);
+                        }
+                        else {
+                            logger.debug("PROCEDURE_END line=" + line
+                                    + " thread="
+                                    + thread.getName() + " name=" + name);
+                        }
+                    }
+                    else if (type.equals("FOREACH_IT")) {
+                        logger.debug("FOREACH_IT_" + (start ? "START" : "END")
+                                + " line=" + line + " thread="
+                                + thread.getName());
+                        if (start) {
+                            logger.debug("SCOPE thread=" + thread.getName());
+                        }
+                    }
+                    else if (type.equals("INTERNALPROC")) {
+                        logger.debug("INTERNALPROC_"
+                                + (start ? "START" : "END")
+                                + " thread=" + thread.getName() + " name="
+                                + name);
+                    }
+                    else if (type.equals("CONDITION_BLOCK")) {
+                        if (start) {
+                            logger.debug("SCOPE thread=" + thread.getName());
+                        }
+                    }
+                }
             }
         }
     }

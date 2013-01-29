@@ -31,8 +31,12 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
 
 public class Log extends InternalFunction {
 	private ArgRef<String> level;
@@ -57,8 +61,24 @@ public class Log extends InternalFunction {
     public static Level getLevel(String lvl) {
 		return priorities.get(lvl);
 	}
-	
-	protected void runBody(LWThread thr) {
+    
+    
+    
+    @Override
+    public Node compile(WrapperNode w, Scope scope) throws CompilationException {
+        Node n = super.compile(w, scope);
+        String sLvl = this.level.getValue();
+        if (sLvl != null) {
+            // don't compile this if it won't produce output
+            if (!logger.isEnabledFor(getLevel(sLvl))) {
+                return null;
+            }
+        }
+        return n;
+    }
+
+
+    protected void runBody(LWThread thr) {
 		Stack stack = thr.getStack();
 		Level lvl = getLevel(this.level.getValue(stack));
 		if (logger.isEnabledFor(lvl)) {
