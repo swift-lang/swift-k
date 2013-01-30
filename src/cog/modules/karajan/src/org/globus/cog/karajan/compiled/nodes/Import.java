@@ -28,11 +28,11 @@ import org.globus.cog.karajan.analyzer.NamedValue;
 import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.analyzer.RootScope;
 import org.globus.cog.karajan.analyzer.Scope;
-import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.analyzer.Scope.Def;
 import org.globus.cog.karajan.analyzer.Scope.JavaDef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.parser.NativeParser;
 import org.globus.cog.karajan.parser.ParsingException;
 import org.globus.cog.karajan.parser.WrapperNode;
@@ -101,6 +101,7 @@ public class Import extends InternalFunction {
     private ChannelRef<NamedValue> c_export;
     private String name;
     private ArgRef<Boolean> export;
+    private ArgRef<String> file;
     
     private VarRef<KarajanProperties> props;
     private VarRef<String> fileDir;
@@ -110,11 +111,11 @@ public class Import extends InternalFunction {
 	@Override
 	protected Signature getSignature() {
 		return new Signature(
-				params(identifier("name"), optional("export", Boolean.FALSE), channel("export")),
+				params(identifier("name"), optional("file", null), optional("export", Boolean.FALSE), channel("export")),
 				returns(channel("export"))
 		);
 	}
-	
+
 	protected void processIdentifierArgs(WrapperNode w, Signature sig) throws CompilationException {
 		Iterator<Param> i = sig.getParams().iterator();
 		boolean found = false;
@@ -126,25 +127,31 @@ public class Import extends InternalFunction {
 				}
 				String suffix;
 				WrapperNode in = w.getNode(0);
-				if (!"k:var".equals(in.getNodeType()) && !"k:str".equals(in.getNodeType())) {
-					throw new CompilationException(w, "Expected identifier or path");
-				}
 				if ("k:var".equals(in.getNodeType())) {
-					suffix = ".k";
+					name = in.getText() + ".k";
+					w.removeNode(in);
+					i.remove();
+					return;
 				}
-				else {
-					suffix = "";
-				}
-				
-				setArg(w, p, in.getText() + suffix);
-				w.removeNode(in);
-				i.remove();
 			}
 		}
 	}
 
 	@Override
 	public Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
+		if ("import @ swift.k, line: 137".equals(this.toString())) {
+			System.out.print("");
+		}
+		
+		if (name == null && file.getValue() == null) {
+			throw new CompilationException(w, "Could not statically determine file name");
+		}
+		if (name != null && file.getValue() != null) {
+			throw new CompilationException(w, "Invalid arguments");
+		}
+		if (name == null && file.getValue() != null) {
+			name = file.getValue();
+		}
 		props = scope.getVarRef("#properties");
 		fileDir = scope.getVarRef("#filedir");
 		context = scope.getVarRef("#context");
@@ -154,7 +161,7 @@ public class Import extends InternalFunction {
 			r = resolve(name, props.getValue(), fileDir.getValue());
 		}
 		catch (IOException ee) {
-			throw new CompilationException(w, "Import of " + name + " failed", ee);
+			throw new CompilationException(w, "Import of '" + name + "' failed", ee);
 		}
 		Boolean e = export.getValue();
 		if (e == null) {
@@ -164,10 +171,10 @@ public class Import extends InternalFunction {
 			m = importFile(r, props.getValue(), argScope);
 		}
 		catch (Exception ee) {
-			throw new CompilationException(w, "Import of " + name + " failed", ee);
+			throw new CompilationException(w, "Import of '" + name + "' failed", ee);
 		}
 		catch (Error ee) {
-			throw new CompilationException(w, "Import of " + name + " failed", ee);
+			throw new CompilationException(w, "Import of '" + name + "' failed", ee);
 		}
 		
 		Var.Channel eret = scope.parent.lookupChannel("export");
@@ -231,7 +238,7 @@ public class Import extends InternalFunction {
 							return new ResolvedFile(test);
 						}
 						catch (Exception e) {
-							throw new IOException("Could not read file " + fn + ": " + e.getMessage(),
+							throw new IOException("Could not read file '" + fn + "': " + e.getMessage(),
 									e);
 						}
 					}
@@ -239,7 +246,7 @@ public class Import extends InternalFunction {
 			}
 			
 			if (!found) {
-				throw new IOException("File not found " + fn);
+				throw new IOException("File not found: '" + fn + "'");
 			}
 		}
 		else {
@@ -247,10 +254,10 @@ public class Import extends InternalFunction {
 				return new ResolvedFile(f);
 			}
 			else {
-				throw new IOException("File not found: " + fn);
+				throw new IOException("File not found: '" + fn + "'");
 			}
 		}
-		throw new IOException("File not found: " + fn);
+		throw new IOException("File not found: '" + fn + "'");
 	}
 
 	@Override

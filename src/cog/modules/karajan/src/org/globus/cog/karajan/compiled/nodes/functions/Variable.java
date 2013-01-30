@@ -22,6 +22,8 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 
+import com.sun.xml.internal.bind.v2.model.core.Ref;
+
 public class Variable extends Node {
 	final static Logger logger = Logger.getLogger(Variable.class);
 
