@@ -48,7 +48,7 @@ do
    case "$1" in
       -site|-sites|-s) SITES=$2; verify_not_null sites $SITES; shift ;;
       -config|-c) CONFIG=$2; verify_not_null config $CONFIG; shift ;;
-      *) if [ -z "$script" ]; then script="$1"
+      *) if [ -z "$script" ] && [[ $1 == *.swift ]]; then script="$1"
          else args+="$1 "
          fi ;;
    esac
