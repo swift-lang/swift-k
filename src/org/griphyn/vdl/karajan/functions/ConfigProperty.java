@@ -25,47 +25,65 @@ import java.io.IOException;
 import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
-import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
-import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.util.BoundContact;
 import org.griphyn.vdl.util.VDL2Config;
 
-public class ConfigProperty extends AbstractSingleValuedFunction {
+public class ConfigProperty extends InternalFunction {
     private ArgRef<String> name;
     private ArgRef<Boolean> instance;
     private ArgRef<BoundContact> host;
+    private ChannelRef<Object> cr_vargs;
     
     private VDL2Config instanceConfig;
     private VarRef<Context> context;
     
     
     @Override
-    protected Param[] getParams() {
-        return params("name", optional("instance", Boolean.TRUE), optional("host", null));
+    protected Signature getSignature() {
+        return new Signature(params("name", optional("instance", Boolean.TRUE), optional("host", null)), 
+        		returns(channel("...")));
     }
 
     public static final String INSTANCE_CONFIG = "SWIFT_CONFIG";
 
     public static final Logger logger = Logger.getLogger(ConfigProperty.class);
-    
+
     
     @Override
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
         context = scope.getVarRef("#context");
+        Context ctx = context.getValue();
+        Var.Channel r = scope.parent.lookupChannel("...");
+        if (this.name.isStatic() && this.instance.isStatic() && this.host.isStatic() 
+        		&& ctx != null && this.host.getValue() == null) {
+        	String value = getProperty(this.name.getValue(), this.instance.getValue(), getInstanceConfig(ctx));
+        	if (r.append(value)) {
+        		return null;
+        	}
+        }
+        
+        r.appendDynamic();
+        
         return super.compileBody(w, argScope, scope);
     }
 
     @Override
-    public Object function(Stack stack) {
+    protected void runBody(LWThread thr) {
+    	Stack stack = thr.getStack();
         String name = this.name.getValue(stack);
         boolean instance = this.instance.getValue(stack);
         BoundContact host = this.host.getValue(stack);
@@ -80,13 +98,14 @@ public class ConfigProperty extends AbstractSingleValuedFunction {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Found property " + name + " in BoundContact");
                 }
-                return prop;
+                cr_vargs.append(stack, prop);
+                return;
             }
             if (logger.isDebugEnabled()) {
                 logger.debug("Could not find property " + name + " in BoundContact");
             }
         }
-        return getProperty(name, instance, getInstanceConfig(stack));
+        cr_vargs.append(stack, getProperty(name, instance, getInstanceConfig(stack)));
     }
 
     private synchronized VDL2Config getInstanceConfig(Stack stack) {
@@ -95,6 +114,10 @@ public class ConfigProperty extends AbstractSingleValuedFunction {
             instanceConfig = (VDL2Config) ctx.getAttribute("SWIFT:CONFIG");
         }
         return instanceConfig;
+    }
+    
+    private synchronized VDL2Config getInstanceConfig(Context ctx) {
+    	return (VDL2Config) ctx.getAttribute("SWIFT:CONFIG");
     }
 
     public static String getProperty(String name, VDL2Config instanceConfig) {
