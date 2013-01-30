@@ -455,7 +455,7 @@ namespace(swift) {
 						stageWrapperParams(jobid, jobdir, wrapfile, wfdir, rhost)
 					}
 
-					log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", maybe(" arguments=", arguments), " tmpdir={tmpdir} host={rhost}")
+					log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), " tmpdir={tmpdir} host={rhost}")
 
 					setProgress(progress, "Submitting")
 
@@ -501,7 +501,7 @@ namespace(swift) {
 							directory = wfdir
 							redirect = false
 							host = rhost
-							TCProfile(rhost, if (attributes != null, attributes = attributes), tr = tr)
+							TCProfile(rhost, if(attributes != null, attributes = attributes), tr = tr)
 							replicationGroup = replicationGroup
 							replicationChannel = replicationChannel
 							jobid = jobid
@@ -569,7 +569,7 @@ namespace(swift) {
 							exception(
 								concat(
 									"Exception in {tr}:",
-									maybe("\n    Arguments: ", arguments),
+									if (arguments != null, "\n    Arguments: {arguments}")
 									"\n    Host: {rhost}",
 									"\n    Directory: {tmpdir}",
 									"{outs}",
@@ -580,24 +580,6 @@ namespace(swift) {
 					}
 				}
 			}
-		}
-	)
-
-	export(generateProvenanceGraph,
-		function(gdata) {
-			pgraph := configProperty("pgraph")
-			gname := if(pgraph == "true", "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.dot", pgraph)
-			file:write(gname) {
-				"digraph SwiftProvenance \{\n",
-				"	graph [", configProperty("pgraph.graph.options"), "];\n",
-				"	node [", configProperty("pgraph.node.options"), "];\n",
-	
-				for(i, gdata) {
-					"	", i, "\n"
-				}
-				"}\n"
-			}
-			log(LOG:INFO, "Provenance graph saved in ", gname)
 		}
 	)
 }
