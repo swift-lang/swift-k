@@ -360,7 +360,7 @@ The single_file_mapper maps a single physical file to a dataset.
 |=======================
 |Swift variable|Filename
 |f|myfile
-|f[0]|INVALID
+|f [0]|INVALID
 |f.bar|INVALID
 |=======================
 
