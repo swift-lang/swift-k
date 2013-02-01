@@ -338,7 +338,7 @@ is imported multiple times, for example in different files, then Swift
 will only process the imports once.
 
 Imports may contain anything that is valid in a SwiftScript program,
-including code that causes remote execution.
+including the code that causes remote execution.
 
 Mappers
 -------
@@ -347,9 +347,9 @@ disk. This is needed when Swift must access files to transfer them to
 remote sites for execution or to pass to applications.
 
 Swift provides a number of mappers that are useful in common cases. This
-section details those standard mappers. For more complex cases, it is
+section details those mappers. For more complex cases, it is
 possible to write application-specific mappers in Java and use them
-within a SwiftScript program.
+within a Swift script.
 
 
 The single file mapper
@@ -488,7 +488,7 @@ string "goodbye" into the file qux.right.txt.
 
 concurrent mapper
 ~~~~~~~~~~~~~~~~~
-concurrent_mapper is almost the same as the simple mapper, except that
+The concurrent_mapper is almost the same as the simple mapper, except that
 it is used to map an output file, and the filename generated will
 contain an extract sequence that is unique. This mapper is the default
 mapper for variables when no mapper is specified.
@@ -516,12 +516,12 @@ generate f2 filename with prefix "foo" and extension ".txt"
 
 File system mapper
 ~~~~~~~~~~~~~~~~~~
-filesys_mapper is similar to the simple mapper, but maps a file or a
+The filesys_mapper is similar to the simple mapper, but maps a file or a
 list of files to an array. Each of the filename is mapped as an element
 in the array. The order of files in the resulting array is not defined.
 
 TODO: note on difference between location as a relative vs absolute path
-wrt staging to remote location - as mihael said: It's because you
+w.r.t. staging to remote location - as mihael said: It's because you
 specify that location in the mapper. Try location="." instead of
 location="/sandbox/..."
 
