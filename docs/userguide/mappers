@@ -392,6 +392,7 @@ the file names will be mapped as a subelement of the dataset.
 |location|A directory that the files are located.
 |prefix|The prefix of the files
 |suffix|The suffix of the files, for instance: ".txt"
+|padding| The number of digits used to uniquely identify the mapped file. This is an optional parameter which defaults to 4.
 |pattern|A UNIX glob style pattern, for instance: "\*foo*" would match
 all file names that contain foo. When this mapper is used to specify
 output filenames, pattern is ignored.
@@ -438,7 +439,7 @@ type messagefile;
     }
 }
 
-messagefile outfile[] <simple_mapper;prefix="baz",suffix=".txt">;
+messagefile outfile[] <simple_mapper;prefix="baz",suffix=".txt", padding=2>;
 
 outfile[0] = greeting("hello");
 outfile[1] = greeting("middle");
@@ -448,9 +449,9 @@ outfile[2] = greeting("goodbye");
 [options="header, autowidth"]
 |=======================
 |Swift variable|Filename
-|outfile[0]|baz0000.txt
-|outfile[1]|baz0001.txt
-|outfile[2]|baz0002.txt
+|outfile[0]|baz00.txt
+|outfile[1]|baz01.txt
+|outfile[2]|baz02.txt
 |=======================
 
 simple_mapper can be used to map structures. It will map the name of
