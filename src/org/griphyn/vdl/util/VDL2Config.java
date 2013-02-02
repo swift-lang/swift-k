@@ -120,6 +120,7 @@ public class VDL2Config extends Properties {
 		put("ticker.prefix", "Progress:  time:");
 		
 		put(VDL2ConfigProperties.FILE_GC_ENABLED, "true");
+		put(VDL2ConfigProperties.DM_CHECKER, "on");
 	}
 
 	private VDL2Config(VDL2Config other) {
