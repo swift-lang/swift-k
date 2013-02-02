@@ -46,7 +46,7 @@ public class StringValue extends Node {
 			}
 		}
 		catch (IllegalArgumentException e) {
-			throw new CompilationException(w, e.getMessage());
+			throw new CompilationException(w, e.getMessage(), e);
 		}
 	}
 

@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
 import org.globus.cog.karajan.analyzer.NamedValue;
 import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.analyzer.RootScope;
@@ -280,7 +281,9 @@ public class Import extends InternalFunction {
 			}
 		}
 		m = actualImport(r, props, scope);
-		m.dump(new File(new File(key + ".compiled").getName()));
+		if (CompilerSettings.DUMP_COMPILED_TREE) {
+			m.dump(new File(new File(key + ".compiled").getName()));
+		}
 		storeExports(m, scope);
 		synchronized(compiled) {
 			compiled.put(key, m);

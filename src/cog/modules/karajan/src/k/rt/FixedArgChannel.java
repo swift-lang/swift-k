@@ -33,7 +33,7 @@ public class FixedArgChannel<T> extends Sink<T> {
 	@Override
 	public synchronized boolean add(T value) {
 		if (index > (bounds & 0x0000ffff)) {
-			throw new IndexOutOfBoundsException();
+			throw new IllegalExtraArgumentException(value);
 		}
 		if (CompilerSettings.DEBUG) {
 			f.setName(index, names.get(index - (bounds >> 16)));

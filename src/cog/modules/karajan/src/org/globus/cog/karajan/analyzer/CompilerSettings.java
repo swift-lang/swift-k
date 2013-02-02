@@ -15,4 +15,6 @@ public class CompilerSettings {
 	public static final boolean DEBUG_STACK_ALLOCATION = false;
 	
 	public static final boolean PERFORMANCE_COUNTERS = false;
+	
+	public static final boolean DUMP_COMPILED_TREE = false;
 }

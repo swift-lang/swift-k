@@ -24,6 +24,7 @@ import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.CompilerSettings;
 import org.globus.cog.karajan.analyzer.RootScope;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.Main;
@@ -118,7 +119,9 @@ public class Loader {
 			
 			Main root = compile(tree, context);
 			
-			root.dump(new File(project + ".compiled"));
+			if (CompilerSettings.DUMP_COMPILED_TREE) {
+				root.dump(new File(project + ".compiled"));
+			}
 
 			Executor ec = new Executor(root);
 			

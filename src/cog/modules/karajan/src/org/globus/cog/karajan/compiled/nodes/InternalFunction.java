@@ -20,6 +20,7 @@ import java.util.Set;
 import k.rt.ExecutionException;
 import k.rt.FutureObject;
 import k.rt.FutureValue;
+import k.rt.IllegalExtraArgumentException;
 import k.rt.Stack;
 import k.thr.LWThread;
 import k.thr.Yield;
@@ -137,9 +138,14 @@ public abstract class InternalFunction extends Sequential {
 	        		initializeArgs(stack);
 	        		i++;
 	        	default:
-			            for (; i <= ec; i++) {
-			            	runChild(i - 1, thr);
-			            }
+	        			try {
+				            for (; i <= ec; i++) {
+				            	runChild(i - 1, thr);
+				            }
+	        			}
+	        			catch (IllegalExtraArgumentException e) {
+	        				throw new ExecutionException(this, e.getMessage());
+	        			}
 			            try {
 			            	runBody(thr);
 			            }

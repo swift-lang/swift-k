@@ -22,7 +22,7 @@ public class KException extends AbstractSingleValuedFunction {
    
 	@Override
 	protected Param[] getParams() {
-		return params("message", optional("exception", null));
+		return params("message", "exception");
 	}
 
 	public Object function(Stack stack) { 

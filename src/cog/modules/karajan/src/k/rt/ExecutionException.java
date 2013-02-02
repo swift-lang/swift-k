@@ -55,7 +55,7 @@ public class ExecutionException extends RuntimeException {
 	}
 	
 	public ExecutionException(Node n, String message, Throwable cause) {
-        super(message, cause);
+        super(message, translateException(cause));
         push(n);
     }
 
@@ -91,9 +91,10 @@ public class ExecutionException extends RuntimeException {
 		types.put("java.lang.Number", "number");
 		types.put("java.lang.Boolean", "boolean");
 		types.put("java.util.ArrayList", "list");
+		types.put("k.rt.ExecutionException", "exception");
 	}
 
-	private static String translateType(String t) {
+	public static String translateType(String t) {
 		String tt = types.get(t);
 		if (tt == null) {
 			return t;

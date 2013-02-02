@@ -237,7 +237,7 @@ public class GridExec extends AbstractGridNode {
 			}
 		}
 		catch (Exception e) {
-			throw new ExecutionException("Exception caught while submitting job", e);
+			throw new ExecutionException(this, "Exception caught while submitting job", e);
 		}
 		if (logger.isInfoEnabled()) {
 			logger.info("TASK_DEFINITION: " + task + " is " + 
