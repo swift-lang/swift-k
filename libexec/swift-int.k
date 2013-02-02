@@ -307,35 +307,6 @@ namespace(swift) {
 		log(LOG:INFO, "END jobid={jobid} - Staging out finished")
 	}
 
-	export(graphStuff,
-		function(tr, stagein, stageout, err, args = null) {
-			if (configProperty("pgraph") != "false") {
-				errprops := if(err, ",color=lightsalmon", ",color=lightsteelblue1")
-				tp := currentThread()
-				to (graph) {
-					concat(str:quote(tp), " [label=", str:quote(tr), "{errprops}]")
-				}
-				for (si, stagein) {
-					si := basename(si)
-					to(graph) {
-						concat(str:quote(si), " [shape=parallelogram]")
-						concat(str:quote(si), " -> ", str:quote(tp))
-					}
-				}
-				for (pv, stageout) {
-					(path, var) := each(pv)
-					file := fileName(getField(var, path=path))
-					file := basename(file)
-					label := niceName(var, path = path)
-					to(graph) {
-						concat(str:quote(file), " [shape=parallelogram,label=", str:quote(label), "]")
-						concat(str:quote(tp), " -> ", str:quote(file))
-					}
-				}
-			}
-		}
-	)
-
 	fileSizes := function(files) {
 		math:sum(
 			for(f, files, file:size(f))
@@ -396,11 +367,13 @@ namespace(swift) {
 			replicationGroup, replicationChannel
 			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
 			
+			log(LOG:INFO, "A ", currentThread())
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
+			log(LOG:INFO, "X ", currentThread())
 
 			allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
-			
+				log(LOG:INFO, "B ", currentThread())
 				ddir := initDDir(),
 				(wfdir, sharedDir) := 
 					try {
@@ -410,6 +383,7 @@ namespace(swift) {
 						throw(exception("Could not initialize shared directory on {rhost}", exception))
 					}
 					
+				log(LOG:INFO, "C ", currentThread())
 				uid := UID()
 				jobdir := substring(uid, from=0, to=1)
 				jobid := "{tr}-{uid}"
@@ -445,6 +419,7 @@ namespace(swift) {
 					}
 				}
 
+				log(LOG:INFO, "D ", currentThread())
 				setProgress(progress, "Stage in")
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 

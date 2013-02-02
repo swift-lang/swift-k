@@ -4,7 +4,6 @@ import(rlog)
 import('swift-operators', export = true)
 import('swift-lib', export = true)
 import('swift-xs', export = true)
-import('swift-int')
 
 SWIFT:SCRIPT_NAME := contextAttribute("SWIFT:SCRIPT_NAME")
 SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
@@ -14,6 +13,10 @@ namespace(swift) {
 
 	pstaging := (configProperty("use.provider.staging") == "true")
 	wstaging := (configProperty("use.wrapper.staging") == "true")
+	
+	impl := if (pstaging, "swift-int-staging.k", if (wstaging, "swift-int-wrapper-staging.k", "swift-int.k"))
+	
+	import(file = impl)
 	
 	import(java)
 
@@ -174,10 +177,6 @@ namespace(swift) {
 		}
 		log(LOG:INFO, "Provenance graph saved in ", gname)
 	}
-	
-	impl := if (pstaging, "swift-int-staging.k", if (wstaging, "swift-int-wrapper-staging.k", "swift-int.k"))
-	
-	import(file = impl)
 	
 	export(execute,
 		function(

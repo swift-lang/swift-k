@@ -213,6 +213,7 @@ namespace(swift) {
 
 					if (wrapperMode == "files") {
 						swift:execute(
+							progress, 
 							siteProfile(rhost, "swift:wrapperInterpreter"),
 							list(
 								siteProfile(rhost, "swift:wrapperInterpreterOptions"),

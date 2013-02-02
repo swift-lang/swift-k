@@ -5,15 +5,18 @@ import('swift-lib')
  * Things that are not exposed to the translated file
  */
 
+SWIFT:SCRIPT_NAME := contextAttribute("SWIFT:SCRIPT_NAME")
+SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
+SWIFT:HOME := contextAttribute("SWIFT:HOME")
 
 WRAPPER_TRANSFER_MODE :=
-	if (vdl:configProperty("wrapperlog.always.transfer") == "true", 
+	if (configProperty("wrapperlog.always.transfer") == "true", 
 		STAGING_MODE:IF_PRESENT, STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
 
 pinOption := configProperty("provider.staging.pin.swiftfiles")
 
 PIN := if(pinOption == "true", "pinned:", "")
-PROVENANCE_GRAPH_ENABLED := (vdl:configProperty("pgraph") != "false")
+PROVENANCE_GRAPH_ENABLED := (configProperty("pgraph") != "false")
 
 namespace(swift) {
 
@@ -73,7 +76,7 @@ namespace(swift) {
 				stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
 				stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr))
 
-				wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
+				wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 				cdmfile := cdm:file()
 
@@ -83,17 +86,18 @@ namespace(swift) {
 					setProgress(progress, "Submitting")
 
 					swift:execute(
+						progress,
 						siteProfile(rhost, "swift:wrapperInterpreter"),
 						list(
 							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
 							wrapper,
-							"-e", vdl:executable(tr, rhost),
+							"-e", executable(tr, rhost),
 							"-out", stdout,
 							"-err", stderr,
 							"-i", if (stdin != null, getFieldValue(stdin)),
 							"-d", flatten(unique(outFileDirs(stageout))),
-							"-if", flatten(infiles(stagein)),
-							"-of", flatten(outfiles(stageout)),
+							"-if", flatten(inFiles(stagein)),
+							"-of", flatten(outFiles(stageout)),
 							"-k",
 							"-cdmfile", cdmfile,
 							"-status", "provider"
@@ -110,31 +114,35 @@ namespace(swift) {
 					
 						stagingMethod := siteProfile(rhost, "swift:stagingMethod", default="proxy")
 
-						stageIn("{PIN}{stagingMethod}://localhost/{swift.home}/libexec/{wrapper}", wrapper)
+						stageIn("{PIN}{stagingMethod}://localhost/{SWIFT:HOME}/libexec/{wrapper}", wrapper)
 
 						if (cdmfile != "") {
-							d := dirname(cdmfile)
+							d := swift:dirname(cdmfile)
 							file := basename(cdmfile)
-							dir := if (d == "", "./", str:concat(d,"/"))
+							dir := if (d == "", "./", "{d}/")
 							loc := "{PIN}{stagingMethod}://localhost/"
 							stageIn("{loc}{dir}{file}", cdmfile)
-							stageIn("{loc}{swift.home}/libexec/cdm.pl", "cdm.pl")
-							stageIn("{loc}{swift.home}/libexec/cdm_lib.sh", "cdm_lib.sh")
+							stageIn("{loc}{SWIFT:HOME}/libexec/cdm.pl", "cdm.pl")
+							stageIn("{loc}{SWIFT:HOME}/libexec/cdm_lib.sh", "cdm_lib.sh")
 						}
 
 						appStageins(jobid, stagein, ".", stagingMethod)
 
 						stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info", 
 							mode = WRAPPER_TRANSFER_MODE)
-						//stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}")
-						//stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
+						if (false) {
+							stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}")
+							stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
+						}
 						stageOut("wrapper.error", "{stagingMethod}://localhost/{ddir}/{jobid}.error", 
 							mode = STAGING_MODE:IF_PRESENT)
 						appStageouts(jobid, stageout, ".", stagingMethod)
 
-						task:cleanUp(".") //the whole job directory
-					) // execute
-					doRestartlog(restartout)
+						task:cleanUp(".")
+					)
+					
+					
+					doRestartLog(restartout)
 					log(LOG:DEBUG, "JOB_END jobid={jobid}")
 				}
 				else catch(prev) {
