@@ -1,20 +1,21 @@
+import(sys)
+import(file = "../testlib.k")
+
 map(
 	map:entry("name", "try/catch")
 	map:entry("test",
-		element([]
+		lambda() {
 			list(
-				try(
-					(
-						throw("Kaboom")
-						"uncaught"
-					)
-					catch(".*"
-						"caught"
-					)
-				)
+				try {
+					throw("Kaboom")
+					"uncaught"
+				}
+				else catch(e) {
+					"caught"
+				}
 				"alldone"
 			)
-		)
+		}
 	)
 	map:entry("expected-result", ["caught", "alldone"])
 )

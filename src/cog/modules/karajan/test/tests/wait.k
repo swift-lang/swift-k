@@ -2,11 +2,12 @@ import(sys)
 import(file = "../testlib.k")
 
 map(
-	map:entry("name", "sum")
+	map:entry("name", "wait")
 	map:entry("test",
 		lambda() {
-			sum(1, 2, 3)
+			wait(delay=10)
+			"OK"
 		}
 	)
-	map:entry("expected-result", 6)
+	map:entry("expected-result", "OK")
 )

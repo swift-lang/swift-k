@@ -1,31 +1,18 @@
+import(sys)
+import(file = "../testlib.k")
+
 map(
-	map:entry("name", "list")
+	map:entry("name", "large list")
 	map:entry("test",
-		element([]
-			list(
-				list:size(
-					list(
-						list(1, 2)
-						list(3, 4)
-					)
-				)
-				
-				list:size(
-					list:join(
-						list(1, 2)
-						list(3, 4)
-					)
-				)
-				
-				set(mylist, list(1, 2, 3, 4))
-				
-				list:butFirst(mylist)
-				list:butLast(mylist)
-				list:first(mylist)
-				list:last(mylist)
+		lambda() {
+			l := list(
+				for(i, range(1, 1000000)) {
+					i
+				}
 			)
-		)
+			1
+		}
 	)
-	map:entry("expected-result", [2, 4, [2, 3, 4], [1, 2, 3], 1, 4])
-	map:entry("comparison", math_comparison)
+	map:entry("expected-result", 0)
+	map:entry("comparison", noComparison)
 )

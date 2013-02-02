@@ -1,10 +1,10 @@
-import("sys.k")
-import("task.k")
+import(sys)
+import(task)
 
-global(global_pass_count, 1)
-global(test_pass_count, 10)
+export(GLOBAL_PASS_COUNT, 10)
+export(TEST_PASS_COUNT, 10)
 
-global(grid_resources
+export(GRID_RESOURCES,
 	list(
 		host("plussed.mcs.anl.gov:4020", cpus=2
 			service("execution", provider="gt2")
@@ -12,5 +12,5 @@ global(grid_resources
 		)
 	)
 )
-global(default_provider, "gt2")
-global(task_run_count, 4)
+export(DEFAULT_PROVIDER, "gt2")
+export(TASK_RUN_COUNT, 4)
