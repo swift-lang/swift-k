@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Appender;
+import org.apache.log4j.AsyncAppender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -221,10 +222,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
             }
             ec.setArguments(arguments);
-            // long start = System.currentTimeMillis();
             new HangChecker(stack).start();
             ec.start(stack);
             ec.waitFor();
+
             if (ec.isFailed()) {
                 runerror = true;
             }
@@ -560,6 +561,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
         else {
             fa.setFile(f.getAbsolutePath());
             fa.activateOptions();
+            
+            AsyncAppender aa = new AsyncAppender();
+            aa.addAppender(fa);
+
+            replaceAppender(fa, aa);
         }
         Level level = Level.WARN;
         if (ap.isPresent(ARG_VERBOSE)) {
@@ -598,6 +604,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
     }
 
+    private static void replaceAppender(FileAppender fa, AsyncAppender aa) {
+        Logger root = Logger.getRootLogger();
+        root.removeAppender(fa);
+        root.addAppender(aa);
+    }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected static Appender getAppender(Class cls) {
