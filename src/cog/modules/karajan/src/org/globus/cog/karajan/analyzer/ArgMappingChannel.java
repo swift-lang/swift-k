@@ -27,11 +27,11 @@ public class ArgMappingChannel extends StaticChannel {
 
 	@Override
 	public boolean append(Object value) {
-		if (index >= params.size() && !hasVargs) {
-			throw new IllegalArgumentException("Illegal extra argument to " + owner);
-		}
 		if (dynamic) {
 			return false;
+		}
+		if (index >= params.size() && !hasVargs) {
+			throw new IllegalArgumentException("Illegal extra argument to " + owner);
 		}
 		while (index < params.size() && (params.get(index).getValue() != null || params.get(index).dynamic)) {
 			index++;
@@ -50,8 +50,8 @@ public class ArgMappingChannel extends StaticChannel {
 	public void appendDynamic() {
 		super.appendDynamic();
 		while (index < params.size() && (params.get(index).getValue() != null || params.get(index).dynamic)) {
-			index++;
-		}
+            index++;
+        }
 		int i = index;
 		while (i < params.size()) {
 			params.get(i).setDynamic();
