@@ -47,6 +47,7 @@ import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.execution.fake.JobSubmissionTaskHandler;
 import org.globus.cog.karajan.compiled.nodes.Main;
 import org.globus.cog.karajan.compiled.nodes.grid.AbstractGridNode;
 import org.globus.cog.karajan.parser.WrapperNode;
@@ -194,6 +195,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
             context.setAttribute("SWIFT:RUN_ID", runID);
             context.setAttribute("SWIFT:DRY_RUN", ap.isPresent(ARG_DRYRUN));
             context.setAttribute("SWIFT:HOME", System.getProperty("swift.home"));
+           
+            addCommandLineProperties(config, ap);
+            if (logger.isDebugEnabled()) {
+                logger.debug(config);
+            }
+            debugSitesText(config);
             
             Main root = compileKarajan(tree, context);
             root.setFileName(projectName);
@@ -204,19 +211,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
             if (ap.hasValue(ARG_RESUME)) {
                 arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
             }
-            
-            addCommandLineProperties(config, ap);
-            if (logger.isDebugEnabled()) {
-                logger.debug(config);
-            }
-            debugSitesText(config);
-
+           
             new HangChecker(context).start();
             long start = System.currentTimeMillis();
             ec.start(context);
             ec.waitFor();
             long end = System.currentTimeMillis();
-            //System.out.println(JobSubmissionTaskHandler.jobsRun + " jobs, " + JobSubmissionTaskHandler.jobsRun * 1000 / (end - start) + " j/s");
+            System.out.println(JobSubmissionTaskHandler.jobsRun + " jobs, " + JobSubmissionTaskHandler.jobsRun * 1000 / (end - start) + " j/s");
             if (ec.isFailed()) {
                 runerror = true;
             }
