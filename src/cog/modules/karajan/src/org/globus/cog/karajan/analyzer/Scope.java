@@ -262,6 +262,11 @@ public class Scope {
 	private Def findDefNoNs(String name) {
 		List<String> l = new LinkedList<String>();
 		getAllNamespaces(name, l);
+		for (String ns : l) {
+			if (ns == null) {
+				return findDef(null, name);
+			}
+		}
 		if (l.size() > 1) {
 			throw new RuntimeException("Ambiguous function reference '" + name + "'. Valid choices: " + l);
 		}
