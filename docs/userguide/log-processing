@@ -39,8 +39,11 @@ note that we will ignore the timestamps here.
 . _DEBUG textfiles BEGIN_
 . _DEBUG Loader kmlversion is_
 
+Log plotting
+~~~~~~~~~~~~
+
 Normalize event times in the log to the run start time
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Generate the log, assuming the log is titled +swift-run.log+
 
@@ -51,7 +54,7 @@ TODO:In what format does the start time be in 'file.contains.start.time'
 
 
 Make a basic load plot from Coasters Cpu log lines
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 . Normalize the log.
 . Build up a load data file:
@@ -68,7 +71,7 @@ Note: Th load.cfg is available from swift/libexec/log-processing/
 
 
 Make a basic job completion plot from Coasters Cpu log lines
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 . Normalize the log.
 
@@ -85,7 +88,7 @@ swift_plotter.zsh -s completed.cfg completed.eps completed.data
 ------------------------------------------
 
 Make a basic Block allocation plot from Coasters Block log lines
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 . Normalize the log.
 
@@ -102,7 +105,7 @@ swift_plotter.zsh -s blocks.{cfg,eps,data}
 ------------------------------------------
 
 Make a job runtime distribution plot from Coasters Cpu log lines
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 . Normalize the log.
 
