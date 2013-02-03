@@ -5,7 +5,6 @@ Log Processing
 To properly generate log plots, you must enable VDL/Karajan logging.
 TODO:How?
 
-
 You should check the scripts that you intend to use to determine
 what log lines they require and ensure that you are generating
 those lines via log4j.properties
@@ -17,6 +16,28 @@ log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Cpu=DEBUG
 log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Block=DEBUG
 --------------------------------------
 TODO: Does it work for coasters-based runs only?
+
+Meaning and interpretation of Swift log messages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A Swift log file is typically a text file with the name of the Swift run and
+its timestamp in the filename and an extension ".log". In addition, a ".rlog"
+file is Swift's resume log which is used by Swift when a run is resumed using
+the "-resume" option. The .rlog file is only for Swift's internal purpose and
+not to be interpreted by the user.
+
+Each line in the log file is typically made up of three parts. The first part
+is the timestamp, the second is the type of log message and the third is the
+message itself. The types of log messages follows the java log4j standard types
+of TRACE, DEBUG, INFO, WARN, ERROR and FATAL. This section lists the various
+Swift log messages and explains the meaning and likely interpretation of those
+messages. Please note that the list is not comprehensive at this time. Also
+note that we will ignore the timestamps here.
+
+. _DEBUG Loader arguments: [-sites.file, sites.xml, -config, cf, -tc.file, tc, postproc-gridftp.swift]_
+. _DEBUG Loader Max heap: 5592449024_
+. _DEBUG textfiles BEGIN_
+. _DEBUG Loader kmlversion is_
 
 Normalize event times in the log to the run start time
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
