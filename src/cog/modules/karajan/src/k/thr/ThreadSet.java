@@ -11,8 +11,8 @@ package k.thr;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import k.rt.ConditionalYield;
 import k.rt.ExecutionException;
@@ -21,29 +21,27 @@ import k.rt.FutureListener;
 
 
 public class ThreadSet implements Future {
-	private List<LWThread> threads;
+	private Set<LWThread> threads;
 	private FutureListener listener;
 	private ExecutionException ex;
-	private boolean abort;
-	private int doneCount;
+	private boolean abort, anyDone;
 	
 	public ThreadSet() {
-		threads = new ArrayList<LWThread>();
+		threads = new HashSet<LWThread>();
 	}
 	
 	public synchronized boolean add(LWThread thread) {
 		if (!abort) {
 			if (threads == null) {
-				threads = new ArrayList<LWThread>();
+				threads = new HashSet<LWThread>();
 			}
 			threads.add(thread);
 		}
 		return abort;
 	}
 	
-	
 	public synchronized void lock() {
-		doneCount--;
+		add(null);
 	}
 	
 	public synchronized void unlock() {
@@ -61,7 +59,7 @@ public class ThreadSet implements Future {
 	        return 0;
 	    }
 	    else {
-	    	return threads.size() - doneCount;
+	    	return threads.size();
 	    }
 	}
 	
@@ -78,14 +76,15 @@ public class ThreadSet implements Future {
 	}
 
 	public synchronized void threadDone(LWThread thr, ExecutionException e) {
-		doneCount++;
 		if (abort) {
 			return;
 		}
+		anyDone = true;
 		if (this.ex == null) {
 			this.ex = e;
 		}
-		if (threads == null || doneCount == threads.size()) {
+		threads.remove(thr);
+		if (threads.isEmpty()) {
 			threads = null;
 			notifyListeners();
 		}
@@ -104,13 +103,13 @@ public class ThreadSet implements Future {
 			throw new IllegalThreadStateException("Multiple listeners");
 		}
 		listener = l;
-		if (threads == null || doneCount == threads.size() || ex != null || abort) {
+		if (threads == null || ex != null || abort) {
 			notifyListeners();
 		}
 	}
 	
 	public synchronized boolean allDone() {
-		return threads == null || doneCount == threads.size();
+		return threads == null;
 	}
 	
 	public synchronized Exception getException() {
@@ -118,7 +117,7 @@ public class ThreadSet implements Future {
 	}
 
 	public synchronized void waitFor() {
-		if (threads == null || doneCount == threads.size()) {
+		if (threads == null) {
 			if (ex == null) {
 				return;
 			}
@@ -143,7 +142,7 @@ public class ThreadSet implements Future {
 	}
 
 	public synchronized boolean anyDone() {
-		return doneCount > 0;
+		return anyDone;
 	}
 
 	public synchronized void checkFailed() {
