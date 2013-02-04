@@ -27,8 +27,8 @@ namespace(swift) {
 		echo("RunID: {SWIFT:RUN_ID}")
 	}
 
-	export(stagein, def("org.griphyn.vdl.karajan.lib.Stagein"))
-	export(stageout, def("org.griphyn.vdl.karajan.lib.Stageout"))
+	export(stageIn, def("org.griphyn.vdl.karajan.lib.Stagein"))
+	export(stageOut, def("org.griphyn.vdl.karajan.lib.Stageout"))
 
 	export(parameterLog,
 		function(direction, variable, id, thread) {
