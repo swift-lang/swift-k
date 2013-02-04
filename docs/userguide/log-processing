@@ -43,9 +43,9 @@ note that we will ignore the timestamps here.
 . _INFO  get__site STARTCOMPOUND thread=0-8 name=get__site_
 . _INFO vdl:execute START thread=0-8-0 tr=_
 . _INFO  GlobalSubmitQueue No global submit throttle set. Using default (1024)_
-. _DEBUG vdl:execute2 THREAD_ASSOCIATION jobid=getsite-ymj72ook thread=0-8-0-1 host=localhost replicationGroup=xmj72ook
+. _DEBUG vdl:execute2 THREAD_ASSOCIATION jobid=getsite-ymj72ook thread=0-8-0-1 host=localhost replicationGroup=xmj72ook_
 . _DEBUG vdl:execute2 JOB_START jobid=getsite-ymj72ook tr=getsite arguments=[644] tmpdir=postproc-gridftp-20120319-0942-adf1o1u2/jobs/y/getsite-ymj72ook host=localhost_
-. _INFO  GridExec TASK_DEFINITION
+. _INFO  GridExec TASK_DEFINITION_
 . _WARN  RemoteConfiguration Find: http://140.221.8.62:38260_
 . _INFO  AbstractStreamKarajanChannel$Multiplexer Multiplexer 0 started_
 . _INFO  AbstractStreamKarajanChannel$Multiplexer (0) Scheduling SC-null for addition_
