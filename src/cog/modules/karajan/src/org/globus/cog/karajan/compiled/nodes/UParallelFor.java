@@ -106,6 +106,8 @@ public class UParallelFor extends InternalFunction {
 						ct.start();
 					}
 					ts.unlock();
+					i++;
+				case 2:
 					ts.waitFor();
 			}
 		}
