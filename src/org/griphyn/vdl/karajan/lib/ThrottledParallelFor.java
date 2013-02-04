@@ -180,6 +180,8 @@ public class ThrottledParallelFor extends UParallelFor {
                     
                     ts.unlock();
                     decRefs(drefs);
+                    i++;
+                case 2:
                     ts.waitFor();
             }
         }
