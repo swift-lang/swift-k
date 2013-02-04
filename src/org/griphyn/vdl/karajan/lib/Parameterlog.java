@@ -39,7 +39,7 @@ public class Parameterlog extends InternalFunction {
     public static final Logger logger = Logger.getLogger(Parameterlog.class);
     
     private ArgRef<String> direction;
-    private ArgRef<Object> variable;
+    private ArgRef<String> variable;
     private ArgRef<String> id;
     
     @Override
