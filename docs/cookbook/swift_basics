@@ -12,10 +12,10 @@ Prerequisites
 ^^^^^^^^^^^^^^
 .Check your Java
 Swift is a Java application. Make sure you are running Java version 5 or higher. You
-can make sure you have Java in your $PATH (or $HOME/.soft file depending upon
+can make sure you have Java in your $PATH (or file such as $HOME/.soft depending upon
 your environment) 
 
-Following are the possible ways to detect and run Java:
+Following are some possible ways to detect and run Java:
 
 ----
 $ grep java $HOME/.soft
@@ -32,10 +32,12 @@ Java HotSpot(TM) 64-Bit Server VM (build 11.0-b16, mixed mode)
 Setting up to run Swift
 ~~~~~~~~~~~~~~~~~~~~~~~~
 This is simple. We will be using a pre-compiled version of Swift that can be
-downloaded from link:http://www.ci.uchicago.edu/swift/downloads/index.php[here]. Download and untar the latest precompiled version as follows:
+downloaded from
+link:http://www.ci.uchicago.edu/swift/downloads/index.php[here]. Download and
+untar the latest precompiled version as follows:
 
 ----
-$ tar xf swift-0.92.1.tar.gz
+$ tar zxf swift-0.92.1.tar.gz
 ----
 
 Environment Setup
@@ -99,7 +101,7 @@ The _installation-status_ and _platform_ fields are not used. Set them to
 The _profiles_ field should be set to null if no profile entries are to be
 specified, or should contain the profile entries separated by semicolons. 
 
-Setting swift configuration
+Setting Swift configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Many configuration properties could be set using the Swift configuration file.
 We will not cover them all in this section. see
@@ -201,16 +203,16 @@ Also includes a description of Swift inputs and outputs.
 
 What if Swift hangs
 ~~~~~~~~~~~~~~~~~~~
-Owing to its highly multithreaded architecture it is often the case that the
+Owing to its multi-threaded architecture it is often the case that the
 underlying java virtual machine gets into deadlock situations or Swift hangs
-because of other complications in its threaded operations. Under such
-situations, Swift _hang-checker_ chips in and resolves the situation.
+because of other complications in its operations. Under such
+situations, Swift _hang-checker_ chips in and gives indication of the situation.
 
 . how to use the information to identify and correct the deadlock.
 
 . How close to the Swift source code can we make the hang-checker messages, so that the user can relate it to Swift functions, expressions, and ideally source code lines?
 
-. The current Hang Checker output is actually *very* nice and useful already:
+. The Hang Checker output is nice and useful:
 
 ----
 Registered futures:
@@ -224,7 +226,7 @@ Variation[] vars  Closed, 72 elements, 0 listeners
 Resuming a stopped or crashed Swift Run
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-I had a .rlog file from a Swift run that ran out of time. I kicked it off
+I had a .rlog file from a Swift run that ran out of time. I resumed the run
 using the -resume flag described in section 16.2 of the Swift User Guide and
 it picked up where it left off. Then I killed it because I wanted to make
 changes to my sites file.
@@ -250,8 +252,8 @@ finished.
 [nbest@login2 files]$ pwd
 /home/nbest/bigdata/files
 [nbest@login2 files]$
-~wilde/swift/src/stable/cog/modules/swift/dist/swift-svn/bin/swift \
-> -tc.file tc -sites.file pbs.xml ~/scripts/mcd12q1.swift -resume
+~wilde/swift/src/stable/cog/modules/swift/dist/swift-svn/bin/swift -resume \
+> -tc.file tc -sites.file pbs.xml ~/scripts/mcd12q1.swift 
 > mcd12q1-20100310-1326-ptxe1x1d.0.rlog
 Swift svn swift-r3255 (swift modified locally) cog-r2723 (cog modified
 locally)
@@ -273,13 +275,6 @@ Finished in previous run:2558
 Progress:  Selecting site:1150  Stage in:90  Submitted:5  Active:1  Finished
 in previous run:2558
 ----
-
-
-From Neil: A comment about that section of the user guide: It says "In order
-to restart from a restart log file, the -resume logfile argument can be used
-after the SwiftScript? program file name." and then puts the -resume logfile
-argument before the script file name. I'm sure the order doesn't matter but
-the contradiction is confusing.
 
 Notes to add (from Mike):
 
