@@ -24,7 +24,7 @@ imagefile f1<single_file_mapper;file="/home/yongzh/data/file1.bin">
 The above example declares a dataset called f1, which uses a single file
 mapper to map a file from a specific location.
 
-SwiftScript has a simplified syntax for this case, since
+Swift has a simplified syntax for this case, since
 single_file_mapper is frequently used:
 
 ----
@@ -35,20 +35,20 @@ Swift comes with a number of mappers that handle common mapping
 patterns. These are documented in the mappers section of this
 guide.
 
-More technical details about SwiftScript
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The syntax of SwiftScript has a superficial resemblance to C and Java.
+More technical details about Swift script
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The syntax of Swift script has a superficial resemblance to C and Java.
 For example, { and } characters are used to enclose blocks of statements.
 
-A SwiftScript program consists of a number of statements. Statements may
+A Swift script consists of a number of statements. Statements may
 declare types, procedures and variables, assign values to variables, and
 express operations over arrays.
 
 
 Variables
 ^^^^^^^^^
-Variables in SwiftScript are declared to be of a specific type.
-Assignments to those variables must be data of that type. SwiftScript
+Variables in Swift scripts are declared to be of a specific type.
+Assignments to those variables must be data of that type. Swift script
 variables are single-assignment - a value may be assigned to a variable
 at most once. This assignment can happen at declaration time or later on
 in execution. When an attempt to read from a variable that has not yet
@@ -98,10 +98,10 @@ Procedures
 ~~~~~~~~~~
 There are two kinds of procedure: An atomic procedure, which describes
 how an external program can be executed; and compound procedures which
-consist of a sequence of SwiftScript statements.
+consist of a sequence of Swift script statements.
 
 A procedure declaration defines the name of a procedure and its input
-and output parameters. SwiftScript procedures can take multiple inputs
+and output parameters. Swift script procedures can take multiple inputs
 and produce multiple outputs. Inputs are specified to the right of the
 function name, and outputs are specified to the left. For example:
 
@@ -155,7 +155,7 @@ arguments.
 
 Compound procedures
 ^^^^^^^^^^^^^^^^^^^
-A compound procedure contains a set of SwiftScript statements:
+A compound procedure contains a set of Swift script statements:
 
 ----
 (type2 b) foo_bar (type1 a) {
@@ -167,7 +167,7 @@ A compound procedure contains a set of SwiftScript statements:
 
 Control Constructs
 ~~~~~~~~~~~~~~~~~~
-SwiftScript provides if, switch, foreach, and iterate
+Swift script provides if, switch, foreach, and iterate
 constructs, with syntax and semantics similar to comparable constructs
 in other high-level languages.
 
@@ -265,7 +265,7 @@ evaluating the termination expression.
 
 Operators
 ~~~~~~~~~
-The following infix operators are available for use in SwiftScript
+The following infix operators are available for use in Swift script
 expressions.
 
 [options="header, autowidth"]
@@ -286,7 +286,7 @@ expressions.
 Global constants
 ~~~~~~~~~~~~~~~~
 
-At the top level of a SwiftScript program, the global modified may be
+At the top level of a Swift script program, the global modified may be
 added to a declaration so that it is visible throughout the program,
 rather than only at the top level of the program. This allows global
 constants (of any type) to be defined. (since Swift 0.10)
@@ -295,9 +295,9 @@ constants (of any type) to be defined. (since Swift 0.10)
 Imports
 ~~~~~~~
 The import directive can be used to import definitions from another
-SwiftScript file. (since Swift 0.10)
+Swift file.
 
-For example, a SwiftScript program might contain this:
+For example, a Swift script might contain this:
 
 ----
 import "defs";
@@ -337,7 +337,7 @@ There is no requirement that a module is imported only once. If a module
 is imported multiple times, for example in different files, then Swift
 will only process the imports once.
 
-Imports may contain anything that is valid in a SwiftScript program,
+Imports may contain anything that is valid in a Swift script,
 including the code that causes remote execution.
 
 Mappers
@@ -754,9 +754,11 @@ an absolute path is not specified)
 
 The output (stdout) of the executable should consist of two columns of data,
 separated by a space. The first column should be the path of the mapped
-variable, in SwiftScript syntax (for example [2] means the 2nd element
-of an array) or the symbol $ to represent the root of the mapped
-variable. The following table shows the symbols that should appear in the first column corresponding to the mapping of different types of swift constructs such as scalars, arrays and structs.
+variable, in Swift script syntax (for example [2] means the 2nd element of an
+array) or the symbol $ to represent the root of the mapped variable. The
+following table shows the symbols that should appear in the first column
+corresponding to the mapping of different types of swift constructs such as
+scalars, arrays and structs.
 
 [option="header, autowidth"]
 |=============
@@ -793,7 +795,12 @@ would map
 |stus[2]|qux
 |===========
 
-Advanced Example: The following mapper.sh is an advanced example of an external mapper that maps a two-dimensional array to a directory of files. The files in the said directory are identified by their names appended by a number between 000 and 099. The first index of the array maps to the first part of the filename while the second index of the array maps to the second part of the filename.
+Advanced Example: The following mapper.sh is an advanced example of an external
+mapper that maps a two-dimensional array to a directory of files. The files in
+the said directory are identified by their names appended by a number between
+000 and 099. The first index of the array maps to the first part of the
+filename while the second index of the array maps to the second part of the
+filename.
 
 ----
 #!/bin/sh
@@ -837,7 +844,9 @@ file_dat dat_files[][] < ext;
 
 ----
 
-Assuming there are 4 files with name aaa, bbb, ccc, ddd and a mod_index of 10, we will have 4x10=40 files mapped to a two-dimensional array in the following pattern:
+Assuming there are 4 files with name aaa, bbb, ccc, ddd and a mod_index of 10,
+we will have 4x10=40 files mapped to a two-dimensional array in the following
+pattern:
 
 [options="header, autowidth"]
 |============

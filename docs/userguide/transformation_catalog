@@ -22,7 +22,7 @@ status, platform, and profile entries.
 The site field should correspond to a site name listed in the sites catalog.
 
 The transformation name should correspond to the transformation name
-used in a SwiftScript app procedure.
+used in a Swift script app procedure.
 
 The executable path should specify where the particular executable is
 located on that site.

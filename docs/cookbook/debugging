@@ -4,8 +4,8 @@ Swift errors are logged in several places:
 
 . All text from standard output and standard error produced by running the
 swift command
-. The .log file from this run. It will be named swiftscript.uniqueID.log
-where "swiftscript" is the name of your *.swift script source file, and
+. The .log file from this run. It will be named script.uniqueID.log
+where "script" is the name of your *.swift script source file, and
 uniqueID is a long unique id which starts with the date and time you ran the
 swift command.
 . $HOME/.globus/coasters directory on remote machines on which you are

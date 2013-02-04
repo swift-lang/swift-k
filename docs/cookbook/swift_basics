@@ -90,7 +90,7 @@ The fields are: _site_, _transformation-name_, _executable-path_, _installation-
 The _site_ field should correspond to a site name listed in the sites catalog.
 
 The _transformation-name_ should correspond to the transformation name used in a
-SwiftScript app procedure.
+Swift script app procedure.
 
 The _executable-path_ should specify where the particular executable is located
 on that site.
@@ -141,9 +141,9 @@ key="initialScore">100000</profile>
 </pool>
 source~~~~~~
 
-First SwiftScript
+First Swift script
 ~~~~~~~~~~~~~~~~~
-Your first SwiftScript
+Your first Swift script
 Hello Swift-World!
 
 A good sanity check that Swift is set up and running OK locally is this:
@@ -163,7 +163,7 @@ RunID: 20100115-1240-6xhzxuz3
 
 Progress:
 
-SwiftScript trace: Hello, Swift world!
+Swift trace: Hello, Swift world!
 
 Final status:
 
@@ -173,7 +173,7 @@ A good first tutorial in using Swift is at:
 http://www.ci.uchicago.edu/swift/guides/tutorial.php. Follow the steps in that
 tutorial to learn how to run a few simple scripts on the login host.
 
-second SwiftScript
+second Swift script
 ~~~~~~~~~~~~~~~~~~~
 Following is a more involved Swift script.
 [java]
@@ -438,14 +438,14 @@ locally)
 
 RunID: 20100310-1105-4okarq08
 Progress:
-SwiftScript trace: 1, output/myfile.h11v04.mytype
-SwiftScript trace: 2, home/wilde/bigdata/data/sample/h11v05.tif
-SwiftScript trace: 3, home/wilde/bigdata/data/sample/h12v04.tif
-SwiftScript trace: 0, output/myfile.h32v08.mytype
-SwiftScript trace: 0, home/wilde/bigdata/data/sample/h32v08.tif
-SwiftScript trace: 3, output/myfile.h12v04.mytype
-SwiftScript trace: 1, home/wilde/bigdata/data/sample/h11v04.tif
-SwiftScript trace: 2, output/myfile.h11v05.mytype
+Swift script trace: 1, output/myfile.h11v04.mytype
+Swift script trace: 2, home/wilde/bigdata/data/sample/h11v05.tif
+Swift script trace: 3, home/wilde/bigdata/data/sample/h12v04.tif
+Swift script trace: 0, output/myfile.h32v08.mytype
+Swift script trace: 0, home/wilde/bigdata/data/sample/h32v08.tif
+Swift script trace: 3, output/myfile.h12v04.mytype
+Swift script trace: 1, home/wilde/bigdata/data/sample/h11v04.tif
+Swift script trace: 2, output/myfile.h11v05.mytype
 Final status:
 login1$ 
 ----

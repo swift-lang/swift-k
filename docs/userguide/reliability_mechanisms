@@ -26,7 +26,7 @@ When a run fails, a restart log file will be left behind in a file named
 using the unique job ID and a .rlog extension. This restart log can
 then be passed to a subsequent Swift invocation using the -resume
 parameter. Swift will resume execution, avoiding execution of
-invocations that have previously completed successfully. The SwiftScript
+invocations that have previously completed successfully. The Swift
 source file and input data files should not be modified between runs.
 
 Every run creates a restart log file with a named composed of the file
@@ -38,7 +38,7 @@ successfully, the restart log file is deleted. If however the workflow
 fails, swift can use the restart log file to continue execution from a
 point before the failure occurred. In order to restart from a restart
 log file, the -resume logfile argument can be used after the
-SwiftScript program file name. Example:
+Swift script file name. Example:
 
 ----
 $ swift -resume example-ht0adgi315l61.0.rlog example.swift.

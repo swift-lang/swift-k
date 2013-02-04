@@ -15,7 +15,7 @@ into a (remote) unix process execution. It does not describe the
 mechanisms by which Swift performs that translation; that is described
 in the next section.
 
-In this section, this example SwiftScript program is used for reference:
+In this section, this example Swift script is used for reference:
 
 ----
 type file;
@@ -40,7 +40,7 @@ and application workspace directory ?
 This application workspace directory will not be shared with any other
 application procedure execution attempt; all application procedure
 execution attempts will run with distinct application procedure
-workspaces. (for the avoidance of doubt: If a SwiftScript procedure
+workspaces. (for the avoidance of doubt: If a Swift script procedure
 invocation is subject to multiple application procedure execution
 attempts (due to Swift-level restarts, retries or replication) then each
 of those application procedure execution attempts will be made in a
@@ -87,7 +87,7 @@ be true:
       of the application executable), then the application executable
       should exit with unix return code not equal to 0.
 
-    * Each file mapped from an output parameter of the SwiftScript
+    * Each file mapped from an output parameter of the Swift script
       procedure call must exist. Files will be mapped in the same way as
       for input files.
 
@@ -212,7 +212,7 @@ The kickstart utility can be used to capture environmental
 information at execution time to aid in debugging and provenance capture.
 
 
-SwiftScript language compilation layer
+Swift script language compilation layer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step i: text to XML intermediate form parser/processor. parser written
 in ANTLR - see resources/VDL.g. The XML Schema Definition (XSD) for the
@@ -220,7 +220,7 @@ intermediate language is in resources/XDTM.xsd.
 
 Step ii: XML intermediate form to Karajan workflow. Karajan.java - reads
 the XML intermediate form. compiles to karajan workflow language - for
-example, expressions are converted from SwiftScript syntax into Karajan
+example, expressions are converted from Swift script syntax into Karajan
 syntax, and function invocations become karajan function invocations
 with various modifications to parameters to accomodate return parameters
 and dataset handling.
@@ -261,7 +261,7 @@ GRAM and GridFTP can be implemented as Java CoG kit providers.
 Function reference
 ------------------
 This section details functions that are available for use in the
-SwiftScript language.
+Swift scripting language.
 
 @arg
 ~~~~
@@ -287,8 +287,8 @@ $ swift arg.swift -myparam=hello
 Swift v0.3-dev r1674 (modified locally)
 
 RunID: 20080220-1548-ylc4pmda
-SwiftScript trace: defaultvalue
-SwiftScript trace: hello
+Swift trace: defaultvalue
+Swift trace: hello
 ----
 
 @extractint
@@ -408,13 +408,13 @@ parallel).
 @toint
 ~~~~~~
 @toint(input) will parse its input string into an integer. This can be
-used with @arg to pass input parameters to a SwiftScript program as
+used with @arg to pass input parameters to a Swift script as
 integers.
 
 @tofloat
 ~~~~~~
 @tofloat(input) will parse its input string into a floating point number. This can be
-used with @arg to pass input parameters to a SwiftScript program as
+used with @arg to pass input parameters to a Swift script as
 floating point numbers.
 
 @length
@@ -428,7 +428,7 @@ floating point numbers.
 Built-in procedure reference
 ----------------------------
 This section details built-in procedures that are available for use in
-the SwiftScript language.
+the Swift scripting language.
 
 readData
 ~~~~~~~~
