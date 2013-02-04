@@ -102,7 +102,7 @@ public class ContainerScope extends Scope {
 	@Override
 	public String toString() {
 		List<Integer> l = Collections.emptyList();
-		return "C - " + owner + "\n" + map("\t", l);
+		return "C - " + owner + "\n" + map("\t", l) + (parent == null ? "" : "\n" + parent.toString());
 	}
 
 	/**
@@ -126,6 +126,7 @@ public class ContainerScope extends Scope {
 			}
 			if (CompilerSettings.DEBUG_STACK_ALLOCATION) {
 				l.add(index);
+				System.out.println("\t-" + v.name + " - " + index);
 			}
 			vars.remove(index);
 			unset(index);

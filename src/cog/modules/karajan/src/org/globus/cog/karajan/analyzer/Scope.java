@@ -177,6 +177,9 @@ public class Scope {
 		else {
 			index = getContainerScope().allocate(ref);
 		}
+		if (CompilerSettings.DEBUG_STACK_ALLOCATION) {
+		    System.out.println("\t+" + ref.name + " - " + index);
+		}
 		ref.setIndex(index);
 		vars.put(ref.name, ref);
 	}
@@ -208,6 +211,9 @@ public class Scope {
 	public void addVar(Var ref, int index) {
 		if (vars == null) {
 			vars = new HashMap<String, Var>();
+		}
+		if (CompilerSettings.DEBUG_STACK_ALLOCATION) {
+		    System.out.println("\t+" + ref.name + " - " + index);
 		}
 		ref.setIndex(index);
 		vars.put(ref.name, ref);
