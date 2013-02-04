@@ -88,15 +88,16 @@ public class OrderedChannelsNode extends CompoundNode {
 					if (trackedChannels.containsKey(cn)) {
 						Var.Channel src = ts.getChannel(cn);
 						Var.Channel dst = scope.lookupChannel(cn);
+						ChannelRef<Object> dstref = scope.getChannelRef(dst);
 						if (dst.isDynamic() && !dst.isCommutative()) {
-							if (trackedChannels.get(cn)) {						
-								ChannelRef.Ordered<Object> cr = new ChannelRef.Ordered<Object>(cn, src.getIndex(), dst.getIndex(), prev.get(cn));
+							if (trackedChannels.get(cn)) {			
+								ChannelRef.Ordered<Object> cr = new ChannelRef.Ordered<Object>(cn, src.getIndex(), dstref, prev.get(cn));
 								getOCW(childIndex).addChannel(cr);
 								prev.put(cn, cr);
 							}
 							else {
 								// only referenced from one place, no buffering 
-								getOCW(childIndex).addChannel(new ChannelRef.Redirect<Object>(cn, src.getIndex(), dst.getIndex()));
+								getOCW(childIndex).addChannel(new ChannelRef.Redirect<Object>(cn, src.getIndex(), dstref));
 							}
 						}
 					}

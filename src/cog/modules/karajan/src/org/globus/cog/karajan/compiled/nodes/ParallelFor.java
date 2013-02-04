@@ -73,12 +73,14 @@ public class ParallelFor extends InternalFunction {
 					continue;
 				}
 				dst.appendDynamic();
+				
+				ChannelRef<Object> dstref = cs.getChannelRef(dst);
 				Var.Channel src = ts.getChannel(name);
 				
 				if (channels == null) {
 					channels = new LinkedList<ChannelRef.OrderedFramed<Object>>();
 				}
-				channels.add(new ChannelRef.OrderedFramed<Object>(name, src.getIndex(), dst.getIndex()));
+				channels.add(new ChannelRef.OrderedFramed<Object>(name, src.getIndex(), dstref));
 			}
 		}
 		
@@ -141,6 +143,8 @@ public class ParallelFor extends InternalFunction {
 						ct.start();
 					}
 					ts.unlock();
+					i++;
+				case 2:
 					ts.waitFor();
 			}
 		}

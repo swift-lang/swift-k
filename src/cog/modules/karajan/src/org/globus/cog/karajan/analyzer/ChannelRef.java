@@ -496,20 +496,19 @@ public abstract class ChannelRef<T> {
 
 	
 	public static class Redirect<T> extends Dynamic<T> {
-		protected final int dstIndex;
+		protected final ChannelRef<T> dst;
 		
-		public Redirect(String name, int srcIndex, int dstIndex) {
+		public Redirect(String name, int srcIndex, ChannelRef<T> dst) {
 			super(name, srcIndex);
-			this.dstIndex = dstIndex;
+			this.dst = dst;
+			if (dst == null) {
+				throw new IllegalArgumentException("Redirect to null channel");
+			}
 		}
 
 		@Override
 		public void create(Stack stack) {
-			Channel<?> dst = (Channel<?>) stack.top().get(dstIndex);
-			if (dst == null) {
-				throw new IllegalArgumentException("Redirect to null channel");
-			}
-			stack.top().set(index, dst);
+			stack.top().set(index, dst.get(stack));
 			if (CompilerSettings.DEBUG) {
 				stack.top().setName(index, name);
 			}
@@ -532,8 +531,8 @@ public abstract class ChannelRef<T> {
 	public static class Ordered<T> extends Redirect<T> {
 		private final int prevIndex;
 		
-		public Ordered(String name, int srcIndex, int dstIndex, Ordered<T> prev) {
-			super(name, srcIndex, dstIndex);
+		public Ordered(String name, int srcIndex, ChannelRef<T> dst, Ordered<T> prev) {
+			super(name, srcIndex, dst);
 			if (prev == null) {
 				prevIndex = -1;
 			}
@@ -547,19 +546,19 @@ public abstract class ChannelRef<T> {
 		public void create(Stack stack) {
 			if (prevIndex == -1) {
 				stack.top().set(index, 
-						new OrderedParallelChannel<T>((Channel<T>) stack.top().get(dstIndex), null));
+						new OrderedParallelChannel<T>(dst.get(stack), null));
 			}
 			else {
 				stack.top().set(index, 
-						new OrderedParallelChannel<T>((Channel<T>) stack.top().get(dstIndex), 
+						new OrderedParallelChannel<T>(dst.get(stack), 
 								(OrderedParallelChannel<T>) stack.top().get(prevIndex)));
 			}
 		}
 	}
 	
 	public static class OrderedFramed<T> extends Redirect<T> {
-		public OrderedFramed(String name, int srcIndex, int dstIndex) {
-			super(name, srcIndex, dstIndex);
+		public OrderedFramed(String name, int srcIndex, ChannelRef<T> dst) {
+			super(name, srcIndex, dst);
 		}
 
 		@SuppressWarnings("unchecked")
@@ -568,7 +567,7 @@ public abstract class ChannelRef<T> {
 			if (prev != null) {
 				pc = (OrderedParallelChannel<T>) prev.top().get(index);
 			}
-			stack.top().set(index, new OrderedParallelChannel<T>((Channel<T>) stack.top().prev().get(dstIndex), pc));
+			stack.top().set(index, new OrderedParallelChannel<T>(dst.get(stack), pc));
 		}
 	}
 	
