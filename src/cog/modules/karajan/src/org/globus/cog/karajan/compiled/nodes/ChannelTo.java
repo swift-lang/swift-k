@@ -46,24 +46,25 @@ public class ChannelTo extends InternalFunction {
 
 	@Override
 	public Node compile(WrapperNode w, Scope scope) throws CompilationException {
-		return super.compile(w, scope);
+		Node n = super.compile(w, scope);
+		if (c_vargs == null) {
+			return null;
+		}
+		else {
+			return n;
+		}
 	}
 	
-	
-
-	@Override
-	public void run(LWThread thr) {
-		super.run(thr);
-	}
-
 	@Override
 	protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
 			Scope scope) throws CompilationException {
 		Var.Channel cdst = scope.parent.lookupChannel(name, this);
 		Var.Channel csrc = scope.addChannel("...");
-		c_vargs = new ChannelRef.Redirect<Object>("...", csrc.getIndex(), cdst.getIndex());
 		csrc.setValue(cdst.getValue());
 		super.compileBlocks(w, sig, blocks, scope);
+		if (csrc.isDynamic()) {
+			c_vargs = new ChannelRef.Redirect<Object>("...", csrc.getIndex(), scope.parent.getChannelRef(cdst));
+		}
 	}
 
 	@Override
