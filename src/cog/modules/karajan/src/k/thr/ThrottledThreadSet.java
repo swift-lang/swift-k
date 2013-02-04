@@ -12,6 +12,7 @@ package k.thr;
 import k.rt.AbstractFuture;
 import k.rt.ConditionalYield;
 import k.rt.ExecutionException;
+import k.rt.FutureListener;
 
 
 public class ThrottledThreadSet extends ThreadSet {
@@ -22,6 +23,18 @@ public class ThrottledThreadSet extends ThreadSet {
 		@Override
 		protected boolean isClosed() {
 			return false;
+		}
+
+		@Override
+		public void addListener(FutureListener l) {
+		    synchronized(ThrottledThreadSet.this) {
+    		    if (canAdd()) {
+    		        l.futureUpdated(this);
+    		    }
+    		    else {
+    		    	super.addListener(l);
+    		    }
+		    }
 		}
 
 		@Override
@@ -41,7 +54,10 @@ public class ThrottledThreadSet extends ThreadSet {
 	}
 	
 	public int freeSlots() {
-	    return maxThreads - getRunning();
+	    // this is not exactly correct, but if the set is locked
+	    // getRunning() is artificially increased by one. The assumption
+	    // here is that this method is only called with the set locked.
+	    return maxThreads - getRunning() + 1;
 	}
 	
 	@Override
