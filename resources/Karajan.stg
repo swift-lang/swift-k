@@ -59,15 +59,22 @@ memberdefinition(type,name,sourcelocation) ::= <<
 
 procedure(name, outputs, inputs, arguments, optargs, binding, declarations, statements, config, line, initWaitCounts, cleanups, closes) ::= <<
 
-$name$ := function($if(optargs)$ "$proc_oargs(args=optargs)$"$endif$$if(arguments)$ "$proc_args(args=arguments)$"$endif$) {
-	$inputs:swift_log_input();separator="\n"$
-	$outputs:swift_log_output();separator="\n"$
+$name$ := function($if(optargs)$$proc_oargs(args=optargs)$$if(arguments)$, $endif$$endif$$if(arguments)$$proc_args(args=arguments)$$endif$) {
+	$swift_log_inputs(inputs)$
+	$swift_log_outputs(outputs)$
 $if(binding)$
 	$swift_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name,line=line)$
 $else$
 	$compound(outputs=outputs, inputs=inputs, declarations=declarations, statements=statements, name=name, initWaitCounts=initWaitCounts, cleanups=cleanups)$
 $endif$
 }
+>>
+
+swift_log_inputs(params) ::= <<
+$params:log_param("input");separator="\n"$
+>>
+swift_log_outputs(params) ::= <<
+$params:log_param("output");separator="\n"$
 >>
 
 compound(outputs, inputs, declarations, statements, config, name, initWaitCounts, cleanups) ::= <<
@@ -87,7 +94,7 @@ unitEnd("COMPOUND", name="$name$")
 >>
 
 proc_args(args) ::= <<
-$args:arg_name();separator=","$
+$args:arg_name();separator=", "$
 >>
 
 arg_name() ::= <<
@@ -115,12 +122,8 @@ $outputs:swift_closedataset();separator="\n"$
 unitEnd("PROCEDURE", name="$name$", line="$line$")
 >>
 
-swift_log_input() ::= <<
-parameterLog("input", "$it.name$", swift:getDatasetProvenanceID($it.name$), currentThread())
->>
-
-swift_log_output() ::= <<
-parameterLog("output", "$it.name$", swift:getDatasetProvenanceID($it.name$), currentThread())
+log_param(dir) ::= <<
+parameterLog("$dir$", "$it.name$", swift:getDatasetProvenanceID($it.name$))
 >>
 
 swift_stagein() ::= <<
@@ -144,14 +147,17 @@ list() ::= <<$it.name$>>
 swift_arguments(attributes,arguments,stdin,stdout,stderr) ::= <<
 $attributes$
 swift:arguments(
-	$arguments;separator="\n"$
+	$arguments;separator=", "$
 )
+
 $if (stdin)$
 swift:stdin($stdin$)
 $endif$
+
 $if (stdout)$
 swift:stdout($stdout$)
 $endif$
+
 $if (stderr)$
 swift:stderr($stderr$)
 $endif$
@@ -175,9 +181,7 @@ parallel(
 	$statements;separator="\n"$
 )
 $else$
-sequential(
-	$statements$
-)
+$statements$
 $endif$
 >>
 
@@ -187,7 +191,7 @@ $endif$
 
 function(name, args, datatype, line) ::= <<
 swiftscript:$name$(
-	$if(args)$ $args$ $endif$
+	$if(args)$$args;separator=", "$$endif$
 )
 >>
 
@@ -214,6 +218,7 @@ $if(statements)$
 	$parallel(statements=statements)$
 	$cleanups:swift_cleandataset();separator="\n"$
 $endif$
+
 	unitEnd("FOREACH_IT", line="$line$")
 }
 >>
@@ -237,14 +242,14 @@ sequential(
 
 callInternal_log_input() ::= <<
 sequential(
-	parameterLog("input", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$), currentThread())
+	parameterLog("input", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
 	$it$
 )
 >>
 
 callInternal_log_output() ::= <<
 sequential(
-	parameterLog("output", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$), currentThread())
+	parameterLog("output", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
 	$it$
 )
 >>
@@ -252,9 +257,9 @@ sequential(
 callUserDefined(func, outputs, inputs, line, serialize, partialClose) ::= <<
 $func$(
 	$if(!serialize)$parallel($endif$
-    $outputs;separator="\n"$
-    $inputs;separator="\n"$
-  $if(!serialize)$)$endif$
+	$outputs;separator=", "$
+	$inputs;separator=", "$
+	$if(!serialize)$)$endif$
 )
 $if(partialClose)$
 $partialClose$
@@ -276,35 +281,30 @@ $name$ := $expr$
 variable(name, type, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line) ::= <<
 $name$ := 
 	$if(mapping)$
-	swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$, _defline="$line$"$if(input)$, input=true$endif$
+	swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline="$line$"$endif$$if(input)$, input=true$endif$
 		$swift_mapping(mapping=mapping, file=file)$
 	)
 	$else$
 		$if(file)$
-			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$, _defline="$line$"$if(input)$, input=true$endif$
+			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline="$line$"$endif$$if(input)$, input=true$endif$
 				$swift_mapping(mapping=mapping, file=file)$
 			)
 		$else$
-			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$, _defline="$line$"$if(input)$, input=true$endif$)
+			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline="$line$"$endif$$if(input)$, input=true$endif$)
 		$endif$
 	$endif$
 $variable_log()$
 >>
 
 variable_log() ::= <<
-	parameterLog("intermediate", "$name$", swift:getDatasetProvenanceID($name$), currentThread())
+	parameterLog("intermediate", "$name$", swift:getDatasetProvenanceID($name$))
 >>
 
 swift_mapping(mapping, file) ::= <<
 $if(file)$
-swift:mapping("single_file_mapper", 
-  swift:parameter("file", "$file.name$")
-  $if(file.params)$$file.params;separator="\n"$$endif$
-)
+swift:mapping("single_file_mapper", swift:parameter("file", "$file.name$") $if(file.params)$$file.params;separator="\n"$$endif$)
 $else$
-swift:mapping("$mapping.descriptor$",
-  $mapping.params;separator="\n"$
-)
+swift:mapping("$mapping.descriptor$", $mapping.params;separator="\n"$)
 $endif$
 >>
 
@@ -313,23 +313,23 @@ swift:parameter("$name$", $expr$)
 >>
 
 assign(var, value, line, partialClose) ::= <<
-   swift:setFieldValue($if(line)$_traceline="$line$"$else$_traceline="-1"$endif$
-       $var$
-       $value$
-   )
-   $if(partialClose)$
+swift:setFieldValue($if(line)$_traceline="$line$"$endif$
+	$var$
+	$value$
+)
+$if(partialClose)$
 $partialClose$
-   $endif$
+$endif$
 >>
 
 append(array, value, partialClose) ::= <<
-	swift:appendArray(
-		$array$
-		$value$
-	)
-	$if(partialClose)$
+swift:appendArray(
+	$array$
+	$value$
+)
+$if(partialClose)$
 $partialClose$
-    $endif$
+$endif$
 >>
 
 callexpr(call, datatype, prefix) ::= <<
@@ -353,11 +353,11 @@ swift:createarray(
 >>
 
 range(from, to, step, datatype) ::= <<
-	sequential(
-		tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$)
-		tmp
-		$range_log()$
-	) 
+sequential(
+	tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$)
+	tmp
+	$range_log()$
+) 
 >>
 
 range_log() ::= <<
@@ -408,9 +408,13 @@ $endif$
 // the wrapping layer disappers in the (perhaps common?) case of a
 // single layer.
 sequential(statements) ::= <<
-	sequential(
-    	$statements;separator="\n"$
-  	)
+$if(rest(statements))$
+sequential(
+   	$statements;separator="\n"$
+)
+$else$
+$statements$
+$endif$
 >>
 
 
@@ -499,7 +503,8 @@ bConst(value, datatype) ::= <<
 swift:new("boolean", value=$value$)
 >>
 
+// Why is there a value attribute?
 sConst(value,innervalue,datatype) ::= <<
-swift:new("string", value="$value$")
+swift:new("string", value="$innervalue$")
 >>
 
