@@ -13,8 +13,8 @@ include::swift_basics[]
 
 include::coasters[]
 
-include::diverse_infrastructures[]
+include::infrastructures[]
 
-include::debugging_swift[]
+include::debugging[]
 
 include::log_processing[]
