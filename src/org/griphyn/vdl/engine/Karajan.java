@@ -478,7 +478,7 @@ public class Karajan {
 			if (!isPrimitiveOrArrayOfPrimitive(var.getType().getLocalPart())) {
     			StringTemplate mappingST = new StringTemplate("mapping");
     			mappingST.setAttribute("descriptor", "concurrent_mapper");
-    			StringTemplate paramST = template("vdl_parameter");
+    			StringTemplate paramST = template("swift_parameter");
     			paramST.setAttribute("name", "prefix");
     			paramST.setAttribute("expr", var.getName() + "-"
     					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
@@ -492,7 +492,7 @@ public class Karajan {
 	}
 
     private StringTemplate mappingParameter(Param param, VariableScope scope) throws CompilationException {
-        StringTemplate paramST = template("vdl_parameter");
+        StringTemplate paramST = template("swift_parameter");
         paramST.setAttribute("name", param.getName());
         Node expressionDOM = param.getAbstractExpression().getDomNode();
         String namespaceURI = expressionDOM.getNamespaceURI();
@@ -508,7 +508,7 @@ public class Karajan {
             // TODO factorise this and other code in variable()?
             StringTemplate pmappingST = new StringTemplate("mapping");
             pmappingST.setAttribute("descriptor", "concurrent_mapper");
-            StringTemplate pparamST = template("vdl_parameter");
+            StringTemplate pparamST = template("swift_parameter");
             pparamST.setAttribute("name", "prefix");
             pparamST.setAttribute("expr", parameterVariableName + "-" + 
                 UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
@@ -1124,7 +1124,7 @@ public class Karajan {
 		Profile[] profiles = app.getProfileArray();
 		if (profiles.length == 0) 
 			return;
-		StringTemplate attributes = template("vdl_attributes");
+		StringTemplate attributes = template("swift_attributes");
 		for (Profile profile : profiles) { 
 			XmlObject xmlKey   = profile.getAbstractExpressionArray(0);
 			XmlObject xmlValue = profile.getAbstractExpressionArray(1);
