@@ -98,8 +98,6 @@ public class AllocateHost extends InternalFunction {
 		super.compileBlocks(w, sig, blocks, scope);
 	}
 
-	private static Map<Task, Long> stimes = Collections.synchronizedMap(new HashMap<Task, Long>());
-
 	protected void allocateHost(LWThread thr) {
 		int i = thr.checkSliceAndPopState();
 		TaskFuture tf = (TaskFuture) thr.popState();
@@ -125,7 +123,6 @@ public class AllocateHost extends InternalFunction {
 							Contact contact = s.allocateContact(constraints);
 							t.setVirtualContact(contact);
 							
-							stimes.put(t, System.currentTimeMillis());
 							s.enqueue(t, new Contact[] { contact }, tf);
 							i++;
 							throw new ConditionalYield(tf);
