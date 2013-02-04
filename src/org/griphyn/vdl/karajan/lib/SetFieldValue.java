@@ -112,6 +112,14 @@ public class SetFieldValue extends SwiftFunction {
         tracer = Tracer.getTracer(this);
         return fn;
     }
+    
+    
+
+    @Override
+    protected void initializeArgs(Stack stack) {
+        super.initializeArgs(stack);
+        this.state.setValue(stack, null);
+    }
 
     @Override
     public Object function(Stack stack) {
