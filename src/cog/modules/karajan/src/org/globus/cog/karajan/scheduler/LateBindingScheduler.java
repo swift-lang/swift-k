@@ -476,7 +476,10 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			throws TaskSubmissionException {
 		Task t = e.task;
 		if (t instanceof ContactAllocationTask) {
-			((ContactAllocationTask) t).setContact((BoundContact) contacts[0]);
+			ContactAllocationTask ct = (ContactAllocationTask) t;
+			ct.setContact((BoundContact) contacts[0]);
+			removeEntry(t);
+			virtualContacts.remove(ct.getVirtualContact());
 			Status status = t.getStatus();
 			status.setPrevStatusCode(status.getStatusCode());
 			status.setStatusCode(Status.COMPLETED);
