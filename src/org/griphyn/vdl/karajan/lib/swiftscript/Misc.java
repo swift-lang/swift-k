@@ -326,7 +326,7 @@ public class Misc {
 
         @Override
         protected Signature getSignature() {
-            return new Signature(params("array", optional("delim", new RootDataNode(Types.STRING, ", "))));
+            return new Signature(params("array", "delim"));
         }
         
         @Override
@@ -419,7 +419,7 @@ public class Misc {
 
         @Override
         protected Signature getSignature() {
-            return new Signature(params("str"));
+            return new Signature(params("str"), returns(channel("...", 1)));
         }
         
         @Override
@@ -450,9 +450,20 @@ public class Misc {
         @Override
         public Object function(Stack stack) {
             AbstractDataNode hstr = str.getValue(stack);
-            String str = SwiftFunction.unwrap(this, hstr);
+            Object obj = SwiftFunction.unwrap(this, hstr);
             
-            DSHandle handle = new RootDataNode(Types.FLOAT, Double.valueOf(str));
+            DSHandle handle;
+            
+            if (obj instanceof String) {
+                handle = new RootDataNode(Types.FLOAT, Double.valueOf((String) obj));
+            }
+            else if (obj instanceof Number) {
+                handle = new RootDataNode(Types.FLOAT, ((Number) obj).doubleValue());
+            }
+            else {
+                throw new ExecutionException("Expected a string or int. Got " + obj);
+            }
+            
 
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();

@@ -22,8 +22,6 @@ import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.compiled.nodes.Node;
-import org.globus.cog.karajan.compiled.nodes.functions.BinaryOp;
-import org.globus.cog.karajan.compiled.nodes.functions.UnaryOp;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
@@ -99,9 +97,9 @@ public class Operators {
         }
     }
 		
-	public static class Sum extends BinaryOp<DSHandle, DSHandle> {
+	public static class Sum extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             Type t = type(v1, v2);
             DSHandle r;
             if (t == Types.STRING) {
@@ -118,9 +116,9 @@ public class Operators {
         }
 	}
 	
-	public static class Difference extends BinaryOp<DSHandle, DSHandle> {
+	public static class Difference extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             Type t = type(v1, v2);
             DSHandle r;
             if (t == Types.INT) {
@@ -134,9 +132,9 @@ public class Operators {
         }
     }
 	
-	public static class Product extends BinaryOp<DSHandle, DSHandle> {
+	public static class Product extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             Type t = type(v1, v2);
             DSHandle r;
             if (t == Types.INT) {
@@ -150,9 +148,9 @@ public class Operators {
         }
     }
 	
-	public static class FQuotient extends BinaryOp<DSHandle, DSHandle> {
+	public static class FQuotient extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.FLOAT, getFloat(this, v1) / getFloat(this, v2));
             logBinaryProvenance("fquotient", v1, v2, r);
             return r;
@@ -162,18 +160,18 @@ public class Operators {
 	public static class Quotient extends FQuotient {
 	}
 
-	public static class IQuotient extends BinaryOp<DSHandle, DSHandle> {
+	public static class IQuotient extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.INT, getInt(this, v1) / getInt(this, v2));
             logBinaryProvenance("iquotient", v1, v2, r);
             return r;
         }
     }
 
-	public static class Remainder extends BinaryOp<DSHandle, DSHandle> {
+	public static class Remainder extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             Type t = type(v1, v2);
             DSHandle r;
             if (t == Types.INT) {
@@ -187,81 +185,81 @@ public class Operators {
         }
     }
 	
-	public static class LE extends BinaryOp<DSHandle, DSHandle> {
+	public static class LE extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) <= getFloat(this, v2));
             logBinaryProvenance("le", v1, v2, r);
             return r;
         }
     }
 	
-	public static class GE extends BinaryOp<DSHandle, DSHandle> {
+	public static class GE extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) >= getFloat(this, v2));
             logBinaryProvenance("ge", v1, v2, r);
             return r;
         }
     }
 	
-	public static class LT extends BinaryOp<DSHandle, DSHandle> {
+	public static class LT extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) < getFloat(this, v2));
             logBinaryProvenance("lt", v1, v2, r);
             return r;
         }
     }
 	
-	public static class GT extends BinaryOp<DSHandle, DSHandle> {
+	public static class GT extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) > getFloat(this, v2));
             logBinaryProvenance("gt", v1, v2, r);
             return r;
         }
     }
 	
-	public static class EQ extends BinaryOp<DSHandle, DSHandle> {
+	public static class EQ extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, v1.getValue().equals(v2.getValue()));
             logBinaryProvenance("eq", v1, v2, r);
             return r;
         }
     }
 	
-	public static class NE extends BinaryOp<DSHandle, DSHandle> {
+	public static class NE extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, !v1.getValue().equals(v2.getValue()));
             logBinaryProvenance("ne", v1, v2, r);
             return r;
         }
     }
 	
-	public static class And extends BinaryOp<DSHandle, DSHandle> {
+	public static class And extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, getBool(this, v1) && getBool(this, v2));
             logBinaryProvenance("and", v1, v2, r);
             return r;
         }
     }
 
-	public static class Or extends BinaryOp<DSHandle, DSHandle> {
+	public static class Or extends SwiftBinaryOp {
         @Override
-        protected DSHandle value(DSHandle v1, DSHandle v2) {
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, getBool(this, v1) || getBool(this, v2));
             logBinaryProvenance("or", v1, v2, r);
             return r;
         }
     }
 	
-	public static class Not extends UnaryOp<DSHandle, DSHandle> {
+	public static class Not extends SwiftUnaryOp {
         @Override
-        protected DSHandle value(DSHandle v) {
+        protected DSHandle value(AbstractDataNode v) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, !getBool(this, v));
             logUnaryProvenance("not", v, r);
             return r;
