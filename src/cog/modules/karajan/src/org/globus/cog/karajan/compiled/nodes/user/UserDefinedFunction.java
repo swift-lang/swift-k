@@ -290,4 +290,8 @@ public abstract class UserDefinedFunction extends CompoundNode {
             body.dump(ps, level + 1);
         }
     }
+
+	protected List<ArgRef.RuntimeOptional<Object>> getRuntimeOptionalValues() {
+		return runtimeOptionalValues;
+	}
 }

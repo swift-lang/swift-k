@@ -19,8 +19,6 @@ import k.rt.Stack;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Param;
-import org.globus.cog.karajan.futures.FutureIterator;
-import org.globus.cog.karajan.util.KarajanIterator;
 
 public class List {
 	
@@ -133,11 +131,7 @@ public class List {
 		@Override
 		public Object function(Stack stack) {
 			Object o = list.getValue(stack);
-			if (o instanceof FutureIterator) {
-				((FutureIterator) o).next();
-				return o;
-			}
-			else if (o instanceof Channel) {
+			if (o instanceof Channel) {
 				return ((Channel<?>) o).subChannel(1);
 			}
 			else if (o instanceof java.util.List) {
@@ -180,9 +174,6 @@ public class List {
 			}
 			else if (o instanceof Channel) {
 				return ((Channel<?>) o).get(0);
-			}
-			else if (o instanceof KarajanIterator) {
-				return ((KarajanIterator<?>) o).peek();
 			}
 			throw new ExecutionException(this, "Not a list: " + o);
 		}

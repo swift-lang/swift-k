@@ -123,11 +123,6 @@ public class Function extends UserDefinedFunction {
 
 	protected void bindArgs(Frame src, Frame dst, int firstIndex, int argCount) {
 		System.arraycopy(src.getAll(), firstIndex, dst.getAll(), 0, argCount);
-		if (runtimeOptionalValues != null) {
-			for (ArgRef.RuntimeOptional<Object> p : runtimeOptionalValues) {
-				p.set(dst);
-			}
-		}
 	}
 
 	public void bindChannels(Stack parent, Stack def, List<ChannelRef<Object>> wrapperChannels) {

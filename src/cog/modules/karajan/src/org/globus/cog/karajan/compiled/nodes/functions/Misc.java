@@ -44,10 +44,9 @@ import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.globus.cog.karajan.util.KarajanIterator;
 import org.globus.cog.karajan.util.TypeUtil;
 
 public class Misc {
@@ -495,9 +494,14 @@ public class Misc {
 			else {
 				str = String.valueOf(o);
 			}
-			String pat = pattern.getValue(stack);
-			Pattern p = Pattern.compile(pat, Pattern.DOTALL);
-			return p.matcher(str).matches();
+			if (str == null) {
+				return false;
+			}
+			else {
+				String pat = pattern.getValue(stack);
+				Pattern p = Pattern.compile(pat, Pattern.DOTALL);
+				return p.matcher(str).matches();
+			}
 		}
 	}
 	
@@ -692,7 +696,7 @@ public class Misc {
 		}
 	}
 	
-	public static class DotIterator implements KarajanIterator<Object> {
+	public static class DotIterator implements Iterator<Object> {
 		private final Iterator<Object>[] its;
 		private boolean next, nextValid;
 		private int crt;

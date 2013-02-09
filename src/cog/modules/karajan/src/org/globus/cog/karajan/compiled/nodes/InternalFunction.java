@@ -123,6 +123,10 @@ public abstract class InternalFunction extends Sequential {
 	protected Param block(String name) {
 		return new Param(name, Param.Type.BLOCK);
 	}
+	
+	protected List<ChannelRef<?>> getChannelParams() {
+		return channelParams;
+	}
 		
 	protected void runBody(LWThread thr) {
 	}
@@ -172,11 +176,15 @@ public abstract class InternalFunction extends Sequential {
 				c.create(stack);
 			}
 		}
-		if (firstOptionalIndex != -1) {
-		    Arrays.fill(stack.top().getAll(), firstOptionalIndex, lastOptionalIndex, null);
-		}
+		initializeOptional(stack);
 	}
 	
+	protected void initializeOptional(Stack stack) {
+	    if (firstOptionalIndex != -1) {
+            Arrays.fill(stack.top().getAll(), firstOptionalIndex, lastOptionalIndex, null);
+        }
+	}
+
 	protected static class ArgInfo {
 		public final LinkedList<WrapperNode> blocks;
 		public final Var.Channel vargs;
@@ -287,7 +295,7 @@ public abstract class InternalFunction extends Sequential {
 			}
 			else {
 				setArg(w, p, new ArgRef.Static<Object>(p.value));
-				scope.removeVar(p.varName());
+				removeOptionalParam(scope, p);
 			}
 		}
 		
@@ -362,6 +370,10 @@ public abstract class InternalFunction extends Sequential {
 				}
 			}
 		}
+	}
+
+	protected void removeOptionalParam(Scope scope, Param p) {
+	    scope.removeVar(p.varName());
 	}
 
 	private ChannelRef<Object> makeInvalidArgChannel(int index) {

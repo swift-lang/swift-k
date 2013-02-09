@@ -118,6 +118,10 @@ public abstract class ArgRef<T> {
 			dst.set(index, value);
 		}
 		
+		public void set(Frame dst, int offset) {
+            dst.set(index + offset, value);
+        }
+		
 		public String toString() {
 		    return name + " = " + value;
 		}

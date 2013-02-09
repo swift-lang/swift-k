@@ -29,8 +29,8 @@ import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 
 public class InvocationWrapper extends InternalFunction {
@@ -114,6 +114,12 @@ public class InvocationWrapper extends InternalFunction {
 			staticArgs = nsa;
 		}
 		staticArgs[index] = value;
+	}
+
+	@Override
+	protected void removeOptionalParam(Scope scope, Param p) {
+		// not done here since static optional params are still
+	    // created on the stack
 	}
 
 	@Override
@@ -220,6 +226,18 @@ public class InvocationWrapper extends InternalFunction {
             System.arraycopy(staticArgs, 0, stack.top().getAll(), firstIndex, staticArgs.length);
         }
 		super.initializeArgs(stack);
+	}
+	
+	
+
+	@Override
+	protected void initializeOptional(Stack stack) {
+		List<ArgRef.RuntimeOptional<Object>> opt = fn.getRuntimeOptionalValues();
+        if (opt != null) {
+            for (ArgRef.RuntimeOptional<Object> o : opt) {
+                o.set(stack.top(), firstIndex);
+            }
+        }
 	}
 
 	@Override

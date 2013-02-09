@@ -20,7 +20,7 @@ import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 
 public abstract class UnaryOp<T, R> extends AbstractFunction {
-	private ArgRef<T> v1;
+	protected ArgRef<T> v1;
 
 	@Override
 	public R function(Stack stack) {

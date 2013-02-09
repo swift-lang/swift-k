@@ -54,7 +54,7 @@ public class ThreadSet implements Future {
 		}
 	}
 	
-	protected synchronized int getRunning() {
+	public synchronized int getRunning() {
 	    if (threads == null) {
 	        return 0;
 	    }
@@ -69,7 +69,9 @@ public class ThreadSet implements Future {
 			return;
 		}
 		for (LWThread thread : threads) {
-			thread.abort();
+			if (thread != null) {
+				thread.abort();
+			}
 		}
 		threads = null;
 		notifyListeners();

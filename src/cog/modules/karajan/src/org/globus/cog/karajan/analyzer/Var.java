@@ -70,7 +70,7 @@ public class Var {
 	}
 
 	public static class Channel extends Var {
-		private boolean disabled, singleValued, noBuffer;
+		private boolean disabled, singleValued, noBuffer, commutative;
 		private String channelName;
 		
 		public Channel(String name) {
@@ -152,7 +152,11 @@ public class Var {
 		}
 
 		public boolean isCommutative() {
-			return false;
+			return commutative;
+		}
+
+		public void setCommutative(boolean commutative) {
+			this.commutative = commutative;
 		}
 
 		public void clear() {

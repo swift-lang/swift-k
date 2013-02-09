@@ -43,11 +43,6 @@ public class CBFInvocationWrapper extends InvocationWrapper {
 	protected ChannelRef<Object> makeArgMappingChannel(int firstDynamicIndex, int dynamicCount, int vargsIndex) {
 		return new ChannelRef.ArgMappingFuture<Object>(firstDynamicIndex, dynamicCount, vargsIndex);
 	}
-
-	@Override
-	protected void initializeArgs(Stack stack) {
-		super.initializeArgs(stack);
-	}
 	
 	@Override
 	public void run(LWThread thr) throws ExecutionException {
@@ -82,6 +77,7 @@ public class CBFInvocationWrapper extends InvocationWrapper {
 			            for (; i <= ec; i++) {
 			            	runChild(i - 1, thr);
 			            }
+			            closeChannels(thr.getStack());
 			            i = Integer.MAX_VALUE;
 	        	case Integer.MAX_VALUE:
 	        		fo.getValue();
@@ -92,6 +88,15 @@ public class CBFInvocationWrapper extends InvocationWrapper {
             y.getState().push(i);
             throw y;
         }
+	}
+
+	private void closeChannels(Stack stack) {
+		List<ChannelRef<?>> l = this.getChannelParams();
+		if (l != null) {
+			for (ChannelRef<?> r : l) {
+				r.close(stack);
+			}
+		}
 	}
 
 	@Override

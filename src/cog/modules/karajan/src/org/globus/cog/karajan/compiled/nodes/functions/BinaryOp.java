@@ -20,8 +20,8 @@ import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 
 public abstract class BinaryOp<T, R> extends AbstractFunction {
-	private ArgRef<T> v1;
-	private ArgRef<T> v2;
+	protected ArgRef<T> v1;
+	protected ArgRef<T> v2;
 
 	@Override
 	public R function(Stack stack) {

@@ -79,6 +79,13 @@ public class Math {
 		}
 	}
 	
+	public static class Neg extends UnaryOp<Number, Number> {
+        @Override
+        protected Number value(Number v1) {
+            return  -v1.doubleValue();
+        }
+    }
+	
 	public static class Sqrt extends UnaryOp<Number, Number> {
 		@Override
 		protected Number value(Number v1) {
