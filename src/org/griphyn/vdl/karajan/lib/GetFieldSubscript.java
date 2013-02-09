@@ -24,14 +24,16 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.OOBYield;
 import org.griphyn.vdl.mapping.Path;
 
 public class GetFieldSubscript extends SwiftFunction {
     private ArgRef<DSHandle> var;
-    private ArgRef<Object> subscript;
+    private ArgRef<AbstractDataNode> subscript;
 
 	@Override
     protected Signature getSignature() {
@@ -42,9 +44,11 @@ public class GetFieldSubscript extends SwiftFunction {
 	public Object function(Stack stack) {
 		DSHandle var = this.var.getValue(stack);
 
-		Object index = this.subscript.getValue(stack);
+		AbstractDataNode indexh = this.subscript.getValue(stack);
 
 		try {
+		    indexh.waitFor();
+		    Object index = indexh.getValue();
 			Path path;
 			if ("*".equals(index)) {
 			    path = Path.CHILDREN;
@@ -59,6 +63,9 @@ public class GetFieldSubscript extends SwiftFunction {
 			else {
 				return fields;
 			}
+		}
+		catch (OOBYield y) {
+		    throw y.wrapped(this);
 		}
 		catch (InvalidPathException e) {
 			throw new ExecutionException(this, e);

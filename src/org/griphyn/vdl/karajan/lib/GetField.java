@@ -38,7 +38,7 @@ public class GetField extends SwiftFunction {
 	
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("var", optional("path", Path.EMPTY_PATH)));
+        return new Signature(params("var", "path"));
     }
 
 	@Override

@@ -22,23 +22,30 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
+import k.rt.Context;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.compiled.nodes.restartLog.LogChannelOperator;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
 
 public class IsDone extends SwiftFunction {
     private ArgRef<Iterable<List<Object>>> stageout;
     
-    private ChannelRef<String> cr_restartLog;
+    private VarRef<Context> context;
 
     @Override
     protected Signature getSignature() {
-        return new Signature(params("stageout"), returns(channel("...", 1), channel("restartLog")));
+        return new Signature(params("stageout"), returns(channel("...", 1)));
+    }
+    
+    @Override
+    protected void addLocals(Scope scope) {
+        context = scope.getVarRef("#context");
+        super.addLocals(scope);
     }
     
     @Override
@@ -47,7 +54,7 @@ public class IsDone extends SwiftFunction {
         for (List<Object> pv : files) {
             Path p = (Path) pv.get(0);
             DSHandle handle = (DSHandle) pv.get(1);
-            if (!IsLogged.isLogged((LogChannelOperator) cr_restartLog.get(stack), handle, p)) {
+            if (!IsLogged.isLogged(context.getValue(stack), handle, p)) {
                 return Boolean.FALSE;
             }
         }

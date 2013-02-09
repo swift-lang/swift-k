@@ -26,7 +26,6 @@ import k.rt.ConditionalYield;
 import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
-import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;

@@ -23,14 +23,16 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.compiled.nodes.restartLog.LogChannelOperator;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.restartLog.LogEntry;
+import org.globus.cog.karajan.compiled.nodes.restartLog.RestartLog;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.MappingParam;
@@ -40,11 +42,17 @@ public class IsLogged extends SwiftFunction {
 	private ArgRef<DSHandle> var;
 	private ArgRef<Object> path;
 	
-	private ChannelRef<String> cr_restartLog;
+	private VarRef<Context> context;
 	
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("var", "path"), returns(channel("restartLog")));
+        return new Signature(params("var", "path"));
+    }
+	
+	@Override
+    protected void addLocals(Scope scope) {
+        context = scope.getVarRef("#context");
+        super.addLocals(scope);
     }
 
 	@Override
@@ -58,11 +66,12 @@ public class IsLogged extends SwiftFunction {
 		else {
 			path = Path.parse(TypeUtil.toString(p));
 		}
-		return Boolean.valueOf(isLogged((LogChannelOperator) cr_restartLog.get(stack), var, path));
+		return Boolean.valueOf(isLogged(context.getValue(stack), var, path));
 	}
 	
-	public static boolean isLogged(LogChannelOperator log, DSHandle var, Path path) throws ExecutionException {
-		Map<LogEntry, Object> logData = log.getLogData();
+	public static boolean isLogged(Context ctx, DSHandle var, Path path) throws ExecutionException {
+		@SuppressWarnings("unchecked")
+        Map<LogEntry, Object> logData = (Map<LogEntry, Object>) ctx.getAttribute(RestartLog.LOG_DATA);
 	    path = var.getPathFromRoot().append(path);
         LogEntry entry = LogEntry.build(var.getRoot().getParam(MappingParam.SWIFT_RESTARTID) + "." + path.stringForm());
         boolean found = false;

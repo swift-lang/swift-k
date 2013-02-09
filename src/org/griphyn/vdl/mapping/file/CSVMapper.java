@@ -80,7 +80,13 @@ public class CSVMapper extends AbstractMapper {
 			throw new InvalidMappingParameterException("CSV mapper must have a file parameter.");
 		}
 		if (!PARAM_HDELIMITER.isPresent(this)) {
-		    params.set(PARAM_HDELIMITER, PARAM_DELIMITER.getRawValue(this));
+		    Object raw = PARAM_DELIMITER.getRawValue(this);
+		    if (raw != null) {
+		        params.set(PARAM_HDELIMITER, PARAM_DELIMITER.getRawValue(this));
+		    }
+		    else {
+		        params.set(PARAM_HDELIMITER, PARAM_DELIMITER.getValue(this));
+		    }
 		}
 		delim = PARAM_DELIMITER.getStringValue(this);
         hdelim = PARAM_HDELIMITER.getStringValue(this);
