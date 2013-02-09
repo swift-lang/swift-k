@@ -22,6 +22,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.Collection;
 
+import k.rt.ConditionalYield;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
@@ -36,7 +37,6 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.futures.FutureFault;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
@@ -62,7 +62,7 @@ public class Stagein extends SwiftFunction {
     public Node compile(WrapperNode w, Scope scope)
             throws CompilationException {
         Node def = getParent().getParent();
-        procName = Karajan.demangle(def.getTextualName());
+        procName = def.getTextualName();
         tracer = Tracer.getTracer(def, "APPCALL");
         return super.compile(w, scope);
     }
@@ -70,7 +70,7 @@ public class Stagein extends SwiftFunction {
     @Override
     public Object function(Stack stack) {
         AbstractDataNode var = this.var.getValue(stack);
-        if (var.isPrimitive()) {
+        if (!var.isPrimitive()) {
             boolean deperr = false;
             boolean mdeperr = false;
             try {
@@ -90,7 +90,7 @@ public class Stagein extends SwiftFunction {
                     stagein.add(filename(var.getField(p))[0]);
                 }
             }
-            catch (FutureFault f) {
+            catch (ConditionalYield f) {
                 if (tracer.isEnabled()) {
                     tracer.trace(LWThread.currentThread(), procName + " WAIT " + Tracer.getFutureName(f.getFuture()));
                 }

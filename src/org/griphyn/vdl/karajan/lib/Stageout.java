@@ -73,7 +73,7 @@ public class Stageout extends SwiftFunction {
             var.waitFor(this);
         }
         try {
-            if (var.isPrimitive()) {
+            if (!var.isPrimitive()) {
                 retPaths(cr_stageout.get(stack), var);
             }
             if (var.isRestartable()) {
