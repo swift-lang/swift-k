@@ -47,7 +47,6 @@ import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.execution.fake.JobSubmissionTaskHandler;
 import org.globus.cog.karajan.compiled.nodes.Main;
 import org.globus.cog.karajan.compiled.nodes.grid.AbstractGridNode;
 import org.globus.cog.karajan.parser.WrapperNode;
@@ -217,7 +216,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ec.start(context);
             ec.waitFor();
             long end = System.currentTimeMillis();
-            System.out.println(JobSubmissionTaskHandler.jobsRun + " jobs, " + JobSubmissionTaskHandler.jobsRun * 1000 / (end - start) + " j/s");
+            //System.out.println(JobSubmissionTaskHandler.jobsRun + " jobs, " + JobSubmissionTaskHandler.jobsRun * 1000 / (end - start) + " j/s");
             if (ec.isFailed()) {
                 runerror = true;
             }
@@ -287,7 +286,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         File swiftscript = new File(project);
         debugText("SWIFTSCRIPT", swiftscript);
         String projectBase = project.substring(0, project.lastIndexOf('.'));
-        File xml = new File(projectBase + ".xml");
+        File xml = new File(projectBase + ".swiftx");
         File kml = new File(projectBase + ".kml");
 
         loadBuildVersion(provenanceEnabled);
@@ -309,7 +308,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 recompile = true;
             }
             else {
-                String prefix = "<!-- CACHE ID ";
+            	firstLine = firstLine.trim();
+                String prefix = "// CACHE ID ";
                 int offset = firstLine.indexOf(prefix);
                 if (offset < 0) {
                     // no build version in the KML
@@ -318,9 +318,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                     recompile = true;
                 }
                 else {
-                    String cut = firstLine.substring(offset + prefix.length());
-                    int endOffset = cut.indexOf(" -->");
-                    String kmlversion = cut.substring(0, endOffset);
+                    String kmlversion = firstLine.substring(offset + prefix.length());
                     logger.debug("kmlversion is >" + kmlversion + "<");
                     logger.debug("build version is >" + buildVersion + "<");
                     if (!(kmlversion.equals(buildVersion))) {
