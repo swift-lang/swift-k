@@ -183,37 +183,6 @@ public class TypeUtil {
 			throw new IllegalArgumentException("Could not convert value to iterator: " + obj, e);
 		}
 	}
-	
-	@SuppressWarnings("unchecked")
-    public static <T> KarajanIterator<T> toKarajanIterator(final Object obj) {
-        try {
-            if (obj instanceof KarajanIterator) {
-                return (KarajanIterator<T>) obj;
-            }
-            if (obj instanceof List) {
-                return new ListKarajanIterator((List<Object>) obj);
-            }
-            List<Object> l = new ArrayList<Object>();
-            if (obj instanceof String) {
-                StringTokenizer st = new StringTokenizer((String) obj, ",");
-                while (st.hasMoreTokens()) {
-                    l.add(st.nextToken().trim());
-                }
-                return new ListKarajanIterator(l);
-            }
-            if (obj instanceof Map) {
-                return new MapKeyKarajanIterator((Map<Object, Object>) obj);
-            }
-            if (obj == null) {
-                throw new ExecutionException("Expected iterator but got null");
-            }
-            throw new ExecutionException("Expected iterator but got " + obj.getClass() + ": " + obj);
-        }
-        catch (Exception e) {
-            throw new IllegalArgumentException("Could not convert value to iterator: " + obj, e);
-        }
-    }
-
 
 	public static String toString(final Object obj) {
 		if (obj instanceof String) {
