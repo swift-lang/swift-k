@@ -67,9 +67,21 @@ public abstract class AbstractGridNode extends InternalFunction {
 	}
 
 	public final void runBody(LWThread thr) {
+		TaskStateFuture tsf = (TaskStateFuture) thr.popState();
 		int i = thr.checkSliceAndPopState();
-		if (i == 0) {
-			submitTask(thr.getStack());
+		try {
+			switch (i) {
+				case 0:
+					submitTask(thr.getStack());
+				case 1:
+					if (tsf != null) {
+						tsf.getValue();
+					}
+			}		
+		}
+		catch (ConditionalYield y) {
+			y.getState().push(y.getFuture());
+			throw y;
 		}
 	}
 

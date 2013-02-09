@@ -30,7 +30,8 @@ public class FileSize extends AbstractFileOperation {
     	
 	@Override
     protected Signature getSignature() {
-        return new Signature(params(optional("file", null), 
+        return new Signature(params(
+            "file", 
             optional("host", BoundContact.LOCALHOST), optional("provider", "local")), 
             returns(channel("...", 1)));
     }
@@ -43,12 +44,7 @@ public class FileSize extends AbstractFileOperation {
 	@Override
 	protected String[] getArguments(Stack stack) {
 	    String file = this.file.getValue(stack);
-		if (file != null) {
-			return new String[] { file };
-		}
-		else {
-			return new String[] {};
-		}
+		return new String[] { file };
 	}
 
 	@Override

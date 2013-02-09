@@ -93,17 +93,10 @@ public abstract class AbstractFileOperation extends AbstractGridNode {
 			}
 		}
 		catch (TaskException e) {
-			logger.warn("Could not execute file operation", e);
 			throw new ExecutionException(this, e);
 		}
 		catch (Exception e) {
-			if (task != null && task.getStatus().getStatusCode() != Status.FAILED) {
-				logger.warn("Task handler threw exception but did not set status");
-				throw new ExecutionException("Could not submit task: " + e.getMessage(), e);
-			}
-			else {
-				// Handled by processing the status event
-			}
+			throw new ExecutionException(this, e);
 		}
 	}
 

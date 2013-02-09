@@ -15,18 +15,18 @@ import k.rt.Stack;
 import org.globus.cog.abstraction.interfaces.FileOperationSpecification;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.util.BoundContact;
 
 public class MakeDir extends AbstractFileOperation {
 	private ArgRef<String> name;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("name", optional("host", null), 
+        return new Signature(params("name", optional("host", BoundContact.LOCALHOST), 
         		optional("provider", "local")));
     }
 
-
-    protected String getOperation(Stack stack) throws ExecutionException {
+	protected String getOperation(Stack stack) throws ExecutionException {
         return FileOperationSpecification.MKDIRS;
     }
 
