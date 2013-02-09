@@ -59,7 +59,6 @@ import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.globus.cog.karajan.compiled.nodes.Node;
-import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -166,13 +165,14 @@ public class Monitor implements ActionListener, MouseListener {
 					}
 					entry.add(sz);
 					String fs;
-					if (f instanceof FutureWrapper) {
+					// TODO
+					/*if (f instanceof FutureWrapper) {
 						fs = String.valueOf(((FutureWrapper) f).listenerCount());
 					}
-					else {
+					else {*/
 						fs = f.toString();
 						fs = fs.substring(fs.indexOf(' ') + 1);
-					}
+					//}
 					entry.add(fs);
 					entry.add("2");
 					al.add(entry);
@@ -308,7 +308,7 @@ public class Monitor implements ActionListener, MouseListener {
                 if (o instanceof Node) {
                     Node n = (Node) o;
                     int line = n.getLine();
-                    return(Karajan.demangle(n.getTextualName()) + ", " + 
+                    return(n.getTextualName() + ", " + 
                             fileName(n) + ", line " + line);
                 }
             }
@@ -324,7 +324,7 @@ public class Monitor implements ActionListener, MouseListener {
                 if (o instanceof Node) {
                     Node n = (Node) o;
                     int line = n.getLine();
-                	ret.add(Karajan.demangle(n.getTextualName()) + ", " + 
+                	ret.add(n.getTextualName() + ", " + 
                             fileName(n) + ", line " + line);
                 
                 }
@@ -491,12 +491,14 @@ public class Monitor implements ActionListener, MouseListener {
 
 	public List<FutureListener> getListeners(int wrindex) {
 		Object o = wr.get(wrindex);
-		if (o instanceof FutureWrapper) {
+		// TODO
+		/*if (o instanceof FutureWrapper) {
 			return ((FutureWrapper) o).getListeners();
 		}
 		else {
 		    return null;
-		}
+		}*/
+		return null;
 	}
 
 	public void mousePressed(MouseEvent e) {
