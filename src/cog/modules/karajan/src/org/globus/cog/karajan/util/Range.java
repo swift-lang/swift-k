@@ -35,19 +35,11 @@ public class Range implements Iterable<Number> {
 
 
 
-	private class Iterator implements KarajanIterator<Number> {
+	private class Iterator implements java.util.Iterator<Number> {
 		private int crt;
 		
 		protected Iterator() {
 			this.crt = start;
-		}
-
-		public int count() {
-			return (end - start) / step + 1;
-		}
-
-		public int remaining() {
-			return (end - crt) / step + 1;
 		}
 
 		public int current() {

@@ -11,9 +11,7 @@ package org.globus.cog.karajan.futures;
 
 import k.rt.Future;
 
-import org.globus.cog.karajan.util.KarajanIterator;
 
-
-public interface FutureIterator extends KarajanIterator, Future {
+public interface FutureIterator extends Future {
 	boolean hasAvailable();
 }
