@@ -63,7 +63,7 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
                 }
             }
             catch (Exception e) {
-                System.err.println("Invalid pool entry '" + attr(pools.item(i), "name") + "': " + e.getMessage());
+                throw new ExecutionException(this, "Invalid pool entry '" + attr(pools.item(i), "handle") + "': ", e);
             }
         }
         return cs;
@@ -76,7 +76,7 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
         String name = attr(n, "handle");
         BoundContact bc = new BoundContact(name);
         
-        String sysinfo = attr(n, "sysinfo");
+        String sysinfo = attr(n, "sysinfo", null);
         if (sysinfo != null) {
             bc.addProperty("sysinfo", sysinfo);
         }
@@ -160,11 +160,17 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
 
     private Service execution(Node n) throws InvalidProviderException, ProviderMethodException {
         String provider = attr(n, "provider");
-        String url = attr(n, "url");
-        String jobManager = attr(n, "jobManager");
+        String url = attr(n, "url", null);
+        String jobManager = attr(n, "jobManager", null);
         ServiceContact contact = null;
         if (url != null) {
             contact = new ServiceContactImpl(url);
+        }
+        else if (provider.equals("local")) {
+            contact = new ServiceContactImpl("localhost");
+        }
+        else {
+            throw new IllegalArgumentException("Missing URL");
         }
         return new ExecutionServiceImpl(provider, contact, 
             AbstractionFactory.newSecurityContext(provider, contact), jobManager);
@@ -172,10 +178,16 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
 
     private Service filesystem(Node n) throws InvalidProviderException, ProviderMethodException {
         String provider = attr(n, "provider");
-        String url = attr(n, "url");
+        String url = attr(n, "url", null);
         ServiceContact contact = null;
         if (url != null) {
             contact = new ServiceContactImpl(url);
+        }
+        else if (provider.equals("local")) {
+            contact = new ServiceContactImpl("localhost");
+        }
+        else {
+            throw new IllegalArgumentException("Missing URL");
         }
         return new ServiceImpl(provider, Service.FILE_OPERATION, 
             contact, AbstractionFactory.newSecurityContext(provider, contact));
@@ -210,14 +222,30 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
         if (attrs != null) {
             Node attr = attrs.getNamedItem(name);
             if (attr == null) {
-                return null;
+                throw new IllegalArgumentException("Missing " + name);
             }
             else {
                 return attr.getNodeValue();
             }
         }
         else {
-            return null;
+            throw new IllegalArgumentException("Missing " + name);
+        }
+    }
+    
+    private String attr(Node n, String name, String defVal) {
+        NamedNodeMap attrs = n.getAttributes();
+        if (attrs != null) {
+            Node attr = attrs.getNamedItem(name);
+            if (attr == null) {
+                return defVal;
+            }
+            else {
+                return attr.getNodeValue();
+            }
+        }
+        else {
+            return defVal;
         }
     }
 }

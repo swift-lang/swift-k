@@ -457,6 +457,9 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 	
 	@Override
     public void setResources(ContactSet cs) {
+	    if (cs == null || cs.getContacts() == null) {
+	        throw new IllegalArgumentException("No sites specified");
+	    }
         super.setResources(cs);
         for (BoundContact bc : cs.getContacts()) {
             if ("passive".equals(bc.getProperty("globus:workerManager")) 
