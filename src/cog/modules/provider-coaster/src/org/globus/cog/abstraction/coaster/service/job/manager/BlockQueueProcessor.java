@@ -597,6 +597,10 @@ implements RegistrationManager, Runnable {
                     added++;
                     ii++;
                 }
+                // lastI  <-> ii
+                // indexI <-> index + 1
+                // if ii == index + 1 <=> ii - index - 1 == 0 then 
+                //     lastI and indexI point to the same element
                 
                 if (logger.isInfoEnabled()) {
                     logger.info("Queued: " + (ii-last) +
