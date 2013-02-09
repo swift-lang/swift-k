@@ -370,7 +370,7 @@ public final class NativeParser {
                 unaryOperator("+", "+");
                 break;
             case '-':
-                unaryOperator("-", "-");
+                unaryOperator("-", "neg");
                 break;
             case '!':
                 unaryOperator("!", "!");
@@ -452,6 +452,15 @@ public final class NativeParser {
                         case 't':
                             sb.append('\t');
                             break;
+                        case 'f':
+                        	sb.append('\f');
+                        	break;
+                        case 'r':
+                        	sb.append('\r');
+                        	break;
+                        case 'b':
+                        	sb.append('\b');
+                        	break;
                         case '\\':
                         	sb.append('\\');
                         	break;
