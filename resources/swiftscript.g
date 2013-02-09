@@ -50,9 +50,7 @@ String escape(String s) {
 }
 
 String quote(String s) {
-    String s1 = s.replaceAll("\\\\\"", "&quot;");
-    String s2 = s1.replaceAll("\\\\\\\\", "\\\\");
-    return s2;
+    return s.replaceAll("\\\\\"", "&quot;");
 }
 
 }
@@ -1287,7 +1285,6 @@ ESC
     |    'b'
     |    'f'
     |    '"'
-    |    '\''
     |    '\\'
     )
     ;
