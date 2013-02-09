@@ -11,27 +11,20 @@ package org.globus.cog.karajan.compiled.nodes.restartLog;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 import k.rt.ChannelOperator;
 
 public class LogChannelOperator extends ChannelOperator<String, String> {
 	private final FlushableLockedFileWriter writer;
 	private boolean closed;
-	private Map<LogEntry, Object> logData;
 
-	public LogChannelOperator(FlushableLockedFileWriter writer, Map<LogEntry, Object> logData) {
+	public LogChannelOperator(FlushableLockedFileWriter writer) {
 		super(null);
 		this.writer = writer;
-		this.logData = logData;
 	}
 
 	protected Object initialValue() {
 		return null;
-	}
-
-	public Map<LogEntry, Object> getLogData() {
-		return logData;
 	}
 
 	protected synchronized String update(String oldvalue, String str) {

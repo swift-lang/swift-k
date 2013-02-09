@@ -43,6 +43,8 @@ import org.globus.cog.karajan.parser.WrapperNode;
 public class RestartLog extends InternalFunction {
 	public static final Logger logger = Logger.getLogger(RestartLog.class);
 	
+	public static final String LOG_DATA = "RESTART_LOG:DATA";
+	
 	public static final int MAX_INDEX = 16384;
 		
 	private ArgRef<String> resume;
@@ -161,7 +163,8 @@ public class RestartLog extends InternalFunction {
 							+ log.getAbsolutePath());
 				}
 				writeDate(logffw, "# Log file updated ");
-				c_restartLog.set(stack, new LogChannelOperator(logffw, logData));
+				c_restartLog.set(stack, new LogChannelOperator(logffw));
+				context.getValue(stack).setAttribute(LOG_DATA, logData);
 			}
 			catch (IOException e) {
 				throw new ExecutionException("Exception caught while creating log file", e);
@@ -207,7 +210,8 @@ public class RestartLog extends InternalFunction {
 		if (logffw == null) {
 			throw new ExecutionException(this, "Could not create unique log file");
 		}
-		c_restartLog.set(stack, new LogChannelOperator(logffw, m));
+		c_restartLog.set(stack, new LogChannelOperator(logffw));
+		context.getValue(stack).setAttribute(LOG_DATA, m);
 	}
 
 	private void writeDate(FlushableLockedFileWriter logffw, String prefix) throws IOException {

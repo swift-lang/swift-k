@@ -11,22 +11,32 @@ package org.globus.cog.karajan.compiled.nodes.restartLog;
 
 import java.util.Map;
 
+import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
 import k.thr.Yield;
 
 import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 
 public class Logged extends InternalFunction {
 	private ChannelRef<String> cr_restartLog;
+	private VarRef<Context> context;
 	
 	@Override
 	protected Signature getSignature() {
 		return new Signature(params(), returns(channel("restartLog")));
+	}
+	
+	@Override
+	protected void addLocals(Scope scope) {
+	    context = scope.getVarRef("#context");
+		super.addLocals(scope);
 	}
 
 	@Override
@@ -53,7 +63,8 @@ public class Logged extends InternalFunction {
 
 	protected boolean checkLogged(LWThread thr, Stack stack) {
 		try {
-			Map<LogEntry, Object> map = ((LogChannelOperator) cr_restartLog.get(stack)).getLogData();
+			@SuppressWarnings("unchecked")
+			Map<LogEntry, Object> map = (Map<LogEntry, Object>) context.getValue(stack).getAttribute(RestartLog.LOG_DATA);
 			LogEntry entry = LogEntry.build(thr, this);
 			boolean found = false;
 			synchronized(map) {
