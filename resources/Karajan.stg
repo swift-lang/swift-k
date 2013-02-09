@@ -19,8 +19,8 @@ types(
 
 $endif$
 $constants;separator="\n"$
-$procedures;separator="\n"$
 $declarations;separator="\n"$
+$procedures;separator="\n"$
 $if(statements)$
 
 restartLog() {
@@ -33,6 +33,7 @@ restartLog() {
 	)
 }
 $endif$
+
 $cleanups:swift_cleandataset();separator="\n"$
 swift:cleanDataset(shutdown=true)
 >>
@@ -78,7 +79,7 @@ $params:log_param("output");separator="\n"$
 >>
 
 compound(outputs, inputs, declarations, statements, config, name, initWaitCounts, cleanups) ::= <<
-unitStart("COMPOUND", name="$name$", outputs="$outputs:list();separator=","$")
+swift:unitStart("COMPOUND", name="$name$", outputs="$outputs:list();separator=","$")
 $if(initWaitCounts)$
 $initWaitCounts;separator="\n"$
 $endif$
@@ -90,7 +91,7 @@ $endif$
 $outputs:swift_closedataset();separator="\n"$
 
 $cleanups:swift_cleandataset();separator="\n"$
-unitEnd("COMPOUND", name="$name$")
+swift:unitEnd("COMPOUND", name="$name$")
 >>
 
 proc_args(args) ::= <<
@@ -110,7 +111,7 @@ $it.name$=$if(it.default)$$it.default$$else$null$endif$
 >>
 
 swift_execute(outputs,inputs,attributes,application,name,line) ::= <<
-unitStart("PROCEDURE", name="$name$", line="$line$", outputs="$outputs:list();separator=","$")
+swift:unitStart("PROCEDURE", name="$name$", line="$line$", outputs="$outputs:list();separator=","$")
 swift:execute(
 	$attributes$
 	swift:tr("$application.exec$")
@@ -119,7 +120,7 @@ swift:execute(
 	$swift_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
 )
 $outputs:swift_closedataset();separator="\n"$
-unitEnd("PROCEDURE", name="$name$", line="$line$")
+swift:unitEnd("PROCEDURE", name="$name$", line="$line$")
 >>
 
 log_param(dir) ::= <<
@@ -165,7 +166,7 @@ $endif$
 
 swift_attributes(entries) ::= <<
 swift:attributes(
-	map(
+	map:map(
 		$entries;separator="\n"$
 	)
 )
@@ -197,7 +198,7 @@ swiftscript:$name$(
 
 iterate(declarations,statements,cond,var,cleanups,trace,line) ::= <<
 sys:while($var$, 0) {
-	if (vdl:getFieldValue($cond$)) {
+	if (swift:getFieldValue($cond$)) {
 		$sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
 		next($var$ + 1)
 	}
@@ -205,21 +206,22 @@ sys:while($var$, 0) {
 >>
 
 foreach(var, in, indexVar, indexVarType, declarations, statements, line, refs, selfClose, cleanups, trace) ::= <<
-swift:tParallelFor(\$, _traceline="$line$"$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose="true"$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
+swift:tParallelFor(\$, _traceline="$line$"$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
 $! The iterator !$
 	getArrayIterator($in$)) {
 	(\$\$, $var$) := each(\$)
 $if(indexVar)$
-	$indexVar$ := swift:new($indexVarType$, \$\$)		
+	$indexVar$ := swift:new("$indexVarType$", value=\$\$)
 $endif$
-	unitStart("FOREACH_IT", line="$line$") 
+
+	swift:unitStart("FOREACH_IT", line="$line$") 
 	$declarations;separator="\n"$
 $if(statements)$
 	$parallel(statements=statements)$
 	$cleanups:swift_cleandataset();separator="\n"$
 $endif$
 
-	unitEnd("FOREACH_IT", line="$line$")
+	swift:unitEnd("FOREACH_IT", line="$line$")
 }
 >>
 
@@ -229,32 +231,35 @@ $endif$
 
 callInternal(func, outputs, inputs, line, serialize) ::= <<
 sequential(
-	unitStart("INTERNALPROC", name="$func$", outputs="$outputs:list();separator=","$")
+	swift:unitStart("INTERNALPROC", name="$func$", outputs="$outputs:list();separator=","$")
 	$func$(
 		$if(!serialize)$parallel($endif$
     	$outputs:callInternal_log_output();separator="\n"$
     	$inputs:callInternal_log_input();separator="\n"$
   		$if(!serialize)$)$endif$
 	)
-	unitEnd("INTERNALPROC", name="$func$")
+	swift:unitEnd("INTERNALPROC", name="$func$")
 )
 >>
 
 callInternal_log_input() ::= <<
 sequential(
-	parameterLog("input", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
+	swift:parameterLog("input", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
 	$it$
 )
 >>
 
 callInternal_log_output() ::= <<
 sequential(
-	parameterLog("output", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
+	swift:parameterLog("output", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
 	$it$
 )
 >>
 
 callUserDefined(func, outputs, inputs, line, serialize, partialClose) ::= <<
+$if(partialClose)$
+sequential(
+$endif$
 $func$(
 	$if(!serialize)$parallel($endif$
 	$outputs;separator=", "$
@@ -263,6 +268,7 @@ $func$(
 )
 $if(partialClose)$
 $partialClose$
+)
 $endif$
 >>
 
@@ -297,7 +303,7 @@ $variable_log()$
 >>
 
 variable_log() ::= <<
-	parameterLog("intermediate", "$name$", swift:getDatasetProvenanceID($name$))
+	swift:parameterLog("intermediate", "$name$", swift:getDatasetProvenanceID($name$))
 >>
 
 swift_mapping(mapping, file) ::= <<
@@ -313,39 +319,45 @@ swift:parameter("$name$", $expr$)
 >>
 
 assign(var, value, line, partialClose) ::= <<
+$if(partialClose)$
+sequential(
+$endif$
 swift:setFieldValue($if(line)$_traceline="$line$"$endif$
 	$var$
 	$value$
 )
 $if(partialClose)$
-$partialClose$
+$partialClose$)
 $endif$
 >>
 
 append(array, value, partialClose) ::= <<
+$if(partialClose)$
+sequential(
+$endif$
 swift:appendArray(
 	$array$
 	$value$
 )
 $if(partialClose)$
-$partialClose$
+$partialClose$)
 $endif$
 >>
 
 callexpr(call, datatype, prefix) ::= <<
 sequential(
-	tmp := swift:new("$datatype$", dbgname="swift#callintermediate",
+	swift#callintermediate := swift:new("$datatype$", dbgname="swift#callintermediate",
 		swift:mapping("concurrent_mapper",
 			swift:parameter("prefix", "_callintermediate-$prefix$")
 		)
 	)
 	$call$
-	tmp
+	swift#callintermediate
 )
 >>
 
 array(elements, datatype) ::= <<
-swift:createarray(
+swift:createArray(
 	list(
 		$elements;separator="\n"$
 	)
@@ -356,21 +368,24 @@ range(from, to, step, datatype) ::= <<
 sequential(
 	tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$)
 	tmp
-	$range_log()$
+	$range_log(from=from, to=to, step=step, out=tmp)$
 ) 
 >>
 
-range_log() ::= <<
+range_log(from, to, step, out) ::= <<
+	swift:log(INFO, str:concat("ARRAYRANGE thread=", currentThread(), " array=", getDatasetProvenanceId($out$),
+		" from=", getDatasetProvenanceId($from$), "to=", getDatasetProvenanceId($to$)
+		$if(step)$", step=", getDatasetProvenanceId($step$)$else$, "step=none"$endif$))
 >>
 
 if(condition,vthen,velse,line,trace) ::= <<
 if (swift:getFieldValue($condition$)) {
-	unitStart("CONDITION_BLOCK")
+	swift:unitStart("CONDITION_BLOCK")
 	$vthen$
 }
 $if(velse)$
 else {
-	unitStart("CONDITION_BLOCK")
+	swift:unitStart("CONDITION_BLOCK")
 	$velse$
 }
 $endif$
@@ -394,7 +409,7 @@ $cases:{case |
 	if (swift:getFieldValue(swiftop:eq(swc, $case.value$))) {
 		$sub_comp(declarations=case.declarations, statements=case.statements)$
 	}
-	else 
+	$if(rest(cases))$else$else$$if(sdefault)$else$endif$$endif$
 }$
 $if(sdefault)$
     {
@@ -419,19 +434,20 @@ $endif$
 
 
 partialclose(var, count) ::= <<
-partialCloseDataset($var$$if(count)$, count=$count$$endif$)
+swift:partialCloseDataset($var$$if(count)$, count=$count$$endif$)
 >>
 
 setWaitCount(name, waitCount) ::= <<
-setWaitCount($name$$if(waitCount)$, count=$waitCount$$endif$)
+swift:setWaitCount($name$$if(waitCount)$, count=$waitCount$$endif$)
+
 >>
 
 unitStart(type, outputs) ::= <<
-  unitStart("$type$", outputs="$outputs$")
+swift:unitStart("$type$", outputs="$outputs$")
 >>
 
 unitEnd(type) ::= <<
-  unitEnd("$type$")
+  swift:unitEnd("$type$")
 >>
 
 operator ::= [
@@ -472,22 +488,24 @@ $var$
 >>
 
 extractarrayelement(parent, arraychild, datatype) ::= <<
-swift:getfieldsubscript($parent$, $arraychild$)
+swift:getFieldSubscript($parent$, $arraychild$)
 >>
 
 extractstructelement(parent, memberchild, datatype) ::= <<
-getfield($parent$, $memberchild$)
+getField($parent$, "$memberchild$")
 >>
 
 slicearray(parent, memberchild, datatype) ::= <<
 sequential(
-	slice := swift:sliceArray($parent$, $memberchild$, $datatype$)
- 	logSliceArray($memberchild$, $parent$)
+	slice := swift:sliceArray($parent$, "$memberchild$", "$datatype$")
+ 	$logSliceArray(memberchild=memberchild, array=parent, slice=slice)$
  	slice
 )
 >>
 
-logSliceArray(memberchild, array) ::= <<
+logSliceArray(memberchild, array, slice) ::= <<
+	swift:log(DEBUG, str:concat("SLICEARRAY thread=", currentThread(), " slice=", swift:getDatasetProvenanceID($slice$),
+		" member=$member$ array=", swift:getDatasetProvenanceID($array$))
 >>
 
 

@@ -11,4 +11,8 @@ variable_log() ::= << >>
 
 range(from, to, step, datatype) ::= <<swift:range($from$, $to$$if(step)$, step = $step$$endif$)>>
 
+slicearray(parent, memberchild, datatype) ::= <<
+	swift:sliceArray($parent$, "$memberchild$", "$datatype$")
+>>
+
 cs() ::= << >>
