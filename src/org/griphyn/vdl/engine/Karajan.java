@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -268,7 +269,7 @@ public class Karajan {
 	}
 
 	private void processProcedures(Program prog, VariableScope scope) throws CompilationException {
-
+		Map<String, Procedure> names = new HashMap<String, Procedure>();
 		// Keep track of declared procedures
 	    // Check for redefinitions of existing procedures
 	    Set<String> procsDefined = new HashSet<String>() ;	    
@@ -284,17 +285,63 @@ public class Karajan {
 			ps.setInputArgs(proc.getInputArray());
 			ps.setOutputArgs(proc.getOutputArray());
 			proceduresMap.put(procName, ps);
+			names.put(procName, proc);
 		}
+		
+		List<Procedure> sorted = new ArrayList<Procedure>();
+        Set<Procedure> unmarked = new HashSet<Procedure>(Arrays.asList(prog.getProcedureArray()));
+        
+        while (!unmarked.isEmpty()) {
+            Set<Procedure> tmp = new HashSet<Procedure>();
+            visit(unmarked.iterator().next(), unmarked, sorted, tmp, names);
+        }
 
-		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
-			Procedure proc = prog.getProcedureArray(i);
+        for (Procedure proc : sorted) {
 			procedure(proc, scope);
 		}
-
 	}
 
 
-	public StringTemplate program(Program prog) throws CompilationException {
+    private void visit(Procedure proc, Set<Procedure> unmarked,
+            List<Procedure> sorted, Set<Procedure> tmp, Map<String, Procedure> names) throws CompilationException {
+    	if (tmp.contains(proc)) {
+    		throw new CompilationException("Circular procedure dependency detected");
+    	}
+    	if (unmarked.contains(proc)) {
+    		tmp.add(proc);
+    		Set<String> dupes = new HashSet<String>();
+    		for (Call c : getCalls(proc, new ArrayList<Call>())) {
+    			String name = c.getProc().getLocalPart();
+    			if (dupes.contains(name)) {
+    				continue;
+    			}
+    			dupes.add(name);
+    			if (names.containsKey(name)) {
+    				visit(names.get(name), unmarked, sorted, tmp, names);
+    			}
+    			else {
+    				// handled later
+    			}
+    		}
+    		unmarked.remove(proc);
+    		sorted.add(proc);
+    	}
+    }
+
+    private List<Call> getCalls(XmlObject o, List<Call> l) {
+        XmlCursor cursor = o.newCursor();
+        cursor.selectPath("*");
+        while (cursor.toNextSelection()) {
+            XmlObject child = cursor.getObject();
+            if (child instanceof Call) {
+            	l.add((Call) child);
+            }
+            getCalls(child, l);
+        }
+        return l;
+    }
+
+    public StringTemplate program(Program prog) throws CompilationException {
 		VariableScope scope = new VariableScope(this, null, prog);
 		scope.bodyTemplate = template("program");
 
@@ -326,7 +373,7 @@ public class Karajan {
 		StringTemplate procST = template("procedure");
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
 		procST.setAttribute("line", getLine(proc));
-		procST.setAttribute("name", mangle(proc.getName()));
+		procST.setAttribute("name", proc.getName());
 		for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
 			FormalParameter param = proc.getOutputArray(i);
 			StringTemplate paramST = parameter(param, innerScope);
@@ -373,52 +420,7 @@ public class Karajan {
         }
     }
     
-
-    /**
-     * Convert to a case-insensitive representation by
-     * pre-pending a '_' to upper case letters. If the
-     * original name contains a '_' it will be converted 
-     * to "__" (two underscores).
-     */
-	public static String mangle(String name) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
-            if (Character.isUpperCase(c) || c == '_') {
-                sb.append('_');
-            }
-            sb.append(Character.toLowerCase(c));
-        }
-        return sb.toString();
-    }
-	
-	public static String demangle(String name) {
-        StringBuilder sb = new StringBuilder();
-        boolean upper = false;
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
-            if (c == '_') {
-            	if (upper) {
-            	    sb.append("_");
-            	    upper = false;
-            	}
-            	else {
-            	    upper = true;
-            	}
-            }
-            else {
-            	if (upper) {
-            		upper = false;
-            		sb.append(Character.toUpperCase(c));
-            	}
-            	else {
-            	    sb.append(Character.toLowerCase(c));
-            	}
-            }
-        }
-        return sb.toString();
-    }
-
+  
     public StringTemplate parameter(FormalParameter param, VariableScope scope) throws CompilationException {
 		StringTemplate paramST = new StringTemplate("parameter");
 		StringTemplate typeST = new StringTemplate("type");
@@ -456,7 +458,7 @@ public class Karajan {
 		if (!var.isNil()) {
 			if (var.getFile() != null) {
 				StringTemplate fileST = new StringTemplate("file");
-				fileST.setAttribute("name", escapeQuotes(var.getFile().getName()));
+				fileST.setAttribute("name", escape(var.getFile().getName()));
 				fileST.defineFormalArgument("params");
 				variableST.setAttribute("file", fileST);
 			}
@@ -480,8 +482,8 @@ public class Karajan {
     			mappingST.setAttribute("descriptor", "concurrent_mapper");
     			StringTemplate paramST = template("swift_parameter");
     			paramST.setAttribute("name", "prefix");
-    			paramST.setAttribute("expr", var.getName() + "-"
-    					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
+    			paramST.setAttribute("expr", "\"" + var.getName() + "-"
+    					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString() + "\"");
     			mappingST.setAttribute("params", paramST);
     			variableST.setAttribute("mapping", mappingST);
     			variableST.setAttribute("nil", Boolean.TRUE);
@@ -529,7 +531,7 @@ public class Karajan {
             if (param.getAbstractExpression().getDomNode().getNodeName().equals("stringConstant")) {
                 StringTemplate valueST = template("sConst");
                 valueST.setAttribute("innervalue", param.getAbstractExpression().getDomNode().getFirstChild().getNodeValue());
-                paramST.setAttribute("expr",valueST);
+                paramST.setAttribute("expr", valueST);
             }
             else {
                 paramST.setAttribute("expr",variableReferenceST);
@@ -706,7 +708,7 @@ public class Karajan {
 				throw new CompilationException
 				("Unknown procedure invocation mode "+proc.getInvocationMode());
 			}
-			callST.setAttribute("func", mangle(procName));
+			callST.setAttribute("func", procName);
 			callST.setAttribute("line", getLine(call));
 			/* Does number of input arguments match */
 			for (int i = 0; i < proc.sizeOfInputArray(); i++) {
@@ -1148,7 +1150,7 @@ public class Karajan {
 
 	public StringTemplate function(Function func, VariableScope scope) throws CompilationException {
 		StringTemplate funcST = template("function");
-		funcST.setAttribute("name", mangle(func.getName()));
+		funcST.setAttribute("name", func.getName());
 		funcST.setAttribute("line", getLine(func));
 		ProcedureSignature funcSignature =  functionsMap.get(func.getName());
 		if(funcSignature == null) {
@@ -1629,7 +1631,7 @@ public class Karajan {
 		for (String key : stringInternMap.keySet()) {
 			String variableName = stringInternMap.get(key);
 			StringTemplate st = template("sConst");
-			st.setAttribute("innervalue",escapeQuotesAndMarkup(key));
+			st.setAttribute("innervalue",escape(key));
 			StringTemplate vt = template("globalConstant");
 			vt.setAttribute("name",variableName);
 			vt.setAttribute("expr",st);
@@ -1657,27 +1659,16 @@ public class Karajan {
 		}
 	}
 
-	String escapeQuotes(String in) {
-		return in.replaceAll("\"", "&quot;");
-	}
 	
-	String escapeQuotesAndMarkup(String in) {
+	String escape(String in) {
 	    StringBuilder sb = new StringBuilder();
 	    for (int i = 0; i < in.length(); i++) {
 	        char c = in.charAt(i);
 	        switch (c) {
-	            case '<':
-	                sb.append("&lt;");
-	                break;
-	            case '>':
-	                sb.append("&gt;");
-	                break;
 	            case '"':
-	                sb.append("&quot;");
+	                sb.append("\\\"");
 	                break;
-	            case '&':
-	                sb.append("&amp;");
-	                break;
+	            
 	            default:
 	                sb.append(c);
 	        }

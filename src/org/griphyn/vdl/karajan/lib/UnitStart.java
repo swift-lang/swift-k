@@ -25,10 +25,9 @@ import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.DSHandle;
 
@@ -117,7 +116,7 @@ public class UnitStart extends InternalFunction {
         String line = this.line.getValue();
 
         if (tracer != null && tracer.isEnabled()) {
-            tracer.trace(thr, Karajan.demangle(name) + "("
+            tracer.trace(thr, name + "("
                     + formatArguments(thr.getStack()) + ")");
         }
 
@@ -139,7 +138,7 @@ public class UnitStart extends InternalFunction {
                 else {
                     sb.append(", ");
                 }
-                sb.append(Karajan.demangle(nr.name));
+                sb.append(nr.name);
                 sb.append(" = ");
                 sb.append(Tracer.unwrapHandle(nr.ref.getValue(stack)));
             }
