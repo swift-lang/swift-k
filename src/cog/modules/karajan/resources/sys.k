@@ -139,6 +139,7 @@ namespace(sys) {
 		export('+', def(classname="org.globus.cog.karajan.compiled.nodes.functions.Math$Sum"))
 		export('*', def(classname="org.globus.cog.karajan.compiled.nodes.functions.Math$Product"))
 		export('-', def(classname="org.globus.cog.karajan.compiled.nodes.functions.Math$Difference"))
+		export('neg', def(classname="org.globus.cog.karajan.compiled.nodes.functions.Math$Neg"))
 		export('/', def(classname="org.globus.cog.karajan.compiled.nodes.functions.Math$Quotient"))
 		export('%', def(classname="org.globus.cog.karajan.compiled.nodes.functions.Math$Remainder"))
 		export('>', def(classname="org.globus.cog.karajan.compiled.nodes.functions.Math$GreaterThan"))
