@@ -28,15 +28,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import k.rt.Future;
+import k.rt.FutureListener;
+import k.rt.FutureValue;
 import k.thr.Yield;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
-import org.griphyn.vdl.karajan.DSHandleFutureWrapper;
-import org.griphyn.vdl.karajan.FutureTracker;
-import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
@@ -44,7 +42,7 @@ import org.griphyn.vdl.util.VDL2Config;
 
 
 
-public abstract class AbstractDataNode implements DSHandle {
+public abstract class AbstractDataNode implements DSHandle, FutureValue {
 
     static final String DATASET_URI_PREFIX = "dataset:";
 
@@ -86,8 +84,8 @@ public abstract class AbstractDataNode implements DSHandle {
     private String identifier;
     private Path pathFromRoot;
     
-    protected FutureWrapper wrapper;
     private int writeRefCount;
+    private List<FutureListener> listeners;
 
     protected AbstractDataNode(Field field) {
         this.field = field;
@@ -631,7 +629,8 @@ public abstract class AbstractDataNode implements DSHandle {
                 logger.debug("Waiting for " + this);
             }
             
-            Yield y = new FutureNotYetAvailable(getFutureWrapper());
+            System.out.println("Wait");
+            Yield y = new FutureNotYetAvailable(this);
             y.getState().addTraceElement(who);
             throw y;
         }
@@ -651,7 +650,7 @@ public abstract class AbstractDataNode implements DSHandle {
                 logger.debug("Waiting for " + this);
             }
             
-            throw new OOBYield(new FutureNotYetAvailable(getFutureWrapper()), this);
+            throw new OOBYield(new FutureNotYetAvailable(this), this);
         }
         else {
             if (logger.isDebugEnabled()) {
@@ -667,25 +666,30 @@ public abstract class AbstractDataNode implements DSHandle {
         throw new UnsupportedOperationException();
     }
     
-    public synchronized Future getFutureWrapper() {
-    	if (wrapper == null) {
-    		wrapper = new DSHandleFutureWrapper(this);
-    		FutureTracker.get().add(this, wrapper);
-    	}
-    	return wrapper;
-    }
-    
-    protected void notifyListeners() {
-    	FutureWrapper wrapper;
+    public void addListener(FutureListener l) {
+    	boolean closed;
     	synchronized(this) {
-    		wrapper = this.wrapper;
-    		if (closed) {
-    		    FutureTracker.get().remove(this);
-    		    this.wrapper = null;
-    		}
+        	if (this.listeners == null) {
+        		this.listeners = new ArrayList<FutureListener>();
+        	}
+        	this.listeners.add(l);
+        	closed = this.closed;
     	}
-    	if (wrapper != null) {
-    		wrapper.notifyListeners();
+    	if (closed) {
+    		notifyListeners();
+    	}
+    }
+        
+    protected void notifyListeners() {
+    	List<FutureListener> l;
+    	synchronized(this) {
+    		l = this.listeners;
+    		this.listeners = null;
+    	}
+    	if (l != null) {
+    		for (FutureListener ll : l) {
+    			ll.futureUpdated(this);
+    		}
     	}
     }
 
@@ -715,7 +719,7 @@ public abstract class AbstractDataNode implements DSHandle {
     @Override
     public synchronized int updateWriteRefCount(int delta) {
         this.writeRefCount += delta;
-
+       
         if (this.writeRefCount < 0) {
             throw new IllegalArgumentException("Reference count mismatch for " + this + ". Count is " + this.writeRefCount);
         }

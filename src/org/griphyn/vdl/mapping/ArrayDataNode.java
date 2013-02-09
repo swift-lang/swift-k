@@ -20,18 +20,16 @@
  */
 package org.griphyn.vdl.mapping;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import k.rt.Future;
-
-import org.globus.cog.karajan.futures.FutureList;
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
-import org.griphyn.vdl.karajan.ArrayIndexFutureList;
-import org.griphyn.vdl.karajan.FutureTracker;
 import org.griphyn.vdl.type.Field;
 
 public class ArrayDataNode extends DataNode {
+	private List<Comparable<?>> keyList;
+	
 	protected ArrayDataNode(Field field, DSHandle root, DSHandle parent) {
 		super(field, root, parent);
 	}
@@ -39,7 +37,7 @@ public class ArrayDataNode extends DataNode {
 	public void getFringePaths(List<Path> list, Path parentPath) throws HandleOpenException {
 		checkMappingException();
 		if (!isClosed()) {
-		    throw new FutureNotYetAvailable(getFutureWrapper());
+		    throw new FutureNotYetAvailable(this);
 		}
 		Map<Comparable<?>, DSHandle> handles = getHandles();
 		synchronized (this) {
@@ -93,13 +91,12 @@ public class ArrayDataNode extends DataNode {
     }
     
     private void addKey(Comparable<?> key) {
-        ArrayIndexFutureList w;
-        synchronized(this) {
-            w = (ArrayIndexFutureList) wrapper;
-        }
-        if (w != null) {
-            w.addKey(key);
-        }
+    	synchronized(this) {
+    		if (keyList != null) {
+    			keyList.add(key);
+    		}
+    	}
+        notifyListeners();
     }
     
     @Override
@@ -108,20 +105,27 @@ public class ArrayDataNode extends DataNode {
         addKey(key);
         return h;
     }
-
-    @Override
-    public synchronized Future getFutureWrapper() {
-    	if (wrapper == null) {
-    		wrapper = new ArrayIndexFutureList(this, this.getArrayValue());
-    		FutureTracker.get().add(this, wrapper);
+    
+    public Iterable<List<?>> entryList() {
+    	synchronized(this) {
+    		if (isClosed()) {
+    			return new ClosedArrayEntries(getArrayValue());
+    		}
+    		else {
+    			keyList = new ArrayList<Comparable<?>>(getArrayValue().keySet());
+    			return new OpenArrayEntries(keyList, getArrayValue(), this);
+    		}
     	}
-        return wrapper;
-    }
-
-    public FutureList getFutureList() {
-        return (FutureList) getFutureWrapper();
     }
     
+    @Override
+    public void closeShallow() {
+        super.closeShallow();
+        synchronized(this) {
+        	keyList = null;
+        }
+    }
+
     protected void getFields(List<DSHandle> fields, Path path) throws InvalidPathException {
         if (path.isEmpty()) {
             fields.add(this);
@@ -130,7 +134,7 @@ public class ArrayDataNode extends DataNode {
             Path rest = path.butFirst();
             if (path.isWildcard(0)) {
                 if (!isClosed()) {
-                    throw new FutureNotYetAvailable(getFutureWrapper());
+                    throw new FutureNotYetAvailable(this);
                 }
                 for (DSHandle handle : getHandles().values()) {
                     ((AbstractDataNode) handle).getFields(fields, rest);

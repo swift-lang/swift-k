@@ -67,7 +67,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	    
 		waitingMapperParam = params.getFirstOpenParamValue();
         if (waitingMapperParam != null) {
-            waitingMapperParam.getFutureWrapper().addListener(this);
+            waitingMapperParam.addListener(this);
             if (tracer.isEnabled()) {
                 tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
@@ -144,7 +144,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
             return null;
         }
         else {
-            throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
+            throw new FutureNotYetAvailable(waitingMapperParam);
         }
 	}
 	

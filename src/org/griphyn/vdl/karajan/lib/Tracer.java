@@ -19,8 +19,6 @@ import k.thr.LWThread;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.globus.cog.karajan.compiled.nodes.Node;
-import org.griphyn.vdl.engine.Karajan;
-import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Mapper;
@@ -99,7 +97,7 @@ public class Tracer {
     }
 
     private String getType(Node fe) {
-        String t = Karajan.demangle(fe.getTextualName());
+        String t = fe.getTextualName();
         String nt = NAME_MAPPINGS.get(t);
         if (nt == null) {
             return t;
@@ -233,12 +231,14 @@ public class Tracer {
     }
     
     public static String getFutureName(Future future) {
-        if (future instanceof FutureWrapper) {
+        // TODO
+        /*if (future instanceof FutureWrapper) {
             return getVarName(((FutureWrapper) future).getHandle());
         }
         else {
             return future.toString();
-        }
+        }*/
+        return future.toString();
     }
     
     public static Object unwrapHandle(Object o) {

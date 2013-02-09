@@ -67,7 +67,7 @@ public class GetArrayIterator extends SwiftFunction {
 					    if (logger.isDebugEnabled()) {
                             logger.debug("Using future iterator for " + var);
                         }
-						return ((ArrayDataNode) var).getFutureList().futureIterator();
+						return ((ArrayDataNode) var).entryList();
 					}
 				}
 			}

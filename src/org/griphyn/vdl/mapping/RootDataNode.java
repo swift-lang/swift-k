@@ -72,7 +72,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	private synchronized void innerInit() throws HandleOpenException {
 	    waitingMapperParam = params.getFirstOpenParamValue();
 	    if (waitingMapperParam != null) {
-            waitingMapperParam.getFutureWrapper().addListener(this);
+            waitingMapperParam.addListener(this);
             if (tracer.isEnabled()) {
                 tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
@@ -260,7 +260,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		    return null;
 		}
 		else {        
-		    throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
+		    throw new FutureNotYetAvailable(waitingMapperParam);
 		}
 	}
 	
