@@ -486,7 +486,6 @@ public class LWThread implements Runnable {
         	}
         	setState(ABORTING, true);
         	if (getState(SLEEPING)) {
-        		System.out.println("----> " + tstate + "  " + runCount);
         		Scheduler.getScheduler().awake(this);
         	}
         }
