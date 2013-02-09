@@ -284,7 +284,7 @@ namespace(swift) {
 				dir:make(ldir, host=dhost, provider=provider)
 				policy := cdm:query(query=file)
 				log(LOG:DEBUG, "CDM: {file} : {policy}")
-				if (policy == "DEFAULT" | policy == "BROADCAST") {
+				if ((policy == "DEFAULT") | (policy == "BROADCAST")) {
 					restartOnError(2) {
 						task:transfer(srchost=host, srcfile=bname,srcdir=rdir,
 							destdir=ldir, desthost=dhost, destprovider=provider,
@@ -367,13 +367,10 @@ namespace(swift) {
 			replicationGroup, replicationChannel
 			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
 			
-			log(LOG:INFO, "A ", currentThread())
 			stagein := list(unique(each(stagein)))
 			stageout := list(unique(each(stageout)))
-			log(LOG:INFO, "X ", currentThread())
 
 			allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
-				log(LOG:INFO, "B ", currentThread())
 				ddir := initDDir(),
 				(wfdir, sharedDir) := 
 					try {
@@ -383,7 +380,6 @@ namespace(swift) {
 						throw(exception("Could not initialize shared directory on {rhost}", exception))
 					}
 					
-				log(LOG:INFO, "C ", currentThread())
 				uid := UID()
 				jobdir := substring(uid, from=0, to=1)
 				jobid := "{tr}-{uid}"
@@ -419,7 +415,6 @@ namespace(swift) {
 					}
 				}
 
-				log(LOG:INFO, "D ", currentThread())
 				setProgress(progress, "Stage in")
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 
@@ -523,7 +518,7 @@ namespace(swift) {
 					}
 					else {
 						setProgress(progress, "Failed but can retry")
-						exception := try(exception(checkErrorFile(rhost, wfdir, jobid, jobdir)), prev)
+						exception := try(exception(checkErrorFile(rhost, wfdir, jobid, jobdir), prev), prev)
 						
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 

@@ -78,6 +78,7 @@ namespace(swift) {
 	
 	export(stdin,
 		function(file) {
+			echo(file)
 			stdin = file
 		}
 	)
@@ -206,8 +207,8 @@ namespace(swift) {
 									try {
 										execute2(
 											progress, 
-											tr, maybe(arguments=unwrapClosedList(arguments)),
-											maybe(stdin=stdin), maybe(stdout=stdout), maybe(stderr=stderr), maybe(attributes=attributes),
+											tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
+											stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
 											stagein, stageout, restartout, replicationGroup, replicationChannel
 										)
 									}
