@@ -650,6 +650,9 @@ public class VariableScope {
 	}
 			
 	private void setPreClose(String name, int count) {
+	    if (inhibitClosing != null && inhibitClosing.contains(name)) {
+	        return;
+	    }
 	    setCount("preClose", name, count, 
 	        new RefCountSetter<StringTemplate>() {
 	            @Override
@@ -1035,7 +1038,8 @@ public class VariableScope {
 		}
 		presentStatementPostStatements.clear();
 		outputs.clear();
-		inhibitClosing = null;
+		// Cannot set inhibitClosing to null here, since
+		// it may break then/else linked closing. See bug 927
 	}
 
 	private String join(List<String> l) {
