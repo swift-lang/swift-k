@@ -432,25 +432,17 @@ the Swift scripting language.
 
 readData
 ~~~~~~~~
-readData will read data from a specified file.
-
-The format of the input file is controlled by the type of the return value.
-
-For scalar return types, such as int, the specified file should contain
-a single value of that type.
-
-For arrays of scalars, the specified file should contain one value per
-line.
-
-For structs of scalars, the file should contain two rows. The first row
-should be structure member names separated by whitespace. The second row
-should be the corresponding values for each structure member, separated
-by whitespace, in the same order as the header row.
-
-For arrays of structs, the file should contain a heading row listing
-structure member names separated by whitespace. There should be one row
-for each element of the array, with structure member elements listed in
-the same order as the header row and separated by whitespace. (since
+readData will read data from a specified file and assign it to Swift variable. The format of the input file is
+controlled by the type of the return value. For scalar return types, such as
+int, the specified file should contain a single value of that type. For arrays
+of scalars, the specified file should contain one value per line.  For complex types
+of scalars, the file should contain two rows. The first row should be structure
+member names separated by whitespace. The second row should be the
+corresponding values for each structure member, separated by whitespace, in the
+same order as the header row.  For arrays of structs, the file should contain a
+heading row listing structure member names separated by whitespace. There
+should be one row for each element of the array, with structure member elements
+listed in the same order as the header row and separated by whitespace. (since
 Swift 0.4)
 
 readStructured

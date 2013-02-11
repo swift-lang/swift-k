@@ -11,19 +11,51 @@ Data is represented in a script by strongly-typed single-assignment
 variables. The syntax superficially resembles C and Java. For example,
 { and } characters are used to enclose blocks of statements.
 
-Types in Swift can be atomic or composite. An atomic type can be
-either a primitive type or a mapped type. Swift provides a fixed set
-of primitive types, such as integer and string. A mapped type
-indicates that the actual data does not reside in CPU addressable memory
-(as it would in conventional programming languages), but in POSIX-like
-files. Composite types are further subdivided into structures and
-arrays. Structures are similar in most respects to structure types in
-other languages. Arrays use numeric indices, but are sparse. They can
-contain elements of any type, including other array types, but all
-elements in an array must be of the same type. We often refer to
+Types in Swift can be atomic or composite. An atomic type can be either a
+primitive type or a mapped type. Swift provides a fixed set of primitive types,
+such as integer and string. A mapped type indicates that the actual data does
+not reside in CPU addressable memory (as it would in conventional programming
+languages), but in POSIX-like files. Composite types are further subdivided
+into structures and arrays. Structures are similar in most respects to
+structure types in other languages. In Swift, structures are defined using the
+_type_ keyword (there is no struct keyword). Arrays use numeric indices, but
+are sparse. They can contain elements of any type, including other array types,
+but all elements in an array must be of the same type. We often refer to
 instances of composites of mapped types as datasets.
 
 image:type-hierarchy.png[]
+
+Atomic types such as string, int, float and double work the same way as in
+C-like programming languages. A variable of such atomic types can be defined as
+follows:
+
+----
+string astring = "hello";
+----
+
+A struct variable is defined using the _type_ keyword as discussed above.
+Following is an example of a variable holding employee data:
+
+----
+type Employee{
+    string name;
+    int id;
+    string address;
+}
+----
+
+The members of the structure defined above can be accessed using the dot
+notation. An example of a variable of type Employee is as follows:
+
+----
+Employee emp;
+emp.name="Thomas";
+emp.id=2222;
+emp.address="Chicago";
+----
+
+Arrays of structures are allowed in Swift. A convenient way of populating
+structures and arrays of structures is to use the _readData()_ function.
 
 Mapped type and composite type variable declarations can be annotated
 with a mapping descriptor indicating the file(s) that make up that
