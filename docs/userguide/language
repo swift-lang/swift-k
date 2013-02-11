@@ -40,7 +40,7 @@ Following is an example of a variable holding employee data:
 type Employee{
     string name;
     int id;
-    string address;
+    string loc;
 }
 ----
 
@@ -51,7 +51,7 @@ notation. An example of a variable of type Employee is as follows:
 Employee emp;
 emp.name="Thomas";
 emp.id=2222;
-emp.address="Chicago";
+emp.loc="Chicago";
 ----
 
 Arrays of structures are allowed in Swift. A convenient way of populating

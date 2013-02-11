@@ -442,8 +442,35 @@ corresponding values for each structure member, separated by whitespace, in the
 same order as the header row.  For arrays of structs, the file should contain a
 heading row listing structure member names separated by whitespace. There
 should be one row for each element of the array, with structure member elements
-listed in the same order as the header row and separated by whitespace. (since
-Swift 0.4)
+listed in the same order as the header row and separated by whitespace. The following example shows how readData() can be used to populate an array of Swift struct-like complex type:
+
+----
+type Employee{
+    string name;
+    int id;
+    string loc;
+}
+
+Employee emps[] = readData("emps.txt");
+----
+
+Where the contents of the "emps.txt" file are:
+
+----
+name id address
+Thomas 2222 Chicago
+Gina 3333 Boston
+Anne 4444 Houston
+----
+
+This will result in the array "emps" with 3 members. This can be processed within a Swift script using the foreach construct as follows:
+
+----
+foreach emp in emps{
+    tracef("Employee %s lives in %s and has id %d", emp.name, emp.loc, emp.id);
+}
+----
+
 
 readStructured
 ~~~~~~~~~~~~~~
