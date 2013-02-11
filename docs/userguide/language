@@ -114,8 +114,14 @@ image:userguide-rotated.jpg[]
 Arrays and Parallel Execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Arrays of values can be declared using the [] suffix. An array be
-mapped to a collection of files, one element per file, by using a
+Arrays of values can be declared using the [] suffix. Following is an example
+of an array of strings:
+
+----
+string pets[] = ["shane", "noddy", "leo"];
+----
+
+An array may be mapped to a collection of files, one element per file, by using a
 different form of mapping expression. For example, the filesys_mapper 
 maps all files matching a particular unix glob pattern into an array:
 
