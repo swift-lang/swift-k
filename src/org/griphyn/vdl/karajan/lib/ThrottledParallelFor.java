@@ -258,7 +258,10 @@ public class ThrottledParallelFor extends UParallelFor {
                     ts.threadDone(thr2, null);
                 }
                 catch (ExecutionException e) {
-                    throw e;
+                    thr2.getStack().dropToFrame(fcf);
+                    ts.threadDone(thr2, e);
+                    ts.abortAll();
+                    thr.awake();
                 }
                 catch (Exception e) {
                     thr2.getStack().dropToFrame(fcf);
