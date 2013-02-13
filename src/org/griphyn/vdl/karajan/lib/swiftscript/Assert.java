@@ -45,8 +45,14 @@ public class Assert extends SwiftFunction {
     @Override
     public Object function(Stack stack) {
         AbstractDataNode hmessage = this.message.getValue(stack);
-        hmessage.waitFor(this);
-        String message = (String) hmessage.getValue();
+        String message;
+        if (hmessage != null) {
+            hmessage.waitFor(this);
+            message = (String) hmessage.getValue();
+        }
+        else {
+            message = "Assertion failed";
+        }
         AbstractDataNode hvalue = this.value.getValue(stack);
         hvalue.waitFor(this);
                  
@@ -70,7 +76,7 @@ public class Assert extends SwiftFunction {
             throw new ExecutionException(this, "First argument to assert() must be boolean or int!");
         }
         if (!success) {
-            throw new AssertFailedException(message);
+            throw new AssertFailedException(this, message);
         }
     }
 }
