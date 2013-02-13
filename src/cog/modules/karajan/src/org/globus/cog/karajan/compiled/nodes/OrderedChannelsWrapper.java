@@ -17,6 +17,7 @@ import java.util.List;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
+import k.thr.Yield;
 
 import org.globus.cog.karajan.analyzer.ChannelRef;
 
@@ -37,13 +38,30 @@ public class OrderedChannelsWrapper extends Node {
 
 	@Override
 	public void run(LWThread thr) {
+		int i = thr.checkSliceAndPopState();
+		int fc = thr.popIntState();
+		Stack stack = thr.getStack();
 		try {
-			child.run(thr);
-			closeArgs(thr.getStack());
+			switch(i) {
+				case 0:
+					fc = stack.frameCount();
+					i++;
+				case 1:
+					try {
+						child.run(thr);
+						closeArgs(stack);
+					}
+					catch (ExecutionException e) {
+						stack.dropToFrame(fc);
+						closeArgs(stack);
+						throw e;
+					}
+			}
 		}
-		catch (ExecutionException e) {
-			closeArgs(thr.getStack());
-			throw e;
+		catch (Yield y) {
+			y.getState().push(fc);
+			y.getState().push(i);
+			throw y;
 		}
 	}
 
