@@ -306,9 +306,11 @@ public class LWThread implements Runnable {
             	running = false;
             }
             // System.out.println(this);
-            e.printStackTrace();
-            System.out.println(this + " Run count: " + runCount);
-            System.out.println(this + " crt state: " + state);
+            if (DEBUG) {
+	            e.printStackTrace();
+	            System.out.println(this + " Run count: " + runCount);
+	            System.out.println(this + " crt state: " + state);
+            }
             done(e);
         }
     }
