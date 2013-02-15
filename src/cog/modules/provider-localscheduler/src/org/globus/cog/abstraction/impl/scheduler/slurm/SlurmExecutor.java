@@ -113,6 +113,8 @@ public class SlurmExecutor extends AbstractExecutor {
 		Task task = getTask();
 		JobSpecification spec = getSpec();
 		Properties properties = Properties.getProperties();
+                boolean exclusive_defined=false;
+
 		validate(task);
 		writeHeader(wr);
 
@@ -123,7 +125,6 @@ public class SlurmExecutor extends AbstractExecutor {
 		wr.write("#SBATCH --output=" + quote(stdout) + '\n');
 		wr.write("#SBATCH --error=" + quote(stderr) + '\n');
 		wr.write("#SBATCH --nodes=" + count + '\n');
-		wr.write("#SBATCH --exclusive\n");
 		wr.write("#SBATCH --ntasks-per-node=1\n");
 		writeNonEmptyAttr("ppn", "--cpus-per-task", wr);
 		writeNonEmptyAttr("project", "--account", wr);
@@ -134,10 +135,24 @@ public class SlurmExecutor extends AbstractExecutor {
 		for (String a : spec.getAttributeNames()) {
 			if (a != null && a.startsWith("slurm.")) {
 				String attributeName[] = a.split("slurm.");
-				wr.write("#SBATCH --" + attributeName[1] + "=" + spec.getAttribute(a) + '\n');
+                                 if (attributeName[1].equals("exclusive")) { 
+					exclusive_defined=true;
+					if(spec.getAttribute(a).equals("true")) {
+						wr.write("#SBATCH --exclusive");
+					} else {
+						wr.write("#SBATCH --share");
+					}
+                                
+                                 } else {
+				 wr.write("#SBATCH --" + attributeName[1] + "=" + spec.getAttribute(a) + '\n');
+                        	 }
 			}
 		}
-		
+ 
+                if(!exclusive_defined) {
+                   wr.write("#SBATCH --exclusive\n");
+                }		
+
 		wr.write("\n");
 		for (String name : spec.getEnvironmentVariableNames()) {
 			wr.write("export " + name + '=' + quote(spec.getEnvironmentVariable(name)) + '\n');
