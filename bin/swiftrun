@@ -97,8 +97,8 @@ echo "</config>" >> sites.xml
 timestamp=$( date +%s )
 ln -s $PWD $HOME/.swift/runs/current/$rundir.$timestamp 
 if [ -n "$CONFIG" ]; then
-   eval time swift -sites.file sites.xml -tc.file tc.data -config $CONFIG $script $args 2>&1 | tee swift.out
+   eval time swift -sites.file sites.xml -tc.file tc.data -config $CONFIG $( basename $script ) $args 2>&1 | tee swift.out
 else
-   eval time swift -sites.file sites.xml -tc.file tc.data $script $args 2>&1 | tee swift.out
+   eval time swift -sites.file sites.xml -tc.file tc.data $( basename $script ) $args 2>&1 | tee swift.out
 fi
 mv $HOME/.swift/runs/current/$rundir.$timestamp $HOME/.swift/runs/completed
