@@ -1,0 +1,46 @@
+<karajan>
+		<map>
+			<map:entry key="name" value="element list"/>
+			<map:entry key="test">
+				<element arguments="">
+					<set name="list1">
+						<elementList>
+							<number>1</number>
+							<number>2</number>
+						</elementList>
+					</set>
+					
+					<set name="list2">
+						<list>
+							<element arguments="">
+								<number>1</number>
+							</element>
+							<element arguments="">
+								<number>2</number>
+							</element>
+						</list>
+					</set>
+					
+					<argument>
+						<list>
+							<for name="item" in="{list1}">
+								<executeElement element="{item}"/>
+							</for>
+							<for name="item" in="{list2}">
+								<executeElement element="{item}"/>
+							</for>
+						</list>
+					</argument>
+				</element>
+			</map:entry>
+			<map:entry key="expected-result">
+				<list>
+					<number>1</number>
+					<number>2</number>
+					<number>1</number>
+					<number>2</number>
+				</list>
+			</map:entry>
+			<map:entry key="comparison" value="{math_comparison}"/>
+		</map>
+</karajan>

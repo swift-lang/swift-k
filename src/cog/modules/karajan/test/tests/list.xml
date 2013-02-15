@@ -1,0 +1,78 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="list"/>
+		<map:entry key="test">
+			<element arguments="">
+				<list>
+					<!-- list of lists -->
+					<list:size>
+						<list>
+							<list>
+								<number>1</number>
+								<number>2</number>
+							</list>
+							<list>
+								<number>3</number>
+								<number>4</number>
+							</list>
+						</list>
+					</list:size>
+					
+					<!-- list concatenation -->
+					<list:size>
+						<list:join>
+							<list>
+								<number>1</number>
+								<number>2</number>
+							</list>
+							<list>
+								<number>3</number>
+								<number>4</number>
+							</list>
+						</list:join>
+					</list:size>
+					
+					<set name="mylist">
+						<list>
+							<number>1</number>
+							<number>2</number>
+							<number>3</number>
+							<number>4</number>
+						</list>		
+					</set>
+					
+					<!-- butFirst -->
+					<list:butFirst list="{mylist}"/>
+					
+					<!-- butLast -->	
+					<list:butLast list="{mylist}"/>
+					
+					<!-- first -->
+					<list:first list="{mylist}"/>
+					
+					<!-- last -->	
+					<list:last list="{mylist}"/>
+				</list>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result">
+			<list>
+				<number>2</number>
+				<number>4</number>
+				<list>
+					<number>2</number>
+					<number>3</number>
+					<number>4</number>
+				</list>
+				<list>
+					<number>1</number>
+					<number>2</number>
+					<number>3</number>
+				</list>
+				<number>1</number>
+				<number>4</number>
+			</list>
+		</map:entry>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

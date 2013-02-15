@@ -1,0 +1,50 @@
+<karajan>
+	<namespace prefix="gt4">
+		<include file="sys.xml"/>
+		<include file="task.xml"/>
+				
+		<if>
+			<isDefined name="GLOBUS_LOCATION"/>
+			<then>
+				<if>
+					<not>
+						<file:exists name="{GLOBUS_LOCATION}/bin/globusrun-ws"/>
+					</not>
+
+					<then>
+						<generateError>
+							<argument name="message">
+GLOBUS_LOCATION is invalid: {GLOBUS_LOCATION}
+No globusrun-ws executable could be found in {GLOBUS_LOCATION}/bin
+							</argument>
+						</generateError>
+					</then>
+				</if>
+			</then>
+			<else>
+				<generateError>
+					<argument name="message">
+You must set the GLOBUS_LOCATION global variable before including the GT4 library.
+					</argument>
+				</generateError>
+			</else>
+		</if>
+		
+		<export name="submit">
+			<element arguments="description">
+				<set name="descfile">
+					<uid prefix="gt4jobdesc"/>
+				</set>
+				<file:write name="{descfile}">
+					<variable>description</variable>
+				</file:write>
+				<task:execute provider="local" host="localhost"
+					executable="{GLOBUS_LOCATION}/bin/globusrun-ws"
+					arguments="-submit -f {descfile}"
+					redirect="true"/>
+			</element>
+		</export>
+	</namespace>
+</karajan>
+
+

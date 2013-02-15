@@ -1,0 +1,3 @@
+The provider-mpichg2 module is a component of the abstractions framework. 
+It provides the implementation for the execution task handler
+supporting mpichg2 jobs.

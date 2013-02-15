@@ -1,0 +1,45 @@
+<karajan>
+	<include file="java.xml"/>
+	
+	<element name="currentTime">
+		<java:invokeMethod method="currentTimeMillis" 
+                                   classname="java.lang.System" 
+                                   static="true"/>
+	</element>
+	
+	<export>
+		<element name="timer:initialize">
+			<global name="_timers">
+				<map/>
+			</global>
+		</element>
+	
+		<element name="timer:start" arguments="name">
+			<!-- globals are bad! -->
+			<map:put map="{_timers}">
+				<map:entry key="{name}">
+					<currentTime/>
+				</map:entry>
+			</map:put>
+		</element>
+	
+		<!-- will return the value of the timer -->
+		<element name="timer:value" arguments="name">
+			<set name="end">
+				<currentTime/>
+			</set>
+			<set name="start">
+				<map:get map="{_timers}" key="{name}"/>
+			</set>
+			<subtraction from="{end}" value="{start}"/>
+		</element>
+	
+		<!-- will print the current value of the timer -->
+		<element name="timer:print" arguments="name">
+			<set name="value">
+				<timer:value name="{name}"/>
+			</set>
+			<echo message="Timer '{name}': {value} ms"/>
+		</element>
+	</export>
+</karajan>

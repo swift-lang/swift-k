@@ -1,0 +1,52 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="fold"/>
+		<map:entry key="test">
+			<element arguments="">
+				<set name="s">
+					<fold>
+						<element arguments="x, s">
+						 	<list>
+								<sum>
+									<variable>x</variable>
+									<first list="{s}"/>
+								</sum>
+								<sum>
+									<number>1</number>
+									<last list="{s}"/>
+								</sum>
+							</list>
+						</element>
+						<list>
+							<number>0</number>
+							<number>0</number>
+						</list>
+					
+						<for name="i">
+							<range from="1" to="10"/>
+							<variable>i</variable>
+						</for>
+					</fold>
+				</set>
+			
+				<list>
+					<first list="{s}"/>
+					<last list="{s}"/>
+					<quotient>
+						<first list="{s}"/>
+						<last list="{s}"/>
+					</quotient>
+				</list>
+
+			</element>
+		</map:entry>
+		<map:entry key="expected-result">
+			<list>
+				<number>55</number>
+				<number>10</number>
+				<number>5.5</number>
+			</list>
+		</map:entry>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

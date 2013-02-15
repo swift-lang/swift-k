@@ -1,0 +1,4 @@
+JGlobus is a client side implementation of the classic version of the Globus
+Toolkit. It can be used to interact with classic (pre-OGSI, pre-WS) 
+Globus services. Parts of JGlobus (such as the security libraries) are also
+used by the Java implementations of OGSI and WSRF services/clients.

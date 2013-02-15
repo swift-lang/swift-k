@@ -1,0 +1,17 @@
+expression := 
+		variable moreExpression |
+		ANYTOKEN() moreExpression |
+		E() EMPTYSTRING() ;
+		
+moreExpression :=
+		variable CONCAT() moreExpression |
+		ANYTOKEN() CONCAT() moreExpression |
+		E() ;
+
+variable := 
+		LITERAL("{") maybeVar ;
+		
+maybeVar :=
+		LITERAL("{") PUSH("{") |
+		IDENTIFIER() VARIABLE() LITERAL("}") ;
+		

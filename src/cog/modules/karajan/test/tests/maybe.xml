@@ -1,0 +1,60 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="maybe"/>
+		<map:entry key="test">
+			<element arguments="">
+				<element name="a" arguments="a, b" optargs="c, d">
+					<list>
+						<variable>a</variable>
+						<variable>b</variable>
+						<maybe><variable>c</variable></maybe>
+						<maybe><variable>d</variable></maybe>
+					</list>
+				</element>
+				
+				<element name="b" arguments="a, b" optargs="c, d">
+					<a a="{a}" b="{b}">
+						<maybe>
+							<argument name="c" value="{c}"/>
+						</maybe>
+						<maybe>
+							<argument name="d" value="{d}"/>
+						</maybe>
+					</a>
+				</element>
+				
+				<list>
+					<b a="1" b="2"/>
+					<b a="1" b="2" c="3"/>
+					<b a="1" b="2" c="3" d="4"/>
+					<b a="1" b="2" d="4"/>
+					<list>
+						<maybe>
+							<number>2</number>
+							<number>3</number>
+							<variable>noway</variable>
+						</maybe>
+					</list>
+					<list>
+						<maybe>
+							<number>2</number>
+							<number>3</number>
+							<number>4</number>
+						</maybe>
+					</list>
+				</list>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result">
+			<list>
+				<list items="1, 2"/>
+				<list items="1, 2, 3"/>
+				<list items="1, 2, 3, 4"/>
+				<list items="1, 2, 4"/>
+				<list/>
+				<list items="2, 3, 4"/>
+			</list>
+		</map:entry>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

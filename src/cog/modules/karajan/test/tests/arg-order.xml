@@ -1,0 +1,36 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="arguments order"/>
+		<map:entry key="test">
+			<element arguments="">
+				<list>
+					<parallel>
+						<sequential>
+							<wait delay="100"/>
+							<number>1</number>
+						</sequential>
+						<sequential>
+							<wait delay="150"/>
+							<number>2</number>
+						</sequential>
+						<sequential>
+							<wait delay="10"/>
+							<number>3</number>
+						</sequential>
+						
+						<number>4</number>
+					</parallel>
+				</list>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result">
+			<list>
+				<number>1</number>
+				<number>2</number>
+				<number>3</number>
+				<number>4</number>
+			</list>
+		</map:entry>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>
