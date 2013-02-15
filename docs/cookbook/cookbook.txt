@@ -11,8 +11,6 @@ include::overview[]
 
 include::swift_basics[]
 
-include::coasters[]
-
 include::infrastructures[]
 
 include::debugging[]
