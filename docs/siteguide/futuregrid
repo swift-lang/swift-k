@@ -1,9 +1,13 @@
-Futuregrid (x86 cloud)
-----------------------
-
-FutureGrid is a distributed, high-performance test-bed that allows
-scientists to collaboratively develop and test innovative approaches
-to parallel, grid, and cloud computing.
+Futuregrid Cloud
+----------------
+The NSF-funded FutureGrid cloud is administered by Indiana University. It
+offers a variety of resources via a multitude of interfaces. Currently, it
+offers cloud resources via three different interfaces: Eucalyptus,
+Nimbus (www.nimbusproject.org), and
+OpenStack (www.openstack.org). The total number of resources at
+FutureGrid is close to 5000 CPU cores and 220~TB of storage from more than six
+physical clusters. We use the resources offered by one such cluster via the
+Nebula middleware.
 
 More information on futuregrid can be found at https://portal.futuregrid.org/.
 

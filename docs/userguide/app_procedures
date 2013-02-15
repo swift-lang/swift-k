@@ -15,7 +15,7 @@ into a (remote) unix process execution. It does not describe the
 mechanisms by which Swift performs that translation; that is described
 in the next section.
 
-In this section, this example SwiftScript program is used for reference:
+In this section, this example Swift script is used for reference:
 
 ----
 type file;
@@ -40,7 +40,7 @@ and application workspace directory ?
 This application workspace directory will not be shared with any other
 application procedure execution attempt; all application procedure
 execution attempts will run with distinct application procedure
-workspaces. (for the avoidance of doubt: If a SwiftScript procedure
+workspaces. (for the avoidance of doubt: If a Swift script procedure
 invocation is subject to multiple application procedure execution
 attempts (due to Swift-level restarts, retries or replication) then each
 of those application procedure execution attempts will be made in a
@@ -87,13 +87,14 @@ be true:
       of the application executable), then the application executable
       should exit with unix return code not equal to 0.
 
-    * Each file mapped from an output parameter of the SwiftScript
+    * Each file mapped from an output parameter of the Swift script
       procedure call must exist. Files will be mapped in the same way as
       for input files.
 
-      (? Is it defined that output subdirectories will be precreated
-      before execution or should app executables expect to make them?
-      That's probably determined by the present behaviour of wrapper.sh)
+    * The output subdirectories will be precreated
+      before execution by Swift if defined within a Swift script such as the
+      location attribute of a mapper. App executables expect to make them if
+      they are referred to in the wrapper scripts.
 
     * Output produced by running the application executable on some
       inputs should be the same no matter how many times, when or where
@@ -104,19 +105,19 @@ be true:
 
 Things to not assume:
 
-    * anything about the path of the application workspace directory
+    * Anything about the path of the application workspace directory
 
-    * that either the application workspace directory will be deleted or
+    * That either the application workspace directory will be deleted or
       will continue to exist or will remain unmodified after execution
       has finished
 
-    * that files can be passed(?def) between application procedure
+    * That files can be passed between application procedure
       invocations through any mechanism except through files known to
       Swift through the mapping mechanism (there is some exception here
       for external datasets - there are a separate set of assertions
       that hold for external datasets)
 
-    * that application executables will run on any particular site of
+    * That application executables will run on any particular site of
       those available, or than any combination of applications will run
       on the same or different sites.
 
@@ -212,7 +213,7 @@ The kickstart utility can be used to capture environmental
 information at execution time to aid in debugging and provenance capture.
 
 
-SwiftScript language compilation layer
+Swift script language compilation layer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step i: text to XML intermediate form parser/processor. parser written
 in ANTLR - see resources/VDL.g. The XML Schema Definition (XSD) for the
@@ -220,7 +221,7 @@ intermediate language is in resources/XDTM.xsd.
 
 Step ii: XML intermediate form to Karajan workflow. Karajan.java - reads
 the XML intermediate form. compiles to karajan workflow language - for
-example, expressions are converted from SwiftScript syntax into Karajan
+example, expressions are converted from Swift script syntax into Karajan
 syntax, and function invocations become karajan function invocations
 with various modifications to parameters to accomodate return parameters
 and dataset handling.
@@ -261,7 +262,7 @@ GRAM and GridFTP can be implemented as Java CoG kit providers.
 Function reference
 ------------------
 This section details functions that are available for use in the
-SwiftScript language.
+Swift scripting language.
 
 @arg
 ~~~~
@@ -287,8 +288,8 @@ $ swift arg.swift -myparam=hello
 Swift v0.3-dev r1674 (modified locally)
 
 RunID: 20080220-1548-ylc4pmda
-SwiftScript trace: defaultvalue
-SwiftScript trace: hello
+Swift trace: defaultvalue
+Swift trace: hello
 ----
 
 @extractint
@@ -408,13 +409,13 @@ parallel).
 @toint
 ~~~~~~
 @toint(input) will parse its input string into an integer. This can be
-used with @arg to pass input parameters to a SwiftScript program as
+used with @arg to pass input parameters to a Swift script as
 integers.
 
 @tofloat
 ~~~~~~
 @tofloat(input) will parse its input string into a floating point number. This can be
-used with @arg to pass input parameters to a SwiftScript program as
+used with @arg to pass input parameters to a Swift script as
 floating point numbers.
 
 @length
@@ -428,30 +429,49 @@ floating point numbers.
 Built-in procedure reference
 ----------------------------
 This section details built-in procedures that are available for use in
-the SwiftScript language.
+the Swift scripting language.
 
 readData
 ~~~~~~~~
-readData will read data from a specified file.
+readData will read data from a specified file and assign it to Swift variable. The format of the input file is
+controlled by the type of the return value. For scalar return types, such as
+int, the specified file should contain a single value of that type. For arrays
+of scalars, the specified file should contain one value per line.  For complex types
+of scalars, the file should contain two rows. The first row should be structure
+member names separated by whitespace. The second row should be the
+corresponding values for each structure member, separated by whitespace, in the
+same order as the header row.  For arrays of structs, the file should contain a
+heading row listing structure member names separated by whitespace. There
+should be one row for each element of the array, with structure member elements
+listed in the same order as the header row and separated by whitespace. The following example shows how readData() can be used to populate an array of Swift struct-like complex type:
 
-The format of the input file is controlled by the type of the return value.
+----
+type Employee{
+    string name;
+    int id;
+    string loc;
+}
 
-For scalar return types, such as int, the specified file should contain
-a single value of that type.
+Employee emps[] = readData("emps.txt");
+----
 
-For arrays of scalars, the specified file should contain one value per
-line.
+Where the contents of the "emps.txt" file are:
 
-For structs of scalars, the file should contain two rows. The first row
-should be structure member names separated by whitespace. The second row
-should be the corresponding values for each structure member, separated
-by whitespace, in the same order as the header row.
+----
+name id address
+Thomas 2222 Chicago
+Gina 3333 Boston
+Anne 4444 Houston
+----
 
-For arrays of structs, the file should contain a heading row listing
-structure member names separated by whitespace. There should be one row
-for each element of the array, with structure member elements listed in
-the same order as the header row and separated by whitespace. (since
-Swift 0.4)
+This will result in the array "emps" with 3 members. This can be processed within a Swift script using the foreach construct as follows:
+
+----
+foreach emp in emps{
+    tracef("Employee %s lives in %s and has id %d", emp.name, emp.loc, emp.id);
+}
+----
+
 
 readStructured
 ~~~~~~~~~~~~~~

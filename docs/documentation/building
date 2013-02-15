@@ -10,6 +10,7 @@ There are several prerequisites for building documentation:
 * asciidoc and a2x (http://www.methods.co.nz/asciidoc)
 * dblatex (http://dblatex.sourceforge.net)
 * source-highlight (http://www.gnu.org/software/src-highlite)
+* For Mac OSX users only: coreutils (installation via macports recommended)
 
 For CI users, compiled versions of these packages can be found in ~davidk.
 

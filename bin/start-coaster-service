@@ -428,8 +428,10 @@ source $CONFIG_FILE
 if [ -z "$IPADDR" ]; then
    if [ "$SSH_TUNNELING" == "yes" ]; then
       IPADDR=localhost
+   elif [ -n "$GLOBUS_HOSTNAME" ]; then
+      IPADDR=$GLOBUS_HOSTNAME
    elif [ -x "/sbin/ifconfig" ]; then
-      IPADDR=$( /sbin/ifconfig | grep 'inet addr' | grep -v 127.0.0.1 | cut -d ':' -f 2 | awk '{print $1}' |head -1)
+      IPADDR=$( /sbin/ifconfig 2>/dev/null | grep 'inet addr' | grep -v 127.0.0.1 | cut -d ':' -f 2 | awk '{print $1}' |head -1)
    else
       crash "Unable to determine IP address of system. Please add to coaster-service.conf"
    fi
@@ -526,11 +528,11 @@ else
 fi
 
 # For evil bug #467 
-#echo "app echo (string i) { echo i; }" > hi.swift
-#echo "echo(\"hi\");" >> hi.swift
-#swift -sites.file sites.xml -tc.file tc.data -config cf hi.swift > /dev/null 2>&1 &
-#DUMMYPID=$!
-#sleep 15
+echo "app echo (string i) { echo i; }" > hi.swift
+echo "echo(\"hi\");" >> hi.swift
+swift -sites.file sites.xml -tc.file tc.data -config cf hi.swift > /dev/null 2>&1 &
+DUMMYPID=$!
+sleep 15
 
 # Start workers
 case $WORKER_MODE in
@@ -567,7 +569,7 @@ case $WORKER_MODE in
 esac
 
 # Wait for dummy script to finish
-#wait $DUMMYPID
+wait $DUMMYPID
 
 # Generate config file
 if [ "$SHARED_FILESYSTEM" == "no" ]; then

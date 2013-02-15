@@ -44,6 +44,7 @@ public class VDL2ConfigProperties {
 	public static final String PROVENANCE_LOG = "provenance.log";
 	public static final String FILE_GC_ENABLED = "file.gc.enabled";
 	public static final String TRACING_ENABLED = "tracing.enabled";
+	public static final String DM_CHECKER = "mapping.checker";
 	public static final Map<String, PropInfo> PROPERTIES;
 
 	static {
@@ -143,6 +144,11 @@ public class VDL2ConfigProperties {
 				"operations within swift such as iterations, invocations, assignments, and declarations, as well " +
 				"as data dependencies will be logged. This comes at a cost in performance. It is therefore " +
 				"disabled by default."));
+		
+		PROPERTIES.put(DM_CHECKER, new PropInfo("<on|off>", "Controls the run-time duplicate mapping checker " +
+				"(which indetifies mapping conflicts). If set to 'on', the checker is enabled. When enabled, a record " +
+				"of all mapped data is kept, so this comes at the expense of a slight memory leak. If set 'off', the" +
+				" mapping checker is disabled. Enabled by default."));
 	}
 
 	public static Map<String, PropInfo> getPropertyDescriptions() {

@@ -1,32 +1,66 @@
-Swift on Diverse Infrastructures 
----------------------------------
+Swift on Computational Infrastructures 
+--------------------------------------
+
+Introduction
+~~~~~~~~~~~~
+
+We will use the following Swift example, called "catsn" throughout the present section of this cookbook:
+
+----
+type file;
+
+app (file o) cat (file i)
+{
+  cat @i stdout=@o;
+}
+
+file out[]<simple_mapper; location="odir", prefix="f.", suffix=".out">;
+foreach j in [1:@toint(@arg("n","1"))] {
+  file data<"data.txt">;
+  out[j] = cat(data);
+}
+----
 
 Beagle
 ~~~~~~
-Swift is available on Beagle as a software module.
-In this recipe, we will walk you through a very simple example running Swift
-on Beagle. The prerequisites required for running this example on Beagle is an access to Beagle and a project allocation. The example is a simplest form of a real application that involves reading from a disc file and writing onto another disc file. It runs the +/bin/cat+ Unix command to read an input file called +data.txt+ and write it to an output file in a folder +outdir+, called +f.nnn.out+.
+Beagle is a University of Chicago's Computational Institute super computer
+dedicated to bioinformatics research. It is a cray XE6 machine running PBS job
+scheduler. More on Beagle could be found
+link:https://beagle.ci.uchicago.edu[here].
+
+Swift is available on Beagle as a software module. This recipe will walk you
+through a very simple example running Swift on Beagle. The prerequisites for
+running this example on Beagle is an access to and a project allocation on
+Beagle. The example is a simplest form of a real application which involves
+reading from a disc file and writing onto another disc file. It runs the
++/bin/cat+ Unix command to read an input file called +data.txt+ and write it to
+an output file in a folder +outdir+, called +f.nnn.out+.
 
 image::figures/catsn.png[Swift Example]
 
 The steps are as follows:
 
-*step 1.* Load the Swift module on Beagle commandline as follows: +$ module load swift+
+*step 1.* Load the Swift module on Beagle commandline as follows: +$ module
+load swift+
 
-*step 2.* Create and change to a directory where your Swift related work (source, inputs, outputs) will
-stay. (say, +$ mkdir swift-lab+, followed by, +$ cd swift-lab+)
+*step 2.* Create and change to a directory where your Swift related work
+(source, inputs, outputs) will stay. (say, +$ mkdir swift-lab+, followed by, +$
+cd swift-lab+)
 
-*step 3.* copy the folder at +/home/ketan/labs/catsn+ to the above directory. (+$cp -r /home/ketan/catsn .+ followed by +$ cd catsn+).
+*step 3.* copy the folder at +/home/ketan/labs/catsn+ to the above directory.
+(+$cp -r /home/ketan/catsn .+ followed by +$ cd catsn+).
 
-*step 4.*  In the sites file: +sites.xml+ make the following two
-changes:
+*step 4.*  In the sites file: +sites.xml+ make the following two changes:
 
- 1. change the path of the +$$<workdirectory>$$+ element to your preferred location (this location is *required* to be on /lustre, say to +/lustre/beagle/<yourname>/swift-lab/swift.workdir+), and
+ 1. change the path of the +$$<workdirectory>$$+ element to your preferred
+ location (this location is *required* to be on /lustre, say to
+ +/lustre/beagle/<yourname>/swift-lab/swift.workdir+), and
 
-  2. Change the project name to your project (for instance, +CI-CCR000013+) . The workdirectory will contain
-  execution data related to each run, e.g. wrapper scripts, system information, inputs and outputs.
+  2. Change the project name to your project (for instance, +CI-CCR000013+) .
+  The workdirectory will contain execution data related to each run, e.g.
+  wrapper scripts, system information, inputs and outputs.
 
-*step 5.* Run the example using following commandline (also found in run.sh):
+*step 5.* Run the example using following commandline:
 
 ----
 $ swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1
@@ -36,11 +70,6 @@ You can further change the value of +-n+ to any arbitrary number to run that
 many number of concurrent +cat+
 
 *step 6.* Check the output in the generated +outdir+ directory (+ls outdir+)
-
-Note: Running from sandbox node or requesting 1 hour walltime for upto 3 nodes
-will get fast prioritized execution. Good for small tests
-Swift supports a coasters based computing environment for Beagle. A detailed version of Swift documentation is maintained
-http://www.ci.uchicago.edu/swift/docs/index.php[here].
 
 //
 //Intrepid-BG/P
@@ -54,7 +83,7 @@ Swift on PADS
 To execute your Swift script on the PADS cluster use this command: 
 
 ----
-swift -tc.file tc -sites.file pbs.xml modis.swift
+swift -tc.file tc -sites.file pbs.xml catsn.swift
 ----
 where the contents of a simple pbs.xml sites file could be:
 [xml]
@@ -71,6 +100,41 @@ source~~~~
   </pool>
 </config>
 source~~~~
+
+Fusion
+~~~~~~
+Fusion is an Argonne-LCRC computational facility. More information on Fusion can be found link:http://www.lcrc.anl.gov/using-fusion[here].
+
+In the current section, we present a recipe to use Swift on Fusion system.
+Fusion employs a PBS schedular. Consequently, we will use the Coasters PBS provider. 
+The jobmanager string will be "local:pbs" as follows:
+
+----
+<execution provider="coaster" jobmanager="local:pbs" url="none" />
+----
+
+The complete sites.xml file is as follows:
+
+[xml]
+source~~~~
+<config>
+  <pool handle="pbs">
+    <execution provider="coaster" jobmanager="local:pbs" url="none" />
+    <profile namespace="globus" key="project">ProteinPrediction</profile>
+    <profile namespace="globus" key="queue">batch</profile>
+    <profile namespace="globus" key="maxtime">1000</profile>
+    <profile namespace="globus" key="slots">1</profile>
+    <profile namespace="globus" key="nodeGranularity">2</profile>
+    <profile namespace="globus" key="maxNodes">2</profile>
+
+    <profile namespace="karajan" key="jobThrottle">0.23</profile>
+
+    <filesystem provider="local"/>
+    <workdirectory >/fusion/gpfs/home/${HOME}/SwiftWork</workdirectory>
+  </pool>
+</config>
+source~~~~
+
 
 OSG
 ~~~

@@ -30,6 +30,7 @@ Normalize event times in the log to the run start time
 ------------------------------------------
 ./normalize-log.pl file.contains.start.time swift-run.log > swift-run.norm
 ------------------------------------------
+Note: This script not available.
 
 Make a basic load plot from Coasters Cpu log lines
 --------------------------------------------------
@@ -40,12 +41,15 @@ Make a basic load plot from Coasters Cpu log lines
 ------------------------------------------
 ./cpu-job-load.pl < swift-run.norm > load.data
 ------------------------------------------
+Note: This script not available.
+
 . Plot with the JFreeChart-based plotter in usertools/plotter:
 +
 ------------------------------------------
 swift_plotter.zsh -s load.cfg load.eps load.data
 ------------------------------------------
 Note: The load.cfg is available from swift/libexec/log-processing/
+Note: This script not available.
 
 
 Make a basic job completion plot from Coasters Cpu log lines
@@ -64,6 +68,7 @@ Make a basic job completion plot from Coasters Cpu log lines
 ------------------------------------------
 swift_plotter.zsh -s completed.cfg completed.eps completed.data
 ------------------------------------------
+Note: This script not available.
 
 Make a basic Block allocation plot from Coasters Block log lines
 ----------------------------------------------------------------
@@ -75,12 +80,14 @@ Make a basic Block allocation plot from Coasters Block log lines
 ------------------------------------------
 ./block-level.pl < swift-run.norm > blocks.data
 ------------------------------------------
+Note: This script not available.
 
 . Plot with the JFreeChart-based plotter in usertools/plotter:
 +
 ------------------------------------------
 swift_plotter.zsh -s blocks.{cfg,eps,data}
 ------------------------------------------
+Note: This script not available.
 
 Make a job run time distribution plot from Coasters Cpu log lines
 -----------------------------------------------------------------
@@ -98,12 +105,14 @@ Make a job run time distribution plot from Coasters Cpu log lines
 ------------------------------------------
 ./buckets.pl 1 times.data > buckets.data
 ------------------------------------------
+Note: This script not available.
 
 . Plot with the JFreeChart-based plotter in usertools/plotter:
 +
 ------------------------------------------
 swift_plotter.zsh -s buckets.cfg buckets.eps buckets.data
 ------------------------------------------
+Note: This script not available.
 
 == Utilities
 

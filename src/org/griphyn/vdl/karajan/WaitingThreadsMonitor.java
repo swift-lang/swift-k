@@ -24,48 +24,95 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.ThreadingContext;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class WaitingThreadsMonitor {
-	private static Map<VariableStack, DSHandle> threads = new HashMap<VariableStack, DSHandle>();
-	private static Map<VariableStack, List<DSHandle>> outputs = new HashMap<VariableStack, List<DSHandle>>();;
+    private static class StackTCPair {
+        public final VariableStack stack;
+        public final ThreadingContext tc;
+        
+        public StackTCPair(VariableStack stack) {
+            this.stack = stack;
+            try {
+                this.tc = ThreadingContext.get(stack);
+            }
+            catch (VariableNotFoundException e) {
+                throw new RuntimeException("Cannot get thread id", e);
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return tc.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof StackTCPair) {
+                return ((StackTCPair) obj).tc == tc;
+            }
+            else {
+                return false;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return tc.toString();
+        }
+    }
+    
+	private static Map<StackTCPair, DSHandle> threads = new HashMap<StackTCPair, DSHandle>();
+	private static Map<StackTCPair, List<DSHandle>> outputs = new HashMap<StackTCPair, List<DSHandle>>();;
 	
 	public static void addThread(VariableStack stack, DSHandle waitingOn) {
 	    if (stack != null) {
 	        synchronized(threads) {
-	            threads.put(stack, waitingOn);
+	            threads.put(new StackTCPair(stack), waitingOn);
 	        }
 	    }
 	}
 		
 	public static void removeThread(VariableStack stack) {
-	    synchronized(threads) {
-	        threads.remove(stack);
+	    if (stack != null) {
+	        synchronized(threads) {
+	            threads.remove(new StackTCPair(stack));
+	        }
 	    }
 	}
 	
 	public static Map<VariableStack, DSHandle> getAllThreads() {
 	    synchronized(threads) {
-	        return new HashMap<VariableStack, DSHandle>(threads);
+	        Map<VariableStack, DSHandle> m = new HashMap<VariableStack, DSHandle>();
+	        for (Map.Entry<StackTCPair, DSHandle> e : threads.entrySet()) {
+	            m.put(e.getKey().stack, e.getValue());
+	        }
+	        return m;
 	    }
 	}
 
     public static void addOutput(VariableStack stack, List<DSHandle> outputs) {
         synchronized(WaitingThreadsMonitor.outputs) {
-            WaitingThreadsMonitor.outputs.put(stack, outputs);
+            WaitingThreadsMonitor.outputs.put(new StackTCPair(stack), outputs);
         }
     }
 
     public static void removeOutput(VariableStack stack) {
         synchronized(outputs) {
-            outputs.remove(stack);
+            outputs.remove(new StackTCPair(stack));
         }
     }
     
     public static Map<VariableStack, List<DSHandle>> getOutputs() {
         synchronized(outputs) {
-            return new HashMap<VariableStack, List<DSHandle>>(outputs);
+            Map<VariableStack, List<DSHandle>> m = new HashMap<VariableStack, List<DSHandle>>();
+            for (Map.Entry<StackTCPair, List<DSHandle>> e : outputs.entrySet()) {
+                m.put(e.getKey().stack, e.getValue());
+            }
+            return m;
         }
     }
 }

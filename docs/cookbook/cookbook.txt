@@ -1,3 +1,7 @@
+// To compile use: asciidoc -a toc -n cookbook-asciidoc.txt 
+
+:numbered:
+
 Swift Cookbook
 ==============
 Swift team <swift-user@ci.uchicago.edu>
@@ -7,10 +11,8 @@ include::overview[]
 
 include::swift_basics[]
 
-include::coasters[]
+include::infrastructures[]
 
-include::diverse_infrastructures[]
-
-include::debugging_swift[]
+include::debugging[]
 
 include::log_processing[]

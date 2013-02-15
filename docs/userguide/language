@@ -1,5 +1,5 @@
-The SwiftScript Language
-------------------------
+The Swift scripting Language
+----------------------------
 
 Language basics
 ~~~~~~~~~~~~~~~
@@ -11,19 +11,51 @@ Data is represented in a script by strongly-typed single-assignment
 variables. The syntax superficially resembles C and Java. For example,
 { and } characters are used to enclose blocks of statements.
 
-Types in Swift can be atomic or composite. An atomic type can be
-either a primitive type or a mapped type. Swift provides a fixed set
-of primitive types, such as integer and string. A mapped type
-indicates that the actual data does not reside in CPU addressable memory
-(as it would in conventional programming languages), but in POSIX-like
-files. Composite types are further subdivided into structures and
-arrays. Structures are similar in most respects to structure types in
-other languages. Arrays use numeric indices, but are sparse. They can
-contain elements of any type, including other array types, but all
-elements in an array must be of the same type. We often refer to
+Types in Swift can be atomic or composite. An atomic type can be either a
+primitive type or a mapped type. Swift provides a fixed set of primitive types,
+such as integer and string. A mapped type indicates that the actual data does
+not reside in CPU addressable memory (as it would in conventional programming
+languages), but in POSIX-like files. Composite types are further subdivided
+into structures and arrays. Structures are similar in most respects to
+structure types in other languages. In Swift, structures are defined using the
+_type_ keyword (there is no struct keyword). Arrays use numeric indices, but
+are sparse. They can contain elements of any type, including other array types,
+but all elements in an array must be of the same type. We often refer to
 instances of composites of mapped types as datasets.
 
 image:type-hierarchy.png[]
+
+Atomic types such as string, int, float and double work the same way as in
+C-like programming languages. A variable of such atomic types can be defined as
+follows:
+
+----
+string astring = "hello";
+----
+
+A struct variable is defined using the _type_ keyword as discussed above.
+Following is an example of a variable holding employee data:
+
+----
+type Employee{
+    string name;
+    int id;
+    string loc;
+}
+----
+
+The members of the structure defined above can be accessed using the dot
+notation. An example of a variable of type Employee is as follows:
+
+----
+Employee emp;
+emp.name="Thomas";
+emp.id=2222;
+emp.loc="Chicago";
+----
+
+Arrays of structures are allowed in Swift. A convenient way of populating
+structures and arrays of structures is to use the _readData()_ function.
 
 Mapped type and composite type variable declarations can be annotated
 with a mapping descriptor indicating the file(s) that make up that
@@ -64,15 +96,15 @@ invocation passed as inputs.
 
 The examples above have used the type image without any definition of
 that type. We can declare it as a marker type which has no structure
-exposed to SwiftScript:
+exposed to Swift script:
 
 ----
 type image;  
 ----
 
 This does not indicate that the data is unstructured; but it indicates
-that the structure of the data is not exposed to SwiftScript. Instead,
-SwiftScript will treat variables of this type as individual opaque files.
+that the structure of the data is not exposed to Swift. Instead,
+Swift will treat variables of this type as individual opaque files.
 
 With mechanisms to declare types, map variables to data files, and
 declare and invoke procedures, we can build a complete (albeit simple)
@@ -114,8 +146,14 @@ image:userguide-rotated.jpg[]
 Arrays and Parallel Execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Arrays of values can be declared using the [] suffix. An array be
-mapped to a collection of files, one element per file, by using a
+Arrays of values can be declared using the [] suffix. Following is an example
+of an array of strings:
+
+----
+string pets[] = ["shane", "noddy", "leo"];
+----
+
+An array may be mapped to a collection of files, one element per file, by using a
 different form of mapping expression. For example, the filesys_mapper 
 maps all files matching a particular unix glob pattern into an array:
 
@@ -172,7 +210,7 @@ y=p(x);
 z=q(y);  
 ----
 
-Arrays in SwiftScript are more monotonic - a generalisation of being
+Arrays in Swift are more monotonic - a generalisation of being
 assignment. Knowledge about the content of an array increases during
 execution, but cannot otherwise change. Each element of the array is
 itself single assignment or monotonic (depending on its type). During a
@@ -208,9 +246,9 @@ Compound procedures
 ~~~~~~~~~~~~~~~~~~~
 
 As with many other programming languages, procedures consisting of
-SwiftScript code can be defined. These differ from the previously
+Swift script can be defined. These differ from the previously
 mentioned procedures declared with the app keyword, as they invoke
-other SwiftScript procedures rather than a component program.
+other Swift procedures rather than a component program.
 
 ----
 (file output) process (file input) {  
@@ -249,13 +287,13 @@ values to be used by subsequent statements.
 More about types
 ~~~~~~~~~~~~~~~~
 
-Each variable and procedure parameter in SwiftScript is strongly typed.
+Each variable and procedure parameter in Swift script is strongly typed.
 Types are used to structure data, to aid in debugging and checking
 program correctness and to influence how Swift interacts with data.
 
 The image type declared in previous examples is a marker type.
 Marker types indicate that data for a variable is stored in a single
-file with no further structure exposed at the SwiftScript level.
+file with no further structure exposed at the Swift script level.
 
 Arrays have been mentioned above, in the arrays section. A code block
 may be applied to each element of an array using foreach; or

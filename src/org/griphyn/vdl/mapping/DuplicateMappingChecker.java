@@ -15,20 +15,42 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.VDL2ConfigProperties;
 
 public class DuplicateMappingChecker {
     public static final Logger logger = Logger.getLogger(DuplicateMappingChecker.class);
     
+    public boolean enabled = true;
+    
     private final Map<PhysicalFormat, Entry> map;
     
-    public DuplicateMappingChecker() {
+    public DuplicateMappingChecker(VDL2Config conf) {
+        enabled = !"off".equals(conf.getProperty(VDL2ConfigProperties.DM_CHECKER));
         map = new HashMap<PhysicalFormat, Entry>();
     }
     
-    private static class Entry {
-        private DSHandle write;
-        private List<DSHandle> read;
+    private static class Info {
+        private final String name, line;
         
+        public Info(String name, String line) {
+            this.name = name;
+            this.line = line;
+        }
+        
+        public String toString() {
+            if (line == null) {
+                return name;
+            }
+            else {
+                return name + " (line " + line + ")";
+            }
+        }
+    }
+    
+    private static class Entry {
+        private Info write;
+        private List<Info> read;
     }
     
     private Entry getEntry(PhysicalFormat f) {
@@ -41,30 +63,46 @@ public class DuplicateMappingChecker {
     }
 
     public synchronized void addRead(PhysicalFormat f, DSHandle h) {
+        if (!enabled) {
+            return;
+        }
         Entry e = getEntry(f);
         if (e.write != null) {
             warn("Duplicate mapping found:\n\t" + 
-                getVarInfo(h) + " is used to read from " + f + "\n\t" + 
-                getVarInfo(e.write) + " is used to write to " + f);
+                formatInfo(getInfo(h)) + " is used to read from " + f + "\n\t" + 
+                formatInfo(e.write) + " is used to write to " + f);
         }
         if (e.read == null) {
-            e.read = new LinkedList<DSHandle>();
+            e.read = new LinkedList<Info>();
         }
-        e.read.add(h);
+        e.read.add(getInfo(h));
+    }
+
+    private Info getInfo(DSHandle h) {
+        if (h instanceof AbstractDataNode) {
+            AbstractDataNode a = (AbstractDataNode) h;
+            return new Info(a.getDisplayableName(), a.getDeclarationLine());
+        }
+        else {
+            return new Info(String.valueOf(h), null);
+        }
     }
 
     public synchronized void addWrite(PhysicalFormat f, DSHandle h) {
+        if (!enabled) {
+            return;
+        }
         Entry e = getEntry(f);
         if (e.write != null) {
             warn("Duplicate mapping found:\n\t" + 
-                getVarInfo(h) + " and " + getVarInfo(e.write) + " are both used to write to " + f);
+                formatInfo(getInfo(h)) + " and " + formatInfo(e.write) + " are both used to write to " + f);
         }
         if (e.read != null) {
             warn("Duplicate mapping found:\n\t" + 
-                getVarInfo(e.write) + " is used to write to " + f + "\n\t" + 
-                "The following variables(s) are also used to read from " + f + ":" + getVarInfos(e.read));
+                formatInfo(e.write) + " is used to write to " + f + "\n\t" + 
+                "The following variables(s) are also used to read from " + f + ":" + formatInfos(e.read));
         }
-        e.write = h;
+        e.write = getInfo(h);
     }
     
     private void warn(String s) {
@@ -74,22 +112,16 @@ public class DuplicateMappingChecker {
         System.err.println(s);
     }
 
-    private String getVarInfos(List<DSHandle> l) {
+    private String formatInfos(List<Info> l) {
         StringBuilder sb = new StringBuilder();
-        for (DSHandle h : l) {
+        for (Info h : l) {
             sb.append("\n\t\t");
-            sb.append(getVarInfo(h));
+            sb.append(formatInfo(h));
         }
         return sb.toString();
     }
 
-    private String getVarInfo(DSHandle h) {
-        if (h instanceof AbstractDataNode) {
-            AbstractDataNode a = (AbstractDataNode) h;
-            return a.getDisplayableName() + " (line " + a.getDeclarationLine() + ")";
-        }
-        else {
-            return String.valueOf(h);
-        }
+    private String formatInfo(Info i) {
+        return i.toString();
     }
 }

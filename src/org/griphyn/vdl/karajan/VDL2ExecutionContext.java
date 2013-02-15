@@ -28,8 +28,10 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ElementTree;
 import org.globus.cog.karajan.workflow.ExecutionContext;
 import org.globus.cog.karajan.workflow.ExecutionException;
+import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.karajan.functions.ProcessBulkErrors;
 import org.griphyn.vdl.mapping.DuplicateMappingChecker;
+import org.griphyn.vdl.util.VDL2Config;
 
 public class VDL2ExecutionContext extends ExecutionContext {
 	public static final Logger logger = Logger.getLogger(VDL2ExecutionContext.class);
@@ -100,7 +102,9 @@ public class VDL2ExecutionContext extends ExecutionContext {
 		super.setGlobals(stack);
 		stack.setGlobal(RUN_ID, runID);
 		stack.setGlobal(SCRIPT_NAME, scriptName);
-		stack.setGlobal(DM_CHECKER, new DuplicateMappingChecker());
+		
+		VDL2Config conf = (VDL2Config) stack.getGlobal(ConfigProperty.INSTANCE_CONFIG);
+		stack.setGlobal(DM_CHECKER, new DuplicateMappingChecker(conf));
 	}
 
 	public String getRunID() {
