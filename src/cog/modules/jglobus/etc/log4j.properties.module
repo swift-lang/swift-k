@@ -1,2 +1,0 @@
-# SSL Debugging
-log4j.category.COM.claymoresystems.ptls.SSLDebug=OFF

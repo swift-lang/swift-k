@@ -1,4 +1,0 @@
-# New TACC Open SSL CA rights (cacl)
- access_id_CA      X509         '/C=US/O=UTAustin/OU=TACC/CN=TACC Certification Authority/USERID=caman'
- pos_rights        globus        CA:sign
- cond_subjects     globus       '"/C=US/O=UTAustin/OU=TACC/*"'

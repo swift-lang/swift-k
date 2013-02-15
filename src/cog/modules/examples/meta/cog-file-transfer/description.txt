@@ -1,3 +1,0 @@
-This command transfers a file hosted on one file server to another
-file server. If both the file servers are GridFTP servers, then
-the files can be transfered in third party mode.

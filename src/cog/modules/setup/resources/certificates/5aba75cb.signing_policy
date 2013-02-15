@@ -1,5 +1,0 @@
-# NCSA CA Policy
-
-access_id_CA   X509    '/C=US/O=National Computational Science Alliance/OU=Certification Authority'
-pos_rights     globus  CA:sign
-cond_subjects  globus  '/C=US/O=National Computational Science Alliance/*'

@@ -1,5 +1,0 @@
-# SDSC CA Policy
-
-access_id_CA   X509    '/C=US/O=NPACI/OU=SDSC/CN=Certificate Manager/UID=certman'
-pos_rights     globus  CA:sign
-cond_subjects  globus  '/C=US/O=NPACI/*'

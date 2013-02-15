@@ -1,5 +1,0 @@
- Please choose a file to save the settings to.
- 
- If you want to edit the settings manually, press the "Edit" button.
- 
- To save the settings and complete the setup, press "Finish".

@@ -1,5 +1,0 @@
- You can either load a previous Java CoG Kit configuration, or start a new one.
- 
- If the second option is selected below, it means that a default previous configuration was not found.
- 
- The default configuration can usually be found in your .globus directory which is located in your home directory. The default name for the Java CoG Kit configuration file is "cog.properties".

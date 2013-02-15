@@ -1,1 +1,0 @@
-import("task.xml", export = true)
