@@ -48,8 +48,6 @@ then
   exit 1
 fi
 
-INSTALLATION_DIRECTORY=$1
-
 # Create installation directory if needed
 if [ ! -d "$INSTALLATION_DIRECTORY" ]; then
    mkdir $INSTALLATION_DIRECTORY || crash "Unable to create directory $INSTALLATION_DIRECTORY"
