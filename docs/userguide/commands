@@ -74,6 +74,30 @@ Swift command-line options
     unique with respect to all other run IDs that might be used,
     irrespective of (at least) expected execution sites, program or user.
 
+-version
+
+    Display Swift version and exit
+
+-recompile
+
+      Forces Swift to re-compile the invoked Swift script. While Swift 
+      is meant to detect when recompilation is necessary, in some 
+      special cases it fails to do so. This flag helps with those 
+      special cases.
+
+-cdm.file
+     
+     Specifies a CDM policy file.
+
+-reduced.logging
+
+      Makes logging more terse by disabling provenance information and 
+      low-level task messages
+
+-minimal.logging
+
+      Makes logging much more terse: reports warnings only 
+
 -tui
 
     Displays an interactive text mode monitor during a run. (since Swift
