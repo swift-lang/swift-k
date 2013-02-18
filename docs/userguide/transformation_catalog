@@ -8,12 +8,12 @@ be overridden with the tc.file configuration property, either in the
 Swift configuration file or on the command line.
 
 The format is one line per executable per site, with fields separated by
-tabs.
+tab or space.
 
 Some example entries:
 ----
-localhost  echo    /bin/echo       INSTALLED       INTEL32::LINUX  null
-TGUC       touch   /usr/bin/touch  INSTALLED       INTEL32::LINUX  GLOBUS::maxwalltime="0:1"
+localhost  echo  /bin/echo INSTALLED INTEL32::LINUX  null
+TGUC touch /usr/bin/touch INSTALLED INTEL32::LINUX GLOBUS::maxwalltime="0:1"
 ----
 
 The fields are: site, transformation name, executable path, installation
@@ -40,7 +40,7 @@ This can be accomplished using *env* in the profile entry. For example,
 the following application sets an environment variable called R_LIBS to
 /home/user/R_libs.
 -----
-localhost	R	/usr/bin/R	INSTALLED	INTEL32::LINUX	env::R_LIBS=/home/user/r_libs
+localhost R /usr/bin/R INSTALLED INTEL32::LINUX	env::R_LIBS=/home/user/r_libs
 -----
 
 Setting Multiple Profiles
@@ -49,5 +49,5 @@ Multiple profile entries can be added by using a semicolon. The example below
 sets two environment variables: R_LIBS and R_HOME.
 
 -----
-localhost       R       /usr/bin/R      INSTALLED       INTEL32::LINUX  env::R_LIBS=/home/user/r_libs;env::R_HOME=/home/user/r
+localhost R /usr/bin/R INSTALLED INTEL32::LINUX env::R_LIBS=/home/user/r_libs;env::R_HOME=/home/user/r
 -----
