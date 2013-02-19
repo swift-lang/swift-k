@@ -18,6 +18,7 @@ import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
+import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.karajan.analyzer.ArgRef;
@@ -162,35 +163,39 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
         String provider = attr(n, "provider");
         String url = attr(n, "url", null);
         String jobManager = attr(n, "jobManager", null);
+        
+        ExecutionService s = new ExecutionServiceImpl();
+        s.setProvider(provider);
         ServiceContact contact = null;
         if (url != null) {
             contact = new ServiceContactImpl(url);
+            s.setServiceContact(contact);
+            s.setSecurityContext(AbstractionFactory.newSecurityContext(provider, contact));
         }
-        else if (provider.equals("local")) {
-            contact = new ServiceContactImpl("localhost");
+        
+        if (jobManager != null) {
+            s.setJobManager(jobManager);
         }
-        else {
-            throw new IllegalArgumentException("Missing URL");
-        }
-        return new ExecutionServiceImpl(provider, contact, 
-            AbstractionFactory.newSecurityContext(provider, contact), jobManager);
+        
+        return s;
     }
 
     private Service filesystem(Node n) throws InvalidProviderException, ProviderMethodException {
         String provider = attr(n, "provider");
         String url = attr(n, "url", null);
+        
+        Service s = new ServiceImpl();
+        s.setType(Service.FILE_OPERATION);
+        s.setProvider(provider);
+        
         ServiceContact contact = null;
         if (url != null) {
             contact = new ServiceContactImpl(url);
+            s.setServiceContact(contact);
+            s.setSecurityContext(AbstractionFactory.newSecurityContext(provider, contact));
         }
-        else if (provider.equals("local")) {
-            contact = new ServiceContactImpl("localhost");
-        }
-        else {
-            throw new IllegalArgumentException("Missing URL");
-        }
-        return new ServiceImpl(provider, Service.FILE_OPERATION, 
-            contact, AbstractionFactory.newSecurityContext(provider, contact));
+        
+        return s;
     }
 
     private void env(BoundContact bc, Node n) {
