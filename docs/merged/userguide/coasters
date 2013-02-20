@@ -145,8 +145,8 @@ The following table briefly describes the elements of the coasters setup:
 |jobThrottle |the number of concurrent jobs allowed on a site
 |==============================================================================================
 
-For Advanced Users
-~~~~~~~~~~~~~~~~~~
+Advanced User-Guide
+~~~~~~~~~~~~~~~~~~~
 
 //Coasters for advanced users. Getting your hands dirty.
 
@@ -158,29 +158,9 @@ with a careful tuning of coaters parameters.
 
 Coasters configurations
 ~~~~~~~~~~~~~~~~~~~~~~~
-//
-//Manual
-//^^^^^^^
-//Todo
-//
-//Passive
-//^^^^^^^^
-//Todo
-//
-//Persistent
-//^^^^^^^^^^^
-//Todo
-//
-//Summary of Differences Between different Coaster types
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//A tabular representations of highlights of different coaster setups
-//
-//
-//Data Management 
-//
 
-Coaster providers: local, ssh, pbs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Coaster providers
+~~~~~~~~~~~~~~~~~
 
 Settings and examples for different coaster providers mechanisms.
 
