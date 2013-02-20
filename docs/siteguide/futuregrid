@@ -111,8 +111,8 @@ Now that you have all of your configuration files generated, run the following c
 $ swift -sites.file sites.xml -tc.file tc.data -config cf <yourscript.swift>
 -----
 
-If you would like to create a custom tc file for repeated use, rename it to something other
-than tc.data to prevent it from being overwritten. The sites.xml however will need to be
+If you like to create a custom tc and/or cf file for repeated use, rename it to something other
+than tc.data/cf to prevent it from being overwritten. The sites.xml however will need to be
 regenerated every time you start the coaster service. If you need to repeatedly modify some
 sites.xml options, you may edit the template in Swift's etc/sites/persistent-coasters. You
 may also create your own custom tc files with the hostname of persistent-coasters. More
@@ -132,6 +132,6 @@ the virtual machines that were created during start-coaster-service.
 More Help
 ~~~~~~~~~
 The best place for additional help is the Swift user mailing list. You can subscribe to this list at
-http://mail.ci.uchicago.edu/mailman/listinfo/swift-user. When submitting information, please send
+http://mail.ci.uchicago.edu/mailman/listinfo/swift-user. When submitting information, send
 your sites.xml file, your tc.data, and any error messages you run into.
 

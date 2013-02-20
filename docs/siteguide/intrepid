@@ -165,7 +165,10 @@ Copy these commands and save it as tc.data.
 
 Catsn.swift
 ~~~~~~~~~~~
-The swift script we will run is called catsn.swift. It simply cats a file and saves the result. This is a nice simple test to ensure jobs are running correctly. Create a file called data.txt which contains some simple input - a "hello world" will do the trick.
+The swift script we will run is called catsn.swift. It simply cats a file and
+saves the result. This is a nice simple test to ensure jobs are running
+correctly. Create a file called data.txt which contains some simple input - a
+"hello world" will do the trick.
 
 -----
 include::../../examples/misc/catsn.swift[]
@@ -179,13 +182,17 @@ Now that everything is in place, run Swift with the following command:
 swift -sites.file sites.xml -tc.file tc.data catsn.swift -n=10
 -----
 
-You should see several new files being created, called catsn.0001.out, catsn.0002.out, etc. Each of these
-files should contain the contents of what you placed into data.txt. If this happens, your job has run
-successfully on PADS!
+You should see several new files being created, called catsn.0001.out,
+catsn.0002.out, etc. Each of these files should contain the contents of what
+you placed into data.txt. If this happens, your job has run successfully on
+PADS!
 
 More Help
 ~~~~~~~~~
-The best place for additional help is the Swift user mailing list. You can subscribe to this list at
-https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user. When submitting information, please send your sites.xml file, your tc.data, and any Swift log files that were created during your attempt.
+The best place for additional help is the Swift user mailing list. You can
+subscribe to this list at
+https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user. When
+submitting information, send your sites.xml file, your tc.data, and any Swift
+log files that were created during your attempt.
 
 

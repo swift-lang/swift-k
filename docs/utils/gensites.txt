@@ -142,7 +142,7 @@ translate them to full path names for Swift.
 WARNING: Running gensites with #app definitions will replace any file
 called tc.data in your current directory. If a file called tc.data exists,
 it will be renamed to tc.data.old. If you run gensites twice, the original
-contents of your tc.data will be lost. Please either rename your tc file
+contents of your tc.data will be lost. Either rename your tc file
 or copy to a different location.
 
 Running Swift With the New Configuration
