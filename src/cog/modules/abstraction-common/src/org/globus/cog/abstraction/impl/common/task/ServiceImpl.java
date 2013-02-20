@@ -19,20 +19,24 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 
 public class ServiceImpl implements Service {
-    private Identity identity = null;
+    public static final ServiceContact DEFAULT_CONTACT = new ServiceContactImpl("localhost");
+    
+    private Identity identity;
     private String name = "";
     private ServiceContact serviceContact;
-    private SecurityContext securityContext = null;
+    private SecurityContext securityContext;
     private Map<String, Object> attributes;
     private String provider = null;
     private int type = 0;
     private int totalCount = 0, failedCount = 0, activeCount = 0;
 
     public ServiceImpl() {
+        serviceContact = DEFAULT_CONTACT;
     }
 
     public ServiceImpl(int type) {
         this.type = type;
+        serviceContact = DEFAULT_CONTACT;
     }
 
     public ServiceImpl(String provider, ServiceContact serviceContact,
@@ -90,6 +94,9 @@ public class ServiceImpl implements Service {
     }
 
     public void setServiceContact(ServiceContact serviceContact) {
+        if (serviceContact == null) {
+            throw new NullPointerException("serviceContact");
+        }
         this.serviceContact = serviceContact;
     }
 
@@ -164,7 +171,7 @@ public class ServiceImpl implements Service {
     }
 
     public String toString() {
-        return serviceContact.toString() + "(" + this.provider + ")";
+        return serviceContact + "(" + this.provider + ")";
     }
 
     public int hashCode() {

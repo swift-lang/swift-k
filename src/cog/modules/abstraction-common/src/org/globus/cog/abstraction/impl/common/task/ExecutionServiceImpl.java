@@ -39,7 +39,7 @@ public class ExecutionServiceImpl extends ServiceImpl implements
     }
     
     public String toString() {
-        return getServiceContact().toString() + 
+        return getServiceContact() + 
                "(" + getProvider() + (jobManager == null ? "" : "/" + jobManager) + ")";
     }
 }
