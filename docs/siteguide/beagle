@@ -107,7 +107,8 @@ The tc file (tc) is as follows:
 pbs cat /bin/cat null null null
 -----
 
-More about config and tc file options can be found in the swift userguide here: http://www.ci.uchicago.edu/swift/wwwdev/guides/release-0.93/userguide/userguide.html#_swift_configuration_properties.
+More about config and tc file options can be found in the swift userguide here:
+http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html#_swift_configuration_properties
 
 *step 6.* Run the example using following commandline:
 

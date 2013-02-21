@@ -1,17 +1,19 @@
 Stampede 
 ---------
 
-Stampede is a 10 petaflop supercomputer available as part of XSEDE resources. It employs a batch-oriented
-computational model where-in a SLURM schedular accepts user's jobs and queues
-them in the queueing system for execution. The computational model requires
-a user to prepare the submit files, track job submissions, chackpointing,
-managing input/output data and handling exceptional conditions manually.
+Stampede is a 10 petaflop supercomputer available as part of  XSEDE resources.
+It employs a batch-oriented computational model where-in a SLURM schedular
+accepts user's jobs and queues them in the queueing system for execution. The
+computational model requires a user to prepare the submit files, track job
+submissions, chackpointing, managing input/output data and handling exceptional
+conditions manually.
 
 Running Swift under Stampede can accomplish the above tasks with least manual
 user intervention. In the following sections, we discuss more about specifics of
 running Swift on Stampede. A more detailed information about Swift and its
 workings can be found on Swift documentation page here:
 http://www.ci.uchicago.edu/swift/wwwdev/docs/index.php
+
 More information on Stampede can be found on XSEDE Stampede website here:
 https://www.xsede.org/stampede
 
@@ -31,10 +33,12 @@ ssh yourusername@stampede.tacc.utexas.edu
 
 Follow the steps outlined below to get started with Swift on Stampede:
 
-*step 1.* Install Swift using one of the installation methods documented on Swift home: http://www.ci.uchicago.edu/swift/downloads/index.php, if installing from source, java can be loaded on Stampede using +module load jdk32+ and apache ant could be downloaded from here: http://ant.apache.org
+*step 1.* Install Swift using one of the installation methods documented on Swift home: http://www.ci.uchicago.edu/swift/downloads/index.php,
+
+if installing from source, java can be loaded on Stampede using +module load jdk32+ and apache ant could be downloaded from here: http://ant.apache.org
 
 *step 2.* Create and change to a directory where your Swift related work will
-stay. (say, +mkdir swift-work+, followed by, +cd swift-work+)
+stay. (say,  +mkdir swift-work+, followed by, +cd swift-work+)
 
 *step 3.* To get started with a simple example running the Linux +/bin/cat+ command to read an
 input file +data.txt+ and write it to an output file, start with writing a simple Swift source script as follows:
@@ -80,7 +84,7 @@ Make sure a file named +data.txt+ is available in the current directory where th
     <profile namespace="globus" key="queue">development</profile>
 
     <!-- for mail notification -->
-    <profile namespace="globus" key="slurm.mail-user">myemail@dept.org</profile>
+    <profile namespace="globus" key="slurm.mail-user">me@dept.org</profile>
     <profile namespace="globus" key="slurm.mail-type">ALL</profile>
     
     <filesystem provider="local"/>
@@ -108,7 +112,8 @@ The tc file (tc) is as follows:
 stampede cat /bin/cat null null null
 -----
 
-More about config and tc file options can be found in the Swift userguide here: http://www.ci.uchicago.edu/swift/wwwdev/guides/release-0.93/userguide/userguide.html#_swift_configuration_properties.
+More about config and tc file options can be found in the Swift userguide here:
+http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html#_swift_configuration_properties.
 
 *step 6.* Run the example using following commandline:
 
@@ -122,7 +127,8 @@ many number of +cat+ in parallel
 *step 7.* Swift will show a status message as "done" after the job has completed its run in the queue. Check the output in the generated +outdir+ directory (+ls outdir+)
 
 ----
-login3$ swift -sites.file sites.stampede.xml -config cf -tc.file tc catsn.swiftSwift trunk swift-r6290 cog-r3609
+login3$ swift -sites.file sites.stampede.xml -config cf -tc.file tc catsn.swift
+Swift trunk swift-r6290 cog-r3609
 
 RunID: 20130221-1030-faapk389
 Progress:  time: Thu, 21 Feb 2013 10:30:21 -0600
@@ -152,4 +158,10 @@ It is likely that it is set to a path where the compute nodes can not write or n
 * If the jobs are not getting to active state for a long time, check the job status using the slurm squeue command:
 ----
 $ squeue -u `whoami`
+----
+
+The output will give an indication of the status of jobs. See the slurm manual for more information on job management commands:
+
+----
+$ man slurm
 ----
