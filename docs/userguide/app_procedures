@@ -539,6 +539,7 @@ tracef("%s: %i\n", "the value is", i);
 Specifiers:
 
 +%s+:: Format a string.
++%b+:: Format a boolean.
 +%i+:: Format a number as an integer.
 +%f+:: Format a number as a floating point number.
 +%q+:: Format an array.
