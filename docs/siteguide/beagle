@@ -129,9 +129,6 @@ Progress:  time: Sun, 18 Dec 2011 02:46:42 +0000  Active:1
 Final status:  time: Sun, 18 Dec 2011 02:46:43 +0000  Finished successfully:1
 ----
 
-Note: Running from sandbox node or requesting 30 minutes walltime for upto 3 nodes
-will get fast prioritized execution. Suitable for small tests.
-
 Larger Runs on Beagle
 ~~~~~~~~~~~~~~~~~~~~~
 A key factor in scaling up Swift runs on Beagle is to setup the sites.xml parameters.
