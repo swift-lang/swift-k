@@ -416,6 +416,13 @@ wrapper.invocation.mode
     directory. In such cases, relative mode must be used. (since Swift
     0.9)
 
+use.wrapper.staging
+
+    Valid values: true, false
+    Default value: false
+    
+    Determines if the Swift wrapper should do file staging.
+
 wrapper.parameter.mode
 
     Controls how Swift will supply parameters to the remote wrapper
