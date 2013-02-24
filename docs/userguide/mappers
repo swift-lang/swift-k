@@ -248,8 +248,7 @@ end of each block.
 iterate
 ^^^^^^^
 iterate expressions allow a block of code to be evaluated repeatedly,
-with an integer parameter sweeping upwards from 0 until a termination
-condition holds.
+with an iteration variable being incremented after each iteration.
 
 The general form is:
 
@@ -259,9 +258,29 @@ iterate var {
 } until (terminationExpression);
 ----
 
-with the variable var starting at 0 and increasing by one in each
-iteration. That variable is in scope in the statements block and when
-evaluating the termination expression.
+Here _var_ is the iteration variable. Its initial value is 0. After each iteration,
+but before _terminationExpression_ is evaluated, the iteration variable is incremented.
+This means that if the termination expression is a function of only the iteration variable,
+the body will never be executed while the termination expression is true.
+
+Example:
+
+----
+iterate i {
+    trace(i); // will print 0, 1, and 2
+} until (i == 3);
+----
+
+Variables declared inside the body of _iterate_ can be used in the termination expression.
+However, their values will reflect the values calculated as part of the last invocation
+of the body, and may not reflect the incremented value of the iteration variable:
+
+----
+iterate i {
+    trace(i);
+    int j = i; // will print 0, 1, 2, and 3
+} until (j == 3);
+----
 
 Operators
 ~~~~~~~~~
