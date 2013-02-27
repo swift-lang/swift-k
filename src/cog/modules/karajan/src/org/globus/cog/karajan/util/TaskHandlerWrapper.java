@@ -19,7 +19,7 @@ public class TaskHandlerWrapper {
 	}
 	
 	public TaskHandlerWrapper(String provider, int type) {
-		this.provider = provider;
+		this.provider = provider.toLowerCase();
 		this.type = type;
 	}
 

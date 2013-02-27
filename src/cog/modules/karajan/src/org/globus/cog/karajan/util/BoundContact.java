@@ -174,7 +174,7 @@ public class BoundContact extends Contact {
 
 		public TypeProviderPair(int type, String provider) {
 			this.type = type;
-			this.provider = provider == null ? null : provider.toLowerCase();
+			this.provider = provider;
 		}
 
 		public boolean equals(Object obj) {
