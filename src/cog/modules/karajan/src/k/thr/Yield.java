@@ -30,7 +30,7 @@ public class Yield extends Error {
 		return state;
 	}
 	
-	public synchronized Throwable fillInStackTrace2() {
+	public synchronized Throwable fillInStackTrace() {
 		return this;
 	}
 }
