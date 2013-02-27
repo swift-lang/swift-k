@@ -15,8 +15,11 @@ import k.thr.LWThread;
 import k.thr.Yield;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.parser.WrapperNode;
 
 public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 	private ArgRef<String> match;
@@ -26,6 +29,18 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 	@Override
 	protected Signature getSignature() {
 		return new Signature(params(optional("match", null), "times", block("body")));
+	}
+
+
+	@Override
+	protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+			throws CompilationException {
+		if (times.getValue() != null && times.getValue().intValue() == 0) {
+			return body;
+		}
+		else {
+			return super.compileBody(w, argScope, scope);
+		}
 	}
 
 	protected void runBody(LWThread thr) {
