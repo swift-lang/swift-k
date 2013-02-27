@@ -26,7 +26,7 @@ import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.ContactSet;
-import org.globus.swift.catalog.site.Parser;
+import org.globus.swift.catalog.site.SiteCatalogParser;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -34,6 +34,10 @@ import org.w3c.dom.NodeList;
 
 public class SiteCatalog extends AbstractSingleValuedFunction {
     private ArgRef<String> fileName;
+    
+    private enum Version {
+        V1, V2;
+    }
 
     @Override
     protected Param[] getParams() {
@@ -43,7 +47,7 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
     @Override
     public Object function(Stack stack) {
         String fn = fileName.getValue(stack);
-        Parser p = new Parser(fn);
+        SiteCatalogParser p = new SiteCatalogParser(fn);
         try {
             Document doc = p.parse();
             return buildResources(doc);
@@ -54,27 +58,68 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
     }
 
     private Object buildResources(Document doc) {
+        Node root = getRoot(doc);
+        
+        if (root.getLocalName().equals("config")) {
+            return parse(root, Version.V1);
+        }
+        else if (root.getLocalName().equals("sites")) {
+            return parse(root, Version.V1);
+        }
+        else {
+            throw new IllegalArgumentException("Illegal sites file root node: " + root.getLocalName());
+        }
+    }
+    
+    
+
+    private Object parse(Node config, Version v) {
         ContactSet cs = new ContactSet();
-        NodeList pools = doc.getElementsByTagName("config").item(0).getChildNodes();
+        NodeList pools = config.getChildNodes();
         for (int i = 0; i < pools.getLength(); i++) {
-            try {
-                BoundContact bc = pool(pools.item(i));
-                if (bc != null) {
-                    cs.addContact(bc);
+            Node n = pools.item(i);
+            if (n.getNodeType() == Node.ELEMENT_NODE) {
+                try {
+                    BoundContact bc = pool(n, v);
+                    if (bc != null) {
+                        cs.addContact(bc);
+                    }
                 }
-            }
-            catch (Exception e) {
-                throw new ExecutionException(this, "Invalid pool entry '" + attr(pools.item(i), "handle") + "': ", e);
+                catch (Exception e) {
+                    throw new ExecutionException(this, "Invalid site entry '" + poolName(n, v) + "': ", e);
+                }
             }
         }
         return cs;
     }
 
-    private BoundContact pool(Node n) throws InvalidProviderException, ProviderMethodException {
+    private String poolName(Node site, Version v) {
+       if (site.getLocalName().equals("pool")) {
+           return attr(site, "handle");
+       }
+       else if (site.getLocalName().equals("site")) {
+           return attr(site, "name");
+       }
+       else {
+           throw new IllegalArgumentException("Invalid node: " + site.getLocalName());
+       }
+    }
+
+    private Node getRoot(Document doc) {
+        NodeList l = doc.getChildNodes();
+        for (int i = 0; i < l.getLength(); i++) {
+            if (l.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                return l.item(i);
+            }
+        }
+        throw new IllegalArgumentException("Missing root element");
+    }
+
+    private BoundContact pool(Node n, Version v) throws InvalidProviderException, ProviderMethodException {
         if (n.getNodeType() != Node.ELEMENT_NODE) {
             return null;
         }
-        String name = attr(n, "handle");
+        String name = poolName(n, v);
         BoundContact bc = new BoundContact(name);
         
         String sysinfo = attr(n, "sysinfo", null);
@@ -91,10 +136,10 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
             }
             String ctype = c.getNodeName();
             
-            if (ctype.equals("gridftp")) {
+            if (v == Version.V1 && ctype.equals("gridftp")) {
                 bc.addService(gridftp(c));
             }
-            else if (ctype.equals("jobmanager")) {
+            else if (v == Version.V1 && ctype.equals("jobmanager")) {
                 bc.addService(jobmanager(c));
             }
             else if (ctype.equals("execution")) {
@@ -115,11 +160,17 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
             else if (ctype.equals("profile")) {
                 profile(bc, c);
             }
+            else if (v == Version.V2 && ctype.equals("application")) {
+                application(bc, c);
+            }
             else {
-                System.err.println("Unknown node type: " + ctype);
+                throw new IllegalArgumentException("Unknown node type: " + ctype);
             }
         }
         return bc;
+    }
+
+    private void application(BoundContact bc, Node c) {
     }
 
     private Service jobmanager(Node n) throws InvalidProviderException, ProviderMethodException {
@@ -163,6 +214,9 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
         String provider = attr(n, "provider");
         String url = attr(n, "url", null);
         String jobManager = attr(n, "jobManager", null);
+        if (jobManager == null) {
+            jobManager = attr(n, "jobmanager", null);
+        }
         
         ExecutionService s = new ExecutionServiceImpl();
         s.setProvider(provider);
@@ -230,7 +284,7 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
                 throw new IllegalArgumentException("Missing " + name);
             }
             else {
-                return attr.getNodeValue();
+                return expandProps(attr.getNodeValue());
             }
         }
         else {
@@ -246,11 +300,47 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
                 return defVal;
             }
             else {
-                return attr.getNodeValue();
+                return expandProps(attr.getNodeValue());
             }
         }
         else {
             return defVal;
         }
+    }
+
+    private String expandProps(String v) {
+        if (v == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        int li = -1;
+        for (int i = 0; i < v.length(); i++) {
+            char c = v.charAt(i);
+            switch (c) {
+                case '{':
+                    if (li != -1) {
+                        li = -1;
+                        sb.append('{');
+                    }
+                    else {
+                        li = i;
+                    }
+                    break;
+                case '}':
+                    if (li != -1) {
+                        sb.append(System.getProperty(v.substring(li + 1, i)));
+                        li = -1;
+                    }
+                    else {
+                        sb.append(c);
+                    }
+                    break;
+                default:
+                    if (li == -1) {
+                        sb.append(c);
+                    }
+            }
+        }
+        return sb.toString();
     }
 }
