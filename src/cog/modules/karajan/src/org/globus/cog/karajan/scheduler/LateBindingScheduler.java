@@ -184,9 +184,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	public void enqueue(Task task, Object constraints, StatusListener l) {
+		Entry e = new Entry(task, constraints, l);
 		synchronized (this) {
-			Entry e = new Entry(task, constraints, l);
-			setEntry(task, e);
 			getJobQueue().enqueue(e);
 			if (sleeping) {
 				notify();
@@ -209,32 +208,28 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	}
 
 	protected void checkGlobalLoadConditions() throws NoFreeResourceException {
-		if (!checkFreeMemory()) {
-			throw new NoFreeResourceException("Not enough free memory for another job");
-		}
 	}
 
 	protected void checkTaskLoadConditions(Task t) throws NoFreeResourceException {
-		if (t.getType() == 0) {
-			return;
+		switch (t.getType()) {
+			case Task.FILE_OPERATION:
+				if (currentFileOperations >= maxFileOperations) {
+					throw new NoFreeResourceException();
+				}
+				return;
+			case Task.FILE_TRANSFER:
+				if (currentTransfers >= maxTransfers) {
+					throw new NoFreeResourceException();
+				}
+				return;
+			case Task.JOB_SUBMISSION:
+				if (currentJobs >= getMaxSimultaneousJobs()) {
+					throw new NoFreeResourceException();
+				}
+				return;
+			default:
+				return;
 		}
-		if (t.getType() == Task.FILE_OPERATION && (currentFileOperations >= maxFileOperations)) {
-			throw new NoFreeResourceException();
-		}
-		if (t.getType() == Task.FILE_TRANSFER && (currentTransfers >= maxTransfers)) {
-			throw new NoFreeResourceException();
-		}
-		if (t.getType() == Task.JOB_SUBMISSION && (currentJobs >= getMaxSimultaneousJobs())) {
-			throw new NoFreeResourceException();
-		}
-	}
-
-	// make sure there is enough memory to run 8 more threads (approx).
-	public boolean checkFreeMemory() {
-		// TODO it is unlikely that Java allocates stack memory for threads from
-		// the heap.
-		return (THREAD_STACK_SIZE * 8 < Runtime.getRuntime().freeMemory()
-				+ Runtime.getRuntime().maxMemory() - Runtime.getRuntime().totalMemory());
 	}
 
 	protected synchronized int incRunning() {
@@ -478,7 +473,6 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 		if (t instanceof ContactAllocationTask) {
 			ContactAllocationTask ct = (ContactAllocationTask) t;
 			ct.setContact((BoundContact) contacts[0]);
-			removeEntry(t);
 			virtualContacts.remove(ct.getVirtualContact());
 			Status status = t.getStatus();
 			status.setPrevStatusCode(status.getStatusCode());
@@ -487,6 +481,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			fireJobStatusChangeEvent(se, e);
 			return;
 		}
+		setEntry(e.task, e);
 		for (int i = 0; i < contacts.length; i++) {
 			if (!(contacts[i] instanceof BoundContact)) {
 				throw new TaskSubmissionException(
