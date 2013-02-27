@@ -543,8 +543,19 @@ public class Misc {
         protected Param[] getParams() {
             return params("str");
         }
-
+        
         @Override
+		protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+				throws CompilationException {
+        	if (str.getValue() != null && staticReturn(scope, Double.parseDouble(str.getValue()))) {
+        		return null;
+        	}
+        	else {
+        		return super.compileBody(w, argScope, scope);
+        	}
+		}
+
+		@Override
         public Object function(Stack stack) {
             String str = this.str.getValue(stack);
             return Double.parseDouble(str);
