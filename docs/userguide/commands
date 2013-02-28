@@ -142,18 +142,20 @@ Environment variables
 
 The swift is influenced by the following environment variables:
 
-GLOBUS_HOSTNAME, GLOBUS_TCP_PORT_RANGE - set in the environment
-before running Swift. These can be set to inform Swift of the
-configuration of your local firewall. More information can be found in
-the Globus firewall How-to <http://dev.globus.org/wiki/FirewallHowTo>.
+GLOBUS_HOSTNAME, GLOBUS_TCP_PORT_RANGE 
 
-COG_OPTS - set in the environment before running Swift. Options set in
-this variable will be passed as parameters to the Java Virtual Machine
-which will run Swift. The parameters vary between virtual machine
-imlementations, but can usually be used to alter settings such as
-maximum heap size. Typing 'java -help' will sometimes give a list of
-commands. The Sun Java 1.4.2 command line options are documented here
-<http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/java.html>.
+    Set in the environment before running Swift. These can be set to inform Swift
+    of the configuration of your local firewall. More information can be found in
+    the Globus firewall How-to <http://dev.globus.org/wiki/FirewallHowTo>.
+
+COG_OPTS
+
+    Set in the environment before running Swift. Options set in
+    this variable will be passed as parameters to the Java Virtual Machine
+    which will run Swift. The parameters vary between virtual machine
+    imlementations, but can usually be used to alter settings such as
+    maximum heap size. Typing 'java -help' will sometimes give a list of
+    commands. 
 
 
 swift-osg-ress-site-catalog
