@@ -25,3 +25,6 @@ include::mcs[]
 include::uc3[]
 
 include::stampede[]
+
+link:http://www.ci.uchicago.edu/swift/docs/index.php[home]
+
