@@ -123,10 +123,10 @@ fi
 if [ ! -f "$TEMPLATE_PATH" ]; then
    if [ -f "$TEMPLATE" ]; then
       TEMPLATE_PATH=$TEMPLATE
-   elif [ -f "$SWIFT_HOME/$TEMPLATE" ]; then
-      TEMPLATE_PATH=$SWIFT_HOME/$TEMPLATE
    elif [ -f "$HOME/.swift/sites/$TEMPLATE" ]; then
       TEMPLATE_PATH=$HOME/.swift/sites/$TEMPLATE
+   elif [ -f "$SWIFT_HOME/$TEMPLATE" ]; then
+      TEMPLATE_PATH=$SWIFT_HOME/$TEMPLATE
    fi
    if [ ! -f "$TEMPLATE_PATH" ]; then
       crash "Cannot find template for $TEMPLATE"
