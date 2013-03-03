@@ -17,11 +17,10 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -354,7 +353,7 @@ public class Settings {
     }
 
     public Collection<URI> getLocalContacts(int port) {
-        List<URI> l = new ArrayList<URI>();
+        Set<URI> l = new HashSet<URI>();
         try {
             Enumeration<NetworkInterface> e1 = NetworkInterface.getNetworkInterfaces();
             while (e1.hasMoreElements()) {
