@@ -694,7 +694,7 @@ public class Karajan {
 			ProcedureSignature proc = proceduresMap.get(procName);
 			
 			if (proc.isDeprecated()) {
-			    /* warn(call, "Procedure " + procName + " is deprecated"); */
+			    Warnings.warn(call, "Procedure " + procName + " is deprecated");
 			}
 			
 			StringTemplate callST;
