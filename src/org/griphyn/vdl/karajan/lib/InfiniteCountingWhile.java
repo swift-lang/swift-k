@@ -34,8 +34,10 @@ public class InfiniteCountingWhile extends Sequential {
     
     public static final String COUNTER_NAME = "$";
     public static final Arg.Positional VAR = new Arg.Positional("var");
+    public static final Arg O_REFS = new Arg.Optional("refs", null);
     
     private Tracer tracer;
+    private List<StaticRefCount> srefs;
 
 	public InfiniteCountingWhile() {
 		setOptimize(false);
@@ -45,18 +47,21 @@ public class InfiniteCountingWhile extends Sequential {
     protected void initializeStatic() {
         super.initializeStatic();
         tracer = Tracer.getTracer(this);
+        srefs = StaticRefCount.build((String) O_REFS.getStatic(this));
     }
 
     public void pre(VariableStack stack) throws ExecutionException {
 		ThreadingContext tc = (ThreadingContext)stack.getVar("#thread");
 		stack.setVar("#iteratethread", tc);
 		stack.setVar("#thread", tc.split(0));
+		stack.setVar("#refs", RefCount.build(srefs, stack));
 		stack.setVar(COUNTER_NAME, Collections.singletonList(0));
 		String var = (String) VAR.getStatic(this);
 		if (tracer.isEnabled()) {
 		    tracer.trace(tc.toString(), var + " = 0");
 		}
 		stack.setVar(var, new RootDataNode(Types.INT, 0));
+		incRefs(stack);
 		super.pre(stack);
 	}
 
@@ -89,6 +94,7 @@ public class InfiniteCountingWhile extends Sequential {
                 tracer.trace(ntc.toString(), var + " = " + i);
             }
             stack.setVar(var, new RootDataNode(Types.INT, i));
+            incRefs(stack);
 		}
 		if (index >= elementCount()) {
 			// starting new iteration
@@ -102,6 +108,16 @@ public class InfiniteCountingWhile extends Sequential {
 		startElement(fn, stack);
 	}
 	
+    private void incRefs(VariableStack stack) {
+        @SuppressWarnings("unchecked")
+        List<RefCount> rcs = (List<RefCount>) stack.currentFrame().getVar("#refs");
+        if (rcs != null) {
+            for (RefCount rc : rcs) {
+                rc.var.updateWriteRefCount(rc.count);
+            }
+        }
+    }
+
     public void failed(VariableStack stack, ExecutionException e)
             throws ExecutionException {
         if (e instanceof While.Break) {

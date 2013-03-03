@@ -908,7 +908,7 @@ public class Karajan {
     }
 
     public void iterateStat(Iterate iterate, VariableScope scope) throws CompilationException {
-		VariableScope loopScope = new VariableScope(this, scope, EnclosureType.LOOP, iterate);
+		VariableScope loopScope = new VariableScope(this, scope, EnclosureType.ALL, iterate);
 		VariableScope innerScope = new VariableScope(this, loopScope, EnclosureType.LOOP, iterate);
 
 		loopScope.addVariable(iterate.getVar(), "int", "Iteration variable", iterate);
@@ -1531,8 +1531,6 @@ public class Karajan {
 		        throw new CompilationException("Procedure " + name + " must have exactly one " +
 		        		"return value to be used in an expression.");
 		    }
-		    
-		    Warnings.warn(c, "Procedure " + name + " is deprecated");
 
 		    StringTemplate call = template("callexpr");
 

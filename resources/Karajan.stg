@@ -219,9 +219,8 @@ function(name, args, datatype, line) ::= <<
 </swiftscript:$name$>
 >>
 
-iterate(declarations,statements,cond,var,cleanups,trace,line) ::= <<
-
-<vdl:infinitecountingwhile var="$var$" $if(trace)$ _traceline="$line$"$endif$>
+iterate(declarations, statements, cond, var, refs, cleanups, trace, line) ::= <<
+<vdl:infinitecountingwhile var="$var$" $if(trace)$ _traceline="$line$"$endif$$if(refs)$ refs="$refs;separator=" "$"$endif$>
   $sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
   <sys:if>
     <vdl:getfieldvalue>$cond$</vdl:getfieldvalue>

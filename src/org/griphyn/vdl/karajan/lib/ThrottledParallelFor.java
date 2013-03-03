@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -40,7 +39,6 @@ import org.globus.cog.karajan.workflow.futures.FutureListener;
 import org.globus.cog.karajan.workflow.futures.ListenerStackPair;
 import org.globus.cog.karajan.workflow.nodes.AbstractParallelIterator;
 import org.griphyn.vdl.karajan.Pair;
-import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class ThrottledParallelFor extends AbstractParallelIterator {
@@ -64,75 +62,14 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 	private String kvar, vvar;
 	private List<StaticRefCount> srefs;
 	
-	private static class StaticRefCount {
-	    public final String name;
-        public final int count;
-        
-        public StaticRefCount(String name, int count) {
-            this.name = name;
-            this.count = count;
-        }
-	}
-	
-	private static class RefCount {
-	    public final DSHandle var;
-	    public final int count;
-	    
-	    public RefCount(DSHandle var, int count) {
-	        this.var = var;
-	        this.count = count;
-	    }
-	    
-	    public void inc() {
-	        
-	    }
-	    
-	    public void dec() {
-	        
-	    }
-	}
-	
-    @Override
+	@Override
     protected void initializeStatic() {
         super.initializeStatic();
         forTracer = Tracer.getTracer(this, "FOREACH");
         iterationTracer = Tracer.getTracer(this, "ITERATION");
         kvar = (String) getProperty("_kvar");
         vvar = (String) getProperty("_vvar");
-        srefs = buildStaticRefs();
-    }
-
-    private List<StaticRefCount> buildStaticRefs() {
-        String refs = (String) O_REFS.getStatic(this);
-        if (refs == null) {
-            return null;
-        }
-        List<StaticRefCount> l = new ArrayList<StaticRefCount>();
-        String name = null;
-        boolean flip = true;
-        StringTokenizer st = new StringTokenizer(refs);
-        while (st.hasMoreTokens()) {
-            if (flip) {
-                name = st.nextToken();
-            }
-            else {
-                int count = Integer.parseInt(st.nextToken());
-                l.add(new StaticRefCount(name.toLowerCase(), count));
-            }
-            flip = !flip;
-        }
-        return l;
-    }
-
-    private List<RefCount> buildRefs(VariableStack stack) throws VariableNotFoundException {
-        if (srefs == null) {
-            return null;
-        }
-        List<RefCount> l = new ArrayList<RefCount>(srefs.size());
-        for (StaticRefCount s : srefs) {
-            l.add(new RefCount((DSHandle) stack.getVar(s.name), s.count));
-        }
-        return l;
+        srefs = StaticRefCount.build((String) O_REFS.getStatic(this));
     }
 
     protected void partialArgumentsEvaluated(VariableStack stack)
@@ -313,7 +250,7 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 				maxThreadCount = DEFAULT_MAX_THREADS;
 			}
 		}
-		stack.setVar(THREAD_COUNT, new ThreadCount(maxThreadCount, selfClose, i, buildRefs(stack)));
+		stack.setVar(THREAD_COUNT, new ThreadCount(maxThreadCount, selfClose, i, RefCount.build(srefs, stack)));
 	}
 
 	private ThreadCount getThreadCount(VariableStack stack)
