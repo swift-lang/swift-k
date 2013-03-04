@@ -11,9 +11,7 @@ package k.thr;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,13 +36,10 @@ public class LWThread implements Runnable {
 
     public static final int SLEEPING = 0x01;
     public static final int ALIVE = 0x02;
-    public static final int WAITING_FOR_CHILDREN = 0x04;
-    public static final int ABORT_ON_CHILD_FAILURE = 0x08;
     public static final int ABORTING = 0x10;
 
-    private int tstate;
+    private int tstate, forkIndex;
     private LWThread parent;
-    private Map<Integer, LWThread> children;
     private KRunnable runnable;
     private State state;
     private String name;
@@ -93,9 +88,6 @@ public class LWThread implements Runnable {
         	setState(ALIVE, true);
         }
         parent = LWThread.currentThread();
-        if (parent != null) {
-        	parent.addChild(this);
-        }
         Scheduler.getScheduler().schedule(this);
     }
 
@@ -115,8 +107,6 @@ public class LWThread implements Runnable {
     public String getState() {
     	return ((tstate & SLEEPING) != 0 ? "S" : "-") +
     		   ((tstate & ALIVE) != 0 ? "A" : "-") + 
-    		   ((tstate & WAITING_FOR_CHILDREN) != 0 ? "W" : "-") +
-    		   ((tstate & ABORT_ON_CHILD_FAILURE) != 0 ? "A" : "-") +
     		   ((tstate & ABORTING) != 0 ? "X" : "-");
     }
 
@@ -208,13 +198,6 @@ public class LWThread implements Runnable {
         catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private synchronized void addChild(LWThread thread) {
-        if (children == null) {
-            children = new HashMap<Integer, LWThread>();
-        }
-        children.put(System.identityHashCode(thread), thread);
     }
     
     private boolean running;
@@ -340,24 +323,13 @@ public class LWThread implements Runnable {
 
     protected synchronized void childFinished(LWThread thread,
             RuntimeException t) {
-        children.remove(System.identityHashCode(thread));
         if (t != null) {
-            if (isAbortOnChildFailure()) {
-                this.t = t;
-                abortChildren();
+            try {
+                printException(t);
             }
-            else {
-                try {
-                    printException(t);
-                }
-                catch (Exception e) {
-                    printException(e);
-                }
+            catch (Exception e) {
+                printException(e);
             }
-        }
-        if (children.isEmpty() && getState(WAITING_FOR_CHILDREN)) {
-            setState(WAITING_FOR_CHILDREN, false);
-            Scheduler.getScheduler().awake(this);
         }
     }
 
@@ -402,14 +374,6 @@ public class LWThread implements Runnable {
             sb.append(e.toString());
             sb.append('\n');
             return true;
-        }
-    }
-
-    public void abortChildren() {
-        if (DEBUG)
-            System.out.println(this + " abortChildren()");
-        for (LWThread child : children.values()) {
-            child.abort();
         }
     }
 
@@ -471,14 +435,6 @@ public class LWThread implements Runnable {
         return getState(ALIVE);
     }
 
-    public final boolean isAbortOnChildFailure() {
-        return getState(ABORT_ON_CHILD_FAILURE);
-    }
-
-    public void setAbortOnChildFailure(boolean b) {
-        setState(ABORT_ON_CHILD_FAILURE, b);
-    }
-
     public final void abort() {
         if (DEBUG)
             System.out.println(this + " abort()");
@@ -506,14 +462,9 @@ public class LWThread implements Runnable {
     public final synchronized LWThread fork(int state) {
         if (DEBUG)
             System.out.println(this + " fork(" + state + ")");
-        int id = (children == null ? 1 : children.size() + 1);
+        int id = forkIndex++;
         LWThread child = new LWThread(name + "-" + id, runnable, stack.copy());
         
-        if (children == null) {
-            children = new HashMap<Integer, LWThread>();
-        }
-        children.put(System.identityHashCode(child), child);
-
         child.state = new State();
         child.state.replaceBottom(state);
         if (child.state.isEmpty()) {
@@ -526,14 +477,9 @@ public class LWThread implements Runnable {
     public final synchronized LWThread fork(KRunnable r) {
         if (DEBUG)
             System.out.println(this + " fork(" + state + ")");
-        int id = (children == null ? 1 : children.size() + 1);
+        int id = forkIndex++;
         LWThread child = new LWThread(name + "-" + id, r, stack.copy());
-        
-        if (children == null) {
-            children = new HashMap<Integer, LWThread>();
-        }
-        children.put(System.identityHashCode(child), child);
-        
+                
         if (DEBUG) {
         	Exception e = new Exception();
         	System.out.println(child + " forked by " + e.getStackTrace()[1].getClassName());
@@ -541,33 +487,11 @@ public class LWThread implements Runnable {
         
         return child;
     }
-    
-    public final synchronized void waitForChildren() {
-        if (DEBUG)
-            System.out.println(this + " waitForChildren()");
-        if (children == null || !children.isEmpty()) {
-        	if (isAborting()) {
-        		throw new Abort();
-        	}
-            Yield y = new Yield(0);
-            this.state = y.getState();
-            setState(SLEEPING, true);
-            setState(WAITING_FOR_CHILDREN, true);
-            throw y;
-        }
-        else if (t != null) {
-            throw t;
-        }
-    }
-    
+        
     public final void die() {
         if (DEBUG)
             System.out.println(this + " die()");
         throw new LWThreadDeath();
-    }
-
-    public int getChildCount() {
-        return children.size();
     }
 
     public RootThread getRoot() {
