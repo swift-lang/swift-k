@@ -1533,6 +1533,10 @@ sub sendStatus {
 	my ($jobid) = @_;
 
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
+	
+	if ($JOBDATA{$jobid}{"perftrace"}) {
+		$LOGLEVEL = WARN;
+	}
 
 	if ($ec == 0) {
 		queueJobStatusCmd($jobid, COMPLETED, 0, "");
@@ -1683,6 +1687,7 @@ sub submitjob {
 	my $line;
 	my $JOBID = undef;
 	my $MAXWALLTIME = 600;
+	my $PERFTRACE = 0;
 	my %JOB = ();
 	my @JOBARGS = ();
 	my %JOBENV = ();
@@ -1710,6 +1715,12 @@ sub submitjob {
 			my @ap = split(/=/, $pair[1], 2);
 			if ($ap[0] eq "maxwalltime") {
 				$MAXWALLTIME = $ap[1];
+			}
+			elsif ($ap[0] eq "tracePerformance") {
+				$PERFTRACE = $ap[1];
+				wlog INFO, "tracePerformance set (id=$PERFTRACE)\n";
+				# as long as the job is alive, enable debugging
+				$LOGLEVEL = DEBUG;
 			}
 			else {
 				wlog WARN, "Ignoring attribute $ap[0] = $ap[1]\n";
@@ -1763,6 +1774,7 @@ sub submitjob {
 			stageoutm => \@STAGEOUTM,
 			cleanup => \@CLEANUP,
 			maxwalltime => $MAXWALLTIME,
+			perftrace => $PERFTRACE,
 		};
 
 		stagein($JOBID);
@@ -1773,6 +1785,7 @@ sub checkJob() {
 	my ($tag, $JOBID, $JOB) = @_;
 	
 	wlog INFO, "$JOBID Job info received (tag=$tag)\n";
+	
 	my $executable = $$JOB{"executable"};
 	if (!(defined $JOBID)) {
 		my $ds = hts($JOB);
@@ -1837,7 +1850,12 @@ sub forkjob {
 	if (defined($pid)) {
 		if ($pid == 0) {
 			close $PARENT_R;
-			runjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
+			if ($JOBDATA{$JOBID}{"perftrace"} != 0) {
+				stracerunjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID}{"perftrace"});
+			}
+			else {
+				runjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
+			}
 			close $CHILD_W;
 		}
 		else {
@@ -2006,6 +2024,22 @@ sub runjob {
 	exec { $executable } @$JOBARGS or print $WR "Could not execute $executable: $!\n";
 	die "Could not execute $executable: $!";
 }
+
+sub stracerunjob {
+	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $LOGID) = @_;
+	my $executable = $$JOB{"executable"};
+
+	$$JOB{"executable"} = "strace";
+	unshift @$JOBARGS, $executable;
+	unshift @$JOBARGS, "$LOGDIR/$BLOCKID-$ID-$LOGID.perf";
+	unshift @$JOBARGS, "-o";
+	unshift @$JOBARGS, "-tt";
+	unshift @$JOBARGS, "-f";
+	unshift @$JOBARGS, "-T";
+	
+	runjob($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
+}
+
 
 $ENV{"LANG"} = "C";
 

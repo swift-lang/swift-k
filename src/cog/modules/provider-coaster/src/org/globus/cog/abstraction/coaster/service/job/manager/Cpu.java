@@ -42,7 +42,21 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
 	private boolean shutdown;
 	private int failedJobs, completedJobs;
 	
-	public static volatile int totalCompletedJobs, totalFailedJobs;
+	public static volatile int totalCompletedJobs, totalFailedJobs, totalJobCount;
+	
+	private static int PERF_TRACE_INTERVAL = -1;
+	
+	static {
+	    try {
+	        String val = System.getProperty("job.perf.trace.interval");
+	        if (val != null) {
+	            PERF_TRACE_INTERVAL = Integer.parseInt(val);
+	        }
+	    }
+	    catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
 
     public Cpu() {
         this.done = new ArrayList<Job>();
@@ -164,6 +178,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                 logger.trace(block.getId() + ":" + getId() + " pull");
             }
             synchronized (this) {
+                totalJobCount++;
                 if (shutdown) {
                     return;
                 }
@@ -182,6 +197,10 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
                     running = bqp.request(time, cpus);
                     if (running != null) {
                         block.jobPulled();
+                        if (PERF_TRACE_INTERVAL != -1 && (totalJobCount % PERF_TRACE_INTERVAL == 0)) {
+                            JobSpecification spec = (JobSpecification) running.getTask().getSpecification();
+                            spec.setAttribute("tracePerformance", String.valueOf(totalJobCount));
+                        }
                         success = launch(running);
                     }
                     else {

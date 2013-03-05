@@ -99,25 +99,27 @@ public class BlockTask extends TaskImpl {
         // If $CWD happens to be /scratch/something it has a filter in place
         // that rejects the job with the warning that /scratch/something is not accessible
         // on the worker node. And we don't care about the $CWD for the worker.
-        if (settings.getDirectory() == null)
+        if (settings.getDirectory() == null) {
             js.setDirectory("/");
-        else
+        }
+        else {
             js.setDirectory(settings.getDirectory());
+        }
 
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
 
-        if (settings.getWorkerLoggingLevel().equals("NONE"))
-        {
-          js.addArgument("NOLOGGING");
+        if (settings.getWorkerLoggingLevel().equals("NONE")) {
+            js.addArgument("NOLOGGING");
         }
-        else
-        {
+        else {
         	String logDir = settings.getWorkerLoggingDirectory();
-        	if (logDir.equals("DEFAULT"))
+        	if (logDir.equals("DEFAULT")) {
         		js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());
-        	else
+        	}
+        	else {
         		js.addArgument(logDir);
+        	}
         }
 
         // logger.debug("arguments: " + js.getArguments());

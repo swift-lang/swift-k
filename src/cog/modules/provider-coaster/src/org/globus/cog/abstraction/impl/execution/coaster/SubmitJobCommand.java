@@ -106,6 +106,9 @@ public class SubmitJobCommand extends Command {
     
         if (simple) {
         	add(sb, "attr", "maxwalltime=" + formatWalltime(spec.getAttribute("maxwalltime")));
+        	if (spec.getAttribute("tracePerformance") != null) {
+        	    add(sb, "attr", "tracePerformance=" + spec.getAttribute("tracePerformance"));
+        	}
         }
         else {
             for (String name : spec.getAttributeNames())
