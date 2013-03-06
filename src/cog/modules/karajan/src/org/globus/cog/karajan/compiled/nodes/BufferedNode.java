@@ -59,9 +59,11 @@ public class BufferedNode extends CompoundNode {
 			l = new LinkedList<ChannelRef.Buffer<Object>>();
 			for (String name : names) {
 				Var.Channel dst = scope.parent.lookupChannel(name);
-				Var.Channel src = scope.lookupChannel(name);
 				
-				l.add(new ChannelRef.Buffer<Object>(name, src.getIndex(), dst.getIndex()));
+				if (!dst.getNoBuffer()) {
+					Var.Channel src = scope.lookupChannel(name);
+					l.add(new ChannelRef.Buffer<Object>(name, src.getIndex(), dst.getIndex()));
+				}
 			}
 		}
 		return l;
