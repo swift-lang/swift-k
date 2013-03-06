@@ -42,6 +42,7 @@ import org.globus.cog.karajan.scheduler.Scheduler;
 import org.griphyn.vdl.karajan.lib.RuntimeStats.ProgressState;
 import org.griphyn.vdl.karajan.lib.replication.CanceledReplicaException;
 import org.griphyn.vdl.karajan.lib.replication.ReplicationManager;
+import org.griphyn.vdl.util.VDL2Config;
 
 public class Execute extends GridExec {
 	public static final Logger logger = Logger.getLogger(Execute.class);
@@ -52,6 +53,8 @@ public class Execute extends GridExec {
 	private ArgRef<ProgressState> progress;
 	
 	private VarRef<Context> context;
+	
+	private boolean replicationEnabled;
 	
 	@Override
     protected Signature getSignature() {
@@ -67,12 +70,17 @@ public class Execute extends GridExec {
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
         context = scope.getVarRef("#context");
+        VDL2Config config = (VDL2Config) context.getValue().getAttribute("SWIFT:CONFIG");
+        replicationEnabled = "true".equals(config.getProperty("replication.enabled"));
     }
 
     @Override
     public void submitScheduled(Scheduler scheduler, Task task, Stack stack, Object constraints) {
 		try {
-			registerReplica(stack, task);
+		    setTaskIdentity(stack, task);
+		    if (replicationEnabled) {
+		        registerReplica(stack, task);
+		    }
 			log(task, stack);
 			
 			TaskStateFuture tsf = new SwiftTaskStateFuture(stack, task, false);
@@ -99,8 +107,6 @@ public class Execute extends GridExec {
 	}
 
 	protected void registerReplica(Stack stack, Task task) throws CanceledReplicaException {
-		setTaskIdentity(stack, task);
-		
 		String rg = this.replicationGroup.getValue(stack);
 		if (rg != null) {
 			getReplicationManager(stack).register(rg, task);
@@ -122,7 +128,9 @@ public class Execute extends GridExec {
     				ProgressState ps = progress.getValue(stack);
     				if (c == Status.SUBMITTED) {
     				    ps.setState("Submitted");
-    					getReplicationManager(stack).submitted(task, e.getStatus().getTime());
+    				    if (replicationEnabled) {
+    				        getReplicationManager(stack).submitted(task, e.getStatus().getTime());
+    				    }
     				}
     				else if (c == Status.STAGE_IN) {
     				    ps.setState("Stage in");
@@ -132,11 +140,15 @@ public class Execute extends GridExec {
     				}
     				else if (c == Status.ACTIVE) {
     					ps.setState("Active");
-    					getReplicationManager(stack).active(task, e.getStatus().getTime());
-    					Execute.this.replicationChannel.getValue(stack).close();
+    					if (replicationEnabled) {
+    					    getReplicationManager(stack).active(task, e.getStatus().getTime());
+    					    Execute.this.replicationChannel.getValue(stack).close();
+    					}
     				}
     				else if (e.getStatus().isTerminal()) {
-    				    getReplicationManager(stack).terminated(task);
+    				    if (replicationEnabled) {
+    				        getReplicationManager(stack).terminated(task);
+    				    }
     				}
     				else if (c == ReplicationManager.STATUS_NEEDS_REPLICATION) {
     					ps.setState("Replicating");

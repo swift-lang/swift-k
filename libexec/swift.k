@@ -199,17 +199,37 @@ namespace(swift) {
 						throttled {
 							setProgress(progress, "Selecting site")
 							restartOnError(number(swift:configProperty("execution.retries"))) {
-								replicationChannel := channel:new()
-								//trigger the first job
-								discard(append(replicationChannel, true)) 
-								replicationGroup := UID()
-								parallelFor(i, replicationChannel) {
+								if (swift:configProperty("replication.enabled") == "true") {
+									replicationChannel := channel:new()
+									//trigger the first job
+									discard(append(replicationChannel, true)) 
+									replicationGroup := UID()
+									parallelFor(i, replicationChannel) {
+										try {
+											execute2(
+												progress, 
+												tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
+												stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
+												stagein, stageout, restartout, replicationGroup, replicationChannel
+											)
+										}
+										else catch(exception) {
+											if (matches(exception, "^Abort$")) {
+												// ignored
+											}
+											else {
+												throw(exception)
+											}
+										}
+									}
+								}
+								else {
 									try {
 										execute2(
 											progress, 
 											tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
 											stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
-											stagein, stageout, restartout, replicationGroup, replicationChannel
+											stagein, stageout, restartout, null, null
 										)
 									}
 									else catch(exception) {
