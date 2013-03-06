@@ -69,7 +69,6 @@ localPath() {
 stagein() {
 	SRC=$1
 	DST=$2
-  	
 	case $SRC in
 		*://*)
 			;;
@@ -82,7 +81,7 @@ stagein() {
 	
 	case $SRC in
 		file://*)
-			SRC=${SRC#file://}
+			SRC=${SRC#file://*/}
 			log "Copying $SRC to $DST"
 			if [ ! -f $SRC ]; then
 				fail 254 "Cannot stage in $SRC. File not found."
@@ -123,7 +122,7 @@ stageout() {
 			DIR=`dirname $DST`
 			mkdir -p $DIR
 			log "Copying $SRC to $DST"
-			cp $SRC $DST 2>&1 >& "$INFO"
+			dd if=$SRC of=$DST bs=16M 2>&1 >& "$INFO"
 			;;
 		*://*)
 			fail 254 "Cannot handle protocol ${DST%%://*}"
@@ -427,6 +426,7 @@ log "SITEDIR_KEEP=$SITEDIR_KEEP"
 log "CDM_FILE=$CDM_FILE"
 log "ARGS=$@"
 log "ARGC=$#"
+
 [ -n $MPI_RANK ] && log "MPI_RANK=$MPI_RANK" && log "PMI_RANK=$PMI_RANK"
 IFS="|"
 
@@ -456,9 +456,7 @@ if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
 			continue
 		fi
 	
-                SRC=$( localPath $L )
-                DST=$DIR/$( localPath $L )
-                stagein $SRC $DST
+                stagein $L "$DIR/`localPath $L`"
 	done
 	
 	if [[ $CDM_FILE != "" ]]; then
