@@ -159,6 +159,33 @@ public class RuntimeStats {
         }
     }
 
+	private static class MutableInt {
+	    private int value;
+	    
+	    public MutableInt() {
+	        value = 0;
+	    }
+	    
+	    public MutableInt(int value) {
+	        this.value = value;
+	    }
+	    
+	    public int getValue() {
+	        return value;
+	    }
+	    
+	    public void setValue(int value) {
+	        this.value = value;
+	    }
+	    
+	    public void inc() {
+	        value++;
+	    }
+	    
+	    public String toString() {
+	        return String.valueOf(value);
+	    }
+	}
 
 	public static class StopProgressTicker extends Node {
         private VarRef<Context> context;
@@ -265,13 +292,13 @@ public class RuntimeStats {
 			printStates("Final status:");
 		}
 		
-		private Map<String, Integer> getSummary() {
+		private Map<String, MutableInt> getSummary() {
 			List<ProgressState> states;
 			
 			synchronized(this.states) {
 				states = new ArrayList<ProgressState>(this.states);
 			}
-		    Map<String, Integer> m = new HashMap<String, Integer>();
+		    Map<String, MutableInt> m = new HashMap<String, MutableInt>();
 
 	        for (ProgressState s : states) {
 	            inc(m, s);
@@ -279,20 +306,19 @@ public class RuntimeStats {
 		    return m;
 		}
 				
-		private void inc(Map<String, Integer> m, ProgressState s) {
+		private void inc(Map<String, MutableInt> m, ProgressState s) {
 		    String v = s.crt;
-		    Integer i = m.get(v);
+		    MutableInt i = m.get(v);
 		    if (i == null) {
-		        i = 1;
+		        i = new MutableInt();
+		        m.put(v, i);
 		    }
-		    else {
-		        i = i + 1;
-		    }
-		    m.put(v, i);
+		    
+		    i.inc();
         }
 
         synchronized void printStates(String prefix) {
-			Map<String, Integer> summary = getSummary();
+			Map<String, MutableInt> summary = getSummary();
 			
 			StringBuilder sb = new StringBuilder();
 
@@ -305,7 +331,7 @@ public class RuntimeStats {
 						
 			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
 				String key = preferredOutputOrder[pos];
-				Integer value = summary.get(key);
+				MutableInt value = summary.get(key);
 				if(value != null) {
 				    sb.append("  ");
 				    sb.append(key);
@@ -315,7 +341,7 @@ public class RuntimeStats {
 				summary.remove(key);
 			}
 
-			for (Map.Entry<String, Integer> s : summary.entrySet()) {
+			for (Map.Entry<String, MutableInt> s : summary.entrySet()) {
 			    sb.append("  ");
 			    sb.append(s.getKey());
 			    sb.append(":");
