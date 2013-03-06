@@ -58,6 +58,8 @@ debug() {
 localPath() {
 	# remove protocol://
 	PATH="${1#*://}"
+        # Remove hostname
+        PATH="${PATH#*/}"
 	# remove leading "/" if present
 	PATH="${PATH#/}"
 	log "Transformed $1 to $PATH"
@@ -67,7 +69,7 @@ localPath() {
 stagein() {
 	SRC=$1
 	DST=$2
-	
+  	
 	case $SRC in
 		*://*)
 			;;
@@ -85,7 +87,7 @@ stagein() {
 			if [ ! -f $SRC ]; then
 				fail 254 "Cannot stage in $SRC. File not found."
 			fi
-			cp $SRC $DST 2>&1 >& "$INFO"
+			dd if=$SRC of=$DST bs=16M 2>&1 >& "$INFO"
 			;;
 		http://*)
 			log "Fetching $SRC using wget"
@@ -453,8 +455,10 @@ if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
 			eval cdm_action $DIR "INPUT" $L $CDM_POLICY
 			continue
 		fi
-		
-		stagein $L "$DIR/`localPath $L`"
+	
+                SRC=$( localPath $L )
+                DST=$DIR/$( localPath $L )
+                stagein $SRC $DST
 	done
 	
 	if [[ $CDM_FILE != "" ]]; then
