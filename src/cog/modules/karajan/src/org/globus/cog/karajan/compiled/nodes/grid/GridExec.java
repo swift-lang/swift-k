@@ -177,9 +177,6 @@ public class GridExec extends AbstractGridNode {
 			addStageOut(stack, js);
 			addCleanups(stack, js);
 
-			if (js.getArguments() == null && js.getSpecification() == null) {
-				js.setArguments("");
-			}
 			if (js.getSpecification() == null && js.getExecutable() == null) {
 				throw new ExecutionException("No executable or specification provided");
 			}
