@@ -1,7 +1,7 @@
   <pool handle="stampede">
     <execution provider="coaster" jobmanager="local:slurm"/>
     <profile namespace="globus" key="project">TG-EAR130015</profile>
-    <profile namespace="globus" key="jobsPerNode">1</profile>
+    <profile namespace="globus" key="jobsPerNode">16</profile>
     <profile namespace="globus" key="maxWalltime">01:00:00</profile>
     <profile namespace="globus" key="maxtime">3700</profile>
     <profile namespace="globus" key="highOverAllocation">100</profile>
