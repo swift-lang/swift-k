@@ -293,7 +293,7 @@ public class Karajan {
         
         while (!unmarked.isEmpty()) {
             Set<Procedure> tmp = new HashSet<Procedure>();
-            visit(unmarked.iterator().next(), unmarked, sorted, tmp, names);
+            visit(null, unmarked.iterator().next(), unmarked, sorted, tmp, names);
         }
 
         for (Procedure proc : sorted) {
@@ -302,10 +302,16 @@ public class Karajan {
 	}
 
 
-    private void visit(Procedure proc, Set<Procedure> unmarked,
+    private void visit(Procedure self, Procedure proc, Set<Procedure> unmarked,
             List<Procedure> sorted, Set<Procedure> tmp, Map<String, Procedure> names) throws CompilationException {
     	if (tmp.contains(proc)) {
-    		throw new CompilationException("Circular procedure dependency detected");
+    	    if (proc == self) {
+    	        // immediate recursion allowed
+    	        return;
+    	    }
+    	    else {
+    	        throw new CompilationException("Circular procedure dependency detected");
+    	    }
     	}
     	if (unmarked.contains(proc)) {
     		tmp.add(proc);
@@ -317,7 +323,7 @@ public class Karajan {
     			}
     			dupes.add(name);
     			if (names.containsKey(name)) {
-    				visit(names.get(name), unmarked, sorted, tmp, names);
+    				visit(proc, names.get(name), unmarked, sorted, tmp, names);
     			}
     			else {
     				// handled later
@@ -696,7 +702,7 @@ public class Karajan {
 			ProcedureSignature proc = proceduresMap.get(procName);
 			
 			if (proc.isDeprecated()) {
-			    /* warn(call, "Procedure " + procName + " is deprecated"); */
+			    Warnings.warn(call, "Procedure " + procName + " is deprecated");
 			}
 			
 			StringTemplate callST;
@@ -1534,8 +1540,6 @@ public class Karajan {
 		        		"return value to be used in an expression.");
 		    }
 		    
-		    Warnings.warn(c, "Procedure " + name + " is deprecated");
-
 		    StringTemplate call = template("callexpr");
 
 		    String type = funcSignature.getOutputArray(0).getType();
