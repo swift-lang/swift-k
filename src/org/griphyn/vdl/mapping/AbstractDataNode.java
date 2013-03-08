@@ -629,7 +629,6 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
                 logger.debug("Waiting for " + this);
             }
             
-            System.out.println("Wait");
             Yield y = new FutureNotYetAvailable(this);
             y.getState().addTraceElement(who);
             throw y;
