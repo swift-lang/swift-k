@@ -631,14 +631,12 @@ reference the group matched.
 
 Example:
 ----
-string s = "picture.gif";
-file f <regexp_mapper;
-  source=s,
-  match="(.*)gif",
-  transform="\\1jpg">;
+file s <"picture.gif">;
+file f <regexp_mapper; source=s,
+  match="(.*)gif", transform="\\1jpg">;
 ----
 
-This example transforms a string ending gif into one ending jpg and
+This example transforms a file ending gif into one ending jpg and
 maps that to a file.
 
 [options="header, autowidth"]
@@ -649,8 +647,9 @@ maps that to a file.
 
 structured regular expression mapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The structured_regexp_mapper is similar to the regexp_mapper. The
-structured_regexp_mapper can be applied to lists while the regexp_mapper cannot.
+
+The structured_regexp_mapper is similar to the regexp_mapper with the only
+difference that it can be applied to arrays while the regexp_mapper cannot.
 
 [options="header, autowidth"]
 |==========
@@ -667,14 +666,13 @@ reference the group matched.
 
 Example:
 ----
-string s[] = ["picture.gif", "hello.gif", "world.gif"];
-file f[] <structured_regexp_mapper;
-          source=s,
-          match="(.*)gif",
-          transform="\\1jpg">;
+file s[] <filesys_mapper; pattern="*.gif">;
+
+file f[] <structured_regexp_mapper; source=s,
+          match="(.*)gif", transform="\\1jpg">;
 ----
 
-This example transforms all strings in a list that end in gif to end in jpg and maps
+This example transforms all files in a list that end in gif to end in jpg and maps
 the list to those files.
 
 csv mapper
