@@ -308,6 +308,9 @@ public class VariableScope {
 	        inhibitClosing = new HashSet<String>();
 	    }
 		inhibitClosing.add(name);
+		if (thenScope != null) {
+		    setPreClose(name, 0);
+		}
 	}
 
 	public void addVariable(String name, String type, String context, boolean global, XmlObject src) throws CompilationException {
