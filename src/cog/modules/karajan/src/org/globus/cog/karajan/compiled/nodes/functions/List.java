@@ -101,7 +101,13 @@ public class List {
 		}
 
 		public Object function(Stack stack) {
-			return c_vargs.get(stack).getAll();
+			java.util.List<Object> l = c_vargs.get(stack).getAll();
+			if (l.isEmpty()) {
+			    return new ArrayList<Object>();
+			}
+			else {
+			    return l;
+			}
 		}
 	}
 	
