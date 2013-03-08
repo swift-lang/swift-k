@@ -13,7 +13,35 @@ import k.thr.LWThread;
 import k.thr.ThreadSet;
 import k.thr.Yield;
 
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.TrackingScope;
+import org.globus.cog.karajan.parser.WrapperNode;
+
 public class UParallel extends CompoundNode {
+	
+	@Override
+    protected Node compileChildren(WrapperNode w, Scope scope) throws CompilationException {
+        for (WrapperNode c : w.nodes()) {
+            TrackingScope ts = new TrackingScope(scope);
+            ts.setTrackChannels(false);
+            ts.setAllowChannelReturns(true);
+            ts.setTrackNamed(false);
+            ts.setDelayedClosing(true);
+
+            Node n = compileChild(c, ts);
+            if (n != null) {
+                addChild(n);
+            }
+        }
+        if (childCount() == 0) {
+            return null;
+        }
+        else {
+            return this;
+        }
+    }
+
 	
 	@Override
 	public void run(LWThread thr) throws ExecutionException {
