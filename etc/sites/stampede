@@ -1,4 +1,3 @@
-<config>
   <pool handle="stampede">
     <execution provider="coaster" jobmanager="local:slurm"/>
     <profile namespace="globus" key="project">TG-EAR130015</profile>
@@ -14,4 +13,3 @@
     <filesystem provider="local"/>
     <workdirectory>{env.SCRATCH}</workdirectory>
   </pool>
-</config>
