@@ -354,6 +354,10 @@ public abstract class SwiftFunction extends AbstractFunction {
         return v;
     }
 	
+	protected static void waitFor(Node n, DSHandle h) {
+        ((AbstractDataNode) h).waitFor(n);
+    }
+	
 	public static Channel<Object> unwrapAll(Node who, Channel<AbstractDataNode> vargs) throws ExecutionException {
 		waitForAll(who, vargs);
 		MemoryChannel<Object> mc = new MemoryChannel<Object>();
