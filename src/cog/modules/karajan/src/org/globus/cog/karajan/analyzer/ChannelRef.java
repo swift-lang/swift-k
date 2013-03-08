@@ -37,6 +37,8 @@ public abstract class ChannelRef<T> {
 	
 	public abstract void set(Stack stack, Channel<T> value);
 	
+	public abstract int getFrame();
+	
 	public void close(Stack stack) {
 		get(stack).close();
 	}
@@ -181,6 +183,11 @@ public abstract class ChannelRef<T> {
 		public String toString() {
 			return "&CD(" + index + ")";
 		}
+
+		@Override
+		public int getFrame() {
+			return 0;
+		}
 	}
 	
 	public static class DynamicSingleValued<T> extends Dynamic<T> {
@@ -253,6 +260,11 @@ public abstract class ChannelRef<T> {
 		public String toString() {
 			return "&CSV()";
 		}
+
+		@Override
+		public int getFrame() {
+			return 0;
+		}
 	}
 
 		
@@ -284,6 +296,11 @@ public abstract class ChannelRef<T> {
 		
 		public String toString() {
 			return "&CS(" + value + ")";
+		}
+
+		@Override
+		public int getFrame() {
+			return 0;
 		}
 	}
 	
@@ -361,6 +378,11 @@ public abstract class ChannelRef<T> {
 		
 		public String toString() {
 			return "&CE()";
+		}
+
+		@Override
+		public int getFrame() {
+			return 0;
 		}
 	}
 	
