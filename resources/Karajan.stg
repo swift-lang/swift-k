@@ -178,7 +178,7 @@ map_entry(key,value) ::= <<
 
 parallel(statements) ::= <<
 $if(rest(statements))$
-parallel(
+uparallel(
 	$statements;separator="\n"$
 )
 $else$
