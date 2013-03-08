@@ -43,7 +43,6 @@ public class LWThread implements Runnable {
     private KRunnable runnable;
     private State state;
     private String name;
-    private RuntimeException t;
     private Stack stack;
     private int runCount;
     private long deadline;
@@ -190,9 +189,6 @@ public class LWThread implements Runnable {
         try {
             while (getState(ALIVE)) {
                 wait();
-            }
-            if (t != null) {
-                throw t;
             }
         }
         catch (InterruptedException e) {
