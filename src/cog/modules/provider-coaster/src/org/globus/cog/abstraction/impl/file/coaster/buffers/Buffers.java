@@ -9,10 +9,10 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster.buffers;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -84,8 +84,12 @@ public class Buffers extends Thread {
         return new InputStreamReadBuffer(buffers, is, size, cb);
     }
 
-    public static WriteBuffer newWriteBuffer(Buffers buffers, GatheringByteChannel channel, WriteBufferCallback cb) {
-        return new NIOChannelWriteBuffer(buffers, channel, cb);
+    public static WriteBuffer newWriteBuffer(Buffers buffers, File f, WriteBufferCallback cb) {
+        return new NIOChannelWriteBuffer(buffers, f, cb);
+    }
+    
+    public static WriteBuffer newEmptyFileWriteBuffer(Buffers buffers, File f, WriteBufferCallback cb) {
+        return new EmptyFileWriteBuffer(buffers, f, cb);
     }
 
     public static WriteBuffer newWriteBuffer(Buffers buffers, OutputStream os, WriteBufferCallback cb) {

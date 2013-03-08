@@ -13,37 +13,31 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.GatheringByteChannel;
 
-public class NIOChannelWriteBuffer extends WriteBuffer {
+public class EmptyFileWriteBuffer extends WriteBuffer {
     
-    private GatheringByteChannel channel;
+    private static final ByteBuffer EMPTY_BB = ByteBuffer.allocate(0);
+    
     private WriteBufferCallback cb;
     private File f;
 
-    protected NIOChannelWriteBuffer(Buffers buffers, File f, WriteBufferCallback cb) {
+    protected EmptyFileWriteBuffer(Buffers buffers, File f, WriteBufferCallback cb) {
     	super(buffers);
         this.f = f;
         this.cb = cb;
+        buffers.queueRequest(true, EMPTY_BB, this, this);
     }
 
     public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
         try {
-            if (channel == null) {
-                File p = f.getParentFile();
-                if (!p.exists()) {
-                    if (!p.mkdirs()) {
-                        throw new IOException("Failed to create directory " + p.getAbsolutePath());
-                    }
+            File p = f.getParentFile();
+            if (!p.exists()) {
+                if (!p.mkdirs()) {
+                    throw new IOException("Failed to create directory " + p.getAbsolutePath());
                 }
-                channel = new FileOutputStream(f).getChannel();
             }
-            channel.write(b);
-            b.rewind();
-            if (last) {
-                channel.close();
-            }
-            cb.done(last);
+            new FileOutputStream(f).close();
+            cb.done(true);
         }
         catch (IOException e) {
             cb.error(last, e);

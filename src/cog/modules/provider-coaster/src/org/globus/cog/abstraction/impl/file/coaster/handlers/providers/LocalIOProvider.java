@@ -11,7 +11,6 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers.providers;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -82,18 +81,12 @@ public class LocalIOProvider implements IOProvider {
 
         public void setLength(long len) throws IOException {
             this.len = len;
-            File p = f.getParentFile();
-            if (!p.exists()) {
-                if (!p.mkdirs()) {
-                    throw new IOException("Failed to create directory " + p.getAbsolutePath());
-                }
-            }
             if (len == 0) {
-                f.createNewFile();
-                cb.done(this);
+                // no further writes
+                buf = Buffers.newEmptyFileWriteBuffer(Buffers.getBuffers(Direction.OUT), f, this);
             }
             else {
-                buf = Buffers.newWriteBuffer(Buffers.getBuffers(Direction.OUT), new FileOutputStream(f).getChannel(), this);
+                buf = Buffers.newWriteBuffer(Buffers.getBuffers(Direction.OUT), f, this);
             }
         }
 

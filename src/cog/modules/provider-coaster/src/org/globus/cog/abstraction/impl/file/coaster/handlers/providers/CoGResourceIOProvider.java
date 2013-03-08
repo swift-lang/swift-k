@@ -11,7 +11,6 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers.providers;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -71,11 +70,10 @@ public class CoGResourceIOProvider implements IOProvider {
                 }
             }
             if (len == 0) {
-                f.createNewFile();
-                cb.done(this);
+            	buf = Buffers.newEmptyFileWriteBuffer(Buffers.getBuffers(BUFDIR), f, this);
             }
             else {
-                buf = Buffers.newWriteBuffer(Buffers.getBuffers(BUFDIR), new FileOutputStream(f).getChannel(), this);
+                buf = Buffers.newWriteBuffer(Buffers.getBuffers(BUFDIR), f, this);
             }
         }
 

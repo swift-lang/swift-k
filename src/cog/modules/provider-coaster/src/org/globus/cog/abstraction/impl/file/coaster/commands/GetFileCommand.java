@@ -9,7 +9,7 @@
  */
 package org.globus.cog.abstraction.impl.file.coaster.commands;
 
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -47,7 +47,7 @@ public class GetFileCommand extends Command implements WriteBufferCallback {
     }
 
     protected WriteBuffer createWriteBuffer() throws IOException {
-        return Buffers.newWriteBuffer(Buffers.getBuffers(Direction.IN), new FileOutputStream(dst).getChannel(), this);
+        return Buffers.newWriteBuffer(Buffers.getBuffers(Direction.IN), new File(dst), this);
     }
     
     protected void addInData(boolean fin, boolean err, byte[] data) {
