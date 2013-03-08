@@ -31,6 +31,7 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
@@ -76,9 +77,6 @@ public class AppStageouts extends InternalFunction {
     }
     
     private List<String> makeList(String s1, String s2) {
-        List<String> l = new LinkedList<String>();
-        l.add(s1);
-        l.add(s2);
-        return l;
+        return new Pair<String>(s1, s2);
     }
 }

@@ -22,16 +22,23 @@ package org.griphyn.vdl.karajan;
 
 import java.util.AbstractList;
 
-public class Pair extends AbstractList<Object> {
-	private Object[] elements = new Object[2];
+public class Pair<T> extends AbstractList<T> {
+	private T o1, o2;
 
-	public Pair(Object o1, Object o2) {
-		elements[0] = o1;
-		elements[1] = o2;
+	public Pair(T o1, T o2) {
+		this.o1 = o1;
+		this.o2 = o2;
 	}
 
-	public Object get(int index) {
-		return elements[index];
+    public T get(int index) {
+	    switch (index) {
+	        case 0:
+	            return o1;
+	        case 1:
+	            return o2;
+	        default:
+	            throw new IndexOutOfBoundsException();
+	    }
 	}
 
 	public int size() {
