@@ -175,7 +175,7 @@ public class SSHCLProxyForwarder extends ProxyForwarder {
 
     private String makeGlobusDir() throws IOException {
         String h = runSSH(new String[] {"mkdir", "-p", "~/.globus", ";", "ls", "-d", "~"});
-        return h.trim();
+        return h.trim() + "/.globus";
     }
 
     private String runSSH(String[] args) throws IOException {
