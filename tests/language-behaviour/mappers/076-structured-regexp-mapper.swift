@@ -12,14 +12,14 @@ type messagefile {}
     }
 }
 
+messagefile outfile[] <simple_mapper; prefix="076-structured-regexp-mapper.a",suffix=".out", padding=1>;
 
-messagefile outfile <"076-structured-regexp-mapper.a.out">;
-messagefile outfile2 <structured_regexp_mapper;
-    source=outfile,
-    match="(.*)per.a(.*)",
-    transform="\\1per.b\\2"
->;
+messagefile outfile2[] <structured_regexp_mapper;
+    source=outfile, match="(.*)per.a(.*)",
+    transform="\\1per.b\\2" >;
 
-outfile = greeting();
+foreach i in [0:1]{
+ outfile[i] = greeting();
+ outfile2[i] = greeting2(outfile[i]);
+}
 
-outfile2 = greeting2(outfile);
