@@ -64,6 +64,8 @@ public class ServiceManager implements StatusListener {
     public static final String BOOTSTRAP_JAR = "coaster-bootstrap.jar";
 
     public static final String TASK_ATTR_ID = "coaster:serviceid";
+    
+    public static final String ATTR_USER_HOME_OVERRIDE = "userHomeOverride";
 
     private static ServiceManager defaultManager;
 
@@ -108,8 +110,12 @@ public class ServiceManager implements StatusListener {
             return th;
         }
     }
-
+    
     public String reserveService(Service service, String bootHandlerProvider) throws TaskSubmissionException {
+        return reserveService(service, bootHandlerProvider, null);
+    }
+ 
+    public String reserveService(Service service, String bootHandlerProvider, String userHomeOverride) throws TaskSubmissionException {
         ServiceContact contact = service.getServiceContact();
         if (logger.isDebugEnabled()) {
             logger.debug("Reserving service " + contact);
@@ -121,7 +127,7 @@ public class ServiceManager implements StatusListener {
             if (url == null) {
                 url =
                         startService(service, getBootHandler(bootHandlerProvider),
-                            bootHandlerProvider);
+                            bootHandlerProvider, userHomeOverride);
             }
             increaseUsageCount(contact);
             return url;
@@ -133,7 +139,12 @@ public class ServiceManager implements StatusListener {
 
     public String reserveService(Task task, String bootHandlerProvider)
             throws TaskSubmissionException {
-        return reserveService(getService(task), bootHandlerProvider);
+        String userHomeOverride = null;
+        if (task.getType() == Task.JOB_SUBMISSION) {
+            JobSpecification spec = (JobSpecification) task.getSpecification();
+            userHomeOverride = (String) spec.getAttribute(ATTR_USER_HOME_OVERRIDE);
+        }
+        return reserveService(getService(task), bootHandlerProvider, userHomeOverride);
     }
     
     private Service getService(Task task) {
@@ -159,13 +170,13 @@ public class ServiceManager implements StatusListener {
 
     // private static final String[] STRING_ARRAY = new String[0];
 
-    protected String startService(Service service, TaskHandler bootHandler, 
-            String bootHandlerProvider) throws Exception {
+    protected String startService(final Service service, TaskHandler bootHandler, 
+            String bootHandlerProvider, String userHomeOverride) throws Exception {
         ServiceContact contact = service.getServiceContact();
         SecurityContext sc = service.getSecurityContext();
         try {
             startLocalService();
-            final Task t = buildTask(service);
+             final Task t = buildTask(service, userHomeOverride);
             
             t.addStatusListener(this);
             if (logger.isDebugEnabled()) {
@@ -188,7 +199,8 @@ public class ServiceManager implements StatusListener {
                 t.setAttribute(TASK_ATTR_ID, id);
                 new Thread(new Runnable() {
                     public void run() {
-                        CoasterService.main(new String[] { ls, id, "-local" });
+                        CoasterService.main(new String[] { ls, id, "-local", "-shared.dir", 
+                                (String) service.getAttribute(ATTR_USER_HOME_OVERRIDE) });
                     }
                 }).start();
             }
@@ -286,7 +298,7 @@ public class ServiceManager implements StatusListener {
         return task.getService(0).getSecurityContext();
     }
 
-    private Task buildTask(Service service) throws TaskSubmissionException {
+    private Task buildTask(Service service, String userHomeOverride) throws TaskSubmissionException {
         try {
             Task t = new TaskImpl();
             t.setType(Task.JOB_SUBMISSION);
@@ -297,7 +309,8 @@ public class ServiceManager implements StatusListener {
             t.setAttribute(TASK_ATTR_ID, id);
             js.addArgument(loadBootstrapScript(new String[] { getBootstrapServiceURL(),
                     getLocalServiceURL(), getMD5(BOOTSTRAP_JAR), getMD5(Bootstrap.BOOTSTRAP_LIST),
-                    id, service.getServiceContact().getHost() }));
+                    id, service.getServiceContact().getHost(), 
+                    userHomeOverride }));
             js.setDelegation(Delegation.FULL_DELEGATION);
             js.setStdOutputLocation(FileLocation.MEMORY);
             js.setStdErrorLocation(FileLocation.MEMORY);

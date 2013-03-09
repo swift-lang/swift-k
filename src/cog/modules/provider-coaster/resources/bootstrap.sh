@@ -3,7 +3,7 @@ LS=$2
 EMD5=$3
 ID=$5
 H=$6
-L=$7
+HO=$7
 B="coaster-bootstrap"
 
 error() {
@@ -54,9 +54,14 @@ plain() {
         eval "$@"
 }
 
-if [ "$L" == "" ]; then
-	L=~/$B-$ID.log 
+if [ "$HO" == "" ]; then
+	HO=$HOME
 fi
+
+if [ "$L" == "" ]; then
+	L=$HO/$B-$ID.log
+fi
+
 detectPaths
 DJ=`mktemp /tmp/bootstrap.XXXXXX`
 echo "BS: $BS" >>$L
@@ -89,8 +94,8 @@ if [ "$AAMD5" != "$EMD5" ]; then
 	error "Bootstrap jar checksum failed: $EMD5 != $AAMD5"
 fi
 echo "JAVA=$JAVA" >>$L
-if [ -x $JAVA ]; then 
-	CMD="$WR $JAVA -Djava=\"$JAVA\" -DGLOBUS_TCP_PORT_RANGE=\"$GLOBUS_TCP_PORT_RANGE\" -DX509_USER_PROXY=\"$X509_USER_PROXY\" -DX509_CERT_DIR=\"$X509_CERT_DIR\" -DGLOBUS_HOSTNAME=\"$H\" -jar $DJ $BS $LS $ID"
+if [ -x $JAVA ]; then
+	CMD="$WR $JAVA -Djava=\"$JAVA\" -DGLOBUS_TCP_PORT_RANGE=\"$GLOBUS_TCP_PORT_RANGE\" -DX509_USER_PROXY=\"$X509_USER_PROXY\" -DX509_CERT_DIR=\"$X509_CERT_DIR\" -DGLOBUS_HOSTNAME=\"$H\" -Duser.home=\"$HO\" -jar $DJ $BS $LS $ID"
 	echo $CMD >>$L
 	eval $CMD >>$L
 	EC=$?

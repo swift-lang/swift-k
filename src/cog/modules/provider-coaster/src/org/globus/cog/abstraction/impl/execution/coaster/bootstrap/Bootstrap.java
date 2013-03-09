@@ -185,8 +185,10 @@ public class Bootstrap {
         args.add("2");
         args.add(java);
         addDebuggingOptions(args);
-        args.add("-Xmx256M");
+        args.add("-Xmx1024M");
         args.add("-Dtcp.channel.log.io.performance=true");
+        //pass user home override to service
+        args.add("-Duser.home=" + System.getProperty("user.home"));
         //args.add("-agentlib:hprof=file=c.hprof");
         addProperties(args);
         args.add("-cp");
