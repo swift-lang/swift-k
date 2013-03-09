@@ -36,7 +36,7 @@ Assuming your code is in *_/tmp/cog_*, where you
 have the conventional *_cog/modules/swift_* configuration,
 and you have done an *ant dist*, you can run
 *********************************************************
- suite.sh -t -o /tmp $PWD/tests/groups/group-all-local.sh
+ suite.sh -t -o /tmp $PWD/groups/group-all-local.sh
 *********************************************************
 or *cd* into */tmp* and run
 **************************************************************
