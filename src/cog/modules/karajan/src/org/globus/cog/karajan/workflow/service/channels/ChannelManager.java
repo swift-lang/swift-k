@@ -501,14 +501,13 @@ public class ChannelManager {
 		public boolean equals(Object obj) {
 			if (obj instanceof HostCredentialPair) {
 				HostCredentialPair other = (HostCredentialPair) obj;
-				return host.equals(other.host)
-						&& ((DN == null && other.DN == null) || ((DN != null) && DN.equals(other.DN)));
+				return host.equals(other.host);
 			}
 			return false;
 		}
 
 		public int hashCode() {
-			return host.hashCode() + ((DN == null) ? 0 : DN.hashCode());
+			return host.hashCode();
 		}
 
 		public String toString() {
