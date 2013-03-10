@@ -128,7 +128,6 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		long now = System.currentTimeMillis();
 		long lastTime = getLastTime();
 		if (now - lastTime > TIMEOUT * 1000) {
-		    lastTime = Long.MAX_VALUE;
 		    TimeoutException e = new TimeoutException(this, "Channel timed out", lastTime);
 			context.notifyRegisteredCommandsAndHandlers(e);
 			handleChannelException(e);
