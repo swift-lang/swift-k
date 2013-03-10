@@ -301,6 +301,7 @@ public class ServiceManager implements StatusListener {
             t.setType(Task.JOB_SUBMISSION);
             JobSpecification js = new JobSpecificationImpl();
             js.setExecutable("/bin/bash");
+            js.addArgument("-l");
             js.addArgument("-c");
             String id = getRandomID();
             t.setAttribute(TASK_ATTR_ID, id);
