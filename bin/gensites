@@ -151,9 +151,9 @@ fi
 # Setup for creating a TC file
 if [ -f "$PROPERTIES_FILE" ]; then
    if [ -n "`grep -e app $PROPERTIES_FILE`" ]; then
-      if [ -f "tc.data" ]; then
-         mv tc.data tc.data.old
-      fi
+      #if [ -f "tc.data" ]; then
+      #   mv tc.data tc.data.old
+      #fi
       HOSTS=`grep -i "pool handle" $TEMPLATE_PATH|grep -v "^[[:space:]]*#"|cut -d'"' -f2`
    fi
 fi

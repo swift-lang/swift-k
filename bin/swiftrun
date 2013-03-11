@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 # Verify an argument is not null
 verify_not_null()
@@ -80,11 +80,11 @@ do
    # If config is not defined, but there is a config in conf/ that matches, use that
    if [ -z "$CONFIG" ] && [ -f "../conf/$site.cf" ]; then
       cp ../conf/$site.cf .
-      CONFIG=$site.cf
-   fi
+      config=$site.cf
+   fi  
 
-   if [ -f "$CONFIG" ]; then
-      gensites -p $CONFIG $site >> sites.xml
+   if [ -f "$config" ]; then
+      gensites -p $config $site >> sites.xml
    else
       gensites $site >> sites.xml
    fi
@@ -92,6 +92,9 @@ do
 done
 echo "</config>" >> sites.xml
 
+if [ -z "$CONFIG" ]; then
+   CONFIG=$config
+fi
 
 # Run
 timestamp=$( date +%s )
