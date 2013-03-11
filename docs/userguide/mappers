@@ -263,6 +263,14 @@ with the variable var starting at 0 and increasing by one in each
 iteration. That variable is in scope in the statements block and when
 evaluating the termination expression.
 
+For example, the following block will iterate over the +months+ variable 12 times:
+
+----
+iterate month {
+  tracef("%i\n", month);
+ } until (month==12);
+----
+
 Operators
 ~~~~~~~~~
 The following infix operators are available for use in Swift script
