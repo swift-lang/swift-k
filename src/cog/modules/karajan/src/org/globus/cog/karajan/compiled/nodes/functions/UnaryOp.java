@@ -45,6 +45,7 @@ public abstract class UnaryOp<T, R> extends AbstractFunction {
 				return null;
 			}
 		}
+		returnDynamic(scope);
 		return this;
 	}
 }
