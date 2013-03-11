@@ -14,4 +14,6 @@ namespace(swiftop) {
 	export(and, def("org.griphyn.vdl.karajan.lib.Operators$And"))
 	export(or, def("org.griphyn.vdl.karajan.lib.Operators$Or"))
 	export(not, def("org.griphyn.vdl.karajan.lib.Operators$Not"))
+	
+	export(inc, def("org.griphyn.vdl.karajan.lib.Operators$Inc"))
 }

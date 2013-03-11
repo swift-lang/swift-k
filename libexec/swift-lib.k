@@ -119,6 +119,7 @@ namespace(swift) {
 
 	export(tParallelFor, def("org.griphyn.vdl.karajan.lib.ThrottledParallelFor"))
 	export(throttled, def("org.griphyn.vdl.karajan.lib.Throttled"))
+	export(while, def("org.griphyn.vdl.karajan.lib.While"))
 
 	export(appStageins, def("org.griphyn.vdl.karajan.lib.AppStageins"))
 	export(appStageouts, def("org.griphyn.vdl.karajan.lib.AppStageouts"))

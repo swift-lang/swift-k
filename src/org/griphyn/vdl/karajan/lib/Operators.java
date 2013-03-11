@@ -67,7 +67,7 @@ public class Operators {
 			return ((Integer) v).intValue();
 		}
 		else {
-			throw new ExecutionException(n, "Internal error. Expected an int: " + h);
+			throw new ExecutionException(n, "Internal error. Expected an int: " + v + " (" + h + ")");
 		}
 	}
 	
@@ -262,6 +262,14 @@ public class Operators {
         protected DSHandle value(AbstractDataNode v) {
             DSHandle r = new RootDataNode(Types.BOOLEAN, !getBool(this, v));
             logUnaryProvenance("not", v, r);
+            return r;
+        }
+    }
+	
+	public static class Inc extends SwiftUnaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v) {
+            DSHandle r = new RootDataNode(Types.INT, getInt(this, v) + 1);
             return r;
         }
     }

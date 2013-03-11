@@ -916,7 +916,7 @@ public class Karajan {
     }
 
     public void iterateStat(Iterate iterate, VariableScope scope) throws CompilationException {
-		VariableScope loopScope = new VariableScope(this, scope, EnclosureType.LOOP, iterate);
+		VariableScope loopScope = new VariableScope(this, scope, EnclosureType.ALL, iterate);
 		VariableScope innerScope = new VariableScope(this, loopScope, EnclosureType.LOOP, iterate);
 
 		loopScope.addVariable(iterate.getVar(), "int", "Iteration variable", iterate);

@@ -18,10 +18,8 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import k.rt.ConditionalYield;
 import k.rt.ExecutionException;
@@ -40,13 +38,11 @@ import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.CompilerSettings;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.UParallelFor;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.griphyn.vdl.karajan.Pair;
-import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class ThrottledParallelFor extends UParallelFor {
@@ -79,38 +75,10 @@ public class ThrottledParallelFor extends UParallelFor {
 	private Tracer forTracer, iterationTracer;
     private List<StaticRefCount> srefs;
 
-    private static class StaticRefCount {
-        public final VarRef<?> ref;
-        public final int count;
-
-        public StaticRefCount(VarRef<?> ref, int count) {
-            this.ref = ref;
-            this.count = count;
-        }
-    }
-
-    private static class RefCount {
-        public final DSHandle var;
-        public final int count;
-
-        public RefCount(DSHandle var, int count) {
-            this.var = var;
-            this.count = count;
-        }
-
-        public void inc() {
-
-        }
-
-        public void dec() {
-
-        }
-    }
-    
     @Override
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
-        srefs = buildStaticRefs(scope);
+        srefs = StaticRefCount.build(scope, this.refs.getValue());
         if (_traceline.getValue() != null) {
             setLine(Integer.parseInt(_traceline.getValue()));
         }
@@ -118,39 +86,6 @@ public class ThrottledParallelFor extends UParallelFor {
         iterationTracer = Tracer.getTracer(this, "ITERATION");
         sc = selfClose.getValue();
         return super.compileBody(w, argScope, scope);
-    }
-    
-     private List<StaticRefCount> buildStaticRefs(Scope scope) {
-        String refs = this.refs.getValue();
-        if (refs == null) {
-            return null;
-        }
-        List<StaticRefCount> l = new ArrayList<StaticRefCount>();
-        String name = null;
-        boolean flip = true;
-        StringTokenizer st = new StringTokenizer(refs);
-        while (st.hasMoreTokens()) {
-            if (flip) {
-                name = st.nextToken();
-            }
-            else {
-                int count = Integer.parseInt(st.nextToken());
-                l.add(new StaticRefCount(scope.getVarRef(name), count));
-            }
-            flip = !flip;
-        }
-        return l;
-    }
-
-    private List<RefCount> buildRefs(Stack stack) {
-        if (srefs == null) {
-            return null;
-        }
-        List<RefCount> l = new ArrayList<RefCount>(srefs.size());
-        for (StaticRefCount s : srefs) {
-            l.add(new RefCount((DSHandle) s.ref.getValue(stack), s.count));
-        }
-        return l;
     }
 
     @SuppressWarnings("unchecked")
@@ -173,7 +108,7 @@ public class ThrottledParallelFor extends UParallelFor {
                         ts = new TPFThreadSet(it, getMaxThreads());
                     }
                     
-                    drefs = buildRefs(stack);
+                    drefs = RefCount.build(stack, srefs);
                     ts.lock();
                     fc = stack.frameCount() + 1;
                     
@@ -191,7 +126,7 @@ public class ThrottledParallelFor extends UParallelFor {
                     startRest(thr, ts, fc, drefs);
                     
                     ts.unlock();
-                    decRefs(drefs);
+                    RefCount.decRefs(drefs);
                     i++;
                 case 2:
                     ts.waitFor();
@@ -242,7 +177,7 @@ public class ThrottledParallelFor extends UParallelFor {
     }
 
     private boolean startOne(final LWThread thr, final ThreadSet ts, final Object value, final int fcf, List<RefCount> refs) {
-        incRefs(refs);
+        RefCount.incRefs(refs);
         LWThread ct = thr.fork(new KRunnable() {
             @Override
             public void run(LWThread thr2) {
@@ -281,22 +216,6 @@ public class ThrottledParallelFor extends UParallelFor {
         ct.start();
         return false;
     }
-    
-    private void decRefs(List<RefCount> rcs) throws ExecutionException {
-            if (rcs != null) {
-                for (RefCount rc : rcs) {
-                    rc.var.updateWriteRefCount(-rc.count);
-                }
-            }
-        }
-
-    private void incRefs(List<RefCount> rcs) throws ExecutionException {
-        if (rcs != null) {
-            for (RefCount rc : rcs) {
-                rc.var.updateWriteRefCount(rc.count);
-            }
-        }
-    }
 
 	
 	private int getMaxThreads() {
@@ -314,7 +233,7 @@ public class ThrottledParallelFor extends UParallelFor {
 	
 	protected Object unwrap(Object value) {
         if (value instanceof Pair) {
-            Pair p = (Pair) value;
+            Pair<?> p = (Pair<?>) value;
             if (_kvar.getValue() != null) {
                 return _kvar.getValue() + "=" + p.get(0) + ", " + _vvar.getValue() + "=" + Tracer.unwrapHandle(p.get(1));
             }
