@@ -31,12 +31,21 @@ After writing the Swift program
 +program.swift+, run:
 
 ----
-swift -sites.file sites.xml -config cf -tc.file tc program.swift
+swift -sites.file <sites.xml> -config <cf> -tc.file <tc.data> <program.swift>
 ----
 
 Swift accepts many commandline arguments. Following are the most frequently used:
 
-+-config <cf>+:: The config file
++-config <file>+ :: Indicates the Swift configuration file to be used for this
+run. Properties in this configuration file will override the default
+properties. If individual command line arguments are used for properties, they
+will override the contents of this file.
+
++-sites.file <file>+ :: Points to the location of the sites.xml file
+
++-tc.file <file>+ :: Points to the location of the tc.data file
+
++-resume <file>+ :: Resumes the execution using a log file
 
 == Program Structure
 
@@ -147,7 +156,6 @@ Literals for these types use conventional syntax:
 ** \r
 ** \v
 ** hexadecimal escape codes, e.g. \xf2
-
 
 The literals +true+ and +false+ may be used for boolean.
 
@@ -381,54 +389,7 @@ String concatenation is also performed with +&#43;+ (plus).
 [[argv]]
 ==== Command line
 
-Consider this command line:
-
- turbine -l -n 3 program.tcl -v -a=file1.txt file2.txt --exec="prog thing1 thing2" --help file4.txt
-
-The arguments to +program.tcl+ are just the tokens after +program.tcl+
-
-+args() -> string+::
-
-Obtain all arguments as single string
-+
-E.g., +"-v -a=file1.txt file2.txt --exec="prog thing1 thing2" --help file4.txt"+
-
-The remaining functions are convenience functions oriented around
-Swift conventions.  Under these conventions, the example command above
-has _flagged_ arguments +v+, +a=file.txt+, +exec="prog thing1
-thing2"+, and +help+. The command has _unflagged_ arguments
-+file2.txt+ and +file4.txt+
-
-+argc()+::
-Get count of unflagged arguments
-
-+argv(string)+::
-_(argument-value)_
-Given a string, returns the flagged argument with that key:
-+
-+argv("a") -> file1.txt+
-
-+argp(int)+::
-_(argument-positional)_
-Given an integer, returns the unflagged argument at that index:
-+
-+argp(2) -> file4.txt+
-+
-Given 0, returns the program name,
-+
-+argp(0) -> /path/to/program.tcl+
-
-+argv_accept(string...)+::
-
-If program is given command line arguments not contained in given list,
-abort.
-E.g., +argv_accept("x")+ would cause program failure at run time
-
-+argv_contains(string) -> boolean+::
-
-Test if the command line contains the given flagged argument:
-+
-+argv_contains("v") -> true+
+Swift accepts commandline arguments in the form of -var <value>. 
 
 ==== Debugging
 
@@ -436,13 +397,6 @@ Test if the command line contains the given flagged argument:
 
 +assert(boolean condition, string message)+::
 If condition is false, report +message+ and exit immediately.
-
-[[Turbine_information]]
-==== Turbine information
-
-+adlb_servers()    -> int+:: Number of ADLB servers
-+turbine_engines() -> int+:: Number of Turbine engines
-+turbine_workers() -> int+:: Number of Turbine workers
 
 === Files
 
@@ -468,71 +422,6 @@ the work is done by _leaf functions_ that are _composed_ together with
 Swift code.  Leaf functions may be extension or app functions.
 The builtin functions mentioned above are implemented as extension
 functions in Tcl.
-
-=== Swift extension functions
-
-Currently we support Tcl extension functions, where a function is implemented
-as a Tcl function.  Tcl has good support for wrapping native C/C\++ functions,
-so this provides an indirect way to call C/C++ functions from Swift.
-
-Several components are required to implement a Tcl extension:
-
--  Tcl bindings to your function.
--  For complex types such as structures, arrays and files, you may need
-   additional logic to marshal inputs and outputs to/from the global
-   data store.
--  The requisite files required to build a Tcl package (e.g pkgIndex.tcl)
--  Swift declarations for the function that specify the type of the function
-    and the Tcl implementation.
-
-==== Simple Tcl Function Example
-In this first example we will implement a trivial Tcl extension function
-that doubles an integer.  Here is the Tcl code that will go in
-+myextension.tcl+:
-
-----
-namespace eval myextension {
-  proc double { x } {
-    return [ expr $x * 2 ]
-  }
-}
-----
-
-* TODO: info on how to create Tcl package, e.g. pkgIndex.tcl
-
-Here is the Swift function definition that will go in +myextension.swift+:
-----
-@pure
-(int o) double (int i) "myextension" "0.0.1" [
-  "set <<o>> [ myextension::double <<i>> ]"
-];
-----
-
-The above definition has, from left to right, the output arguments,
-the name of the new Swift function, input arguments, the name
-of the Tcl package containing the file, and the minimum version
-of that package.
-
-We tell the compiler how to call our Tcl function using inline
-Tcl code as a template with variable names surrounded by +<< >>+
-indicating where variables should be substituted.
-
-We can also tell the Swift compiler a little about the function so
-that it can better optimize your programs.
-For example, +double+ has no side-effects and produces the same result each
-time for the same arguments (i.e. is deterministic), so we can flag
-it as a +@pure+ function.
-
-If your function has a long running time and should be dispatched
-to a worker process for execution, then you need to label the
-function as a leaf function, for example:
-
-----
-@dispatch=LEAF
-(int o) process (int i) "pkg" "0.0.1" [
-  "set <<o>> [ pkg::process <<i>> ]"
-];
-----
 
 === App functions
 

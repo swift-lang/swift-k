@@ -244,6 +244,23 @@ Unlike C or Java switch statements, execution does not fall through to
 subsequent case blocks, and no break statement is necessary at the
 end of each block.
 
+Following is an example of a switch expression in Swift:
+
+----
+int score=60;
+switch (score){
+case 100:
+    tracef("%s\n", "Bravo!");
+case 90:
+    tracef("%s\n", "very good");
+case 80:
+    tracef("%s\n", "good");
+case 70:
+    tracef("%s\n", "fair");
+default:
+    tracef("%s\n", "unknown grade");
+    }
+----
 
 iterate
 ^^^^^^^
