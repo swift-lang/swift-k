@@ -160,12 +160,12 @@ string hw = s + "world";
 === Files
 
 A file is a first-class entity in Swift that in many ways can be treated
-as any other variable.  The main difference is that a file can be
-*mapped* to path in a filesystem.  Assigning to a mapped file variable
+as any other variable. The main difference is that a file can be
+*mapped* to path in a filesystem. Assigning to a mapped file variable
 results in a file being created in the file system at the specified path.
 File variables can also be initialized with data from a pre-existing
 file using the +input_file+ function. File paths are relative to the
-working directory for Turbine.
+working directory.
 
 For example, if +/home/user/in.txt+ is a file with some data in it,
 the following Swift program will copy the file to +/home/user/out.txt+.
@@ -180,7 +180,7 @@ the following Swift program will copy the file to +/home/user/out.txt+.
   file y <"/home/user/out.txt">;
 
   y = cp_app(x); 
-
+----
 
 === Arrays
 
@@ -372,34 +372,6 @@ String concatenation is also performed with +&#43;+ (plus).
 
 +@strcat(string,string)+: Concatenation
 
-///////////////////////////////////////////////////
-
-=== Math
-
- #include <math.swift>
-
-+floor(float i) -> int+:: Round down
-+ceil(float i) -> int+:: Round up
-+round(float i) -> int+:: Round nearest
-+log(float i) -> float+:: Natural logarithm
-+exp(float i) -> float+:: Natural exponentiation: e^i^
-+sqrt(float i) -> float+:: Square root
-+is_nan(float i) -> boolean+:: Check for NaN
-+abs_integer(int) -> int+:: Absolute value
-+abs_float(float) -> float+:: Absolute value
-
- #include <random.swift>
-
-+random() -> float+:: Obtain random number
-
-+randint(int start, int end)+::
-Obtain random integer from +start+, inclusive, to +end+, exclusive
-
- #include <stats.swift>
-
-+sum_integer(int[]) -> int+:: Sum
-+avg(int|float[]) -> float+:: Average
-
 === System
 
  #include <sys.swift>
@@ -562,33 +534,10 @@ function as a leaf function, for example:
 ];
 ----
 
-==== Swift/Tcl Data Type Mapping
-If you are defining Tcl functions in the way above with inline
-Tcl code, Swift types are mapped to Tcl types in the following way:
-
-* int/float/string/bool are converted to the standard
-  Tcl representations
-* blobs are represented as a Tcl list with first element a pointer
-  to the data, and the second element the length of the data
-
-==== Writing Custom Tcl interfaces
-For Tcl functions that take complex argument types, such as arrays
-or structures, you currently need to write a Tcl wrapper function
-that is directly passed references to data in Swift's global data store.
-In this case your function must manually retrieve/store data from/to the
-global distributed data store.
-
-----
-(int o) complex (int arr[]) "pkg" "0.0.1" "complex";
-----
-
-* TODO: guide to do this.  Can look in turbine/lib for examples
-
-
 === App functions
 
 App functions are functions that are implemented as command-line
-programs.  These command-line programs can be brought into a Swift
+programs. These command-line programs can be brought into a Swift
 program as functions with typed inputs and outputs.
 
 An app function definition comprises:
@@ -613,7 +562,7 @@ Standard input, output and error can be redirected to files.
 
 Join files together:
 ----
-#include <files.swift>
+type file;
 
 app (file out) cat (file inputs[]) {
   "/bin/cat" inputs @stdout=out
@@ -625,13 +574,12 @@ main {
 ----
 
 Sleep an arbitrary amount of time:
-----
 
+----
 app (void signal) sleep (int secs) {
   "/bin/sleep" secs
 }
 
-main {
   foreach time in [1:5] {
     void signal = sleep(time);
     // Wait on output signal so that trace occurs after sleep
@@ -639,201 +587,7 @@ main {
       trace("Slept " + fromint(time));
     }
   }
-}
 ----
-
-
-[[Optimizations]]
-== Optimizations
-STC performs a range of compiler optimizations that can significantly
-speed up most Swift programs.  The optimization level can be controlled
-by the +-O+ command line option.  Almost always the default optimization
-level +-O2+ is your best choice.
-
-----
-# No optimizations at all (not recommended)
-stc -O0 example.swift example.tcl
-
-# Basic optimizations (not recommended)
-stc -O1 example.swift example.tcl
-
-# Standard optimizations (recommended)
-stc example.swift example.tcl
-# OR
-stc -O2 example.swift example.tcl
-
-# All optimizations (including ones that sometimes hurt performance)
-stc -O3 example.swift example.tcl
-----
-
-Individual optimizations can be toggled on using +-T <opt name>+
-or off with +-t <opt name>+, but this typically is only useful for
-debugging.
-
-[[Turbine]]
-== Running in Turbine
-
-The following describes how to run Turbine programs.
-
-=== Architecture
-
-Turbine runs as an MPI program consisting of many processes.  Turbine
-programs are ADLB programs.  Thus, they produce and execute discrete
-tasks that are distributed and load balanced at run time.
-
-Each process runs in a _mode_: _engine_, _worker_, or _server_.
-
-Engines:: Evaluate the Swift logic.  Produces tasks
-Workers:: Performs tasks
-Servers:: Distributes tasks
-
-Typical Swift programs perform compute-intensive work in extension
-functions.  These always execute on workers.
-
-Engines split up the control logic work among themselves.  This
-results in the generation of calls to extension functions.
-
-Servers distribute tasks in a scalable, load balanced manner.  They
-also store Swift data (integers, strings, etc.).
-
-=== Concurrency
-
-The available concurrency and efficiency in your Swift script is
-limited by the following factors:
-
-* The available concurrency in the Swift logic.  Sequential
-  dependencies will be evaluated sequentially.  +foreach+ loops and
-  branching function calls may be evaluated concurrently
-* The number of workers available to process leaf functions
-  concurrently
-* The number of engines and servers available to control the Turbine
-  run.  Adding more engines and servers usually improves performance
-  but costs processes
-
-=== Invocation
-
-The general form of a Turbine invocation for STC-generated
-+program.tcl+ is:
-
-----
-turbine <turbine arguments> <program.tcl> <program arguments>
-----
-
-The program arguments are available to Swift (<<argv>>).
-
-Turbine accepts the following arguments:
-
-+-l+:: Enable +mpiexec -l+ ranked output formatting
-+-n+:: The total number of Turbine MPI processes
-
-The user controls the Turbine run time configuration through
-environment variables:
-
-+TURBINE_ENGINES+:: Number of Turbine engines
-
-+ADLB_SERVERS+:: Number of ADLB servers
-
-The remaining processes are workers.  These values are available to
-Swift (<<Turbine_information, Turbine information>>).
-
-+TURBINE_LOG=0+:: Disable logging
-
-+ADLB_EXHAUST_TIME+::
-Time in seconds taken by ADLB task servers to shut down.  May include
-a decimal point.  Default +0.1+ .  In very large runs, this may be set to
-5 to ensure correctness.
-
-+TURBINE_LAUNCH_OPTS+::
-Provide other arguments to +mpiexec+, such as a machine file, etc.
-
-+TURBINE_SRAND+::
-If unset or empty, the random number generator seed will be set to the
-process rank for each process, giving reproducible results.  If set to
-an integer +seed+, the random number generator seed for each process
-will be set to +seed+ + +rank+.
-+
-For non-reproducible random results, use the following shell commands:
-+
-----
-export TURBINE_SRAND=$( date +%s )
-turbine ...
-----
-+
-The seed is recorded in the log.
-
-=== Configuration
-
-The following describes how to turn Swift/T programs in Turbine
-on more complex systems.
-
-[[Build_settings]]
-==== Build settings
-
-If +exm-setup.zsh+ does not succeed, you may need to change how it
-tries to configure and compile Swift/T.
-
-Swift/T is built with standard Ant (Java) and Autotools/Makefile
-(C,Tcl) techniques.  The primary control is thus the arguments to
-+ant+ or +configure+.
-
-==== Manual configuration
-
-You do not need to use +exm-setup.zsh+ to install Swift/T.  To perform
-the installation using +configure+/+make+, simply untar the
-distribution package and do:
-
-----
-cd c-utils
-./configure ...
-make install
-
-cd ../lb
-./configure ...
-make install
-
-cd ../turbine
-./configure ...
-make install
-
-cd ../stc
-ant -Ddist.dir=... -Dturbine.home=...
-----
-
-* You may use +./configure --help+ and the
-  link:turbine-sites.html[Sites Guide] for further options.
-* You can use +exm-setup.zsh+ as a guide to this process, as it is a
-  simple linear shell script that automates the +configure+/+make+
-  process.
-
-==== Non-standard MPI locations
-
-Configure Turbine with:
-
-----
- --enable-custom --with-mpi-include=/path/to/mpi.h/include
-                 --with-mpi-lib-dir=/path/to/mpi_lib/lib
-                 --with-mpi-lib-name=funny.mpi.a
-----
-
-==== Known systems
-
-See the
-http://www.mcs.anl.gov/exm/local/guides/turbine-sites.html[Turbine Sites Guide]
-for information about specific systems with Turbine installations.
-
-=== Performance enhancements
-
-1. Disable logging/debugging via environment
-2. Disable logging/debugging at configure/compile time
-+
-** Configure c-utils with +--disable-log+
-+
-3. Configure everything with +--enable-fast+. This disables assertions
-   and other checks
-4. When making performance measurements, always subtract 1 second
-   (or the value of +ADLB_EXHAUST_TIME+) from the Turbine run time
-   due to the ADLB shutdown protocol, which does not start until the
-   system is idle for that amount of time.
 
 ////
 Local Variables:
