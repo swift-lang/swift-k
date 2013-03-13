@@ -95,11 +95,32 @@ detected at compile time, although in some cases it will result in a
 run time error. Unassigned variables that are inputs to functions
 will lead to a stall in progress.
 
-== App functions
+== Composite functions
 
 Swift code is written in composite functions.
 
-Composite functions have the form:
+----
+[(<output list>)] function_name [(<input list>)]
+{
+  statement;
+  statement;
+  ...
+}
+----
+
+An example of a Swift composite function is shown below:
+
+----
+(Station _stat) get_site(int _run_id) {
+    StationFile file<"/tmp/site_tmp">;
+    file = getsite_file(_run_id);
+    _stat = readData(file);
+}
+----
+
+== App functions
+Swift app functions are used to integrate external apps into Swift and made
+callable as Swift functions.  App functions have the form:
 
 ----
 [(<output list>)] app function_name [(<input list>)]
@@ -107,6 +128,17 @@ Composite functions have the form:
   statement;
 }
 ----
+
+An example of an app function definition is as follows:
+
+----
+(RuptureFile _rup) app getrupture_file(int _run_id) {
+    getrupture _run_id stdout=@filename(_rup);
+}
+----
+
+Note that an app function may have only one commandline statement while a
+composite function may have multiple statements.
 
 An empty input or output list may be omitted or written as +()+.
 
@@ -117,6 +149,7 @@ x1, x2 = f(i1, i2);
 // or equivalently:
 (x1, x2) = f(i1, i2);
 ----
+
 
 == Types
 
@@ -370,6 +403,8 @@ The following unary operators are defined:
 String concatenation is also performed with +&#43;+ (plus).
 +==+ and +!=+ may also be used on strings.
 
+== Standard Library
+
 === Output
 
 +trace(anything, anything, ...)+:: Report the value of any variable
@@ -414,13 +449,12 @@ that match.  Available glob symbols include:
 * +\x+: character +x+
 * +{a,b,c,...}+ any of +a+, +b+, +c+, etc.
 
-== Defining Leaf functions
+== Defining Apps 
 
 In typical Swift applications, the computationally intensive parts of the
 application are not written in the Swift language.  Rather,
-the work is done by _leaf functions_ that are _composed_ together with
-Swift code.  Leaf functions may be extension or app functions.
-The builtin functions mentioned above are implemented as extension
+the work is done by _app functions_ that are _composed_ together with
+Swift code. The builtin functions mentioned above are implemented as extension
 functions in Tcl.
 
 === App functions
