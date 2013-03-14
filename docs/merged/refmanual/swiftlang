@@ -150,14 +150,20 @@ x1, x2 = f(i1, i2);
 (x1, x2) = f(i1, i2);
 ----
 
+=== Swift keywords
+
+Following is a list of Swift keywords:
+
+    app type float int boolean string global
+    foreach if else iterate switch case default
+    file while import
 
 == Types
 
-Swift provides a similar range of primitive types to many other
-programming languages. Files are a primitive type in Swift, unlike
-in many other languages, and have a number of special characteristics
-that merit special mention.
-Two basic kinds of data structure are provided: arrays and structs.
+Swift provides a similar range of primitive types to many other programming
+languages. Files are a primitive type in Swift, unlike in many other languages,
+and have a number of special characteristics that merit special mention. Two
+basic kinds of data structure are provided: arrays and structs.
 
 === Primitive Types
 
@@ -335,17 +341,17 @@ tracef("b: %i\n", b);
 
 === Iteration
 
-Iteration is performed with the +foreach+ and +iterate+ statement.
+Iteration in parallel is performed with the +foreach+ and +iterate+ statement.
 
 ==== Foreach loop
 
 The +foreach+ loop allows for parallel iteration over an array:
 
 ----
-string A[];
-foreach value, index in A
-{
-  tracef("A[%i] = %s\n", index, value);
+foreach value[, index] in [expression]{
+    statement;
+    statement;
+    ...
 }
 ----
 
@@ -360,6 +366,23 @@ handling for this case that avoids constructing an array.
 ----
 foreach i in [start:stop:step] {
     ...
+}
+----
+
+Examples of +foreach+ loop are as follows:
+
+----
+string A[];
+foreach value, index in A
+{
+  tracef("A[%i] = %s\n", index, value);
+}
+----
+
+----
+trace(" First five odd numbers");
+foreach idx in [1:10:2]{
+    tracef("%i\n",idx);
 }
 ----
 

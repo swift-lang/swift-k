@@ -148,13 +148,14 @@ The workdirectory element specifies where on the site files can be
 stored.
 
 ----
-<workdirectory>/home/benc</workdirectory>
+<workdirectory>/tmp/swift.workdir</workdirectory>
 ----
 
-This file must be accessible through the transfer mechanism specified in
-the <gridftp> element and also mounted on all worker nodes that will
-be used for execution. A shared cluster scratch filesystem is
-appropriate for this.
+This directory must be accessible through the specified transfer mechanism and
+also mounted on all worker nodes that will be used for execution. A shared
+cluster scratch filesystem is appropriate for this. Note that you need to
+specify _absolute pathname_ for this field.
+
 
 Scratch
 ~~~~~~~
