@@ -1,3 +1,3 @@
 #!/bin/sh
 
-asciidoc --attribute stylesheet=${PWD}/swift.css swiftlang
+asciidoc --attribute stylesheet=${PWD}/swift.css refmanual.txt

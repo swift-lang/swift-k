@@ -1,17 +1,5 @@
 
-////
-Swift Language Reference Manual, asciidoc format
-////
-
-:toc:
-:numbered:
-
-////
-Settings:
-////
-:miscellaneous.newline: \n
-
-= Swift Language Referance Manual
+== Swift Language Reference Manual
 This reference manual semi-formally outlines the Swift language conventions
 
 == Support
