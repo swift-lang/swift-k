@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash 
 
 # Verify an argument is not null
 verify_not_null()
@@ -60,6 +60,14 @@ create_dotswift
 rundir=$( echo run??? | sed -e 's/^.*run//' | awk '{ printf("run%03d\n", $1+1)}' )
 mkdir $rundir
 
+# Link input_files
+if [ -d "input_files" ]; then
+   for input_file in input_files/*
+   do
+      ln -s $PWD/$input_file $rundir
+   done
+fi
+
 # Swift script
 if [ -f "$script" ]; then 
    cp $script $rundir
@@ -77,13 +85,10 @@ IFS=","
 echo "<config>" > sites.xml
 for site in $SITES
 do
-   echo SITE IS $site
-   echo FILE IS ../conf/$site.cf
    # If config is not defined, but there is a config in conf/ that matches, use that
    if [ -z "$CONFIG" ] && [ -f "../conf/$site.cf" ]; then
       cp ../conf/$site.cf .
       config=$site.cf
-      echo config IS $config
    fi  
 
    if [ -f "$config" ]; then
