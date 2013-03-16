@@ -58,7 +58,6 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			this.context = channelContext;
 		}
 		this.requestManager = requestManager;
-		// registeredMaps = new LinkedList();
 		this.client = client;
 		configureHeartBeat();
 		configureTimeoutChecks();
@@ -130,7 +129,7 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 		if (now - lastTime > TIMEOUT * 1000) {
 		    TimeoutException e = new TimeoutException(this, "Channel timed out", lastTime);
 		    // prevent further timeouts
-		    lastTime = Long.MAX_VALUE;
+		    setLastTime(Long.MAX_VALUE);
 			context.notifyRegisteredCommandsAndHandlers(e);
 			handleChannelException(e);
 			timeoutCheckTask.cancel();
@@ -148,6 +147,12 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 			return lastTime;
 	    }
 	}
+	
+	protected void setLastTime(long lastTime) {
+        synchronized(lastTimeLock) {
+            this.lastTime = lastTime;
+        }
+    }
 	
 	protected boolean clientControlsHeartbeats() {
 	    return true;
