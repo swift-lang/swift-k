@@ -105,12 +105,16 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
-			closeShallow();
 		}
 	}
 	
 	public void futureModified(Future f, VariableStack stack) {
-	    innerInit();
+	    try {
+	        innerInit();
+	    }
+	    catch (Exception e) {
+	        this.setValue(new MappingException(this, e));
+	    }
     }
 
 	public String getParam(MappingParam p) {

@@ -108,13 +108,16 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
-			closeShallow();
-			return;
 		}
 	}
 
 	public void futureModified(Future f, VariableStack stack) {
-		innerInit();
+		try {
+            innerInit();
+        }
+        catch (Exception e) {
+            this.setValue(new MappingException(this, e));
+        }
 	}
 
 
