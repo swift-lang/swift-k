@@ -31,6 +31,9 @@ public abstract class AbstractParallelIterator extends AbstractIterator {
 		catch (ExecutionException e) {
 			failImmediately(stack, e);
 		}
+		catch (Exception e) {
+		    failImmediately(stack, e);
+		}
 	}
 
 
