@@ -119,16 +119,35 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 			    startIteration(tc, var, i.current(), tc.tryIncrement(), stack);
 			}
 			
-			decRefs(tc.rc);
+			if (!tc.selfClose) {
+			    decRefs(tc.rc);
+			}
 			
 			int left;
 			synchronized(tc) {
-			    // can only have closed and running = 0 in one place
+			    // can only have closed and running = 0 in one of the two critical sections
+			    // related to tc. One (CS1) is this and the other one (CS2) is:
+			    // closed = tc.isClosed();
+			    // running = tc.decrement();
+			    // 
+			    // If on the last iteration CS1 runs before CS2, then:
+			    // CS1 - (closed = true, left > 0), CS2 - (closed = true, --running == 0)
+			    // If CS2 runs before CS1:
+			    // CS2 - (closed = false, --running == 0), CS1 - (closed = true, left == 0).
 			    tc.close();
 			    left = tc.current();
 			}
 			if (left == 0) {
-				complete(stack);
+			    // i.e., no iteration running
+			    if (!tc.selfClose) {
+			        // when selfClose is on, decRefs() and complete() are called
+			        // as part of the self closing logic, so don't invoke them again
+			        complete(stack);
+			    }
+			}
+			else {
+			    // complete() will be called when
+			    // the last iteration completes (in iterationCompleted).
 			}
 		}
 		catch (FutureIteratorIncomplete fii) {
@@ -231,9 +250,11 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 		boolean done = false;
 		if (running == 0) {
 		    if (closed) {
+		        // write refs were decremented when the last
+		        // iteration was started
 		        complete(stack);
 		    }
-		    if (tc.selfClose && !iteratorHasValues) {
+		    else if (tc.selfClose && !iteratorHasValues) {
 		        decRefs(tc.rc);
 		        complete(stack);
 		    }
