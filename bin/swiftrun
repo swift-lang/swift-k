@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # Verify an argument is not null
 verify_not_null()
