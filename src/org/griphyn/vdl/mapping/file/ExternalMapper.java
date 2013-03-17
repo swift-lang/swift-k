@@ -25,7 +25,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +44,14 @@ public class ExternalMapper extends AbstractMapper {
 	private Map<String, Path> rmap;
 
 	public static final MappingParam PARAM_EXEC = new MappingParam("exec");
+	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_EXEC);
+	    s.add("*");
+        super.getValidMappingParams(s);
+    }
 
 	private static final String[] STRING_ARRAY = new String[0];
 

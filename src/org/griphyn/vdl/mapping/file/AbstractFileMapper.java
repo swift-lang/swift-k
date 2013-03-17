@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.util.Base64;
@@ -71,6 +72,13 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	public static final MappingParam PARAM_PATTERN = new MappingParam("pattern", null);
 	public static final MappingParam PARAM_LOCATION = new MappingParam("location", null);
 	public static final MappingParam PARAM_NOAUTO = new MappingParam("noauto", "false");
+	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_PREFIX, PARAM_SUFFIX, PARAM_PATTERN, PARAM_LOCATION, PARAM_NOAUTO);
+        super.getValidMappingParams(s);
+    }
 
 	public static final Logger logger = Logger.getLogger(AbstractFileMapper.class);
 

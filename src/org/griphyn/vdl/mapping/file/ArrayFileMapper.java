@@ -37,6 +37,12 @@ public class ArrayFileMapper extends AbstractMapper {
     static Logger logger = Logger.getLogger(ArrayFileMapper.class);
     
 	public static final MappingParam PARAM_FILES = new MappingParam("files");
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_FILES);
+        super.getValidMappingParams(s);
+    }
 
 	public Collection<Path> existing() {
 		List<Path> l = new ArrayList<Path>();

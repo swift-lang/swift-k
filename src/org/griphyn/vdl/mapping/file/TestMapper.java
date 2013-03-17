@@ -19,6 +19,7 @@ package org.griphyn.vdl.mapping.file;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
@@ -33,6 +34,12 @@ public class TestMapper extends AbstractMapper {
     public static final MappingParam PARAM_TEMP = new MappingParam("temp", false);
     public static final MappingParam PARAM_REMAPPABLE = new MappingParam("remappable", false);
     public static final MappingParam PARAM_STATIC = new MappingParam("static", true);
+    
+    @Override
+    protected void getValidMappingParams(Set<String> s) {
+        addParams(s, PARAM_FILE, PARAM_TEMP, PARAM_REMAPPABLE, PARAM_STATIC);
+        super.getValidMappingParams(s);
+    }
     
     private PhysicalFormat remap, map;
 

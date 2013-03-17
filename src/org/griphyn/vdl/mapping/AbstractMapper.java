@@ -17,6 +17,9 @@
 
 package org.griphyn.vdl.mapping;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.file.FileGarbageCollector;
 
@@ -30,7 +33,25 @@ public abstract class AbstractMapper implements Mapper {
 
 	public static final Logger logger = Logger.getLogger(AbstractMapper.class);
 	public static final MappingParam PARAM_INPUT = new MappingParam("input", Boolean.FALSE);
-	protected MappingParamSet params;
+	
+	protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_INPUT);
+	}
+	
+	protected void addParams(Set<String> s, MappingParam... params) {
+	    for (MappingParam p : params) {
+	        s.add(p.getName());
+	    }
+    }
+	
+    @Override
+    public final Set<String> getSupportedParamNames() {
+        Set<String> s = new HashSet<String>();
+        getValidMappingParams(s);
+        return s;
+    }
+
+    protected MappingParamSet params;
 
 	public synchronized void setParam(MappingParam param, Object value) {
 		if (params == null) {

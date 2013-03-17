@@ -35,6 +35,13 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 public class ConcurrentMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_THREAD_PREFIX = new MappingParam("thread_prefix", "");
 	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_THREAD_PREFIX);
+        super.getValidMappingParams(s);
+    }
+	
 	private Map<Path, PhysicalFormat> remappedPaths;
 
 	public ConcurrentMapper() {

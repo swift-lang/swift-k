@@ -18,6 +18,7 @@
 package org.griphyn.vdl.mapping;
 
 import java.util.Collection;
+import java.util.Set;
 
 /** This interface must be implemented by a Java class that represents
     a Swift mapper between SwiftScript variables and external data
@@ -80,4 +81,6 @@ public interface Mapper {
     
     
     boolean isPersistent(Path path);
+    
+    Set<String> getSupportedParamNames();
 }

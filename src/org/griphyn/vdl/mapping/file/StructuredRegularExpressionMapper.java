@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,6 +43,13 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
         public static final MappingParam PARAM_SOURCE = new MappingParam("source");
 	public static final MappingParam PARAM_MATCH = new MappingParam("match");
 	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
+	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_SOURCE, PARAM_MATCH, PARAM_TRANSFORM);
+        super.getValidMappingParams(s);
+    }
 
 	public StructuredRegularExpressionMapper() {
 	}

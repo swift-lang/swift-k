@@ -64,6 +64,7 @@ import org.griphyn.vdl.engine.VariableScope.EnclosureType;
 import org.griphyn.vdl.engine.VariableScope.WriteType;
 import org.griphyn.vdl.karajan.CompilationException;
 import org.griphyn.vdl.karajan.Loader;
+import org.griphyn.vdl.mapping.MapperFactory;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.safehaus.uuid.UUIDGenerator;
@@ -465,7 +466,9 @@ public class Karajan {
 
 			if (mapping != null) {
 				StringTemplate mappingST = new StringTemplate("mapping");
-				mappingST.setAttribute("descriptor", mapping.getDescriptor());
+				String mapperType = mapping.getDescriptor();
+				mappingST.setAttribute("descriptor", mapperType);
+				checkMapperParams(mapperType, mapping);
 				for (int i = 0; i < mapping.sizeOfParamArray(); i++) {
 					Param param = mapping.getParamArray(i);
 					mappingST.setAttribute("params", mappingParameter(param, scope));
@@ -490,6 +493,27 @@ public class Karajan {
 
 		scope.bodyTemplate.setAttribute("declarations", variableST);
 	}
+
+    private void checkMapperParams(String mapperType, Mapping mapping) throws CompilationException {
+        if (!MapperFactory.isValidMapperType(mapperType)) {
+            throw new CompilationException("Unknown mapper type: '" + mapperType + "'");
+        }
+        
+        Set<String> validParams = MapperFactory.getValidParams(mapperType);
+        if (validParams == null && mapping.sizeOfParamArray() > 0) {
+            throw new CompilationException(mapperType + " does not support any parameters");
+        }
+        if (validParams.contains("*")) {
+            // mapper accepts any parameter (e.g. external_mapper)
+            return;
+        }
+        for (int i = 0; i < mapping.sizeOfParamArray(); i++) {
+            Param param = mapping.getParamArray(i);
+            if (!validParams.contains(param.getName())) {
+                throw new CompilationException(mapperType + " does not support a '" + param.getName() + "' parameter");
+            }
+        }
+    }
 
     private StringTemplate mappingParameter(Param param, VariableScope scope) throws CompilationException {
         StringTemplate paramST = template("vdl_parameter");
