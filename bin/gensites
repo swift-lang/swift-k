@@ -125,6 +125,8 @@ if [ ! -f "$TEMPLATE_PATH" ]; then
       TEMPLATE_PATH=$TEMPLATE
    elif [ -f "$HOME/.swift/sites/$TEMPLATE" ]; then
       TEMPLATE_PATH=$HOME/.swift/sites/$TEMPLATE
+   elif [ -f "$PWD/conf/$TEMPLATE" ]; then
+      TEMPLATE_PATH=$PWD/conf/$TEMPLATE
    elif [ -f "$SWIFT_HOME/$TEMPLATE" ]; then
       TEMPLATE_PATH=$SWIFT_HOME/$TEMPLATE
    fi
