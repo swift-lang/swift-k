@@ -66,6 +66,17 @@ public final class Scheduler {
 			}}, delay);
 	}
 	
+	/**
+	 * Returns a number that can be used to determine if any progress has
+	 * been made since the last call to this method. If any progress has
+	 * been made (i.e. threads have successfully completed at least one
+	 * time slice), then the number returned by this method is guaranteed
+	 * to be different from the last call.
+	 */
+	public long getSequenceId() {
+		return workers.getCompletedTaskCount();
+	}
+	
 	protected void schedule(final LWThread thread) {
 	    workers.execute(thread);
 	}
