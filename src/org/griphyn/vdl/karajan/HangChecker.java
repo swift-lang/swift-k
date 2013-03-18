@@ -50,6 +50,7 @@ public class HangChecker extends TimerTask {
     public static final int MAX_CYCLES = 10;
     private Timer timer;
     private Context context;
+    private long lastSequenceNumber;
     
     public HangChecker(Context context) throws ExecutionException {
     	this.context = context;
@@ -62,6 +63,11 @@ public class HangChecker extends TimerTask {
 
     public void run() {
         try {
+            long crtSequenceNumber = Scheduler.getScheduler().getSequenceId();
+            if (crtSequenceNumber != lastSequenceNumber) {
+                lastSequenceNumber = crtSequenceNumber;
+                return;
+            }
             WeightedHostScoreScheduler s = (WeightedHostScoreScheduler) context.getAttribute(SchedulerNode.CONTEXT_ATTR_NAME);
             if (s != null) {
                 int running = s.getRunning();
