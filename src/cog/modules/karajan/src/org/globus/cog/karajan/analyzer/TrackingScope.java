@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.globus.cog.karajan.analyzer.Var.Channel;
 import org.globus.cog.karajan.compiled.nodes.Node;
 
 
@@ -82,37 +81,10 @@ public class TrackingScope extends Scope {
 			return super.lookupChannelRecursive(name, src);
 		}
 	}
-	
-	protected <T> ChannelRef<T> getActualChannelRefRecursive(String name, int frame) {
-        if (vars != null) {
-            Var.Channel existing = (Channel) vars.get(name);
-            if (existing != null) {
-                int pframe = 0;
-                if (allowChannelReturns) {
-                	// must look up actual channel to see how many frames to skip
-                	ChannelRef<T> prev = parent.getChannelRefRecursive(name, 0);
-                	pframe = prev.getFrame();
-                }
-                if (existing.isSingleValued()) {
-                    return new ChannelRef.ReturnSingleValued<T>(frame + pframe, existing.getIndex());
-                }
-                else {
-                    return new ChannelRef.Return<T>(frame + pframe, existing.getIndex());
-                }
-            }
-        }
-        
-        if (parent != null) {
-            return parent.getChannelRefRecursive(name, frameBump(frame));
-        }
-        else {
-            throw new RuntimeException("Variable not found: " + name);
-        }
-    }
-	
+		
 	@Override
 	protected <T> ChannelRef<T> getChannelRefRecursive(String name, int frame) {
-		ChannelRef<T> ref = getActualChannelRefRecursive(name, frame);
+		ChannelRef<T> ref = super.getChannelRefRecursive(name, frame);
 		if (updateableChannelRefs) {
 			if (channelRefs == null) {
 				channelRefs = new HashMap<String, List<ChannelRef<?>>>();
