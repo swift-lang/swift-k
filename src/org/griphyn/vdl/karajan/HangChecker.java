@@ -65,7 +65,8 @@ public class HangChecker extends TimerTask {
             if (s != null) {
                 int running = s.getRunning();
                 boolean allOverloaded = s.allOverloaded();
-                if (running == 0 && EventBus.eventCount == lastEventCount && !allOverloaded) {
+                if (running == 0 && EventBus.eventCount == lastEventCount && 
+                        !EventBus.getBus().isAnythingRunning() && !allOverloaded) {
                     logger.warn("No events in " + (CHECK_INTERVAL / 1000) + "s.");
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     PrintStream ps = new PrintStream(os);
