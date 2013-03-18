@@ -10,10 +10,9 @@
  */
 package org.globus.cog.karajan.workflow.events;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.stack.VariableStack;
@@ -48,10 +47,12 @@ public final class EventBus {
 	private static final EventBus bus = new EventBus();
 	public volatile static long eventCount;
 
-	private final ExecutorService es;
+	private final ThreadPoolExecutor es;
 
 	public EventBus() {
-		es = Executors.newFixedThreadPool(DEFAULT_WORKER_COUNT);
+		es = new ThreadPoolExecutor(DEFAULT_WORKER_COUNT, DEFAULT_WORKER_COUNT,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>());		
 	}
 
 	private void _post(FlowElement target, VariableStack stack) {
@@ -70,6 +71,10 @@ public final class EventBus {
 	public static void post(FlowElement target, VariableStack stack) {
 		eventCount++;
 		bus._post(target, stack);
+	}
+	
+	public boolean isAnythingRunning() {
+		return es.getActiveCount() != 0;
 	}
 	
 	public static void post(Runnable r) {
