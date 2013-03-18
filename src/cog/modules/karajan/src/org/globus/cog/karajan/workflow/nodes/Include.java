@@ -150,13 +150,14 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 			throw new ExecutionException("No include file specified");
 		}
 		else {
+			String dir = null;
 			File f = new File(iname);
 			if (!f.isAbsolute()) {
 				boolean found = false;
 				List includeDirs = stack.getExecutionContext().getProperties().getDefaultIncludeDirs();
 				Iterator i = includeDirs.iterator();
 				while (i.hasNext()) {
-					String dir = (String) i.next();
+					dir = (String) i.next();
 					if (dir.equals(".")) {
 						/*
 						 * "." means current directory relative to the current
@@ -222,7 +223,6 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 									logger.debug(iname + " included from " + dir);
 								}
 								reader = new FileReader(iname);
-								setProperty("_path", dir);
 								found = true;
 								break;
 							}
@@ -263,6 +263,7 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 						XMLConverter.read(this, tree,
 								new KarajanTranslator(reader, iname).translate(), iname, false);
 					}
+					tree.getRoot().setProperty("_path", dir);
 					reader.close();
 				}
 				catch (Exception e) {
