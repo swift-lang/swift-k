@@ -46,7 +46,7 @@ import org.griphyn.vdl.mapping.DSHandle;
 public class HangChecker extends TimerTask {
     public static final Logger logger = Logger.getLogger(HangChecker.class);
     
-    public static final int CHECK_INTERVAL = 1000;
+    public static final int CHECK_INTERVAL = 10000;
     public static final int MAX_CYCLES = 10;
     private Timer timer;
     private Context context;
