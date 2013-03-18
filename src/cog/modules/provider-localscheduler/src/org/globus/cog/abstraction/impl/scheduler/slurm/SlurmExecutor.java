@@ -23,16 +23,17 @@ public class SlurmExecutor extends AbstractExecutor {
 	// Number of program invocations
 	private int count = 1;
 	private static NumberFormat IDF = new DecimalFormat("000000");
-	
+
 	// Used for task name generation
 	private static int unique = 0;
-	
+
 	public SlurmExecutor(Task task, ProcessListener listener) {
 		super(task, listener);
 	}
 
 	/**
 	 * Write attribute if non-null
+	 * 
 	 * @throws IOException
 	 */
 	protected void writeAttr(String attrName, String arg, Writer wr)
@@ -44,7 +45,8 @@ public class SlurmExecutor extends AbstractExecutor {
 	}
 
 	/**
-	 * Write attribute if non-null and non-empty 
+	 * Write attribute if non-null and non-empty
+	 * 
 	 * @throws IOException
 	 */
 	protected void writeNonEmptyAttr(String attrName, String arg, Writer wr)
@@ -59,6 +61,7 @@ public class SlurmExecutor extends AbstractExecutor {
 
 	/**
 	 * Write walltime in hh:mm:ss
+	 * 
 	 * @param wr
 	 * @throws IOException
 	 */
@@ -90,9 +93,10 @@ public class SlurmExecutor extends AbstractExecutor {
 			logger.debug("Slurm name: for: " + task.getIdentity() + " is: " + name);
 		}
 	}
-	
+
 	/**
 	 * Verify that an object contains a valid int
+	 * 
 	 * @param obj
 	 * @param name
 	 * @return
@@ -101,8 +105,7 @@ public class SlurmExecutor extends AbstractExecutor {
 		try {
 			assert (obj != null);
 			return Integer.parseInt(obj.toString());
-		} 
-		catch (NumberFormatException e) {
+		} catch (NumberFormatException e) {
 			throw new IllegalArgumentException("Illegal value for " + name + ". Must be an integer.");
 		}
 	}
@@ -110,79 +113,93 @@ public class SlurmExecutor extends AbstractExecutor {
 	@Override
 	protected void writeScript(Writer wr, String exitcodefile, String stdout, String stderr) 
 			throws IOException {
+		
 		Task task = getTask();
 		JobSpecification spec = getSpec();
 		Properties properties = Properties.getProperties();
-                boolean exclusive_defined=false;
+		boolean exclusive_defined = false;
 
 		validate(task);
 		writeHeader(wr);
 
+		String type = (String) spec.getAttribute("jobType");
 		Object countValue = getSpec().getAttribute("count");
-		if (countValue != null)
+		
+		if (countValue != null) {
 			count = parseAndValidateInt(countValue, "count");
+		}
+		
 		wr.write("#SBATCH --job-name=" + task.getName() + '\n');
 		wr.write("#SBATCH --output=" + quote(stdout) + '\n');
 		wr.write("#SBATCH --error=" + quote(stderr) + '\n');
 		wr.write("#SBATCH --nodes=" + count + '\n');
-		wr.write("#SBATCH --ntasks-per-node=1\n");
-		writeNonEmptyAttr("ppn", "--cpus-per-task", wr);
 		writeNonEmptyAttr("project", "--account", wr);
 		writeNonEmptyAttr("queue", "--partition", wr);
 		writeWallTime(wr);
 		
+	    if("single".equalsIgnoreCase(type)) {
+			writeNonEmptyAttr("ppn", "--ntasks-per-node", wr);
+	    } else { 
+	    	wr.write("#SBATCH --ntasks-per-node=1\n");
+	    	writeNonEmptyAttr("jobsPerNode", "--cpus-per-task", wr);
+	    }
+
 		// Handle all slurm attributes specified by the user
 		for (String a : spec.getAttributeNames()) {
 			if (a != null && a.startsWith("slurm.")) {
 				String attributeName[] = a.split("slurm.");
-                                 if (attributeName[1].equals("exclusive")) { 
-					exclusive_defined=true;
-					if(spec.getAttribute(a).equals("true")) {
+				if (attributeName[1].equals("exclusive")) {
+					exclusive_defined = true;
+					if (spec.getAttribute(a).equals("true")) {
 						wr.write("#SBATCH --exclusive");
 					} else {
 						wr.write("#SBATCH --share");
 					}
-                                
-                                 } else {
-				 wr.write("#SBATCH --" + attributeName[1] + "=" + spec.getAttribute(a) + '\n');
-                        	 }
+				} else {
+					wr.write("#SBATCH --" + attributeName[1] + "="
+							+ spec.getAttribute(a) + '\n');
+				}
 			}
 		}
- 
-                if(!exclusive_defined) {
-                   wr.write("#SBATCH --exclusive\n");
-                }		
 
-		wr.write("\n");
-		for (String name : spec.getEnvironmentVariableNames()) {
-			wr.write("export " + name + '=' + quote(spec.getEnvironmentVariable(name)) + '\n');
+		// Default to exclusive mode
+		if (!exclusive_defined) {
+			wr.write("#SBATCH --exclusive\n");
 		}
 
+		// Environment variables
+		wr.write("\n");
+		for (String name : spec.getEnvironmentVariableNames()) {
+			wr.write("export " + name + '='
+					+ quote(spec.getEnvironmentVariable(name)) + '\n');
+		}
 
-
-		String type = (String) spec.getAttribute("jobType");
-		if (logger.isDebugEnabled())
-			logger.debug("Job type: " + type);
-
+		// Determine wrapper
 		if (type != null) {
 			String wrapper = properties.getProperty("wrapper." + type);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Wrapper: " + wrapper);
 			}
-			
+
 			if (wrapper != null) {
 				wrapper = replaceVars(wrapper);
 				wr.write(wrapper);
 				wr.write(' ');
 			}
-			
-			if (logger.isDebugEnabled()) { 
+
+			if (logger.isDebugEnabled()) {
 				logger.debug("Wrapper after variable substitution: " + wrapper);
 			}
 		}
-	        
-                wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
-		wr.write("$RUNCOMMAND /bin/bash -c \'");
+
+		// Don't use srun for MPI jobs
+		if("single".equalsIgnoreCase(type)) {
+			wr.write("/bin/bash -c \'");
+		} else {
+			wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
+			wr.write("$RUNCOMMAND /bin/bash -c \'");			
+		}
+		
 		if (spec.getDirectory() != null) {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
@@ -193,8 +210,8 @@ public class SlurmExecutor extends AbstractExecutor {
 		if (spec.getStdInput() != null) {
 			wr.write(" < " + quote(spec.getStdInput()));
 		}
-		
-		if("multiple".equals(type)) {
+
+		if ("multiple".equals(type)) {
 			wr.write("; /bin/echo $? >" + exitcodefile + ".$SLURM_PROCID\'\n");
 		} else {
 			wr.write("; /bin/echo $? >" + exitcodefile + "\'\n");
@@ -240,14 +257,14 @@ public class SlurmExecutor extends AbstractExecutor {
 			return poller;
 		}
 	}
-	
-    protected String parseSubmitCommandOutput(String out) throws IOException {
-        if ("".equals(out)) {
-            throw new IOException(getProperties().getSubmitCommandName()
-                    + " returned an empty job ID");
-        }
-        String outArray[] = out.split(" ");
-        return outArray[outArray.length-1].trim();
-    }
-    
+
+	protected String parseSubmitCommandOutput(String out) throws IOException {
+		if ("".equals(out)) {
+			throw new IOException(getProperties().getSubmitCommandName()
+					+ " returned an empty job ID");
+		}
+		String outArray[] = out.split(" ");
+		return outArray[outArray.length - 1].trim();
+	}
+
 }
