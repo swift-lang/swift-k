@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 # Verify an argument is not null
 verify_not_null()
@@ -60,6 +60,14 @@ create_dotswift
 rundir=$( echo run??? | sed -e 's/^.*run//' | awk '{ printf("run%03d\n", $1+1)}' )
 mkdir $rundir
 
+# Link input_files
+if [ -d "input_files" ]; then
+   for input_file in input_files/*
+   do
+      ln -s $PWD/$input_file $rundir
+   done
+fi
+
 # Swift script
 if [ -f "$script" ]; then 
    cp $script $rundir
@@ -72,25 +80,26 @@ if [ -f "$CONFIG" ]; then
 fi
 
 # Create sites.xml
-cd $rundir
 IFS=","
-echo "<config>" > sites.xml
+echo "<config>" > $rundir/sites.xml
 for site in $SITES
 do
    # If config is not defined, but there is a config in conf/ that matches, use that
-   if [ -z "$CONFIG" ] && [ -f "../conf/$site.cf" ]; then
-      cp ../conf/$site.cf .
+   if [ -z "$CONFIG" ] && [ -f "conf/$site.cf" ]; then
+      cp conf/$site.cf $rundir
       config=$site.cf
    fi  
 
-   if [ -f "$config" ]; then
-      gensites -p $config $site >> sites.xml
+   if [ -f "conf/$config" ]; then
+      gensites -p conf/$config $site >> $rundir/sites.xml
    else
-      gensites $site >> sites.xml
+      gensites $site >> $rundir/sites.xml
    fi
 
 done
-echo "</config>" >> sites.xml
+echo "</config>" >> $rundir/sites.xml
+mv tc.data $rundir
+cd $rundir
 
 if [ -z "$CONFIG" ]; then
    CONFIG=$config
