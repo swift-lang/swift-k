@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,6 +41,13 @@ public class RegularExpressionMapper extends AbstractMapper {
 	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
 	
 	private String match, source, transform;
+	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_SOURCE, PARAM_MATCH, PARAM_TRANSFORM);
+        super.getValidMappingParams(s);
+    }
 
 	public RegularExpressionMapper() {
 	}

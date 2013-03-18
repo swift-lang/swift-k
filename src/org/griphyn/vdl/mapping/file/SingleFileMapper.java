@@ -20,6 +20,7 @@ package org.griphyn.vdl.mapping.file;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
@@ -33,11 +34,16 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
   */
 public class SingleFileMapper extends AbstractMapper {
 
-	public static final MappingParam PARAM_FILE = new MappingParam("file");
-	
+	public static final MappingParam PARAM_FILE = new MappingParam("file");	
 	private AbsFile file;
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_FILE);
+        super.getValidMappingParams(s);
+    }
 
-	public SingleFileMapper() {
+    public SingleFileMapper() {
 		super();
 	}
 

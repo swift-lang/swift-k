@@ -20,6 +20,7 @@ package org.griphyn.vdl.mapping.file;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.griphyn.vdl.mapping.AbsFile;
@@ -36,7 +37,14 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
     an array. */
 public class FixedArrayFileMapper extends AbstractMapper {
 	public static final MappingParam PARAM_FILES = new MappingParam("files");
-
+	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_FILES);
+        super.getValidMappingParams(s);
+    }
+	
 	private String[] files;
 	
 	public FixedArrayFileMapper() {

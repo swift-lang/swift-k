@@ -22,6 +22,7 @@ package org.griphyn.vdl.mapping;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.griphyn.vdl.mapping.file.AirsnMapper;
 import org.griphyn.vdl.mapping.file.ArrayFileMapper;
@@ -38,11 +39,14 @@ import org.griphyn.vdl.mapping.file.StructuredRegularExpressionMapper;
 import org.griphyn.vdl.mapping.file.TestMapper;
 
 public class MapperFactory {
-	private static Map<String,Class<Mapper>> mappers = 
-	    new HashMap<String,Class<Mapper>>();
+	private static Map<String, Class<? extends Mapper>> mappers;
+	
+	private static Map<String, Set<String>> validParams;
 
 	static {
-
+	    mappers = new HashMap<String, Class<? extends Mapper>>();
+	    validParams = new HashMap<String, Set<String>>();
+	    
 		// the following are general purpose file mappers
 		registerMapper("simple_mapper", SimpleFileMapper.class);
 		registerMapper("single_file_mapper", SingleFileMapper.class);
@@ -62,11 +66,10 @@ public class MapperFactory {
 		registerMapper("test_mapper", TestMapper.class);
 	}
 
-	public synchronized static Mapper getMapper(String type, MappingParamSet params) 
-	throws InvalidMapperException {
-		Class<Mapper> cls = mappers.get(type);
+	public synchronized static Mapper getMapper(String type, MappingParamSet params) throws InvalidMapperException {
+		Class<? extends Mapper> cls = mappers.get(type);
 		if (cls == null) {
-			throw new InvalidMapperException("no such mapper: "+type);
+			throw new InvalidMapperException("No such mapper: "+type);
 		}
 		try {
 			Mapper mapper = cls.newInstance();
@@ -77,15 +80,29 @@ public class MapperFactory {
 			throw new InvalidMapperException(type + ": " + e.getMessage(), e);
 		}
 	}
-
-    public static void registerMapper(String type, String cls) 
-	throws ClassNotFoundException {
-	    registerMapper(type, MapperFactory.class.getClassLoader().loadClass(cls));
+	
+	public synchronized static boolean isValidMapperType(String type) {
+	    return mappers.containsKey(type);
+	}
+	
+    @SuppressWarnings("unchecked")
+    public static void registerMapper(String type, String cls) throws ClassNotFoundException {
+	    registerMapper(type, (Class<? extends Mapper>) MapperFactory.class.getClassLoader().loadClass(cls));
 	}
 
-	@SuppressWarnings("unchecked")
-    public synchronized static void registerMapper(String type, 
-	                                               Class<?> cls) {
-		mappers.put(type, (Class<Mapper>) cls);
+    public synchronized static void registerMapper(String type, Class<? extends Mapper> cls) {
+		mappers.put(type, cls);
+		try {
+		    Mapper m = cls.newInstance();
+		    validParams.put(type, m.getSupportedParamNames());
+		}
+		catch (Exception e) {
+		    throw new RuntimeException("Cannot instantiate a '" + type + "'", e);
+		}
 	}
+
+    
+    public static Set<String> getValidParams(String type) {
+        return validParams.get(type);
+    }
 }

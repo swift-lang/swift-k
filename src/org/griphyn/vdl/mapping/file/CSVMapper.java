@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.griphyn.vdl.mapping.AbsFile;
@@ -57,6 +58,13 @@ public class CSVMapper extends AbstractMapper {
 
 	/** delimiters between content fields. default is space, tab, comma */
 	public static final MappingParam PARAM_DELIMITER = new MappingParam("delim", " \t,");
+	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_FILE, PARAM_HEADER, PARAM_SKIP, PARAM_HDELIMITER, PARAM_DELIMITER);
+	    super.getValidMappingParams(s);
+    }
 
 	/** list of column names */
 	private List cols = new ArrayList();
