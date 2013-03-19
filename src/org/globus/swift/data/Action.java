@@ -92,7 +92,9 @@ public class Action extends FunctionsCollection {
             srcdir = ".";
         String desthost = bc.getHost();
         String workdir = (String) bc.getProperty("workdir");
-        
+        if (workdir!=null && !workdir.startsWith("/")){
+            workdir=System.getProperty("user.dir")+"/"+workdir;
+        }
         External.doExternal(srcfile, srcdir, 
                             desthost, workdir+"/"+destdir);
     }

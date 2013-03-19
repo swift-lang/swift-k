@@ -23,8 +23,7 @@ namespace_dec [StringTemplate code]
     ;
 ----
 
-
-Import statement
+The import statement
 ----
 importStatement [StringTemplate code] :
 "import" name:STRING_LITERAL SEMI {
