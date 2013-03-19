@@ -18,6 +18,7 @@
 package org.griphyn.vdl.karajan;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,18 +40,21 @@ import k.thr.Scheduler;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.VariableNotFoundException;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.grid.SchedulerNode;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.Path;
 
 public class HangChecker extends TimerTask {
     public static final Logger logger = Logger.getLogger(HangChecker.class);
     
-    public static final int CHECK_INTERVAL = 10000;
+    public static final int CHECK_INTERVAL = 1000;
     public static final int MAX_CYCLES = 10;
     private Timer timer;
     private Context context;
-    private long lastSequenceNumber;
+    private long lastSequenceNumber, lastHandledSequenceNumber;
     
     public HangChecker(Context context) throws ExecutionException {
     	this.context = context;
@@ -68,16 +72,20 @@ public class HangChecker extends TimerTask {
                 lastSequenceNumber = crtSequenceNumber;
                 return;
             }
+            if (lastHandledSequenceNumber == crtSequenceNumber) {
+                // already printed info, so don't spam stdout
+                return;
+            }
             WeightedHostScoreScheduler s = (WeightedHostScoreScheduler) context.getAttribute(SchedulerNode.CONTEXT_ATTR_NAME);
             if (s != null) {
                 int running = s.getRunning();
                 boolean allOverloaded = s.allOverloaded();
                 if (running == 0 && !Scheduler.getScheduler().isAnythingRunning() && !allOverloaded) {
+                    lastHandledSequenceNumber = crtSequenceNumber;
                     logger.warn("No events in " + (CHECK_INTERVAL / 1000) + "s.");
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     PrintStream ps = new PrintStream(os);
-                    Monitor.dumpVariables(ps);
-                    Monitor.dumpThreads(ps);
+                    dumpThreads(ps);
                     try {
                         Graph g = buildGraph();
                         if (!findCycles(ps, g)) {
@@ -97,6 +105,93 @@ public class HangChecker extends TimerTask {
         }
     }
     
+    public void dumpThreads() {
+        dumpThreads(System.out);
+    }
+
+    public static void dumpThreads(PrintStream pw) {
+        pw.println("\nWaiting threads:");
+        Map<LWThread, DSHandle> c = WaitingThreadsMonitor.getAllThreads();
+        for (Map.Entry<LWThread, DSHandle> e : c.entrySet()) {
+            dumpThread(pw, e.getKey(), e.getValue());
+            pw.println();
+        }
+        pw.println("----");
+    }
+
+    public static void dumpThread(PrintStream pw, LWThread thr, DSHandle handle) {
+        try {
+            pw.println("Thread: " + thr.getName() 
+                + (handle == null ? "" : ", waiting on " + varWithLine(handle)));
+
+            for (String t : getSwiftTrace(thr)) {
+                pw.println("\t" + t);
+            }
+        }
+        catch (VariableNotFoundException e1) {
+            pw.println("unknown thread");
+        }
+    }
+    
+    public static String varWithLine(DSHandle value) {
+        String line = value.getRoot().getParam(MappingParam.SWIFT_LINE);
+        Path path = value.getPathFromRoot();
+        return value.getRoot().getParam(MappingParam.SWIFT_DBGNAME) + 
+            (value == value.getRoot() ? "" : (path.isArrayIndex(0) ? path : "." + path)) + 
+            (line == null ? "" : " (declared on line " + line + ")");
+    }
+    
+    public static String getLastCall(LWThread thr) {
+        List<Object> trace = thr.getTrace();
+        if (trace != null) {
+            for (Object o : trace) {
+                if (o instanceof Node) {
+                    Node n = (Node) o;
+                    int line = n.getLine();
+                    return(n.getTextualName() + ", " + 
+                            fileName(n) + ", line " + line);
+                }
+            }
+        }
+        return "?";
+    }
+    
+    public static List<String> getSwiftTrace(LWThread thr) {
+        List<String> ret = new ArrayList<String>();
+        List<Object> trace = thr.getTrace();
+        if (trace != null) {
+            for (Object o : trace) {
+                if (o instanceof Node) {
+                    Node n = (Node) o;
+                    int line = n.getLine();
+                    ret.add(n.getTextualName() + ", " + 
+                            fileName(n) + ", line " + line);
+                
+                }
+            }
+        }
+        return ret;
+    }
+    
+    public static List<Object> getSwiftTraceElements(LWThread thr) {
+        List<Object> ret = new ArrayList<Object>();
+        List<Object> trace = thr.getTrace();
+        if (trace != null) {
+            for (Object o : trace) {
+                if (o instanceof Node) {
+                    Node n = (Node) o;
+                    ret.add(n.getLine());
+                }
+            }
+        }
+        return ret;
+    }
+
+    private static String fileName(Node n) {
+        return new File(n.getFileName()).getName().replace(".kml", ".swift");
+    }
+
+    
     private void findThreadsToBlame(PrintStream ps, Graph g) {
         Map<LWThread, DSHandle> wt = WaitingThreadsMonitor.getAllThreads();
         Set<LWThread> sl = g.nodeSet();
@@ -110,7 +205,7 @@ public class HangChecker extends TimerTask {
             ps.println();
             ps.println("The following threads are independently hung:");
             for (LWThread s : loners) {
-                Monitor.dumpThread(ps, s, wt.get(s));
+                dumpThread(ps, s, wt.get(s));
                 ps.println();
             }
             ps.println("----");
@@ -209,19 +304,19 @@ public class HangChecker extends TimerTask {
             for (Object o : c) {
                 if (o instanceof Stack) {
                     if (prev != null) {
-                        ps.println("\t" + Monitor.varWithLine((DSHandle) prev) + " is needed by: ");
+                        ps.println("\t" + varWithLine((DSHandle) prev) + " is needed by: ");
                     }
                     else {
                         ps.println("\tthe above must complete before the block below can complete:");
                     }
-                    for (String t : Monitor.getSwiftTrace((LWThread) o)) {
+                    for (String t : getSwiftTrace((LWThread) o)) {
                         ps.println("\t\t" + t);
                     }
                 }
                 else {
                     prev = o;
                     if (o != null) {
-                        ps.println("\twhich produces " + Monitor.varWithLine((DSHandle) o));
+                        ps.println("\twhich produces " + varWithLine((DSHandle) o));
                     }
                     ps.println();
                 }
@@ -280,8 +375,8 @@ public class HangChecker extends TimerTask {
         LWThread sa = (LWThread) a;
         LWThread sb = (LWThread) b;
         
-        List<Object> ta = Monitor.getSwiftTraceElements(sa);
-        List<Object> tb = Monitor.getSwiftTraceElements(sb);
+        List<Object> ta = getSwiftTraceElements(sa);
+        List<Object> tb = getSwiftTraceElements(sb);
         
         if (ta.size() != tb.size()) {
             return false;
