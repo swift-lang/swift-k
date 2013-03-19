@@ -43,6 +43,10 @@ public class LevelBars extends Container {
             getBar(i).setValue((float) values[i] / range);
         }
     }
+    
+    public void setText(int index, String text) {
+        getBar(index).setText(text);
+    }
 
     private LevelBar getBar(int i) {
         return (LevelBar) getComponents().get(i);

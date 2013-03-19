@@ -23,9 +23,9 @@ package org.griphyn.vdl.karajan.monitor;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 
 public interface SystemStateListener {
-	public static final int ITEM_ADDED = 0;
-	public static final int ITEM_REMOVED = 1;
-	public static final int ITEM_UPDATED = 2;
+	public enum UpdateType {
+		ITEM_ADDED, ITEM_REMOVED, ITEM_UPDATED;
+	}
 	
-	void itemUpdated(int updateType, StatefulItem item);
+	void itemUpdated(UpdateType updateType, StatefulItem item);
 }

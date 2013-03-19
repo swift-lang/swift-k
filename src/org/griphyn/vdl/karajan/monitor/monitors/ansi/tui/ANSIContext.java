@@ -193,7 +193,9 @@ public class ANSIContext {
             int[] sz = new int[2];
             sz[0] = ((Integer) nums.get(1)).intValue();
             sz[1] = ((Integer) nums.get(0)).intValue();
-            logger.info("Terminal size is " + sz[0] + "x" + sz[1]);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Terminal size is " + sz[0] + "x" + sz[1]);
+            }
             return sz;
         }
         catch (Exception e) {

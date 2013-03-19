@@ -83,7 +83,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_LOGFILE = "logfile";
     public static final String ARG_CDMFILE = "cdm.file";
     public static final String ARG_RUNID = "runid";
-    public static final String ARG_TUI = "tui";
+    public static final String ARG_UI = "ui";
     public static final String ARG_RECOMPILE = "recompile";
     public static final String ARG_REDUCED_LOGGING = "reduced.logging";
     public static final String ARG_MINIMAL_LOGGING = "minimal.logging";
@@ -233,7 +233,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         else {
             logger.info("Swift finished with no errors");
         }
-        if (ap.isPresent(ARG_TUI)) {
+        if (ma != null) {
             ma.close();
         }
         System.exit(runerror ? 2 : 0);
@@ -505,7 +505,16 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 ARG_RUNID,
                 "Specifies the run identifier. This must be unique for every invocation of a workflow and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier.",
                 "string", ArgumentParser.OPTIONAL);
-        ap.addFlag(ARG_TUI);
+        ap.addOption(
+            ARG_UI, 
+            "Indicates how swift should display run-time information. The following are valid values:" +
+            "\n\t'summary' (default) - causesSswift to regularly print a count of jobs for each state that a job can be in" +
+            "\n\t'text' - regularly prints a more detailed table with Swift run-time information" +
+            "\n\t'TUI' - displays Swift run-time information using an interactive text user interface." +
+            " The terminal must standard ANSI/VT100 escape sequences. If a port is specified," +
+            " the interface will also be available via telnet at the specified port." +
+            "\n\t'http' - enables an http server allowing access to swift run-time information using a web browser",
+            "<summary|text|TUI[:port]|http[:[password@]port]>", ArgumentParser.OPTIONAL);
         ap.addFlag(ARG_REDUCED_LOGGING, "Makes logging more terse by disabling provenance " +
         		"information and low-level task messages");
         ap.addFlag(ARG_MINIMAL_LOGGING, "Makes logging much more terse: " +
@@ -566,8 +575,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ca.activateOptions();
         }
         Logger.getLogger(Log.class).setLevel(Level.INFO);
-        if (ap.isPresent(ARG_TUI)) {
-            ma = new MonitorAppender(projectName);
+        if (ap.isPresent(ARG_UI) && !"summary".equals(ap.getStringValue(ARG_UI))) {
+            ma = new MonitorAppender(projectName, ap.getStringValue(ARG_UI));
             Logger.getRootLogger().addAppender(ma);
             Logger.getLogger(Log.class).setLevel(Level.DEBUG);
             Logger.getLogger(AbstractGridNode.class).setLevel(Level.DEBUG);

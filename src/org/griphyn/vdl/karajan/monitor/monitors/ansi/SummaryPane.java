@@ -18,8 +18,9 @@
 package org.griphyn.vdl.karajan.monitor.monitors.ansi;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Map;
-import java.util.TimerTask;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
@@ -29,6 +30,7 @@ import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.ANSIContext;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Container;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Dialog;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Label;
+import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.LevelBar;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.LevelBars;
 
 public class SummaryPane extends Container {
@@ -38,19 +40,23 @@ public class SummaryPane extends Container {
             "Stage in", "Submitting", "Submitted", "Active", "Stage out",
             "Failed", "Replicating", "Finished successfully" };
     
-    private Label[] labels;
     private LevelBars bars;
+    private LevelBar memory;
+    private Label memlabel;
 
     public SummaryPane(SystemState state) {
         this.state = state;
         bars = new LevelBars(STATES.length);
-        bars.setLocation(34, 2);
+        bars.setLocation(26, 2);
         add(bars);
-        labels = new Label[STATES.length];
         for (int i = 0; i < STATES.length; i++) {
             addLabel(STATES[i] + ": ", 2, 2 + i, 24);
-            labels[i] = addLabel("0", 25, 2 + i, 8);
         }
+        
+        memlabel = addLabel("Heap: ", 2, 4 + STATES.length, 24);
+        memory = new LevelBar();
+        memory.setLocation(26, 4 + STATES.length);
+        add(memory);
 
         GlobalTimer.getTimer().schedule(new SafeTimerTask(getScreen()) {
             public void runTask() {
@@ -67,19 +73,54 @@ public class SummaryPane extends Container {
                 for (int i = 0; i < STATES.length; i++) {
                     Integer v = counts.get(STATES[i]);
                     if (v != null) {
-                        labels[i].setText(v.toString());
                         bars.setValue(i, v);
+                        bars.setText(i, v.toString());
                     }
                     else {
-                        labels[i].setText("0");
                         bars.setValue(i, 0);
+                        bars.setText(i, "0");
                     }
                 }
             }
+            // mem
+            Runtime r = Runtime.getRuntime();
+            long heapMax = r.maxMemory();
+            long heapCrt = r.totalMemory() - r.freeMemory();
+            double fraction = (double) heapCrt / heapMax;
+            memory.setValue((float) fraction);
+            memory.setText(formatMemory(heapCrt) + " / " + formatMemory(heapMax));
             redraw();
         }
         catch (Exception e) {
             Dialog.displaySimpleDialog(getScreen(), "Error", e.toString(), new String[] {"Close"});
+        }
+    }
+    
+    private static final NumberFormat NF = new DecimalFormat("###.##");
+
+    private String formatMemory(long v) {
+        int l = 1;
+        while (v > 512 * 1024) {
+            v = v / 1024;
+            l++;
+        }
+        return NF.format(v / 1024.0) + unit(l);
+    }
+
+    private String unit(int l) {
+        switch(l) {
+            case 0:
+                return "b";
+            case 1:
+                return "Kb";
+            case 2:
+                return "Mb";
+            case 3:
+                return "Gb";
+            case 4:
+                return "Tb";
+            default:
+                return "?";
         }
     }
 
@@ -99,7 +140,8 @@ public class SummaryPane extends Container {
     }
 
     protected void validate() {
-        bars.setSize(width - 35, STATES.length);
+        bars.setSize(width - 27, STATES.length);
+        memory.setSize(width - 27, 1);
         super.validate();
     }    
 }

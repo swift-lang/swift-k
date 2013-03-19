@@ -30,8 +30,6 @@ import k.rt.Stack;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 
-import com.sun.org.apache.xpath.internal.VariableStack;
-
 public class SystemState {
 	private Map<StatefulItemClass, StatefulItemClassSet<? extends StatefulItem>> classes;
     private Set<SystemStateListener> listeners;
@@ -50,7 +48,7 @@ public class SystemState {
 
 	public void addItem(StatefulItem item) {
 		getItemClassSet(item.getItemClass()).add(item);
-        notifyListeners(SystemStateListener.ITEM_ADDED, item);
+        notifyListeners(SystemStateListener.UpdateType.ITEM_ADDED, item);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -68,7 +66,7 @@ public class SystemState {
 
 	public void removeItem(StatefulItem item) {
 		getItemClassSet(item.getItemClass()).remove(item);
-        notifyListeners(SystemStateListener.ITEM_REMOVED, item);
+        notifyListeners(SystemStateListener.UpdateType.ITEM_REMOVED, item);
 	}
 
 	public void setParent(StatefulItem item, StatefulItem parent) {
@@ -84,10 +82,10 @@ public class SystemState {
 	}
 
 	public void itemUpdated(StatefulItem item) {
-		notifyListeners(SystemStateListener.ITEM_UPDATED, item);
+		notifyListeners(SystemStateListener.UpdateType.ITEM_UPDATED, item);
 	}
     
-    protected void notifyListeners(int updateType, StatefulItem item) {
+    protected void notifyListeners(SystemStateListener.UpdateType updateType, StatefulItem item) {
         for (SystemStateListener l : listeners) {
             l.itemUpdated(updateType, item);
         }

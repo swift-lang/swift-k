@@ -21,10 +21,13 @@ import java.io.IOException;
 
 public class LevelBar extends Component {
     private float value;
+    private String text;
+    private int textColor;
     
     public LevelBar() {
         bgColor = ANSI.BLACK;
         fgColor = ANSI.RED;
+        textColor = ANSI.WHITE;
     }
 
     public float getValue() {
@@ -36,11 +39,59 @@ public class LevelBar extends Component {
     }
 
     protected void draw(ANSIContext context) throws IOException {
+        if (text == null) {
+            drawWithoutText(context);
+        }
+        else {
+            drawWithText(context);
+        }
+    }
+
+    private void drawWithoutText(ANSIContext context) throws IOException {
         context.moveTo(sx, sy);
         context.bgColor(fgColor);
         int c = (int) (value * width);
         context.spaces(c);
         context.bgColor(bgColor);
         context.spaces(width - c);
+    }
+    
+    private void drawWithText(ANSIContext context) throws IOException {
+        int textPos = (width - text.length()) / 2;
+        StringBuilder sb = new StringBuilder();
+        spaces(sb, textPos);
+        sb.append(text);
+        spaces(sb, width - textPos - text.length());
+        String s = sb.toString();
+        
+        context.moveTo(sx, sy);
+        context.bgColor(fgColor);
+        context.fgColor(textColor);
+        int c = (int) (value * width);
+        context.text(s.substring(0, c));
+        context.bgColor(bgColor);
+        context.text(s.substring(c));
+    }
+    
+     private void spaces(StringBuilder sb, int count) {
+        for(int i = 0; i < count; i++) {
+            sb.append(' ');
+        }
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public int getTextColor() {
+        return textColor;
+    }
+
+    public void setTextColor(int textColor) {
+        this.textColor = textColor;
     }
 }

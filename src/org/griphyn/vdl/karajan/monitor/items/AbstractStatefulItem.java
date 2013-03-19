@@ -26,7 +26,7 @@ import java.util.Set;
 
 public abstract class AbstractStatefulItem implements StatefulItem {
 	private StatefulItem parent;
-	private Set children;
+	private Set<StatefulItem> children;
 	private final String id;
 
 	public AbstractStatefulItem(String id) {
@@ -39,7 +39,7 @@ public abstract class AbstractStatefulItem implements StatefulItem {
 	public void addChild(StatefulItem child) {
 		synchronized (this) {
 			if (children == null) {
-				children = new HashSet();
+				children = new HashSet<StatefulItem>();
 			}
 		}
 		synchronized (children) {
@@ -47,7 +47,7 @@ public abstract class AbstractStatefulItem implements StatefulItem {
 		}
 	}
 
-	public Collection getChildren() {
+	public Collection<StatefulItem> getChildren() {
 		return children;
 	}
 

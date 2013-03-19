@@ -24,8 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.griphyn.vdl.karajan.lib.RuntimeStats;
-import org.griphyn.vdl.karajan.lib.RuntimeStats.ProgressTicker;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 
 public class SummaryItem extends AbstractStatefulItem {
