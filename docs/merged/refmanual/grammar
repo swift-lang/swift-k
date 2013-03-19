@@ -1,6 +1,7 @@
 == Swift Language Grammar
 
 The specification for a SwiftScript program
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 program:
     (namespace_dec[code])*   
@@ -11,6 +12,7 @@ program:
 ----
 
 Namespace Declaration
+~~~~~~~~~~~~~~~~~~~~~~
 ----
 namespace_dec [StringTemplate code]
 {StringTemplate ns=template("nsDef");}:
@@ -24,6 +26,7 @@ namespace_dec [StringTemplate code]
 ----
 
 The import statement
+~~~~~~~~~~~~~~~~~~~~
 ----
 importStatement [StringTemplate code] :
 "import" name:STRING_LITERAL SEMI {
@@ -35,6 +38,7 @@ importStatement [StringTemplate code] :
 ----
 
 Type Declaration
+~~~~~~~~~~~~~~~~~
 ----
 typedecl [StringTemplate code]
 {StringTemplate r=template("typeDef");
@@ -57,53 +61,44 @@ typedecl [StringTemplate code]
 ----
 
 Structure declaration
+~~~~~~~~~~~~~~~~~~~~~~
 ----
 structdecl [StringTemplate code]
 {StringTemplate e=null, e1=null, t=null; String thisType = null;} :
-    LCURLY
-    (t=type id:ID
-    {
-    thisType = (String) t.getAttribute("name");
-    e=template("memberdefinition");
-    e.setAttribute("name", id.getText());
-    }
-    (LBRACK RBRACK { thisType = thisType + "[]"; })*
-    {
-      StringTemplate thisTypeTemplate;
-      thisTypeTemplate=template("type");
-      thisTypeTemplate.setAttribute("name", thisType);
-      e.setAttribute("type", thisTypeTemplate);
-      code.setAttribute("members", e);
-    }
-    (
-        COMMA
-        id1:ID
-        {
+    LCURLY (t=type id:ID {
         thisType = (String) t.getAttribute("name");
-        e1=template("memberdefinition");
-        e1.setAttribute("name", id1.getText());
+        e=template("memberdefinition");
+        e.setAttribute("name", id.getText());
+    }
+    (LBRACK RBRACK { thisType = thisType + "[]"; })* {
+        StringTemplate thisTypeTemplate;
+        thisTypeTemplate=template("type");
+        thisTypeTemplate.setAttribute("name", thisType);
+        e.setAttribute("type", thisTypeTemplate);
+        code.setAttribute("members", e); 
+    }
+    ( COMMA
+        id1:ID {
+            thisType = (String) t.getAttribute("name");
+            e1=template("memberdefinition");
+            e1.setAttribute("name", id1.getText());
         }
-        (LBRACK RBRACK { thisType = thisType + "[]"; })*
-        {
-           StringTemplate thisTypeTemplate;
-           thisTypeTemplate=template("type");
-           thisTypeTemplate.setAttribute("name", thisType);
-           e1.setAttribute("type", thisTypeTemplate);
-           code.setAttribute("members", e1);
-         }
-    )*
-    SEMI
-    )*
-    RCURLY
-    (options {
+        (LBRACK RBRACK { thisType = thisType + "[]"; })* {
+            StringTemplate thisTypeTemplate;
+            thisTypeTemplate=template("type");
+            thisTypeTemplate.setAttribute("name", thisType);
+            e1.setAttribute("type", thisTypeTemplate);
+            code.setAttribute("members", e1);
+         })*
+    SEMI)*
+    RCURLY (options {
        warnWhenFollowAmbig = false;
-     }
-    :SEMI
-    )?
+     } :SEMI)?
     ;
 ----
 
 Top level statement
+~~~~~~~~~~~~~~~~~~~
 ----
 topLevelStatement[StringTemplate code]
 {StringTemplate d=null; } :
@@ -152,7 +147,8 @@ topLevelStatement[StringTemplate code]
 ----
 
 
-Predicate Declaration
+Predict Declaration
+~~~~~~~~~~~~~~~~~~~
 ----
 predictDeclaration {StringTemplate x,y;} : ("global") | (x=type y=declarator) ;
 
@@ -168,6 +164,7 @@ declaration [StringTemplate code]
 ----
 
 Declaration part
+~~~~~~~~~~~~~~~~
 ----
 declpart [StringTemplate code, StringTemplate t, boolean isGlobal]
     {
@@ -217,6 +214,7 @@ declpart [StringTemplate code, StringTemplate t, boolean isGlobal]
 ----
 
 Variable Declarator
+~~~~~~~~~~~~~~~~~~~
 ----
 variableDecl [StringTemplate code, StringTemplate t, StringTemplate d, StringTemplate v1]
 {StringTemplate i1=null, m=null;
@@ -237,6 +235,7 @@ variableDecl [StringTemplate code, StringTemplate t, StringTemplate d, StringTem
 ----
 
 Declarator
+~~~~~~~~~~
 ----
 declarator returns [StringTemplate code=null] :
 id:ID {code=text(id.getText());}
@@ -245,6 +244,7 @@ id:ID {code=text(id.getText());}
 
 
 Variable initializer
+~~~~~~~~~~~~~~~~~~~~
 ----
 varInitializer returns [StringTemplate code=null] :
 ASSIGN code=expression
@@ -290,6 +290,7 @@ LBRACK
 ----
 
 Mapping Declaration
+~~~~~~~~~~~~~~~~~~~
 ----
 mappingdecl returns [StringTemplate code=template("mapping")]
 {StringTemplate p=null, d=null;}
@@ -299,6 +300,7 @@ mappingdecl returns [StringTemplate code=template("mapping")]
 ----
 
 Mapping parameters declaration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 mapparamdecl [StringTemplate code]
 {StringTemplate p=null;} :
@@ -316,6 +318,9 @@ n=declarator ASSIGN v=mappingExpr
     }
     ;
 ----
+
+Predict Procedure Declaration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This predicts in two different ways.
 The first choice is procedures with no return parameters. For these,
@@ -346,6 +351,7 @@ predictProceduredecl
 ----
 
 Procedure declaration
+~~~~~~~~~~~~~~~~~~~~~
 ----
 proceduredecl returns [StringTemplate code=template("function")]
 {StringTemplate f=null;} :
@@ -389,6 +395,7 @@ proceduredecl returns [StringTemplate code=template("function")]
 ----
 
 App procedure declaration
+~~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 appproceduredecl returns [StringTemplate code=template("function")]
 {StringTemplate f=null;
@@ -435,6 +442,7 @@ appproceduredecl returns [StringTemplate code=template("function")]
 ----
 
 App profile
+~~~~~~~~~~~
 ----
 appProfile [StringTemplate code]
 {   StringTemplate p=null;
@@ -482,6 +490,7 @@ formalParameter returns [StringTemplate code=template("parameter")]
 ----
 
 Type declaration
+~~~~~~~~~~~~~~~~
 ----
 type returns [ StringTemplate code = null ]
 	{ StringBuilder buf = new StringBuilder(); } :
@@ -496,6 +505,7 @@ type returns [ StringTemplate code = null ]
 ----
 
 Type Subscript
+~~~~~~~~~~~~~~
 ----
 typeSubscript[StringBuilder buf] :
 	LBRACK { buf.append('['); }
@@ -505,6 +515,7 @@ typeSubscript[StringBuilder buf] :
 ----
 
 Compound Statement
+~~~~~~~~~~~~~~~~~~
 ----
 compoundStat[StringTemplate code]
     :   LCURLY
@@ -514,6 +525,7 @@ compoundStat[StringTemplate code]
 ----
 
 Compound body
+~~~~~~~~~~~~~
 ----
 compoundBody[StringTemplate code]
     :    ( innerStatement[code] )*
@@ -537,6 +549,7 @@ innerStatement[StringTemplate code]
 ----
 
 Case Inner Statement
+~~~~~~~~~~~~~~~~~~~~
 ----
 caseInnerStatement [StringTemplate statements]
 { StringTemplate code = null; }
@@ -562,7 +575,9 @@ ll1statement returns [StringTemplate code=null]
     | code=iterateStat
     ;
 ----
+
 If statement
+~~~~~~~~~~~~
 ----
 ifStat returns [StringTemplate code=template("if")]
 {
@@ -585,6 +600,7 @@ ifStat returns [StringTemplate code=template("if")]
 ----
 
 Foreach statement
+~~~~~~~~~~~~~~~~~
 ----
 foreachStat returns [StringTemplate code=template("foreach")] {
   StringTemplate ds=null;
@@ -602,6 +618,7 @@ foreachStat returns [StringTemplate code=template("foreach")] {
 ----
 
 Iterate statement
+~~~~~~~~~~~~~~~~~
 ----
 iterateStat returns [StringTemplate code=template("iterate")]
 {
@@ -619,6 +636,7 @@ iterateStat returns [StringTemplate code=template("iterate")]
 ----
 
 Switch statement
+~~~~~~~~~~~~~~~~
 
 ----
 switchStat returns [StringTemplate code=template("switch")]
@@ -634,6 +652,7 @@ switchStat returns [StringTemplate code=template("switch")]
 ----
 
 Cases Group
+~~~~~~~~~~~
 ----
 casesGroup returns [StringTemplate code=template("case")]
 {StringTemplate b=null;}
@@ -661,6 +680,7 @@ aCase [StringTemplate code]
 ----
 
 Case Slist
+~~~~~~~~~~
 ----
 caseSList [StringTemplate code]
 {StringTemplate s=null;}
@@ -669,6 +689,7 @@ caseSList [StringTemplate code]
 ----
 
 Predict assignment statement
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 predictAssignStat
 {StringTemplate x=null;}
@@ -676,6 +697,7 @@ predictAssignStat
 ----
 
 Predict append statement
+~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 predictAppendStat
 {StringTemplate x=null;}
@@ -683,6 +705,7 @@ predictAppendStat
 ----
 
 Assignment statement
+~~~~~~~~~~~~~~~~~~~~
 ----
 assignStat returns [StringTemplate code=null]
 {StringTemplate id=null;}
@@ -705,6 +728,7 @@ assignStat returns [StringTemplate code=null]
 ----
 
 Append statement
+~~~~~~~~~~~~~~~~
 ----
 appendStat returns [ StringTemplate code = null ]
 	{ StringTemplate id=null; }
@@ -726,6 +750,7 @@ appendStat returns [ StringTemplate code = null ]
 ----
 
 Array append statement
+~~~~~~~~~~~~~~~~~~~~~~
 ----
 arrayAppend returns [ StringTemplate code = null ]
 	{ StringTemplate a = null, e = null, id = null; }
@@ -738,6 +763,7 @@ arrayAppend returns [ StringTemplate code = null ]
 ----
 
 Variable Assign statement
+~~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 variableAssign returns [StringTemplate code=null]
 {StringTemplate a=null, e=null, id=null;}
@@ -750,6 +776,7 @@ variableAssign returns [StringTemplate code=null]
 ----
 
 Procedure call
+~~~~~~~~~~~~~~
 ----
 procedurecallCode returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
@@ -759,6 +786,7 @@ procedurecallCode returns [StringTemplate code=template("call")]
 ----
 
 procedure invocation
+~~~~~~~~~~~~~~~~~~~~
 ----
 procedureInvocation [StringTemplate code]
     :
@@ -768,6 +796,7 @@ procedureInvocation [StringTemplate code]
 ----
 
 procedure invocation without semicolon
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 procedureInvocationWithoutSemi [StringTemplate code]
 {StringTemplate f=null;}
@@ -787,6 +816,7 @@ procedureInvocationWithoutSemi [StringTemplate code]
 ----
 
 procedure invocation expression
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 procedureInvocationExpr [StringTemplate code]
 {StringTemplate f=null;}
@@ -807,6 +837,7 @@ procedureInvocationExpr [StringTemplate code]
 ----
 
 procedure call expression
+~~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 procedureCallExpr returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
@@ -815,7 +846,8 @@ procedureCallExpr returns [StringTemplate code=template("call")]
     ;
 ----
 
-
+predict procedure call
+~~~~~~~~~~~~~~~~~~~~~~
 ----
 predictProcedurecallDecl : ASSIGN ID LPAREN ;
 
@@ -836,6 +868,7 @@ container.setAttribute("statements",code);
         procedureInvocationWithoutSemi[code]
     ;
 ----
+
 
 ----
 procedurecallStatAssignManyReturnParam [StringTemplate s]
@@ -913,6 +946,8 @@ actualParameter returns [StringTemplate code=template("actualParam")]
     ;
 ----
 
+Atomic Procedure Body
+~~~~~~~~~~~~~~~~~~~~~
 ----
 atomicBody [StringTemplate code]
 {StringTemplate app=null, svc=null;}
@@ -935,6 +970,8 @@ appSpec returns [StringTemplate code=template("app")]
     ;
 ----
 
+App Args
+~~~~~~~~
 ----
 appArg [StringTemplate code]
 {StringTemplate arg=null;}
@@ -945,6 +982,8 @@ appArg [StringTemplate code]
     ;
 ----
 
+Mapping Expression
+~~~~~~~~~~~~~~~~~~
 ----
 mappingExpr returns [StringTemplate code=null]
 {StringTemplate e=null;}
@@ -957,6 +996,8 @@ mappingExpr returns [StringTemplate code=null]
     ;
 ----
 
+Function Invocation
+~~~~~~~~~~~~~~~~~~~
 ----
 functionInvocation returns [StringTemplate code=template("functionInvocation")]
 {StringTemplate func=null, e=null;}
@@ -995,6 +1036,8 @@ functionInvocationArgument [StringTemplate code]
      ;
 ----
 
+Standard IO Arg
+~~~~~~~~~~~~~~~
 ----
 stdioArg [StringTemplate code]
 {StringTemplate t=null,m=null; String name=null;}
@@ -1013,6 +1056,8 @@ stdioArg [StringTemplate code]
     ;
 ----
 
+Expression
+~~~~~~~~~~
 ----
 expression returns [StringTemplate code=null]
     :   code=orExpr
@@ -1070,6 +1115,8 @@ Token op=null;
     ;
 ----
 
+Conditional Expression
+~~~~~~~~~~~~~~~~~~~~~~
 ----
 condExpr returns [StringTemplate code=null] {
 StringTemplate a,b=null;
@@ -1177,9 +1224,12 @@ predictProcedureCallExpr
     : ID LPAREN ;
 
 ----
+
+Identifier
+~~~~~~~~~~
+
 // TODO - redo identifier parsing to fit in with the XML style
 // that this patch introduces
-
 // specifically, need the base ID to be distinct from all the
 // other IDs
 
@@ -1199,7 +1249,8 @@ identifier returns [StringTemplate code=null]
     ;
 ----
 
-
+Array Index
+~~~~~~~~~~~
 ----
 arrayIndex returns [StringTemplate code=null]
 {StringTemplate e=null;}
@@ -1231,6 +1282,8 @@ memberName returns [StringTemplate code=null]
     ;
 ----
 
+Constant
+~~~~~~~~
 ----
 constant returns [StringTemplate code=null]
     : i:INT_LITERAL
@@ -1264,6 +1317,8 @@ constant returns [StringTemplate code=null]
 
 // TODO ^^^^^^ array literal -- rename and rearrange the methods
 
+Literal Symbols
+~~~~~~~~~~~~~~~
 
 ----
 AT        :   "@" ;
