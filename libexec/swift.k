@@ -242,6 +242,7 @@ namespace(swift) {
 									}
 								}
 							}
+							setDatasetValues(stageout)
 							mark(restartout, err=false, mapping=false)
 							log(LOG:INFO, "END_SUCCESS thread=", currentThread(), " tr={tr}")
 							setProgress(progress, "Finished successfully")

@@ -238,18 +238,17 @@ public class SetFieldValue extends SwiftFunction {
                 fname = fni.next();
                 se.value(fname);
             }
-            Path fpath = Path.EMPTY_PATH.addFirst(fname);
             try {
-                DSHandle dstf = dest.getField(fpath);
+                DSHandle dstf = dest.getField(fname);
                 try {
-                    DSHandle srcf = source.getField(fpath);
+                    DSHandle srcf = source.getField(fname);
                     deepCopy(dstf, srcf, state, level + 1);
                 }
-                catch (InvalidPathException e) {
+                catch (NoSuchFieldException e) {
                     // do nothing. It's an unused field in the source.
                 }
             }
-            catch (InvalidPathException e) {
+            catch (NoSuchFieldException e) {
                 throw new ExecutionException("Internal type inconsistency detected. " + 
                     dest + " claims not to have a " + fname + " field");
             }
@@ -330,13 +329,12 @@ public class SetFieldValue extends SwiftFunction {
             }
             Comparable<?> lhs = (Comparable<?>) pair.get(0);
             DSHandle rhs = (DSHandle) pair.get(1);
-            Path memberPath = Path.EMPTY_PATH.addLast(lhs, true);
             
             DSHandle field;
             try {
-                field = dest.getField(memberPath);
+                field = dest.getField(lhs);
             }
-            catch (InvalidPathException ipe) {
+            catch (NoSuchFieldException ipe) {
                 throw new ExecutionException("Could not get destination field",ipe);
             }
             deepCopy(field, rhs, state, level + 1);

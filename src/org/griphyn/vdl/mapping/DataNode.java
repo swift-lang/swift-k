@@ -25,9 +25,9 @@ import org.griphyn.vdl.type.Field;
 
 public class DataNode extends AbstractDataNode {
 	private DSHandle root;
-	private DSHandle parent;
+	private AbstractDataNode parent;
 	
-	protected DataNode(Field field, DSHandle root, DSHandle parent) {
+	protected DataNode(Field field, DSHandle root, AbstractDataNode parent) {
 		super(field);
 		if (parent != null && field.getId() == null) {
 		    throw new IllegalArgumentException("Internal error: field id is null");
@@ -44,7 +44,11 @@ public class DataNode extends AbstractDataNode {
 		return parent;
 	}
 	
-	public void setParent(DSHandle parent) {
+	public AbstractDataNode getParentNode() {
+        return parent;
+    }
+	
+	public void setParent(AbstractDataNode parent) {
 		this.parent = parent;
 	}
 

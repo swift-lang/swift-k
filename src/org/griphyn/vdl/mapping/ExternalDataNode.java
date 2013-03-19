@@ -113,6 +113,11 @@ public class ExternalDataNode extends AbstractDataNode {
 	    return null;
 	}
 
+    @Override
+    protected AbstractDataNode getParentNode() {
+        return null;
+    }
+
     public String getParam(MappingParam p) {
         if (params == null) {
             return null;

@@ -56,7 +56,7 @@ public class OpenArrayEntries implements Iterable<List<?>> {
                 synchronized(source) {
                     if (index < keyList.size()) {
                         Comparable<?> key = keyList.get(index++);
-                        return new Pair(key, array.get(key));
+                        return new Pair<Object>(key, array.get(key));
                     }
                     else {
                         if (source.isClosed()) {

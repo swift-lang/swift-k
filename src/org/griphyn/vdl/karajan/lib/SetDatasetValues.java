@@ -15,33 +15,43 @@
  */
 
 
+/*
+ * Created on Jul 18, 2010
+ */
 package org.griphyn.vdl.karajan.lib;
+
+import java.util.Collection;
+import java.util.List;
 
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
+import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.Path;
 
-public class AppendArray extends SetFieldValue {
+public class SetDatasetValues extends SwiftFunction {
+    private ArgRef<List<List<Object>>> stageouts;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("var", "value"));
+        return new Signature(params("stageouts"));
     }
 
     @Override
     public Object function(Stack stack) {
-        DSHandle var = this.var.getValue(stack);
-        AbstractDataNode value = this.value.getValue(stack);
-        // while there isn't a way to avoid conflicts between auto generated indices
-        // and a user manually using the same index, adding a "#" may reduce
-        // the incidence of problems
-       try {
-            deepCopy(var.getField(getThreadPrefix()), value, stack);
+        Collection<List<Object>> files = this.stageouts.getValue(stack);
+        try {
+            for (List<Object> pv : files) {
+                Path p = parsePath(pv.get(0));
+                DSHandle handle = (DSHandle) pv.get(1);
+                DSHandle leaf = handle.getField(p);
+                leaf.setValue(AbstractDataNode.FILE_VALUE);
+            }
         }
-        catch (NoSuchFieldException e) {
+        catch (Exception e) {
             throw new ExecutionException(this, e);
         }
         return null;

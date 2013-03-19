@@ -38,8 +38,6 @@ import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -140,13 +138,13 @@ public class ReadData extends SwiftFunction {
 		String line = br.readLine();
 		try {
 			while (line != null) {
-				DSHandle child = dest.getField(Path.EMPTY_PATH.addLast(index, true));
+				DSHandle child = dest.getField(index);
 				setValue(child, line);
 				line = br.readLine();
 				index++;
 			}
 		}
-		catch (InvalidPathException e) {
+		catch (NoSuchFieldException e) {
 			throw new ExecutionException(this, e);
 		}
 	}
@@ -160,14 +158,14 @@ public class ReadData extends SwiftFunction {
 			while (line != null) {
 				line = line.trim();
 				if (!line.equals("")) {
-					DSHandle child = dest.getField(Path.EMPTY_PATH.addLast(index, true));
+					DSHandle child = dest.getField(index);
 					readStruct(child, line, header);
 					index++;
 				}
 				line = br.readLine();
 			}
 		}
-		catch (InvalidPathException e) {
+		catch (NoSuchFieldException e) {
 			throw new ExecutionException(this, e);
 		}
 	}
@@ -205,12 +203,12 @@ public class ReadData extends SwiftFunction {
 			else {
 
 				for (int i = 0; i < cols.length; i++) {
-					DSHandle child = dest.getField(Path.EMPTY_PATH.addLast(header[i]));
+					DSHandle child = dest.getField(header[i]);
 					setValue(child, cols[i]);
 				}
 			}
 		}
-		catch (InvalidPathException e) {
+		catch (NoSuchFieldException e) {
 			throw new ExecutionException(this, e);
 		}
 	}

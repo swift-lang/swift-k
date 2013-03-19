@@ -36,6 +36,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.Loader;
+import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.util.VDL2Config;
@@ -43,6 +44,7 @@ import org.griphyn.vdl.util.VDL2Config;
 
 
 public abstract class AbstractDataNode implements DSHandle, FutureValue {
+    public static final Object FILE_VALUE = new Object();
 
     static final String DATASET_URI_PREFIX = "dataset:";
 
@@ -132,6 +134,8 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     protected Field getField() {
         return field;
     }
+    
+    protected abstract AbstractDataNode getParentNode();
 
     /**
      * create a String representation of this node. If the node has a value,
@@ -311,8 +315,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         handles.put(id, handle);
     }
 
-    protected synchronized DSHandle getField(Comparable<?> key)
-        throws NoSuchFieldException {
+    public synchronized DSHandle getField(Comparable<?> key) throws NoSuchFieldException {
         DSHandle handle = handles.get(key);
         if (handle == null) {
             if (closed) {
@@ -327,8 +330,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         return handles.isEmpty();
     }
 
-    public DSHandle createField(Comparable<?> key)
-    throws NoSuchFieldException {
+    public DSHandle createField(Comparable<?> key) throws NoSuchFieldException {
         if (closed) {
             throw new RuntimeException("Cannot write to closed handle: " + this + " (" + key + ")");
         }
@@ -336,6 +338,19 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         return addHandle(key, newNode(getChildField(key)));
     }
     
+    @Override
+    public DSHandle createField(Path path) throws InvalidPathException {
+        if (path.size() != 1) {
+            throw new InvalidPathException("Expected a path of size 1: " + path);
+        }
+        try {
+            return createField(path.getFirst());
+        }
+        catch (NoSuchFieldException e) {
+            throw new InvalidPathException("Invalid path (" + path + ") for " + this);
+        }
+    }
+
     protected synchronized DSHandle addHandle(Comparable<?> id, DSHandle handle) {
         Object o = handles.put(id, handle);
         if (o != null) {
@@ -384,6 +399,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     }
 
     public Object getValue() {
+        checkNoValue();
         checkDataException();
         if (field.getType().isArray()) {
             return handles;
@@ -637,6 +653,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             if (logger.isDebugEnabled()) {
                 logger.debug("Do not need to wait for " + this);
             }
+            checkNoValue();
             if (value instanceof RuntimeException) {
                 throw (RuntimeException) value;
             }
@@ -655,18 +672,36 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             if (logger.isDebugEnabled()) {
                 logger.debug("Do not need to wait for " + this);
             }
+            checkNoValue();
             if (value instanceof RuntimeException) {
                 throw (RuntimeException) value;
             }
         }
     }
     
+    protected void checkNoValue() {
+        if (value == null) {
+            if (getType().isComposite()) {
+                // composite types (arrays, structs) don't usually have a value
+                return;
+            }
+            AbstractDataNode parent = getParentNode();
+            if (parent != null && parent.getType().isArray()) {
+                throw new IndexOutOfBoundsException("Invalid index [" + field.getId() + "] for " + parent.getDisplayableName());
+            }
+            else {
+                throw new RuntimeException(getDisplayableName() + " has no value");
+            }
+        }
+    }
+
     public void addListener(DSHandleListener listener) {
         throw new UnsupportedOperationException();
     }
     
     public void addListener(FutureListener l) {
     	boolean closed;
+    	WaitingThreadsMonitor.addThread(l, this);
     	synchronized(this) {
         	if (this.listeners == null) {
         		this.listeners = new ArrayList<FutureListener>();
@@ -688,6 +723,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     	if (l != null) {
     		for (FutureListener ll : l) {
     			ll.futureUpdated(this);
+    			WaitingThreadsMonitor.removeThread(ll);
     		}
     	}
     }

@@ -87,12 +87,10 @@ public class SliceArray extends SwiftFunction {
     		for (List<?> pair : s) {
     			Object index = pair.get(0);
     			DSHandle sourceElement = (DSHandle) pair.get(1);
-    
-    			Path p = Path.EMPTY_PATH.addLast((Comparable<?>) index, true);
-    
+        
     			DSHandle n = sourceElement.getField(cutPath);
     
-    			destinationArray.getField(p).set(n);
+    			destinationArray.getField((Comparable<?>) index).set(n);
     		}
     
     		// all of the inputs should be closed, so
@@ -124,8 +122,11 @@ public class SliceArray extends SwiftFunction {
 		catch(NoSuchTypeException nste) {
 			throw new ExecutionException("No such type",nste);
 		}
-		catch (InvalidPathException e) {
+		catch (NoSuchFieldException e) {
 			throw new ExecutionException(this, e);
 		}
+		catch (InvalidPathException e) {
+            throw new ExecutionException(this, e);
+        }
 	}
 }

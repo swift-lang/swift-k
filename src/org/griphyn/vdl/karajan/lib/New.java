@@ -43,7 +43,6 @@ import org.griphyn.vdl.mapping.ExternalDataNode;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.OOBYield;
-import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
@@ -177,9 +176,8 @@ public class New extends SwiftFunction {
 							// TODO check type consistency of elements with
 							// the type of the array
 							Object n = i.next();
-							Path p = Path.EMPTY_PATH.addLast(index, true);
 							if (n instanceof DSHandle) {
-								handle.getField(p).set((DSHandle) n);
+								handle.getField(index).set((DSHandle) n);
 							}
 							else {
 								throw new RuntimeException(

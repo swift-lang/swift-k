@@ -41,11 +41,6 @@ public class PartialCloseDataset extends SwiftFunction {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Partially closing " + var);
 		}
-
-		if (var.isClosed()) {
-			logger.debug("variable already closed - skipping partial close processing");
-			return null;
-		}
 		
 		int count = this.count.getValue(stack).intValue();
 		var.updateWriteRefCount(-count);

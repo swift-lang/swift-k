@@ -27,10 +27,11 @@ import java.util.Map;
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.type.Field;
 
-public class ArrayDataNode extends DataNode {
+public class ArrayDataNode extends DataNode { 
+    
 	private List<Comparable<?>> keyList;
 	
-	protected ArrayDataNode(Field field, DSHandle root, DSHandle parent) {
+	protected ArrayDataNode(Field field, DSHandle root, AbstractDataNode parent) {
 		super(field, root, parent);
 	}
 	
@@ -151,4 +152,11 @@ public class ArrayDataNode extends DataNode {
             }
         }
     }
+
+    @Override
+    protected void checkNoValue() {
+        // lack of a value in an array node does not indicate an error
+    }
+    
+    
 }

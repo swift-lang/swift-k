@@ -38,8 +38,6 @@ import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Types;
@@ -295,10 +293,10 @@ public class Misc {
             for (int i = 0; i < split.length; i++) {
                 DSHandle el;
                 try {
-                    el = handle.getField(Path.EMPTY_PATH.addFirst(i, true));
+                    el = handle.getField(i);
                     el.setValue(split[i]);
                 }
-                catch (InvalidPathException e) {
+                catch (NoSuchFieldException e) {
                     throw new ExecutionException(this, e);
                 }
             }

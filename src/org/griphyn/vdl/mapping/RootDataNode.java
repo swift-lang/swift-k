@@ -175,7 +175,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		for (Path p : mapper.existing()) {
             try {
                 DSHandle field = root.getField(p);
-                field.closeShallow();
+                field.setValue(FILE_VALUE);
                 if (tracer.isEnabled()) {
                     tracer.trace(root.getThread(), root.getDeclarationLine(), 
                         root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
@@ -252,7 +252,12 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		return null;
 	}
 
-	public synchronized Mapper getMapper() {
+	@Override
+    protected AbstractDataNode getParentNode() {
+        return null;
+    }
+
+    public synchronized Mapper getMapper() {
 		if (initialized) {
 			return mapper;
 		}

@@ -17,8 +17,6 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Collection;
-
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
@@ -49,19 +47,11 @@ public class GetFieldSubscript extends SwiftFunction {
 		try {
 		    indexh.waitFor();
 		    Object index = indexh.getValue();
-			Path path;
 			if ("*".equals(index)) {
-			    path = Path.CHILDREN;
+			    return var.getFields(Path.CHILDREN);
 			}
 			else {
-				path = Path.EMPTY_PATH.addFirst((Comparable<?>) index, true);
-			}
-			Collection<DSHandle> fields = var.getFields(path);
-			if (fields.size() == 1) {
-				return fields.iterator().next();
-			}
-			else {
-				return fields;
+			    return var.getField(Path.EMPTY_PATH.addFirst((Comparable<?>) index, true));
 			}
 		}
 		catch (OOBYield y) {

@@ -72,6 +72,7 @@ namespace(swift) {
 	export(partialCloseDataset, def("org.griphyn.vdl.karajan.lib.PartialCloseDataset"))
 	export(setWaitCount, def("org.griphyn.vdl.karajan.lib.SetWaitCount"))
 	export(cleanDataset, def("org.griphyn.vdl.karajan.lib.CleanDataset"))
+	export(setDatasetValues, def("org.griphyn.vdl.karajan.lib.SetDatasetValues"))
 	export(range, def("org.griphyn.vdl.karajan.lib.Range"))
 
 	export(isLogged, def("org.griphyn.vdl.karajan.lib.IsLogged"))
