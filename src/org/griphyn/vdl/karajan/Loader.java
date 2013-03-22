@@ -119,7 +119,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 new Monitor().start();
             }
             if (!ap.hasValue(ArgumentParser.DEFAULT)) {
-                error("No SwiftScript program specified");
+                version();
+                error("No Swift script specified");
             }
             project = ap.getStringValue(ArgumentParser.DEFAULT);
         }
