@@ -416,52 +416,6 @@ The following unary operators are defined:
 String concatenation is also performed with +&#43;+ (plus).
 +==+ and +!=+ may also be used on strings.
 
-== Standard Library
-
-=== Output
-
-+trace(anything, anything, ...)+:: Report the value of any variable
-+tracef("anything %format", anything, ...)+:: Report the value of any variable
-
-
-=== String functions
-
-+@strcat(string,string)+: Concatenation
-
-=== System
-
- #include <sys.swift>
-
-+getenv(string) -> string+:: Obtain an environment variable
-
-[[argv]]
-==== Command line
-
-Swift accepts commandline arguments in the form of -var <value>. 
-
-==== Debugging
-
- #include <assert.swift>
-
-+assert(boolean condition, string message)+::
-If condition is false, report +message+ and exit immediately.
-
-=== Files
-
-+filename(file) -> string+::   Obtain the name of a file
-+input_file(string) -> file+:: Obtain a +file+.  At run time, the
-filesystem is checked for the given file name
-+readFile(file) -> string+::   Read file as a string
-+writeFile(string) -> file+::  Write string to file
-+glob(string) -> file[]+:: Perform glob operation, returning files
-that match.  Available glob symbols include:
-+
-* +*+: any character sequence (including the zero-length sequence)
-* +?+: any character
-* +[chars]+: any of the given characters
-* +\x+: character +x+
-* +{a,b,c,...}+ any of +a+, +b+, +c+, etc.
-
 == Defining Apps 
 
 In typical Swift applications, the computationally intensive parts of the
