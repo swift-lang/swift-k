@@ -89,10 +89,8 @@ public class QueuePoller extends AbstractQueuePoller {
 			if (line != null) {
 				String jobid = parseToWhitespace(line, jobIDIndex);
 				String state = parseToWhitespace(line, stateIndex);
-				if (jobid == null || jobid.equals("") || state == null
-						|| state.equals("")) {
-					throw new IOException("Failed to parse bjobs line: "
-							+ line);
+				if (jobid == null || jobid.equals("") || state == null || state.equals("")) {
+                                	continue;
 				}
 				
 				Job job = getJob(jobid);
