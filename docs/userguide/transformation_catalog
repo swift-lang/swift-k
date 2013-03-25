@@ -1,18 +1,19 @@
-The Transformation Catalog - tc.data
-------------------------------------
+The Transformation Catalog - tc
+-------------------------------
 The transformation catalog lists where application executables are
-located on remote sites.
+located on execution sites.
 
 By default, the site catalog is stored in etc/tc.data. This path can
 be overridden with the tc.file configuration property, either in the
 Swift configuration file or on the command line.
 
-The format is one line per executable per site, with fields separated by
-tab or space.
+The format is one line per executable per site, with fields separated by space or tab.
 
 Some example entries:
 ----
-localhost  echo  /bin/echo INSTALLED INTEL32::LINUX  null
+localhost  cat  /bin/cat null null null 
+localhost  vasp  /home/ketan/runvasp.sh null null null
+fusion  echo  /bin/echo INSTALLED INTEL32::LINUX  null
 TGUC touch /usr/bin/touch INSTALLED INTEL32::LINUX GLOBUS::maxwalltime="0:1"
 ----
 
@@ -24,11 +25,11 @@ The site field should correspond to a site name listed in the sites catalog.
 The transformation name should correspond to the transformation name
 used in a Swift script app procedure.
 
-The executable path should specify where the particular executable is
+The executable path should specify where the executable is
 located on that site.
 
 The installation status and platform fields are not used. Set them to
-INSTALLED and INTEL32::LINUX respectively.
+INSTALLED and INTEL32::LINUX respectively. Alternatively, they could be set to null.
 
 The profiles field should be set to null if no profile entries are to
 be specified.
@@ -39,6 +40,7 @@ It is often useful to set environment variables when running an application.
 This can be accomplished using *env* in the profile entry. For example,
 the following application sets an environment variable called R_LIBS to
 /home/user/R_libs.
+
 -----
 localhost R /usr/bin/R INSTALLED INTEL32::LINUX	env::R_LIBS=/home/user/r_libs
 -----

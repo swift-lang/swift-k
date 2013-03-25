@@ -106,6 +106,6 @@ Jobs and Coasters Parameters Equation
 The parameters provided in the coasters specification affect jobs submitted by Swift to the scheduling system.
 
 ----
-Jobs Submitted = slots X node_granularity X jobs_per_node
+Jobs Submitted = slots X jobsPerNode X nodeGranularity X maxNodes
 ----
 

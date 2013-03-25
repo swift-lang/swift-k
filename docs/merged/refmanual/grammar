@@ -394,7 +394,7 @@ proceduredecl returns [StringTemplate code=template("function")]
     ;
 ----
 
-App procedure declaration
+App declaration
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 ----
 appproceduredecl returns [StringTemplate code=template("function")]
