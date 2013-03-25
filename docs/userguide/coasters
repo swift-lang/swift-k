@@ -100,3 +100,12 @@ In order to submit to a specific job schedular queue, the +queue+ parameter of c
 <profile namespace="globus" key="queue">normal</profile>
 ----
 
+Jobs and Coasters Parameters Equation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The parameters provided in the coasters specification affect jobs submitted by Swift to the scheduling system.
+
+----
+Jobs Submitted = slots X node_granularity X jobs_per_node
+----
+

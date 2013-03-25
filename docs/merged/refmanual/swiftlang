@@ -142,9 +142,11 @@ x1, x2 = f(i1, i2);
 
 Following is a list of Swift keywords:
 
-    app type float int boolean string global
-    foreach if else iterate switch case default
-    file while import
+----
+    app type float int boolean string
+    global foreach if else iterate
+    switch case default file while import
+----
 
 == Types
 

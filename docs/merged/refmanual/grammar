@@ -457,10 +457,8 @@ appProfile [StringTemplate code]
     ;
 ----
 
-TODO in here, why do we have an | between LBRACKBRACK and ASSIGN?
-does this mean that we don't have array initialisation in formal
-params? this wouldn't surprise me given the previous treatment
-of arrays. investigate this and fix...
+App Formal parameter
+~~~~~~~~~~~~~~~~~~~~
 
 ----
 formalParameter returns [StringTemplate code=template("parameter")]
@@ -563,7 +561,7 @@ caseInnerStatement [StringTemplate statements]
     ;
 ----
 
-These are the statements that we can predict with ll(1) grammer
+These are the statements that can be predicted with ll(1) grammer
 i.e. with one token of lookahead
 
 ----
@@ -1227,12 +1225,6 @@ predictProcedureCallExpr
 
 Identifier
 ~~~~~~~~~~
-
-// TODO - redo identifier parsing to fit in with the XML style
-// that this patch introduces
-// specifically, need the base ID to be distinct from all the
-// other IDs
-
 ----
 identifier returns [StringTemplate code=null]
 {
@@ -1270,11 +1262,11 @@ arrayIndex returns [StringTemplate code=null]
     ;
 ----
 
+Array Member
+~~~~~~~~~~~~
 ----
-memberName returns [StringTemplate code=null]
-    :
-    d:DOT (member:ID | s:STAR)
-    {
+memberName returns [StringTemplate code=null] :
+    d:DOT (member:ID | s:STAR) {
       code=template("memberAccess");
       if(member != null) code.setAttribute("name",member.getText());
       if(s != null) code.setAttribute("name","*");
@@ -1314,8 +1306,6 @@ constant returns [StringTemplate code=null]
     | code=arrayInitializer
     ;
 ----
-
-// TODO ^^^^^^ array literal -- rename and rearrange the methods
 
 Literal Symbols
 ~~~~~~~~~~~~~~~
@@ -1381,7 +1371,6 @@ NUMBER
     )
     ;
 
-
 whitespace  :   (   ' '
         |   '\t'
         |   '\r'
@@ -1390,18 +1379,21 @@ whitespace  :   (   ' '
         { $setType(Token.SKIP); }
     ;
 
+//Single line comment C/C++ style
 singleline_ccomment:
         "//"
         (~('\n'|'\r'))* ('\n'|'\r'('\n')?)
         {$setType(Token.SKIP); newline();}
     ;
 
+//Single line comment shell style
 singleline_scomment:
         "#"
         (~('\n'|'\r'))* ('\n'|'\r'('\n')?)
         {$setType(Token.SKIP); newline();}
     ;
 
+//Multiline comment C style
 multiline_comment :
         "/*"
         (
