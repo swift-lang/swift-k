@@ -9,12 +9,12 @@ FutureGrid is close to 5000 CPU cores and 220~TB of storage from more than six
 physical clusters. We use the resources offered by one such cluster via the
 Nebula middleware.
 
-More information on futuregrid can be found at https://portal.futuregrid.org/.
+More information on futuregrid can be found link:https://portal.futuregrid.org/[here].
 
 Requesting Futuregrid Access
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 If you do not already have a futuregrid account, you can follow the
-instructions at https://portal.futuregrid.org/gettingstarted to get started.
+instructions link:https://portal.futuregrid.org/gettingstarted[here] to get started.
 This page provides information on how to create an account, how to join
 a project, how to set up your SSH keys, and how to create a new project.
 
@@ -31,11 +31,13 @@ $ svn co https://svn.ci.uchicago.edu/svn/vdl2/usertools/swift-vm-boot swift-vm-b
 Download your Credentials
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Run the following commands to retrieve your credentials:
+
 -----
 $ cd swift-vm-boot
 $ scp yourusername@hotel.futuregrid.org:nimbus_creds.tar.gz .
 $ tar xvfz nimbus_creds.tar.gz
 -----
+
 When you extract your credential file, look at the file called
 hotel.conf. Near the bottom of this file will be two settings
 called vws.repository.s3id and vws.repository.s3key. Copy these
