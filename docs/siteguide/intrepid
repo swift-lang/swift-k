@@ -154,7 +154,7 @@ that starts with +172+.
 
 Manually Editing tc.data
 ~~~~~~~~~~~~~~~~~~~~~~~~
-Below is the tc.data file used by Swift's test suite for running on PADS.
+Below is the tc.data file used by Swift's test suite.
 
 -----
 include::../../tests/providers/intrepid/tc.template.data[]
@@ -183,8 +183,7 @@ swift -sites.file sites.xml -tc.file tc.data catsn.swift -n=10
 
 You should see several new files being created, called catsn.0001.out,
 catsn.0002.out, etc. Each of these files should contain the contents of what
-you placed into data.txt. If this happens, your job has run successfully on
-PADS!
+you placed into data.txt. If this happens, your job has run successfully!
 
 More Help
 ~~~~~~~~~
