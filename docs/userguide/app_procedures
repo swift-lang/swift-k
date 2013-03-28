@@ -558,4 +558,9 @@ sequences such as +\\+.
 writeData
 ~~~~~~~~~
 writeData will write out data structures in the format described for
-readData
+readData. The following example demonstrates how one can write a string "foo" into a file "writeDataPrimitive.out":
+
+----
+include::../../tests/language-behaviour/IO/writeDataPrimitive.swift[]
+----
+
