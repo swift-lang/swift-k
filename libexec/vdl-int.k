@@ -46,15 +46,15 @@ namespace("vdl"
 					log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
 				)
 				sequential(
-					try (
-						msg = checkErrorFile(rhost, wfdir, jobid, jobdir)
+					msg := try (
+						checkErrorFile(rhost, wfdir, jobid, jobdir)
 						sequential (
 							log(LOG:INFO, "NO_STATUS_FILE jobid={jobid} - Both status files are missing")
 							throw("No status file was found. Check the shared filesystem on {rhost}")
 						)
 					)
+					throw(msg)
 				)
-				throw(checkErrorFile(rhost, wfdir, jobid, jobdir))
 			)
 		)
 		
