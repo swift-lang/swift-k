@@ -53,7 +53,7 @@ public class CacheUnlockFiles extends CacheFunction {
 		Iterator i = pairs.iterator();
 		while (i.hasNext()) {
 			String file = (String) i.next();
-			File f = new File(new AbsFile(file).getPath(), dir, host, 0);
+			File f = new File(PathUtils.remotePathName(new AbsFile(file).getPath()), dir, host, 0);
 			CacheReturn cr = cache.unlockEntry(f, TypeUtil.toBoolean(FORCE.getValue(stack)));
 			rem.addAll(cr.remove);
 		}

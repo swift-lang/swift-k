@@ -39,14 +39,12 @@ import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.transformation.File;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.karajan.AssertFailedException;
-import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
@@ -337,12 +335,7 @@ public abstract class VDLFunction extends SequentialWithArguments {
 	 */
 	public static String relativize(String name) {
 		name = pathOnly(name);
-		if (name != null && name.length() > 0 && name.charAt(0) == '/') {
-			return name.substring(1);
-		}
-		else {
-			return name;
-		}
+		return PathUtils.remotePathName(name);
 	}
 
 	protected static Map getLogData(VariableStack stack) throws ExecutionException {

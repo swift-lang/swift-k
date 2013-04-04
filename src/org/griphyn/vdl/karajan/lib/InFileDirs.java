@@ -47,16 +47,7 @@ public class InFileDirs extends AbstractSequentialWithArguments {
         	AbsFile af = new AbsFile(path);
         	if ("file".equals(af.getProtocol())) {
                 String dir = af.getDir();
-                // there could be a clash here since
-                // "/a/b/c.txt" would be remotely the same
-                // as "a/b/c.txt". Perhaps absolute paths
-                // should have a unique prefix.
-                if (dir.startsWith("/") && dir.length() != 1) {
-                	ret.append(dir.substring(1));
-                }
-                else if (dir.length() != 0) {
-                    ret.append(dir);
-                }
+                ret.append(PathUtils.remotePathName(dir));
         	}
         	else {
         	    // also prepend host name to the path

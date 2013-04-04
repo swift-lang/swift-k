@@ -49,14 +49,152 @@ public class PathUtils extends FunctionsCollection {
     public String vdl_reldirname(VariableStack stack) throws ExecutionException {
         String path = TypeUtil.toString(PATH.getValue(stack));
         String dir = new AbsFile(path).getDir();
-        if (dir.startsWith("/")) {
-            return dir.substring(1);
+        return remotePathName(dir);
+    }
+    
+    private static final char EOL = '\0';
+    /**
+     * Replace leading slash if present with "__root__" and replace
+     * parent dir references with "__parent__"
+     */
+    public static String remotePathName(String dir) {
+        if (dir.length() == 0) {
+            return dir;
+        }
+        StringBuilder sb = null;
+        
+        // parse it by hand to avoid creating too much string object garbage
+        boolean modified = false;
+        boolean nondot = false;
+        int dotcount = 0;
+        int start = 0;
+        for (int i = 0; i <= dir.length(); i++) {
+            boolean skip = false;
+            char c;
+            if (i == dir.length()) {
+                c = EOL;
+            }
+            else {
+                c = dir.charAt(i);
+            }
+            switch (c) {
+                case EOL:
+                case '/':
+                    if (i == 0) {
+                        sb = new StringBuilder();
+                        sb.append("__root__/");
+                        skip = true;
+                        modified = true;
+                    }
+                    else if (nondot) {
+                        // do nothing
+                    }
+                    else {
+                        // only dots. If zero or one, remove completely ("//", "/./")
+                        switch (dotcount) {
+                            case 0:
+                            case 1:
+                            case 2:
+                                modified = true;
+                                skip = true;
+                                if (sb == null) {
+                                    sb = new StringBuilder();
+                                    append(sb, dir, 0, i - dotcount);
+                                }
+                                if (dotcount == 2) {
+                                    sb.append("__parent__");
+                                    if (c != EOL) {
+                                        sb.append('/');
+                                    }
+                                }
+                            default:
+                                // pass along
+                        }
+                    }
+                    nondot = false;
+                    dotcount = 0;
+                    break;
+                case '.':
+                    if (nondot) {
+                        // a path element containing a dot among other things
+                        // so leave it alone
+                    }
+                    else {
+                        dotcount++;
+                        skip = true;
+                    }
+                    break;
+                default:
+                    nondot = true;
+                    if (dotcount > 0) {
+                        if (modified) {
+                            for (int j = 0; j < dotcount; j++) {
+                                sb.append('.');
+                            }
+                        }
+                        dotcount = 0;
+                    }
+            }
+            if (modified) {
+                if (sb == null) {
+                    sb = new StringBuilder();
+                    append(sb, dir, 0, i - dotcount);
+                }
+                if (!skip && c != EOL) {
+                    sb.append(c);
+                }
+            }
+        }
+        if (modified) {
+            return sb.toString();
         }
         else {
             return dir;
         }
     }
     
+    public static void testMakeRelative(String str, String expected, boolean samestr) {
+        String result = remotePathName(str);
+        if (!result.equals(expected)) {
+            throw new RuntimeException("input: '" + str + "', expected: '" + expected + "', result: '" + result + "'");
+        }
+        if (samestr && (str != result)) {
+            throw new RuntimeException("Expected same string for '" + str + "'");
+        }
+        System.out.println("OK '" + str + "' -> '" + result + "'");
+    }
+    
+    public static void main(String[] args) {
+        testMakeRelative("onething", "onething", true);
+        testMakeRelative("two/things", "two/things", true);
+        testMakeRelative("/absolute/path", "__root__/absolute/path", false);
+        testMakeRelative("../in/the/beginning", "__parent__/in/the/beginning", false);
+        testMakeRelative("in/the/../middle", "in/the/__parent__/middle", false);
+        // nonsensical, but meh
+        testMakeRelative("/../in/the/beginning/absolute", "__root__/__parent__/in/the/beginning/absolute", false);
+        testMakeRelative("/in/the/../middle/absolute", "__root__/in/the/__parent__/middle/absolute", false);
+        testMakeRelative("../in/../many/../places", "__parent__/in/__parent__/many/__parent__/places", false);
+        testMakeRelative("/../in/../many/../places/../absolute", "__root__/__parent__/in/__parent__/many/__parent__/places/__parent__/absolute", false);
+        testMakeRelative("a/single/./dot", "a/single/dot", false);
+        testMakeRelative("double//slash", "double/slash", false);
+        testMakeRelative("./single/dot/at/start", "single/dot/at/start", false);
+        testMakeRelative("/./single/dot/at/start/absolute", "__root__/single/dot/at/start/absolute", false);
+        testMakeRelative("multiple/single/././././dots", "multiple/single/dots", false);
+        // technically this isn't valid, but that's not our problem
+        testMakeRelative("three/.../dots", "three/.../dots", true);
+        testMakeRelative("two/..valid/dots", "two/..valid/dots", true);
+        testMakeRelative("more/val..id/dots", "more/val..id/dots", true);
+        testMakeRelative("/everything/./in/../../one//single../../path", "__root__/everything/in/__parent__/__parent__/one/single../__parent__/path", false);
+        testMakeRelative("..", "__parent__", false);
+        testMakeRelative("ends/in/..", "ends/in/__parent__", false);
+    }
+
+    private static void append(StringBuilder sb, String str, int begin, int end) {
+        for (int i = begin; i < end; i++) {
+            sb.append(str.charAt(i));
+        }
+    }
+
     static {
         setArguments("vdl_basename", new Arg[] { PATH });
     }
@@ -125,10 +263,10 @@ public class PathUtils extends FunctionsCollection {
     }
 
     public Object[] vdl_pathnames(VariableStack stack) throws ExecutionException {
-        List l = new ArrayList();
-        Iterator i = TypeUtil.toIterator(FILES.getValue(stack));
+        List<String> l = new ArrayList<String>();
+        Iterator<?> i = TypeUtil.toIterator(FILES.getValue(stack));
         while (i.hasNext()) {
-        	l.add(new AbsFile((String) i.next()).getPath());
+        	l.add(remotePathName(new AbsFile((String) i.next()).getPath()));
         }
         return l.toArray(new String[0]);
     }
