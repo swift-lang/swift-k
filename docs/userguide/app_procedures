@@ -297,6 +297,10 @@ Swift trace: hello
 @extractInt(file) will read the specified file, parse an integer from
 the file contents and return that integer.
 
+@extractFloat
+~~~~~~~~~~~~~
+Similar to @extractInt, @extractFloat(file) will read the specified file, parse a float from
+the file contents and return that float.
 
 @filename
 ~~~~~~~~~
@@ -464,7 +468,7 @@ Employee emps[] = readData("emps.txt");
 Where the contents of the "emps.txt" file are:
 
 ----
-name id address
+name id loc
 Thomas 2222 Chicago
 Gina 3333 Boston
 Anne 4444 Houston
@@ -520,7 +524,6 @@ trace
 trace will log its parameters. By default these will appear on both
 stdout and in the run log file. Some formatting occurs to produce the
 log message. The particular output format should not be relied upon.
-(since Swift 0.4)
 
 tracef
 ~~~~~~
