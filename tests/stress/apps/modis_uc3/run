@@ -1,0 +1,5 @@
+#! /bin/sh
+
+set -x
+
+swift -config swift.properties -sites.file sites.template.xml -tc.file tc.template.data modis.swift -modisdir=input/
