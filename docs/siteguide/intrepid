@@ -68,6 +68,13 @@ Replace <version> with the actual name of the swift directory in the example abo
 
 What You Need To Know Before Running Swift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note that on Intrepid, the compute nodes can not create or write to a /home filesystem. Consequently, in order for Swift to interface correctly from login node to the compute nodes, Swift must write all internal and intermediate files to /intrepid-fs0, which is writable by the compute nodes. In order to accomplish this, export the environment variable SWIFT_USERHOME as follows:
+
+----
+export SWIFT_USERHOME=/intrepid-fs0/users/`whoami`/scratch
+----
+
 Before you can create a Swift configuration file, there are some things
 you will need to know.
 
