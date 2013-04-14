@@ -102,7 +102,7 @@ namespace(swift) {
 	}
 
 	initDDir := function() {
-		ddir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
+		ddir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
 		
 		once(ddir) {
 			if(!file:exists(ddir)) {
