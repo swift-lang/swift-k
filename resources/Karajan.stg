@@ -23,7 +23,7 @@ $declarations;separator="\n"$
 $procedures;separator="\n"$
 $if(statements)$
 
-restartLog() {
+restartLog(name = k:concat(contextAttribute("SWIFT:SCRIPT_NAME"), "-", contextAttribute("SWIFT:RUN_ID"))) {
 	swift:mains(
 		swift:startProgressTicker()
 		swift:mainp(
