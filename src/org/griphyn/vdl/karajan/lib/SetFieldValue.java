@@ -289,7 +289,7 @@ public class SetFieldValue extends SwiftFunction {
                 logger.debug("Remapping " + dest + " to " + source);
             }
             dmapper.remap(dpath, source.getMapper(), source.getPathFromRoot());
-            dest.closeShallow();
+            dest.setValue(AbstractDataNode.FILE_VALUE);
         }
         else {
             StateEntry se = getStateEntry(state, level);
@@ -303,7 +303,7 @@ public class SetFieldValue extends SwiftFunction {
                         throw new ExecutionException("Failed to copy " + source + " to " + dest, fc.getException());
                     }
                 }
-                dest.closeShallow();
+                dest.setValue(AbstractDataNode.FILE_VALUE);
             }
             else {
                 fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
