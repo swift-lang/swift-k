@@ -197,6 +197,9 @@ public class TypeUtil {
 				return d.toString();
 			}
 		}
+		if (obj instanceof Channel) {
+			return ((Channel<?>) obj).getAll().toString();
+		}
 		if (obj instanceof Throwable) {
 			if (obj instanceof ExecutionException) {
 				return obj.toString();
