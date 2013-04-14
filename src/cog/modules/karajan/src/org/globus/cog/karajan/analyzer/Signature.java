@@ -29,31 +29,42 @@ public class Signature {
 	}
 	
 	public Signature(List<Param> params) {
-		for (Param p : params) {
-			if (p.type == Param.Type.CHANNEL) {
-				channelParams = add(channelParams, p);
-			}
-			else {
-				this.params = add(this.params, p);
-			}
-		}
+		addParams(params);
 	}
 
 	public Signature(Param[] params, Param[] returns) {
 		this(params);
-		
-		if (returns != null) {
-			for (Param p : returns) {
-	            if (p.type == Param.Type.CHANNEL) {
-	                channelReturns = add(channelReturns, p);
-	            }
-	            else {
-	                this.returns = add(this.returns, p);
-	            }
-	        }
-		}
+		addReturns(returns);
 	}
 	
+	public void addParams(List<Param> params) {
+	    for (Param p : params) {
+            if (p.type == Param.Type.CHANNEL) {
+                channelParams = add(channelParams, p);
+            }
+            else {
+                this.params = add(this.params, p);
+            }
+        }
+	}
+	
+	public void addReturns(Param[] returns) {
+        if (returns != null) {
+            for (Param p : returns) {
+                addReturn(p);                
+            }
+        }
+	}
+	
+	public void addReturn(Param p) {
+	    if (p.type == Param.Type.CHANNEL) {
+            channelReturns = add(channelReturns, p);
+        }
+        else {
+            returns = add(returns, p);
+        }
+	}
+
 	private <T> List<T> add(List<T> l, T p) {
 		if (l == null) {
 			l = new ArrayList<T>();

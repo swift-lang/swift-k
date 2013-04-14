@@ -22,7 +22,7 @@ public class InvalidArgChannel extends Sink<Object> {
 	
 	@Override
 	public boolean add(Object e) {
-		throw new IllegalArgumentException("Illegal argument ('" + e + "' to " + owner);
+		throw new IllegalArgumentException("Illegal argument ('" + e + "' to " + owner + ")");
 	}
 
 	@Override

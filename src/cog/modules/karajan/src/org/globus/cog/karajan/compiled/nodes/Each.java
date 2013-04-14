@@ -29,11 +29,6 @@ public class Each extends InternalFunction {
 	}
 
 	@Override
-	public void run(LWThread thr) throws ExecutionException {
-		super.run(thr);
-	}
-
-	@Override
 	protected void runBody(LWThread thr) {
 		Stack stack = thr.getStack();
 		Iterable<Object> items = this.items.getValue(stack);
