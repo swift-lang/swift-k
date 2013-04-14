@@ -86,6 +86,8 @@ public class Executor {
 			main.waitFor();
 		}
 		catch (Exception e) {
+			failed = true;
+			failure = e;
 			printFailure(e);
 		}
 	}
