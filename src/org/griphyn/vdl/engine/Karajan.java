@@ -776,35 +776,63 @@ public class Karajan {
 					callST.setAttribute("inputs", argST);
 				}
 			} else if (keywordArgsInput) {
-				/* if ALL arguments are specified by name=value */
-				int noOfMandArgs = 0;
-				for (int i = 0; i < call.sizeOfInputArray(); i++) {
-					ActualParameter input = call.getInputArray(i);
-					StringTemplate argST = actualParameter(input, scope);
+			    /* if ALL arguments are specified by name=value */
+                /* Re-order all (which re-orders positionals), then pass optionals by keyword */
+                ActualParameter[] actuals = new ActualParameter[proc.sizeOfInputArray()];
+                for (int i = 0; i < call.sizeOfInputArray(); i++) {
+                    ActualParameter actual = call.getInputArray(i);
+                    boolean found = false;
+                    for (int j = 0; j < proc.sizeOfInputArray(); j++) {
+                        FormalArgumentSignature formal = proc.getInputArray(j);
+                        if (actual.getBind().equals(formal.getName())) {
+                            actuals[j] = actual;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        throw new CompilationException("Formal argument " + actual.getBind() + " doesn't exist");
+                    }
+                }
+                
+                int noOfMandArgs = 0;
+                for (ActualParameter actual : actuals) {
+                    if (actual == null) {
+                        // an optional formal parameter with no actual parameter
+                        continue;
+                    }
+					FormalArgumentSignature formal = inArgs.get(actual.getBind());
+					
+					StringTemplate argST;
+					if (formal.isOptional()) {
+                        argST = actualParameter(actual, formal.getName(), scope);
+                    }
+                    else {
+                        argST = actualParameter(actual, scope);
+                    }
 					callST.setAttribute("inputs", argST);
 
-					if (!inArgs.containsKey(input.getBind()))
-						throw new CompilationException("Formal argument " + input.getBind() + " doesn't exist");
-					FormalArgumentSignature formalArg = inArgs.get(input.getBind());
-					String formalType = formalArg.getType();
+					String formalType = formal.getType();
 					String actualType = datatype(argST);
-					if (!formalArg.isAnyType() && !actualType.equals(formalType))
-						throw new CompilationException("Wrong type for parameter number " + i +
-								", expected " + formalType + ", got " + actualType);
+					if (!formal.isAnyType() && !actualType.equals(formalType))
+						throw new CompilationException("Wrong type for '" + formal.getName() + "' parameter;" +
+								" expected " + formalType + ", got " + actualType);
 
-					if (!formalArg.isOptional())
+					if (!formal.isOptional()) {
 						noOfMandArgs++;
+					}
 				}
-				if (!proc.getAnyNumOfInputArgs() && noOfMandArgs < proc.sizeOfInputArray() - noOfOptInArgs)
+				if (!proc.getAnyNumOfInputArgs() && noOfMandArgs < proc.sizeOfInputArray() - noOfOptInArgs) {
 					throw new CompilationException("Mandatory argument missing");
+				}
 			} else { /* Positional arguments */
 				/* Checking types of mandatory arguments */
 				for (int i = 0; i < proc.sizeOfInputArray() - noOfOptInArgs; i++) {
 					ActualParameter input = call.getInputArray(i);
+					FormalArgumentSignature formalArg = proceduresMap.get(procName).getInputArray(i);
 					StringTemplate argST = actualParameter(input, scope);
 					callST.setAttribute("inputs", argST);
-
-					FormalArgumentSignature formalArg = proceduresMap.get(procName).getInputArray(i);
+					
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -814,13 +842,15 @@ public class Karajan {
 				/* Checking types of optional arguments */
 				for (int i = proc.sizeOfInputArray() - noOfOptInArgs; i < call.sizeOfInputArray(); i++) {
 					ActualParameter input = call.getInputArray(i);
-					StringTemplate argST = actualParameter(input, scope);
-					callST.setAttribute("inputs", argST);
 
 					String formalName = input.getBind();
 					if (!inArgs.containsKey(formalName))
 						throw new CompilationException("Formal argument " + formalName + " doesn't exist");
 					FormalArgumentSignature formalArg = inArgs.get(formalName);
+					
+					StringTemplate argST = actualParameter(input, formalArg.getName(), scope);
+                    callST.setAttribute("inputs", argST);
+					
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -847,21 +877,35 @@ public class Karajan {
 			}
 			if (keywordArgsOutput) {
 				/* if ALL arguments are specified by name=value */
-				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
-					ActualParameter output = call.getOutputArray(i);
-					StringTemplate argST = actualParameter(output, scope);
+			    /* Re-order to match the formal output args */
+			    ActualParameter[] actuals = new ActualParameter[proc.sizeOfOutputArray()];
+			    for (int i = 0; i < call.sizeOfOutputArray(); i++) {
+			        ActualParameter actual = call.getOutputArray(i);
+			        boolean found = false;
+			        for (int j = 0; j < proc.sizeOfOutputArray(); j++) {
+			            FormalArgumentSignature formal = proc.getOutputArray(j);
+			            if (actual.getBind().equals(formal.getName())) {
+			                actuals[j] = actual;
+			                found = true;
+			                break;
+			            }
+			        }
+			        if (!found) {
+			            throw new CompilationException("Formal argument " + actual.getBind() + " doesn't exist");
+			        }
+			    }
+				for (ActualParameter actual : actuals) {
+					StringTemplate argST = actualParameter(actual, null, scope);
 					callST.setAttribute("outputs", argST);
 
-					if (!outArgs.containsKey(output.getBind()))
-						throw new CompilationException("Formal argument " + output.getBind() + " doesn't exist");
-					FormalArgumentSignature formalArg = outArgs.get(output.getBind());
+					FormalArgumentSignature formalArg = outArgs.get(actual.getBind());
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
-						throw new CompilationException("Wrong type for output parameter number " + i +
-								", expected " + formalType + ", got " + actualType);
+						throw new CompilationException("Wrong type for output parameter '" + actual.getBind() +
+								"', expected " + formalType + ", got " + actualType);
 
-					addWriterToScope(scope, call.getOutputArray(i).getAbstractExpression(), call, callST);
+					addWriterToScope(scope, actual.getAbstractExpression(), call, callST);
 				}
 			} else { /* Positional arguments */
 				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
@@ -1091,13 +1135,23 @@ public class Karajan {
 	}
 	
 	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope) throws CompilationException {
-	    return actualParameter(arg, scope, false);
+        return actualParameter(arg, null, scope, false);
+    }
+	
+	public StringTemplate actualParameter(ActualParameter arg, String bind, VariableScope scope) throws CompilationException {
+	    return actualParameter(arg, bind, scope, false);
 	}
-
+	
 	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope, boolean lvalue) throws CompilationException {
+        return actualParameter(arg, null, scope, lvalue);
+    }
+
+	public StringTemplate actualParameter(ActualParameter arg, String bind, VariableScope scope, boolean lvalue) throws CompilationException {
 		StringTemplate argST = template("call_arg");
 		StringTemplate expST = expressionToKarajan(arg.getAbstractExpression(), scope, lvalue);
-		argST.setAttribute("bind", arg.getBind());
+		if (bind != null) {
+		    argST.setAttribute("bind", arg.getBind());
+		}
 		argST.setAttribute("expr", expST);
 		argST.setAttribute("datatype", datatype(expST));
 		return argST;
