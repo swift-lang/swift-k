@@ -233,6 +233,17 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         return prefix;
     }
     
+    public String getFullName() {
+        String name = getDisplayableName();
+        Path p = getPathFromRoot();
+        if (p.isEmpty()) {
+            return name;
+        }
+        else {
+            return name + "." + p;
+        }
+    }
+    
     public String getDeclarationLine() {
         String line = getRoot().getParam(MappingParam.SWIFT_LINE);
         if (line == null || line.length() == 0) {
@@ -398,7 +409,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         }
     }
 
-    public Object getValue() {
+    public synchronized Object getValue() {
         checkNoValue();
         checkDataException();
         if (field.getType().isArray()) {
@@ -420,16 +431,20 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     }
 
     public void setValue(Object value) {
-        if (this.closed) {
-            throw new IllegalArgumentException(this.getDisplayableName() 
-            		+ " is closed with a value of " + this.value);
+        synchronized(this) {
+            if (this.closed) {
+                throw new IllegalArgumentException(this.getFullName() 
+                		+ " is closed with a value of " + this.value);
+            }
+            if (this.value != null) {
+                throw new IllegalArgumentException(this.getFullName() 
+                		+ " is already assigned with a value of " + this.value);
+            }
+        
+            this.value = value;
+            this.closed = true;
         }
-        if (this.value != null) {
-            throw new IllegalArgumentException(this.getDisplayableName() 
-            		+ " is already assigned with a value of " + this.value);
-        }
-        this.value = value;
-        closeShallow();
+        postCloseActions();
     }
 
     public Collection<Path> getFringePaths() throws HandleOpenException {
@@ -466,7 +481,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             }
         }
     }
-    
+        
     public void closeShallow() {
         synchronized(this) {
             if (this.closed) {
@@ -474,6 +489,10 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             }
             this.closed = true;
         }
+        postCloseActions();
+    }
+
+    private void postCloseActions() {
         // closed
         notifyListeners();
         if (logger.isDebugEnabled()) {
@@ -687,10 +706,10 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             }
             AbstractDataNode parent = getParentNode();
             if (parent != null && parent.getType().isArray()) {
-                throw new IndexOutOfBoundsException("Invalid index [" + field.getId() + "] for " + parent.getDisplayableName());
+                throw new IndexOutOfBoundsException("Invalid index [" + field.getId() + "] for " + parent.getFullName());
             }
             else {
-                throw new RuntimeException(getDisplayableName() + " has no value");
+                throw new RuntimeException(getFullName() + " has no value");
             }
         }
     }
