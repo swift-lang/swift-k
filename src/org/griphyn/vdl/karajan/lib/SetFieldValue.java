@@ -185,25 +185,32 @@ public class SetFieldValue extends SwiftFunction {
 	}
 	
 	protected void deepCopy(DSHandle dest, DSHandle source, Stack stack) {
-	    State state = this.state.getValue(stack);
-        if (state == null) {
-            state = new State();
-            this.state.setValue(stack, state);
+	    // don't create a state if only a non-composite is copied
+	    ((AbstractDataNode) source).waitFor(this);
+        if (source.getType().isPrimitive()) {
+            dest.setValue(source.getValue());
         }
-        
-        deepCopy(dest, source, state, 0);
-        
-        this.state.setValue(stack, null);
+        else {
+    	    State state = this.state.getValue(stack);
+            if (state == null) {
+                state = new State();
+                this.state.setValue(stack, state);
+            }
+            
+            deepCopy(dest, source, state, 0);
+            
+            this.state.setValue(stack, null);
+        }
 	}
 	
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
 	public void deepCopy(DSHandle dest, DSHandle source, State state, int level) {
 	    ((AbstractDataNode) source).waitFor(this);
-		if (source.getType().isPrimitive()) {
-			dest.setValue(source.getValue());
-		}
-		else if (source.getType().isArray()) {
+        if (source.getType().isPrimitive()) {
+            dest.setValue(source.getValue());
+        }
+        else if (source.getType().isArray()) {
 		    copyArray(dest, source, state, level);
 		}
 		else if (source.getType().isComposite()) {
