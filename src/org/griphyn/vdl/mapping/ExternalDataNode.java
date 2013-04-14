@@ -124,4 +124,14 @@ public class ExternalDataNode extends AbstractDataNode {
         }
         return (String) params.get(p);
     }
+
+    @Override
+    public void closeDeep() {
+        /*
+         * Need to override this and set a value since 
+         * this is skipped by the normal stageout mechanism which
+         * does that
+         */
+        this.setValue(FILE_VALUE);
+    }
 }
