@@ -46,7 +46,7 @@ public class FnArg extends SwiftFunction {
     
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("name", optional("value", null)));
+        return new Signature(params("name", "value"));
     }
 
     @Override
