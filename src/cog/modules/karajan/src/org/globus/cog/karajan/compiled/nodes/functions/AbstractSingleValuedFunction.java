@@ -20,8 +20,17 @@ import org.globus.cog.karajan.parser.WrapperNode;
 
 public abstract class AbstractSingleValuedFunction extends AbstractFunction {
 
-	protected final Signature getSignature() {
+	protected Signature getSignature() {
 		return new Signature(getParams());
+	}
+
+	@Override
+	protected void resolveChannelReturns(WrapperNode w, Signature sig, Scope scope)
+			throws CompilationException {
+	    if (sig.getChannelReturns().isEmpty()) {
+	        sig.addReturn(channel("...", 1));
+	    }
+		super.resolveChannelReturns(w, sig, scope);
 	}
 
 	@Override
@@ -32,5 +41,7 @@ public abstract class AbstractSingleValuedFunction extends AbstractFunction {
 	}
 
 
-	protected abstract Param[] getParams();
+	protected Param[] getParams() {
+	    throw new RuntimeException("Default getParams() called");
+	}
 }
