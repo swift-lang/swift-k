@@ -32,7 +32,7 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
-import org.globus.cog.karajan.compiled.nodes.functions.AbstractFunction;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
@@ -128,7 +128,7 @@ public class Misc {
         }
     }
 	
-	public static class StrCat extends AbstractFunction {
+	public static class StrCat extends AbstractSingleValuedFunction {
         private ChannelRef<AbstractDataNode> c_vargs;
 
         @Override
@@ -161,7 +161,7 @@ public class Misc {
         }
 	}
 	
-	public static class Exists extends AbstractFunction {
+	public static class Exists extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> file;
 
         @Override
@@ -190,7 +190,7 @@ public class Misc {
         }
     }
 	
-	public static class StrCut extends AbstractFunction {
+	public static class StrCut extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
@@ -238,7 +238,7 @@ public class Misc {
         }
 	}
 	
-	public static class StrStr extends AbstractFunction {
+	public static class StrStr extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
@@ -271,7 +271,7 @@ public class Misc {
         }
     }
 	
-	public static class StrSplit extends AbstractFunction {
+	public static class StrSplit extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
@@ -318,7 +318,7 @@ public class Misc {
 	 * @return DSHandle representing the resulting string
 	 * @throws ExecutionException
 	 */
-	public static class StrJoin extends AbstractFunction {
+	public static class StrJoin extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> array;
         private ArgRef<AbstractDataNode> delim;
 
@@ -359,7 +359,7 @@ public class Misc {
         }
     }
     
-	public static class Regexp extends AbstractFunction {
+	public static class Regexp extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
         private ArgRef<AbstractDataNode> transform;
@@ -412,7 +412,7 @@ public class Misc {
         }
     }
 	
-	public static class ToInt extends AbstractFunction {
+	public static class ToInt extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> str;
 
         @Override
@@ -437,7 +437,7 @@ public class Misc {
         }
     }
 	
-	public static class ToFloat extends AbstractFunction {
+	public static class ToFloat extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> str;
 
         @Override
@@ -476,7 +476,7 @@ public class Misc {
 	/*
 	 * Takes in a float and formats to desired precision and returns a string
 	 */
-	public static class Format extends AbstractFunction {
+	public static class Format extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> format;
         private ArgRef<AbstractDataNode> value;
 
@@ -508,7 +508,7 @@ public class Misc {
 	/*
 	 * Takes in an int and pads zeros to the left and returns a string
 	 */
-	public static class Pad extends AbstractFunction {
+	public static class Pad extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> size;
         private ArgRef<AbstractDataNode> value;
 
@@ -537,7 +537,7 @@ public class Misc {
         }
     }
 	
-	public static class ToString extends AbstractFunction {
+	public static class ToString extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> value;
 
         @Override
@@ -548,6 +548,7 @@ public class Misc {
         @Override
         public Object function(Stack stack) {
             AbstractDataNode hvalue = this.value.getValue(stack);
+            hvalue.waitFor(this);
             
             StringBuilder sb = new StringBuilder();
             prettyPrint(sb, hvalue);
@@ -570,7 +571,7 @@ public class Misc {
      * Good for debugging because array needs to be closed
      *   before the length is determined
      */
-	public static class Dirname extends AbstractFunction {
+	public static class Dirname extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> file;
 
         @Override
@@ -596,7 +597,7 @@ public class Misc {
         }
     }
 		
-	public static class Length extends AbstractFunction {
+	public static class Length extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> array;
 
         @Override
