@@ -52,6 +52,8 @@ Settings for swift.properties get set in the following order.
 4. $HOME/.swift/swift.properties
 5. One or both of $PWD/swift.properties and $PWD/.swift/swift.properties (to
    be determined)
+6. Command line options. Swift will accept parameters on the command line, in
+   the format of -Dexecution.retries=5.
 
 Settings are accumulative. Every swift.properties files that is found is read
 and values are set, with values from the most recent file taking precedence.
@@ -168,6 +170,17 @@ line to the Swift configuration file we are using:
 -----
 site.beagle.jobsPerNode=12
 -----
+
+Defining sites in swift.properties
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+We may also want to talk about the ability to define sites directly in
+swift.properties using the existing XML format. The program that parses the
+properties file can attempt to find pool entries there.
+
+NOTE: This came up in discussions, but I think we should try to avoid this
+one. We should be able to shape a sites file using only x.y.z=foo properties. 
+In cases where a user wants to use XML directly, I think they should
+use the -sites.file option.
 
 Run directories and logs
 ------------------------
