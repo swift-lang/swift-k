@@ -1,0 +1,197 @@
+Swiftrun
+========
+
+:toc:
+:icons:
+:numbered:
+
+New method for running Swift
+----------------------------
+This document describes a new method of running which aims to make
+Swift easier to use.
+
+Currently, Swift configuration settings are split up into multiple files.
+Sites.xml defines the site definition, tc.data defines applications,
+swift.properties defines other various settings, and cdm.data defines CDM
+rules.
+
+Below is a fairly typical Swift command:
+-----
+swift -sites.file sites.xml -tc.file tc.data -config cf -cdm.file fs.data hello.swift
+-----
+
+We should keep this syntax for backward compatibility, but try to simplify
+this and also add some flexibility. There are a few ways to go about this.
+
+.Goals
+1. Define all settings in a single, swift.properties-like file.
+2. Make the settings in swift.properties simple to understand, and use a
+   consistent format for all settings (eliminate the need to 
+   know the formats of tc.data and sites.xml).
+3. Make it easier to use predefined site templates
+4. Increase flexibility when running on multiple sites.
+
+Swift Properties
+----------------
+This new configuration file will be very similar to the current format of
+swift.properties. Settings that are currently defined in swift.properties
+will keep the same names and formatting.
+
+-----
+execution.retries=0
+sitedir.keep=true
+-----
+
+Where will Swift look for swift.properties?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Settings for swift.properties get set in the following order.
+
+1. Swift default values
+2. The etc/swift.properties file in the swift installation directory
+3. The swift.properties file located in the $SWIFT_CONFIG directory
+4. $HOME/.swift/swift.properties
+5. One or both of $PWD/swift.properties and $PWD/.swift/swift.properties (to
+   be determined)
+
+Settings are accumulative. Every swift.properties files that is found is read
+and values are set, with values from the most recent file taking precedence.
+
+Apps
+----
+Applications currently defined in tc.data will instead be defined in the
+new swift.properties file in the following format:
+
+-----
+app.beagle.wc = /usr/bin/wc
+app.midway.bash = /bin/bash
+-----
+
+Special cases
+~~~~~~~~~~~~~
+For most app definitions you need only the path to the application. You should 
+also be able to handle special cases in a similar way. For example, to define 
+that an app is WIN32, or to set an app specific walltime:
+-----
+app.beagle.wc.win32 = true
+app.beagle.wc.walltime = 00:05:00
+-----
+
+App wildcards
+~~~~~~~~~~~~~
+The existing tc.data format should be modified to allow wildcards. A * in your
+tc.data would allow you to run any application defined in your swift script on 
+the site. It would search your PATH for the executable location.
+
+-----
+beagle * * null null null
+-----
+
+In the new tc format, this same expression would be:
+-----
+app.beagle.* = * 
+-----
+
+CDM
+---
+CDM configuration files will also be defined in swift.properties.
+
+-----
+pathrule.type=path,path  # type=DIRECT,LOCAL, etc
+---- 
+
+Sites
+-----
+To specify which site a swift script should run on, use the -site command line argument.
+
+-----
+$ swift -site midway hello.swift
+-----
+
+To run on multiple sites, separate site names by a comma.
+
+-----
+swift -site midway,beagle hello.swift
+-----
+
+NOTE: Perhaps we should also think about adding the ability to define "site
+       groups". For example, the group "xsede" could define the sites for
+       Trestles, Stampede, and Kraken. You could then also mix and match
+       multiple groups.
+
+How does Swift know how to run on these sites?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Swift uses XML to shape a specific run. These XML files define things that 
+Swift needs to know about a particular site, for example, which scheduler 
+should be used, what is the location of the work directory, and what degree 
+of parallelism should be used.
+
+Swift will include several XML templates that allow a user to run on a 
+variety of commonly used sites. These site templates could be found in 
+multiple locations. 
+
+. In your current working directory, Swift will search for a matching
+   template in $PWD/.swift/sites.
+
+. Next, Swift will look in $HOME/.swift/sites.
+
+. Directories defined in $SWIFT_TEMPLATE_PATH. The format of this environment
+  variable is similar to $PATH, /dir/location1:/dir/location2:/dir/location3. 
+
+. Finally, the Swift installation directory etc/sites.
+
+How can I change the the values in these templates dynamically?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Values defined in your Swift configuration file can override the default values
+stored in XML templates. Here is one example.
+
+Assume that you are looking at a site templates that looks like this:
+-----
+  <pool handle="beagle">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="providerAttributes">pbs.aprun;pbs.mpp;depth=24</profile>
+    <profile namespace="globus" key="maxWalltime">_WALLTIME_</profile>
+    <profile namespace="globus" key="slots">50</profile>
+    <profile namespace="globus" key="nodeGranularity">1</profile>
+    <profile namespace="karajan" key="jobThrottle">12.00</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <filesystem provider="local"/>
+    <workdirectory>/lustre/beagle/{env.USER}/swiftwork</workdirectory>
+  </pool>
+-----
+
+By default in this template, jobsPerNode is set to 24. However, for our 
+application we would like to set this to 12. To do this, we add this
+line to the Swift configuration file we are using:
+-----
+site.beagle.jobsPerNode=12
+-----
+
+Run directories and logs
+------------------------
+Every time Swift runs, it should create a directory called called 
+$PWD/.swift/runNNN, where NNN is a numeric value that gets incremented
+with every run. 
+
+These run directories contain:
+
+* kml and swiftx files
+* Swift log files 
+* Submit scripts
+* tc.data
+* sites.xml
+* swift.properties
+* cdm.data
+
+What changes need to be made to make this work?
+-----------------------------------------------
+The vast majority of this can done with changes to the swift shell script and
+a new perl script. 
+
+The swift shell script will check the command line parameters it receives. If 
+the newer style of running is specified, where no configuration files are 
+specified, swift and swiftrun will generate sites.xml, tc.data, 
+swift.properties, cdm.data as described in this document. They will be created
+in $PWD/.swift/runNNN and referenced.
