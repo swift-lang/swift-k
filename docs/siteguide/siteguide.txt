@@ -22,4 +22,6 @@ include::intrepid[]
 
 include::mcs[]
 
+include::stampede[]
+
 include::uc3[]

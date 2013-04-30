@@ -17,7 +17,7 @@ CHMOD_FILE_MODE="664"
 # Output group
 GROUP="vdl2-svn"
 # Make PDFs iff MAKE_PDF=1
-MAKE_PDF=1
+MAKE_PDF=0
 
 # See getopts loop below for options
 usage()
