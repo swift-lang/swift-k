@@ -708,8 +708,11 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             if (parent != null && parent.getType().isArray()) {
                 throw new IndexOutOfBoundsException("Invalid index [" + field.getId() + "] for " + parent.getFullName());
             }
-            else {
+            else if (getType().isPrimitive()) {
                 throw new RuntimeException(getFullName() + " has no value");
+            }
+            else {
+                throw new MissingDataException(this, getMapper().map(getPathFromRoot()));
             }
         }
     }
