@@ -418,6 +418,11 @@ integers.
 used with @arg to pass input parameters to a Swift script as
 floating point numbers.
 
+@toString
+~~~~~~~~~
+@toString(input) will parse its input into a string. Input can be an int, float, string,
+or boolean. 
+
 @length
 ~~~~~~
 @length(array) will return the length of an array in Swift. This function will wait for all elements in the array to be written before returning the length.
