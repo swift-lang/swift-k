@@ -292,9 +292,9 @@ Swift trace: defaultvalue
 Swift trace: hello
 ----
 
-@extractint
+@extractInt
 ~~~~~~~~~~~
-@extractint(file) will read the specified file, parse an integer from
+@extractInt(file) will read the specified file, parse an integer from
 the file contents and return that integer.
 
 
@@ -406,15 +406,15 @@ necessarily in order, due to the fact that foreach iterations execute in
 parallel).
 
 
-@toint
+@toInt
 ~~~~~~
-@toint(input) will parse its input string into an integer. This can be
+@toInt(input) will parse its input string into an integer. This can be
 used with @arg to pass input parameters to a Swift script as
 integers.
 
-@tofloat
+@toFloat
 ~~~~~~
-@tofloat(input) will parse its input string into a floating point number. This can be
+@toFloat(input) will parse its input string into a floating point number. This can be
 used with @arg to pass input parameters to a Swift script as
 floating point numbers.
 
