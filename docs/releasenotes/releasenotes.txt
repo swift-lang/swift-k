@@ -112,7 +112,7 @@ Associative Arrays
 Associative arrays have been added. By default, array keys are integers, but in 
 0.94 other primitive types are also allowed as array keys. More details and 
 examples can be found in the
-http://www.ci.uchicago.edu/swift/guides/release-0.94/userguide/userguide.html#_associative_arrays[associate array section of the Swift userguide].
+http://www.ci.uchicago.edu/swift/guides/release-0.94/userguide/userguide.html#_associative_arrays[associate array section of the Swift User Guide].
 
 Dynamic profiles
 ----------------
@@ -122,7 +122,7 @@ multiple apps that have different requirements for settings like processors
 per node and walltime. 
 
 More information and examples can be found in the 
-http://www.ci.uchicago.edu/swift/guides/release-0.94/userguide/userguide.html#_dynamic_profiles[dynamic profiles section of the Swift userguide]
+http://www.ci.uchicago.edu/swift/guides/release-0.94/userguide/userguide.html#_dynamic_profiles[dynamic profiles section of the Swift User Guide]
 
 SSH command line provider
 -------------------------
@@ -151,7 +151,7 @@ Added support for the Slurm scheduler
 Swift 0.94 includes support for Slurm - an open source job scheduler used on 
 many supercomputers and computer clusters. 
 
-The http://www.ci.uchicago.edu/swift/guides/trunk/siteguide/siteguide.html#_midway_x86_cluster[Swift siteguide entry for Midway]
+The http://www.ci.uchicago.edu/swift/guides/trunk/siteguide/siteguide.html#_midway_x86_cluster[Swift Site Guide entry for Midway]
 has an entry containing information about how to run Swift on a specific Slurm 
 cluster at the University of Chicago called Midway. By changing queue names
 and project names, this information could be used to run on any Slurm cluster.
@@ -160,7 +160,7 @@ Added support for the LSF scheduler
 -----------------------------------
 Swift 0.94 includes support for the LSF (Load Sharing Facility) scheduler. An
 example sites.xml can be found in the 
-http://www.ci.uchicago.edu/swift/guides/release-0.94/siteguide/siteguide.html#_geyser_and_caldera_x86_clusters[Swift siteguide entry for Geyser].
+http://www.ci.uchicago.edu/swift/guides/release-0.94/siteguide/siteguide.html#_geyser_and_caldera_x86_clusters[Swift Site Guide entry for Geyser].
 
 Condor Improvements
 -------------------
@@ -193,7 +193,7 @@ Added the ability to call Java methods within swift using @java. For example:
 float f = @java("java.lang.Math", "sin", 0.5);
 -----
 More information can be found in the 
-http://www.ci.uchicago.edu/swift/guides/release-0.94/userguide/userguide.html#_java[Swift userguide entry on @java].
+http://www.ci.uchicago.edu/swift/guides/release-0.94/userguide/userguide.html#_java[Swift User Guide entry on @java].
 
 Hang Checker
 ------------
@@ -227,7 +227,7 @@ Dependency loop found:
 -------- 
 A function called @strjoin function for joining strings. More information and examples are
 in the 
-http://www.ci.uchicago.edu/swift/guides/release-0.94/userguide/userguide.html#_strjoin[Swift userguide section on @strjoin].
+http://www.ci.uchicago.edu/swift/guides/release-0.94/userguide/userguide.html#_strjoin[Swift User Guide section on @strjoin].
 
 Worker Init Command
 -------------------
@@ -249,4 +249,6 @@ restriction.
 
 MPI Improvements
 ----------------
-Various improvements to the way that Swift runs MPI jobs.
+Swift 0.94 has improved MPI support and integration. Details about how to 
+run MPI jobs in Swift can be found in the
+http://www.ci.uchicago.edu/swift/guides/release-0.94/userguide/userguide.html#_launching_mpi_jobs_from_swift[the MPI section of the Swift User Guide].
