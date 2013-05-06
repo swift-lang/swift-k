@@ -16,6 +16,8 @@ include::fusion[]
 
 include::futuregrid[]
 
+include::geyser[]
+
 include::grid[]
 
 include::intrepid[]
