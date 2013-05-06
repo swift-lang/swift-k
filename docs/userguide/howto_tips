@@ -28,52 +28,71 @@ More information on the TeraGrid allocations process can be found here
 Launching MPI jobs from Swift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are several ways to run MPI jobs under Swift.
-The simplest is to simply launch the desired +mpiexec+ command line
-locally by using the local provider.  Two additional use cases are
-noted here.
+There are several ways to run MPI jobs under Swift. Two will be discussed here -
+calling mpiexec from a wrapper script, and using the MPICH/coasters interface.
 
-==== Submission of MPI jobs to remote queues
+Calling mpiexec
+^^^^^^^^^^^^^^^
+In this example, a single MPI program will run across two nodes. For this to
+happen, sites.xml must be configured to allocate two nodes but only run a
+single job on them. A wrapper script must then be used to call mpiexec.
 
-// TODO: This seems to require appropriate PBS profile settings
+sites.xml
++++++++++
+First, we need to make sure that Swift will allocate exactly two nodes. This
+can be done with the maxnodes and nodegranularity settings.
 
-This use case allows the user to submit an MPI job to a remote queue.
+-----
+<profile namespace="globus" key="nodeGranularity">2</profile>
+<profile namespace="globus" key="maxnodes">2</profile>
+-----
 
-Swift makes an invocation that does not look any different
-from any other invocation. In the code below, we do not have any input
-files, and have two output files on stdout and stderr:
+Next, we want to make sure that the MPI program is called only once on those
+nodes. There are two settings we must set to get this behavior:
+-----
+<profile namespace="globus" key="jobsPerNode">1</profile>
+<profile namespace="globus" key="jobtype">single</profile>
+-----
+
+tc.data
++++++++
+The app defined in tc.data should be a shell script wrapper to the actual
+program that is being called. Let's assume in this example that the MPI program
+we are using is called "mpitest", and the wrapper script will be called 
+"mpitest.sh". The tc.data will look like this then:
+
+-----
+host mpitest /path/to/mpitest.sh
+-----
+
+Wrapper script
+++++++++++++++
+The wrapper script in this example, mpitest.sh, will call mpiexec and launch
+the real MPI program. Here is an example:
+
+-----
+#!/bin/bash 
+
+mpiexec /path/to/mpitest "$@"
+-----
+
+Swift then makes an invocation that does not look any different from any other
+invocation. In the code below, we pass one input file and get back one output
+file. 
 
 ----
 type file;
 
-(file o, file e) p() {
-    app {
-        mpi stdout=@filename(o) stderr=@filename(e);
-    }
+app (file output_file) mpitest (file input_file)
+{
+   mpitest @input_file @output_file; 
 }
 
-file mpiout <"mpi.out">;
-file mpierr <"mpi.err">;
+file input <"input.txt">;
+file output <"output.txt">;
 
-(mpiout, mpierr) = p();
+output = mpitest(input);
 ----
-
-Now we define how 'mpi' will run in tc.data:
-----
-tguc    mpi             /home/benc/mpi/mpi.sh   INSTALLED       INTEL32::LINUX GLOBUS::host_xcount=3
-----
-
-mpi.sh is a wrapper script that launches the MPI program. It must be
-installed on the remote site:
-
-----
-#!/bin/bash
-mpirun -np 3 -machinefile $PBS_NODEFILE /home/benc/mpi/a.out
-----
-
-Because of the way that Swift runs its server side code,
-provider-specific MPI modes (such as GRAM jobType=mpi) should not be
-used. Instead, the mpirun command should be explicitly invoked.
 
 ==== MPICH/Coasters
 
