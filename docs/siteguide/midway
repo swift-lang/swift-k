@@ -84,6 +84,30 @@ below requests 2 nodes with 12 slots per node.
 </config>
 -----
 
+Defining non-standard Slurm options
+-----------------------------------
+A Slurm submit script has many settings and options. Swift knows about many of
+the basic Slurm settings, like how to define a project or a queue, but it does 
+not know about every setting. Swift provides a simple way to pass-thru your own
+settings into the Slurm submit script. 
+
+The general way to do this is:
+-----
+<profile namespace="globus" key="slurm.setting">value</profile>
+-----
+
+Here is one specific example. Slurm has the ability to notify users via email 
+when a job is done. To make this happen, the Slurm submit script that Swift
+generates needs a line that contains "--mail-type=END". The following line
+will make it happen.
+
+-----
+<profile namespace="globus" key="slurm.mail-type">END</profile>
+-----
+
+Any valid Slurm setting can be set in a similar way (see the sbatch man page
+for a list of all settings).
+
 Various tips for running MPI jobs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * You'll need to load an MPI module. Run "module load openmpi" to add to your path.
