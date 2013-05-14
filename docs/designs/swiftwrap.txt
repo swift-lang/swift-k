@@ -1,0 +1,30 @@
+swiftwrap.wrapperstaging
+-------------------------
+
+.Command line arguments
+[options="header"]
+|============================
+|Argument       | Description      
+| -a            | Command line arguments passed to app
+| -d            | DIRS?
+| -e            | App to execute
+| -err          | Where to write stderr
+| -i            | Set stdin
+| -if           | Input file(s) 
+| -jobdir       | Swift job directory
+| -of           | Ouput file(s)     
+| -out          | Where to write stdout
+| -scratchdir   | Swift scratch directory
+| -sk           | Sitedir keep, true/false
+| -status       | Provider or files
+| -urlprefix    | URL Prefix
+| -wt           | Wrapper log always transfer, true/false
+|============================
+
+Enabling wrapper staging
+------------------------
+-----
+use.wrapper.staging=true
+wrapper.staging.local.server=file://
+-----
+
