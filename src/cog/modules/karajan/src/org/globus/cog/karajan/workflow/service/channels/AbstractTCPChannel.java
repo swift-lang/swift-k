@@ -115,7 +115,12 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 	}
 
 	public void close() {
-		closing = true;
+		synchronized(this) {
+			if (closing || socket == null) {
+				return;
+			}
+			closing = true;
+		}
 		try {
 			if (!socket.isClosed()) {
 				socket.close();
