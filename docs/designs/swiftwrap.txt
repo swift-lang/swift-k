@@ -6,7 +6,7 @@ swiftwrap.wrapperstaging
 |============================
 |Argument       | Description      
 | -a            | Command line arguments passed to app
-| -d            | DIRS?
+| -d            | List of directories to create
 | -e            | App to execute
 | -err          | Where to write stderr
 | -i            | Set stdin
@@ -21,10 +21,60 @@ swiftwrap.wrapperstaging
 | -wt           | Wrapper log always transfer, true/false
 |============================
 
-Enabling wrapper staging
-------------------------
------
-use.wrapper.staging=true
-wrapper.staging.local.server=file://
------
+Swift properties related to wrapper staging
+-------------------------------------------
+[options="header"]
+|============================
+|Setting	| Description
+| use.wrapper.staging | If set to true, enable wrapper staging. Defaults to false.
+| wrapper.staging.local.server | Swift passes a URL prefix to swiftwrap.wrapperstaging that determines how to access local files. This setting determines what the prefix is (for example, file://).
+|============================
 
+Protocols
+---------
+Below is a list of protocols supported by _swiftwrap.wrapperstaging and a brief explanation of how they are implemented.
+
+http://
+~~~~~~~
+HTTP is implemented in _swiftwrap.wrapperstaging via the wget command.
+
+file://
+~~~~~~~
+TODO: How to set different modes of file staging?
+
+gsiftp://
+~~~~~~~~~
+GSIFTP files will be transferred using the globus-url-copy command.
+
+Examples of how swiftwrap is called
+-----------------------------------
+
+Using absolute pathnames
+~~~~~~~~~~~~~~~~~~~~~~~~
+In this example, Swift tries to map the file below using an absolute path
+-----
+file data <"/home/davidkelly999/staging/dd-absolute/data.txt">;
+-----
+._swiftwrap.wrapperstaging arguments
+|====================================
+| -if | file://localhost//home/davidkelly999/staging/dd-absolute/data.txt
+| -of | catsn.0001.out
+| -urlprefix | file:///home/davidkelly999/staging/dd-absolute
+| -d | \__root__/home/davidkelly999/staging/dd-absolute\|.
+| -a | \__root__/home/davidkelly999/staging/dd-absolute/data.txt
+|====================================
+
+Using relative pathnames
+~~~~~~~~~~~~~~~~~~~~~~~~
+Here is an example using relative pathnames in Swift.
+-----
+file data <"data.txt">;
+-----
+._swiftwrap.wrapperstaging arguments
+|===================================
+| -if | file://localhost/data.txt
+| -of | catsn.0001.out
+| -urlprefix | file:///home/davidkelly999/staging/dd-relative
+| -d | \|.
+| -a | data.txt
+|===================================
