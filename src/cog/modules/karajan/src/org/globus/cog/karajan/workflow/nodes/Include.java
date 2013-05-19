@@ -56,6 +56,20 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 		}
 	}
 
+	@Override
+	protected void executeChildren(VariableStack stack) throws ExecutionException {
+		stack.setCaller(this);
+		synchronized (this) {
+			if (hasProperty("_processed")) {
+				setIndex(stack, (Integer) getProperty("_processed"));
+			}
+			else {
+				setIndex(stack, 0);
+			}
+		}
+		startNext(stack);
+	}
+
 	protected void checkArgs(VariableStack stack) throws ExecutionException {
 		if (A_FILE.isPresent(stack)) {
 			includeFile(TypeUtil.toString(A_FILE.getValue(stack)), stack);
@@ -142,7 +156,7 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 		if (hasProperty("_processed")) {
 			return;
 		}
-		setProperty("_processed", true);
+		setProperty("_processed", elementCount());
 		A_FILE.setStatic(this, iname);
 		logger.debug("Importing: " + iname);
 		Reader reader = null;
