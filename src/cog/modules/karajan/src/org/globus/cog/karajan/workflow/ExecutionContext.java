@@ -201,7 +201,6 @@ public class ExecutionContext implements EventListener {
 	public void failedQuietly(VariableStack stack,
 			                  ExecutionException e) {
 		stateManager.stop();
-		notifyFailed(stack, e);
 		synchronized(this) {
 			if (failed) {
 				return;
@@ -211,6 +210,7 @@ public class ExecutionContext implements EventListener {
 			}
 			setDone();
 		}
+		notifyFailed(stack, e);
 	}
 
 	public void completed(VariableStack stack) throws ExecutionException {
