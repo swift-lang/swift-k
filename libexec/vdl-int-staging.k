@@ -151,7 +151,7 @@ namespace("vdl"
 								stageIn("{loc}{swift.home}/libexec/cdm_lib.sh", "cdm_lib.sh")
 							))
 
-							appStageins(jobid, stagein, ".", stagingMethod)
+							appStageins(jobid, stagein, stagingMethod)
 
 							stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info", 
 								mode = WRAPPER_TRANSFER_MODE)
@@ -159,7 +159,7 @@ namespace("vdl"
 							//stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
 							stageOut("wrapper.error", "{stagingMethod}://localhost/{ddir}/{jobid}.error", 
 								mode = STAGING_MODE:IF_PRESENT)
-							appStageouts(jobid, stageout, ".", stagingMethod)
+							appStageouts(jobid, stageout, stagingMethod)
 
 							task:cleanUp(".") //the whole job directory
 						)

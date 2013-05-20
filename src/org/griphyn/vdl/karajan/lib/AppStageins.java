@@ -40,17 +40,17 @@ public class AppStageins extends AbstractSequentialWithArguments {
     
     public static final Arg JOBID = new Arg.Positional("jobid");
     public static final Arg FILES = new Arg.Positional("files");
-    public static final Arg DIR = new Arg.Positional("dir");
     public static final Arg STAGING_METHOD = new Arg.Positional("stagingMethod");
     public static final Arg.Channel STAGEIN = new Arg.Channel("stagein");
 
     static {
-        setArguments(AppStageins.class, new Arg[] { JOBID, FILES, DIR,
+        setArguments(AppStageins.class, new Arg[] { JOBID, FILES,
                 STAGING_METHOD });
     }
 
     protected void post(VariableStack stack) throws ExecutionException {
         List files = TypeUtil.toList(FILES.getValue(stack));
+        String cwd = stack.getExecutionContext().getCwd();
         for (Object f : files) {
             AbsFile file = new AbsFile(TypeUtil.toString(f));
             Policy policy = Director.lookup(file.toString());
@@ -63,18 +63,30 @@ public class AppStageins extends AbstractSequentialWithArguments {
             if (protocol.equals("file")) {
                 protocol = TypeUtil.toString(STAGING_METHOD.getValue(stack));
             }
-            String path = file.getDir().equals("") ? file.getName() : file
-                .getDir()
-                    + "/" + file.getName();
+            String path = file.getDir().equals("") ? 
+                    file.getName() : file.getDir() + "/" + file.getName();
             String relpath = path.startsWith("/") ? path.substring(1) : path;
             if (logger.isDebugEnabled()) {
                 logger.debug("will stage in: " + relpath + " via: " + protocol);
             }
             ArgUtil.getChannelReturn(stack, STAGEIN).append(
-                makeList(protocol + "://" + file.getHost() + "/" + path,
-                    TypeUtil.toString(DIR.getValue(stack)) + "/" + relpath));
+                makeList(localPath(cwd, protocol, path, file), relpath));
         }
         super.post(stack);
+    }
+
+    protected static String localPath(String cwd, String protocol, String path, AbsFile file) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(protocol);
+        sb.append("://");
+        sb.append(file.getHost());
+        sb.append('/');
+        if (!file.isAbsolute()) {
+            sb.append(cwd);
+            sb.append('/');
+        }
+        sb.append(path);
+        return sb.toString();
     }
 
     private List<String> makeList(String s1, String s2) {

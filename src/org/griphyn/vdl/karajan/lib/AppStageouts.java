@@ -37,19 +37,18 @@ public class AppStageouts extends AbstractSequentialWithArguments {
 
     public static final Arg JOBID = new Arg.Positional("jobid");
     public static final Arg FILES = new Arg.Positional("files");
-    public static final Arg DIR = new Arg.Positional("dir");
     public static final Arg STAGING_METHOD = new Arg.Positional("stagingMethod");
     public static final Arg VAR = new Arg.Optional("var", null);
     public static final Arg.Channel STAGEOUT = new Arg.Channel("stageout");
 
     static {
-        setArguments(AppStageouts.class, new Arg[] { JOBID, FILES, DIR,
-                STAGING_METHOD, VAR });
+        setArguments(AppStageouts.class, new Arg[] { JOBID, FILES, STAGING_METHOD, VAR });
     }
 
     protected void post(VariableStack stack) throws ExecutionException {
         try {
             List files = TypeUtil.toList(FILES.getValue(stack));
+            String cwd = stack.getExecutionContext().getCwd();
             for (Object f : files) { 
                 List pv = TypeUtil.toList(f);
                 Path p = (Path) pv.get(0);
@@ -64,8 +63,7 @@ public class AppStageouts extends AbstractSequentialWithArguments {
                         + "/" + file.getName();
                 String relpath = path.startsWith("/") ? path.substring(1) : path;
                 ArgUtil.getChannelReturn(stack, STAGEOUT).append(
-                    makeList(TypeUtil.toString(DIR.getValue(stack)) + "/" + relpath,
-                        protocol + "://" + file.getHost() + "/" + path));
+                    makeList(relpath, AppStageins.localPath(cwd, protocol, path, file)));
             }
             super.post(stack);
         }
