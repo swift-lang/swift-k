@@ -56,10 +56,12 @@ debug() {
 }
 
 localPath() {
-	# remove protocol://
-	PATH="${1#*://}"
-	# remove leading "/" if present
-	PATH="${PATH#/}"
+        # remove protocol://
+        PATH="${1#*://}"
+        # Remove hostname
+        PATH="${PATH#*/}"
+        # remove leading "/" if present
+        PATH="${PATH#/}"
 	log "Transformed $1 to $PATH"
 	echo $PATH
 }
@@ -80,13 +82,29 @@ stagein() {
 	
 	case $SRC in
 		file://*)
-			SRC=${SRC#file://}
+			SRC=${SRC#file://*/}
 			log "Copying $SRC to $DST"
 			if [ ! -f $SRC ]; then
 				fail 254 "Cannot stage in $SRC. File not found."
 			fi
-			cp $SRC $DST 2>&1 >& "$INFO"
+                        ln -s $SRC $DST 2>&1 >& "$INFO"
 			;;
+		stage://*)
+			SRC=${SRC#stage://}
+			log "Copying $SRC to $DST"
+			if [ ! -f $SRC ]; then
+				fail 254 "Cannot stage in $SRC. File not found."
+			fi
+                        dd if=$SRC of=$DST bs=10M 2>&1 >& "$INFO"
+			;;
+                direct://*)
+                	SRC=${SRC#direct://}
+                        log "Linking $SRC to $DST"
+                        if [ ! -f $SRC ]; then
+				fail 245 "Cannot stage in $SRC. File not found."
+			fi
+                        ln -s $SRC $DST 2>&1 >& "$INFO"
+                        ;;
 		http://*)
 			log "Fetching $SRC using wget"
 			wget $SRC -O $DST 2>&1 >& "$INFO"
@@ -121,7 +139,7 @@ stageout() {
 			DIR=`dirname $DST`
 			mkdir -p $DIR
 			log "Copying $SRC to $DST"
-			cp $SRC $DST 2>&1 >& "$INFO"
+                        dd if=$SRC of=$DST bs=10M 2>&1 >& "$INFO"
 			;;
 		*://*)
 			fail 254 "Cannot handle protocol ${DST%%://*}"
@@ -269,7 +287,6 @@ cdm_gather()
 }
 
 COMMANDLINE=$@
-
 PARAMFILE=
 
 openinfo "wrapper.log"
