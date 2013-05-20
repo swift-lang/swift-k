@@ -34,17 +34,41 @@ Protocols
 ---------
 Below is a list of protocols supported by _swiftwrap.wrapperstaging and a brief explanation of how they are implemented.
 
-http://
-~~~~~~~
-HTTP is implemented in _swiftwrap.wrapperstaging via the wget command.
+direct://
+~~~~~~~~~
+The direct protocol allows you to bypass file staging to the swift created
+work directory. Instead of making a copy of the file, a symlink will be
+created which points to the original location of the file. 
+-----
+file data <"direct:///home/davidkelly999/staging/absolute/direct/data.txt">;
+-----
 
 file://
 ~~~~~~~
-TODO: How to set different modes of file staging?
+By default, files that use the file:// URI, or files that specify no URI at
+all, will act in a way that is similar to the behavior or direct://. A symlink
+will be created in the Swift work directory that points to the original
+location of the file.
+-----
+file data <"file:///home/davidkelly999/staging/absolute/file/data.txt">;
+file data2 <"/home/davidkelly999/staging/absolute/normal/data.txt">;
+-----
 
 gsiftp://
 ~~~~~~~~~
 GSIFTP files will be transferred using the globus-url-copy command.
+
+http://
+~~~~~~~
+HTTP is implemented in _swiftwrap.wrapperstaging via the wget command.
+
+stage://
+~~~~~~~~
+If a file begins with stage://, a copy of the file will be made in the work
+directory. Files get copied using dd with a 10MB block size.
+-----
+file data <"stage:///home/davidkelly999/staging/absolute/stage/data.txt">;
+-----
 
 Examples of how swiftwrap is called
 -----------------------------------
