@@ -63,7 +63,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private static final int STDOUT = 0;
     private static final int STDERR = 1;
 
-    public static final int BUFFER_SIZE = 1024;
+    public static final int BUFFER_SIZE = 32768;
 
     private Process process;
     private volatile boolean killed;
