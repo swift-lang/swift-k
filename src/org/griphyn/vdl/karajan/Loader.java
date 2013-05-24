@@ -65,6 +65,7 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.IncorrectInvocationException;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
+import org.griphyn.vdl.util.LazyFileAppender;
 import org.griphyn.vdl.util.VDL2Config;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 import org.griphyn.vdl.util.VDL2ConfigProperties.PropInfo;
@@ -96,9 +97,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static String buildVersion;
 
     public static void main(String[] argv) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Swift started");
-        }
         ArgumentParser ap = buildArgumentParser();
         String project = null;
         try {
@@ -557,6 +555,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
         else {
             fa.setFile(f.getAbsolutePath());
+            if (fa instanceof LazyFileAppender) {
+                ((LazyFileAppender) fa).fileNameConfigured();
+            }
             fa.activateOptions();
         }
         Level level = Level.WARN;
