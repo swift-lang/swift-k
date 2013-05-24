@@ -61,7 +61,6 @@ import org.globus.swift.language.TypesDocument.Types;
 import org.globus.swift.language.TypesDocument.Types.Type;
 import org.globus.swift.language.Variable.Mapping;
 import org.globus.swift.language.Variable.Mapping.Param;
-import org.globus.swift.language.impl.FunctionImpl;
 import org.griphyn.vdl.engine.VariableScope.EnclosureType;
 import org.griphyn.vdl.engine.VariableScope.WriteType;
 import org.griphyn.vdl.karajan.CompilationException;
@@ -727,7 +726,8 @@ public class Karajan {
 			ProcedureSignature proc = proceduresMap.get(procName);
 			
 			if (proc.isDeprecated()) {
-			    Warnings.warn(call, "Procedure " + procName + " is deprecated");
+			    Warnings.warn(Warnings.Type.DEPRECATION, 
+			        call, "Procedure " + procName + " is deprecated");
 			}
 			
 			StringTemplate callST;
@@ -1651,7 +1651,8 @@ public class Karajan {
         /* Functions have only one output parameter */
         st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
         if (funcSignature.isDeprecated()) {
-            Warnings.warn(c, "Function " + name + " is deprecated");
+            Warnings.warn(Warnings.Type.DEPRECATION, 
+                c, "Function " + name + " is deprecated");
         }
         
         return st;
@@ -1664,7 +1665,8 @@ public class Karajan {
         }
         else {
             // the @var shortcut for filename(var) is not deprecated
-            Warnings.warn("The @ syntax for function invocation is deprecated");
+            Warnings.warn(Warnings.Type.DEPRECATION, 
+                "The @ syntax for function invocation is deprecated");
         }
         ProcedureSignature funcSignature = functionsMap.get(name);
         if (funcSignature == null) {
@@ -1676,7 +1678,8 @@ public class Karajan {
         st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
         
         if (funcSignature.isDeprecated()) {
-            Warnings.warn(f, "Function " + name + " is deprecated");
+            Warnings.warn(Warnings.Type.DEPRECATION, 
+                f, "Function " + name + " is deprecated");
         }
     
         return st;

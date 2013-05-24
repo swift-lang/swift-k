@@ -327,8 +327,9 @@ public class VariableScope {
 		// by the above if? in which case isVariableDefined should
 		// be replaced by is locally defined test.
 		if(parentScope != null && parentScope.isVariableDefined(name)) {
-		    Warnings.warn(context + " " + name + ", on line " + CompilerUtils.getLine(src)
-			+ ", shadows variable of same name on line " + parentScope.getDeclarationLine(name));
+		    Warnings.warn(Warnings.Type.SHADOWING,  
+		        context + " " + name + ", on line " + CompilerUtils.getLine(src)
+		        + ", shadows variable of same name on line " + parentScope.getDeclarationLine(name));
 		}
 
 		if (global && this != rootScope) {
@@ -484,7 +485,7 @@ public class VariableScope {
 		    case CONDITION:
 		        if (parentScope.isVariableWriteable(name, WriteType.PARTIAL)) {
 		            if (getTopmostLoopToDeclaration(name) != null) {
-		                Warnings.warn("Variable " + name + ", defined on line " + 
+		                Warnings.warn(Warnings.Type.DATAFLOW, "Variable " + name + ", defined on line " + 
 		                    getDeclarationLine(name) + ", might have multiple conflicting writers");
 		            }
 		            return true;
