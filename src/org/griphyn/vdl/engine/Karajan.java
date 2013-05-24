@@ -61,6 +61,7 @@ import org.globus.swift.language.TypesDocument.Types;
 import org.globus.swift.language.TypesDocument.Types.Type;
 import org.globus.swift.language.Variable.Mapping;
 import org.globus.swift.language.Variable.Mapping.Param;
+import org.globus.swift.language.impl.FunctionImpl;
 import org.griphyn.vdl.engine.VariableScope.EnclosureType;
 import org.griphyn.vdl.engine.VariableScope.WriteType;
 import org.griphyn.vdl.karajan.CompilationException;
@@ -1232,15 +1233,15 @@ public class Karajan {
 	  * that happens.
 	  */
 
-	public StringTemplate function(Function func, VariableScope scope) throws CompilationException {
+	public StringTemplate function(XmlObject func, String name, XmlObject[] arguments, VariableScope scope) 
+	        throws CompilationException {
 		StringTemplate funcST = template("function");
-		funcST.setAttribute("name", func.getName());
+		funcST.setAttribute("name", name);
 		funcST.setAttribute("line", getLine(func));
-		ProcedureSignature funcSignature =  functionsMap.get(func.getName());
-		if(funcSignature == null) {
-			throw new CompilationException("Unknown function: @"+func.getName());
+		ProcedureSignature funcSignature = functionsMap.get(name);
+		if (funcSignature == null) {
+			throw new CompilationException("Unknown function: @" + name);
 		}
-		XmlObject[] arguments = func.getAbstractExpressionArray();
 		int noOfOptInArgs = 0;
 		for (int i = 0; i < funcSignature.sizeOfInputArray(); i++) {
 			if (funcSignature.getInputArray(i).isOptional())
@@ -1586,53 +1587,100 @@ public class Karajan {
 			return st;
 		} else if (expressionQName.equals(FUNCTION_EXPR)) {
 			Function f = (Function) expression;
-			StringTemplate st = function(f, scope);
-			/* Set function output type */
-			String name = f.getName();
-			ProcedureSignature funcSignature = functionsMap.get(name);
-			if (funcSignature != null) {
-				/* Functions have only one output parameter */
-				st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
-				if (funcSignature.isDeprecated()) {
-				    Warnings.warn(f, "Function " + name + " is deprecated");
-				}
-			} else
-				throw new CompilationException("Function " + name + " is not defined.");
-			return st;
+			return functionExpr(f, scope);
 		} else if (expressionQName.equals(CALL_EXPR)) {
 		    Call c = (Call) expression;
-		    c.addNewOutput();
-		    VariableScope subscope = new VariableScope(this, scope, c);
-		    VariableReferenceDocument ref = VariableReferenceDocument.Factory.newInstance();
-		    ref.setVariableReference("swift#callintermediate");
-		    c.getOutputArray(0).set(ref);
 		    String name = c.getProc().getLocalPart();
-		    ProcedureSignature funcSignature = proceduresMap.get(name);
-
-		    if (funcSignature == null) {
-                throw new CompilationException("Procedure " + name + " is not defined.");
-            }
-
-		    if (funcSignature.sizeOfOutputArray() != 1) {
-		        throw new CompilationException("Procedure " + name + " must have exactly one " +
-		        		"return value to be used in an expression.");
-		    }
 		    
-		    StringTemplate call = template("callexpr");
-
-		    String type = funcSignature.getOutputArray(0).getType();
-		    subscope.addInternalVariable("swift#callintermediate", type, null);
-
-		    call.setAttribute("datatype", type);
-		    call.setAttribute("call", call(c, subscope, true));
-		    call.setAttribute("prefix", UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
-		    return call;
+		    if (proceduresMap.containsKey(name)) {
+		        return callExpr(c, scope);
+		    }
+		    else {
+		        if (functionsMap.containsKey(name)) {
+		            return functionExpr(c, scope);
+		        }
+		        else {
+		            throw new CompilationException("No function or procedure '" + name + "' found.");
+		        }
+		    }
 		} else {
 			throw new CompilationException("unknown expression implemented by class "+expression.getClass()+" with node name "+expressionQName +" and with content "+expression);
 		}
 		// perhaps one big throw catch block surrounding body of this method
 		// which shows Compiler Exception and line number of error
 	}
+
+    private StringTemplate callExpr(Call c, VariableScope scope) throws CompilationException {
+        c.addNewOutput();
+        VariableScope subscope = new VariableScope(this, scope, c);
+        VariableReferenceDocument ref = VariableReferenceDocument.Factory.newInstance();
+        ref.setVariableReference("swift#callintermediate");
+        c.getOutputArray(0).set(ref);
+        String name = c.getProc().getLocalPart();
+        ProcedureSignature funcSignature = proceduresMap.get(name);
+
+        if (funcSignature.sizeOfOutputArray() != 1) {
+            throw new CompilationException("Procedure " + name + " must have exactly one " +
+                    "return value to be used in an expression.");
+        }
+        
+        StringTemplate call = template("callexpr");
+
+        String type = funcSignature.getOutputArray(0).getType();
+        subscope.addInternalVariable("swift#callintermediate", type, null);
+
+        call.setAttribute("datatype", type);
+        call.setAttribute("call", call(c, subscope, true));
+        call.setAttribute("prefix", UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
+        return call;
+    }
+    
+    private StringTemplate functionExpr(Call c, VariableScope scope) throws CompilationException {
+        String name = c.getProc().getLocalPart();
+        ProcedureSignature funcSignature = functionsMap.get(name);
+        if (funcSignature == null) {
+            throw new CompilationException("Function " + name + " is not defined.");
+        }
+        
+        XmlObject[] params = new XmlObject[c.getInputArray().length];
+        for (int i = 0; i < params.length; i++) {
+            params[i] = c.getInputArray(i).getAbstractExpression();
+        }
+        StringTemplate st = function(c, name, params, scope);
+        /* Set function output type */
+        /* Functions have only one output parameter */
+        st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
+        if (funcSignature.isDeprecated()) {
+            Warnings.warn(c, "Function " + name + " is deprecated");
+        }
+        
+        return st;
+    }
+
+    private StringTemplate functionExpr(Function f, VariableScope scope) throws CompilationException {
+        String name = f.getName();
+        if (name.equals("")) {
+            name = "filename";
+        }
+        else {
+            // the @var shortcut for filename(var) is not deprecated
+            Warnings.warn("The @ syntax for function invocation is deprecated");
+        }
+        ProcedureSignature funcSignature = functionsMap.get(name);
+        if (funcSignature == null) {
+            throw new CompilationException("Function " + name + " is not defined.");
+        }
+        StringTemplate st = function(f, name, f.getAbstractExpressionArray(), scope);
+        /* Set function output type */    
+        /* Functions have only one output parameter */
+        st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
+        
+        if (funcSignature.isDeprecated()) {
+            Warnings.warn(f, "Function " + name + " is deprecated");
+        }
+    
+        return st;
+    }
 
     void checkTypesInCondExpr(String op, String left, String right, StringTemplate st)
 			throws CompilationException {

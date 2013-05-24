@@ -229,7 +229,7 @@
       <xs:element minOccurs="0" maxOccurs="unbounded" ref="abstractExpression" />
     </xs:sequence>
 
-    <xs:attribute name="name" type="xs:NMTOKEN">
+    <xs:attribute name="name" type="xs:string">
       <xs:annotation>
         <xs:documentation>name of the mapping function</xs:documentation>
       </xs:annotation>
