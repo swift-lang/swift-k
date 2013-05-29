@@ -5,37 +5,152 @@ Swiftrun
 :icons:
 :numbered:
 
-New method for running Swift
-----------------------------
-This document describes a new method of running which aims to make
-Swift easier to use.
+Steps to implementation
+-----------------------
 
-Currently, Swift configuration settings are split up into multiple files.
-Sites.xml defines the site definition, tc.data defines applications,
-swift.properties defines other various settings, and cdm.data defines CDM
-rules.
+1) Implement the .swift run directory, $HOME/.swiftrc, $PWD/.swiftrun
 
-Below is a fairly typical Swift command:
+NOTE: either simplify or provide some shortcuts and backwards
+compatibility.
+
+2) Implement the search path for site templates.  Site templates are XML for now, but can eventually be in property-file format
+
+3) accept site overrides from property files
+
+4) Users should edit only proprty files unless they are making new templates.
+
+5) Generate app files automatically.
+
+
+New command line and configuration conventions for running Swift.
+-----------------------------------------------------------------
+
+This document describes a new method of running Swift scripts which
+aims to make Swift easier to use.
+
+Currently, Swift configuration settings are split up into multiple
+files.  -sites.file (Sites.xml) defines sites, -tc.file (tc.data)
+defines applications, -config (swift.properties) defines other
+settings, and -cdm.file (cdm.data) defines data management rules.
+
+.Goals of reworking this configuration mechanism are
+
+1. Define all settings in a single configuration file format with more
+uniform conventions. Use a consistent format for all settings.
+
+2. Don't require users or site administrators to use XML.
+
+3. Make the settings in swift.properties simple to understand
+
+4. Build an effective run-directory mechanism into the swift
+command. Reduce the need for users to write their own runMyApp.sh
+wrappers, and reduce the complexity of such wrappers when necessary.
+
+5. Define effective locations for site-specific templates and defaults
+
+6. Enable users to specify default settings for their personal runs as
+well as for specific runs (ie in the current working
+directories where they are running swift)
+
+7. Improve the user-guide documentation of properties, in particular
+by separating out the common ones from the obscure ones and by
+clarifying how throttling actually works, especially for data management and
+coasters vs. single-level providers.
+
+8. Make it easier to use predefined site templates created by site
+Swift administrators or user groups
+
+9. Provide a simpler and more compact way of specifiying which apps
+should be invoked on which sites. (Includes: Don't force user to
+determine which sites to use by resticting the sites file or the tc
+list)
+
+10. Catch mis-spelled config options. Currently these errors are
+silently ignored.
+
+11. Enable simpler linkage from app() definitions in the .swift source
+to the executable to run for that app. This should support the new
+feature of inline multi-language app scripts/programs.
+
+12. Separate the selection of sites to use from the sets of sets
+defined in the configuration properties (do this w/o changes to the
+internals)
+
+13. Enable users to define groups of settings as "profiles" for
+various modes of operation. 
+
+14. Sites templates and config files can be constructed with a
+graphical configurator (ideally one with comprehensive graphics to
+define the configuration...  can envision wysiwyg and drag-and-drop)
+which creates the needed text files. 
+
+15. For below: The parameters specified in a site.sitename.paramname=
+value statement will be checked for correctness against the xml
+schema.
+
+16. It should be possible to define an entire site entry from
+name=value statements. So templates could be specified that way, and
+XML could be used solely for the internal format and eventually
+removed altogether.
+
+17. site.beagle-fixed.maxnodes
+a. slots
+b. maxnodes
+c. nodegranularity
+d. high & low overallocation        <= on/off or via one parameter (fixed/var)
+e. jobThrottle + scalefactor (?sp)
+f. maxtime => slotTime  maxWallTime=>taskTime
+g. passthrough to lower level scheduler:  site.LRM.param
+h. (special for aprun and ibrun, mpiexec...)
+i. site.sitename.param=\_REQUIRED_
+
+18. sites.xml values will be aliased to new, meaningful names.  Since
+the providers will be retained in swift 2.0, we chould make these
+chainges internal, but still provide some period of backwards
+compatibility if thats affordable.
+
+19. Things to fix in sites.xml:
+
+a. jobsPer -> tasks? (in sync with a language spec that nails down
+runs, tasks, and jobs.)
+b. coresPerNode, slotsPerNode?
+c. params for dynamic coaster throttling?
+d. maxTime -> jobWallTime maxWallTime taskWallTime; time into
+consistent units: sec OR hh:mm:ss
+e. slots: are these used consistently between coaster-layered and single-level providers?
+f. it should be possible to define a site-set (eg: namd-sites)
+g. Enable the new mechanism to be implemented with little change to
+Swift internals.  (Still use XML as the internal format used by swift
+and for backwards compatibility).
+h. Create a specification which can be retained in Swift 2.0
+i. The swift run log makes it clear where all property values came from:
+   propert_name property_value property_source
+j. Related code improvements suggested by the config re-specification project:
+k. Dont assign jobs to sites w/o slots unless pre-staging (and even
+then allow an assignment to be abandoned if a better choice appears
+later) <== Mihael fix soon?
+l. Replication to work w/ provider staging
+m. clean up the internal Java structures for specifying parameters
+(properties, sites, tc).  Make it much easier to add new
+parameters. Make it easy to add the pass-through parameters for LRMs.
+
+Below is a typical current swift command invocation:
+
 -----
 swift -sites.file sites.xml -tc.file tc.data -config cf -cdm.file fs.data hello.swift
 -----
 
-We should keep this syntax for backward compatibility, but try to simplify
-this and also add some flexibility. There are a few ways to go about this.
+We will retain this syntax and file separation for backward
+compatibility, and as the "internal" file representation of Swift
+configuration.
 
-.Goals
-1. Define all settings in a single, swift.properties-like file.
-2. Make the settings in swift.properties simple to understand, and use a
-   consistent format for all settings (eliminate the need to 
-   know the formats of tc.data and sites.xml).
-3. Make it easier to use predefined site templates
-4. Increase flexibility when running on multiple sites.
 
 Swift Properties
 ----------------
-This new configuration file will be very similar to the current format of
-swift.properties. Settings that are currently defined in swift.properties
-will keep the same names and formatting.
+
+This new configuration file will be very similar to the current format
+of swift.properties. Settings that are currently defined in
+swift.properties will keep the same names and format.
 
 -----
 execution.retries=0
@@ -53,9 +168,9 @@ Settings for swift.properties get set in the following order.
 5. One or both of $PWD/swift.properties and $PWD/.swift/swift.properties (to
    be determined)
 6. Command line options. Swift will accept parameters on the command line, in
-   the format of -Dexecution.retries=5.
+   the format of -Dexecution.retries=5.  All parameters are unformly specifiable there.
 
-Settings are accumulative. Every swift.properties files that is found is read
+Settings are uniformly cumulative. Every swift.properties files that is found is read
 and values are set, with values from the most recent file taking precedence.
 
 Apps
@@ -93,17 +208,11 @@ In the new tc format, this same expression would be:
 app.beagle.* = * 
 -----
 
-CDM
----
-CDM configuration files will also be defined in swift.properties.
-
------
-pathrule.type=path,path  # type=DIRECT,LOCAL, etc
----- 
-
 Sites
 -----
-To specify which site a swift script should run on, use the -site command line argument.
+
+To specify which site a swift script should run on, use the -site
+command line argument.
 
 -----
 $ swift -site midway hello.swift
@@ -143,8 +252,9 @@ multiple locations.
 
 How can I change the the values in these templates dynamically?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Values defined in your Swift configuration file can override the default values
-stored in XML templates. Here is one example.
+
+Values defined in your Swift configuration file can override the
+default values stored in XML templates. Here is one example.
 
 Assume that you are looking at a site templates that looks like this:
 -----
@@ -164,29 +274,44 @@ Assume that you are looking at a site templates that looks like this:
   </pool>
 -----
 
-By default in this template, jobsPerNode is set to 24. However, for our 
-application we would like to set this to 12. To do this, we add this
-line to the Swift configuration file we are using:
+By default in this template, jobsPerNode is set to 24. However, for
+our application we would like to set this to 12. To do this, we add
+this line to the Swift configuration file we are using:
+
 -----
 site.beagle.jobsPerNode=12
 -----
 
+Can this be shortened?  Initially assume not.
+
+Can same attributes be applied to all sites? E.g.:
+
+site.jobsNerNode=12
+
+or
+
+jobsPerNode=12
+
+OI:  use name=value or name <space> value or both?
+
 Defining sites in swift.properties
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-We may also want to talk about the ability to define sites directly in
-swift.properties using the existing XML format. The program that parses the
-properties file can attempt to find pool entries there.
 
-NOTE: This came up in discussions, but I think we should try to avoid this
-one. We should be able to shape a sites file using only x.y.z=foo properties. 
-In cases where a user wants to use XML directly, I think they should
-use the -sites.file option.
+We may also want to talk about the ability to define sites directly in
+swift.properties using the existing XML format. The program that
+parses the properties file can attempt to find pool entries there.
+
+NOTE: This came up in discussions, but I think we should try to avoid
+this one. We should be able to shape a sites file using only x.y.z=foo
+properties.  In cases where a user wants to use XML directly, I think
+they should use the -sites.file option.
 
 Run directories and logs
 ------------------------
-Every time Swift runs, it should create a directory called called 
+
+Every time Swift runs, it should create a directory called called
 $PWD/.swift/runNNN, where NNN is a numeric value that gets incremented
-with every run. 
+with every run.
 
 These run directories contain:
 
@@ -200,11 +325,12 @@ These run directories contain:
 
 What changes need to be made to make this work?
 -----------------------------------------------
-The vast majority of this can done with changes to the swift shell script and
-a new perl script. 
 
-The swift shell script will check the command line parameters it receives. If 
-the newer style of running is specified, where no configuration files are 
-specified, swift and swiftrun will generate sites.xml, tc.data, 
-swift.properties, cdm.data as described in this document. They will be created
-in $PWD/.swift/runNNN and referenced.
+The vast majority of this can done with changes to the swift shell
+script and a new perl script.
+
+The swift shell script will check the command line parameters it
+receives. If the newer style of running is specified, where no
+configuration files are specified, swift and swiftrun will generate
+sites.xml, tc.data, swift.properties, cdm.data as described in this
+document. They will be created in $PWD/.swift/runNNN and referenced.
