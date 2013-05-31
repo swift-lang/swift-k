@@ -208,6 +208,8 @@ In the new tc format, this same expression would be:
 app.beagle.* = * 
 -----
 
+NOTE: If the form of line in tc is so generic, it could also be considered a default/generate on the fly. Eg. pick site name from swift commandline and generate a tc internally on-the-fly.
+
 Sites
 -----
 
@@ -217,6 +219,8 @@ command line argument.
 -----
 $ swift -site midway hello.swift
 -----
+
+NOTE: Is the -site switch needed? Could we say "swift -local hello.swift" or "swift -midway,beagle hello.swift"
 
 To run on multiple sites, separate site names by a comma.
 
