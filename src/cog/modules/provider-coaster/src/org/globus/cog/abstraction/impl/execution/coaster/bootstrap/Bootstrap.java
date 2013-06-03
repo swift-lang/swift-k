@@ -323,8 +323,10 @@ public class Bootstrap {
     private static class Logger {
         private PrintStream ps;
         private String id;
-        private static final DateFormat DF = new SimpleDateFormat(
-                "yyyy-MM-dd HH:mm:ss,SSS");
+        private static final DateFormat DF = 
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
+        private static final DateFormat LDF = 
+            new SimpleDateFormat("yyyy-MM-dd");
 
         public Logger(String id) {
             this.id = " " + id + " ";
@@ -332,9 +334,8 @@ public class Bootstrap {
                 error("Cannot create coaster directory (" + LOG_DIR + ")");
             }
             try {
-                ps = new PrintStream(new FileOutputStream(LOG_DIR
-                        .getAbsolutePath()
-                        + File.separator + "coasters.log", true));
+                ps = new PrintStream(new FileOutputStream(LOG_DIR.getAbsolutePath()
+                        + File.separator + "coasters-" + LDF.format(new Date()) + ".log", true));
             }
             catch (IOException e) {
                 error("Cannot create coaster log file: " + e.getMessage());

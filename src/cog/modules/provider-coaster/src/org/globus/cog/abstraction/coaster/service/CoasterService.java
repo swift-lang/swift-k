@@ -9,12 +9,20 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Enumeration;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.log4j.Appender;
+import org.apache.log4j.AsyncAppender;
+import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogHandler;
@@ -23,6 +31,7 @@ import org.globus.cog.abstraction.coaster.service.local.JobStatusHandler;
 import org.globus.cog.abstraction.coaster.service.local.RegistrationHandler;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceManager;
+import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Bootstrap;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.karajan.workflow.service.ConnectionHandler;
@@ -367,6 +376,7 @@ public class CoasterService extends GSSService {
 
     public static void main(String[] args) {
         try {
+            configureLogName();
             CoasterService s;
             boolean local = false;
             if (args.length < 2) {
@@ -392,6 +402,45 @@ public class CoasterService extends GSSService {
         catch (Throwable t) {
             error(2, null, t);
         }
+    }
+
+    public static void configureLogName() {
+        FileAppender fa = (FileAppender) getAppender(FileAppender.class);
+        if (fa == null) {
+            logger.warn("Failed to configure log file name");
+        }
+        else {
+            fa.setFile(Bootstrap.LOG_DIR + File.separator + makeLogFileName());
+            fa.activateOptions();
+            
+            AsyncAppender aa = new AsyncAppender();
+            aa.addAppender(fa);
+            replaceAppender(fa, aa);
+        }
+    }
+    
+    private static String makeLogFileName() {
+        DateFormat df = new SimpleDateFormat("YYYY-MM-dd");
+        return "coasters-" + df.format(new Date()) + ".log";
+    }
+
+    private static void replaceAppender(FileAppender fa, AsyncAppender aa) {
+        Logger root = Logger.getRootLogger();
+        root.removeAppender(fa);
+        root.addAppender(aa);
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected static Appender getAppender(Class cls) {
+        Logger root = Logger.getRootLogger();
+        Enumeration e = root.getAllAppenders();
+        while (e.hasMoreElements()) {
+            Appender a = (Appender) e.nextElement();
+            if (cls.isAssignableFrom(a.getClass())) {
+                return a;
+            }
+        }
+        return null;
     }
 
     public static void error(int code, String msg) {
