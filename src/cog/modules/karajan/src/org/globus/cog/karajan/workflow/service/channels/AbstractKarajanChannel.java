@@ -116,6 +116,9 @@ public abstract class AbstractKarajanChannel implements KarajanChannel {
 	}
 	
 	public void configureTimeoutChecks() {
+		if (logger.isInfoEnabled()) {
+			logger.info("Timeout check started for " + this);
+		}
 		Timer.every(TIMEOUT_CHECK_INTERVAL * 1000, timeoutCheckTask = new TimerTask() {
 			public void run() {
 			    checkTimeouts();

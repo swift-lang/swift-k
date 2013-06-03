@@ -19,11 +19,10 @@ import org.globus.cog.karajan.workflow.service.RequestManager;
 import org.globus.cog.karajan.workflow.service.UserContext;
 
 public class TCPChannel extends AbstractTCPChannel {
-	private URI contact;
-
+	
 	public TCPChannel(URI contact, ChannelContext channelContext, RequestManager rm) {
 		super(rm, channelContext, true);
-		this.contact = contact;
+		setContact(contact);
 		setName(contact.toString());
 		channelContext.setUserContext(new UserContext(channelContext));
 	}
@@ -42,6 +41,7 @@ public class TCPChannel extends AbstractTCPChannel {
 
 	protected void reconnect() throws ChannelException {
 		try {
+			URI contact = getContact();
 			if (contact != null) {
 				SocketChannel chan = SocketChannel.open(new InetSocketAddress(contact.getHost(), contact.getPort()));
 				setSocket(chan.socket());
@@ -53,6 +53,17 @@ public class TCPChannel extends AbstractTCPChannel {
 	}
 
 	public String toString() {
-		return "TCP-" + getContact();
+		return "TCPChannel [type: " + (isClient() ? "client" : "server") + ", contact: " + getPeerName() + "]";
+	}
+
+	private String getPeerName() {
+		if (getContact() != null) {
+			return getContact().toString();
+		}
+		Socket sock = getSocket();
+		if (sock != null) {
+			return sock.getInetAddress().getHostAddress() + ":" + sock.getPort();
+		}
+		return "unknown";
 	}
 }

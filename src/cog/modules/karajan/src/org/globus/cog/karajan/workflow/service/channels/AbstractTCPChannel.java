@@ -53,6 +53,10 @@ public abstract class AbstractTCPChannel extends AbstractStreamKarajanChannel {
 			this.nioChannel.configureBlocking(false);
 		}
 	}
+	
+	protected Socket getSocket() {
+		return socket;
+	}
 
 	public synchronized void start() throws ChannelException {
 		if (isClient()) {
