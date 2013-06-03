@@ -208,7 +208,7 @@ In the new tc format, this same expression would be:
 app.beagle.* = * 
 -----
 
-NOTE: If the form of line in tc is so generic, it could also be considered a default/generate on the fly. Eg. pick site name from swift commandline and generate a tc internally on-the-fly.
+NOTE: If the form of line in tc is so generic, it could also be considered a default/generate on the fly. Eg. pick site name from swift commandline and generate a tc internally on-the-fly. In other words, only if user has a special need to define specific path for a specific app, tc should appear otherwise, it should be auto-generated internally. --Ketan.
 
 Sites
 -----
@@ -220,7 +220,7 @@ command line argument.
 $ swift -site midway hello.swift
 -----
 
-NOTE: Is the -site switch needed? Could we say "swift -local hello.swift" or "swift -midway,beagle hello.swift"
+NOTE: Is the -site switch needed? Could we say "swift -local hello.swift" or "swift -midway,beagle hello.swift" --Ketan.
 
 To run on multiple sites, separate site names by a comma.
 
@@ -278,6 +278,8 @@ Assume that you are looking at a site templates that looks like this:
   </pool>
 -----
 
+NOTE: This came up in one or more past discussions: sites file should be less cluttered. Some suggestions: 1) Default values for some attributes be used and should be only visible if a user explicitly wants a new value for them. eg. lowOverAllocation, highOverAllocation, initialscore. 2) One of the walltime and maxwalltime could be done away with. Ditto with depth/ppn and jobspernode. --Ketan
+
 By default in this template, jobsPerNode is set to 24. However, for
 our application we would like to set this to 12. To do this, we add
 this line to the Swift configuration file we are using:
@@ -313,9 +315,11 @@ they should use the -sites.file option.
 Run directories and logs
 ------------------------
 
-Every time Swift runs, it should create a directory called called
+Every time Swift runs, it should create a directory called
 $PWD/.swift/runNNN, where NNN is a numeric value that gets incremented
 with every run.
+
+NOTE: I think the runNNN directory should be created in a visible directory, not a hidden one. It could be simply named runs. --Ketan.
 
 These run directories contain:
 
