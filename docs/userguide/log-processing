@@ -115,10 +115,12 @@ not to be interpreted by the user.
 Each line in the log file typically consists of three parts. The first part
 is the timestamp, the second is the type of log message and the third is the
 message itself. The types of log messages follows the java log4j standard types
-of TRACE, DEBUG, INFO, WARN, ERROR and FATAL. This section lists the various
-Swift log messages and explains the meaning and likely interpretation of those
-messages. Note that the list is not comprehensive at this time. Also
-note that we will ignore the timestamps here.
+of TRACE, DEBUG, INFO, WARN, ERROR and FATAL.
+
+////
+This section lists the various Swift log messages and explains the meaning and
+likely interpretation of those messages. Note that the list is not
+comprehensive at this time. Also note that we will ignore the timestamps here.
 
 . _DEBUG Loader arguments: [-sites.file, sites.xml, -config, cf, -tc.file, tc, postproc-gridftp.swift]_
     Swift commandline arguments
@@ -149,4 +151,4 @@ Heap sizes for performance
 The job ended successfully
 . _INFO  WeightedHostScoreScheduler CONTACT_SELECTED host=localhost, score=99.854_
 . _
-
+////

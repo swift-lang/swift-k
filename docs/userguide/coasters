@@ -91,21 +91,16 @@ starting/shutdown operations
 the coaster service
 |==================
 
+////
 Submitting to a specific job queue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In order to submit to a specific job schedular queue, the +queue+ parameter of coasters sites file should be used. For example, submitting to the +normal+ queue of a PBS schedular, one would use the following sites line:
+In order to submit to a specific job scheduler queue, the +queue+ parameter of
+coasters sites file should be used. For example, submitting to the +normal+
+queue of a PBS scheduler, one would use the following sites line:
 
 ----
 <profile namespace="globus" key="queue">normal</profile>
 ----
-
-Jobs and Coasters Parameters Equation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The parameters provided in the coasters specification affect jobs submitted by Swift to the scheduling system.
-
-----
-Jobs Submitted = slots X jobsPerNode X nodeGranularity X maxNodes
-----
+////
 
