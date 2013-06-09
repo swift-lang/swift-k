@@ -150,7 +150,7 @@ public class CondorExecutor extends AbstractExecutor {
 	    }
 	    
 		wr.write("notification = Never\n");
-		wr.write("leave_in_queue = TRUE\n");
+		wr.write("leave_in_queue = FALSE\n");
 		wr.write("queue\n");
 		wr.close();
 	}
