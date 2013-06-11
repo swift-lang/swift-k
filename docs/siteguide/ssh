@@ -7,8 +7,7 @@ Generate a unique SSH key
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 It is recommended that you create a new SSH key exclusively for this purpose.
 In order to avoid being prompted for passwords/passphrases, your SSH passphrase
-will be stored in a read protected file. Instead of using your real SSH key and
-passphrase for this purpose, create a new one. Run this command on the machine
+will be stored in a read protected file. Run this command on the machine
 where you will be running Swift:
 
 -----
@@ -37,12 +36,12 @@ You should be able to connect without being asked for a password or passphrase.
 
 Create auth.defaults
 ~~~~~~~~~~~~~~~~~~~~
-Once you verify your keys are working, create a file called 
-$HOME/.ssh/auth.defaults by running the following commands
+Create a file called $HOME/.ssh/auth.defaults on the host where you are running Swift.
+Use the following commands to create this file:
 
 -----
-touch $HOME/.ssh/auth.defaults
-chmod 600 $HOME/.ssh/auth.defaults
+$ touch $HOME/.ssh/auth.defaults
+$ chmod 600 $HOME/.ssh/auth.defaults
 -----
 
 Next, edit $HOME/.ssh/auth.defaults and add the following lines:
@@ -53,8 +52,9 @@ login.remotehost.edu.key=/your/home/.ssh/id_dsa-swift
 login.remotehost.edu.passphrase=your_passphrase
 -----
 
-Replace the values for "your_remote_username", "your_passphrase", and the path 
-to the private key you generated.
+Replace login.remotehost.edu with the hostname you want to use, replace the
+values for "your_remote_username", "your_passphrase", and set the correct path 
+of private key you generated.
 
 Create a sites.xml file
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -73,7 +73,7 @@ data to a remote host:
 </config>
 -----
 
-NOTE: This example will run work directly on login.remotehost.edu. In most 
+NOTE: This example will run work directly on login.remotehost.edu. In many 
 cases you will not want to do this. You'll like want to modify your sites.xml
 to use a remote scheduler, by setting jobmanager to ssh:pbs or ssh:slurm, for
 example. This usually requires also setting things like queues and walltimes.
