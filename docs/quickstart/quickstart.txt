@@ -46,13 +46,13 @@ new features. To build Swift from source code, you will need http://ant.apache.o
 and http://www.oracle.com/technetwork/java/javase/downloads/index.html[Java JDK]. Once
 built, the dist/swift-svn directory will contain your build.
 
-To download and build Swift 0.93, follow these instructions:
+To download and build Swift 0.94, follow these instructions:
 -----
-$ mkdir swift-0.93 
-$ cd swift-0.93 
-$ svn co https://cogkit.svn.sourceforge.net/svnroot/cogkit/branches/4.1.9/src/cog 
+$ mkdir swift-0.94
+$ cd swift-0.94
+$ svn co https://svn.code.sf.net/p/cogkit/svn/branches/4.1.10/src/cog
 $ cd cog/modules 
-$ svn co https://svn.ci.uchicago.edu/svn/vdl2/branches/release-0.93 swift 
+$ svn co https://svn.ci.uchicago.edu/svn/vdl2/branches/release-0.94 swift
 $ cd swift 
 $ ant redist
 -----
@@ -62,9 +62,9 @@ Setting your PATH
 Once Swift is installed, it is useful to add the swift binary to your PATH
 environment variable. To do this, first determine where the Swift bin
 directory is located. If you installed Swift from a binary release, it will
-be in the swift-0.93/bin directory where you installed it. If you followed
+be in the swift-0.94/bin directory where you installed it. If you followed
 the instructions above for installing Swift from a source repository, it
-will be located in swift-0.93/cog/modules/swift/dist/swift-svn/bin.
+will be located in swift-0.94/cog/modules/swift/dist/swift-svn/bin.
 
 Add the following line to the bottom of ~/.bashrc:
 
@@ -98,4 +98,4 @@ If this file gets created, you have successfully ran your first
 Swift script!
 
 More documentation on how to run Swift can be found at 
-http://www.ci.uchicago.edu/swift/docs/index.php,
+http://www.ci.uchicago.edu/swift/docs/index.php.
