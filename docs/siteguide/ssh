@@ -29,10 +29,10 @@ From the host where you will be running Swift, run the following
 command to verify your keys are working:
 
 -----
-ssh -i $HOME/.ssh/id_dsa-swift user@login.remotehost.edu
+$ ssh -o IdentitiesOnly=true -i $HOME/.ssh/id_dsa-swift user@login.remotehost.edu
 -----
 
-You should be able to connect without being asked for a password or passphrase.
+You should be prompted for your new passphrase and be able to connect.
 
 Create auth.defaults
 ~~~~~~~~~~~~~~~~~~~~
