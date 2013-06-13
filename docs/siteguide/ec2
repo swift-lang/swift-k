@@ -7,7 +7,8 @@ More information on EC2 can be found link:https://aws.amazon.com/ec2[here].
 Getting Access
 ~~~~~~~~~~~~~~
 
- ==Users with EC2 Allocation
+Users with EC2 Allocation
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you already have an EC2 allocation, you can use either the web console or command-line interface to manage resources.
 
@@ -31,7 +32,8 @@ export EC2_HOME=/home/maheshwari/.ec2
 export PATH=$PATH:$EC2_HOME/bin
 ----
 
-A public AMI on EC2 is available to create instance. The id of this AMI is: ami-332e585a.
+A public AMI on EC2 is available to create instance. Everything needed to run
+Swift is preinstalled on this image. The id of this AMI is: ami-332e585a.
 
 Create instances from the above AMI as follows:
 
@@ -39,10 +41,10 @@ Create instances from the above AMI as follows:
 ec2run -k <keypair_name> -g <sec_group_name> -n <count> ami-332e585a
 ----
 
- ==Users without EC2 Allocation
+Users without EC2 Allocation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Please request access to prepared instances and PKI credentials by mailing: email@mcs.anl.gov.
-
 
 
 Configuring coaster-service.conf
