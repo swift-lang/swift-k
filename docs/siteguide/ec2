@@ -7,19 +7,27 @@ More information on EC2 can be found link:https://aws.amazon.com/ec2[here].
 Getting Access
 ~~~~~~~~~~~~~~
 
-==Users with EC2 Allocation
+ ==Users with EC2 Allocation
 
 If you already have an EC2 allocation, you can use either the web console or command-line interface to manage resources.
 
 Before using EC2 for Swift you must create a security group in order to allow Swift communicate with EC2 instances via open ports. In order to create a security group, follow instructions link:http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html#creating-security-group[here]. Preferably, open ports between 50000 and 51000.
 
 Paste your credentials from the EC2 web console into AWS_ACCESS_KEY and AWS_SECRET_KEY and export them in your .bashrc as follows:
+
 ----
 export AWS_ACCESS_KEY=<your access key>
 export AWS_SECRET_KEY=<your secret key>
 ----
 
-A public AMI for Swift user is available with id: ami-332e585a.
+Command-line tools are pre-installed on +swift.rcc.uchicago.edu+. In order to use them add the following lines to your .bashrc:
+
+----
+export EC2_HOME=/home/maheshwari/.ec2
+export PATH=$PATH:$EC2_HOME/bin
+----
+
+A public AMI on EC2 is available to create instance. The id of this AMI is: ami-332e585a.
 
 Create instances from the above AMI as follows:
 
@@ -27,17 +35,10 @@ Create instances from the above AMI as follows:
 ec2run -k <keypair_name> -g <sec_group_name> -n <count> ami-332e585a
 ----
 
-==Users without EC2 Allocation
+ ==Users without EC2 Allocation
 
 Please request access to prepared instances and PKI credentials by mailing: email@mcs.anl.gov.
 
-Log in to the swift.rcc.uchicago.edu and copy the swift_cloud directory to your home:
-
-----
-cp -r ~maheshwari/swift_cloud $HOME/
-----
-
-Replace the hosts.txt by adding the address/DNS of instances.
 
 
 Configuring coaster-service.conf
@@ -91,24 +92,32 @@ Add a list of any applications you want to run in the format "#app myapp=/path/t
 
 Starting the Coaster Service Script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Now that everything is configured, change to the location of the coaster-service.conf file
-and run this command to start the coaster service:
+Now that everything is configured, run this command to start the coaster service:
 
 -----
-$ start-coaster-service
+source setup
 -----
 
-This command will start the VMs, start the required processes on the worker nodes,
-and generate Swift configuration files for you to use. The configuration files
-will be generated in your current directory. These files are sites.xml, tc.data,
-and cf.
+This command will add the instances to coaster configuration, start the
+required processes on the worker nodes, and generate Swift configuration files
+for you to use. The configuration files will be generated in your current
+directory. These files are sites.xml, tc.data, and cf.
 
 Running Swift
 ~~~~~~~~~~~~~
+
+Log in to the +swift.rcc.uchicago.edu+ and copy the swift_cloud directory to your home:
+
+----
+cp -r ~maheshwari/swift_cloud $HOME/
+----
+
+Replace the hosts.txt by adding the address/DNS of instances.
+
 Now that you have all of your configuration files generated, run the following command:
 
 -----
-$ swift -sites.file sites.xml -tc.file tc.data -config cf <yourscript.swift>
+$ swift -sites.file sites.xml -tc.file tc.data -config cf catsn.swift
 -----
 
 If you like to create a custom tc and/or cf file for repeated use, rename it to something other
