@@ -29,6 +29,17 @@ ec2run -k <keypair_name> -g <sec_group_name> -n <count> ami-332e585a
 
 ==Users without EC2 Allocation
 
+Please request access to prepared instances and PKI credentials by mailing: email@mcs.anl.gov.
+
+Log in to the swift.rcc.uchicago.edu and copy the swift_cloud directory to your home:
+
+----
+cp -r ~maheshwari/swift_cloud $HOME/
+----
+
+Replace the hosts.txt by adding the address/DNS of instances.
+
+
 Configuring coaster-service.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 To run on EC2, you will need a file called coaster-service.conf.
