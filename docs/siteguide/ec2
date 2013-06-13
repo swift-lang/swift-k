@@ -36,31 +36,46 @@ This file contains many options to control how things run. Here is
 an example of a working coaster-service.conf for EC2.
 
 -----
-# Where to copy worker.pl on the remote machine for sites.xml
-export WORKER_LOCATION=/tmp
+#Location of SWIFT. If empty, PATH is referenced
+export SWIFT=
 
-# How to launch workers: local, ssh, cobalt
+# Where to place/launch worker.pl on the remote machine for sites.xml
+export WORKER_LOCATION=/root
+
+# How to launch workers: local, ssh, or cobalt
 export WORKER_MODE=ssh
 
-# Do all the worker nodes you're using have a shared filesystem? (yes/no)
-export SHARED_FILESYSTEM=no
+# Worker logging setting passed to worker.pl for sites.xml
+export WORKER_LOGGING_LEVEL=DEBUG
 
-# Username to use on worker nodes
+export SSH_TUNNELING=yes
+
+# User name to use for all systems
 export WORKER_USERNAME=root
 
-# Enable SSH tunneling? (yes/no)
-export SSH_TUNNELING=yes
+# Worker host names for ssh
+# export WORKER_HOSTS="crush thwomp stomp crank grind churn trounce thrash vanquish"
 
 # Directory to keep log files, relative to working directory when launching start-coaster-service
 export LOG_DIR=logs
+export WORKER_LOG_DIR=/root
 
-# Swift information for creating sites.xml
-export WORK=/tmp
+# Manually define ports. If not specified, ports will be automatically generated
+export LOCAL_PORT=50100
+export SERVICE_PORT=50200
 
-# Application locations for tc.data
-#app convert=/usr/bin/convert
+# Set shared filesystem to no since work will be done in local /sandbox directory
+export SHARED_FILESYSTEM=no
+
+# Below are various settings to give information about how to create sites.xml
+export WORK=/tmp/swift.work
+export JOBSPERNODE=4
+export JOBTHROTTLE=$( echo "scale=5; ($JOBS_PER_NODE * $( echo $WORKER_HOSTS | wc -w ))/100 - 0.00001"|bc )
+
+# Swift applications
+#app cat=/bin/cat
+#app bash=/bin/bash
 -----
-
 Add a list of any applications you want to run in the format "#app myapp=/path/to/app".
 
 Starting the Coaster Service Script
