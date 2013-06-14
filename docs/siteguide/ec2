@@ -99,6 +99,21 @@ Add a list of any applications you want to run in the format "#app myapp=/path/t
 
 Starting the Coaster Service Script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Log in to the +swift.rcc.uchicago.edu+ and copy the swift_cloud directory to your home:
+
+----
+cp -r ~maheshwari/swift_cloud $HOME/
+----
+
+Replace the hosts.txt found in +swift_cloud+ directory by adding the address/DNS of instances.
+
+With the ec2 commandline, the list of ip addresses of running instances can be obtained and added to hosts.txt as follows:
+
+----
+ec2din | grep running | awk '{print $15}' > hosts.txt
+----
+
 Now that everything is configured, run this command to start the coaster service:
 
 -----
@@ -113,13 +128,7 @@ directory. These files are sites.xml, tc.data, and cf.
 Running Swift
 ~~~~~~~~~~~~~
 
-Log in to the +swift.rcc.uchicago.edu+ and copy the swift_cloud directory to your home:
 
-----
-cp -r ~maheshwari/swift_cloud $HOME/
-----
-
-Replace the hosts.txt by adding the address/DNS of instances.
 
 Now that you have all of your configuration files generated, run the following command:
 
