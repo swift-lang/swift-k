@@ -106,6 +106,16 @@ Log in to the +swift.rcc.uchicago.edu+ and copy the swift_cloud directory to you
 cp -r ~maheshwari/swift_cloud $HOME/
 ----
 
+Make sure Swift module is loaded and your credentials are added as follows:
+
+----
+module load swift
+----
+
+----
+ssh-add
+----
+
 Replace the hosts.txt found in +swift_cloud+ directory by adding the address/DNS of instances.
 
 With the ec2 commandline, the list of ip addresses of running instances can be obtained and added to hosts.txt as follows:
