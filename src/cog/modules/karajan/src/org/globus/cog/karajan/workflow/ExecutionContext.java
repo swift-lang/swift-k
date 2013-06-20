@@ -147,6 +147,7 @@ public class ExecutionContext implements EventListener {
 		stack.setVar("user.home", System.getProperty("user.home"));
 		stack.setVar("user.name", System.getProperty("user.name"));
 		stack.setVar(CMDLINE_ARGS, arguments);
+		stack.setVar("cwd", cwd);
 		setEnvironmentVariables(stack);
 	}
 
