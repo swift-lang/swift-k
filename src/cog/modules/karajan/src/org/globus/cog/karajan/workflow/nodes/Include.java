@@ -276,7 +276,7 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 						XMLConverter.read(this, tree,
 								new KarajanTranslator(reader, iname).translate(), iname, false);
 					}
-					tree.getRoot().setProperty("_path", dir);
+					setProperty("_path", dir);
 					reader.close();
 				}
 				catch (Exception e) {
