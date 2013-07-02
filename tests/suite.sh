@@ -403,20 +403,6 @@ output_report() {
 	fi
 }
 
-override_globals() {
-  FILE=$1;
-  index=0;
-  while read line
-  do
-    if echo $line | grep -q "#OVERRIDE_" ; then
-      line=($line)
-      var_lhs=${line[0]#\#OVERRIDE_}
-      var_rhs=${line[1]};
-      eval export $var_lhs=$var_rhs;
-    fi
-  done < $FILE
-}
-
 start_group() {
   G=$1
   echo
@@ -796,6 +782,7 @@ swift_test_case() {
     return 0
   fi
 
+  SOURCESCRIPT=$NAME.source.sh
   SETUPSCRIPT=$NAME.setup.sh
   CHECKSCRIPT=$NAME.check.sh
   CLEANSCRIPT=$NAME.clean.sh
@@ -805,18 +792,15 @@ swift_test_case() {
   TEST_SHOULD_FAIL=0
   OUTPUT=$NAME.setup.stdout
 
+  if [ -x "$GROUP/$SOURCESCRIPT" ]; then
+    cp "$GROUP/$SOURCESCRIPT" .
+    source ./$SOURCESCRIPT 
+  fi
+  echo "GLOBUS_HOSTNAME : $GLOBUS_HOSTNAME"
+
   if [ -x "$GROUP/$SETUPSCRIPT" ]; then
     cp "$GROUP/$SETUPSCRIPT" .
     script_exec ./$SETUPSCRIPT "S"
-    globus_var=`grep "#OVERRIDE_" ./$SETUPSCRIPT`;
-    echo "Globus_var  = $globus_var"
-    if [ $? == 0 ]
-    then
-      globus_var=($globus_var);
-      lhs_var=${globus_var[0]##OVERRIDE_} # Add check here to confirm if GLOBUS_HOSTNAME
-      rhs_val=${globus_var[1]}
-      export GLOBUS_HOSTNAME=$rhs_val
-    fi
   else
     stage_files $GROUP $NAME
   fi
