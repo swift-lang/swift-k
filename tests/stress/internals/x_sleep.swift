@@ -12,13 +12,12 @@
 */
 
 int limit   = @toint(@arg("loops"));
-int range[] = [0:limit:1];
 int result[];
 
 app sleep (int seconds){
     sleep seconds;
 }
 
-foreach num in range {
+foreach num in [0:limit:1] {
 	sleep(num%%5);
 }

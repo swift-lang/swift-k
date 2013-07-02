@@ -1,5 +1,27 @@
 #!/bin/bash
 
+if [[ -z $MIDWAY_USERNAME ]]
+then
+    echo "Remote username not provided. Skipping sites configs"
+else
+    ls *xml
+    cat sites.xml  | sed "s/{mid.USER}/$MIDWAY_USERNAME/" > tmp && mv tmp sites.xml
+fi
+if [[ -z $UC3_USERNAME ]]
+then
+    echo "Remote username not provided. Skipping sites configs"
+else
+    ls *xml
+    cat sites.xml  | sed "s/{uc3.USER}/$UC3_USERNAME/" > tmp && mv tmp sites.xml
+fi
+if [[ -z $BEAGLE_USERNAME ]]
+then
+    echo "Remote username not provided. Skipping sites configs"
+else
+    ls *xml
+    cat sites.xml  | sed "s/{beagle.USER}/$BEAGLE_USERNAME/" > tmp && mv tmp sites.xml
+fi
+
 case $STRESS in
     "S1")
         FILES=10

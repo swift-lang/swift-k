@@ -1,5 +1,14 @@
 #!/bin/bash
 
+USERNAME=$BEAGLE_USERNAME
+if [[ -z $USERNAME ]]
+then
+    echo "Remote username not provided. Skipping sites configs"
+else
+    ls *xml
+    cat sites.xml  | sed "s/{env.USER}/$USERNAME/" > tmp && mv tmp sites.xml
+fi
+
 case $STRESS in
     "S1")
         FILES=10
@@ -17,10 +26,6 @@ case $STRESS in
         FILES=1000
         ;;
 esac
-
-export GLOBUS_HOSTNAME="128.135.112.73"
-export GLOBUS_TCP_PORT_RANGE=50000,51000
-#OVERRIDE_GLOBUS_HOSTNAME "128.135.112.73"
 
 nfiles=${FILES:-10}
 
