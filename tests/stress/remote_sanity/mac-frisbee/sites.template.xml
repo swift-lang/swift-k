@@ -8,7 +8,6 @@
     <profile namespace="globus" key="maxWalltime">00:05:00</profile>
     <profile namespace="karajan" key="jobThrottle">0.0799</profile>
     <profile namespace="karajan" key="initialScore">10000</profile>
-    <!-- <workdirectory>/scratch/{env.USER}/swiftwork</workdirectory> -->
-    <workdirectory>/homes/yadunand/swiftwork</workdirectory>
+    <workdirectory>/scratch/{env.USER}/swiftwork</workdirectory> -->    
   </pool>
 </config>

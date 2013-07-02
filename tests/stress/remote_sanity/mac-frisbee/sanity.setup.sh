@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USERNAME=$MIDWAY_USERNAME
+USERNAME=$MCS_USERNAME
 
 if [[ -z $USERNAME ]] 
 then
