@@ -1,7 +1,0 @@
-#! /bin/sh
-
-set -x
-
-export GLOBUS_HOSTNAME="swift.rcc.uchicago.edu"
-
-swift -config cf -sites.file sites.xml -tc.file tc i1.swift
