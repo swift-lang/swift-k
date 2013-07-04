@@ -107,12 +107,11 @@ public class BlockTask extends TaskImpl {
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
 
-        if (settings.getWorkerLoggingLevel().equals("NONE"))
-        {
+        settings.setWorkerLoggingLevel("DEBUG");
+        if (settings.getWorkerLoggingLevel().equals("NONE")) {
           js.addArgument("NOLOGGING");
         }
-        else
-        {
+        else {
         	String logDir = settings.getWorkerLoggingDirectory();
         	if (logDir.equals("DEFAULT"))
         		js.addArgument(Bootstrap.LOG_DIR.getAbsolutePath());

@@ -346,7 +346,7 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
             bqp.jobTerminated(running);
         }
         if (running != null) {
-            running.fail("Task failed: " + msg, e);
+            running.fail("Block task failed: " + msg, e);
         }
     }
 

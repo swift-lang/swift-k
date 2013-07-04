@@ -92,6 +92,7 @@ public class SubmitJobHandler extends RequestHandler {
         spec.setStdInput(helper.read("stdin"));
         spec.setStdOutput(helper.read("stdout"));
         spec.setStdError(helper.read("stderr"));
+        spec.setRedirected(helper.read("redirect") != null);
         String s;
         while ((s = helper.read("arg")) != null) {
             spec.addArgument(s);

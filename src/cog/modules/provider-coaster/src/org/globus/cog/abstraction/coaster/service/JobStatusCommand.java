@@ -13,21 +13,31 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 
 public class JobStatusCommand extends Command {
+    public static final Logger logger = Logger.getLogger(JobStatusCommand.class);
+    
     public static final String NAME = "JOBSTATUS";
 
     private String taskId;
     private Status status;
+    private String out, err;
 
     public JobStatusCommand(String taskId, Status status) {
         super(NAME);
         this.taskId = taskId;
         this.status = status;
+    }
+    
+    public JobStatusCommand(String taskId, Status status, String out, String err) {
+        this(taskId, status);
+        this.out = out;
+        this.err = err;
     }
 
 
@@ -63,5 +73,12 @@ public class JobStatusCommand extends Command {
         }
         addOutData(sb.toString());
         addOutData(status.getTime().getTime());
+        if (out != null && err != null) {
+            addOutData(out);
+            addOutData(err);
+        }
+        else if (out != null || err != null) {
+            logger.warn("Only one of job STDOUT or STDERR is non-null");
+        }
     }
 }

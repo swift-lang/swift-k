@@ -96,6 +96,10 @@ public class SubmitJobCommand extends Command {
         add(sb, "stdin", spec.getStdInput());
         add(sb, "stdout", spec.getStdOutput());
         add(sb, "stderr", spec.getStdError());
+        
+        if (spec.isRedirected()) {
+            add(sb, "redirect", true);
+        }
 
         for (String arg : spec.getArgumentsAsList())
             add(sb, "arg", arg);
