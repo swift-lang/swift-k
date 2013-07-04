@@ -25,6 +25,7 @@ import org.globus.cog.abstraction.coaster.service.SubmitJobHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
+import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
@@ -97,7 +98,9 @@ public class SubmitJobCommand extends Command {
         add(sb, "stdout", spec.getStdOutput());
         add(sb, "stderr", spec.getStdError());
         
-        if (spec.isRedirected()) {
+        if (spec.isRedirected() || 
+                spec.getStdOutputLocation().overlaps(FileLocation.MEMORY) || 
+                spec.getStdErrorLocation().overlaps(FileLocation.MEMORY)) {
             add(sb, "redirect", true);
         }
 

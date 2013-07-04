@@ -1595,6 +1595,7 @@ sub sendStatus {
 		$redirect = 1;
 	}
 	else {
+		wlog DEBUG, "$jobid Output is NOT redirected\n";
 		$stdoutRedir = "";
 		$stderrRedir = "";
 	}
