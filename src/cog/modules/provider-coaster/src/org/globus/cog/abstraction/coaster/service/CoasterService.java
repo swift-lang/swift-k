@@ -405,11 +405,8 @@ public class CoasterService extends GSSService {
     }
 
     public static void configureLogName() {
-        FileAppender fa = (FileAppender) getAppender(FileAppender.class);
-        if (fa == null) {
-            logger.warn("Failed to configure log file name");
-        }
-        else {
+        FileAppender fa = (FileAppender) getFileAppender();
+        if (fa != null) {
             fa.setFile(Bootstrap.LOG_DIR + File.separator + makeLogFileName());
             fa.activateOptions();
             
@@ -430,16 +427,23 @@ public class CoasterService extends GSSService {
         root.addAppender(aa);
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    protected static Appender getAppender(Class cls) {
+    @SuppressWarnings("rawtypes")
+    protected static Appender getFileAppender() {
         Logger root = Logger.getRootLogger();
         Enumeration e = root.getAllAppenders();
         while (e.hasMoreElements()) {
             Appender a = (Appender) e.nextElement();
-            if (cls.isAssignableFrom(a.getClass())) {
+            if (a instanceof FileAppender) {
                 return a;
             }
+            if (a instanceof AsyncAppender) {
+                // likely this is running in a JVM in which
+                // the file appender has been replaced with 
+                // an async appender, so don't mess with things
+                return null;
+            }
         }
+        logger.warn("Could not find a file appender to configure");
         return null;
     }
 
