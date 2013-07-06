@@ -11,6 +11,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
@@ -376,6 +378,18 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
 
     private void setOtherAttributes(JobSpecification spec, RslNode rsl)
             throws IllegalSpecException {
+       
+        HashSet<String> RSLAttributes = new HashSet<String>(
+		Arrays.asList("directory", "executable", "arguments", "stdin",
+                              "stdout", "stderr", "count", "environment",
+                              "maxTime", "maxWallTime", "maxCpuTime", "jobType",
+                              "gramMyJob", "queue", "project", "hostCount",
+                              "dryRun", "minMemory", "maxMemory", "save_state",
+                              "two_phase", "restart", "stdout_position",
+                              "stderr_position", "remote_io_url")
+        );
+
+
         for (String key : spec.getAttributeNames()) {
             try {
                 String value = String.valueOf(spec.getAttribute(key));
@@ -385,7 +399,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
                 if (key.equalsIgnoreCase("maxwalltime")) {
                     value = WallTime.normalize(value, jobManager);
                 }
-                rsl.add(new NameOpValue(key, NameOpValue.EQ, value));
+                if(RSLAttributes.contains(key)) {
+                    rsl.add(new NameOpValue(key, NameOpValue.EQ, value));
+                }
             }
             catch (Exception e) {
                 throw new IllegalSpecException(
