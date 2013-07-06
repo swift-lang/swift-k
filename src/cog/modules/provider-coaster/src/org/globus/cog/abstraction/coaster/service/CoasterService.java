@@ -371,7 +371,7 @@ public class CoasterService extends GSSService {
     protected RemoteConfiguration.Entry getChannelConfiguration(String contact) {
         return new RemoteConfiguration.Entry(
                 contact.replaceAll("\\.", "\\."),
-                "KEEPALIVE, RECONNECT(8), HEARTBEAT(300)");
+                "KEEPALIVE, RECONNECT(8), HEARTBEAT(30)");
     }
 
     public static void main(String[] args) {
