@@ -73,7 +73,7 @@ public class MetaChannel extends AbstractCoasterChannel {
 			return;
 		}
 		if (logger.isInfoEnabled()) {
-			logger.info(this + " bind -> " + channel);
+			logger.info(this + " binding to " + channel);
 		}
 		if (current instanceof Purgeable) {
 			try {
@@ -156,7 +156,7 @@ public class MetaChannel extends AbstractCoasterChannel {
 	}
 
 	public String toString() {
-		return "MetaChannel" + "[" + this.getChannelContext() + "]" + " -> " + current;
+		return "MetaChannel" + " [context: " + this.getChannelContext() + ", boundTo: " + current + "]";
 	}
 
 	public boolean isClient() {
