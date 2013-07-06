@@ -10,7 +10,7 @@ run() {
 checkerror() {
 	if [ "$?" != "0" ]; then
 		echo "$LAST failed"
-		exit q
+		exit 1
 	fi
 }
 
