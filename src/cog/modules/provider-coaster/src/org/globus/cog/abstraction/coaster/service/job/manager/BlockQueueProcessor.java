@@ -583,10 +583,11 @@ implements RegistrationManager, Runnable {
                     h = Math.min(h + lastwalltime, maxt);
                 }
 
-
                 // create the actual block
                 Block b = new Block(width, TimeInterval.fromSeconds(h), this);
-                
+                if (logger.isInfoEnabled()) {
+                    logger.info("index: " + index + ", last: " + last + ", holding.size(): " + holding.size());
+                }
                 // now add jobs from holding until the size of the jobs exceeds the
                 // size of the block (as given by the metric)
                 int ii = last;
@@ -602,9 +603,10 @@ implements RegistrationManager, Runnable {
                 // if ii == index + 1 <=> ii - index - 1 == 0 then 
                 //     lastI and indexI point to the same element
                 
+                
                 if (logger.isInfoEnabled()) {
-                    logger.info("Queued: " + (ii-last) +
-                                " jobs to new Block");
+                    logger.info("Queued: " + (ii-last) + " jobs to new Block");
+                    logger.info("index: " + index + ", last: " + last + ", ii: " + ii + ", holding.size(): " + holding.size());
                 }
                 // update index of last added job
                 // skip ii - index - 1 jobs since the iterator and "index" are off by one
