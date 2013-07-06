@@ -164,7 +164,9 @@ public class SSHCLProxyForwarder extends ProxyForwarder {
             }
         }
         catch (IOException e) {
-            if (e.getMessage() == null || !e.getMessage().contains("No such file or directory")) {
+            if (e.getMessage() == null 
+            		|| (!e.getMessage().contains("No such file or directory") 
+            				&& !e.getMessage().contains("No match"))) {
                 throw e;
             }
             else {
