@@ -58,7 +58,6 @@ public abstract class AbstractCoasterChannel implements CoasterChannel {
 			this.context = channelContext;
 		}
 		this.requestManager = requestManager;
-		// registeredMaps = new LinkedList();
 		this.client = client;
 		configureHeartBeat();
 		configureTimeoutChecks();
@@ -128,8 +127,9 @@ public abstract class AbstractCoasterChannel implements CoasterChannel {
 		long now = System.currentTimeMillis();
 		long lastTime = getLastTime();
 		if (now - lastTime > TIMEOUT * 1000) {
-		    lastTime = Long.MAX_VALUE;
 		    TimeoutException e = new TimeoutException(this, "Channel timed out", lastTime);
+		    // prevent further timeouts
+		    setLastTime(Long.MAX_VALUE);
 			context.notifyRegisteredCommandsAndHandlers(e);
 			handleChannelException(e);
 			timeoutCheckTask.cancel();
@@ -147,6 +147,12 @@ public abstract class AbstractCoasterChannel implements CoasterChannel {
 			return lastTime;
 	    }
 	}
+	
+	protected void setLastTime(long lastTime) {
+        synchronized(lastTimeLock) {
+            this.lastTime = lastTime;
+        }
+    }
 	
 	protected boolean clientControlsHeartbeats() {
 	    return true;
