@@ -185,7 +185,14 @@ public class Bootstrap {
         args.add("2");
         args.add(java);
         addDebuggingOptions(args);
-        args.add("-Xmx1024M");
+        String arch = System.getProperty("os.arch");
+        if (arch != null && arch.indexOf("64") != -1) {
+            // give the JVM more memory on 64 bit systems
+            args.add("-Xmx512M");
+        }
+        else {
+            args.add("-Xmx256M");
+        }
         args.add("-Dtcp.channel.log.io.performance=true");
         //pass user home override to service
         args.add("-Duser.home=" + System.getProperty("user.home"));
