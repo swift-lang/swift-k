@@ -6,14 +6,13 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
@@ -429,31 +428,18 @@ implements RegistrationManager, Runnable {
      *
      */
     protected void removeIdleBlocks() {
-        ArrayList<Block> sorted;
-
+        SortedMap<Double, Block> sorted = new TreeMap<Double, Block>();
+        
         synchronized (blocks) {
-            sorted = new ArrayList<Block>(blocks.values());
-            Collections.sort(sorted, new Comparator<Block>() {
-                public int compare(Block b1, Block b2) {
-                    double s1 = b1.sizeLeft();
-                    double s2 = b2.sizeLeft();
-                    if (s1 == s2) {
-                    	return 0;
-                    }
-                    else if (s1 < s2) {
-                        return -1;
-                    }
-                    else {
-                        return 1;
-                    }
-                }
-            });
+            for (Block b : blocks.values()) {
+                sorted.put(b.sizeLeft(), b);
+            }
         }
 
         double needed = queued.getJSize() + running.getSize();
 
         double sum = 0;
-        for (Block b : sorted) {
+        for (Block b : sorted.values()) {
             if (sum >= needed
                     && !b.isSuspended()
                     && (System.currentTimeMillis() - b.getLastUsed()) > Block.SUSPEND_SHUTDOWN_DELAY) {
