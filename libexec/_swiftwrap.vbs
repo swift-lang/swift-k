@@ -187,6 +187,10 @@ OUTF=getOptArg()
 expectArg("k")
 KICKSTART=getOptArg()
 
+expectArg("cdmfile")
+'ignored, but read if specified
+CDMFILE=getOptArg()
+
 expectArg("status")
 STATUSMODE=getArgVal(MandatoryArg, "status")
 

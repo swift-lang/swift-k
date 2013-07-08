@@ -39,14 +39,22 @@ import org.griphyn.vdl.mapping.Path;
 public class AppStageouts extends InternalFunction {
     private ArgRef<String> jobid;
     private ArgRef<List<List<Object>>> files;
-    private ArgRef<String> dir;
     private ArgRef<String> stagingMethod;
     
     private ChannelRef<List<String>> cr_stageout;
     
+    private VarRef<String> cwd;
+
+    
     @Override
     protected Signature getSignature() {
-        return new Signature(params("jobid", "files", "dir", "stagingMethod"), returns(channel("stageout")));
+        return new Signature(params("jobid", "files", "stagingMethod"), returns(channel("stageout")));
+    }
+    
+    @Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        cwd = scope.getVarRef("CWD");
     }
 
     protected void runBody(LWThread thr) {
@@ -54,7 +62,8 @@ public class AppStageouts extends InternalFunction {
             Stack stack = thr.getStack();
             List<List<Object>> files = this.files.getValue(stack);
             String stagingMethod = this.stagingMethod.getValue(stack);
-            String dir = this.dir.getValue(stack);
+            String cwd = this.cwd.getValue(stack);
+
             for (List<Object> pv : files) { 
                 Path p = (Path) pv.get(0);
                 DSHandle handle = (DSHandle) pv.get(1);
@@ -67,8 +76,8 @@ public class AppStageouts extends InternalFunction {
                         + "/" + file.getName();
                 String relpath = path.startsWith("/") ? path.substring(1) : path;
                 cr_stageout.append(stack, 
-                    makeList(dir + "/" + relpath,
-                        protocol + "://" + file.getHost() + "/" + path));
+                    makeList(relpath,
+                        AppStageins.localPath(cwd, protocol, path, file)));
             }
         }
         catch (Exception e) {

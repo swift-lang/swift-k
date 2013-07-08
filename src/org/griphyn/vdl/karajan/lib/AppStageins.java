@@ -39,17 +39,24 @@ import org.griphyn.vdl.mapping.AbsFile;
 public class AppStageins extends InternalFunction {
 	private ArgRef<String> jobid;
 	private ArgRef<List<String>> files;
-	private ArgRef<String> dir;
 	private ArgRef<String> stagingMethod;
 	
 	private ChannelRef<List<String>> cr_stagein;
+	
+	private VarRef<String> cwd;
 
     static Logger logger = Logger.getLogger(AppStageins.class);
     
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("jobid", "files", "dir", "stagingMethod"), returns(channel("stagein")));
+        return new Signature(params("jobid", "files", "stagingMethod"), returns(channel("stagein")));
+    }
+    
+    @Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        cwd = scope.getVarRef("CWD");
     }
 
     
@@ -57,7 +64,7 @@ public class AppStageins extends InternalFunction {
     	Stack stack = thr.getStack();
     	List<String> files = this.files.getValue(stack);
     	String stagingMethod = this.stagingMethod.getValue(stack);
-    	String dir = this.dir.getValue(stack);
+        String cwd = this.cwd.getValue(stack);
         for (Object f : files) {
             AbsFile file = new AbsFile(TypeUtil.toString(f));
             Policy policy = Director.lookup(file.toString());
@@ -70,17 +77,29 @@ public class AppStageins extends InternalFunction {
             if (protocol.equals("file")) {
                 protocol = stagingMethod;
             }
-            String path = file.getDir().equals("") ? file.getName() : file
-                .getDir()
-                    + "/" + file.getName();
+            String path = file.getDir().equals("") ? 
+                    file.getName() : file.getDir() + "/" + file.getName();
             String relpath = path.startsWith("/") ? path.substring(1) : path;
             if (logger.isDebugEnabled()) {
                 logger.debug("will stage in: " + relpath + " via: " + protocol);
             }
             cr_stagein.append(stack,
-                makeList(protocol + "://" + file.getHost() + "/" + path,
-                    dir + "/" + relpath));
+                makeList(localPath(cwd, protocol, path, file), relpath));
         }
+    }
+
+    protected static String localPath(String cwd, String protocol, String path, AbsFile file) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(protocol);
+        sb.append("://");
+        sb.append(file.getHost());
+        sb.append('/');
+        if (!file.isAbsolute()) {
+            sb.append(cwd);
+            sb.append('/');
+        }
+        sb.append(path);
+        return sb.toString();
     }
 
     private List<String> makeList(String s1, String s2) {

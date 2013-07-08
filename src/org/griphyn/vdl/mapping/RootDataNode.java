@@ -110,8 +110,6 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
-			closeShallow();
-			return;
 		}
 	}
 
@@ -122,8 +120,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
         catch (OOBYield e) {
             throw e.wrapped();
         }
-        catch (HandleOpenException e) {
-            e.printStackTrace();
+        catch (Exception e) {
+            this.setValue(new MappingException(this, e));
         }
 	}
 

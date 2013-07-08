@@ -41,7 +41,16 @@ public class SetWaitCount extends SwiftFunction {
 		DSHandle var = this.var.getValue(stack);
 
 		if (var.isClosed()) {
-			throw new ExecutionException("Attempted to set a wait count for a closed variable " + var);
+		    // Static mappers will close the array sizes during initialization.
+		    // Such an array passed to a function assigning to elements
+		    // of that array in a loop will attempt to increase the 
+		    // wait count. That is a legit situation to have.
+		    if (var.getMapper().isStatic()) {
+		        // ignore
+		    }
+		    else {
+		        throw new ExecutionException("Attempted to set a wait count for a closed variable " + var);
+		    }
 		}
 		
 		int count = this.count.getValue(stack).intValue();

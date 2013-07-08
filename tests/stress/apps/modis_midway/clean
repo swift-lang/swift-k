@@ -1,0 +1,3 @@
+#! /bin/sh
+
+rm -rf *~ *log *.d ../*.{kml,swiftx} *.out landuse

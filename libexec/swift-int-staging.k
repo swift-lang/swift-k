@@ -126,7 +126,7 @@ namespace(swift) {
 							stageIn("{loc}{SWIFT:HOME}/libexec/cdm_lib.sh", "cdm_lib.sh")
 						}
 
-						appStageins(jobid, stagein, ".", stagingMethod)
+						appStageins(jobid, stagein, stagingMethod)
 
 						stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info", 
 							mode = WRAPPER_TRANSFER_MODE)
@@ -136,7 +136,7 @@ namespace(swift) {
 						}
 						stageOut("wrapper.error", "{stagingMethod}://localhost/{ddir}/{jobid}.error", 
 							mode = STAGING_MODE:IF_PRESENT)
-						appStageouts(jobid, stageout, ".", stagingMethod)
+						appStageouts(jobid, stageout, stagingMethod)
 
 						task:cleanUp(".")
 					)

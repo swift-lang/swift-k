@@ -91,4 +91,35 @@ starting/shutdown operations
 the coaster service
 |==================
 
+Coaster config parameters and Job Quantities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+This section presents information on coaster configuration parameters and their effect on application and scheduler jobs submitted by Swift. In order to achieve optimal performance, the number of application tasks must correspond to the total number of coaster workers. Coaster configuration parameters influence both application tasks and the LRM (Local Resource Manager) jobs that are submitted by Swift. Specifically, the following quantities are influenced by coasters configuration parameters:
+
+* Number of application tasks Swift will pack in one "wave" to be executed in parallel depends on the +foreach.max.threads+ and the +throttle+ parameters. Furthermore, the number of +foreach+ loops in a Swift script influences the aggregate +foreach.max.threads+. The relation between application tasks and the above mentioned quantities could be explained as follows:
+----
+app_tasks = min{nforeach X foreach.max.threads), (throttle X 100 +1)}
+----
+
+Where +nforeach+ is the number of independent foreach loops appearing in a Swift script.
+
+* Number of jobs Swift will submit via the LRM interface is determined by the +slots+ configuration parameter in sites file.
+
+----
+LRM jobs = slots
+----
+
+* Size of each LRM job in terms of number of compute nodes per job is determined by the +maxnodes+ and +nodegranularity+ parameters. LRM jobs submitted by Swift will be of size spread between +nodegranularity+ and +maxnodes+ values.
+
+----
+nodegranularity <= LRM job size <= maxnodes
+----
+
+* Number of coaster workers to be run per LRM job on a target cluster is determined by the +jobspernode+ parameter.
+
+Considering the above factors, the following paramter expressions must match in order for a Swift run to be optimal:
+
+----
+min{nforeach X foreach.max.threads), (throttle X 100 +1)} ~= 
+            slots X avg(nodegranularity,maxnodes) X jobspernode
+----

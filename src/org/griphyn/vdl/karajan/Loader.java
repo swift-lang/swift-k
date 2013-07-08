@@ -642,7 +642,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
             else {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(1);
                 }
                 catch (InterruptedException e) {
                 }

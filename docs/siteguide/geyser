@@ -1,0 +1,37 @@
+Geyser and Caldera (x86 clusters)
+---------------------------------
+The Geyser and Caldera clusters are specialized data analysis and 
+visualization resources at NCAR (National Center for Atmospheric 
+Research).
+
+More information about these clusters can be found at
+http://www2.cisl.ucar.edu/resources/geyser_caldera.
+
+Example sites.xml
+~~~~~~~~~~~~~~~~~
+The following sites.xml has the basic definitions for how to run a job using
+the LSF scheduler.
+
+-----
+<config>
+  <pool handle="geyser">
+    <filesystem provider="local"/>
+    <execution provider="coaster" jobmanager="local:lsf"/>
+    <profile namespace="globus"   key="jobsPerNode">1</profile>
+    <profile namespace="globus"   key="maxTime">3600</profile>
+    <profile namespace="globus"   key="maxwalltime">00:05</profile>
+    <profile namespace="globus"   key="lowOverallocation">100</profile>
+    <profile namespace="globus"   key="highOverallocation">100</profile>
+    <profile namespace="globus"   key="nodeGranularity">1</profile>
+    <profile namespace="globus"   key="maxNodes">1</profile>
+    <profile namespace="globus"   key="project">P93300606</profile>
+    <profile namespace="globus"   key="queue">small</profile>
+    <profile namespace="karajan"  key="jobThrottle">4</profile>
+    <profile namespace="karajan"  key="initialScore">10000</profile>
+    <workdirectory>/glade/scratch/davkelly</workdirectory>
+  </pool>
+</config>
+-----
+
+The values for workdirectory, queue, and project will likely need to be 
+adjusted based on the requirements of your project.

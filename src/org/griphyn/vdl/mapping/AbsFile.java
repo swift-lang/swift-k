@@ -199,6 +199,10 @@ public class AbsFile implements GeneralizedFileFormat {
 		return path;
 	}
 	
+	public boolean isAbsolute() {
+	    return !path.isEmpty() && path.startsWith("/");
+	}
+	
 	public String getType() {
 		return "file";
 	}

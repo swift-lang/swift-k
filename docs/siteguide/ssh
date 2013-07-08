@@ -1,0 +1,91 @@
+SSH
+---
+This section describes how to use the SSH provider to connect to remote sites
+and to handle data transfer.
+
+Generate a unique SSH key
+~~~~~~~~~~~~~~~~~~~~~~~~~
+It is recommended that you create a new SSH key exclusively for this purpose.
+In order to avoid being prompted for passwords/passphrases, your SSH passphrase
+will be stored in a read protected file. Run this command on the machine
+where you will be running Swift:
+
+-----
+ssh-keygen -t dsa -f $HOME/.ssh/id_dsa-swift
+-----
+
+You will be prompted to create a passphrase. This will create two files: 
+$HOME/.ssh/id_dsa-swift and $HOME/.ssh/id_dsa-swift.pub. 
+
+Add your public key to the remote host
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+On the remote host where you will be running, edit or create the file 
+$HOME/.ssh/authorized_keys. Paste in the contents of the newly created 
+$HOME/.ssh/id_dsa-swift.pub from the previous step to the end of the file.
+
+Verify your new key works
+~~~~~~~~~~~~~~~~~~~~~~~~~
+From the host where you will be running Swift, run the following 
+command to verify your keys are working:
+
+-----
+$ ssh -o IdentitiesOnly=true -i $HOME/.ssh/id_dsa-swift user@login.remotehost.edu
+-----
+
+You should be prompted for your new passphrase and be able to connect.
+
+Create auth.defaults
+~~~~~~~~~~~~~~~~~~~~
+Create a file called $HOME/.ssh/auth.defaults on the host where you are running Swift.
+Use the following commands to create this file:
+
+-----
+$ touch $HOME/.ssh/auth.defaults
+$ chmod 600 $HOME/.ssh/auth.defaults
+-----
+
+Next, edit $HOME/.ssh/auth.defaults and add the following lines:
+------
+login.remotehost.edu.type=key
+login.remotehost.edu.username=your_remote_username
+login.remotehost.edu.key=/your/home/.ssh/id_dsa-swift
+login.remotehost.edu.passphrase=your_passphrase
+-----
+
+Replace login.remotehost.edu with the hostname you want to use, replace the
+values for "your_remote_username", "your_passphrase", and set the correct path 
+of private key you generated.
+
+Create a sites.xml file
+~~~~~~~~~~~~~~~~~~~~~~~
+Here is an example sites.xml file that will allow you to connect and transfer
+data to a remote host:
+
+-----
+<config>
+   <pool handle="remotehost">
+      <execution provider="coaster" jobmanager="ssh:local" url="login.remotehost.edu"/> 
+      <filesystem provider="ssh" url="login.remotehost.edu"/>
+      <profile namespace="karajan" key="jobThrottle">0</profile>
+      <profile namespace="karajan" key="initialScore">10000</profile>
+      <workdirectory>/path/to/remote/workdirectory</workdirectory>
+   </pool>
+</config>
+-----
+
+NOTE: This example will run work directly on login.remotehost.edu. In many 
+cases you will not want to do this. You'll like want to modify your sites.xml
+to use a remote scheduler, by setting jobmanager to ssh:pbs or ssh:slurm, for
+example. This usually requires also setting things like queues and walltimes.
+This example is provided for simplicity and testing.
+
+Setting your properties
+~~~~~~~~~~~~~~~~~~~~~~~
+Since you want to data transfer via ssh, you'll want to verify that you're not
+using any other file transfer mechanisms. Make sure you have the following 
+swift properties defined in your configuration file:
+
+-----
+use.provider.staging=false
+use.wrapper.staging=false
+-----

@@ -654,7 +654,7 @@ public class VariableScope {
 	}
 			
 	private void setPreClose(String name, int count) {
-	    if (inhibitClosing != null && inhibitClosing.contains(name)) {
+	    if (inhibitClosing != null && inhibitClosing.contains(name) && count != 0) {
 	        return;
 	    }
 	    setCount("preClose", name, count, 

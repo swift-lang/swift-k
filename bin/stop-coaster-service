@@ -86,7 +86,7 @@ if [ "$WORKER_MODE" == "condor" ] || [ "$WORKER_MODE" == "gwms" ]; then
    if [ -n "$WORKER_RELAY_HOST" ]; then
       ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "condor_rm $WORKER_USERNAME"    
    else
-     condor_rm $CONDOR_USERNAME
+     condor_rm $WORKER_USERNAME
    fi
 fi
 

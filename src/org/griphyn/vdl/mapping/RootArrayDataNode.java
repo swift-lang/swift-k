@@ -105,7 +105,6 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
-			closeShallow();
 		}
 	}
 	
@@ -116,8 +115,8 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
         catch (OOBYield e) {
             throw e.wrapped();
         }
-        catch (HandleOpenException e) {
-            e.printStackTrace();
+        catch (Exception e) {
+            this.setValue(new MappingException(this, e));
         }
     }
 

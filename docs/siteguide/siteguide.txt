@@ -16,6 +16,8 @@ include::fusion[]
 
 include::futuregrid[]
 
+include::geyser[]
+
 include::grid[]
 
 include::intrepid[]
@@ -23,6 +25,10 @@ include::intrepid[]
 include::mcs[]
 
 include::midway[]
+
+include::ssh[]
+
+include::stampede[]
 
 include::uc3[]
 
