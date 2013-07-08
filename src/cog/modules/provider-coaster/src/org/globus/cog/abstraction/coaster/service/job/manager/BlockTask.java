@@ -107,7 +107,6 @@ public class BlockTask extends TaskImpl {
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
 
-        settings.setWorkerLoggingLevel("DEBUG");
         if (settings.getWorkerLoggingLevel().equals("NONE")) {
           js.addArgument("NOLOGGING");
         }
