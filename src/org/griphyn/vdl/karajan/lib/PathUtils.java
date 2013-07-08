@@ -68,6 +68,7 @@ public class PathUtils {
     public static String remotePathName(String dir) {
         if (dir.length() == 0) {
             return dir;
+        }
         StringBuilder sb = null;
         
         // parse it by hand to avoid creating too much string object garbage

@@ -20,7 +20,6 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import k.rt.ExecutionException;
@@ -29,7 +28,9 @@ import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.mapping.AbsFile;
