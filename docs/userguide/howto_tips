@@ -39,8 +39,8 @@ noted here.
 
 This use case allows the user to submit an MPI job to a remote queue.
 
-In SwiftScript, we make an invocation that does not look any different
-from any other invocation. In the below code, we do not have any input
+Swift makes an invocation that does not look any different
+from any other invocation. In the code below, we do not have any input
 files, and have two output files on stdout and stderr:
 
 ----
