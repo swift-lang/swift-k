@@ -27,5 +27,5 @@ the site catalog:
 </pool>
 ----
 
-There are various kickstat.* properties, which have sensible default
+There are various kickstart.* properties, which have sensible default
 values. These are documented in the properties section.

@@ -292,11 +292,15 @@ Swift trace: defaultvalue
 Swift trace: hello
 ----
 
-@extractint
+@extractInt
 ~~~~~~~~~~~
-@extractint(file) will read the specified file, parse an integer from
+@extractInt(file) will read the specified file, parse an integer from
 the file contents and return that integer.
 
+@extractFloat
+~~~~~~~~~~~~~
+Similar to @extractInt, @extractFloat(file) will read the specified file, parse a float from
+the file contents and return that float.
 
 @filename
 ~~~~~~~~~
@@ -406,17 +410,23 @@ necessarily in order, due to the fact that foreach iterations execute in
 parallel).
 
 
-@toint
+@toInt
 ~~~~~~
-@toint(input) will parse its input string into an integer. This can be
+@toInt(input) will parse its input string into an integer. This can be
 used with @arg to pass input parameters to a Swift script as
 integers.
 
-@tofloat
-~~~~~~
-@tofloat(input) will parse its input string into a floating point number. This can be
+@toFloat
+~~~~~~~~
+@toFloat(input) will parse its input string into a floating point number. This can be
 used with @arg to pass input parameters to a Swift script as
 floating point numbers.
+
+@toString
+~~~~~~~~
+@toString(input) will parse its input into a string. This can be
+used with @arg to pass input parameters to a Swift script as
+strings.
 
 @length
 ~~~~~~
@@ -458,7 +468,7 @@ Employee emps[] = readData("emps.txt");
 Where the contents of the "emps.txt" file are:
 
 ----
-name id address
+name id loc
 Thomas 2222 Chicago
 Gina 3333 Boston
 Anne 4444 Houston
@@ -514,7 +524,6 @@ trace
 trace will log its parameters. By default these will appear on both
 stdout and in the run log file. Some formatting occurs to produce the
 log message. The particular output format should not be relied upon.
-(since Swift 0.4)
 
 tracef
 ~~~~~~
@@ -533,6 +542,7 @@ tracef("%s: %i\n", "the value is", i);
 Specifiers:
 
 +%s+:: Format a string.
++%b+:: Format a boolean.
 +%i+:: Format a number as an integer.
 +%f+:: Format a number as a floating point number.
 +%q+:: Format an array.
@@ -551,4 +561,9 @@ sequences such as +\\+.
 writeData
 ~~~~~~~~~
 writeData will write out data structures in the format described for
-readData
+readData. The following example demonstrates how one can write a string "foo" into a file "writeDataPrimitive.out":
+
+----
+include::../../tests/language-behaviour/IO/writeDataPrimitive.swift[]
+----
+

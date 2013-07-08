@@ -11,7 +11,6 @@ the Swift configuration file or on the command line.
 The sites file is formatted as XML. It consists of <pool> elements,
 one for each site that Swift will use.
 
-
 Pool element
 ~~~~~~~~~~~~
 Each pool element must have a handle attribute, giving a symbolic
@@ -24,7 +23,6 @@ to kickstart on the site.
 Each pool must specify a file transfer method, an execution method and
 a remote working directory. Optionally, profile settings can
 be specified.
-
 
 File transfer method
 ~~~~~~~~~~~~~~~~~~~~
@@ -150,13 +148,28 @@ The workdirectory element specifies where on the site files can be
 stored.
 
 ----
-<workdirectory>/home/benc</workdirectory>
+<workdirectory>/tmp/swift.workdir</workdirectory>
 ----
 
-This file must be accessible through the transfer mechanism specified in
-the <gridftp> element and also mounted on all worker nodes that will
-be used for execution. A shared cluster scratch filesystem is
-appropriate for this.
+This directory must be accessible through the specified transfer mechanism and
+also mounted on all worker nodes that will be used for execution. A shared
+cluster scratch filesystem is appropriate for this. Note that you need to
+specify _absolute pathname_ for this field.
+
+
+Scratch
+~~~~~~~
+
+The scratch element takes in a value of a directory on a shared filesystem. For example:
+
+----
+<scratch>/work/01739/ketan/lab/swift/myscratch</scratch>
+----
+
+The scratch element specifies that the underlying Swift wrapper will copy the
+input files into the scratch directory and the job will be run from that
+directory. In the absence of scratch tag, Swift will run the job from
+workdirectory by creating symlinks to input files in a shared directory.
 
 Profiles
 ~~~~~~~~

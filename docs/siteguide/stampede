@@ -1,0 +1,167 @@
+Stampede 
+---------
+
+Stampede is a 10 petaflop supercomputer available as part of  XSEDE resources.
+It employs a batch-oriented computational model where-in a SLURM schedular
+accepts user's jobs and queues them in the queueing system for execution. The
+computational model requires a user to prepare the submit files, track job
+submissions, chackpointing, managing input/output data and handling exceptional
+conditions manually.
+
+Running Swift under Stampede can accomplish the above tasks with least manual
+user intervention. In the following sections, we discuss more about specifics of
+running Swift on Stampede. A more detailed information about Swift and its
+workings can be found on Swift documentation page here:
+http://www.ci.uchicago.edu/swift/wwwdev/docs/index.php
+
+More information on Stampede can be found on XSEDE Stampede website here:
+https://www.xsede.org/stampede
+
+Requesting Access
+~~~~~~~~~~~~~~~~~
+Initial access to XSEDE resources could be obtained by submitting a startup proposal. Advanced users could submit a proposal for research allocation. An educational allocation is available for teaching and/or training purposes. More on XSEDE allocations can be found here:
+https://www.xsede.org/allocations
+
+Connecting to a login node
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Once you have an account, you should be able to access a Stampede login
+node with the following command:
+
+-----
+ssh yourusername@stampede.tacc.utexas.edu
+-----
+
+Follow the steps outlined below to get started with Swift on Stampede:
+
+*step 1.* Install Swift using one of the installation methods documented on Swift home: http://www.ci.uchicago.edu/swift/downloads/index.php,
+
+if installing from source, java can be loaded on Stampede using +module load jdk32+ and apache ant could be downloaded from here: http://ant.apache.org
+
+*step 2.* Create and change to a directory where your Swift related work will
+stay. (say,  +mkdir swift-work+, followed by, +cd swift-work+)
+
+*step 3.* To get started with a simple example running the Linux +/bin/cat+ command to read an
+input file +data.txt+ and write it to an output file, start with writing a simple Swift source script as follows:
+
+-----
+type file;
+
+/* App definitio */
+app (file o) cat (file i)
+{
+  cat @i stdout=@o;
+}
+
+file out[]<simple_mapper; location="outdir", prefix="f.",suffix=".out">;
+file data<"data.txt">;
+
+/* App invocation: n times */
+foreach j in [1:@toint(@arg("n","1"))] {
+  out[j] = cat(data);
+}
+-----
+
+Make sure a file named +data.txt+ is available in the current directory where the above Swift source file will be saved.
+
+*step 4.*  The next step is to create a sites file. An example sites file (sites.xml) is shown as follows:
+
+-----
+<config>
+  <pool handle="stampede">
+    <execution provider="coaster" jobmanager="local:slurm"/>
+    
+    <!-- **replace with your project** -->
+    <profile namespace="globus" key="project">TG-EAR130015</profile>
+
+    <profile namespace="globus" key="jobsPerNode">1</profile>
+    <profile namespace="globus" key="maxWalltime">00:11:00</profile>
+    <profile namespace="globus" key="maxtime">800</profile>
+    
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+
+    <!-- queues on stampede: development, normal, large, etc. -->
+    <profile namespace="globus" key="queue">development</profile>
+
+    <!-- for mail notification -->
+    <profile namespace="globus" key="slurm.mail-user">me@dept.org</profile>
+    <profile namespace="globus" key="slurm.mail-type">ALL</profile>
+    
+    <filesystem provider="local"/>
+    <workdirectory>/path/to/workdir</workdirectory>
+  </pool>
+</config>
+-----
+
+*step 5.* In this step, we will see the config and tc files. The config file (cf) is as follows:
+
+-----
+wrapperlog.always.transfer=true
+sitedir.keep=true
+execution.retries=0
+lazy.errors=false
+status.mode=provider
+use.provider.staging=false
+provider.staging.pin.swiftfiles=false
+use.wrapper.staging=false
+-----
+
+The tc file (tc) is as follows:
+
+-----
+stampede cat /bin/cat null null null
+-----
+
+More about config and tc file options can be found in the Swift userguide here:
+http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html#_swift_configuration_properties.
+
+*step 6.* Run the example using following commandline:
+
+-----
+swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1
+-----
+
+You can further change the value of +-n+ to any arbitrary number to run that
+many number of +cat+ in parallel
+
+*step 7.* Swift will show a status message as "done" after the job has completed its run in the queue. Check the output in the generated +outdir+ directory (+ls outdir+)
+
+----
+login3$ swift -sites.file sites.stampede.xml -config cf -tc.file tc catsn.swift
+Swift trunk swift-r6290 cog-r3609
+
+RunID: 20130221-1030-faapk389
+Progress:  time: Thu, 21 Feb 2013 10:30:21 -0600
+Progress:  time: Thu, 21 Feb 2013 10:30:22 -0600  Submitting:1
+Progress:  time: Thu, 21 Feb 2013 10:30:29 -0600  Submitted:1
+Progress:  time: Thu, 21 Feb 2013 10:30:51 -0600  Active:1
+Progress:  time: Thu, 21 Feb 2013 10:30:54 -0600  Finished successfully:1
+Final status: Thu, 21 Feb 2013 10:30:54 -0600  Finished successfully:1
+----
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+In this section we will discuss some of the common issues and remedies while using Swift on Stampede. The origin of these issues can be Swift or Stampede's configuration, state and usage load among other factors. We try to identify maximum known issues and address them here:
+
+* Command not found: Make sure the +bin+ directory of Swift installation is in +PATH+. 
+
+
+* Failed to transfer wrapperlog for job cat-nmobtbkk and/or Job failed with an exit code of 254. Check the <workdirectory> element on the sites.xml file.
+
+-----
+<workdirectory >/work/your/path/swift.workdir</workdirectory>
+-----
+
+It is likely that it is set to a path where the compute nodes can not write or no space available, e.g. your /home directory. The remedy for this error is to set your workdirectory to the path where Swift could write from compute nodes and there is enough space, e.g. /scratch directory.
+
+* If the jobs are not getting to active state for a long time, check the job status using the slurm squeue command:
+----
+$ squeue -u `whoami`
+----
+
+The output will give an indication of the status of jobs. See the slurm manual for more information on job management commands:
+
+----
+$ man slurm
+----

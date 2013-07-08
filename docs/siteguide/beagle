@@ -3,24 +3,34 @@ Beagle (Cray XE6)
 
 Beagle is a Cray XE6 supercomputer at UChicago. It employs a batch-oriented
 computational model where-in a PBS schedular accepts user's jobs and queues
-them in the queueing system for execution. The computational model requires
-a user to prepare the submit files, track job submissions, chackpointing,
-managing input/output data and handling exceptional conditions manually.
-Running Swift under Beagle can accomplish the above tasks with least manual
-user intervention and maximal oppurtunistic computation time on Beagle
-queues. In the following sections, we discuss more about specifics of
-running Swift on Beagle. A more detailed information about Swift and its
+them in the queueing system for execution.
+
+The computational model requires a user to prepare the submit files, track job
+submissions, chackpointing, managing input/output data and handling exceptional
+conditions manually.  Running Swift under Beagle can accomplish the above tasks
+with least manual user intervention and maximal oppurtunistic computation time
+on Beagle queues. In the following sections, we discuss more about specifics
+of running Swift on Beagle. A more detailed information about Swift and its
 workings can be found on Swift documentation page here:
+
+----
 http://www.ci.uchicago.edu/swift/wwwdev/docs/index.php
+----
+
 More information on Beagle can be found on UChicago Beagle website here:
+
+----
 http://beagle.ci.uchicago.edu
+----
 
 Requesting Access
 ~~~~~~~~~~~~~~~~~
-If you do not already have a Computation Institute account, you can request
-one at https://www.ci.uchicago.edu/accounts/. This page will give you a list
-of resources you can request access to.
-You already have an existing CI account, but do not have access to Beagle,
+
+If you do not already have a Computation Institute (CI) account, you can
+request one at https://www.ci.uchicago.edu/accounts/. This page will give you a
+list of resources you can request access to.
+
+If you already have an existing CI account, but do not have access to Beagle,
 send an email to support@ci.uchicago.edu to request access.
 
 Connecting to a login node
@@ -32,9 +42,11 @@ node with the following command:
 ssh yourusername@login.beagle.ci.uchicago.edu
 -----
 
+Getting Started with Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 Follow the steps outlined below to get started with Swift on Beagle:
 
-*step 1.* Load the Swift module on Beagle as follows: +module load swift+
+*step 1.* Load the Swift and Sun-java module on Beagle as follows: +module load swift sun-java+
 
 *step 2.* Create and change to a directory where your Swift related work will
 stay. (say, +mkdir swift-lab+, followed by, +cd swift-lab+)
@@ -45,7 +57,7 @@ input file +data.txt+ and write to an output file +f.nnn.out+, start with writin
 -----
 type file;
 
-/* App definitio */
+/* App definition */
 app (file o) cat (file i)
 {
   cat @i stdout=@o;
@@ -107,7 +119,8 @@ The tc file (tc) is as follows:
 pbs cat /bin/cat null null null
 -----
 
-More about config and tc file options can be found in the swift userguide here: http://www.ci.uchicago.edu/swift/wwwdev/guides/release-0.93/userguide/userguide.html#_swift_configuration_properties.
+More about config and tc file options can be found in the swift userguide here:
+http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html#_swift_configuration_properties
 
 *step 6.* Run the example using following commandline:
 
@@ -128,9 +141,6 @@ Progress:  time: Sun, 18 Dec 2011 02:46:33 +0000
 Progress:  time: Sun, 18 Dec 2011 02:46:42 +0000  Active:1
 Final status:  time: Sun, 18 Dec 2011 02:46:43 +0000  Finished successfully:1
 ----
-
-Note: Running from sandbox node or requesting 30 minutes walltime for upto 3 nodes
-will get fast prioritized execution. Suitable for small tests.
 
 Larger Runs on Beagle
 ~~~~~~~~~~~~~~~~~~~~~
@@ -192,8 +202,9 @@ If 'swift' is not a typo you can run the following command to lookup the package
 The most likely cause is the module is not loaded. Do the following to load the Swift module:
 
 -----
-$ module load swift
-Swift version swift-0.93RC5 loaded
+$ module load swift sun-java
+Swift version swift-0.93 loaded
+sun-java version jdk1.7.0_02 loaded
 -----
 
 * Failed to transfer wrapperlog for job cat-nmobtbkk and/or Job failed with an exit code of 254. Check the <workdirectory> element on the sites.xml file.

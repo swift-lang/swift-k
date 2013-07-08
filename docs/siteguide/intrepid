@@ -1,17 +1,16 @@
 Intrepid (Blue Gene/P)
 ---------------------
-
-Intrepid is an IBM Blue Gene/P supercomputer located at the Argonne
-Leadership Computing Facility. More information on Intrepid can be
-found at http://www.alcf.anl.gov.  Surveyor and Challenger are
-similar, smaller machines.
+Intrepid is an IBM Blue Gene/P (BG/p) supercomputer located at the Argonne
+Leadership Computing Facility. More information on Intrepid can be found at
+http://www.alcf.anl.gov. Surveyor and Challenger are similar, smaller
+machines.
 
 Requesting Access
 ~~~~~~~~~~~~~~~~~
-If you do not already have an account on Intrepid, you can request
-one at https://accounts.alcf.anl.gov/accounts/request.php. More information about
-this process and requesting allocations for your project can be found at
-http://www.alcf.anl.gov/support/gettingstarted/index.php.
+If you do not already have an account on Intrepid, you can request one
+link:https://accounts.alcf.anl.gov/accounts/request.php[here]. More information
+about this process and requesting allocations for your project can be found
+link:http://www.alcf.anl.gov/support/gettingstarted/index.php[here].
 
 SSH Keys
 ~~~~~~~~
@@ -69,6 +68,13 @@ Replace <version> with the actual name of the swift directory in the example abo
 
 What You Need To Know Before Running Swift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note that on Intrepid, the compute nodes can not create or write to a /home filesystem. Consequently, in order for Swift to interface correctly from login node to the compute nodes, Swift must write all internal and intermediate files to /intrepid-fs0, which is writable by the compute nodes. In order to accomplish this, export the environment variable SWIFT_USERHOME as follows:
+
+----
+export SWIFT_USERHOME=/intrepid-fs0/users/`whoami`/scratch
+----
+
 Before you can create a Swift configuration file, there are some things
 you will need to know.
 
@@ -80,7 +86,7 @@ This directory needs to be writable. Common options for this are:
 -----
 /home/username/swiftwork
 /home/username/work
-/tmp
+/tmp/swift.work
 -----
 
 Which project(s) are you a member of?
@@ -122,7 +128,7 @@ Generating Configuration Files
 
 Now that you know what queue to use, your project, and your work
 directory, it is time to set up Swift. Swift uses a configuration file
-called sites.xml to determine how it should run.  There are two
+called sites.xml to determine how it should run. There are two
 methods you can use for creating this file. You can manually edit the
 configuration file, or generate it with a utility called +gensites+.
 
@@ -155,7 +161,7 @@ that starts with +172+.
 
 Manually Editing tc.data
 ~~~~~~~~~~~~~~~~~~~~~~~~
-Below is the tc.data file used by Swift's test suite for running on PADS.
+Below is the tc.data file used by Swift's test suite.
 
 -----
 include::../../tests/providers/intrepid/tc.template.data[]
@@ -165,7 +171,10 @@ Copy these commands and save it as tc.data.
 
 Catsn.swift
 ~~~~~~~~~~~
-The swift script we will run is called catsn.swift. It simply cats a file and saves the result. This is a nice simple test to ensure jobs are running correctly. Create a file called data.txt which contains some simple input - a "hello world" will do the trick.
+The swift script we will run is called catsn.swift. It simply cats a file and
+saves the result. This is a nice simple test to ensure jobs are running
+correctly. Create a file called data.txt which contains some simple input - a
+"hello world" will do the trick.
 
 -----
 include::../../examples/misc/catsn.swift[]
@@ -179,13 +188,16 @@ Now that everything is in place, run Swift with the following command:
 swift -sites.file sites.xml -tc.file tc.data catsn.swift -n=10
 -----
 
-You should see several new files being created, called catsn.0001.out, catsn.0002.out, etc. Each of these
-files should contain the contents of what you placed into data.txt. If this happens, your job has run
-successfully on PADS!
+You should see several new files being created, called catsn.0001.out,
+catsn.0002.out, etc. Each of these files should contain the contents of what
+you placed into data.txt. If this happens, your job has run successfully!
 
 More Help
 ~~~~~~~~~
-The best place for additional help is the Swift user mailing list. You can subscribe to this list at
-https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user. When submitting information, please send your sites.xml file, your tc.data, and any Swift log files that were created during your attempt.
+The best place for additional help is the Swift user mailing list. You can
+subscribe to this
+link:https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user[list].
+When submitting information, send your sites.xml file, your tc.data, and any
+Swift log files that were created during your attempt.
 
 

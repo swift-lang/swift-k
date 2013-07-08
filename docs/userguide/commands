@@ -74,10 +74,34 @@ Swift command-line options
     unique with respect to all other run IDs that might be used,
     irrespective of (at least) expected execution sites, program or user.
 
+-version
+
+    Display Swift version and exit
+
+-recompile
+
+      Forces Swift to re-compile the invoked Swift script. While Swift
+      is meant to detect when recompilation is necessary, in some
+      special cases it fails to do so. This flag helps with those
+      special cases.
+
+-cdm.file
+
+     Specifies a CDM policy file.
+
+-reduced.logging
+
+      Makes logging more terse by disabling provenance information and
+      low-level task messages
+
+-minimal.logging
+
+      Makes logging much more terse: reports warnings only
+
 -tui
 
     Displays an interactive text mode monitor during a run. (since Swift
-    0.9) 
+    0.9)
 
 In addition, the following Swift properties can be set on the command line:
 
@@ -118,18 +142,26 @@ Environment variables
 
 The swift is influenced by the following environment variables:
 
-GLOBUS_HOSTNAME, GLOBUS_TCP_PORT_RANGE - set in the environment
-before running Swift. These can be set to inform Swift of the
-configuration of your local firewall. More information can be found in
-the Globus firewall How-to <http://dev.globus.org/wiki/FirewallHowTo>.
+GLOBUS_HOSTNAME, GLOBUS_TCP_PORT_RANGE
 
-COG_OPTS - set in the environment before running Swift. Options set in
-this variable will be passed as parameters to the Java Virtual Machine
-which will run Swift. The parameters vary between virtual machine
-imlementations, but can usually be used to alter settings such as
-maximum heap size. Typing 'java -help' will sometimes give a list of
-commands. The Sun Java 1.4.2 command line options are documented here
-<http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/java.html>.
+    Set in the environment before running Swift. These can be set to inform Swift
+    of the configuration of your local firewall. More information can be found in
+    the Globus firewall How-to <http://dev.globus.org/wiki/FirewallHowTo>.
+
+SWIFT_HEAP_MAX
+
+    Sets the java heap size.  Use this if Swift runs out of memory.
+    Uses the format set by java -Xmx, which is how this is implemented.
+    The default setting is 1024M.
+
+COG_OPTS
+
+    Set in the environment before running Swift. Options set in
+    this variable will be passed as parameters to the Java Virtual Machine
+    which will run Swift. The parameters vary between virtual machine
+    imlementations, but can usually be used to alter settings such as
+    maximum heap size. Typing 'java -help' will sometimes give a list of
+    commands.
 
 
 swift-osg-ress-site-catalog

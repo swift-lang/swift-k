@@ -84,7 +84,7 @@ lines.zsh blocks.{cfg,eps,data}
 
 Problem Reporting
 ~~~~~~~~~~~~~~~~~
-When reporting problems to swift-user@ci.uchicago.edu, please attach the
+When reporting problems to swift-user@ci.uchicago.edu, attach the
 following files and information:
  
 . tc.data and sites.xml (or whatever you named these files)

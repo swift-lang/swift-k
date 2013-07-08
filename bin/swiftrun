@@ -60,6 +60,14 @@ create_dotswift
 rundir=$( echo run??? | sed -e 's/^.*run//' | awk '{ printf("run%03d\n", $1+1)}' )
 mkdir $rundir
 
+# Link input_files
+if [ -d "input_files" ]; then
+   for input_file in input_files/*
+   do
+      ln -s $PWD/$input_file $rundir
+   done
+fi
+
 # Swift script
 if [ -f "$script" ]; then 
    cp $script $rundir
@@ -72,33 +80,37 @@ if [ -f "$CONFIG" ]; then
 fi
 
 # Create sites.xml
-cd $rundir
 IFS=","
-echo "<config>" > sites.xml
+echo "<config>" > $rundir/sites.xml
 for site in $SITES
 do
    # If config is not defined, but there is a config in conf/ that matches, use that
-   if [ -z "$CONFIG" ] && [ -f "../conf/$site.cf" ]; then
-      cp ../conf/$site.cf .
-      CONFIG=$site.cf
-   fi
+   if [ -z "$CONFIG" ] && [ -f "conf/$site.cf" ]; then
+      cp conf/$site.cf $rundir
+      config=$site.cf
+   fi  
 
-   if [ -f "$CONFIG" ]; then
-      gensites -p $CONFIG $site >> sites.xml
+   if [ -f "conf/$config" ]; then
+      gensites -p conf/$config $site >> $rundir/sites.xml
    else
-      gensites $site >> sites.xml
+      gensites $site >> $rundir/sites.xml
    fi
 
 done
-echo "</config>" >> sites.xml
+echo "</config>" >> $rundir/sites.xml
+mv tc.data $rundir
+cd $rundir
 
+if [ -z "$CONFIG" ]; then
+   CONFIG=$config
+fi
 
 # Run
 timestamp=$( date +%s )
 ln -s $PWD $HOME/.swift/runs/current/$rundir.$timestamp 
 if [ -n "$CONFIG" ]; then
-   eval time swift -sites.file sites.xml -tc.file tc.data -config $CONFIG $script $args 2>&1 | tee swift.out
+   eval time swift -sites.file sites.xml -tc.file tc.data -config $CONFIG $( basename $script ) $args 2>&1 | tee swift.out
 else
-   eval time swift -sites.file sites.xml -tc.file tc.data $script $args 2>&1 | tee swift.out
+   eval time swift -sites.file sites.xml -tc.file tc.data $( basename $script ) $args 2>&1 | tee swift.out
 fi
 mv $HOME/.swift/runs/current/$rundir.$timestamp $HOME/.swift/runs/completed

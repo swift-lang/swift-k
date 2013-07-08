@@ -14,9 +14,9 @@ Stable releases of Swift have undergone more extensive testing than development 
 In general, they are more stable, have fewer bugs, and have been tested on a variety of
 systems.
 
-The development version of Swift is aimed at developers and testers. The development 
-code has the highest chance of containing buggy and untested code. If you need stability 
-please use the latest stable release. 
+The development version of Swift is aimed at developers and testers. The
+development code has the highest chance of containing buggy and/or untested
+code. If you need stability, use the latest stable release. 
 
 Downloading a Swift Distribution
 --------------------------------
@@ -64,7 +64,7 @@ environment variable. To do this, first determine where the Swift bin
 directory is located. If you installed Swift from a binary release, it will
 be in the swift-0.93/bin directory where you installed it. If you followed
 the instructions above for installing Swift from a source repository, it
-will be located in swift-0.93/cog/modules/swift/dist/swift-svn/bin.
+will be located in swift-<version>/cog/modules/swift/dist/swift-svn/bin.
 
 Add the following line to the bottom of ~/.bashrc:
 
@@ -82,11 +82,11 @@ This should point you to the path of the Swift binary.
 Running Swift Examples
 ----------------------
 The Swift examples can be found in the examples directory in the Swift
-distribution. The examples are written in the SwiftScript language, and 
+distribution. The examples are written in the Swift scripting language, and 
 have .swift as a file extension.
 
-Execution of a Swift workflow is done using the swift command, which
-takes the Swift workflow file name as an argument:
+Execution of a Swift script is done using the swift command, which
+takes the Swift script file name as an argument:
 
 -----
 cd examples/tutorial
@@ -98,4 +98,4 @@ If this file gets created, you have successfully ran your first
 Swift script!
 
 More documentation on how to run Swift can be found at 
-http://www.ci.uchicago.edu/swift/docs/index.php,
+http://www.ci.uchicago.edu/swift/docs/index.php

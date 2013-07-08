@@ -15,3 +15,6 @@ include::language_features[]
 include::runtime_features[]
 
 include::bits[]
+
+link:http://www.ci.uchicago.edu/swift/docs/index.php[home]
+

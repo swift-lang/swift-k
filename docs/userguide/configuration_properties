@@ -1,16 +1,15 @@
 Swift configuration properties
 ------------------------------
-Various aspects of the behavior of the Swift Engine can be configured
-through properties. The Swift Engine recognizes a global, per
-installation properties file which can found in etc/swift.properties
-in the Swift installation directory and a user properties file which can
-be created by each user in ~/.swift/swift.properties. The Swift Engine
-will first load the global properties file. It will then try to load the
-user properties file. If a user properties file is found, individual
-properties explicitly set in that file will override the respective
-properties in the global properties file. Furthermore, some of the
-properties can be overridden directly using command line arguments to
-the *swift* command.
+Various aspects of the behavior of Swift can be configured through properties.
+Swift recognizes a global, per installation properties file which can found in
+etc/swift.properties in the Swift installation directory and a user properties
+file which can be created by each user in ~/.swift/swift.properties.
+
+Swift will first load the global properties file. It will then try to load the
+user properties file. If a user properties file is found, individual properties
+explicitly set in that file will override the respective properties in the
+global properties file. Furthermore, some of the properties can be overridden
+directly using command line arguments to the *swift* command.
 
 Swift properties are specified in the following format:
 
@@ -416,6 +415,13 @@ wrapper.invocation.mode
     directory. In such cases, relative mode must be used. (since Swift
     0.9)
 
+use.wrapper.staging
+
+    Valid values: true, false
+    Default value: false
+    
+    Determines if the Swift wrapper should do file staging.
+
 wrapper.parameter.mode
 
     Controls how Swift will supply parameters to the remote wrapper
@@ -444,4 +450,44 @@ sites.file=${vds.home}/etc/sites.xml
 tc.file=${vds.home}/etc/tc.data
 ip.address=192.168.0.1
 ----
+
+Monitoring Swift
+~~~~~~~~~~~~~~~~
+
+A Swift run can be monitored for progress and resource usage. To monitor the resource usage, use the +-monitor+ option with the Swift commandline. For example:
+
+----
+swift -tc.file tc -sites.file sites.xml -config cf modis04.swift -monitor
+----
+
+This will produce a gui/X window consisting of the following quantities:
+
+* Allocated memory
+* Heap Size
+* Total Threads
+* Total Workers
+
+.Figure 4. Resource Monitor
+image:swift_monitor.png[]
+
+Figure 4 shows a snapshot of a Swift resource monitor.
+
+
+The progress of a Swift run can be monitored using the +-tui+ option. For example:
+
+----
+swift -tc.file tc -sites.file sites.xml -config cf modis04.swift -tui
+----
+
+This will produce a textual user interface with multiple tabs, each showing the following features of the current Swift run:
+
+* A summary view showing task status
+* An apps tab
+* A jobs tab
+* A transfer tab
+* A scheduler tab
+* A Tast statistics tab
+* A customized tab called 'Ben's View'
+
+Navigation between these tabs can be done using the function keys f2 through f8.
 

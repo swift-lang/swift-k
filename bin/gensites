@@ -123,10 +123,12 @@ fi
 if [ ! -f "$TEMPLATE_PATH" ]; then
    if [ -f "$TEMPLATE" ]; then
       TEMPLATE_PATH=$TEMPLATE
-   elif [ -f "$SWIFT_HOME/$TEMPLATE" ]; then
-      TEMPLATE_PATH=$SWIFT_HOME/$TEMPLATE
    elif [ -f "$HOME/.swift/sites/$TEMPLATE" ]; then
       TEMPLATE_PATH=$HOME/.swift/sites/$TEMPLATE
+   elif [ -f "$PWD/conf/$TEMPLATE" ]; then
+      TEMPLATE_PATH=$PWD/conf/$TEMPLATE
+   elif [ -f "$SWIFT_HOME/$TEMPLATE" ]; then
+      TEMPLATE_PATH=$SWIFT_HOME/$TEMPLATE
    fi
    if [ ! -f "$TEMPLATE_PATH" ]; then
       crash "Cannot find template for $TEMPLATE"
@@ -151,9 +153,9 @@ fi
 # Setup for creating a TC file
 if [ -f "$PROPERTIES_FILE" ]; then
    if [ -n "`grep -e app $PROPERTIES_FILE`" ]; then
-      if [ -f "tc.data" ]; then
-         mv tc.data tc.data.old
-      fi
+      #if [ -f "tc.data" ]; then
+      #   mv tc.data tc.data.old
+      #fi
       HOSTS=`grep -i "pool handle" $TEMPLATE_PATH|grep -v "^[[:space:]]*#"|cut -d'"' -f2`
    fi
 fi

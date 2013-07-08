@@ -1,10 +1,10 @@
 Fusion (x86 cluster)
 -------------------
 
-Fusion is a 320-node computing cluster for the Argonne
-National Laboratory community. The primary goal of the LCRC is to
-facilitate mid-range computing in all of the scientific programs of
-Argonne and the University of Chicago.
+Fusion is a 320-node computing cluster for the Argonne's Laboratory Computing
+Resource Center (LCRC). The primary goal of the LCRC is to facilitate mid-range
+computing in all of the scientific programs of Argonne and the University of
+Chicago.
 
 This section will walk you through running a simple Swift script
 on Fusion.
@@ -30,9 +30,10 @@ http://www.lcrc.anl.gov/info/Projects.
 SSH Keys
 ~~~~~~~~
 Before accessing Fusion, be sure to have your SSH keys configured correctly.
-SSH keys are required to access fusion. You should see information about
-this when you request your account. Email support@lcrc.anl.gov for
-additional help.
+SSH keys are required to access fusion. You should see information about this
+when you request your account. Check
+link:http://wiki.mcs.anl.gov/IT/index.php/SSH_keys[ssh FAQ] or email
+support@lcrc.anl.gov for additional help.
 
 Connecting to a login node
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,17 +41,17 @@ Once your keys are configured, you should be able to access a Fusion login
 node with the following command:
 
 -----
-ssh yourusername@fusion.lcrc.anl.gov
+ssh <yourusername>@fusion.lcrc.anl.gov
 -----
 
 Creating sites.xml
 ~~~~~~~~~~~~~~~~~~
-Swift relies on various configuration files to determine how to
-run. This section will provide a working configuration file which
+Swift uses various configuration files to determine how to
+run an application. This section will provide a working configuration file which
 you can copy and paste to get running quickly. The sites.xml file
 tells Swift how to submit jobs, where working directories are
 located, and various other configuration information. More
-information on sites.xml can be found in the Swift User's Guide.
+information on sites.xml can be found in the Swift link:http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html[user guide].
 
 The first step is to paste the text below into a file named sites.xml.
 
@@ -60,18 +61,19 @@ include::../../tests/providers/fusion/coasters/sites.template.xml[]
 
 This file will require one customization. Create a
 directory called swiftwork. Modify \_WORK_ in sites.xml
-to point to this new directory. For example
+to point to a new directory. For example
+
 -----
-<workdirectory>/home/myhome/swiftwork</workdirectory>
+<workdirectory>/tmp/swiftwork</workdirectory>
 -----
 
-Creating tc.data
-~~~~~~~~~~~~~~~~
-The tc.data configuration file gives information about the applications
+Creating tc
+~~~~~~~~~~~
+The tc configuration file gives information about the applications
 that will be called by Swift. More information about the format
-of tc.data can be found in the Swift User's guide.
+of tc can be found in the Swift user guide.
 
-Paste the following example into a file named tc.data
+Paste the following example into a file named tc
 
 -----
 include::../../tests/providers/fusion/coasters/tc.template.data[]
@@ -79,22 +81,26 @@ include::../../tests/providers/fusion/coasters/tc.template.data[]
 
 Copy a Swift Script
 ~~~~~~~~~~~~~~~~~~~~
-Within the Swift directory is an examples directory which contains
-several introductory Swift scripts. The example we will use in this
-section is called catsn.swift. Copy this script to the same directory
-that your sites.xml and tc.data files are located.
+Within the Swift directory is an examples directory which contains several
+introductory Swift scripts. The example we will use in this section is called
+catsn.swift. The script copies input file's content to another file using the
+Unix cat utility. Copy this script to the same directory that your sites.xml
+and tc.data files are located.
 
 -----
 $ cp ~/swift/examples/misc/catsn.swift .
 $ cp ~/swift/examples/misc/data.txt .
 -----
-TIP: The location of your swift directory may vary depending on how you installed it. Change this to the examples/misc directory of your installation as needed.
+
+TIP: The location of your swift directory may vary depending on how you
+installed it. Change this to the examples/misc directory of your installation
+as needed.
 
 Run Swift
 ~~~~~~~~~
 Finally, run the script
 -----
-$ swift -sites.file sites.xml -tc.file tc.data catsn.swift
+$ swift -sites.file sites.xml -tc.file tc catsn.swift
 -----
 
 You should see 10 new text files get created, named catsn*.out. If
@@ -118,7 +124,10 @@ http://www.lcrc.anl.gov/info/BatchJobs.
 
 More Help
 ~~~~~~~~~
-The best place for additional help is the Swift user mailing list. You can subscribe to this list at
-https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user. When submitting information, please send your sites.xml file, your tc.data, and any Swift log files that were created during your attempt.
+The best place for additional help is the Swift user mailing list. You can
+subscribe to this list at
+link:https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user[swift-user].
+When submitting information, send your sites.xml file, your tc.data, and
+any Swift log files that were created during your attempt.
 
 

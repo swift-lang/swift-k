@@ -16,3 +16,6 @@ include::infrastructures[]
 include::debugging[]
 
 include::log_processing[]
+
+link:http://www.ci.uchicago.edu/swift/docs/index.php[home]
+

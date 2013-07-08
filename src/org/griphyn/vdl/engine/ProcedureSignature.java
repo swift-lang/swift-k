@@ -185,6 +185,7 @@ public class ProcedureSignature {
 		add(functionsMap, "arg", returns(STRING), args(STRING, optional(STRING)));
 
 		add(functionsMap, "extractInt", returns(INT), args(ANY));
+		add(functionsMap, "extractFloat", returns(FLOAT), args(ANY));
 		add(functionsMap, "filename", returns(STRING), args(ANY));
 		add(functionsMap, "filenames", returns(STRING_ARRAY), args(ANY));
 		add(functionsMap, "dirname", returns(STRING), args(ANY));

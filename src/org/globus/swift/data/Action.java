@@ -94,6 +94,10 @@ public class Action {
             String desthost = bc.getHost();
             String workdir = (String) bc.getProperty("workdir");
             
+            if (workdir != null && !workdir.startsWith("/")) {
+                workdir = System.getProperty("user.dir") + "/" + workdir;
+            }
+            
             org.globus.swift.data.policy.External.doExternal(srcfile, srcdir, 
                                 desthost, workdir + "/" + destdir);
         }

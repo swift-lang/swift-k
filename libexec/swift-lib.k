@@ -1,5 +1,6 @@
 namespace(swiftscript) {
 	export(extractInt, def("org.griphyn.vdl.karajan.lib.swiftscript.ExtractInt"))
+	export(extractFloat, def("org.griphyn.vdl.karajan.lib.swiftscript.ExtractFloat"))
 	export(readData, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadData"))
 	export(readData2, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"))
 	export(readStructured, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"))

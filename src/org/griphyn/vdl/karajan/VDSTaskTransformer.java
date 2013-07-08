@@ -124,6 +124,14 @@ public class VDSTaskTransformer implements TaskTransformer {
 			String dir = spec.getDirectory();
 			BoundContact bc = (BoundContact) contacts[0];
 			String workdir = (String) bc.getProperty("workdir");
+            
+            if (workdir==null){
+                workdir=System.getProperty("user.dir");
+            }
+
+            if (workdir!=null && !workdir.startsWith("/")){
+                   workdir=System.getProperty("user.dir")+"/"+workdir;
+            }
 			if (dir == null || !dir.startsWith("/")) {
 				if (workdir != null) {
 					if (dir == null) {

@@ -1,5 +1,5 @@
   <pool handle="beagle">
-    <execution provider="coaster" jobmanager="local:pbs" url="login4.beagle.ci.uchicago.edu"/>
+    <execution provider="coaster" jobmanager="ssh-cl:pbs" url="login4.beagle.ci.uchicago.edu"/>
     <profile namespace="globus" key="jobsPerNode">24</profile>
     <profile namespace="globus" key="lowOverAllocation">100</profile>
     <profile namespace="globus" key="highOverAllocation">100</profile>

@@ -22,4 +22,13 @@ include::intrepid[]
 
 include::mcs[]
 
+include::midway[]
+
 include::uc3[]
+
+include::stampede[]
+
+include::ec2[]
+
+link:http://www.ci.uchicago.edu/swift/docs/index.php[home]
+

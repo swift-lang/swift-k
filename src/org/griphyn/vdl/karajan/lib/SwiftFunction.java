@@ -296,12 +296,7 @@ public abstract class SwiftFunction extends AbstractFunction {
 	 */
 	public static String relativize(String name) {
 		name = pathOnly(name);
-		if (name != null && name.length() > 0 && name.charAt(0) == '/') {
-			return name.substring(1);
-		}
-		else {
-			return name;
-		}
+		return PathUtils.remotePathName(name);
 	}
 
 	protected boolean compatible(Type expectedType, Type actualType) {

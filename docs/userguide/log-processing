@@ -112,18 +112,22 @@ file is Swift's resume log which is used by Swift when a run is resumed using
 the "-resume" option. The .rlog file is only for Swift's internal purpose and
 not to be interpreted by the user.
 
-Each line in the log file is typically made up of three parts. The first part
+Each line in the log file typically consists of three parts. The first part
 is the timestamp, the second is the type of log message and the third is the
 message itself. The types of log messages follows the java log4j standard types
-of TRACE, DEBUG, INFO, WARN, ERROR and FATAL. This section lists the various
-Swift log messages and explains the meaning and likely interpretation of those
-messages. Please note that the list is not comprehensive at this time. Also
-note that we will ignore the timestamps here.
+of TRACE, DEBUG, INFO, WARN, ERROR and FATAL.
+
+////
+This section lists the various Swift log messages and explains the meaning and
+likely interpretation of those messages. Note that the list is not
+comprehensive at this time. Also note that we will ignore the timestamps here.
 
 . _DEBUG Loader arguments: [-sites.file, sites.xml, -config, cf, -tc.file, tc, postproc-gridftp.swift]_
+    Swift commandline arguments
 . _DEBUG Loader Max heap: 5592449024_
+    The java runtime heap size
 . _DEBUG textfiles BEGIN_
-. _DEBUG Loader kmlversion is_
+    A dump of config and source files associated with this run
 . _DEBUG VDL2ExecutionContext Stack dump_
 . _INFO  SetFieldValue Set_
 . _INFO  get__site STARTCOMPOUND thread=0-8 name=get__site_
@@ -142,7 +146,9 @@ note that we will ignore the timestamps here.
 . _INFO  ThrottleManager mem=113.54 MB, heap=482.88 MB, maxHeap=5.21 GB_
 . _INFO  ThrottleManager I maxBuffers=512, crtBuffers=0, allowedTransfers=256, active=0, suspended=0_
 . _INFO  PerformanceDiagnosticInputStream [MEM] Heap total: 482.88 MB, Heap used: 118.58 MB_
+Heap sizes for performance
 . _INFO  vdl:execute END_SUCCESS thread=0-8-0 tr=getsite_
+The job ended successfully
 . _INFO  WeightedHostScoreScheduler CONTACT_SELECTED host=localhost, score=99.854_
 . _
-
+////
