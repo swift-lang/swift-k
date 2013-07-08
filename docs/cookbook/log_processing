@@ -2,7 +2,7 @@ Log Processing
 ---------------
 
 To properly generate log plots, you must enable VDL/Karajan logging. Make sure
-log4.properties contains:
+log4j.properties contains:
 ----
 log4j.logger.swift=DEBUG
 log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Cpu=DEBUG

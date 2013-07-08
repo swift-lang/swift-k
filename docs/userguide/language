@@ -1,5 +1,5 @@
-The SwiftScript Language
-------------------------
+The Swift scripting Language
+----------------------------
 
 Language basics
 ~~~~~~~~~~~~~~~
@@ -64,15 +64,15 @@ invocation passed as inputs.
 
 The examples above have used the type image without any definition of
 that type. We can declare it as a marker type which has no structure
-exposed to SwiftScript:
+exposed to Swift script:
 
 ----
 type image;  
 ----
 
 This does not indicate that the data is unstructured; but it indicates
-that the structure of the data is not exposed to SwiftScript. Instead,
-SwiftScript will treat variables of this type as individual opaque files.
+that the structure of the data is not exposed to Swift. Instead,
+Swift will treat variables of this type as individual opaque files.
 
 With mechanisms to declare types, map variables to data files, and
 declare and invoke procedures, we can build a complete (albeit simple)
@@ -172,7 +172,7 @@ y=p(x);
 z=q(y);  
 ----
 
-Arrays in SwiftScript are more monotonic - a generalisation of being
+Arrays in Swift are more monotonic - a generalisation of being
 assignment. Knowledge about the content of an array increases during
 execution, but cannot otherwise change. Each element of the array is
 itself single assignment or monotonic (depending on its type). During a
@@ -208,9 +208,9 @@ Compound procedures
 ~~~~~~~~~~~~~~~~~~~
 
 As with many other programming languages, procedures consisting of
-SwiftScript code can be defined. These differ from the previously
+Swift script can be defined. These differ from the previously
 mentioned procedures declared with the app keyword, as they invoke
-other SwiftScript procedures rather than a component program.
+other Swift procedures rather than a component program.
 
 ----
 (file output) process (file input) {  
@@ -249,13 +249,13 @@ values to be used by subsequent statements.
 More about types
 ~~~~~~~~~~~~~~~~
 
-Each variable and procedure parameter in SwiftScript is strongly typed.
+Each variable and procedure parameter in Swift script is strongly typed.
 Types are used to structure data, to aid in debugging and checking
 program correctness and to influence how Swift interacts with data.
 
 The image type declared in previous examples is a marker type.
 Marker types indicate that data for a variable is stored in a single
-file with no further structure exposed at the SwiftScript level.
+file with no further structure exposed at the Swift script level.
 
 Arrays have been mentioned above, in the arrays section. A code block
 may be applied to each element of an array using foreach; or

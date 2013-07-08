@@ -173,12 +173,12 @@ lazy.errors
     value of this property. If set to false, Swift will report the
     first error encountered and immediately stop execution. If set to
     true, Swift will attempt to run as much as possible from a
-    SwiftScript program before stopping execution and reporting all
+    Swift script before stopping execution and reporting all
     errors encountered.
 
-    When developing SwiftScript programs, using the default value of
+    When developing Swift scripts, using the default value of
     false can make the program easier to debug. However in production
-    runs, using true will allow more of a SwiftScript program to be
+    runs, using true will allow more of a Swift script to be
     run before Swift aborts execution.
 
 pgraph
@@ -188,7 +188,7 @@ pgraph
     Default value: false
 
     Swift can generate a Graphviz <http://www.graphviz.org/> file
-    representing the structure of the SwiftScript program it has run. If
+    representing the structure of the Swift script it has run. If
     this property is set to true, Swift will save the provenance graph
     in a file named by concatenating the program name and the instance
     ID (e.g. helloworld-ht0adgi315l61.dot).

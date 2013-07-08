@@ -51,17 +51,10 @@ $ gensites -l templatename
 -----
 
 Running this command will print some information about the template and give
-you an idea of what settings you will need to specify. You should see
-something like this:
+you an idea of what settings you will need to specify. 
 
------
-Description: Template for Intrepid. More information about this system can be found at http://www.alcf.anl.gov/support/gettingstarted/index.php
-Required Tokens: host work project queue
------
-
-The required tokens are required to properly use the templates. These are placeholder 
-values you will need to specify in the
-following steps.
+The required tokens are required to properly use the templates. These are
+placeholder values you will need to specify in the following steps.
 
 Providing Site Specific Values
 ------------------------------

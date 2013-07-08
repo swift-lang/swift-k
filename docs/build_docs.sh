@@ -57,8 +57,14 @@ if [ ! -d "$INSTALLATION_DIRECTORY" ]; then
    chmod $CHMOD_DIRECTORY_MODE $INSTALLATION_DIRECTORY > /dev/null 2>&1
 fi
 
+unamestr=`\uname`
+if [[ "$unamestr" == 'Linux' ]]; then
+   pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
+else
+   pushd $(dirname $(greadlink -f $0)) > /dev/null 2>&1
+fi
+
 # Gather version information
-pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
 pushd .. > /dev/null 2>&1
 VERSION=`svn info |grep URL|awk -F / '{print $NF}'`
 popd > /dev/null 2>&1

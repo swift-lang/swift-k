@@ -8,15 +8,15 @@ that directory is placed on the PATH.
 swift
 ~~~~~
 The swift command is the main command line tool for executing
-SwiftScript programs.
+Swift scripts.
 
 
 Command-line Syntax
 ^^^^^^^^^^^^^^^^^^^
 The swift command is invoked as follows: swift [options]
-SwiftScript-program [SwiftScript-arguments]* with options taken from the
-following list, and SwiftScript-arguments made available to the
-SwiftScript program through the @arg function.
+Swifti script [Swift-arguments]* with options taken from the
+following list, and Swift script arguments made available to the
+Swift script through the @arg function.
 
 Swift command-line options
 
@@ -26,11 +26,11 @@ Swift command-line options
 
 -typecheck
 
-    Does a typecheck of a SwiftScript program, instead of executing it.
+    Does a typecheck of a Swift script, instead of executing it.
 
 -dryrun
 
-    Runs the SwiftScript program without submitting any jobs (can be
+    Runs the Swift script without submitting any jobs (can be
     used to get a graph)
 
 -monitor
