@@ -417,7 +417,7 @@ public class CoasterService extends GSSService {
     }
     
     private static String makeLogFileName() {
-        DateFormat df = new SimpleDateFormat("YYYY-MM-dd");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         return "coasters-" + df.format(new Date()) + ".log";
     }
 
