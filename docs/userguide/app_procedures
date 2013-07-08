@@ -432,26 +432,45 @@ the Swift scripting language.
 
 readData
 ~~~~~~~~
-readData will read data from a specified file.
+readData will read data from a specified file and assign it to Swift variable. The format of the input file is
+controlled by the type of the return value. For scalar return types, such as
+int, the specified file should contain a single value of that type. For arrays
+of scalars, the specified file should contain one value per line.  For complex types
+of scalars, the file should contain two rows. The first row should be structure
+member names separated by whitespace. The second row should be the
+corresponding values for each structure member, separated by whitespace, in the
+same order as the header row.  For arrays of structs, the file should contain a
+heading row listing structure member names separated by whitespace. There
+should be one row for each element of the array, with structure member elements
+listed in the same order as the header row and separated by whitespace. The following example shows how readData() can be used to populate an array of Swift struct-like complex type:
 
-The format of the input file is controlled by the type of the return value.
+----
+type Employee{
+    string name;
+    int id;
+    string loc;
+}
 
-For scalar return types, such as int, the specified file should contain
-a single value of that type.
+Employee emps[] = readData("emps.txt");
+----
 
-For arrays of scalars, the specified file should contain one value per
-line.
+Where the contents of the "emps.txt" file are:
 
-For structs of scalars, the file should contain two rows. The first row
-should be structure member names separated by whitespace. The second row
-should be the corresponding values for each structure member, separated
-by whitespace, in the same order as the header row.
+----
+name id address
+Thomas 2222 Chicago
+Gina 3333 Boston
+Anne 4444 Houston
+----
 
-For arrays of structs, the file should contain a heading row listing
-structure member names separated by whitespace. There should be one row
-for each element of the array, with structure member elements listed in
-the same order as the header row and separated by whitespace. (since
-Swift 0.4)
+This will result in the array "emps" with 3 members. This can be processed within a Swift script using the foreach construct as follows:
+
+----
+foreach emp in emps{
+    tracef("Employee %s lives in %s and has id %d", emp.name, emp.loc, emp.id);
+}
+----
+
 
 readStructured
 ~~~~~~~~~~~~~~
