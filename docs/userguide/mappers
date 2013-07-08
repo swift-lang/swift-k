@@ -338,7 +338,7 @@ is imported multiple times, for example in different files, then Swift
 will only process the imports once.
 
 Imports may contain anything that is valid in a SwiftScript program,
-including code that causes remote execution.
+including the code that causes remote execution.
 
 Mappers
 -------
@@ -347,9 +347,9 @@ disk. This is needed when Swift must access files to transfer them to
 remote sites for execution or to pass to applications.
 
 Swift provides a number of mappers that are useful in common cases. This
-section details those standard mappers. For more complex cases, it is
+section details those mappers. For more complex cases, it is
 possible to write application-specific mappers in Java and use them
-within a SwiftScript program.
+within a Swift script.
 
 
 The single file mapper
@@ -360,7 +360,7 @@ The single_file_mapper maps a single physical file to a dataset.
 |=======================
 |Swift variable|Filename
 |f|myfile
-|f[0]|INVALID
+|f [0]|INVALID
 |f.bar|INVALID
 |=======================
 
@@ -392,6 +392,7 @@ the file names will be mapped as a subelement of the dataset.
 |location|A directory that the files are located.
 |prefix|The prefix of the files
 |suffix|The suffix of the files, for instance: ".txt"
+|padding| The number of digits used to uniquely identify the mapped file. This is an optional parameter which defaults to 4.
 |pattern|A UNIX glob style pattern, for instance: "\*foo*" would match
 all file names that contain foo. When this mapper is used to specify
 output filenames, pattern is ignored.
@@ -438,7 +439,7 @@ type messagefile;
     }
 }
 
-messagefile outfile[] <simple_mapper;prefix="baz",suffix=".txt">;
+messagefile outfile[] <simple_mapper;prefix="baz",suffix=".txt", padding=2>;
 
 outfile[0] = greeting("hello");
 outfile[1] = greeting("middle");
@@ -448,9 +449,9 @@ outfile[2] = greeting("goodbye");
 [options="header, autowidth"]
 |=======================
 |Swift variable|Filename
-|outfile[0]|baz0000.txt
-|outfile[1]|baz0001.txt
-|outfile[2]|baz0002.txt
+|outfile[0]|baz00.txt
+|outfile[1]|baz01.txt
+|outfile[2]|baz02.txt
 |=======================
 
 simple_mapper can be used to map structures. It will map the name of
@@ -488,7 +489,7 @@ string "goodbye" into the file qux.right.txt.
 
 concurrent mapper
 ~~~~~~~~~~~~~~~~~
-concurrent_mapper is almost the same as the simple mapper, except that
+The concurrent_mapper is almost the same as the simple mapper, except that
 it is used to map an output file, and the filename generated will
 contain an extract sequence that is unique. This mapper is the default
 mapper for variables when no mapper is specified.
@@ -516,12 +517,12 @@ generate f2 filename with prefix "foo" and extension ".txt"
 
 File system mapper
 ~~~~~~~~~~~~~~~~~~
-filesys_mapper is similar to the simple mapper, but maps a file or a
+The filesys_mapper is similar to the simple mapper, but maps a file or a
 list of files to an array. Each of the filename is mapped as an element
 in the array. The order of files in the resulting array is not defined.
 
 TODO: note on difference between location as a relative vs absolute path
-wrt staging to remote location - as mihael said: It's because you
+w.r.t. staging to remote location - as mihael said: It's because you
 specify that location in the mapper. Try location="." instead of
 location="/sandbox/..."
 
