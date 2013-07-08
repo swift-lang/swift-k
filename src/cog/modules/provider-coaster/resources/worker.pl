@@ -1552,7 +1552,6 @@ sub readFile {
 		
 		open($fd, "<", $fname) or return "Error: could not open $fname";
 		while (<$fd>) {
-			chomp;
 			$content = $content . $_;
 			if (length($content) > MAX_OUT_REDIR_SIZE) {
 				close($fd);
