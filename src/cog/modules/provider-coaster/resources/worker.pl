@@ -126,6 +126,7 @@ use constant MAXFRAGS => 16;
 # TODO: Make this configurable (#537)
 use constant MAX_RECONNECT_ATTEMPTS => 3;
 use constant NEVER => 9999999999;
+use constant NULL_TIMESTAMP => "\x00\x00\x00\x00\x00\x00\x00\x00";
 
 use constant JOB_CHECK_INTERVAL => 0.1; # seconds
 
@@ -136,6 +137,9 @@ my $JOB_COUNT = 0;
 use constant BUFSZ => 2048;
 use constant IOBUFSZ => 32768;
 use constant IOBLOCKSZ => 8;
+
+# Maximum size of re-directed output
+use constant MAX_OUT_REDIR_SIZE => 2048;
 
 # If true, enable a profile result that is written to the log
 my $PROFILE = 0;
@@ -1042,7 +1046,14 @@ sub queueJobStatusCmd {
 	my ($jobid, $statusCode, $errorCode, $msg) = @_;
 	
 	queueCmd((nullCB(), "JOBSTATUS", $jobid, 
-			encodeInt($statusCode), encodeInt($errorCode), $msg));
+			encodeInt($statusCode), encodeInt($errorCode), $msg, NULL_TIMESTAMP));
+}
+
+sub queueJobStatusCmdExt {
+	my ($jobid, $statusCode, $errorCode, $msg, $out, $err) = @_;
+	
+	queueCmd((nullCB(), "JOBSTATUS", $jobid, 
+			encodeInt($statusCode), encodeInt($errorCode), $msg, NULL_TIMESTAMP, $out, $err));
 }
 
 sub dieNicely {
@@ -1529,6 +1540,44 @@ sub stageout {
 	}
 }
 
+sub readFile {
+	my ($jobid, $fname) = @_;
+	
+	wlog DEBUG, "$jobid Reading $fname\n";
+	if (-e $fname) {
+		my $fd;
+		my $content;
+		
+		$content = "";
+		
+		open($fd, "<", $fname) or return "Error: could not open $fname";
+		while (<$fd>) {
+			chomp;
+			$content = $content . $_;
+			if (length($content) > MAX_OUT_REDIR_SIZE) {
+				close($fd);
+				$content = $content . "\n<output truncated>";
+				last;
+			}
+		}
+		close($fd);
+		wlog DEBUG, "$jobid $fname: $content\n";
+		return $content;
+	}
+	else {
+		wlog DEBUG, "$jobid $fname does not exist\n";
+		return "";
+	}
+}
+
+sub readFiles {
+	my ($jobid) = @_;
+	
+	my $pid = $JOBDATA{$jobid}{"pid"};
+	
+	return (readFile($jobid, tmpSFile($pid, "out")), readFile($jobid, tmpSFile($pid, "err")));
+}
+
 sub sendStatus {
 	my ($jobid) = @_;
 
@@ -1538,11 +1587,39 @@ sub sendStatus {
 		$LOGLEVEL = WARN;
 	}
 
-	if ($ec == 0) {
-		queueJobStatusCmd($jobid, COMPLETED, 0, "");
+	
+	my $stdoutRedir;
+	my $stderrRedir;
+	my $redirect;
+	
+	$redirect = 0;
+	
+	if (defined $JOBDATA{$jobid}{"job"}{"redirect"}) {
+		wlog DEBUG, "$jobid Output is redirected\n";
+		($stdoutRedir, $stderrRedir) = readFiles($jobid);
+		$redirect = 1;
 	}
 	else {
-		queueJobStatusCmd($jobid, FAILED, $ec, getExitMessage($jobid, $ec));
+		wlog DEBUG, "$jobid Output is NOT redirected\n";
+		$stdoutRedir = "";
+		$stderrRedir = "";
+	}
+	
+	if ($ec == 0) {
+		if ($redirect) {
+			queueJobStatusCmdExt($jobid, COMPLETED, 0, "", $stdoutRedir, $stderrRedir);
+		}
+		else {
+			queueJobStatusCmd($jobid, COMPLETED, 0, "");
+		}
+	}
+	else {
+		if ($redirect) {
+			queueJobStatusCmdExt($jobid, FAILED, $ec, getExitMessage($jobid, $ec), $stdoutRedir, $stderrRedir);
+		}
+		else {
+			queueJobStatusCmd($jobid, FAILED, $ec, getExitMessage($jobid, $ec));
+		}
 	}
 }
 
@@ -1846,7 +1923,7 @@ sub forkjob {
 	pipe($PARENT_R, $CHILD_W);
 
 	$pid = fork();
-
+	
 	if (defined($pid)) {
 		if ($pid == 0) {
 			close $PARENT_R;
@@ -1861,6 +1938,7 @@ sub forkjob {
 		else {
 			wlog INFO, "$JOBID Forked process $pid. Waiting for its completion\n";
 			close $CHILD_W;
+			$JOBDATA{$JOBID}{"pid"} = $pid;
 			$JOBS_RUNNING++;
 			$JOBWAITDATA{$JOBID} = {
 				pid => $pid,
@@ -1988,11 +2066,17 @@ sub checkJobStatus {
 	return 1;
 }
 
+sub tmpSFile {
+	my ($pid, $suffix) = @_;
+	
+	return "/tmp/$pid.$suffix";
+}
+
 sub runjob {
 	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID) = @_;
 	my $executable = $$JOB{"executable"};
-	my $stdout = $$JOB{"stdout"};
-	my $stderr = $$JOB{"stderr"};
+	my $sout = $$JOB{"stdout"};
+	my $serr = $$JOB{"stderr"};
 
 	my $cwd = getcwd();
 	# wlog DEBUG, "CWD: $cwd\n";
@@ -2005,19 +2089,24 @@ sub runjob {
     $ENV{"SWIFT_WORKER_PID"} = $WORKERPID;
 	unshift @$JOBARGS, $executable;
 	wlog DEBUG, "Command: @$JOBARGS\n";
-	if (defined $$JOB{directory}) {
+	if (defined $$JOB{"directory"}) {
 		wlog DEBUG, "chdir: $$JOB{directory}\n";
 	    chdir $$JOB{directory};
 	}
-	if (defined $stdout) {
-		wlog DEBUG, "STDOUT: $stdout\n";
-		close STDOUT;
-		open STDOUT, ">$stdout" or dieNicely("Cannot redirect STDOUT");
+	if (defined $$JOB{"redirect"}) {
+		wlog DEBUG, "Redirection is on\n";
+		$sout = tmpSFile($$, "out");
+		$serr = tmpSFile($$, "err");
 	}
-	if (defined $stderr) {
-		wlog DEBUG, "STDERR: $stderr\n";
+	if (defined $sout) {
+		wlog DEBUG, "STDOUT: $sout\n";
+		close STDOUT;
+		open STDOUT, ">$sout" or dieNicely("Cannot redirect STDOUT");
+	}
+	if (defined $serr) {
+		wlog DEBUG, "STDERR: $serr\n";
 		close STDERR;
-		open STDERR, ">$stderr" or dieNicely("Cannot redirect STDERR");
+		open STDERR, ">$serr" or dieNicely("Cannot redirect STDERR");
 	}
 	close STDIN;
 

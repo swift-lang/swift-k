@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.ExtendedStatusListener;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -42,56 +43,58 @@ public class NotificationManager {
     /** 
        Map from Task IDs to Tasks
      */
-    private Map<String, Task> tasks;
+    private Map<String, TaskListenerPair> listeners;
     
     /**
        Map from Task IDs to Status updates that arrived before the 
        Task existed in the Map {@link tasks}
      */
-    private Map<String, List<Status>> pending;
+    private Map<String, List<ExtendedStatus>> pending;
     private long lastNotificationTime;
 
     public NotificationManager() {
-        tasks = new HashMap<String, Task>();
-        pending = new HashMap<String, List<Status>>();
+        listeners = new HashMap<String, TaskListenerPair>();
+        pending = new HashMap<String, List<ExtendedStatus>>();
         lastNotificationTime = System.currentTimeMillis();
     }
 
-    public void registerTask(String id, Task task) {
-        List<Status> p;
-        synchronized (tasks) {
-            tasks.put(id, task);
+    public void registerTask(String id, Task task, ExtendedStatusListener l) {
+        List<ExtendedStatus> p;
+        synchronized (listeners) {
+            listeners.put(id, new TaskListenerPair(task, l));
             p = pending.remove(id);
         }
-        if (p != null)
-            for (Status status : p)
-                setStatus(task, status);
-    }
-
-    public void notificationReceived(String id, Status s) {
-        if (logger.isDebugEnabled())
-            logger.debug("recvd: for: " + id + " " + s);
-        Task task;
-        synchronized (tasks) {
-            if (s.isTerminal()) {
-                task = tasks.remove(id);
-            }
-            else {
-                task = tasks.get(id);
-            }
-            lastNotificationTime = System.currentTimeMillis();
-            if (task == null) {
-            	addPending(id, s);
+        if (p != null) {
+            for (ExtendedStatus e : p) {
+                notify(l, e);
             }
         }
-        if (task != null) {
-            setStatus(task, s);
+    }
+
+    public void notificationReceived(String id, Status s, String out, String err) {
+        if (logger.isDebugEnabled())
+            logger.debug("recvd: for: " + id + " " + s);
+        TaskListenerPair l;
+        synchronized (listeners) {
+            if (s.isTerminal()) {
+                l = listeners.remove(id);
+            }
+            else {
+                l = listeners.get(id);
+            }
+            lastNotificationTime = System.currentTimeMillis();
+            if (l == null) {
+            	addPending(id, new ExtendedStatus(s, out, err));
+            }
+        }
+        if (l != null) {
+            l.listener.statusChanged(s, out, err);
         }
     }
 
     public long getIdleTime() {
-        synchronized (tasks) {
-            if (tasks.size() == 0 && lastNotificationTime != 0) {
+        synchronized (listeners) {
+            if (listeners.size() == 0 && lastNotificationTime != 0) {
                 return System.currentTimeMillis() - lastNotificationTime;
             }
             else {
@@ -101,50 +104,72 @@ public class NotificationManager {
     }
 
     public void notIdle() {
-        synchronized (tasks) {
+        synchronized (listeners) {
             lastNotificationTime = System.currentTimeMillis();
         }
     }
 
     public int getActiveTaskCount() {
-        synchronized (tasks) {
-            return tasks.size();
+        synchronized (listeners) {
+            return listeners.size();
         }
     }
 
-    private void setStatus(Task t, Status s) {
+    private void notify(ExtendedStatusListener l, ExtendedStatus e) {
         try {
-            t.setStatus(s);
+            l.statusChanged(e.status, e.out, e.err);
         }
-        catch (Exception e) {
-            logger.warn("Could not set task status", e);
+        catch (Exception ex) {
+            logger.warn("Could not set task status", ex);
         }
     }
 
-    private void addPending(String id, Status status) {
-        List<Status> p = pending.get(id);
+    private void addPending(String id, ExtendedStatus es) {
+        List<ExtendedStatus> p = pending.get(id);
         if (p == null) {
-            p = new LinkedList<Status>();
+            p = new LinkedList<ExtendedStatus>();
             pending.put(id, p);
         }
-        p.add(status);
+        p.add(es);
     }
 
     public void serviceTaskEnded(ServiceContact contact1, 
                                  String msg) {
-        List<Task> ts;
-        synchronized (tasks) {
-            ts = new ArrayList<Task>(tasks.values());
+        List<Map.Entry<String, TaskListenerPair>> ts;
+        synchronized (listeners) {
+            ts = new ArrayList<Map.Entry<String, TaskListenerPair>>(listeners.entrySet());
         }
         logger.info(contact1.toString());
-        for (Task t : ts) {
+        for (Map.Entry<String, TaskListenerPair> e: ts) {
             ServiceContact contact2 = 
-                t.getService(0).getServiceContact();
+                e.getValue().task.getService(0).getServiceContact();
             logger.info(contact2.toString());
             if (contact2.equals(contact1))
-                notificationReceived(t.getIdentity().toString(), 
+                notificationReceived(e.getKey(), 
                                      new StatusImpl(Status.FAILED, 
-                                                    msg, null));
+                                                    msg, null), null, null);
+        }
+    }
+    
+    private static final class ExtendedStatus {
+        public final Status status;
+        public final String out;
+        public final String err;
+        
+        public ExtendedStatus(Status status, String out, String err) {
+            this.status = status;
+            this.out = out;
+            this.err = err;
+        }
+    }
+    
+    private static final class TaskListenerPair {
+        public final Task task;
+        public final ExtendedStatusListener listener;
+        
+        public TaskListenerPair(Task task, ExtendedStatusListener listener) {
+            this.task = task;
+            this.listener = listener;
         }
     }
 }

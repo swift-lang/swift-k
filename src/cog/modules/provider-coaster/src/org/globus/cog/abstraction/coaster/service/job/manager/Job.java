@@ -15,6 +15,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
+import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -179,7 +180,8 @@ public class Job implements Comparable<Job> {
     }
 
     public void fail(String message, Exception e) {
-        task.setStatus(new StatusImpl(Status.FAILED, message, e));
+        NotificationManager.getDefault().notificationReceived(task.getIdentity().getValue(), 
+            new StatusImpl(Status.FAILED, message, e), null, null);
     }
 
     public Task getTask() {

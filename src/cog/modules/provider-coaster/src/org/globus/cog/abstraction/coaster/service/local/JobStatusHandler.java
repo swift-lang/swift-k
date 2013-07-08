@@ -31,6 +31,8 @@ public class JobStatusHandler extends RequestHandler {
             int code = getInDataAsInt(2);
             String message = getInDataAsString(3);
             
+            String out = null, err = null;
+            
             Status s = new StatusImpl();
             s.setStatusCode(status);
             if (status == Status.FAILED && code != 0) {
@@ -41,13 +43,17 @@ public class JobStatusHandler extends RequestHandler {
             	    s.setException(new JobException(code));
             	}
             }
+            if (status == Status.FAILED || status == Status.COMPLETED) {
+                if (getInDataSize() == 7) {
+                    out = getInDataAsString(5);
+                    err = getInDataAsString(6);
+                }
+            }
             if (message != null && !message.equals("")) {
                 s.setMessage(message);
             }
-            if (getInDataChunks().size() > 4) {
-                s.setTime(new Date(this.getInDataAsLong(4)));
-            }
-            NotificationManager.getDefault().notificationReceived(jobId, s);
+            s.setTime(new Date(this.getInDataAsLong(4)));
+            NotificationManager.getDefault().notificationReceived(jobId, s, out, err);
             sendReply("OK");
         }
         catch (Exception e) {

@@ -110,7 +110,7 @@ public class BlockTask extends TaskImpl {
         js.addArgument(block.getId());
 
         if (settings.getWorkerLoggingLevel().equals("NONE")) {
-            js.addArgument("NOLOGGING");
+          js.addArgument("NOLOGGING");
         }
         else {
         	String logDir = settings.getWorkerLoggingDirectory();

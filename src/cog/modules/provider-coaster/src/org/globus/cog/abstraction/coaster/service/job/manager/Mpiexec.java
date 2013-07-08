@@ -13,13 +13,11 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
-import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
-import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.util.ProcessListener;
 import org.globus.cog.util.ProcessMonitor;
@@ -33,7 +31,7 @@ import org.globus.cog.util.StringUtil;
  *
  * @author wozniak
  */
-public class Mpiexec implements ProcessListener, StatusListener {
+public class Mpiexec implements ProcessListener, ExtendedStatusListener {
 
     public static final Logger logger = Logger.getLogger(Mpiexec.class);
 
@@ -336,15 +334,12 @@ public class Mpiexec implements ProcessListener, StatusListener {
         // Clone original job as proxy job
         Task clone = (Task) job.getTask().clone();
 
-        // Set clone to notify this Mpiexec instance
-        clone.addStatusListener(this);
-
         // Update Task Identity and set Notification
         Identity cloneID = new IdentityImpl(clone.getIdentity());
         String value = cloneID.getValue() + ":" + i;
         cloneID.setValue(value);
         clone.setIdentity(cloneID);
-        NotificationManager.getDefault().registerTask(value, clone);
+        NotificationManager.getDefault().registerTask(value, clone, this);
 
         // Update Task Specification
         JobSpecification spec = (JobSpecification) clone.getSpecification();
@@ -399,10 +394,10 @@ public class Mpiexec implements ProcessListener, StatusListener {
      * Multiplex Hydra proxy StatusEvents into the StatusEvents for
      * the original job
      */
-    public void statusChanged(StatusEvent event) {
-        logger.debug(event);
+    public void statusChanged(Status s, String out, String err) {
+        logger.debug(s);
         synchronized (statusCount) {
-            int code = event.getStatus().getStatusCode();
+            int code = s.getStatusCode();
             Integer count = statusCount.get(code);
             if (count == null)
                 count = 1;
@@ -410,12 +405,11 @@ public class Mpiexec implements ProcessListener, StatusListener {
                 count++;
             statusCount.put(code, count);
             if (count == proxies.size())
-                propagate(event);
+                propagate(s);
         }
     }
 
-    private void propagate(StatusEvent event) {
-        Status s = event.getStatus();
+    private void propagate(Status s) {
         logger.debug("propagating: to: " + job + " " + s);
         job.getTask().setStatus(s);
     }

@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.ExtendedStatusListener;
 import org.globus.cog.abstraction.coaster.service.local.CoasterResourceTracker;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.coaster.service.local.LocalService;
@@ -42,7 +43,7 @@ import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
 import org.ietf.jgss.GSSCredential;
 
-public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements Callback {
+public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements Callback, ExtendedStatusListener {
     private static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
 
     private static Set<Object> configured, configuring;
@@ -235,8 +236,19 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             if (logger.isDebugEnabled()) {
                 logger.debug("Submitted task " + getTask() + ". Job id: " + jobid);
             }
-            NotificationManager.getDefault().registerTask(jobid, getTask());
+            NotificationManager.getDefault().registerTask(jobid, getTask(), this);
         }
+    }
+
+    public void statusChanged(Status s, String out, String err) {
+        Task t = getTask();
+        if (out != null) {
+            t.setStdOutput(out);
+        }
+        if (err != null) {
+            t.setStdError(err);
+        }
+        t.setStatus(s);
     }
 
     public boolean getAutostart() {
@@ -363,15 +375,16 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         Task t = new TaskImpl();
         t.setType(Task.JOB_SUBMISSION);
         JobSpecification js = new JobSpecificationImpl();
-        js.setExecutable("/bin/sleep");
+        js.setExecutable("/bin/date");
         int base = (int) (rnd.nextDouble() * 20) + 5;
-        js.addArgument(String.valueOf(base + (int) (rnd.nextDouble() * base)));
+        //js.addArgument(String.valueOf(base + (int) (rnd.nextDouble() * base)));
         js.setAttribute("maxwalltime", "00:00:" + String.valueOf(base * 2));
-        js.setAttribute("slots", "8");
+        js.setAttribute("slots", "2");
         js.setAttribute("lowOverallocation", "6");
-        js.setAttribute("nodeGranularity", "8");
-        js.setAttribute("maxNodes", "8");
-        js.setAttribute("remoteMonitorEnabled", "true");
+        js.setAttribute("nodeGranularity", "1");
+        js.setAttribute("maxNodes", "2");
+        js.setRedirected(true);
+        //js.setAttribute("remoteMonitorEnabled", "true");
         t.setSpecification(js);
         ExecutionService s = new ExecutionServiceImpl();
         // s.setServiceContact(new ServiceContactImpl("localhost"));
@@ -388,7 +401,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         // JobSubmissionTaskHandler th = new JobSubmissionTaskHandler(
         // AbstractionFactory.newExecutionTaskHandler("local"));
         JobSubmissionTaskHandler th = new JobSubmissionTaskHandler();
-        // th.setAutostart(true);
+        th.setAutostart(true);
         th.submit(t);
         return t;
     }
@@ -400,11 +413,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         	rnd = new Random();
         	rnd.setSeed(10L);
             long s = System.currentTimeMillis();
-            Task[] ts = new Task[2048];
+            Task[] ts = new Task[1];
             for (int i = 0; i < ts.length; i++) {
                 ts[i] = submitTask();
-                if (i % 100 == 0) {
-                    System.err.println(i + " submitted");
+                if (i % 1 == 0) {
+                    System.err.println((i + 1) + " submitted");
                 }
             }
             for (int i = 0; i < ts.length; i++) {
@@ -415,6 +428,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                     if (ts[i].getStatus().getException() != null) {
                         ts[i].getStatus().getException().printStackTrace();
                     }
+                }
+                else {
+                    System.out.println(ts[i].getStdOutput());
                 }
                 if (i % 100 == 0 && i > 0) {
                     System.err.println(i + " done");
