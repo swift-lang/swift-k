@@ -91,9 +91,10 @@ be true:
       procedure call must exist. Files will be mapped in the same way as
       for input files.
 
-      (? Is it defined that output subdirectories will be precreated
-      before execution or should app executables expect to make them?
-      That's probably determined by the present behaviour of wrapper.sh)
+    * The output subdirectories will be precreated
+      before execution by Swift if defined within a Swift script such as the
+      location attribute of a mapper. App executables expect to make them if
+      they are referred to in the wrapper scripts.
 
     * Output produced by running the application executable on some
       inputs should be the same no matter how many times, when or where
@@ -104,19 +105,19 @@ be true:
 
 Things to not assume:
 
-    * anything about the path of the application workspace directory
+    * Anything about the path of the application workspace directory
 
-    * that either the application workspace directory will be deleted or
+    * That either the application workspace directory will be deleted or
       will continue to exist or will remain unmodified after execution
       has finished
 
-    * that files can be passed(?def) between application procedure
+    * That files can be passed between application procedure
       invocations through any mechanism except through files known to
       Swift through the mapping mechanism (there is some exception here
       for external datasets - there are a separate set of assertions
       that hold for external datasets)
 
-    * that application executables will run on any particular site of
+    * That application executables will run on any particular site of
       those available, or than any combination of applications will run
       on the same or different sites.
 
