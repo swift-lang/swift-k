@@ -65,17 +65,30 @@ if [ -f "$script" ]; then
    cp $script $rundir
 fi
 
+# Copy config file if specified
+if [ -f "$CONFIG" ]; then
+   cp $CONFIG $rundir
+   CONFIG=$( basename $CONFIG )
+fi
+
 # Create sites.xml
 cd $rundir
 IFS=","
 echo "<config>" > sites.xml
 for site in $SITES
 do
+   # If config is not defined, but there is a config in conf/ that matches, use that
+   if [ -z "$CONFIG" ] && [ -f "../conf/$site.cf" ]; then
+      cp ../conf/$site.cf .
+      CONFIG=$site.cf
+   fi
+
    if [ -f "$CONFIG" ]; then
       gensites -p $CONFIG $site >> sites.xml
    else
       gensites $site >> sites.xml
    fi
+
 done
 echo "</config>" >> sites.xml
 
