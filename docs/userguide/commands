@@ -39,7 +39,7 @@ Swift command-line options
 
 -resume file
 
-    Resumes the execution using a log file
+    Resumes the execution using a resume-log file .rlog
 
 -config file
 
