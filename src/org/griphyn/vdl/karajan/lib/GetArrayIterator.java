@@ -17,34 +17,37 @@
 
 package org.griphyn.vdl.karajan.lib;
 
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.PairIterator;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.PairSet;
 import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 
-public class GetArrayIterator extends VDLFunction {
+public class GetArrayIterator extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(GetArrayIterator.class);
 
-	static {
-		setArguments(GetArrayIterator.class, new Arg[] { PA_VAR, OA_PATH });
-	}
+	private ArgRef<DSHandle> var;
+	private ArgRef<Object> path;
+
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("var", optional("path", Path.EMPTY_PATH)));
+    }
 
 	/**
 	 * Takes a supplied variable and path, and returns an array iterator.
 	 */
-	public Object function(VariableStack stack) throws ExecutionException {
-		Object var1 = PA_VAR.getValue(stack);
-		if (!(var1 instanceof DSHandle)) {
-			return var1;
-		}
-		DSHandle var = (DSHandle) var1;
+	@Override
+	public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 		try {
-			Path path = parsePath(OA_PATH.getValue(stack), stack);
+			Path path = parsePath(this.path.getValue(stack));
 			if (path.hasWildcards()) {
 				throw new RuntimeException("Wildcards not supported");
 			}
@@ -58,20 +61,19 @@ public class GetArrayIterator extends VDLFunction {
 					    if (logger.isDebugEnabled()) {
 					        logger.debug("Using closed iterator for " + var);
 					    }
-						return new PairIterator(var.getArrayValue());
+						return new PairSet(var.getArrayValue());
 					}
 					else {
 					    if (logger.isDebugEnabled()) {
                             logger.debug("Using future iterator for " + var);
                         }
-						return ((ArrayDataNode) var).getFutureList().futureIterator();
+						return ((ArrayDataNode) var).entryList();
 					}
 				}
 			}
 		}
 		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
-
 }

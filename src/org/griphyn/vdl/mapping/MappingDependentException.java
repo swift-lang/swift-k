@@ -35,6 +35,6 @@ public class MappingDependentException extends DependentException {
 	}
 
 	public String getMessage() {
-		return getHandle() + " not mapped due to error in mapping dependencies";
+		return getVariableInfo() + " not mapped due to error in mapping dependencies";
 	}
 }

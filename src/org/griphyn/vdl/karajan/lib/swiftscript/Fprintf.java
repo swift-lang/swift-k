@@ -21,14 +21,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import k.rt.Channel;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
-import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.type.Types;
 
 /**
     Formatted file output. <br>
@@ -37,49 +39,43 @@ import org.griphyn.vdl.type.Types;
     @see Tracef, Sprintf
     @author wozniak
  */
-public class Fprintf extends VDLFunction {
-
-    private static final Logger logger = 
-        Logger.getLogger(Fprintf.class);
+public class Fprintf extends SwiftFunction {
+    private static final Logger logger = Logger.getLogger(Fprintf.class);
     
-    static {
-        setArguments(Fprintf.class, new Arg[] { Arg.VARGS });
+    private ArgRef<AbstractDataNode> filename;
+    private ArgRef<AbstractDataNode> spec;
+    private ChannelRef<AbstractDataNode> c_vargs;
+
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("filename", "spec", "..."));
     }
 
-    static ConcurrentHashMap<String, Object> openFiles = 
-        new ConcurrentHashMap<String, Object>();
+    static ConcurrentHashMap<String, Object> openFiles = new ConcurrentHashMap<String, Object>();
     
     @Override
-    protected Object function(VariableStack stack) 
-    throws ExecutionException {
-        AbstractDataNode[] args = waitForAllVargs(stack);
-        
-        check(args);
-        
-        String filename = (String) args[0].getValue();
-        String spec = (String) args[1].getValue(); 
-        DSHandle[] vars = Sprintf.copyArray(args, 2, args.length-2);
+    public Object function(Stack stack) {
+        AbstractDataNode hfilename = this.filename.getValue(stack);
+        AbstractDataNode hspec = this.spec.getValue(stack);
+        hfilename.waitFor(this);
+        hspec.waitFor(this);
+        Channel<AbstractDataNode> args = c_vargs.get(stack);
+        waitForAll(this, args);
+        String filename = (String) hfilename.getValue();
+        String spec = (String) hspec.getValue(); 
         
         StringBuilder output = new StringBuilder();
-        Sprintf.format(spec, vars, output);
+        try {
+            Sprintf.format(spec, args, output);
+        }
+        catch (RuntimeException e) {
+            throw new ExecutionException(this, e.getMessage());
+        }
         String msg = output.toString();
  
         logger.debug("file: " + filename + " msg: " + msg);        
         write(filename, msg);
         return null;
-    }
-    
-    private static void check(DSHandle[] args) 
-    throws ExecutionException {
-        if (args.length < 2)
-            throw new ExecutionException
-            ("fprintf(): requires at least 2 arguments!");
-        if (! args[0].getType().equals(Types.STRING))
-            throw new ExecutionException
-            ("fprintf(): first argument must be a string filename!");
-        if (! args[0].getType().equals(Types.STRING))
-            throw new ExecutionException
-            ("fprintf(): second argument must be a string specifier!");
     }
     
     private static void write(String filename, String msg) 

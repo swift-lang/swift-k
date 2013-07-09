@@ -24,95 +24,62 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ThreadingContext;
+import k.rt.FutureListener;
+import k.thr.LWThread;
+
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class WaitingThreadsMonitor {
-    private static class StackTCPair {
-        public final VariableStack stack;
-        public final ThreadingContext tc;
-        
-        public StackTCPair(VariableStack stack) {
-            this.stack = stack;
-            try {
-                this.tc = ThreadingContext.get(stack);
-            }
-            catch (VariableNotFoundException e) {
-                throw new RuntimeException("Cannot get thread id", e);
-            }
-        }
-
-        @Override
-        public int hashCode() {
-            return tc.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof StackTCPair) {
-                return ((StackTCPair) obj).tc == tc;
-            }
-            else {
-                return false;
-            }
-        }
-
-        @Override
-        public String toString() {
-            return tc.toString();
+	private static Map<LWThread, DSHandle> threads = new HashMap<LWThread, DSHandle>();
+	private static Map<LWThread, List<DSHandle>> outputs = new HashMap<LWThread, List<DSHandle>>();;
+	
+	public static void addThread(FutureListener fl, DSHandle waitingOn) {
+	    if (fl instanceof LWThread.Listener) {
+	        addThread(((LWThread.Listener) fl).getThread(), waitingOn);
+	    }
+	}
+	
+	public static void removeThread(FutureListener fl) {
+        if (fl instanceof LWThread.Listener) {
+            removeThread(((LWThread.Listener) fl).getThread());
         }
     }
-    
-	private static Map<StackTCPair, DSHandle> threads = new HashMap<StackTCPair, DSHandle>();
-	private static Map<StackTCPair, List<DSHandle>> outputs = new HashMap<StackTCPair, List<DSHandle>>();;
 	
-	public static void addThread(VariableStack stack, DSHandle waitingOn) {
-	    if (stack != null) {
+	public static void addThread(LWThread thr, DSHandle waitingOn) {
+	    if (thr != null) {
 	        synchronized(threads) {
-	            threads.put(new StackTCPair(stack), waitingOn);
+	            threads.put(thr, waitingOn);
 	        }
 	    }
 	}
 		
-	public static void removeThread(VariableStack stack) {
-	    if (stack != null) {
-	        synchronized(threads) {
-	            threads.remove(new StackTCPair(stack));
-	        }
+	public static void removeThread(LWThread thr) {
+	    synchronized(threads) {
+	        threads.remove(thr);
 	    }
 	}
 	
-	public static Map<VariableStack, DSHandle> getAllThreads() {
+	public static Map<LWThread, DSHandle> getAllThreads() {
 	    synchronized(threads) {
-	        Map<VariableStack, DSHandle> m = new HashMap<VariableStack, DSHandle>();
-	        for (Map.Entry<StackTCPair, DSHandle> e : threads.entrySet()) {
-	            m.put(e.getKey().stack, e.getValue());
-	        }
-	        return m;
+	        return new HashMap<LWThread, DSHandle>(threads);
 	    }
 	}
 
-    public static void addOutput(VariableStack stack, List<DSHandle> outputs) {
+    public static void addOutput(LWThread thr, List<DSHandle> outputs) {
         synchronized(WaitingThreadsMonitor.outputs) {
-            WaitingThreadsMonitor.outputs.put(new StackTCPair(stack), outputs);
+            WaitingThreadsMonitor.outputs.put(thr, outputs);
         }
     }
 
-    public static void removeOutput(VariableStack stack) {
+    public static void removeOutput(LWThread thr) {
         synchronized(outputs) {
-            outputs.remove(new StackTCPair(stack));
+            outputs.remove(thr);
         }
     }
     
-    public static Map<VariableStack, List<DSHandle>> getOutputs() {
+    public static Map<LWThread, List<DSHandle>> getOutputs() {
         synchronized(outputs) {
-            Map<VariableStack, List<DSHandle>> m = new HashMap<VariableStack, List<DSHandle>>();
-            for (Map.Entry<StackTCPair, List<DSHandle>> e : outputs.entrySet()) {
-                m.put(e.getKey().stack, e.getValue());
-            }
-            return m;
+            return new HashMap<LWThread, List<DSHandle>>(outputs);
         }
     }
 }

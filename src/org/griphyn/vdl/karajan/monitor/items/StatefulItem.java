@@ -28,7 +28,7 @@ public interface StatefulItem {
 	
 	void addChild(StatefulItem child);
 	void removeChild(StatefulItem child);
-	Collection getChildren();
+	Collection<StatefulItem> getChildren();
 	
 	StatefulItemClass getItemClass();
 	

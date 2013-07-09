@@ -25,7 +25,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.globus.cog.karajan.stack.VariableStack;
+import k.rt.Stack;
+
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 
@@ -35,7 +36,7 @@ public class SystemState {
     private Map<String, Stats> stats;
     private int total, completed;
     private long start;
-    private VariableStack stack;
+    private Stack stack;
     private String projectName;
 
 	public SystemState(String projectName) {
@@ -47,7 +48,7 @@ public class SystemState {
 
 	public void addItem(StatefulItem item) {
 		getItemClassSet(item.getItemClass()).add(item);
-        notifyListeners(SystemStateListener.ITEM_ADDED, item);
+        notifyListeners(SystemStateListener.UpdateType.ITEM_ADDED, item);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -65,7 +66,7 @@ public class SystemState {
 
 	public void removeItem(StatefulItem item) {
 		getItemClassSet(item.getItemClass()).remove(item);
-        notifyListeners(SystemStateListener.ITEM_REMOVED, item);
+        notifyListeners(SystemStateListener.UpdateType.ITEM_REMOVED, item);
 	}
 
 	public void setParent(StatefulItem item, StatefulItem parent) {
@@ -81,10 +82,10 @@ public class SystemState {
 	}
 
 	public void itemUpdated(StatefulItem item) {
-		notifyListeners(SystemStateListener.ITEM_UPDATED, item);
+		notifyListeners(SystemStateListener.UpdateType.ITEM_UPDATED, item);
 	}
     
-    protected void notifyListeners(int updateType, StatefulItem item) {
+    protected void notifyListeners(SystemStateListener.UpdateType updateType, StatefulItem item) {
         for (SystemStateListener l : listeners) {
             l.itemUpdated(updateType, item);
         }
@@ -132,11 +133,11 @@ public class SystemState {
         return start;
     }
 
-    public VariableStack getStack() {
+    public Stack getStack() {
         return stack;
     }
 
-    public void setStack(VariableStack stack) {
+    public void setStack(Stack stack) {
         this.stack = stack;
     }
 

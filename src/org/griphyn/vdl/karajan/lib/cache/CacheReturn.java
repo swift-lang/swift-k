@@ -24,10 +24,10 @@ import java.util.List;
 
 public class CacheReturn {
 	public final boolean alreadyCached;
-	public final List remove;
+	public final List<?> remove;
 	public final File cached;
 	
-	public CacheReturn(boolean alreadyCached, List remove, File cached) {
+	public CacheReturn(boolean alreadyCached, List<?> remove, File cached) {
 		this.alreadyCached = alreadyCached;
 		this.remove = remove;
 		this.cached = cached;

@@ -20,9 +20,11 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
@@ -30,28 +32,26 @@ import org.griphyn.vdl.mapping.Path;
 /** 
  * Obtain the DSHandle from within another DSHandle via the given PATH
  * */
-public class GetField extends VDLFunction {
-	static {
-		setArguments(GetField.class, new Arg[] { OA_PATH, PA_VAR });
-	}
+public class GetField extends SwiftFunction {
+	private ArgRef<DSHandle> var;
+	private ArgRef<Object> path; 
+	
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("var", "path"));
+    }
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		Object var1 = PA_VAR.getValue(stack);
+	@Override
+    public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 
-		if(var1 instanceof DSHandle) {
-
-			try {
-				DSHandle var = (DSHandle) var1;
-
-				Path path = parsePath(OA_PATH.getValue(stack), stack);
-				DSHandle field = var.getField(path);
-				return field;
-			}
-			catch (InvalidPathException e) {
-				throw new ExecutionException(e);
-			}
-		} else {
-			throw new ExecutionException("was expecting a DSHandle, got: "+var1.getClass());
+		try {
+			Path path = parsePath(this.path.getValue(stack));
+			DSHandle field = var.getField(path);
+			return field;
+		}
+		catch (InvalidPathException e) {
+			throw new ExecutionException(this, e);
 		}
 	}
 }

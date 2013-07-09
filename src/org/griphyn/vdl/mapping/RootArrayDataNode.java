@@ -17,11 +17,11 @@
 
 package org.griphyn.vdl.mapping;
 
+import k.rt.Future;
+import k.rt.FutureListener;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureListener;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
@@ -50,7 +50,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	    this.dmc = dmc;
 	}
 
-	public void init(MappingParamSet params) {
+	public void init(MappingParamSet params) throws HandleOpenException {
 		this.params = params;
 		if (this.params == null) {
 			initialized();
@@ -60,14 +60,14 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		}
 	}
 
-	private synchronized void innerInit() {
+	private synchronized void innerInit() throws HandleOpenException {
 		if (logger.isDebugEnabled()) {
 		    logger.debug("innerInit: " + this);
 		}
 	    
 		waitingMapperParam = params.getFirstOpenParamValue();
         if (waitingMapperParam != null) {
-            waitingMapperParam.getFutureWrapper().addModificationAction(this, null);
+            waitingMapperParam.addListener(this);
             if (tracer.isEnabled()) {
                 tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
@@ -105,12 +105,19 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
-			closeShallow();
 		}
 	}
 	
-	public void futureModified(Future f, VariableStack stack) {
-	    innerInit();
+	public void futureUpdated(Future f) {
+	    try {
+            innerInit();
+        }
+        catch (OOBYield e) {
+            throw e.wrapped();
+        }
+        catch (Exception e) {
+            this.setValue(new MappingException(this, e));
+        }
     }
 
 	public String getParam(MappingParam p) {
@@ -136,7 +143,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
             return null;
         }
         else {
-            throw new FutureNotYetAvailable(waitingMapperParam.getFutureWrapper());
+            throw new FutureNotYetAvailable(waitingMapperParam);
         }
 	}
 	

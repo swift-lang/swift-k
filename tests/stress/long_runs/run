@@ -1,0 +1,12 @@
+#! /bin/sh
+
+set -x
+export STRESS="S1"
+
+#./long_runner0.setup.sh
+#ARGS=`cat long_runner0.args`
+#swift -config swift.properties -sites.file sites.template.xml -tc.file tc.template.data long_runner0.swift $ARGS
+
+./long_runner1.setup.sh
+ARGS=`cat long_runner1.args`
+swift -config swift.properties -sites.file sites.template.xml -tc.file tc.template.data long_runner1.swift $ARGS

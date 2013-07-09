@@ -9,37 +9,32 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ThreadingContext;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.FlowNode;
+import k.rt.ExecutionException;
+import k.thr.LWThread;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 
-public class UnitEnd extends FlowNode {    
-    public static final Arg.Positional TYPE = new Arg.Positional("type");
-    public static final Arg.Optional NAME = new Arg.Optional("name", null);
-    public static final Arg.Optional LINE = new Arg.Optional("line", null);
+public class UnitEnd extends InternalFunction {
+    
+    private ArgRef<String> type;
+    private ArgRef<String> name;
+    private ArgRef<String> line;
     
     @Override
-    public void execute(VariableStack stack) throws ExecutionException {
-        executeSimple(stack);
-        complete(stack);
+    protected Signature getSignature() {
+        return new Signature(params("type", optional("name", null), optional("line", null)));
     }
     
     @Override
-    public boolean isSimple() {
-        return super.isSimple();
-    }
-    
-    @Override
-    public void executeSimple(VariableStack stack) throws ExecutionException {
-        String type = (String) TYPE.getStatic(this);
-        ThreadingContext thread = ThreadingContext.get(stack);
-        String name = (String) NAME.getStatic(this);
-        String line = (String) LINE.getStatic(this);
+    public void run(LWThread thr) throws ExecutionException {
+        String type = this.type.getValue();
+        String name = this.name.getValue();
+        String line = this.line.getValue();
         
-        UnitStart.log(false, type, thread, name, line);
-        WaitingThreadsMonitor.removeOutput(stack);
+        UnitStart.log(false, type, thr, name, line);
+        WaitingThreadsMonitor.removeOutput(thr);
     }
 }

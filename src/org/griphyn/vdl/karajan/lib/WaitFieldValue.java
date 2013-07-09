@@ -17,35 +17,40 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 
-public class WaitFieldValue extends VDLFunction {
-	public static final Logger logger = Logger.getLogger(WaitFieldValue.class);
+public class WaitFieldValue extends SwiftFunction {
+	private ArgRef<AbstractDataNode> var;
+    private ArgRef<Object> path; 
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("var", optional("path", Path.EMPTY_PATH)));
+    }
 
-	static {
-		setArguments(WaitFieldValue.class, new Arg[] { PA_VAR, OA_PATH });
-	}
 
 	/**
 	 * Takes a supplied variable and path, and returns the unique value at that
 	 * path. Path can contain wildcards, in which case an array is returned.
 	 */
-	public Object function(VariableStack stack) throws ExecutionException {
-		AbstractDataNode var = (AbstractDataNode) PA_VAR.getValue(stack);
+    @Override
+	public Object function(Stack stack) {
+		AbstractDataNode var = this.var.getValue(stack);
 		try {
-			Path path = parsePath(OA_PATH.getValue(stack), stack);
+			Path path = parsePath(this.path.getValue(stack));
 			var = (AbstractDataNode) var.getField(path);
-			var.waitFor();
+			var.waitFor(this);
 			return null;
 		}
 		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 

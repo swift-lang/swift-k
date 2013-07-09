@@ -20,23 +20,31 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
-public class NiceName extends VDLFunction {
-	static {
-		setArguments(NiceName.class, new Arg[] { OA_PATH, PA_VAR });
-	}
+public class NiceName extends SwiftFunction {
+    private ArgRef<DSHandle> var;
+    private ArgRef<Object> path;
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("var", optional("path", Path.EMPTY_PATH)));
+    }
+
+
+    @Override
+	public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 		try {
-			Path path = parsePath(OA_PATH.getValue(stack), stack);
+			Path path = parsePath(this.path.getValue(stack));
 			DSHandle field = var.getField(path);
 			Path p = field.getPathFromRoot();
 			if (p.equals(Path.EMPTY_PATH)) {
@@ -53,7 +61,7 @@ public class NiceName extends VDLFunction {
 			}
 		}
 		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 

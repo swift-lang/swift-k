@@ -33,16 +33,27 @@ public class MonitorFactory {
 		classes = new HashMap<String, Class<? extends Monitor>>();
 		classes.put("text", TextMonitor.class);
 		classes.put("ANSI", ANSIMonitor.class);
+		classes.put("TUI", ANSIMonitor.class);
 		classes.put("Swing", SwingMonitor.class);
 	}
 
 	public static Monitor newInstance(String type) throws InstantiationException,
 			IllegalAccessException {
+		String params = null;
+		if (type.contains(":")) {
+			int index = type.indexOf(':');
+			type = type.substring(0, index);
+			params = type.substring(index + 1, type.length());
+		}
 		Class<? extends Monitor> cls = classes.get(type);
 		if (cls == null) {
 			throw new IllegalArgumentException("Unsupported monitor type (" + type
 					+ "). The supported types are: " + classes.keySet());
 		}
-		return cls.newInstance();
+		Monitor m = cls.newInstance();
+		if (params != null) {
+			m.setParams(params);
+		}
+		return m;
 	}
 }

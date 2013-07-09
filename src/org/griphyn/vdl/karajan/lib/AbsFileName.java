@@ -20,16 +20,22 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.Stack;
 
-public class AbsFileName extends VDLFunction {
-	static {
-		setArguments(AbsFileName.class, new Arg[] { PA_VAR });
-	}
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.mapping.DSHandle;
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		return filename(stack);
-	}
+public class AbsFileName extends SwiftFunction {
+    private ArgRef<DSHandle> var;
+    
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("var"));
+    }
+	
+	@Override
+    public Object function(Stack stack) {
+        return filename(var.getValue(stack));
+    }
 }

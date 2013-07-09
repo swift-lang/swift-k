@@ -23,15 +23,18 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringTokenizer;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.util.Base64;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.AbstractMapper;
-import org.griphyn.vdl.mapping.InvalidMappingParameterException;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
@@ -50,15 +53,12 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
   * <ul>
   *   <li>location - if specified, then all generated filenames
   *                  will be prefixed with this directory, and all lookups
-  *                  for files will happen in this directory</li>
-  *   <li>prefix - if specified, then all filenames will be prefixed
+  *                  for files will happen in this directory. If not specified, 
+  *                  the current directory will be used.</li>
+  *   <li>prefix - if specified, then all file names will be prefixed
   *                  with this string</li>
   *   <li>suffix - if specified, then all filenames will be suffixed with
-  *                  this string. If suffix does not begin with a '.'
-  *                  character, then a '.' will be added automatically to
-  *                  separate the rest of the filename from the suffix</li>
-  *   <li>noauto - if specified as "true", then the suffix auto addition of a'.'
-  *                  will be disabled.  Default value is "false".</li>
+  *                  this string.</li>
   *   <li>pattern - if specified, then filenames will be selected from
   *                 the location directory when they match the unix glob
   *                 pattern supplied in this parameter.</li>
@@ -70,7 +70,15 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	public static final MappingParam PARAM_SUFFIX = new MappingParam("suffix", null);
 	public static final MappingParam PARAM_PATTERN = new MappingParam("pattern", null);
 	public static final MappingParam PARAM_LOCATION = new MappingParam("location", null);
-	public static final MappingParam PARAM_NOAUTO = new MappingParam("noauto", "false");
+	
+	private String location, prefix, suffix, pattern; 
+	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_PREFIX, PARAM_SUFFIX, PARAM_PATTERN, PARAM_LOCATION);
+        super.getValidMappingParams(s);
+    }
 
 	public static final Logger logger = Logger.getLogger(AbstractFileMapper.class);
 
@@ -82,6 +90,8 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 
 		this.elementMapper = elementMapper;
 	}
+	
+	
 
 	/** Creates an AbstractFileMapper without specifying a
 	  * FileNameElementMapper. The elementMapper must be specified
@@ -99,32 +109,37 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		this.elementMapper = elementMapper;
 	}
 
-	public void setParams(MappingParamSet params) {
+	public void setParams(MappingParamSet params) throws HandleOpenException {
 		super.setParams(params);
-		if (PARAM_SUFFIX.isPresent(this)) {
-			String suffix = PARAM_SUFFIX.getStringValue(this);
-			String noauto = PARAM_NOAUTO.getStringValue(this);
-			if (!noauto.equals("true") && !noauto.equals("false")) {
-				throw new InvalidMappingParameterException("noauto parameter value should be 'true' or 'false'" + 
-						". Value set was '" + noauto + "'");
-			}
-			if (!suffix.startsWith(".") && noauto.equals("false")) {
-				PARAM_SUFFIX.setValue(this, "." + suffix);
-			}
+		StringBuilder pattern = new StringBuilder();
+		boolean wildcard = false; 
+		if (PARAM_PREFIX.isPresent(this)) {
+		    prefix = PARAM_PREFIX.getStringValue(this);
+		    pattern.append(prefix);
+		    pattern.append('*');
+		    wildcard = true;
 		}
 		if (PARAM_PATTERN.isPresent(this)) {
-			String pattern = PARAM_PATTERN.getStringValue(this);
-			PARAM_PATTERN.setValue(this, replaceWildcards(pattern));
+            pattern.append(PARAM_PATTERN.getStringValue(this));
+            wildcard = false;
+        }
+		if (PARAM_SUFFIX.isPresent(this)) {
+			suffix = PARAM_SUFFIX.getStringValue(this);
+			if (!wildcard) {
+			    pattern.append('*');
+			}
+			pattern.append(suffix);
 		}
+		location = PARAM_LOCATION.getStringValue(this);
+        prefix = PARAM_PREFIX.getStringValue(this);
+        suffix = PARAM_SUFFIX.getStringValue(this);
+        this.pattern = pattern.toString();
 	}
 
 	public PhysicalFormat map(Path path) {
 		if(logger.isDebugEnabled())
 			logger.debug("mapper id="+this.hashCode()+" starting to map "+path);
 		StringBuffer sb = new StringBuffer();
-		final String location = PARAM_LOCATION.getStringValue(this);
-		final String prefix = PARAM_PREFIX.getStringValue(this);
-		final String suffix = PARAM_SUFFIX.getStringValue(this);
 		maybeAppend(sb, location);
 		if (location != null && !location.endsWith("/")) {
 			sb.append('/');
@@ -213,13 +228,9 @@ public abstract class AbstractFileMapper extends AbstractMapper {
     }
 
     public Collection<Path> existing() {
-		if(logger.isDebugEnabled())
-			logger.debug("list existing paths for mapper id="+this.hashCode());
-		final String location = PARAM_LOCATION.getStringValue(this);
-		final String prefix = PARAM_PREFIX.getStringValue(this);
-		final String suffix = PARAM_SUFFIX.getStringValue(this);
-		final String pattern = PARAM_PATTERN.getStringValue(this);
-
+		if (logger.isDebugEnabled()) {
+			logger.debug("list existing paths for mapper id=" + this.hashCode());
+		}
 		List<Path> result = new ArrayList<Path>();
 		final AbsFile f;
 		if (location == null) {
@@ -227,41 +238,112 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		}
 		else {
 			f = new AbsFile(location);
+			if (!f.exists()) {
+			    throw new IllegalArgumentException("Directory not found: " + location);
+			}
 		}
 		logger.debug("Processing file list.");
-		AbsFile[] files = f.listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				boolean accept = (prefix == null || name.startsWith(prefix))
-						&& (suffix == null || name.endsWith(suffix))
-						&& (pattern == null || name.matches(pattern));
-				logger.debug("file "+name+"? "+accept);
-				return accept;
-			}
-		});
+		List<AbsFile> files = glob(f, pattern);
 		if (files != null) {
-			for (int i = 0; i < files.length; i++) {
-				if(logger.isDebugEnabled()) logger.debug("Processing existing file "+files[i].getName());
-				Path p = rmap(files[i].getName());
+			for (AbsFile file : files) {
+				if (logger.isDebugEnabled()) {
+				    logger.debug("Processing existing file " + file.getName());
+				}
+				Path p = rmap(file.getName());
 				if (p != null) {
-					if(logger.isDebugEnabled()) logger.debug("reverse-mapped to path "+p);
+					if (logger.isDebugEnabled()) {
+					    logger.debug("reverse-mapped to path " + p);
+					}
 					result.add(p);
-				} else {
+				}
+				else {
 					logger.debug("reverse-mapped to nothing");
 				}
 			}
 		}
 		else {
-			logger.debug("list existing paths failed for mapper id="+this.hashCode());
-			throw new IllegalArgumentException("Directory not found: " + location);
+			logger.debug("No files found id=" + this.hashCode());
 		}
-		if(logger.isDebugEnabled()) {
-			logger.debug("Finish list existing paths for mapper "+this.hashCode()+" list="+result);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Finish list existing paths for mapper " + this.hashCode() + " list=" + result);
 		}
-		// System.out.println(getVarName() + " (input): found " + result.size() + " files");
 		return result;
 	}
+    
+    protected List<AbsFile> glob(AbsFile f, String pattern) {
+        if (pattern.length() == 0) {
+            pattern = "*";
+        }
+        List<AbsFile> l = new ArrayList<AbsFile>();
+        List<String> tokens;
+        StringTokenizer st = new StringTokenizer(pattern, File.separator);
+        // avoid creating an array list if only one token exists
+        String firstToken;
+        if (st.hasMoreTokens()) {
+            firstToken = st.nextToken();
+        }
+        else {
+            return Collections.emptyList();
+        }
+        if (st.hasMoreTokens()) {
+            tokens = new ArrayList<String>();
+            tokens.add(firstToken);
+            while (st.hasMoreTokens()) {
+                tokens.add(st.nextToken());
+            }
+        }
+        else {
+            tokens = Collections.singletonList(firstToken);
+        }
+        globRecursive(f, l, tokens, 0);
+        return l;
+    }
+	
+    private void globRecursive(AbsFile f, List<AbsFile> l, List<String> tokens, int pos) {
+        String token = tokens.get(pos);
+        if (pos == tokens.size() - 1) {
+            if (token.equals("**")) {
+                throw new IllegalArgumentException("** cannot be the last path element in a path pattern");
+            }
+            // at the file level
+            globFiles(f, l, token);
+        }
+        else if (token.equals("**")) {
+            // recursively go through all sub-directories and match the remaining pattern tokens
+            DirectoryScanner ds = new DirectoryScanner(f);
+            while (ds.hasNext()) {
+                AbsFile dir = ds.next();
+                globRecursive(dir, l, tokens, pos + 1);
+            }
+        }
+        else {
+            // not the last path element, so a directory
+            final String regex = replaceWildcards(token);
+            List<AbsFile> dirs = f.listDirectories(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.matches(regex);
+                }
+            });
+            for (AbsFile dir : dirs) {
+                globRecursive(dir, l, tokens, pos + 1);
+            }
+        }
+    }
 
-	private String getVarName() {
+    private void globFiles(AbsFile f, List<AbsFile> l, String token) {
+        final String regex = replaceWildcards(token);
+        List<AbsFile> files = f.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.matches(regex);
+            }
+        });
+        l.addAll(files);
+    }
+
+
+    private String getVarName() {
         AbstractDataNode var = (AbstractDataNode) getParam(MappingParam.SWIFT_HANDLE);
         return var == null ? "" : var.getDisplayableName();
     }
@@ -287,21 +369,20 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	public Path rmap(String name) {
 		logger.debug("rmap "+name);
 
-		final String prefix = PARAM_PREFIX.getStringValue(this);
-
-		if(prefix!=null) {
-			if(name.startsWith(prefix)) {
+		if(prefix != null) {
+			if (name.startsWith(prefix)) {
 				name = name.substring(prefix.length());
-			} else {
+			} 
+			else {
 				throw new RuntimeException("filename '"+name+"' does not begin with prefix '"+prefix+"'");
 			}
 		}
 
-		final String suffix = PARAM_SUFFIX.getStringValue(this);
-		if(suffix!=null) {
-			if(name.endsWith(suffix)) {
+		if(suffix != null) {
+			if (name.endsWith(suffix)) {
 				name = name.substring(0,name.length() - suffix.length());
-			} else {
+			}
+			else {
 				throw new RuntimeException("filename '"+name+"' does not end with suffix '"+suffix+"'");
 			}
 		}
@@ -353,11 +434,11 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	}
 
 	public String getLocation() {
-		return PARAM_LOCATION.getStringValue(this);
+		return location;
 	}
 
 	public String getPrefix() {
-		return PARAM_PREFIX.getStringValue(this);
+		return prefix;
 	}
 
 

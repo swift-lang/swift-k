@@ -56,12 +56,12 @@ debug() {
 }
 
 localPath() {
-	# remove protocol://
-	PATH="${1#*://}"
+        # remove protocol://
+        PATH="${1#*://}"
         # Remove hostname
         PATH="${PATH#*/}"
-	# remove leading "/" if present
-	PATH="${PATH#/}"
+        # remove leading "/" if present
+        PATH="${PATH#/}"
 	log "Transformed $1 to $PATH"
 	echo $PATH
 }
@@ -86,8 +86,24 @@ stagein() {
 			if [ ! -f $SRC ]; then
 				fail 254 "Cannot stage in $SRC. File not found."
 			fi
-			dd if=$SRC of=$DST bs=16M 2>&1 >& "$INFO"
+            ln -s $SRC $DST 2>&1 >& "$INFO"
 			;;
+		stage://*)
+			SRC=${SRC#stage://}
+			log "Copying $SRC to $DST"
+			if [ ! -f $SRC ]; then
+				fail 254 "Cannot stage in $SRC. File not found."
+			fi
+                        dd if=$SRC of=$DST bs=10M 2>&1 >& "$INFO"
+			;;
+                direct://*)
+                	SRC=${SRC#direct://}
+                        log "Linking $SRC to $DST"
+                        if [ ! -f $SRC ]; then
+				fail 245 "Cannot stage in $SRC. File not found."
+			fi
+                        ln -s $SRC $DST 2>&1 >& "$INFO"
+                        ;;
 		http://*)
 			log "Fetching $SRC using wget"
 			wget $SRC -O $DST 2>&1 >& "$INFO"
@@ -275,7 +291,6 @@ strip_prefix()
 }
 
 COMMANDLINE=$@
-
 PARAMFILE=
 
 openinfo "wrapper.log"

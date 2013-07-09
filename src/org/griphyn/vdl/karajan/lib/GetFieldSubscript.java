@@ -17,54 +17,51 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Collection;
+import k.rt.ExecutionException;
+import k.rt.Stack;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.OOBYield;
 import org.griphyn.vdl.mapping.Path;
 
-public class GetFieldSubscript extends VDLFunction {
+public class GetFieldSubscript extends SwiftFunction {
+    private ArgRef<DSHandle> var;
+    private ArgRef<AbstractDataNode> subscript;
 
-	public static final SwiftArg PA_SUBSCRIPT = new SwiftArg.Positional("subscript");
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("var", "subscript"));
+    }
 
-	static {
-		setArguments(GetFieldSubscript.class, new Arg[] { PA_VAR, PA_SUBSCRIPT });
-	}
+	@Override
+	public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		Object var1 = PA_VAR.getValue(stack);
-		if(!(var1 instanceof DSHandle)) {
-			throw new ExecutionException("was expecting a dshandle, got: "+var1.getClass());
-		}
-		DSHandle var = (DSHandle) var1;
-
-		Object index = PA_SUBSCRIPT.getValue(stack);
+		AbstractDataNode indexh = this.subscript.getValue(stack);
 
 		try {
-			Path path;
+		    indexh.waitFor();
+		    Object index = indexh.getValue();
 			if ("*".equals(index)) {
-			    path = Path.CHILDREN;
+			    return var.getFields(Path.CHILDREN);
 			}
 			else {
-				path = Path.EMPTY_PATH.addFirst((Comparable<?>) index, true);
+			    return var.getField(Path.EMPTY_PATH.addFirst((Comparable<?>) index, true));
 			}
-			Collection<DSHandle> fields = var.getFields(path);
-			if (fields.size() == 1) {
-				return fields.iterator().next();
-			}
-			else {
-				return fields;
-			}
+		}
+		catch (OOBYield y) {
+		    throw y.wrapped(this);
 		}
 		catch (InvalidPathException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 		catch (HandleOpenException e) {
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 

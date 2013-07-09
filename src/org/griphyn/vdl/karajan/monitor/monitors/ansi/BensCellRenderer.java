@@ -32,10 +32,10 @@ import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Table;
 
 public class BensCellRenderer extends DefaultTableCellRenderer implements
         SystemStateListener {
-    private Map lastUpdated;
+    private Map<String, Long> lastUpdated;
 
     public BensCellRenderer(SystemState state) {
-        lastUpdated = new HashMap();
+        lastUpdated = new HashMap<String, Long>();
         state.addListener(this);
     }
 
@@ -50,7 +50,7 @@ public class BensCellRenderer extends DefaultTableCellRenderer implements
             l.setJustification(Label.LEFT);
         }
         long now = System.currentTimeMillis();
-        Long then = (Long) lastUpdated.get(String.valueOf(row + 1));
+        Long then = lastUpdated.get(String.valueOf(row + 1));
         if (then != null) {
             long t = then.longValue();
             if (now - t < 2000) {
@@ -69,7 +69,7 @@ public class BensCellRenderer extends DefaultTableCellRenderer implements
         return l;
     }
 
-    public void itemUpdated(int updateType, StatefulItem item) {
+    public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
         if (item.getItemClass().equals(StatefulItemClass.TRACE)) {
             lastUpdated.put(item.getID(), new Long(System.currentTimeMillis()));
         }

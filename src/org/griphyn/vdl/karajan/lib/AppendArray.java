@@ -17,36 +17,32 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Path;
 
 public class AppendArray extends SetFieldValue {
     
-    public static final Arg PA_ID = new Arg.Positional("id");
-
-    static {
-        setArguments(AppendArray.class, new Arg[] { PA_VAR, PA_VALUE });
-    }
-    
     @Override
-    public Object function(VariableStack stack) throws ExecutionException {
-        DSHandle var = (DSHandle) PA_VAR.getValue(stack);
-        AbstractDataNode value = (AbstractDataNode) PA_VALUE.getValue(stack);
+    protected Signature getSignature() {
+        return new Signature(params("var", "value"));
+    }
+
+    @Override
+    public Object function(Stack stack) {
+        DSHandle var = this.var.getValue(stack);
+        AbstractDataNode value = this.value.getValue(stack);
         // while there isn't a way to avoid conflicts between auto generated indices
         // and a user manually using the same index, adding a "#" may reduce
         // the incidence of problems
-        Path path = Path.EMPTY_PATH.addFirst(getThreadPrefix(stack), true);
-        try {
-            deepCopy(var.getField(path), value, stack, 0);
+       try {
+            deepCopy(var.getField(getThreadPrefix()), value, stack);
         }
-        catch (InvalidPathException e) {
-            throw new ExecutionException(e);
+        catch (NoSuchFieldException e) {
+            throw new ExecutionException(this, e);
         }
         return null;
     }

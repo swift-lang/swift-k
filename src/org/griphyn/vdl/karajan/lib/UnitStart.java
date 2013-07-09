@@ -10,163 +10,198 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+
+import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.ThreadingContext;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.FlowNode;
-import org.griphyn.vdl.engine.Karajan;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.DSHandle;
 
-public class UnitStart extends FlowNode {
-	public static final Logger uslogger = Logger.getLogger(UnitStart.class);
+public class UnitStart extends InternalFunction {
+    public static final Logger uslogger = Logger.getLogger(UnitStart.class);
     // keep compatibility with log()
     public static final Logger logger = Logger.getLogger("swift");
-    
-    public static final Arg.Positional TYPE = new Arg.Positional("type");
-    public static final Arg.Optional NAME = new Arg.Optional("name", null);
-    public static final Arg.Optional LINE = new Arg.Optional("line", null);
-    public static final Arg.Optional OUTPUTS = new Arg.Optional("outputs", null);
-    
-    private Tracer tracer;
-    private List<String> inputArgs, outputArgs;
-    
+
+    private ArgRef<String> type;
+    private ArgRef<String> name;
+    private ArgRef<String> line;
+    private ArgRef<String> arguments;
+    private ArgRef<String> outputs;
+
     @Override
-    protected void initializeStatic() {
-        super.initializeStatic();
-        String type = (String) TYPE.getStatic(this);
+    protected Signature getSignature() {
+        return new Signature(params("type", optional("name", null),
+            optional("line", null),
+            optional("outputs", null), optional("arguments", null)));
+    }
+
+    private static class NamedRef {
+        public final String name;
+        public final VarRef<DSHandle> ref;
+
+        public NamedRef(String name, VarRef<DSHandle> ref) {
+            this.name = name;
+            this.ref = ref;
+        }
+    }
+
+    private Tracer tracer;
+    private List<NamedRef> inputArgs, outputArgs;
+
+    @Override
+    public Node compile(WrapperNode w, Scope scope) throws CompilationException {
+        Node fn = super.compile(w, scope);
+        String type = this.type.getValue();
         if (type.equals("PROCEDURE")) {
-            tracer = Tracer.getTracer((FlowNode) getParent(), "APPCALL");
+            tracer = Tracer.getTracer(line.getValue(), "APPCALL");
         }
         else if (type.equals("COMPOUND")) {
-            tracer = Tracer.getTracer((FlowNode) getParent(), "CALL");
+            tracer = Tracer.getTracer(line.getValue(), "CALL");
         }
         if (tracer != null && tracer.isEnabled()) {
-            populateArgNames();
+            populateArgNames(scope);
         }
+        return fn;
     }
 
-    private void populateArgNames() {
-        String outs = (String) getStaticArguments().get("outputs");
+    private void populateArgNames(Scope scope) {
+        String outs = this.outputs.getValue();
+        Set<String> outNames = new HashSet<String>();
         if (outs != null && outs.length() > 0) {
-            outputArgs = Arrays.asList(outs.split(","));
+            outputArgs = new ArrayList<NamedRef>();
+            for (String name : outs.split(",")) {
+                VarRef<DSHandle> ref = scope.getVarRef(name);
+                outputArgs.add(new NamedRef(name, ref));
+                outNames.add(name);
+            }
         }
         else {
-            outputArgs = Collections.emptyList();
+            outputArgs = null;
         }
-        String args = (String) getParent().getStaticArguments().get("arguments");
+        String args = this.arguments.getValue();
         if (args != null && args.length() > 0) {
-            inputArgs = new ArrayList<String>(Arrays.asList(args.split(",")));
-            inputArgs.removeAll(outputArgs);
+            inputArgs = new ArrayList<NamedRef>();
+            for (String name : args.split(",")) {
+                if (outNames.contains(name)) {
+                    continue;
+                }
+                VarRef<DSHandle> ref = scope.getVarRef(name);
+                inputArgs.add(new NamedRef(name, ref));
+            }
         }
         else {
-            inputArgs = Collections.emptyList();
+            inputArgs = null;
         }
-        
+
     }
 
     @Override
-    public void execute(VariableStack stack) throws ExecutionException {
-        executeSimple(stack);
-        complete(stack);
-    }
-    
-    @Override
-    public boolean isSimple() {
-        return super.isSimple();
-    }
-    
-    @Override
-    public void executeSimple(VariableStack stack) throws ExecutionException {
-        String type = (String) TYPE.getStatic(this);
-        ThreadingContext thread = ThreadingContext.get(stack);
-        String name = (String) NAME.getStatic(this);
-        String line = (String) LINE.getStatic(this);
-        
+    protected void runBody(LWThread thr) {
+        String type = this.type.getValue();
+        String name = this.name.getValue();
+        String line = this.line.getValue();
+
         if (tracer != null && tracer.isEnabled()) {
-            tracer.trace(thread.toString(), Karajan.demangle(name) + "(" + formatArguments(stack) + ")");
+            tracer.trace(thr, name + "("
+                    + formatArguments(thr.getStack()) + ")");
         }
-        
-        log(true, type, thread, name, line);
-        
-        String outputs = (String) OUTPUTS.getStatic(this);
-        if (outputs != null) {
-            trackOutputs(stack, outputs, "SCOPE".equals(type));
+
+        log(true, type, thr, name, line);
+
+        if (outputArgs != null) {
+            trackOutputs(thr);
         }
     }
-    
-    private String formatArguments(VariableStack stack) {
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (String name : inputArgs) {
-            if (first) {
-                first = false;
+
+    private String formatArguments(Stack stack) {
+        if (inputArgs != null) {
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            for (NamedRef nr : inputArgs) {
+                if (first) {
+                    first = false;
+                }
+                else {
+                    sb.append(", ");
+                }
+                sb.append(nr.name);
+                sb.append(" = ");
+                sb.append(Tracer.unwrapHandle(nr.ref.getValue(stack)));
             }
-            else {
-                sb.append(", ");
-            }
-            sb.append(Karajan.demangle(name));
-            sb.append(" = ");
-            sb.append(Tracer.unwrapHandle(stack.parentFrame().getVar(name)));
+            return sb.toString();
         }
-        return sb.toString();
+        else {
+            return "";
+        }
     }
 
     private static final List<DSHandle> EMPTY_OUTPUTS = Collections.emptyList();
 
-    private void trackOutputs(VariableStack stack, String outputs, boolean deep) {
-    	if (outputs.length() != 0) {
-            String[] names = outputs.split(",");
+    private void trackOutputs(LWThread thr) {
+        Stack stack = thr.getStack();
+        if (!outputArgs.isEmpty()) {
             List<DSHandle> l = new LinkedList<DSHandle>();
-            for (String name : names) {
-            	if (deep) {
-            	    try {
-                        l.add((DSHandle) stack.getVar(name.toLowerCase()));
-                    }
-                    catch (VariableNotFoundException e) {
-                        logger.info("Could not find variable " + name, e);
-                    }
-            	}
-            	else {
-            		l.add((DSHandle) stack.parentFrame().getVar(name));
-            	}
+            for (NamedRef nr : outputArgs) {
+                l.add(nr.ref.getValue(stack));
             }
-            WaitingThreadsMonitor.addOutput(stack, l);
-    	}
+            WaitingThreadsMonitor.addOutput(thr, l);
+        }
     }
 
-    protected static void log(boolean start, String type, ThreadingContext thread, String name, String line) {
-        if (type.equals("COMPOUND")) {
-            logger.info((start ? "START" : "END") + type + " thread=" + thread + " name=" + name);
-        }
-        else if (type.equals("PROCEDURE")) {
-            if (start) {
-                logger.debug("PROCEDURE line=" + line + " thread=" + thread + " name=" + name);
+    protected static void log(boolean start, String type, LWThread thread,
+            String name, String line) {
+        if (logger.isInfoEnabled()) {
+            if (type.equals("COMPOUND")) {
+                logger.info((start ? "START" : "END") + type + " thread="
+                        + thread.getName() + " name=" + name);
             }
             else {
-                logger.debug("PROCEDURE_END line=" + line + " thread=" + thread + " name=" + name);
-            }
-        }
-        else if (type.equals("FOREACH_IT")) {
-            logger.debug("FOREACH_IT_" + (start ? "START" : "END") + " line=" + line + " thread=" + thread);
-            if (start) {
-                logger.debug("SCOPE thread=" + thread);
-            }
-        }
-        else if (type.equals("INTERNALPROC")) {
-            logger.debug("INTERNALPROC_" + (start ? "START" : "END") + " thread=" + thread + " name=" + name);
-        }
-        else if (type.equals("CONDITION_BLOCK")) {
-            if (start) {
-                logger.debug("SCOPE thread=" + thread);
+                if (logger.isDebugEnabled()) {
+                    if (type.equals("PROCEDURE")) {
+                        if (start) {
+                            logger.debug("PROCEDURE line=" + line + " thread="
+                                    + thread.getName() + " name=" + name);
+                        }
+                        else {
+                            logger.debug("PROCEDURE_END line=" + line
+                                    + " thread="
+                                    + thread.getName() + " name=" + name);
+                        }
+                    }
+                    else if (type.equals("FOREACH_IT")) {
+                        logger.debug("FOREACH_IT_" + (start ? "START" : "END")
+                                + " line=" + line + " thread="
+                                + thread.getName());
+                        if (start) {
+                            logger.debug("SCOPE thread=" + thread.getName());
+                        }
+                    }
+                    else if (type.equals("INTERNALPROC")) {
+                        logger.debug("INTERNALPROC_"
+                                + (start ? "START" : "END")
+                                + " thread=" + thread.getName() + " name="
+                                + name);
+                    }
+                    else if (type.equals("CONDITION_BLOCK")) {
+                        if (start) {
+                            logger.debug("SCOPE thread=" + thread.getName());
+                        }
+                    }
+                }
             }
         }
     }

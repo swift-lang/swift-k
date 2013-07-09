@@ -16,6 +16,7 @@ printhelp() {
   printf "\t -t         Tree mode (alias: -a,-c,-g,-p,-s)  \n"
   printf "\t -x         Do not continue after a failure    \n"
   printf "\t -v         Verbose (set -x, HTML comments)    \n"
+  printf "\t -l         Stress level < 1/ 2/ 3/ 4>         \n"
   printf "\t -o output  Location for cog and output        \n"
   printf "\t <GROUP>    GROUP argument                     \n"
 }
@@ -24,6 +25,7 @@ printhelp() {
 TEXTREPORT=0
 DEFAULT_TIMEOUT=30 # seconds
 RUN_ANT=1
+STRESS=2
 # If true, run "ant clean"
 CLEAN=1
 SKIP_TESTS=0
@@ -81,6 +83,9 @@ while [ $# -gt 0 ]; do
     -x)
       ALWAYS_EXITONFAILURE=1
       shift;;
+    -l)
+      STRESS=$2
+      shift 2;;
     -v)
       VERBOSE=1
       shift;;
@@ -110,7 +115,7 @@ else
 	GRAY=""
 fi
 
-
+export STRESS="S$STRESS"
 # Iterations per test (may want to run each test multiple times?)
 ITERS_LOCAL=1
 
@@ -777,6 +782,7 @@ swift_test_case() {
     return 0
   fi
 
+  SOURCESCRIPT=$NAME.source.sh
   SETUPSCRIPT=$NAME.setup.sh
   CHECKSCRIPT=$NAME.check.sh
   CLEANSCRIPT=$NAME.clean.sh
@@ -785,6 +791,13 @@ swift_test_case() {
 
   TEST_SHOULD_FAIL=0
   OUTPUT=$NAME.setup.stdout
+
+  if [ -x "$GROUP/$SOURCESCRIPT" ]; then
+    cp "$GROUP/$SOURCESCRIPT" .
+    source ./$SOURCESCRIPT 
+  fi
+  echo "GLOBUS_HOSTNAME : $GLOBUS_HOSTNAME"
+
   if [ -x "$GROUP/$SETUPSCRIPT" ]; then
     cp "$GROUP/$SETUPSCRIPT" .
     script_exec ./$SETUPSCRIPT "S"
@@ -794,7 +807,10 @@ swift_test_case() {
 
   ARGS=""
   if [ -f $GROUP/$ARGSFILE ]; then
-  	ARGS=`cat $GROUP/$ARGSFILE`
+    cp "$GROUP/$ARGSFILE" .
+    ARGS=`cat $GROUP/$ARGSFILE`
+  elif [ -f $ARGSFILE ]; then
+    ARGS=`cat $ARGSFILE`
   fi
 
   CDM=

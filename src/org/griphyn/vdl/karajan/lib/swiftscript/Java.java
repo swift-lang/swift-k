@@ -20,29 +20,40 @@ package org.griphyn.vdl.karajan.lib.swiftscript;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
+import k.rt.Channel;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
-public class Java extends VDLFunction
-{
-
-    static
-    {
-        setArguments(Java.class, new Arg[] { Arg.VARGS });
+public class Java extends SwiftFunction {
+    private ArgRef<AbstractDataNode> lib;
+    private ArgRef<AbstractDataNode> name;
+    private ChannelRef<AbstractDataNode> c_vargs;
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("lib", "name", "..."));
     }
 
-    protected Object function(VariableStack stack) throws ExecutionException
-    {
-        AbstractDataNode[] args = waitForAllVargs(stack);
+    @Override
+    public Object function(Stack stack) {
+    	AbstractDataNode hlib = this.lib.getValue(stack);
+    	AbstractDataNode hname = this.name.getValue(stack);
+        Channel<AbstractDataNode> args = this.c_vargs.get(stack);
+        hlib.waitFor(this);
+        hname.waitFor(this);
+        waitForAll(this, args);
 
-        Method method = getMethod(args);
+        Method method = getMethod((String) hlib.getValue(), (String) hname.getValue(), args);
         Object[] p = convertInputs(method, args);
         Type type = returnType(method);
         Object value = invoke(method, p);
@@ -55,30 +66,18 @@ public class Java extends VDLFunction
        Given the user args, locate the Java Method.
     */
 
-    Method getMethod(DSHandle[] args)
-    {
+    private Method getMethod(String lib, String name, Channel<AbstractDataNode> args) {
         Method result;
         Class<?> clazz;
 
-        String lib = "unset";
-        String name = "unset";
+        Class<?>[] parameterTypes = new Class[args.size()];
 
-        Class[] parameterTypes = new Class[args.length-2];
-
-        if (args.length < 2)
-            throw new RuntimeException
-                ("@java() requires at least two arguments");
-
-        try
-        {
-            lib = (String) args[0].getValue();
-            name = (String) args[1].getValue();
+        try {
             clazz = Class.forName(lib);
 
-            for (int i = 2; i < args.length; i++)
-            {
-                Class p = null;
-                Type  t = args[i].getType();
+            for (int i = 0; i < args.size(); i++) {
+                Class<?> p = null;
+                Type t = args.get(i).getType();
 
                 if (t.equals(Types.FLOAT))        p = double.class;
                 else if (t.equals(Types.INT))     p = int.class;
@@ -86,20 +85,19 @@ public class Java extends VDLFunction
                 else if (t.equals(Types.STRING))  p = String.class;
                 else                              throw new RuntimeException("Cannot use @java with non-primitive types");
 
-                parameterTypes[i-2] = p;
+                parameterTypes[i] = p;
             }
             result = clazz.getMethod(name, parameterTypes);
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException
-                ("@java(): Error attempting to use: " + args[0].getValue());
+            throw new ExecutionException(this, "@java(): Error attempting to use: " + lib);
         }
 
         if (result == null)
-            throw new RuntimeException
-                ("No method: " + name + " in " + lib + "with parameter types" + Arrays.toString(parameterTypes));
+            throw new ExecutionException(this, "No method: " 
+            		+ name + " in " + lib + "with parameter types" 
+            		+ Arrays.toString(parameterTypes));
 
         return result;
     }
@@ -107,33 +105,11 @@ public class Java extends VDLFunction
     /**
        Convert the user args to a Java Object array.
     */
-    Object[] convertInputs(Method method, DSHandle[] args)
-    {
-        Object[] result = new Object[args.length-2];
+    private Object[] convertInputs(Method method, Channel<AbstractDataNode> args) {
+        Object[] result = new Object[args.size()];
         Object a = null;
-        try
-        {
-            for (int i = 2; i < args.length; i++)
-            {
-                Type   t = args[i].getType();
-                Object v = args[i].getValue();
-                if (t.equals(Types.FLOAT))
-                    a = (Double) v;
-                else if (t.equals(Types.INT))
-                    a = (Integer) v;
-                else if (t.equals(Types.BOOLEAN))
-                    a = (Boolean) v;
-                else if (t.equals(Types.STRING))
-                    a = (String) v;
-                result[i-2] = a;
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException
-                ("Error converting input arguments: \n" +
-                 " to: " + method.getDeclaringClass() +
-                 "." + method + " \n argument: " + a);
+        for (int i = 0; i < args.size(); i++) {
+            result[i] = args.get(i).getValue();
         }
         return result;
     }

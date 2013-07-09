@@ -78,7 +78,7 @@ public class SchedulerInfoPane extends VBox implements SystemStateListener {
         hosts.dataChanged();
     }
 
-    public void itemUpdated(int updateType, StatefulItem item) {
+    public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
         if (item.getItemClass().equals(StatefulItemClass.HOST)) {
             update();
         }

@@ -22,12 +22,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
@@ -37,15 +39,27 @@ public class RegularExpressionMapper extends AbstractMapper {
 	public static final MappingParam PARAM_SOURCE = new MappingParam("source");
 	public static final MappingParam PARAM_MATCH = new MappingParam("match");
 	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
+	
+	private String match, source, transform;
+	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_SOURCE, PARAM_MATCH, PARAM_TRANSFORM);
+        super.getValidMappingParams(s);
+    }
 
 	public RegularExpressionMapper() {
 	}
 
-	public void setParams(MappingParamSet params) {
+	public void setParams(MappingParamSet params) throws HandleOpenException {
 		super.setParams(params);
 		if (!PARAM_MATCH.isPresent(this)) {
 			throw new RuntimeException("Missing parameter match!");
 		}
+		match = PARAM_MATCH.getStringValue(this);
+        source = PARAM_SOURCE.getStringValue(this);
+        transform = PARAM_TRANSFORM.getStringValue(this);
 	}
 
 	public Collection<Path> existing() {
@@ -64,9 +78,7 @@ public class RegularExpressionMapper extends AbstractMapper {
 	                PARAM_MATCH.getName() + "; maybe you meant @filename(" + h.getPathFromRoot() + ")?");
 	        }
 	    }
-		String match = PARAM_MATCH.getStringValue(this);
-		String source = PARAM_SOURCE.getStringValue(this);
-		String transform = PARAM_TRANSFORM.getStringValue(this);
+		
 		Pattern p = Pattern.compile(match);
 		Matcher m = p.matcher(source);
 		if (!m.find()) {
@@ -104,7 +116,12 @@ public class RegularExpressionMapper extends AbstractMapper {
 		params.put("transform", "\\1_area.\\2");
 		MappingParamSet mps = new MappingParamSet();
 		mps.setAll(params);
-		reMapper.setParams(mps);
+		try {
+            reMapper.setParams(mps);
+        }
+        catch (HandleOpenException e) {
+            e.printStackTrace();
+        }
 		System.out.println(reMapper.map(Path.EMPTY_PATH));
 	}
 }

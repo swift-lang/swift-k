@@ -20,29 +20,53 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.PartialArgumentsContainer;
+import k.rt.Context;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCacheFactory;
+import org.griphyn.vdl.util.VDL2Config;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 
-public abstract class CacheFunction extends PartialArgumentsContainer {
-	public static final String CACHE_FILES_TO_REMOVE = "cachefilestoremove";
+public abstract class CacheFunction extends InternalFunction {
+	public static final String CACHE_FILES_TO_REMOVE = "cacheFilesToRemove";
 
-	public static final String VDL_FILE_CACHE = "vdl:filecache";
+	private VarRef<Context> context;
+	private VDLFileCache cache;
+	
+    @Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+        context = scope.getVarRef("#context");
+        return super.compileBody(w, argScope, scope);
+    }
 
-	protected static VDLFileCache getCache(VariableStack stack) throws ExecutionException {
-		VDLFileCache cache;
-		synchronized (stack.getExecutionContext()) {
-			cache = (VDLFileCache) stack.getGlobal(VDL_FILE_CACHE);
-			if (cache == null) {
-				cache = VDLFileCacheFactory.newInstance(ConfigProperty.getProperty(
-						VDL2ConfigProperties.CACHING_ALGORITHM, stack));
-				stack.setGlobal(VDL_FILE_CACHE, cache);
-			}
-		}
-		return cache;
+    protected VDLFileCache getCache(Stack stack) {
+        synchronized(this) {
+            if (cache == null) {
+                cache = getOrCreateCache(stack);
+            }
+            return cache;
+        }
 	}
+
+    private VDLFileCache getOrCreateCache(Stack stack) {
+        Context ctx = context.getValue(stack);
+        synchronized(ctx) {
+            VDLFileCache cache = (VDLFileCache) ctx.getAttribute("SWIFT:FILE_CACHE");
+            if (cache == null) {
+                cache = VDLFileCacheFactory.newInstance(ConfigProperty.getProperty(
+                    VDL2ConfigProperties.CACHING_ALGORITHM, (VDL2Config) ctx.getAttribute("SWIFT:CONFIG")));
+                ctx.setAttribute("SWIFT:FILE_CACHE", cache);
+            }
+            return cache;
+        }
+    }
 }

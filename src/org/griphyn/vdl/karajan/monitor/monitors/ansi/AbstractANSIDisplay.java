@@ -28,6 +28,7 @@ import java.io.PrintStream;
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.SystemStateListener;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
@@ -257,7 +258,7 @@ public class AbstractANSIDisplay extends Thread {
         return ben;
     }
 
-    public void itemUpdated(int updateType, StatefulItem item) {
+    public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
         StatefulItemClass cls = item.getItemClass();
         if (cls.equals(StatefulItemClass.APPLICATION)) {
             if (appsTable != null) {

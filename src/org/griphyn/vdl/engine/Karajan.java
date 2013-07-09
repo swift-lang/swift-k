@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,6 +65,7 @@ import org.griphyn.vdl.engine.VariableScope.EnclosureType;
 import org.griphyn.vdl.engine.VariableScope.WriteType;
 import org.griphyn.vdl.karajan.CompilationException;
 import org.griphyn.vdl.karajan.Loader;
+import org.griphyn.vdl.mapping.MapperFactory;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.safehaus.uuid.UUIDGenerator;
@@ -268,7 +270,7 @@ public class Karajan {
 	}
 
 	private void processProcedures(Program prog, VariableScope scope) throws CompilationException {
-
+		Map<String, Procedure> names = new HashMap<String, Procedure>();
 		// Keep track of declared procedures
 	    // Check for redefinitions of existing procedures
 	    Set<String> procsDefined = new HashSet<String>() ;	    
@@ -284,17 +286,69 @@ public class Karajan {
 			ps.setInputArgs(proc.getInputArray());
 			ps.setOutputArgs(proc.getOutputArray());
 			proceduresMap.put(procName, ps);
+			names.put(procName, proc);
 		}
+		
+		List<Procedure> sorted = new ArrayList<Procedure>();
+        Set<Procedure> unmarked = new HashSet<Procedure>(Arrays.asList(prog.getProcedureArray()));
+        
+        while (!unmarked.isEmpty()) {
+            Set<Procedure> tmp = new HashSet<Procedure>();
+            visit(null, unmarked.iterator().next(), unmarked, sorted, tmp, names);
+        }
 
-		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
-			Procedure proc = prog.getProcedureArray(i);
+        for (Procedure proc : sorted) {
 			procedure(proc, scope);
 		}
-
 	}
 
 
-	public StringTemplate program(Program prog) throws CompilationException {
+    private void visit(Procedure self, Procedure proc, Set<Procedure> unmarked,
+            List<Procedure> sorted, Set<Procedure> tmp, Map<String, Procedure> names) throws CompilationException {
+    	if (tmp.contains(proc)) {
+    	    if (proc == self) {
+    	        // immediate recursion allowed
+    	        return;
+    	    }
+    	    else {
+    	        throw new CompilationException("Circular procedure dependency detected");
+    	    }
+    	}
+    	if (unmarked.contains(proc)) {
+    		tmp.add(proc);
+    		Set<String> dupes = new HashSet<String>();
+    		for (Call c : getCalls(proc, new ArrayList<Call>())) {
+    			String name = c.getProc().getLocalPart();
+    			if (dupes.contains(name)) {
+    				continue;
+    			}
+    			dupes.add(name);
+    			if (names.containsKey(name)) {
+    				visit(proc, names.get(name), unmarked, sorted, tmp, names);
+    			}
+    			else {
+    				// handled later
+    			}
+    		}
+    		unmarked.remove(proc);
+    		sorted.add(proc);
+    	}
+    }
+
+    private List<Call> getCalls(XmlObject o, List<Call> l) {
+        XmlCursor cursor = o.newCursor();
+        cursor.selectPath("*");
+        while (cursor.toNextSelection()) {
+            XmlObject child = cursor.getObject();
+            if (child instanceof Call) {
+            	l.add((Call) child);
+            }
+            getCalls(child, l);
+        }
+        return l;
+    }
+
+    public StringTemplate program(Program prog) throws CompilationException {
 		VariableScope scope = new VariableScope(this, null, prog);
 		scope.bodyTemplate = template("program");
 
@@ -326,7 +380,7 @@ public class Karajan {
 		StringTemplate procST = template("procedure");
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
 		procST.setAttribute("line", getLine(proc));
-		procST.setAttribute("name", mangle(proc.getName()));
+		procST.setAttribute("name", proc.getName());
 		for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
 			FormalParameter param = proc.getOutputArray(i);
 			StringTemplate paramST = parameter(param, innerScope);
@@ -373,52 +427,7 @@ public class Karajan {
         }
     }
     
-
-    /**
-     * Convert to a case-insensitive representation by
-     * pre-pending a '_' to upper case letters. If the
-     * original name contains a '_' it will be converted 
-     * to "__" (two underscores).
-     */
-	public static String mangle(String name) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
-            if (Character.isUpperCase(c) || c == '_') {
-                sb.append('_');
-            }
-            sb.append(Character.toLowerCase(c));
-        }
-        return sb.toString();
-    }
-	
-	public static String demangle(String name) {
-        StringBuilder sb = new StringBuilder();
-        boolean upper = false;
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
-            if (c == '_') {
-            	if (upper) {
-            	    sb.append("_");
-            	    upper = false;
-            	}
-            	else {
-            	    upper = true;
-            	}
-            }
-            else {
-            	if (upper) {
-            		upper = false;
-            		sb.append(Character.toUpperCase(c));
-            	}
-            	else {
-            	    sb.append(Character.toLowerCase(c));
-            	}
-            }
-        }
-        return sb.toString();
-    }
-
+  
     public StringTemplate parameter(FormalParameter param, VariableScope scope) throws CompilationException {
 		StringTemplate paramST = new StringTemplate("parameter");
 		StringTemplate typeST = new StringTemplate("type");
@@ -456,7 +465,7 @@ public class Karajan {
 		if (!var.isNil()) {
 			if (var.getFile() != null) {
 				StringTemplate fileST = new StringTemplate("file");
-				fileST.setAttribute("name", escapeQuotes(var.getFile().getName()));
+				fileST.setAttribute("name", escape(var.getFile().getName()));
 				fileST.defineFormalArgument("params");
 				variableST.setAttribute("file", fileST);
 			}
@@ -465,7 +474,9 @@ public class Karajan {
 
 			if (mapping != null) {
 				StringTemplate mappingST = new StringTemplate("mapping");
-				mappingST.setAttribute("descriptor", mapping.getDescriptor());
+				String mapperType = mapping.getDescriptor();
+				mappingST.setAttribute("descriptor", mapperType);
+				checkMapperParams(mapperType, mapping);
 				for (int i = 0; i < mapping.sizeOfParamArray(); i++) {
 					Param param = mapping.getParamArray(i);
 					mappingST.setAttribute("params", mappingParameter(param, scope));
@@ -478,10 +489,10 @@ public class Karajan {
 			if (!isPrimitiveOrArrayOfPrimitive(var.getType().getLocalPart())) {
     			StringTemplate mappingST = new StringTemplate("mapping");
     			mappingST.setAttribute("descriptor", "concurrent_mapper");
-    			StringTemplate paramST = template("vdl_parameter");
+    			StringTemplate paramST = template("swift_parameter");
     			paramST.setAttribute("name", "prefix");
-    			paramST.setAttribute("expr", var.getName() + "-"
-    					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
+    			paramST.setAttribute("expr", "\"" + var.getName() + "-"
+    					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString() + "\"");
     			mappingST.setAttribute("params", paramST);
     			variableST.setAttribute("mapping", mappingST);
     			variableST.setAttribute("nil", Boolean.TRUE);
@@ -491,8 +502,29 @@ public class Karajan {
 		scope.bodyTemplate.setAttribute("declarations", variableST);
 	}
 
+    private void checkMapperParams(String mapperType, Mapping mapping) throws CompilationException {
+        if (!MapperFactory.isValidMapperType(mapperType)) {
+            throw new CompilationException("Unknown mapper type: '" + mapperType + "'");
+        }
+        
+        Set<String> validParams = MapperFactory.getValidParams(mapperType);
+        if (validParams == null && mapping.sizeOfParamArray() > 0) {
+            throw new CompilationException(mapperType + " does not support any parameters");
+        }
+        if (validParams.contains("*")) {
+            // mapper accepts any parameter (e.g. external_mapper)
+            return;
+        }
+        for (int i = 0; i < mapping.sizeOfParamArray(); i++) {
+            Param param = mapping.getParamArray(i);
+            if (!validParams.contains(param.getName())) {
+                throw new CompilationException(mapperType + " does not support a '" + param.getName() + "' parameter");
+            }
+        }
+    }
+
     private StringTemplate mappingParameter(Param param, VariableScope scope) throws CompilationException {
-        StringTemplate paramST = template("vdl_parameter");
+        StringTemplate paramST = template("swift_parameter");
         paramST.setAttribute("name", param.getName());
         Node expressionDOM = param.getAbstractExpression().getDomNode();
         String namespaceURI = expressionDOM.getNamespaceURI();
@@ -508,7 +540,7 @@ public class Karajan {
             // TODO factorise this and other code in variable()?
             StringTemplate pmappingST = new StringTemplate("mapping");
             pmappingST.setAttribute("descriptor", "concurrent_mapper");
-            StringTemplate pparamST = template("vdl_parameter");
+            StringTemplate pparamST = template("swift_parameter");
             pparamST.setAttribute("name", "prefix");
             pparamST.setAttribute("expr", parameterVariableName + "-" + 
                 UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
@@ -529,7 +561,7 @@ public class Karajan {
             if (param.getAbstractExpression().getDomNode().getNodeName().equals("stringConstant")) {
                 StringTemplate valueST = template("sConst");
                 valueST.setAttribute("innervalue", param.getAbstractExpression().getDomNode().getFirstChild().getNodeValue());
-                paramST.setAttribute("expr",valueST);
+                paramST.setAttribute("expr", valueST);
             }
             else {
                 paramST.setAttribute("expr",variableReferenceST);
@@ -694,7 +726,8 @@ public class Karajan {
 			ProcedureSignature proc = proceduresMap.get(procName);
 			
 			if (proc.isDeprecated()) {
-			    /* warn(call, "Procedure " + procName + " is deprecated"); */
+			    Warnings.warn(Warnings.Type.DEPRECATION, 
+			        call, "Procedure " + procName + " is deprecated");
 			}
 			
 			StringTemplate callST;
@@ -706,7 +739,7 @@ public class Karajan {
 				throw new CompilationException
 				("Unknown procedure invocation mode "+proc.getInvocationMode());
 			}
-			callST.setAttribute("func", mangle(procName));
+			callST.setAttribute("func", procName);
 			callST.setAttribute("line", getLine(call));
 			/* Does number of input arguments match */
 			for (int i = 0; i < proc.sizeOfInputArray(); i++) {
@@ -744,35 +777,63 @@ public class Karajan {
 					callST.setAttribute("inputs", argST);
 				}
 			} else if (keywordArgsInput) {
-				/* if ALL arguments are specified by name=value */
-				int noOfMandArgs = 0;
-				for (int i = 0; i < call.sizeOfInputArray(); i++) {
-					ActualParameter input = call.getInputArray(i);
-					StringTemplate argST = actualParameter(input, scope);
+			    /* if ALL arguments are specified by name=value */
+                /* Re-order all (which re-orders positionals), then pass optionals by keyword */
+                ActualParameter[] actuals = new ActualParameter[proc.sizeOfInputArray()];
+                for (int i = 0; i < call.sizeOfInputArray(); i++) {
+                    ActualParameter actual = call.getInputArray(i);
+                    boolean found = false;
+                    for (int j = 0; j < proc.sizeOfInputArray(); j++) {
+                        FormalArgumentSignature formal = proc.getInputArray(j);
+                        if (actual.getBind().equals(formal.getName())) {
+                            actuals[j] = actual;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        throw new CompilationException("Formal argument " + actual.getBind() + " doesn't exist");
+                    }
+                }
+                
+                int noOfMandArgs = 0;
+                for (ActualParameter actual : actuals) {
+                    if (actual == null) {
+                        // an optional formal parameter with no actual parameter
+                        continue;
+                    }
+					FormalArgumentSignature formal = inArgs.get(actual.getBind());
+					
+					StringTemplate argST;
+					if (formal.isOptional()) {
+                        argST = actualParameter(actual, formal.getName(), scope);
+                    }
+                    else {
+                        argST = actualParameter(actual, scope);
+                    }
 					callST.setAttribute("inputs", argST);
 
-					if (!inArgs.containsKey(input.getBind()))
-						throw new CompilationException("Formal argument " + input.getBind() + " doesn't exist");
-					FormalArgumentSignature formalArg = inArgs.get(input.getBind());
-					String formalType = formalArg.getType();
+					String formalType = formal.getType();
 					String actualType = datatype(argST);
-					if (!formalArg.isAnyType() && !actualType.equals(formalType))
-						throw new CompilationException("Wrong type for parameter number " + i +
-								", expected " + formalType + ", got " + actualType);
+					if (!formal.isAnyType() && !actualType.equals(formalType))
+						throw new CompilationException("Wrong type for '" + formal.getName() + "' parameter;" +
+								" expected " + formalType + ", got " + actualType);
 
-					if (!formalArg.isOptional())
+					if (!formal.isOptional()) {
 						noOfMandArgs++;
+					}
 				}
-				if (!proc.getAnyNumOfInputArgs() && noOfMandArgs < proc.sizeOfInputArray() - noOfOptInArgs)
+				if (!proc.getAnyNumOfInputArgs() && noOfMandArgs < proc.sizeOfInputArray() - noOfOptInArgs) {
 					throw new CompilationException("Mandatory argument missing");
+				}
 			} else { /* Positional arguments */
 				/* Checking types of mandatory arguments */
 				for (int i = 0; i < proc.sizeOfInputArray() - noOfOptInArgs; i++) {
 					ActualParameter input = call.getInputArray(i);
+					FormalArgumentSignature formalArg = proceduresMap.get(procName).getInputArray(i);
 					StringTemplate argST = actualParameter(input, scope);
 					callST.setAttribute("inputs", argST);
-
-					FormalArgumentSignature formalArg = proceduresMap.get(procName).getInputArray(i);
+					
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -782,13 +843,15 @@ public class Karajan {
 				/* Checking types of optional arguments */
 				for (int i = proc.sizeOfInputArray() - noOfOptInArgs; i < call.sizeOfInputArray(); i++) {
 					ActualParameter input = call.getInputArray(i);
-					StringTemplate argST = actualParameter(input, scope);
-					callST.setAttribute("inputs", argST);
 
 					String formalName = input.getBind();
 					if (!inArgs.containsKey(formalName))
 						throw new CompilationException("Formal argument " + formalName + " doesn't exist");
 					FormalArgumentSignature formalArg = inArgs.get(formalName);
+					
+					StringTemplate argST = actualParameter(input, formalArg.getName(), scope);
+                    callST.setAttribute("inputs", argST);
+					
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -815,21 +878,35 @@ public class Karajan {
 			}
 			if (keywordArgsOutput) {
 				/* if ALL arguments are specified by name=value */
-				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
-					ActualParameter output = call.getOutputArray(i);
-					StringTemplate argST = actualParameter(output, scope);
+			    /* Re-order to match the formal output args */
+			    ActualParameter[] actuals = new ActualParameter[proc.sizeOfOutputArray()];
+			    for (int i = 0; i < call.sizeOfOutputArray(); i++) {
+			        ActualParameter actual = call.getOutputArray(i);
+			        boolean found = false;
+			        for (int j = 0; j < proc.sizeOfOutputArray(); j++) {
+			            FormalArgumentSignature formal = proc.getOutputArray(j);
+			            if (actual.getBind().equals(formal.getName())) {
+			                actuals[j] = actual;
+			                found = true;
+			                break;
+			            }
+			        }
+			        if (!found) {
+			            throw new CompilationException("Formal argument " + actual.getBind() + " doesn't exist");
+			        }
+			    }
+				for (ActualParameter actual : actuals) {
+					StringTemplate argST = actualParameter(actual, null, scope);
 					callST.setAttribute("outputs", argST);
 
-					if (!outArgs.containsKey(output.getBind()))
-						throw new CompilationException("Formal argument " + output.getBind() + " doesn't exist");
-					FormalArgumentSignature formalArg = outArgs.get(output.getBind());
+					FormalArgumentSignature formalArg = outArgs.get(actual.getBind());
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
-						throw new CompilationException("Wrong type for output parameter number " + i +
-								", expected " + formalType + ", got " + actualType);
+						throw new CompilationException("Wrong type for output parameter '" + actual.getBind() +
+								"', expected " + formalType + ", got " + actualType);
 
-					addWriterToScope(scope, call.getOutputArray(i).getAbstractExpression(), call, callST);
+					addWriterToScope(scope, actual.getAbstractExpression(), call, callST);
 				}
 			} else { /* Positional arguments */
 				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
@@ -908,7 +985,7 @@ public class Karajan {
     }
 
     public void iterateStat(Iterate iterate, VariableScope scope) throws CompilationException {
-		VariableScope loopScope = new VariableScope(this, scope, EnclosureType.LOOP, iterate);
+		VariableScope loopScope = new VariableScope(this, scope, EnclosureType.ALL, iterate);
 		VariableScope innerScope = new VariableScope(this, loopScope, EnclosureType.LOOP, iterate);
 
 		loopScope.addVariable(iterate.getVar(), "int", "Iteration variable", iterate);
@@ -1059,13 +1136,23 @@ public class Karajan {
 	}
 	
 	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope) throws CompilationException {
-	    return actualParameter(arg, scope, false);
+        return actualParameter(arg, null, scope, false);
+    }
+	
+	public StringTemplate actualParameter(ActualParameter arg, String bind, VariableScope scope) throws CompilationException {
+	    return actualParameter(arg, bind, scope, false);
 	}
-
+	
 	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope, boolean lvalue) throws CompilationException {
+        return actualParameter(arg, null, scope, lvalue);
+    }
+
+	public StringTemplate actualParameter(ActualParameter arg, String bind, VariableScope scope, boolean lvalue) throws CompilationException {
 		StringTemplate argST = template("call_arg");
 		StringTemplate expST = expressionToKarajan(arg.getAbstractExpression(), scope, lvalue);
-		argST.setAttribute("bind", arg.getBind());
+		if (bind != null) {
+		    argST.setAttribute("bind", arg.getBind());
+		}
 		argST.setAttribute("expr", expST);
 		argST.setAttribute("datatype", datatype(expST));
 		return argST;
@@ -1124,7 +1211,7 @@ public class Karajan {
 		Profile[] profiles = app.getProfileArray();
 		if (profiles.length == 0) 
 			return;
-		StringTemplate attributes = template("vdl_attributes");
+		StringTemplate attributes = template("swift_attributes");
 		for (Profile profile : profiles) { 
 			XmlObject xmlKey   = profile.getAbstractExpressionArray(0);
 			XmlObject xmlValue = profile.getAbstractExpressionArray(1);
@@ -1146,15 +1233,15 @@ public class Karajan {
 	  * that happens.
 	  */
 
-	public StringTemplate function(Function func, VariableScope scope) throws CompilationException {
+	public StringTemplate function(XmlObject func, String name, XmlObject[] arguments, VariableScope scope) 
+	        throws CompilationException {
 		StringTemplate funcST = template("function");
-		funcST.setAttribute("name", mangle(func.getName()));
+		funcST.setAttribute("name", name);
 		funcST.setAttribute("line", getLine(func));
-		ProcedureSignature funcSignature =  functionsMap.get(func.getName());
-		if(funcSignature == null) {
-			throw new CompilationException("Unknown function: @"+func.getName());
+		ProcedureSignature funcSignature = functionsMap.get(name);
+		if (funcSignature == null) {
+			throw new CompilationException("Unknown function: @" + name);
 		}
-		XmlObject[] arguments = func.getAbstractExpressionArray();
 		int noOfOptInArgs = 0;
 		for (int i = 0; i < funcSignature.sizeOfInputArray(); i++) {
 			if (funcSignature.getInputArray(i).isOptional())
@@ -1500,55 +1587,103 @@ public class Karajan {
 			return st;
 		} else if (expressionQName.equals(FUNCTION_EXPR)) {
 			Function f = (Function) expression;
-			StringTemplate st = function(f, scope);
-			/* Set function output type */
-			String name = f.getName();
-			ProcedureSignature funcSignature = functionsMap.get(name);
-			if (funcSignature != null) {
-				/* Functions have only one output parameter */
-				st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
-				if (funcSignature.isDeprecated()) {
-				    Warnings.warn(f, "Function " + name + " is deprecated");
-				}
-			} else
-				throw new CompilationException("Function " + name + " is not defined.");
-			return st;
+			return functionExpr(f, scope);
 		} else if (expressionQName.equals(CALL_EXPR)) {
 		    Call c = (Call) expression;
-		    c.addNewOutput();
-		    VariableScope subscope = new VariableScope(this, scope, c);
-		    VariableReferenceDocument ref = VariableReferenceDocument.Factory.newInstance();
-		    ref.setVariableReference("swift#callintermediate");
-		    c.getOutputArray(0).set(ref);
 		    String name = c.getProc().getLocalPart();
-		    ProcedureSignature funcSignature = proceduresMap.get(name);
-
-		    if (funcSignature == null) {
-                throw new CompilationException("Procedure " + name + " is not defined.");
-            }
-
-		    if (funcSignature.sizeOfOutputArray() != 1) {
-		        throw new CompilationException("Procedure " + name + " must have exactly one " +
-		        		"return value to be used in an expression.");
-		    }
 		    
-		    Warnings.warn(c, "Procedure " + name + " is deprecated");
-
-		    StringTemplate call = template("callexpr");
-
-		    String type = funcSignature.getOutputArray(0).getType();
-		    subscope.addInternalVariable("swift#callintermediate", type, null);
-
-		    call.setAttribute("datatype", type);
-		    call.setAttribute("call", call(c, subscope, true));
-		    call.setAttribute("prefix", UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
-		    return call;
+		    if (proceduresMap.containsKey(name)) {
+		        return callExpr(c, scope);
+		    }
+		    else {
+		        if (functionsMap.containsKey(name)) {
+		            return functionExpr(c, scope);
+		        }
+		        else {
+		            throw new CompilationException("No function or procedure '" + name + "' found.");
+		        }
+		    }
 		} else {
 			throw new CompilationException("unknown expression implemented by class "+expression.getClass()+" with node name "+expressionQName +" and with content "+expression);
 		}
 		// perhaps one big throw catch block surrounding body of this method
 		// which shows Compiler Exception and line number of error
 	}
+
+    private StringTemplate callExpr(Call c, VariableScope scope) throws CompilationException {
+        c.addNewOutput();
+        VariableScope subscope = new VariableScope(this, scope, c);
+        VariableReferenceDocument ref = VariableReferenceDocument.Factory.newInstance();
+        ref.setVariableReference("swift#callintermediate");
+        c.getOutputArray(0).set(ref);
+        String name = c.getProc().getLocalPart();
+        ProcedureSignature funcSignature = proceduresMap.get(name);
+
+        if (funcSignature.sizeOfOutputArray() != 1) {
+            throw new CompilationException("Procedure " + name + " must have exactly one " +
+                    "return value to be used in an expression.");
+        }
+        
+        StringTemplate call = template("callexpr");
+
+        String type = funcSignature.getOutputArray(0).getType();
+        subscope.addInternalVariable("swift#callintermediate", type, null);
+
+        call.setAttribute("datatype", type);
+        call.setAttribute("call", call(c, subscope, true));
+        call.setAttribute("prefix", UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
+        return call;
+    }
+    
+    private StringTemplate functionExpr(Call c, VariableScope scope) throws CompilationException {
+        String name = c.getProc().getLocalPart();
+        ProcedureSignature funcSignature = functionsMap.get(name);
+        if (funcSignature == null) {
+            throw new CompilationException("Function " + name + " is not defined.");
+        }
+        
+        XmlObject[] params = new XmlObject[c.getInputArray().length];
+        for (int i = 0; i < params.length; i++) {
+            params[i] = c.getInputArray(i).getAbstractExpression();
+        }
+        StringTemplate st = function(c, name, params, scope);
+        /* Set function output type */
+        /* Functions have only one output parameter */
+        st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
+        if (funcSignature.isDeprecated()) {
+            Warnings.warn(Warnings.Type.DEPRECATION, 
+                c, "Function " + name + " is deprecated");
+        }
+        
+        return st;
+    }
+
+    private StringTemplate functionExpr(Function f, VariableScope scope) throws CompilationException {
+        String name = f.getName();
+        if (name.equals("")) {
+            name = "filename";
+        }
+        else {
+            // the @var shortcut for filename(var) is not deprecated
+            Warnings.warn(Warnings.Type.DEPRECATION, 
+                "The @ syntax for function invocation is deprecated");
+        }
+        ProcedureSignature funcSignature = functionsMap.get(name);
+        if (funcSignature == null) {
+            throw new CompilationException("Function " + name + " is not defined.");
+        }
+        StringTemplate st = function(f, name, f.getAbstractExpressionArray(), scope);
+        /* Set function output type */    
+        /* Functions have only one output parameter */
+        st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
+        
+        if (funcSignature.isDeprecated()) {
+            Warnings.warn(Warnings.Type.DEPRECATION, 
+                f, "Function " + name + " is deprecated");
+        }
+    
+        return st;
+    }
 
     void checkTypesInCondExpr(String op, String left, String right, StringTemplate st)
 			throws CompilationException {
@@ -1629,7 +1764,7 @@ public class Karajan {
 		for (String key : stringInternMap.keySet()) {
 			String variableName = stringInternMap.get(key);
 			StringTemplate st = template("sConst");
-			st.setAttribute("innervalue",escapeQuotesAndMarkup(key));
+			st.setAttribute("innervalue",escape(key));
 			StringTemplate vt = template("globalConstant");
 			vt.setAttribute("name",variableName);
 			vt.setAttribute("expr",st);
@@ -1657,27 +1792,16 @@ public class Karajan {
 		}
 	}
 
-	String escapeQuotes(String in) {
-		return in.replaceAll("\"", "&quot;");
-	}
 	
-	String escapeQuotesAndMarkup(String in) {
+	String escape(String in) {
 	    StringBuilder sb = new StringBuilder();
 	    for (int i = 0; i < in.length(); i++) {
 	        char c = in.charAt(i);
 	        switch (c) {
-	            case '<':
-	                sb.append("&lt;");
-	                break;
-	            case '>':
-	                sb.append("&gt;");
-	                break;
 	            case '"':
-	                sb.append("&quot;");
+	                sb.append("\\\"");
 	                break;
-	            case '&':
-	                sb.append("&amp;");
-	                break;
+	            
 	            default:
 	                sb.append(c);
 	        }

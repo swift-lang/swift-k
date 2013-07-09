@@ -19,32 +19,56 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import k.rt.Context;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.util.VDL2Config;
 
 /** this is an icky class that does too much with globals, but is for
 proof of concept. */
 
-public class RuntimeStats extends FunctionsCollection {
+public class RuntimeStats {
 
-	public static final String TICKER = "#swift-runtime-progress-ticker";
-	public static final String PROGRESS = "#swift-runtime-progress";
+    public static final boolean TICKER_DISABLED;
+    
+    static{
+        boolean disabled;
+        try{
+            disabled = "true".equalsIgnoreCase(VDL2Config.getConfig().getProperty("ticker.disable"));
+        }
+        catch (Exception e) {
+            disabled = false;
+        }
+        TICKER_DISABLED = disabled;
+    }
+    
+	public static final String TICKER = "SWIFT_TICKER";
 
-	public static final Arg PA_STATE = new Arg.Positional("state");
     //formatter for timestamp against std.err lines
 	public static SimpleDateFormat formatter = 
 		new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 	public static final int MIN_PERIOD_MS=1000;
-	public static final int MAX_PERIOD_MS=30000;
+	public static final int MAX_PERIOD_MS=1000;
 
 	public static final String[] preferredOutputOrder = {
 		"uninitialized",
@@ -62,83 +86,137 @@ public class RuntimeStats extends FunctionsCollection {
 		"Finished in previous run",
 		"Finished successfully"
 	};
-
-	static {
-		setArguments("vdl_startprogressticker", new Arg[0]);
-		setArguments("vdl_stopprogressticker", new Arg[0]);
-		setArguments("vdl_setprogress", new Arg[] { PA_STATE } );
-		setArguments("vdl_initprogressstate", new Arg[] { PA_STATE });
-	}
-	
-	public static void setTicker(VariableStack stack, ProgressTicker ticker) {
-	    stack.setGlobal(TICKER, ticker);
-	}
-	
-	public static ProgressTicker getTicker(VariableStack stack) {
-		return (ProgressTicker) stack.getGlobal(TICKER);
-	}
-	
-	public static void setProgress(VariableStack stack, RuntimeProgress p) {
-		stack.parentFrame().setVar(PROGRESS, p);
-	}
-
-	public static RuntimeProgress getProgress(VariableStack stack) throws VariableNotFoundException {
-		return (RuntimeProgress) stack.getDeepVar(PROGRESS);
-	}
-
-	public Object vdl_startprogressticker(VariableStack stack) throws ExecutionException {
-		ProgressTicker t = new ProgressTicker();
-		t.setDaemon(true);
-		t.start();
-		setTicker(stack, t);
 		
-		// Allow user to reformat output date
-		String format;
-		try {
-			format = VDL2Config.getDefaultConfig().getTickerDateFormat();
-		} 
-		catch (IOException e) {
-			throw new ExecutionException(e);
-		}
-		if (format != null && format.length() > 0)
-			formatter = 
-				new SimpleDateFormat(format);
-		return null;
-	}
+	public static class StartProgressTicker extends Node {
+	    private VarRef<Context> context;
 
-	public Object vdl_setprogress(VariableStack stack) throws ExecutionException {
-		setProgress(stack, TypeUtil.toString(PA_STATE.getValue(stack)));
-		return null;
-	}
+        @Override
+        public Node compile(WrapperNode w, Scope scope)
+                throws CompilationException {
+            super.compile(w, scope);
+            context = scope.getVarRef("#context");
+            return TICKER_DISABLED ? null : this;
+        }
 
-	static public void setProgress(VariableStack stack, String newState) throws ExecutionException {
-	    RuntimeProgress p = getProgress(stack);
-	    ProgressTicker t = getTicker(stack);
-	    synchronized(t) {
-	        t.dec(p.status);
-	        t.inc(newState);
+        @Override
+        public void run(LWThread thr) {
+            ProgressTicker t = new ProgressTicker();
+            t.setDaemon(true);
+            t.start();
+            context.getValue(thr.getStack()).setAttribute(TICKER, t);
+            // Allow user to reformat output date
+            String format;
+            try {
+                format = VDL2Config.getDefaultConfig().getTickerDateFormat();
+            } 
+            catch (IOException e) {
+                throw new ExecutionException(this, e);
+            }
+            if (format != null && format.length() > 0) {
+                formatter = new SimpleDateFormat(format);
+            }
+        }
+	}
+	
+	public static class InitProgressState extends Node {
+	    private VarRef<Context> context;
+	    private ChannelRef<Object> cr_vargs;
+	    
+	    @Override
+        public Node compile(WrapperNode w, Scope scope)
+                throws CompilationException {
+            super.compile(w, scope);
+            context = scope.getVarRef("#context");
+            Var.Channel r = scope.lookupChannel("...");
+            r.appendDynamic();
+            cr_vargs = scope.getChannelRef(r);
+            return TICKER_DISABLED ? null : this;
+        }
+
+        @Override
+        public void run(LWThread thr) {
+            ProgressState ps = new ProgressState();
+            ps.crt = "Initializing";
+            Stack stack = thr.getStack();
+            ((ProgressTicker) context.getValue(stack).getAttribute(TICKER)).addState(ps);
+            cr_vargs.get(stack).add(ps);
+        }
+	}
+	
+	public static class SetProgress extends InternalFunction {
+        private ArgRef<ProgressState> ps;
+        private ArgRef<String> state;
+        
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("ps", "state"));
+        }
+        
+        @Override
+        protected void runBody(LWThread thr) {
+            Stack stack = thr.getStack();
+            ps.getValue(stack).crt = state.getValue(stack);
+        }
+    }
+
+	private static class MutableInt {
+	    private int value;
+	    
+	    public MutableInt() {
+	        value = 0;
 	    }
-		p.status = newState;
-		t.dumpState();
+	    
+	    public MutableInt(int value) {
+	        this.value = value;
+	    }
+	    
+	    public int getValue() {
+	        return value;
+	    }
+	    
+	    public void setValue(int value) {
+	        this.value = value;
+	    }
+	    
+	    public void inc() {
+	        value++;
+	    }
+	    
+	    public String toString() {
+	        return String.valueOf(value);
+	    }
 	}
 
-	public Object vdl_initprogressstate(VariableStack stack) throws ExecutionException {
-		RuntimeProgress rp = new RuntimeProgress();
-		ProgressTicker p = getTicker(stack);
-		setProgress(stack, rp);
-		rp.status = "Initializing";
-		synchronized(p) {
-		    p.inc(rp.status);
-		}
-		p.dumpState();
-		return null;
-	}
+	public static class StopProgressTicker extends Node {
+        private VarRef<Context> context;
 
-	public synchronized Object vdl_stopprogressticker(VariableStack stack) throws ExecutionException {
-		ProgressTicker p = getTicker(stack);
-		p.finalDumpState();
-		p.shutdown();
-		return null;
+        @Override
+        public Node compile(WrapperNode w, Scope scope)
+                throws CompilationException {
+            super.compile(w, scope);
+            context = scope.getVarRef("#context");
+            return TICKER_DISABLED ? null : this;
+        }
+
+        @Override
+        public void run(LWThread thr) {
+        	ProgressTicker t = (ProgressTicker) context.getValue(thr.getStack()).getAttribute(TICKER);
+            t.finalDumpState();
+            t.shutdown();
+        }
+    }
+
+	
+	public static class ProgressState {
+	    private String crt;
+
+        public void setState(String state) {
+            this.crt = state;
+        }
+        
+        public String toString() {
+            return "ProgressState: " + crt; 
+        }
 	}
 
 
@@ -146,7 +224,7 @@ public class RuntimeStats extends FunctionsCollection {
 	    
 	    public static final Logger logger = Logger.getLogger(ProgressTicker.class);
 
-		private Map<String, Integer> counts;
+		private Set<ProgressState> states;
 
 		long start;
 		long lastDumpTime = 0;
@@ -157,7 +235,7 @@ public class RuntimeStats extends FunctionsCollection {
 		
 		public ProgressTicker() {
 			super("Progress ticker");
-			counts = new HashMap<String, Integer>();
+			states = new HashSet<ProgressState>();
 			try {
 				if ("true".equalsIgnoreCase(VDL2Config.getConfig().getProperty("ticker.disable"))) {
 					logger.info("Ticker disabled in configuration file");
@@ -170,6 +248,12 @@ public class RuntimeStats extends FunctionsCollection {
 				logger.debug("Could not read swift properties", e);
 			}
 			start = System.currentTimeMillis();
+		}
+		
+		public void addState(ProgressState ps) {
+			synchronized(states) {
+			    states.add(ps);
+			}
 		}
 
 		public void run() {
@@ -186,29 +270,7 @@ public class RuntimeStats extends FunctionsCollection {
 				}
 			}
 		}
-		
-		public void inc(String state) {
-		    Integer crt = counts.get(state);
-		    if (crt == null) {
-		        counts.put(state, 1);
-		    }
-		    else {
-		        counts.put(state, crt + 1);
-		    }
-		}
-		
-		public void dec(String state) {
-            Integer crt = counts.get(state);
-            if (crt != null) {
-                if (crt == 1) {
-                    counts.remove(state);
-                }
-                else {
-                    counts.put(state, crt - 1);
-                }
-            }
-        }
-		
+				
 		void shutdown() {
 		    shutdown = true;
 		}
@@ -230,12 +292,33 @@ public class RuntimeStats extends FunctionsCollection {
 			printStates("Final status:");
 		}
 		
-		public synchronized Map<String, Integer> getSummary() {
-            return new HashMap<String, Integer>(counts);
+		private Map<String, MutableInt> getSummary() {
+			List<ProgressState> states;
+			
+			synchronized(this.states) {
+				states = new ArrayList<ProgressState>(this.states);
+			}
+		    Map<String, MutableInt> m = new HashMap<String, MutableInt>();
+
+	        for (ProgressState s : states) {
+	            inc(m, s);
+	        }
+		    return m;
+		}
+				
+		private void inc(Map<String, MutableInt> m, ProgressState s) {
+		    String v = s.crt;
+		    MutableInt i = m.get(v);
+		    if (i == null) {
+		        i = new MutableInt();
+		        m.put(v, i);
+		    }
+		    
+		    i.inc();
         }
-		
-		void printStates(String prefix) {
-			Map<String, Integer> summary = getSummary();
+
+        synchronized void printStates(String prefix) {
+			Map<String, MutableInt> summary = getSummary();
 			
 			StringBuilder sb = new StringBuilder();
 
@@ -248,7 +331,7 @@ public class RuntimeStats extends FunctionsCollection {
 						
 			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
 				String key = preferredOutputOrder[pos];
-				Integer value = summary.get(key);
+				MutableInt value = summary.get(key);
 				if(value != null) {
 				    sb.append("  ");
 				    sb.append(key);
@@ -258,7 +341,7 @@ public class RuntimeStats extends FunctionsCollection {
 				summary.remove(key);
 			}
 
-			for (Map.Entry<String, Integer> s : summary.entrySet()) {
+			for (Map.Entry<String, MutableInt> s : summary.entrySet()) {
 			    sb.append("  ");
 			    sb.append(s.getKey());
 			    sb.append(":");
@@ -273,9 +356,5 @@ public class RuntimeStats extends FunctionsCollection {
 			}
 		}
 
-	}
-
-	class RuntimeProgress {
-		String status = "uninitialized";
 	}
 }

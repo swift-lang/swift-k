@@ -18,7 +18,9 @@
 
 package org.griphyn.vdl.karajan;
 
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+
+import org.globus.cog.karajan.compiled.nodes.Node;
 
 /** 
  * Generated only by SwiftScript @assert(). 
@@ -32,7 +34,7 @@ public class AssertFailedException extends ExecutionException {
    
     String message = null;
     
-	public AssertFailedException(String message) {
-		super(message);
+	public AssertFailedException(Node n, String message) {
+		super(n, message);
 	}
 }

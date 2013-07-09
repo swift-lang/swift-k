@@ -21,8 +21,7 @@
 package org.griphyn.vdl.karajan.monitor.processors;
 
 import org.apache.log4j.Level;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.griphyn.vdl.karajan.VDL2ExecutionContext;
+import org.griphyn.vdl.karajan.SwiftExecutor;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 
 public class ExecutionContextProcessor extends AbstractMessageProcessor {
@@ -32,12 +31,9 @@ public class ExecutionContextProcessor extends AbstractMessageProcessor {
 	}
 
 	public Class<?> getSupportedSource() {
-		return VDL2ExecutionContext.class;
+		return SwiftExecutor.class;
 	}
 
 	public void processMessage(SystemState state, Object message, Object details) {
-		if (message instanceof VariableStack) {
-		    state.setStack((VariableStack) message);
-		}
 	}
 }

@@ -17,11 +17,14 @@
 
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
+import k.rt.Channel;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 
 /**
@@ -34,21 +37,27 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
     3) allows for consumption of variables without display (%k); 
     4) does not impose any formatting (commas, etc.).  <br><br>
  */
-public class Tracef extends VDLFunction {
-
-    private static final Logger logger = 
-        Logger.getLogger(Tracef.class);
+public class Tracef extends SwiftFunction {
+    private static final Logger logger = Logger.getLogger(Tracef.class);
     
-    static {
-        setArguments(Tracef.class, new Arg[] { Arg.VARGS });
+    private ArgRef<AbstractDataNode> spec;
+    private ChannelRef<AbstractDataNode> c_vargs;
+
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("spec", "..."));
     }
+
     
     @Override
-    protected Object function(VariableStack stack) 
-    throws ExecutionException {
-        AbstractDataNode[] args = waitForAllVargs(stack);
-
-        String msg = Sprintf.format(args);
+    public Object function(Stack stack) {
+        AbstractDataNode hspec = this.spec.getValue(stack);
+        hspec.waitFor(this);
+        Channel<AbstractDataNode> args = c_vargs.get(stack);
+        waitForAll(this, args);
+        String spec = (String) hspec.getValue();
+     
+        String msg = Sprintf.format(spec, args);
         logger.info(msg);
         System.out.print(msg);
         return null;

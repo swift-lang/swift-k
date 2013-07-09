@@ -18,11 +18,13 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 // import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.AssertFailedException;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.type.Types;
@@ -31,36 +33,35 @@ import org.griphyn.vdl.type.Types;
     Throw AssertionException if input is false or 0. 
     Optional second argument is string message printed on failure. 
  */
-public class Assert extends VDLFunction {
-
-    //    private static final Logger logger = 
-    //    Logger.getLogger(Assert.class);
-    
-    static {
-        setArguments(Assert.class, new Arg[] { Arg.VARGS });
-    }
+public class Assert extends SwiftFunction {
+    private ArgRef<AbstractDataNode> value;
+    private ArgRef<AbstractDataNode> message;
     
     @Override
-    protected Object function(VariableStack stack) 
-    throws ExecutionException {
-        AbstractDataNode[] args = waitForAllVargs(stack);
-        String message = "";
-        
-        if (args.length == 2)
-            if (args[1].getType() == Types.STRING)
-                message = (String) args[1].getValue();
-            else
-                throw new ExecutionException
-                ("Second argument to assert() must be a String!");
-         
-        checkAssert(args[0], message);
+    protected Signature getSignature() {
+        return new Signature(params("value", "message"));
+    }
+
+    @Override
+    public Object function(Stack stack) {
+        AbstractDataNode hmessage = this.message.getValue(stack);
+        String message;
+        if (hmessage != null) {
+            hmessage.waitFor(this);
+            message = (String) hmessage.getValue();
+        }
+        else {
+            message = "Assertion failed";
+        }
+        AbstractDataNode hvalue = this.value.getValue(stack);
+        hvalue.waitFor(this);
+                 
+        checkAssert(hvalue, message);
         
         return null;
     }
 
-    private void checkAssert(DSHandle value, String message) 
-    throws ExecutionException
-    {
+    private void checkAssert(DSHandle value, String message) {
         boolean success = true; 
         if (value.getType() == Types.BOOLEAN) { 
             if (! (Boolean) value.getValue())
@@ -71,10 +72,11 @@ public class Assert extends VDLFunction {
             if (d == 0)
                 success = false;
         } 
-        else 
-            throw new ExecutionException
-            ("First argument to assert() must be boolean or int!");
-        if (! success)
-            throw new AssertFailedException(message);
+        else {
+            throw new ExecutionException(this, "First argument to assert() must be boolean or int!");
+        }
+        if (!success) {
+            throw new AssertFailedException(this, message);
+        }
     }
 }

@@ -35,7 +35,6 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.scheduler.TaskTransformer;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
-import org.globus.cog.karajan.workflow.KarajanRuntimeException;
 import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.util.FQN;
@@ -159,7 +158,7 @@ public class VDSTaskTransformer implements TaskTransformer {
 				}
 			} 
 			catch(IOException ioe) {
-				throw new KarajanRuntimeException("Could not determine wrapper invocation mode", ioe);
+				throw new RuntimeException("Could not determine wrapper invocation mode", ioe);
 			}
 		}
 
@@ -184,7 +183,7 @@ public class VDSTaskTransformer implements TaskTransformer {
 				l = tc.getTCEntries(fqn, bc.getHost(), TCType.INSTALLED);
 			}
 			catch (Exception e) {
-				throw new KarajanRuntimeException(e);
+				throw new RuntimeException(e);
 			}
 			if (l == null || l.isEmpty()) {
 				return;

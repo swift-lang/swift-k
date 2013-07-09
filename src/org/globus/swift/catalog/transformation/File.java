@@ -1155,6 +1155,8 @@ public class File
      * @param msg  the message to be logged.
      */
     protected void logMessage( String msg ) {
-        logger.debug(msg);
+    	if (logger.isDebugEnabled()) {
+    	    logger.debug(msg);
+    	}
     }
 }

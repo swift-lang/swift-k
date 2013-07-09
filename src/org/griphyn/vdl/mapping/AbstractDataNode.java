@@ -28,21 +28,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.FutureListener;
+import k.rt.FutureValue;
+import k.thr.Yield;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.Future;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-import org.griphyn.vdl.karajan.DSHandleFutureWrapper;
-import org.griphyn.vdl.karajan.FutureTracker;
-import org.griphyn.vdl.karajan.FutureWrapper;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.Loader;
+import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.util.VDL2Config;
 
 
 
-public abstract class AbstractDataNode implements DSHandle {
+public abstract class AbstractDataNode implements DSHandle, FutureValue {
+    public static final Object FILE_VALUE = new Object();
 
     static final String DATASET_URI_PREFIX = "dataset:";
 
@@ -84,8 +86,8 @@ public abstract class AbstractDataNode implements DSHandle {
     private String identifier;
     private Path pathFromRoot;
     
-    protected FutureWrapper wrapper;
     private int writeRefCount;
+    private List<FutureListener> listeners;
 
     protected AbstractDataNode(Field field) {
         this.field = field;
@@ -109,7 +111,7 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
 
-    public void init(MappingParamSet params) {
+    public void init(MappingParamSet params) throws HandleOpenException {
         throw new UnsupportedOperationException();
     }
     
@@ -132,6 +134,8 @@ public abstract class AbstractDataNode implements DSHandle {
     protected Field getField() {
         return field;
     }
+    
+    protected abstract AbstractDataNode getParentNode();
 
     /**
      * create a String representation of this node. If the node has a value,
@@ -229,6 +233,17 @@ public abstract class AbstractDataNode implements DSHandle {
         return prefix;
     }
     
+    public String getFullName() {
+        String name = getDisplayableName();
+        Path p = getPathFromRoot();
+        if (p.isEmpty()) {
+            return name;
+        }
+        else {
+            return name + "." + p;
+        }
+    }
+    
     public String getDeclarationLine() {
         String line = getRoot().getParam(MappingParam.SWIFT_LINE);
         if (line == null || line.length() == 0) {
@@ -311,8 +326,7 @@ public abstract class AbstractDataNode implements DSHandle {
         handles.put(id, handle);
     }
 
-    protected synchronized DSHandle getField(Comparable<?> key)
-        throws NoSuchFieldException {
+    public synchronized DSHandle getField(Comparable<?> key) throws NoSuchFieldException {
         DSHandle handle = handles.get(key);
         if (handle == null) {
             if (closed) {
@@ -327,8 +341,7 @@ public abstract class AbstractDataNode implements DSHandle {
         return handles.isEmpty();
     }
 
-    public DSHandle createField(Comparable<?> key)
-    throws NoSuchFieldException {
+    public DSHandle createField(Comparable<?> key) throws NoSuchFieldException {
         if (closed) {
             throw new RuntimeException("Cannot write to closed handle: " + this + " (" + key + ")");
         }
@@ -336,6 +349,19 @@ public abstract class AbstractDataNode implements DSHandle {
         return addHandle(key, newNode(getChildField(key)));
     }
     
+    @Override
+    public DSHandle createField(Path path) throws InvalidPathException {
+        if (path.size() != 1) {
+            throw new InvalidPathException("Expected a path of size 1: " + path);
+        }
+        try {
+            return createField(path.getFirst());
+        }
+        catch (NoSuchFieldException e) {
+            throw new InvalidPathException("Invalid path (" + path + ") for " + this);
+        }
+    }
+
     protected synchronized DSHandle addHandle(Comparable<?> id, DSHandle handle) {
         Object o = handles.put(id, handle);
         if (o != null) {
@@ -383,7 +409,8 @@ public abstract class AbstractDataNode implements DSHandle {
         }
     }
 
-    public Object getValue() {
+    public synchronized Object getValue() {
+        checkNoValue();
         checkDataException();
         if (field.getType().isArray()) {
             return handles;
@@ -404,16 +431,20 @@ public abstract class AbstractDataNode implements DSHandle {
     }
 
     public void setValue(Object value) {
-        if (this.closed) {
-            throw new IllegalArgumentException(this.getDisplayableName() 
-            		+ " is closed with a value of " + this.value);
+        synchronized(this) {
+            if (this.closed) {
+                throw new IllegalArgumentException(this.getFullName() 
+                		+ " is closed with a value of " + this.value);
+            }
+            if (this.value != null) {
+                throw new IllegalArgumentException(this.getFullName() 
+                		+ " is already assigned with a value of " + this.value);
+            }
+        
+            this.value = value;
+            this.closed = true;
         }
-        if (this.value != null) {
-            throw new IllegalArgumentException(this.getDisplayableName() 
-            		+ " is already assigned with a value of " + this.value);
-        }
-        this.value = value;
-        closeShallow();
+        postCloseActions();
     }
 
     public Collection<Path> getFringePaths() throws HandleOpenException {
@@ -450,7 +481,7 @@ public abstract class AbstractDataNode implements DSHandle {
             }
         }
     }
-    
+        
     public void closeShallow() {
         synchronized(this) {
             if (this.closed) {
@@ -458,6 +489,10 @@ public abstract class AbstractDataNode implements DSHandle {
             }
             this.closed = true;
         }
+        postCloseActions();
+    }
+
+    private void postCloseActions() {
         // closed
         notifyListeners();
         if (logger.isDebugEnabled()) {
@@ -623,46 +658,95 @@ public abstract class AbstractDataNode implements DSHandle {
         return DATASET_URI_PREFIX + datasetIDPartialID + ":" + datasetIDCounter;
     }
        
-    public synchronized void waitFor() {
+    public synchronized void waitFor(Node who) {
         if (!closed) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Waiting for " + this);
             }
-            throw new FutureNotYetAvailable(getFutureWrapper());
+            
+            Yield y = new FutureNotYetAvailable(this);
+            y.getState().addTraceElement(who);
+            throw y;
         }
         else {
             if (logger.isDebugEnabled()) {
                 logger.debug("Do not need to wait for " + this);
             }
+            checkNoValue();
             if (value instanceof RuntimeException) {
                 throw (RuntimeException) value;
             }
         }
     }
     
+    public synchronized void waitFor() throws OOBYield {
+        if (!closed) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Waiting for " + this);
+            }
+            
+            throw new OOBYield(new FutureNotYetAvailable(this), this);
+        }
+        else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Do not need to wait for " + this);
+            }
+            checkNoValue();
+            if (value instanceof RuntimeException) {
+                throw (RuntimeException) value;
+            }
+        }
+    }
+    
+    protected void checkNoValue() {
+        if (value == null) {
+            if (getType().isComposite()) {
+                // composite types (arrays, structs) don't usually have a value
+                return;
+            }
+            AbstractDataNode parent = getParentNode();
+            if (parent != null && parent.getType().isArray()) {
+                throw new IndexOutOfBoundsException("Invalid index [" + field.getId() + "] for " + parent.getFullName());
+            }
+            else if (getType().isPrimitive()) {
+                throw new RuntimeException(getFullName() + " has no value");
+            }
+            else {
+                throw new MissingDataException(this, getMapper().map(getPathFromRoot()));
+            }
+        }
+    }
+
     public void addListener(DSHandleListener listener) {
         throw new UnsupportedOperationException();
     }
     
-    public synchronized Future getFutureWrapper() {
-    	if (wrapper == null) {
-    		wrapper = new DSHandleFutureWrapper(this);
-    		FutureTracker.get().add(this, wrapper);
-    	}
-    	return wrapper;
-    }
-    
-    protected void notifyListeners() {
-    	FutureWrapper wrapper;
+    public void addListener(FutureListener l) {
+    	boolean closed;
+    	WaitingThreadsMonitor.addThread(l, this);
     	synchronized(this) {
-    		wrapper = this.wrapper;
-    		if (closed) {
-    		    FutureTracker.get().remove(this);
-    		    this.wrapper = null;
-    		}
+        	if (this.listeners == null) {
+        		this.listeners = new ArrayList<FutureListener>();
+        	}
+        	this.listeners.add(l);
+        	closed = this.closed;
     	}
-    	if (wrapper != null) {
-    		wrapper.notifyListeners();
+    	if (closed) {
+    		notifyListeners();
+    	}
+    }
+        
+    protected void notifyListeners() {
+    	List<FutureListener> l;
+    	synchronized(this) {
+    		l = this.listeners;
+    		this.listeners = null;
+    	}
+    	if (l != null) {
+    		for (FutureListener ll : l) {
+    			ll.futureUpdated(this);
+    			WaitingThreadsMonitor.removeThread(ll);
+    		}
     	}
     }
 
@@ -692,7 +776,7 @@ public abstract class AbstractDataNode implements DSHandle {
     @Override
     public synchronized int updateWriteRefCount(int delta) {
         this.writeRefCount += delta;
-
+       
         if (this.writeRefCount < 0) {
             throw new IllegalArgumentException("Reference count mismatch for " + this + ". Count is " + this.writeRefCount);
         }

@@ -63,8 +63,8 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 	private JTable table, header;
 	private HeaderModel hmodel;
 	private ChartModel cmodel;
-	private List jobs;
-	private Map jobmap;
+	private List<Job> jobs;
+	private Map<String, Job> jobmap;
 	private JScrollPane csp, hsp;
 	private JSpinner scalesp;
 	private long firstEvent;
@@ -74,8 +74,8 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 
 	public GanttChart() {
 		scale = 1.0 / SCALE;
-		jobs = new ArrayList();
-		jobmap = new HashMap();
+		jobs = new ArrayList<Job>();
+		jobmap = new HashMap<String, Job>();
 
 		header = new JTable() {
 			public Dimension getPreferredSize() {
@@ -127,38 +127,38 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 		repaint();
 	}
 
-	public void itemUpdated(int updateType, StatefulItem item) {
+	public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
 		if (firstEvent == 0) {
 			firstEvent = System.currentTimeMillis();
 		}
 		if (item.getItemClass().equals(StatefulItemClass.APPLICATION)) {
 			ApplicationItem ai = (ApplicationItem) item;
-			if (updateType == ITEM_ADDED) {
+			if (updateType == SystemStateListener.UpdateType.ITEM_ADDED) {
 				addJob(ai);
 			}
-			else if (updateType == ITEM_REMOVED) {
-				Job j = (Job) jobmap.get(item.getID());
+			else if (updateType == SystemStateListener.UpdateType.ITEM_REMOVED) {
+				Job j = jobmap.get(item.getID());
 				j.end();
 			}
 		}
 		else if (item.getItemClass().equals(StatefulItemClass.TASK)) {
 			TaskItem ti = (TaskItem) item;
 			if (ti.getTask() != null && item.getParent() != null) {
-				Job job = (Job) jobmap.get(item.getParent().getID());
+				Job job = jobmap.get(item.getParent().getID());
 				if (job == null) {
 					return;
 				}
 				Task task = ti.getTask();
 				if (task.getType() == Task.FILE_OPERATION) {
-					if (updateType == ITEM_ADDED) {
+					if (updateType == SystemStateListener.UpdateType.ITEM_ADDED) {
 						job.addPretask();
 					}
-					else if (updateType == ITEM_REMOVED) {
+					else if (updateType == SystemStateListener.UpdateType.ITEM_REMOVED) {
 						job.removePretask();
 					}
 				}
 				else if (task.getType() == Task.JOB_SUBMISSION) {
-					if (updateType == ITEM_UPDATED) {
+					if (updateType == SystemStateListener.UpdateType.ITEM_UPDATED) {
 						job.setJobStatus(ti.getStatus());
 						hmodel.fireTableDataChanged();
 					}
@@ -190,7 +190,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 
 		}
 
-		public Class getColumnClass(int columnIndex) {
+		public Class<?> getColumnClass(int columnIndex) {
 			return Job.class;
 		}
 
@@ -214,7 +214,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 
 		}
 
-		public Class getColumnClass(int columnIndex) {
+		public Class<?> getColumnClass(int columnIndex) {
 			return Job.class;
 		}
 
@@ -275,11 +275,11 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 
 	private class Job {
 		private ApplicationItem ai;
-		private List events;
+		private List<Event> events;
 		private int pretasks;
 
 		public Job(ApplicationItem ai) {
-			events = new ArrayList();
+			events = new ArrayList<Event>();
 			this.ai = ai;
 		}
 
@@ -411,18 +411,18 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 		}
 
 		public void paint(Graphics g) {
-			List events;
+			List<Event> events;
 			synchronized (job.events) {
-				events = new ArrayList(job.events);
+				events = new ArrayList<Event>(job.events);
 			}
 			if (events.size() == 0) {
 				return;
 			}
 			int ox = 0, ex = 0;
 			boolean endcap = false;
-			Iterator i = events.iterator();
+			Iterator<Event> i = events.iterator();
 			while (i.hasNext()) {
-				Event e = (Event) i.next();
+				Event e = i.next();
 				if (e.type == StartEvent.TYPE) {
 					ox = e.time;
 				}
@@ -452,7 +452,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 			int lx = ox;
 			i = events.iterator();
 			while (i.hasNext()) {
-				Event e = (Event) i.next();
+				Event e = i.next();
 				int x = (int) (e.time * scale);
 				// System.err.println(crt+", "+lx+", "+x);
 				if (crt != null) {

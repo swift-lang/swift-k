@@ -24,36 +24,54 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 
-public class UnwrapClosedList extends VDLFunction {
+public class UnwrapClosedList extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(UnwrapClosedList.class);
 	
-	public static final Arg.Positional PA_LIST = new Arg.Positional("list");
+	private ArgRef<List<AbstractDataNode>> list;
+	
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("list"));
+    }
 
-	static {
-		setArguments(UnwrapClosedList.class, new Arg[] { PA_LIST });
-	}
-
-	public Object function(VariableStack stack) throws ExecutionException {
-		@SuppressWarnings("unchecked")
-        List<DSHandle> l = (List<DSHandle>) PA_LIST.getValue(stack);
+	@Override
+	public Object function(Stack stack) {
+        List<AbstractDataNode> l = this.list.getValue(stack);
 		
 		List<Object> r = new ArrayList<Object>(l.size());
 		
-		for (DSHandle h : l) {
+		for (AbstractDataNode h : l) {
 		    if (h.getType().isArray()) {
+		        h.waitFor(this);
 		        Map<?, DSHandle> m = h.getArrayValue();
 		        for (DSHandle h2 : m.values()) {
-		            r.add(h2.getValue());
+		            if (h2.getType().isPrimitive()) {
+		                ((AbstractDataNode) h2).waitFor(this);
+		                r.add(h2.getValue());
+		            }
+		            else {
+		                throw new ExecutionException(this, "Cannot pass an array of non-primitives as an application parameter");
+		            }
 		        }
 		    }
-		    else {
+		    else if (h.getType().isPrimitive()) {
+		        // stagein only waits for the root of the parameter
+		        // and the fringes as returned by getFringePaths(), but
+		        // the latter only returns mapped types
+		        h.waitFor(this);
 		        r.add(h.getValue());
+		    }
+		    else {
+		        throw new ExecutionException(this, "Cannot pass a structure as an application parameter");
 		    }
 		}
 		

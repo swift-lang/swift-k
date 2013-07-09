@@ -46,7 +46,7 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 		if (!path.isArrayIndex(0)) {
 			return null;
 		}
-		String location = PARAM_LOCATION.getStringValue(this);
+		String location = getLocation();
 		Object index = path.getFirst();
 		String filename = filenames.get(index);
 		if (filename == null) {

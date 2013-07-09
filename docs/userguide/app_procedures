@@ -423,10 +423,9 @@ used with @arg to pass input parameters to a Swift script as
 floating point numbers.
 
 @toString
-~~~~~~~~
-@toString(input) will parse its input into a string. This can be
-used with @arg to pass input parameters to a Swift script as
-strings.
+~~~~~~~~~
+@toString(input) will parse its input into a string. Input can be an int, float, string,
+or boolean. 
 
 @length
 ~~~~~~

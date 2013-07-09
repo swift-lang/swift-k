@@ -9,33 +9,49 @@
  */
 package org.griphyn.vdl.engine;
 
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlObject;
-import org.w3c.dom.Node;
 
 public class Warnings {
     public static final Logger logger = Logger.getLogger(Warnings.class);
     
-    private static Set<String> warnings = new HashSet<String>();
+    public static enum Type {
+        DEPRECATION, 
+        SHADOWING, 
+        DATAFLOW
+    }
     
-    public static void warn(XmlObject obj, String msg) {
-        if (!warnings.contains(msg)) {
-            warnings.add(msg);
-            msg = "Warning: " + msg + ", at " + CompilerUtils.getLine(obj.getDomNode());
-            logger.info(msg);
-            System.err.println(msg);
+    private static Set<String> warnings = new HashSet<String>();
+    private static EnumSet<Type> enabledWarnings = EnumSet.noneOf(Type.class);
+    
+    static {
+        enabledWarnings.add(Type.DEPRECATION);
+        enabledWarnings.add(Type.DATAFLOW);
+    }
+    
+    public static void warn(Type type, XmlObject obj, String msg) {
+        if (enabledWarnings.contains(type)) {
+            if (!warnings.contains(msg)) {
+                warnings.add(msg);
+                msg = "Warning: " + msg + ", at " + CompilerUtils.getLine(obj.getDomNode());
+                logger.info(msg);
+                System.err.println(msg);
+            }
         }
     }
     
-    public static void warn(String msg) {
-        if (!warnings.contains(msg)) {
-            warnings.add(msg);
-            msg = "Warning: " + msg;
-            logger.info(msg);
-            System.err.println(msg);
+    public static void warn(Type type, String msg) {
+        if (enabledWarnings.contains(type)) {
+            if (!warnings.contains(msg)) {
+                warnings.add(msg);
+                msg = "Warning: " + msg;
+                logger.info(msg);
+                System.err.println(msg);
+            }
         }
     }
 }

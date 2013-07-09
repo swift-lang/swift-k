@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
@@ -35,13 +36,20 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 public class ConcurrentMapper extends AbstractFileMapper {
 	public static final MappingParam PARAM_THREAD_PREFIX = new MappingParam("thread_prefix", "");
 	
+	
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_THREAD_PREFIX);
+        super.getValidMappingParams(s);
+    }
+	
 	private Map<Path, PhysicalFormat> remappedPaths;
 
 	public ConcurrentMapper() {
 		super(new ConcurrentElementMapper());
 	}
 
-	public void setParams(MappingParamSet params) {
+	public void setParams(MappingParamSet params) throws HandleOpenException {
 		String prefix = PARAM_PREFIX.getStringValue(params);
 		prefix = "_concurrent/" + (prefix == null ? "" : prefix + "-") + 
 		    PARAM_THREAD_PREFIX.getValue(params);

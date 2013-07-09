@@ -25,9 +25,9 @@ import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.impl.execution.coaster.WorkerShellCommand;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.karajan.workflow.service.ProtocolException;
-import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
-import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
+import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Dialog;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Terminal;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Terminal.InputHandler;
@@ -72,7 +72,7 @@ public class WorkerTerminalInputHandler implements InputHandler {
 
     private String runcmd(String cmd) {
         try {
-            KarajanChannel channel = ChannelManager.getManager()
+            CoasterChannel channel = ChannelManager.getManager()
                 .reserveChannel(contact, cred, LocalRequestManager.INSTANCE);
             WorkerShellCommand wsc = new WorkerShellCommand(workerId, cmd);
             wsc.execute(channel);

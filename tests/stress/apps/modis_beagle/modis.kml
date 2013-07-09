@@ -1,0 +1,200 @@
+<project><!-- CACHE ID abf630aa-7a86-4f7c-8484-2439be2e7702-no-provenance -->
+  <import file="sys.xml"/>
+  <import file="scheduler.xml"/>
+  <import file="rlog.xml"/>
+  <import file="vdl.k"/>
+  <types>
+     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      	   <xs:simpleType name="imagefile">
+      	   <xs:restriction base="string"/>
+      	   </xs:simpleType>
+      	   <xs:simpleType name="landuse">
+      	   <xs:restriction base="string"/>
+      	   </xs:simpleType>
+      	   <xs:simpleType name="perlscript">
+      	   <xs:restriction base="string"/>
+      	   </xs:simpleType>
+     </xs:schema>
+  </types>
+  <global name="swift#string#17009">
+    <vdl:new type="string" value="landuse/\1.landuse.byfreq" />
+  </global>
+  <global name="swift#string#17002">
+    <vdl:new type="string" value="modisdir" />
+  </global>
+  <global name="swift#string#17007">
+    <vdl:new type="string" value="(h..v..)" />
+  </global>
+  <global name="swift#string#17000">
+    <vdl:new type="string" value="nfiles" />
+  </global>
+  <global name="swift#string#17003">
+    <vdl:new type="string" value="../data/modis/2002" />
+  </global>
+  <global name="swift#string#17005">
+    <vdl:new type="string" value=".rgb" />
+  </global>
+  <global name="swift#string#17001">
+    <vdl:new type="string" value="1000" />
+  </global>
+  <element name="get_land_use" arguments="output,input,ps" _defline="7">
+     
+     
+     
+    <unitStart name="get_land_use" line="7" type="PROCEDURE" outputs="output"/>
+    <vdl:execute>
+      <vdl:tr>perl</vdl:tr>
+      <vdl:stagein var="{input}"/>
+      <vdl:stagein var="{ps}"/>
+      <vdl:stageout var="{output}"/>
+
+      <vdl:arguments>
+        <swiftscript:filename _traceline="9">
+         <variable>ps</variable> 
+        </swiftscript:filename>
+        <swiftscript:filename _traceline="9">
+         <variable>input</variable> 
+        </swiftscript:filename>
+      </vdl:arguments>
+      <vdl:stdout>
+        <swiftscript:filename _traceline="9">
+         <variable>output</variable> 
+        </swiftscript:filename>
+      </vdl:stdout>
+    </vdl:execute>
+    <vdl:closedataset var="{output}"/>
+    <unitEnd name="get_land_use" line="7" type="PROCEDURE"/></element>
+
+  <set name="getlanduse_pl">
+        <vdl:new type="perlscript" dbgname="getlanduse_pl" _defline="5" input="true">
+          <vdl:mapping descriptor="single_file_mapper">
+            <vdl:parameter name="file" value="getlanduse.pl"/>
+          </vdl:mapping>
+        </vdl:new>
+  </set>
+   
+  <set name="nFiles">
+        <vdl:new type="int" dbgname="nFiles" waitCount="1" _defline="13"/>
+  </set>
+   
+  <set name="MODISdir">
+        <vdl:new type="string" dbgname="MODISdir" waitCount="1" _defline="14"/>
+  </set>
+   
+  <set name="swift#mapper#17004">
+        <vdl:new type="string" dbgname="swift#mapper#17004" _defline=""/>
+  </set>
+   
+  <set name="geos">
+    <vdl:new type="imagefile[]" dbgname="geos" _defline="17" input="true">
+      <vdl:mapping descriptor="filesys_mapper">
+        <vdl:parameter name="location"><variable>MODISdir</variable></vdl:parameter>
+        <vdl:parameter name="suffix"><vdl:new type="string" value=".rgb" /></vdl:parameter>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+   
+  <set name="swift#mapper#17006">
+        <vdl:new type="string" dbgname="swift#mapper#17006" _defline=""/>
+  </set>
+   
+  <set name="swift#mapper#17008">
+        <vdl:new type="string" dbgname="swift#mapper#17008" _defline=""/>
+  </set>
+   
+  <set name="land">
+    <vdl:new type="landuse[]" dbgname="land" waitCount="1" _defline="20">
+      <vdl:mapping descriptor="structured_regexp_mapper">
+        <vdl:parameter name="source"><variable>geos</variable></vdl:parameter>
+        <vdl:parameter name="match"><vdl:new type="string" value="(h..v..)" /></vdl:parameter>
+        <vdl:parameter name="transform"><variable>swift#mapper#17008</variable></vdl:parameter>
+      </vdl:mapping>
+    </vdl:new>
+  </set>
+   
+  <restartLog>
+  	<vdl:mains>
+		<vdl:startprogressticker />
+		<vdl:mainp>
+		    <uparallel>
+		        <sequential>
+		             <vdl:setfieldvalue _traceline="14">
+		                 <variable>nFiles</variable>
+		                 <swiftscript:to_int _traceline="13">
+		                  <swiftscript:arg _traceline="13">
+		                  <variable>swift#string#17000</variable><variable>swift#string#17001</variable> 
+		                 </swiftscript:arg> 
+		                 </swiftscript:to_int>
+		             </vdl:setfieldvalue>
+		             <partialCloseDataset var="{nFiles}"/>
+		        </sequential>
+		        <sequential>
+		             <vdl:setfieldvalue _traceline="17">
+		                 <variable>MODISdir</variable>
+		                 <swiftscript:arg _traceline="14">
+		                  <variable>swift#string#17002</variable><variable>swift#string#17003</variable> 
+		                 </swiftscript:arg>
+		             </vdl:setfieldvalue>
+		             <partialCloseDataset var="{MODISdir}"/>
+		        </sequential>
+		        <sequential>
+		             <vdl:setfieldvalue _traceline="-1">
+		                 <variable>swift#mapper#17004</variable>
+		                 <variable>swift#string#17005</variable>
+		             </vdl:setfieldvalue>
+
+		        </sequential>
+		        <sequential>
+		             <vdl:setfieldvalue _traceline="-1">
+		                 <variable>swift#mapper#17006</variable>
+		                 <variable>swift#string#17007</variable>
+		             </vdl:setfieldvalue>
+
+		        </sequential>
+		        <sequential>
+		             <vdl:setfieldvalue _traceline="-1">
+		                 <variable>swift#mapper#17008</variable>
+		                 <swiftscript:strcat _traceline="21">
+		                  <variable>swift#string#17009</variable> 
+		                 </swiftscript:strcat>
+		             </vdl:setfieldvalue>
+
+		        </sequential>
+		        <sequential>
+		          <vdl:tparallelFor name="$"_kvar="i" _vvar="g" refs="land 1">
+		          	<getarrayiterator>
+		          		<variable>geos</variable>
+		          	</getarrayiterator>
+		          	<set names="$$, g">
+		          		<each items="{$}"/>
+		          	</set>
+		          	<set name="i">
+		          		<vdl:new type="int" value="{$$}"/>
+		          	</set>
+		          	<unitStart line="23" type="FOREACH_IT"/>
+		          	<sequentialWithID>
+		          	    <sequential>
+		          	      <get_land_use _traceline="24">
+		          	          <vdl:getfieldsubscript>
+		          	            <argument name="var"><variable>land</variable></argument>
+		          	            <argument name="subscript"><variable>i</variable></argument>
+		          	          </vdl:getfieldsubscript>
+		          	          <variable>g</variable>
+		          	          <variable>getlanduse_pl</variable>
+		          	      </get_land_use>
+		          	      <partialCloseDataset var="{land}"/>
+		          	    </sequential>
+		          	</sequentialWithID>
+		          	<unitEnd line="23" type="FOREACH_IT"/>
+		          </vdl:tparallelFor>
+		        </sequential>
+		    </uparallel>
+		</vdl:mainp>
+		<vdl:stopprogressticker />
+	</vdl:mains>
+  </restartLog>
+  <vdl:cleandataset var="{geos}"/>
+  <vdl:cleandataset var="{getlanduse_pl}"/>
+  <vdl:cleandataset var="{land}"/>
+  <vdl:cleandataset shutdown="true"/>
+</project>

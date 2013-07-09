@@ -35,7 +35,7 @@ public class TaskProcessor extends AbstractMessageProcessor {
     }
 
     public Class<?> getSupportedSource() {
-        return org.globus.cog.karajan.workflow.nodes.grid.AbstractGridNode.class;
+        return org.globus.cog.karajan.compiled.nodes.grid.AbstractGridNode.class;
     }
 
     public void processMessage(SystemState state, Object message, Object details) {

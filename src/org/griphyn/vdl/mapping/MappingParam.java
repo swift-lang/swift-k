@@ -61,9 +61,9 @@ public class MappingParam {
 	/** Returns the value of this parameter. If the value is a dataset,
 	  * then the value will be converted to a string. If no value is
 	  * specified in the SwiftScript program, then the default value
-	  * will be returned.
+	  * will be returned. 
 	  */
-	public Object getValue(Mapper mapper) {
+	public Object getValue(Mapper mapper) throws HandleOpenException {
 		Object value = mapper.getParam(this);
 		if (value instanceof AbstractDataNode) {
 			AbstractDataNode handle = (AbstractDataNode) value;
@@ -89,7 +89,7 @@ public class MappingParam {
 		}
 	}
 	
-	public Object getValue(MappingParamSet params) {
+	public Object getValue(MappingParamSet params) throws HandleOpenException {
         Object value = params.get(this);
         if (value instanceof AbstractDataNode) {
             AbstractDataNode handle = (AbstractDataNode) value;
@@ -120,7 +120,7 @@ public class MappingParam {
 
 	/** Returns the mapper parameter as a String. Other data types will be
 	    converted to a String as appropriate. */
-	public String getStringValue(Mapper mapper) {
+	public String getStringValue(Mapper mapper) throws HandleOpenException {
 		Object value = getValue(mapper);
 		if (value == null) {
 			return null;
@@ -128,17 +128,13 @@ public class MappingParam {
 		return String.valueOf(value);
 	}
 	
-	public String getStringValue(MappingParamSet params) {
+	public String getStringValue(MappingParamSet params) throws HandleOpenException {
         Object value = getValue(params);
         if (value == null) {
             return null;
         }
         return String.valueOf(value);
     }
-
-	public void setValue(Mapper mapper, Object value) {
-		mapper.setParam(this, value);
-	}
 
 	public boolean isPresent(Mapper mapper) {
 		return mapper.getParam(this) != null;
@@ -155,7 +151,7 @@ public class MappingParam {
 	  * match, then 'false' is returned (note an exception is not thrown,
 	  * unlike other getValue methods).
 	  */
-	public boolean getBooleanValue(Mapper mapper) {
+	public boolean getBooleanValue(Mapper mapper) throws HandleOpenException {
 		Object value = getValue(mapper);
 		if (value instanceof String) {
 			return Boolean.valueOf((String) value).booleanValue();
@@ -172,7 +168,7 @@ public class MappingParam {
 	  * is a string, then the string will be parsed to an int. If the
 	  * value is an int, then this will be passed through. Otherwise,
 	  * a NumberFormatException will be thrown. */
-	public int getIntValue(Mapper mapper) {
+	public int getIntValue(Mapper mapper) throws HandleOpenException {
 		Object value = getValue(mapper);
 		if (value instanceof String) {
 			return Integer.parseInt((String) value);

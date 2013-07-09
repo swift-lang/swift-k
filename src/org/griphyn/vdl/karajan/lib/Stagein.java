@@ -22,52 +22,55 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.Collection;
 
+import k.rt.ConditionalYield;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.Arg.Channel;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.NamedArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureFault;
-import org.globus.cog.karajan.workflow.nodes.FlowNode;
-import org.griphyn.vdl.engine.Karajan;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.futures.FutureFault;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.AbstractDataNode;
-import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 
-public class Stagein extends VDLFunction {
+public class Stagein extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(Stagein.class);
 
-    public static final Arg VAR = new Arg.Positional("var");
-    
-    public static final Channel STAGEIN = new Channel("stagein");
+    private ArgRef<AbstractDataNode> var;
+    private ChannelRef<Object> cr_stagein;
+    private VarRef<Boolean> r_deperror;
+    private VarRef<Boolean> r_mdeperror;
     
     private Tracer tracer; 
     private String procName;
-
-    static {
-        setArguments(Stagein.class, new Arg[] { VAR });
-    }
     
     @Override
-    protected void initializeStatic() {
-        super.initializeStatic();
-        FlowNode def = (FlowNode) getParent().getParent();
-        procName = Karajan.demangle(def.getTextualName());
+    protected Signature getSignature() {
+        return new Signature(params("var"), returns("deperror", "mdeperror", channel("stagein", DYNAMIC)));
+    }
+
+    @Override
+    public Node compile(WrapperNode w, Scope scope)
+            throws CompilationException {
+        Node def = getParent().getParent();
+        procName = def.getTextualName();
         tracer = Tracer.getTracer(def, "APPCALL");
+        return super.compile(w, scope);
     }
 
-    private boolean isPrimitive(DSHandle var) {
-        return (var instanceof AbstractDataNode && ((AbstractDataNode) var)
-            .isPrimitive());
-    }
-
-    protected Object function(VariableStack stack) throws ExecutionException {
-        AbstractDataNode var = (AbstractDataNode) VAR.getValue(stack);
-        if (!isPrimitive(var)) {
+    @Override
+    public Object function(Stack stack) {
+        AbstractDataNode var = this.var.getValue(stack);
+        if (!var.isPrimitive()) {
             boolean deperr = false;
             boolean mdeperr = false;
             try {
@@ -75,19 +78,21 @@ public class Stagein extends VDLFunction {
                 try {
                     for (Path p : fp) {
                         AbstractDataNode n = (AbstractDataNode) var.getField(p);
-                    	n.waitFor();
+                    	n.waitFor(this);
                     }
                 }
                 catch (DependentException e) {
                     deperr = true;
                 }
+                
+                k.rt.Channel<Object> stagein = cr_stagein.get(stack);
                 for (Path p : fp) {
-                    STAGEIN.ret(stack, filename(stack, var.getField(p))[0]);
+                    stagein.add(filename(var.getField(p))[0]);
                 }
             }
-            catch (FutureFault f) {
+            catch (ConditionalYield f) {
                 if (tracer.isEnabled()) {
-                    tracer.trace(stack, procName + " WAIT " + Tracer.getFutureName(f.getFuture()));
+                    tracer.trace(LWThread.currentThread(), procName + " WAIT " + Tracer.getFutureName(f.getFuture()));
                 }
                 throw f;
             }
@@ -97,27 +102,28 @@ public class Stagein extends VDLFunction {
                 mdeperr = true;
             }
             catch (Exception e) {
-                throw new ExecutionException(e);
+                throw new ExecutionException(this, e);
             }
-            if (deperr || mdeperr) {
-                NamedArguments named = ArgUtil.getNamedReturn(stack); 
-                named.add("deperror", deperr);
-                named.add("mdeperror", mdeperr);
+            if (deperr) {
+                this.r_deperror.setValue(stack, true);
+            }
+            if (mdeperr) {
+                this.r_mdeperror.setValue(stack, true);
             }
         }
         else {
             // we still wait until the primitive value is there
             if (tracer.isEnabled()) {
                 try {
-                    var.waitFor();
+                    var.waitFor(this);
                 }
                 catch (FutureFault f) {
-                    tracer.trace(stack, procName + " WAIT " + Tracer.getFutureName(f.getFuture()));
+                    tracer.trace(LWThread.currentThread(), procName + " WAIT " + Tracer.getFutureName(f.getFuture()));
                     throw f;
                 }
             }
             else {
-                var.waitFor();
+                var.waitFor(this);
             }
         }
         return null;

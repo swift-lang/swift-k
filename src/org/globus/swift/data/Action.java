@@ -17,94 +17,107 @@
 
 package org.globus.swift.data;
 
-import org.apache.log4j.Logger;
+import k.rt.Stack;
+import k.thr.LWThread;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
+import org.apache.log4j.Logger;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.util.BoundContact;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
-import org.globus.swift.data.policy.Broadcast;
-import org.globus.swift.data.policy.External;
 import org.globus.swift.data.policy.Policy;
 
 /**
  * Karajan-accessible CDM functions that change something.
  * */
-public class Action extends FunctionsCollection {
-    private static final Logger logger = 
-        Logger.getLogger(Action.class);
-    
-    public static final Arg PA_SRCFILE  = 
-        new Arg.Positional("srcfile");
-    public static final Arg PA_SRCDIR   = 
-        new Arg.Positional("srcdir");
-    public static final Arg PA_DESTHOST = 
-        new Arg.Positional("desthost");
-    public static final Arg PA_DESTDIR  = 
-        new Arg.Positional("destdir");
-
-    static {
-        setArguments("cdm_broadcast", new Arg[]{ PA_SRCFILE, 
-                                                 PA_SRCDIR });
-        setArguments("cdm_external", new Arg[]{ PA_SRCFILE, 
-                                                PA_SRCDIR, 
-                                                PA_DESTHOST, 
-                                                PA_DESTDIR });
-        setArguments("cdm_wait", new Arg[]{});
-    }
+public class Action {
+    private static final Logger logger = Logger.getLogger(Action.class);
 
     /**
        Register a file for broadcast by CDM.
        The actual broadcast is triggered by {@link cdm_wait}.
     */
-    public void cdm_broadcast(VariableStack stack) 
-    throws ExecutionException {
-        String srcfile = (String) PA_SRCFILE.getValue(stack);
-        String srcdir  = (String) PA_SRCDIR.getValue(stack);
-
-        logger.debug("cdm_broadcast()");
+    public static class Broadcast extends InternalFunction {
+        private ArgRef<String> srcfile;
+        private ArgRef<String> srcdir;
         
-        Policy policy = Director.lookup(srcfile);
-        
-        if (!(policy instanceof Broadcast)) {
-            throw new RuntimeException
-                ("Attempting to BROADCAST the wrong file: " +
-                 srcdir + " " + srcfile + " -> " + policy);
-        }
-        
-        if (srcdir == "") { 
-            srcdir = ".";
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("srcfile", "srcdir"));
         }
 
-        Director.addBroadcast(srcdir, srcfile);
+        @Override
+        protected void runBody(LWThread thr) {
+            Stack stack = thr.getStack();
+            String srcfile = this.srcfile.getValue(stack);
+            String srcdir  = this.srcdir.getValue(stack);
+
+            logger.debug("cdm_broadcast()");
+        
+            Policy policy = Director.lookup(srcfile);
+        
+            if (!(policy instanceof org.globus.swift.data.policy.Broadcast)) {
+                throw new RuntimeException("Attempting to BROADCAST the wrong file: " +
+                    srcdir + " " + srcfile + " -> " + policy);
+            }
+        
+            if (srcdir == "") { 
+                srcdir = ".";
+            }
+
+            Director.addBroadcast(srcdir, srcfile);
+        }
     }
-
-    public void cdm_external(VariableStack stack) 
-    throws ExecutionException
-    {
-        String srcfile  = (String) PA_SRCFILE.getValue(stack);
-        String srcdir   = (String) PA_SRCDIR.getValue(stack);
-        BoundContact bc = (BoundContact) PA_DESTHOST.getValue(stack);
-        String destdir  = (String) PA_DESTDIR.getValue(stack);
+    
+    public static class External extends InternalFunction {
+        private ArgRef<String> srcfile;
+        private ArgRef<String> srcdir;
+        private ArgRef<BoundContact> desthost;
+        private ArgRef<String> destdir;
         
-        if (srcdir.length() == 0)
-            srcdir = ".";
-        String desthost = bc.getHost();
-        String workdir = (String) bc.getProperty("workdir");
-        if (workdir!=null && !workdir.startsWith("/")){
-            workdir=System.getProperty("user.dir")+"/"+workdir;
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("srcfile", "srcdir", "desthost", "destdir"));
         }
-        External.doExternal(srcfile, srcdir, 
-                            desthost, workdir+"/"+destdir);
+
+        @Override
+        protected void runBody(LWThread thr) {
+            Stack stack = thr.getStack();
+            String srcfile  = this.srcfile.getValue(stack);
+            String srcdir   = this.srcdir.getValue(stack);
+            BoundContact bc = this.desthost.getValue(stack);
+            String destdir  = this.destdir.getValue(stack);
+        
+            if (srcdir.length() == 0) {
+                srcdir = ".";
+            }
+            String desthost = bc.getHost();
+            String workdir = (String) bc.getProperty("workdir");
+            
+            if (workdir != null && !workdir.startsWith("/")) {
+                workdir = System.getProperty("user.dir") + "/" + workdir;
+            }
+            
+            org.globus.swift.data.policy.External.doExternal(srcfile, srcdir, 
+                                desthost, workdir + "/" + destdir);
+        }
     }
     
     /**
        Wait until CDM has ensured that all data has been propagated.
     */
-    public void cdm_wait(VariableStack stack) 
-    throws ExecutionException {
-        logger.debug("cdm_wait()");
-        Director.doBroadcast();
+    public static class Wait extends InternalFunction {
+
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params());
+        }
+
+        @Override
+        protected void runBody(LWThread thr) {
+            // TODO busy waiting is not good
+            logger.debug("cdm_wait()");
+            Director.doBroadcast();
+        }
     }
 }

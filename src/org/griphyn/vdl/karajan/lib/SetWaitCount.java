@@ -17,30 +17,43 @@
 
 package org.griphyn.vdl.karajan.lib;
 
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.DSHandle;
 
-public class SetWaitCount extends VDLFunction {
+public class SetWaitCount extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(CloseDataset.class);
 
-	public static final Arg OA_COUNT = new Arg.Optional("count", 1);
+	private ArgRef<DSHandle> var;
+    private ArgRef<Number> count;
 
-	static {
-		setArguments(SetWaitCount.class, new Arg[] { PA_VAR, OA_COUNT });
-	}
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("var", optional("count", 1)));
+    }
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+    @Override
+	public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 
 		if (var.isClosed()) {
-			throw new ExecutionException("Attempted to set a wait count for a closed variable " + var);
+		    // Static mappers will close the array sizes during initialization.
+		    // Such an array passed to a function assigning to elements
+		    // of that array in a loop will attempt to increase the 
+		    // wait count. That is a legit situation to have.
+		    if (var.getMapper().isStatic()) {
+		        // ignore
+		    }
+		    else {
+		        throw new ExecutionException("Attempted to set a wait count for a closed variable " + var);
+		    }
 		}
 		
-		int count = TypeUtil.toInt(OA_COUNT.getValue(stack));
+		int count = this.count.getValue(stack).intValue();
 		var.setWriteRefCount(count);
 		return null;
 	}

@@ -47,16 +47,20 @@ public interface DSHandle {
      */
     public Type getType();
 
-    public void init(MappingParamSet params);
+    public void init(MappingParamSet params) throws HandleOpenException;
 
     public DSHandle getRoot();
 
     public DSHandle getParent();
 
     /** returns the field below this node that is referred to by the
-     *  supplied path. The path must have no wildcards.
+     *  supplied path. The path must have no wildcards. If at any point
+     *  in the path the field does not exist and the parent to that field is
+     *  closed, an InvalidPathException will be thrown.
      */
     public DSHandle getField(Path path) throws InvalidPathException;
+    
+    public DSHandle getField(Comparable<?> key) throws NoSuchFieldException;
 
     /** returns a collection of fields below this node that are referred to
      *  by the supplied path. The path may contain wildcards. If it does not,
@@ -73,6 +77,8 @@ public interface DSHandle {
 
     /** create a new logical component */
     public DSHandle createField(Comparable<?> key) throws NoSuchFieldException;
+ 
+    public DSHandle createField(Path path) throws InvalidPathException;
  
     // special file oriented methods, not sure if these apply to 
     // all datasets

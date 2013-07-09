@@ -23,34 +23,50 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.LinkedList;
 import java.util.List;
 
+import k.rt.Stack;
+import k.thr.LWThread;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
 import org.globus.swift.data.Director;
 import org.globus.swift.data.policy.Policy;
 import org.griphyn.vdl.mapping.AbsFile;
 
-public class AppStageins extends AbstractSequentialWithArguments {
+public class AppStageins extends InternalFunction {
+	private ArgRef<String> jobid;
+	private ArgRef<List<String>> files;
+	private ArgRef<String> stagingMethod;
+	
+	private ChannelRef<List<String>> cr_stagein;
+	
+	private VarRef<String> cwd;
 
     static Logger logger = Logger.getLogger(AppStageins.class);
     
-    public static final Arg JOBID = new Arg.Positional("jobid");
-    public static final Arg FILES = new Arg.Positional("files");
-    public static final Arg DIR = new Arg.Positional("dir");
-    public static final Arg STAGING_METHOD = new Arg.Positional("stagingMethod");
-    public static final Arg.Channel STAGEIN = new Arg.Channel("stagein");
-
-    static {
-        setArguments(AppStageins.class, new Arg[] { JOBID, FILES, DIR,
-                STAGING_METHOD });
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("jobid", "files", "stagingMethod"), returns(channel("stagein")));
+    }
+    
+    @Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        cwd = scope.getVarRef("CWD");
     }
 
-    protected void post(VariableStack stack) throws ExecutionException {
-        List files = TypeUtil.toList(FILES.getValue(stack));
+    
+    protected void runBody(LWThread thr) {
+    	Stack stack = thr.getStack();
+    	List<String> files = this.files.getValue(stack);
+    	String stagingMethod = this.stagingMethod.getValue(stack);
+        String cwd = this.cwd.getValue(stack);
         for (Object f : files) {
             AbsFile file = new AbsFile(TypeUtil.toString(f));
             Policy policy = Director.lookup(file.toString());
@@ -61,20 +77,31 @@ public class AppStageins extends AbstractSequentialWithArguments {
                                         
             String protocol = file.getProtocol();
             if (protocol.equals("file")) {
-                protocol = TypeUtil.toString(STAGING_METHOD.getValue(stack));
+                protocol = stagingMethod;
             }
-            String path = file.getDir().equals("") ? file.getName() : file
-                .getDir()
-                    + "/" + file.getName();
+            String path = file.getDir().equals("") ? 
+                    file.getName() : file.getDir() + "/" + file.getName();
             String relpath = path.startsWith("/") ? path.substring(1) : path;
             if (logger.isDebugEnabled()) {
                 logger.debug("will stage in: " + relpath + " via: " + protocol);
             }
-            ArgUtil.getChannelReturn(stack, STAGEIN).append(
-                makeList(protocol + "://" + file.getHost() + "/" + path,
-                    TypeUtil.toString(DIR.getValue(stack)) + "/" + relpath));
+            cr_stagein.append(stack,
+                makeList(localPath(cwd, protocol, path, file), relpath));
         }
-        super.post(stack);
+    }
+
+    protected static String localPath(String cwd, String protocol, String path, AbsFile file) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(protocol);
+        sb.append("://");
+        sb.append(file.getHost());
+        sb.append('/');
+        if (!file.isAbsolute()) {
+            sb.append(cwd);
+            sb.append('/');
+        }
+        sb.append(path);
+        return sb.toString();
     }
 
     private List<String> makeList(String s1, String s2) {

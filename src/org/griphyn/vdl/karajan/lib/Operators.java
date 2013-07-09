@@ -17,82 +17,42 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.io.IOException;
+import k.rt.ExecutionException;
+import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
 
-public class Operators extends FunctionsCollection {
-
-	public static final SwiftArg L = new SwiftArg.Positional("left");
-	public static final SwiftArg R = new SwiftArg.Positional("right");
-	public static final SwiftArg U = new SwiftArg.Positional("unaryArg");
+public class Operators {
+	
+	public static final boolean PROVENANCE_ENABLED;
+	
+	static {
+		boolean v;
+		try {
+		    v = VDL2Config.getConfig().getProvenanceLog();
+		}
+		catch (Exception e) {
+			v = false;
+		}
+		PROVENANCE_ENABLED = v;
+	}
 
 	public static final Logger provenanceLogger = Logger.getLogger("org.globus.swift.provenance.operators");
 
-	private DSHandle newNum(Type type, double value) throws ExecutionException {
-		try {
-			DSHandle handle = new RootDataNode(type);
-			if (type == Types.INT) {
-			    handle.setValue(Integer.valueOf((int) value));
-			}
-			else {
-			    handle.setValue(new Double(value));
-			}
-			handle.closeShallow();
-			return handle;
+	private static Type type(DSHandle l, DSHandle r) throws ExecutionException {
+		Type tl = l.getType();
+		Type tr = r.getType();
+		if (Types.STRING.equals(tl) || Types.STRING.equals(tr)) {
+			return Types.STRING;
 		}
-		catch (Exception e) {
-			throw new ExecutionException("Internal error", e);
-		}
-	}
-	
-	private DSHandle newNum(Type type, int value) throws ExecutionException {
-        try {
-            DSHandle handle = new RootDataNode(type);
-            handle.setValue(new Integer(value));
-            handle.closeShallow();
-            return handle;
-        }
-        catch (Exception e) {
-            throw new ExecutionException("Internal error", e);
-        }
-    }
-	
-	private DSHandle newString(String value) throws ExecutionException {
-		try {
-			DSHandle handle = new RootDataNode(Types.STRING);
-			handle.setValue(value);
-			handle.closeShallow();
-			return handle;
-		}
-		catch (Exception e) {
-			throw new ExecutionException("Internal error", e);
-		}
-	}
-
-	private DSHandle newBool(boolean value) throws ExecutionException {
-		try {
-			DSHandle handle = new RootDataNode(Types.BOOLEAN);
-			handle.setValue(new Boolean(value));
-			handle.closeShallow();
-			return handle;
-		}
-		catch (Exception e) {
-			throw new ExecutionException("Internal error", e);
-		}
-	}
-
-	private Type type(VariableStack stack) throws ExecutionException {
-		if (Types.FLOAT.equals(L.getType(stack)) || Types.FLOAT.equals(R.getType(stack))) {
+		else if (Types.FLOAT.equals(tl) || Types.FLOAT.equals(tr)) {
 			return Types.FLOAT;
 		}
 		else {
@@ -100,193 +60,238 @@ public class Operators extends FunctionsCollection {
 		}
 	}
 
-	private static final String[] BINARY_OPERATORS = new String[] { "vdlop_sum", "vdlop_subtraction",
-			"vdlop_product", "vdlop_quotient", "vdlop_fquotient", "vdlop_iquotient",
-			"vdlop_remainder", "vdlop_le", "vdlop_ge", "vdlop_lt", "vdlop_gt", "vdlop_eq", "vdlop_ne", "vdlop_and", "vdlop_or" };
-	private static final String[] UNARY_OPERATORS = new String[] { "vdlop_not" };
-
-	private static final Arg[] BINARY_ARGS = new Arg[] { L, R };
-	private static final Arg[] UNARY_ARGS = new Arg[] { U };
-
-	static {
-		for (int i = 0; i < BINARY_OPERATORS.length; i++) {
-			setArguments(BINARY_OPERATORS[i], BINARY_ARGS);
-		}
-		for (int i = 0; i < UNARY_OPERATORS.length; i++) {
-			setArguments(UNARY_OPERATORS[i], UNARY_ARGS);
-		}
-	}
-
-	public Object vdlop_sum(VariableStack stack) throws ExecutionException {
-		Object l = L.getValue(stack);
-		Object r = R.getValue(stack);
-		Type t = type(stack);
-		DSHandle ret;
-		if (l instanceof String || r instanceof String) {
-			ret = newString(((String) l) + ((String) r));
-		}
-		else if (t == Types.INT) {
-		    ret = newNum(t, SwiftArg.checkInt(l) + SwiftArg.checkInt(r));
+	private static int getInt(Node n, DSHandle h) {
+		waitFor(n, h);
+		Object v = h.getValue();
+		if (v instanceof Integer) {
+			return ((Integer) v).intValue();
 		}
 		else {
-			ret = newNum(t, SwiftArg.checkDouble(l) + SwiftArg.checkDouble(r));
-		}
-		logBinaryProvenance(stack, "sum", ret);
-		return ret;
-	}
-
-	public Object vdlop_subtraction(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		DSHandle ret = newNum(type(stack), l - r);
-		logBinaryProvenance(stack, "subtraction", ret);
-		return ret;
-	}
-
-	public Object vdlop_product(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		DSHandle ret = newNum(type(stack), l * r);
-		logBinaryProvenance(stack, "product", ret);
-		return ret;
-	}
-
-	public Object vdlop_quotient(VariableStack stack) throws ExecutionException {
-		// for now we map to this one
-		return vdlop_fquotient(stack);
-	}
-
-	public Object vdlop_fquotient(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		DSHandle ret = newNum(Types.FLOAT, l / r);
-		logBinaryProvenance(stack, "fquotient", ret);
-		return ret;
-	}
-
-	public Object vdlop_iquotient(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		DSHandle ret = newNum(Types.INT, l / r);
-		logBinaryProvenance(stack, "iquotient", ret);
-		return ret;
-	}
-
-	public Object vdlop_remainder(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		DSHandle ret = newNum(type(stack), l % r);
-		logBinaryProvenance(stack, "remainder", ret);
-		return ret;
-	}
-
-	public Object vdlop_le(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		DSHandle ret = newBool(l <= r);
-		logBinaryProvenance(stack, "le", ret);
-		return ret;
-	}
-
-	public Object vdlop_ge(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		DSHandle ret = newBool(l >= r);
-		logBinaryProvenance(stack, "ge", ret);
-		return ret;
-	}
-
-	public Object vdlop_gt(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		DSHandle ret = newBool(l > r);
-		logBinaryProvenance(stack, "gt", ret);
-		return ret;
-	}
-
-	public Object vdlop_lt(VariableStack stack) throws ExecutionException {
-		double l = L.getDoubleValue(stack);
-		double r = R.getDoubleValue(stack);
-		DSHandle ret = newBool(l < r);
-		logBinaryProvenance(stack, "lt", ret);
-		return ret;
-	}
-
-	public Object vdlop_eq(VariableStack stack) throws ExecutionException {
-		Object l = L.getValue(stack);
-		Object r = R.getValue(stack);
-		if (l == null) {
-			throw new ExecutionException("First operand is null");
-		}
-		if (r == null) {
-			throw new ExecutionException("Second operand is null");
-		}
-		DSHandle ret = newBool(l.equals(r));
-		logBinaryProvenance(stack, "eq", ret);
-		return ret;
-	}
-
-	public Object vdlop_ne(VariableStack stack) throws ExecutionException {
-		Object l = L.getValue(stack);
-		Object r = R.getValue(stack);
-		if (l == null) {
-			throw new ExecutionException("First operand is null");
-		}
-		if (r == null) {
-			throw new ExecutionException("Second operand is null");
-		}
-		DSHandle ret = newBool(!(l.equals(r)));
-		logBinaryProvenance(stack, "ne", ret);
-		return ret;
-	}
-
-	public Object vdlop_and(VariableStack stack) throws ExecutionException {
-		boolean l = ((Boolean)L.getValue(stack)).booleanValue();
-		boolean r = ((Boolean)R.getValue(stack)).booleanValue();
-		DSHandle ret = newBool(l && r);
-		logBinaryProvenance(stack, "and", ret);
-		return ret;
-	}
-
-	public Object vdlop_or(VariableStack stack) throws ExecutionException {
-		boolean l = ((Boolean)L.getValue(stack)).booleanValue();
-		boolean r = ((Boolean)R.getValue(stack)).booleanValue();
-		DSHandle ret = newBool(l || r);
-		logBinaryProvenance(stack, "or", ret);
-		return ret;
-	}
-
-	public Object vdlop_not(VariableStack stack) throws ExecutionException {
-		boolean u = ((Boolean)U.getValue(stack)).booleanValue();
-		DSHandle ret = newBool(!u);
-		logUnaryProvenance(stack, "not", ret);
-		return ret;
-	}
-
-	private void logBinaryProvenance(VariableStack stack, String name, DSHandle resultDataset) throws ExecutionException {
-		try {
-			if(VDL2Config.getConfig().getProvenanceLog()) {
-				String thread = stack.getVar("#thread").toString();
-				String lhs = L.getRawValue(stack).getIdentifier();
-				String rhs = R.getRawValue(stack).getIdentifier();
-				String result = resultDataset.getIdentifier();
-				provenanceLogger.info("OPERATOR thread="+thread+" operator="+name+" lhs="+lhs+" rhs="+rhs+" result="+result);
-			}
-		} catch(IOException ioe) {
-			throw new ExecutionException("Exception when logging provenance for binary operator", ioe);
+			throw new ExecutionException(n, "Internal error. Expected an int: " + v + " (" + h + ")");
 		}
 	}
+	
+	private static void waitFor(Node n, DSHandle h) {
+        ((AbstractDataNode) h).waitFor(n);
+    }
 
-	private void logUnaryProvenance(VariableStack stack, String name, DSHandle resultDataset) throws ExecutionException {
-		try {
-			if(VDL2Config.getConfig().getProvenanceLog()) {
-				String thread = stack.getVar("#thread").toString();
-				String lhs = U.getRawValue(stack).getIdentifier();
-				String result = resultDataset.getIdentifier();
-				provenanceLogger.info("UNARYOPERATOR thread="+thread+" operator="+name+" operand="+lhs+" result="+result);
-			}
-		} catch(IOException ioe) {
-			throw new ExecutionException("Exception when logging provenance for unary operator", ioe);
+    private static double getFloat(Node n, DSHandle h) {
+		waitFor(n, h);
+        Object v = h.getValue();
+        if (v instanceof Number) {
+            return ((Number) v).doubleValue();
+        }
+        else {
+            throw new ExecutionException(n, "Internal error. Expected float: " + h);
+        }
+    }
+	
+	private static boolean getBool(Node n, DSHandle h) {
+		waitFor(n, h);
+        Object v = h.getValue();
+        if (v instanceof Boolean) {
+            return ((Boolean) v).booleanValue();
+        }
+        else {
+            throw new ExecutionException(n, "Internal error. Expected float: " + h);
+        }
+    }
+		
+	public static class Sum extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            Type t = type(v1, v2);
+            DSHandle r;
+            if (t == Types.STRING) {
+            	r = new RootDataNode(Types.STRING, (String.valueOf(v1.getValue()) + String.valueOf(v2.getValue())));
+            }
+            else if (t == Types.INT) {
+            	r = new RootDataNode(Types.INT, getInt(this, v1) + getInt(this, v2));
+            }
+            else {
+            	r = new RootDataNode(Types.FLOAT, getFloat(this, v1) + getFloat(this, v2));
+            }
+            logBinaryProvenance("sum", v1, v2, r);
+            return r;
+        }
+	}
+	
+	public static class Difference extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            Type t = type(v1, v2);
+            DSHandle r;
+            if (t == Types.INT) {
+                r = new RootDataNode(Types.INT, getInt(this, v1) - getInt(this, v2));
+            }
+            else {
+                r = new RootDataNode(Types.FLOAT, getFloat(this, v1) - getFloat(this, v2));
+            }
+            logBinaryProvenance("difference", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class Product extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            Type t = type(v1, v2);
+            DSHandle r;
+            if (t == Types.INT) {
+                r = new RootDataNode(Types.INT, getInt(this, v1) * getInt(this, v2));
+            }
+            else {
+                r = new RootDataNode(Types.FLOAT, getFloat(this, v1) * getFloat(this, v2));
+            }
+            logBinaryProvenance("product", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class FQuotient extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.FLOAT, getFloat(this, v1) / getFloat(this, v2));
+            logBinaryProvenance("fquotient", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class Quotient extends FQuotient {
+	}
+
+	public static class IQuotient extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.INT, getInt(this, v1) / getInt(this, v2));
+            logBinaryProvenance("iquotient", v1, v2, r);
+            return r;
+        }
+    }
+
+	public static class Remainder extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            Type t = type(v1, v2);
+            DSHandle r;
+            if (t == Types.INT) {
+                r = new RootDataNode(Types.INT, getInt(this, v1) % getInt(this, v2));
+            }
+            else {
+                r = new RootDataNode(Types.FLOAT, getFloat(this, v1) % getFloat(this, v2));
+            }
+            logBinaryProvenance("remainder", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class LE extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) <= getFloat(this, v2));
+            logBinaryProvenance("le", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class GE extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) >= getFloat(this, v2));
+            logBinaryProvenance("ge", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class LT extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) < getFloat(this, v2));
+            logBinaryProvenance("lt", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class GT extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) > getFloat(this, v2));
+            logBinaryProvenance("gt", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class EQ extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.BOOLEAN, v1.getValue().equals(v2.getValue()));
+            logBinaryProvenance("eq", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class NE extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.BOOLEAN, !v1.getValue().equals(v2.getValue()));
+            logBinaryProvenance("ne", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class And extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.BOOLEAN, getBool(this, v1) && getBool(this, v2));
+            logBinaryProvenance("and", v1, v2, r);
+            return r;
+        }
+    }
+
+	public static class Or extends SwiftBinaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
+            DSHandle r = new RootDataNode(Types.BOOLEAN, getBool(this, v1) || getBool(this, v2));
+            logBinaryProvenance("or", v1, v2, r);
+            return r;
+        }
+    }
+	
+	public static class Not extends SwiftUnaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v) {
+            DSHandle r = new RootDataNode(Types.BOOLEAN, !getBool(this, v));
+            logUnaryProvenance("not", v, r);
+            return r;
+        }
+    }
+	
+	public static class Inc extends SwiftUnaryOp {
+        @Override
+        protected DSHandle value(AbstractDataNode v) {
+            DSHandle r = new RootDataNode(Types.INT, getInt(this, v) + 1);
+            return r;
+        }
+    }
+
+	private static void logBinaryProvenance(String name, DSHandle v1, DSHandle v2, DSHandle result) throws ExecutionException {
+		if (PROVENANCE_ENABLED) {
+			String thread = LWThread.currentThread().getName();
+			String lhsid = v1.getIdentifier();
+			String rhsid = v2.getIdentifier();
+			String rid = result.getIdentifier();
+			provenanceLogger.info("OPERATOR thread=" + thread + " operator=" + name + 
+					" lhs=" + lhsid + " rhs=" + rhsid + " result=" + rid);
+		}
+	}
+
+	private static void logUnaryProvenance(String name, DSHandle v, DSHandle r) throws ExecutionException {
+		if (PROVENANCE_ENABLED) {
+			String thread = LWThread.currentThread().getName();
+			String vid = v.getIdentifier();
+			String rid = r.getIdentifier();
+			provenanceLogger.info("UNARYOPERATOR thread=" + thread + " operator=" + name + 
+					" operand=" + vid + " result=" + rid);
 		}
 	}
 }

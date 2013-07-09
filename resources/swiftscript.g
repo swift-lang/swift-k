@@ -50,9 +50,7 @@ String escape(String s) {
 }
 
 String quote(String s) {
-    String s1 = s.replaceAll("\\\\\"", "&quot;");
-    String s2 = s1.replaceAll("\\\\\\\\", "\\\\");
-    return s2;
+    return s.replaceAll("\\\\\"", "&quot;");
 }
 
 }
@@ -909,7 +907,16 @@ functionInvocation returns [StringTemplate code=template("functionInvocation")]
     |
     (e=identifier | (LPAREN e=identifier RPAREN) )
     {
-      code.setAttribute("name", "filename");
+      /*
+       * This is matched on expressions like @varname,
+       * which are a shortcut for filename(varname).
+       * The interpretation of what a function invocation
+       * with an empty file name means was moved to the swiftx -> ?
+       * compiler and allows that layer to distinguish between
+       * '@filename(x)' and '@(x)', the former of which 
+       * has been deprecated.
+       */
+      code.setAttribute("name", "");
       code.setAttribute("args", e);
     }
     )
@@ -1287,7 +1294,6 @@ ESC
     |    'b'
     |    'f'
     |    '"'
-    |    '\''
     |    '\\'
     )
     ;

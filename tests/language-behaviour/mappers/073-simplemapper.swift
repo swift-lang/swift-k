@@ -11,7 +11,7 @@ type messagefile;
 
 messagefile outfile <simple_mapper;
                      prefix="073-simplemapper",
-                     suffix="out">;
+                     suffix=".out">;
 
 outfile = write();
 

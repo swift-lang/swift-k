@@ -23,21 +23,29 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.HashMap;
 import java.util.Map;
 
+import k.rt.Channel;
+import k.rt.Stack;
+import k.thr.LWThread;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
 
-public class Log extends AbstractSequentialWithArguments {
-	public static final Arg LEVEL = new Arg.Positional("level");
-	public static final Arg MESSAGE = new Arg.Optional("message", null);
-
-	static {
-		setArguments(Log.class, new Arg[] { LEVEL, MESSAGE, Arg.VARGS });
-	}
+public class Log extends InternalFunction {
+	private ArgRef<String> level;
+	private ChannelRef<Object> c_vargs;
+	
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("level", "..."));
+    }
 
 	public static final Logger logger = Logger.getLogger("swift");
 	private static final Map<String, Level> priorities = new HashMap<String, Level>();
@@ -49,27 +57,37 @@ public class Log extends AbstractSequentialWithArguments {
 		priorities.put("error", Level.ERROR);
 		priorities.put("fatal", Level.FATAL);
 	}
-
-	public static Level getLevel(String lvl) {
+	
+    public static Level getLevel(String lvl) {
 		return priorities.get(lvl);
 	}
-	
-	protected void post(VariableStack stack) throws ExecutionException {
-		Level lvl = getLevel((String) LEVEL.getValue(stack));
+    
+    
+    
+    @Override
+    public Node compile(WrapperNode w, Scope scope) throws CompilationException {
+        Node n = super.compile(w, scope);
+        String sLvl = this.level.getValue();
+        if (sLvl != null) {
+            // don't compile this if it won't produce output
+            if (!logger.isEnabledFor(getLevel(sLvl))) {
+                return null;
+            }
+        }
+        return n;
+    }
+
+
+    protected void runBody(LWThread thr) {
+		Stack stack = thr.getStack();
+		Level lvl = getLevel(this.level.getValue(stack));
 		if (logger.isEnabledFor(lvl)) {
-		    Object smsg = MESSAGE.getValue(stack);
-		    if (smsg != null) {
-		        logger.log(lvl, smsg);
+		    Channel<Object> l = c_vargs.get(stack);
+		    StringBuilder sb = new StringBuilder();
+		    for (Object o : l) {
+		        sb.append(o);
 		    }
-		    else {
-		        Object[] msg = Arg.VARGS.asArray(stack);
-		        StringBuilder sb = new StringBuilder();
-		        for (int i = 0; i < msg.length; i++) {
-		            sb.append(TypeUtil.toString(msg[i]));
-		        }
-		        logger.log(lvl, sb.toString());
-		    }
+		    logger.log(lvl, sb.toString());
 		}
-		super.post(stack);
 	}
 }

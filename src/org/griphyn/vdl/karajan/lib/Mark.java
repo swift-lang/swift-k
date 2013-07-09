@@ -22,34 +22,34 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DataDependentException;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 
-public class Mark extends VDLFunction {
-    public static final Arg RESTARTS = new Arg.Positional("restarts");
-    public static final Arg ERR = new Arg.Positional("err");
-    public static final Arg MAPPING = new Arg.Optional("mapping", Boolean.FALSE);
-
-    static {
-        setArguments(Mark.class, new Arg[] { RESTARTS, ERR, MAPPING });
+public class Mark extends SwiftFunction {
+    private ArgRef<List<List<Object>>> restarts;
+    private ArgRef<Boolean> err;
+    private ArgRef<Boolean> mapping;
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("restarts", "err", optional("mapping", Boolean.FALSE)));
     }
 
     @Override
-    protected Object function(VariableStack stack) throws ExecutionException {
+    public Object function(Stack stack) {
         try {
-            if (TypeUtil.toBoolean(ERR.getValue(stack))) {
-                boolean mapping = TypeUtil.toBoolean(MAPPING.getValue(stack));
-                List files = TypeUtil.toList(RESTARTS.getValue(stack));
-                for (Object f : files) {
-                    List pv = TypeUtil.toList(f);
-                    Path p = parsePath(pv.get(0), stack);
+            if (err.getValue(stack)) {
+                boolean mapping = this.mapping.getValue(stack);
+                List<List<Object>> files = this.restarts.getValue(stack);
+                for (List<Object> pv : files) {
+                    Path p = parsePath(pv.get(0));
                     DSHandle handle = (DSHandle) pv.get(1);
                     DSHandle leaf = handle.getField(p);
                     synchronized (leaf) {
@@ -65,7 +65,7 @@ public class Mark extends VDLFunction {
             }
         }
         catch (Exception e) {
-            throw new ExecutionException(e);
+            throw new ExecutionException(this, e);
         }
         return null;
     }

@@ -55,4 +55,9 @@ public class TraceItem extends AbstractStatefulItem {
     public void setEnded(int ended) {
         this.ended = ended;
     }
+
+    @Override
+    public String toString() {
+        return this.getID() + ": " + ended + "/" + started;
+    }
 }

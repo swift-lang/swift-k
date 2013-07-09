@@ -22,38 +22,42 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.arguments.ArgUtil;
-import org.globus.cog.karajan.arguments.VariableArguments;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
+import k.rt.Channel;
+import k.rt.Stack;
+import k.thr.LWThread;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 
-public class InFileDirs extends AbstractSequentialWithArguments {
-    public static final Arg STAGEINS = new Arg.Positional("stageins");
+public class InFileDirs extends InternalFunction {
     
-    static {
-        setArguments(InFileDirs.class, new Arg[] { STAGEINS });
+    private ArgRef<List<String>> stageins;
+    private ChannelRef<Object> cr_vargs;
+   
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("stageins"), returns(channel("...", DYNAMIC)));
     }
 
+
     @Override
-    protected void post(VariableStack stack) throws ExecutionException {
-        List files = TypeUtil.toList(STAGEINS.getValue(stack));
-        VariableArguments ret = ArgUtil.getVariableReturn(stack);
-        for (Object f : files) { 
-        	String path = (String) f;
+    protected void runBody(LWThread thr) {
+        Stack stack = thr.getStack();
+        List<String> files = stageins.getValue(stack);
+        Channel<Object> ret = cr_vargs.get(stack);
+        for (String path : files) {
         	AbsFile af = new AbsFile(path);
+        	String dir = af.getDir();
         	if ("file".equals(af.getProtocol())) {
-                String dir = af.getDir();
-                ret.append(PathUtils.remotePathName(dir));
+                ret.add(PathUtils.remotePathName(dir));
         	}
         	else {
         	    // also prepend host name to the path
-        	    ret.append(af.getHost() + "/" + af.getDir());
+        	    ret.add(af.getHost() + "/" + PathUtils.remotePathName(dir));
         	}
         }
-        super.post(stack);
     }
 }

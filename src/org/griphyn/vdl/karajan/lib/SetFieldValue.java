@@ -20,19 +20,28 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableNotFoundException;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.futures.FutureFault;
-import org.globus.cog.karajan.workflow.futures.FutureNotYetAvailable;
-import org.griphyn.vdl.karajan.Pair;
-import org.griphyn.vdl.karajan.PairIterator;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.analyzer.VariableNotFoundException;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.futures.FutureFault;
+import org.globus.cog.karajan.futures.FutureNotYetAvailable;
+import org.globus.cog.karajan.parser.WrapperNode;
+import org.griphyn.vdl.karajan.PairSet;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -41,30 +50,84 @@ import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.type.Type;
 
-public class SetFieldValue extends VDLFunction {
+public class SetFieldValue extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(SetFieldValue.class);
 
-	public static final Arg PA_VALUE = new Arg.Positional("value");
-
-	static {
-		setArguments(SetFieldValue.class, new Arg[] { OA_PATH, PA_VAR, PA_VALUE });
-	}
+	protected ArgRef<DSHandle> var;
+	protected ArgRef<Object> path;
+	protected ArgRef<AbstractDataNode> value;
 	
-	private String src, dest;
-	private Tracer tracer;
+	protected ArgRef<String> _traceline;
 
 	@Override
-    protected void initializeStatic() {
-        super.initializeStatic();
-        tracer = Tracer.getTracer(this);
+    protected Signature getSignature() {
+        return new Signature(params("var", "value", optional("path", Path.EMPTY_PATH), optional("_traceline", null)));
     }
 
-    public Object function(VariableStack stack) throws ExecutionException {
-		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+    private String src, dest;
+	private Tracer tracer;
+	
+	protected VarRef<State> state;
+	
+	private static class State {
+	    public final List<StateEntry> l = new ArrayList<StateEntry>();
+	}
+	
+	private static class StateEntry {
+	    private Object value;
+	    private Object it;
+	    
+	    @SuppressWarnings("unchecked")
+        public <T> T it() {
+	        return (T) it;
+	    }
+	    
+	    public void it(Object it) {
+	        this.it= it;
+	    }
+	    
+	    @SuppressWarnings("unchecked")
+        public <T> T value() {
+            return (T) value;
+        }
+        
+        public void value(Object value) {
+            this.value= value;
+        }
+	}
+	
+	@Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        state = scope.getVarRef(scope.addVar("#state"));
+    }
+
+    @Override
+    public Node compile(WrapperNode w, Scope scope)
+            throws CompilationException {
+        Node fn = super.compile(w, scope);
+        if (_traceline.getValue() != null) {
+        	setLine(Integer.parseInt(_traceline.getValue()));
+        }
+        tracer = Tracer.getTracer(this);
+        return fn;
+    }
+    
+    
+
+    @Override
+    protected void initializeArgs(Stack stack) {
+        super.initializeArgs(stack);
+        this.state.setValue(stack, null);
+    }
+
+    @Override
+    public Object function(Stack stack) {
+		DSHandle var = this.var.getValue(stack);
 		try {
-		    Path path = parsePath(OA_PATH.getValue(stack), stack);
+		    Path path = parsePath(this.path.getValue(stack));
 			DSHandle leaf = var.getField(path);
-			AbstractDataNode value = (AbstractDataNode) PA_VALUE.getValue(stack);
+			AbstractDataNode value = this.value.getValue(stack);
 			
 			if (src == null) {
 			    dest = Tracer.getVarName(var);
@@ -72,7 +135,7 @@ public class SetFieldValue extends VDLFunction {
 			}
 			
 			if (tracer.isEnabled()) {
-			    log(leaf, value, stack);
+			    log(leaf, value, LWThread.currentThread());
 			}
 			    
             // TODO want to do a type check here, for runtime type checking
@@ -81,23 +144,25 @@ public class SetFieldValue extends VDLFunction {
             // for type conversion here; but would be useful to have
             // type checking.
 			
-   			deepCopy(leaf, value, stack, 0);
+   			deepCopy(leaf, value, stack);
+   			
 			return null;
 		}
 		catch (FutureFault f) {
+		    LWThread thr = LWThread.currentThread();
 		    if (tracer.isEnabled()) {
-		        tracer.trace(stack, var + " waiting for " + Tracer.getFutureName(f.getFuture()));
+		        tracer.trace(thr, var + " waiting for " + Tracer.getFutureName(f.getFuture()));
 		    }
-		    WaitingThreadsMonitor.addOutput(stack, Collections.singletonList(var));
+		    WaitingThreadsMonitor.addOutput(thr, Collections.singletonList(var));
 			throw f;
 		}
 		catch (Exception e) { // TODO tighten this
-			throw new ExecutionException(e);
+			throw new ExecutionException(this, e);
 		}
 	}
 
-    private void log(DSHandle leaf, DSHandle value, VariableStack stack) throws VariableNotFoundException {
-        tracer.trace(stack, dest + " = " + Tracer.unwrapHandle(value));
+    private void log(DSHandle leaf, DSHandle value, LWThread thr) throws VariableNotFoundException {
+        tracer.trace(thr, dest + " = " + Tracer.unwrapHandle(value));
     }
 
 	String unpackHandles(DSHandle handle, Map<Comparable<?>, DSHandle> handles) { 
@@ -119,21 +184,40 @@ public class SetFieldValue extends VDLFunction {
 	    return sb.toString();
 	}
 	
+	protected void deepCopy(DSHandle dest, DSHandle source, Stack stack) {
+	    // don't create a state if only a non-composite is copied
+	    ((AbstractDataNode) source).waitFor(this);
+        if (source.getType().isPrimitive()) {
+            dest.setValue(source.getValue());
+        }
+        else {
+    	    State state = this.state.getValue(stack);
+            if (state == null) {
+                state = new State();
+                this.state.setValue(stack, state);
+            }
+            
+            deepCopy(dest, source, state, 0);
+            
+            this.state.setValue(stack, null);
+        }
+	}
+	
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
-	public static void deepCopy(DSHandle dest, DSHandle source, VariableStack stack, int level) throws ExecutionException {
-	    ((AbstractDataNode) source).waitFor();
-		if (source.getType().isPrimitive()) {
-			dest.setValue(source.getValue());
-		}
-		else if (source.getType().isArray()) {
-		    copyArray(dest, source, stack, level);
+	public void deepCopy(DSHandle dest, DSHandle source, State state, int level) {
+	    ((AbstractDataNode) source).waitFor(this);
+        if (source.getType().isPrimitive()) {
+            dest.setValue(source.getValue());
+        }
+        else if (source.getType().isArray()) {
+		    copyArray(dest, source, state, level);
 		}
 		else if (source.getType().isComposite()) {
-		    copyStructure(dest, source, stack, level);
+		    copyStructure(dest, source, state, level);
 		}
 		else {
-		    copyNonComposite(dest, source, stack, level);
+		    copyNonComposite(dest, source, state, level);
 		}
 	}
 
@@ -147,45 +231,57 @@ public class SetFieldValue extends VDLFunction {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private static void copyStructure(DSHandle dest, DSHandle source,
-            VariableStack stack, int level) throws ExecutionException {
+    private void copyStructure(DSHandle dest, DSHandle source, State state, int level) {
         Type type = dest.getType();
-        Iterator<String> fni = (Iterator<String>) stack.currentFrame().getVar("it" + level);
+        StateEntry se = getStateEntry(state, level);
+        Iterator<String> fni = se.it();
         if (fni == null) {
             fni = type.getFieldNames().iterator();
-            stack.currentFrame().setVar("it" + level, fni);
+            se.it = fni;
         }
-        String fname = (String) stack.currentFrame().getVar("f" + level);
+        String fname = se.value();
         while (fni.hasNext() || fname != null) {
             if (fname == null) {
                 fname = fni.next();
-                stack.currentFrame().setVar("f" + level, fname);
+                se.value(fname);
             }
-            Path fpath = Path.EMPTY_PATH.addFirst(fname);
             try {
-                DSHandle dstf = dest.getField(fpath);
+                DSHandle dstf = dest.getField(fname);
                 try {
-                    DSHandle srcf = source.getField(fpath);
-                    deepCopy(dstf, srcf, stack, level + 1);
+                    DSHandle srcf = source.getField(fname);
+                    deepCopy(dstf, srcf, state, level + 1);
                 }
-                catch (InvalidPathException e) {
+                catch (NoSuchFieldException e) {
                     // do nothing. It's an unused field in the source.
                 }
             }
-            catch (InvalidPathException e) {
+            catch (NoSuchFieldException e) {
                 throw new ExecutionException("Internal type inconsistency detected. " + 
                     dest + " claims not to have a " + fname + " field");
             }
-            stack.currentFrame().deleteVar("f" + level);
+            se.value(null);
             fname = null;
         }
-        stack.currentFrame().deleteVar("it" + level);
+        popStateEntry(state);
         dest.closeShallow();
     }
 
-    private static void copyNonComposite(DSHandle dest, DSHandle source,
-            VariableStack stack, int level) throws ExecutionException {
+    private static StateEntry getStateEntry(State state, int level) {
+        if (state.l.size() == level) {
+            StateEntry e = new StateEntry();
+            state.l.add(e);
+            return e;
+        }
+        else {
+            return state.l.get(level);
+        }
+    }
+    
+    private static void popStateEntry(State state) {
+        state.l.remove(state.l.size() - 1);
+    }
+
+    private static void copyNonComposite(DSHandle dest, DSHandle source, State state, int level) {
         Path dpath = dest.getPathFromRoot();
         Mapper dmapper = dest.getRoot().getMapper();
         if (dmapper.canBeRemapped(dpath)) {
@@ -193,11 +289,12 @@ public class SetFieldValue extends VDLFunction {
                 logger.debug("Remapping " + dest + " to " + source);
             }
             dmapper.remap(dpath, source.getMapper(), source.getPathFromRoot());
-            dest.closeShallow();
+            dest.setValue(AbstractDataNode.FILE_VALUE);
         }
         else {
-            if (stack.currentFrame().isDefined("fc")) {
-                FileCopier fc = (FileCopier) stack.currentFrame().getVarAndDelete("fc");
+            StateEntry se = getStateEntry(state, level);
+            FileCopier fc = se.value();
+            if (fc != null) {
                 if (!fc.isClosed()) {
                     throw new FutureNotYetAvailable(fc);
                 }
@@ -206,12 +303,12 @@ public class SetFieldValue extends VDLFunction {
                         throw new ExecutionException("Failed to copy " + source + " to " + dest, fc.getException());
                     }
                 }
-                dest.closeShallow();
+                dest.setValue(AbstractDataNode.FILE_VALUE);
             }
             else {
-                FileCopier fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
+                fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
                     dest.getMapper().map(dpath));
-                stack.setVar("fc", fc);
+                se.value(fc);
                 try {
                     fc.start();
                 }
@@ -220,41 +317,38 @@ public class SetFieldValue extends VDLFunction {
                 }
                 throw new FutureNotYetAvailable(fc);
             }
+            popStateEntry(state);
         }
     }
 
-    private static void copyArray(DSHandle dest, DSHandle source,
-            VariableStack stack, int level) throws ExecutionException {
-        PairIterator it;
-        if (stack.isDefined("it" + level)) {
-            it = (PairIterator) stack.getVar("it" + level);
+    private void copyArray(DSHandle dest, DSHandle source, State state, int level) {
+        StateEntry se = getStateEntry(state, level);
+        Iterator<List<?>> it = se.it();
+        if (it == null) {
+            it = new PairSet(source.getArrayValue()).iterator();
+            se.it(it);
         }
-        else {
-            it = new PairIterator(source.getArrayValue());
-            stack.setVar("it" + level, it);
-        }
-        Pair pair = (Pair) stack.currentFrame().getVar("p" + level);
+        List<?> pair = se.value();
         while (it.hasNext() || pair != null) {
             if (pair == null) {
-                pair = (Pair) it.next();
-                stack.currentFrame().setVar("p" + level, pair);
+                pair = it.next();
+                se.value(pair);
             }
             Comparable<?> lhs = (Comparable<?>) pair.get(0);
             DSHandle rhs = (DSHandle) pair.get(1);
-            Path memberPath = Path.EMPTY_PATH.addLast(lhs, true);
             
             DSHandle field;
             try {
-                field = dest.getField(memberPath);
+                field = dest.getField(lhs);
             }
-            catch (InvalidPathException ipe) {
+            catch (NoSuchFieldException ipe) {
                 throw new ExecutionException("Could not get destination field",ipe);
             }
-            deepCopy(field, rhs, stack, level + 1);
-            stack.currentFrame().deleteVar("p" + level);
+            deepCopy(field, rhs, state, level + 1);
+            se.value(null);
             pair = null;
         }
-        stack.currentFrame().deleteVar("it" + level);
+        popStateEntry(state);
         dest.closeShallow();
     }
 }

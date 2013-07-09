@@ -2,7 +2,11 @@ MCS Compute Servers (x86 workstations)
 -------------------------------------
 
 This sections describes how to use the general use compute servers for
-the MCS division of Argonne National Laboratory.
+the MCS division of Argonne National Laboratory. Swift is available as a soft package on mcs machines. Add +swift to your .soft and run resoft command.
+
+----
+$ resoft
+----
 
 Create a coaster-service.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

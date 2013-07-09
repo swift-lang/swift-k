@@ -22,40 +22,45 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Types;
 
 
-public class ExtractFloat extends VDLFunction {
-	static {
-		setArguments(ExtractFloat.class, new Arg[] { PA_VAR });
-	}
+public class ExtractFloat extends SwiftFunction {
+    private ArgRef<AbstractDataNode> var;
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		AbstractDataNode handle = null;
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("var"));
+    }
+
+    @Override
+	public Object function(Stack stack) {
+		AbstractDataNode handle = this.var.getValue(stack);
 		try {
-			handle = (AbstractDataNode) PA_VAR.getValue(stack);
-			handle.waitFor();
+			handle.waitFor(this);
 			
 			String fn = argList(filename(handle), true);
 			Reader freader = new FileReader(fn);
 			BufferedReader breader = new BufferedReader(freader);
 			String str = breader.readLine();
 			freader.close();
-			DSHandle result = new RootDataNode(Types.FLOAT, Float.parseFloat(str));
-			int provid = VDLFunction.nextProvenanceID();
-			VDLFunction.logProvenanceResult(provid, result, "extractfloat");
-			VDLFunction.logProvenanceParameter(provid, handle, "filename");
+			DSHandle result = new RootDataNode(Types.FLOAT, Double.parseDouble(str));
+			int provid = SwiftFunction.nextProvenanceID();
+			SwiftFunction.logProvenanceResult(provid, result, "extractfloat");
+			SwiftFunction.logProvenanceParameter(provid, handle, "filename");
 			return result;
 		}
 		catch (IOException ioe) {
-			throw new ExecutionException("Reading floatingpoint content of file", ioe);
+			throw new ExecutionException("Reading integer content of file", ioe);
 		}
 	}
 }

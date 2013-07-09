@@ -22,42 +22,61 @@ package org.griphyn.vdl.karajan.functions;
 
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.Channel;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.AbstractFunction;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractFunction;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.VDL2ErrorTranslator;
 
 public class ProcessBulkErrors extends AbstractFunction {
 	public static final Logger logger = Logger.getLogger(ProcessBulkErrors.class);
+	
+	private ArgRef<String> message;
+	private ArgRef<List<ExecutionException>> errors;
+	private ArgRef<Boolean> onStdout;
+	
+	private ChannelRef<Object> cr_stdout, cr_stderr;
 
-	public static final Arg MESSAGE = new Arg.Positional("message");
-	public static final Arg ERRORS = new Arg.Positional("errors");
-	public static final Arg ONSTDOUT = new Arg.Optional("onstdout", Boolean.FALSE);
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("message", "errors", optional("onStdout", false)), 
+            returns(channel("stdout", DYNAMIC), channel("stderr", DYNAMIC)));
+    }
 
-	static {
-		setArguments(ProcessBulkErrors.class, new Arg[] { MESSAGE, ERRORS, ONSTDOUT });
-	}
+	@Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+	    returnDynamic(scope);
+        return super.compileBody(w, argScope, scope);
+    }
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		String message = TypeUtil.toString(MESSAGE.getValue(stack));
-		boolean onStdout = TypeUtil.toBoolean(ONSTDOUT.getValue(stack));
-		List l = TypeUtil.toList(ERRORS.getValue(stack));
+
+
+    @Override
+	public Object function(Stack stack) {
+		String message = this.message.getValue(stack);
+		boolean onStdout = this.onStdout.getValue(stack);
+		Collection<ExecutionException> l = this.errors.getValue(stack);
 
 		VDL2ErrorTranslator translator = VDL2ErrorTranslator.getDefault();
 
-		Map count = new HashMap();
-		Iterator i = l.iterator();
-		while (i.hasNext()) {
-			ExecutionException ex = (ExecutionException) i.next();
+		Map<String, Integer> count = new HashMap<String, Integer>();
+		for (ExecutionException ex : l) {	
 			if (ex.getCause() instanceof ConcurrentModificationException) {
 				ex.printStackTrace();
 			}
@@ -76,26 +95,25 @@ public class ProcessBulkErrors extends AbstractFunction {
 			}
 			tmsg = tmsg.trim();
 			if (count.containsKey(tmsg)) {
-				Integer j = (Integer) count.get(tmsg);
+				Integer j = count.get(tmsg);
 				count.put(tmsg, new Integer(j.intValue() + 1));
 			}
 			else {
 				count.put(tmsg, new Integer(1));
 			}
 		}
-		Arg.Channel channel = onStdout ? STDOUT : STDERR;
+		ChannelRef<Object> channel = onStdout ? cr_stdout : cr_stderr;
+		Channel<Object> r = channel.get(stack);
 		if (count.size() != 0) {
-			channel.ret(stack, message + "\n");
-			i = count.entrySet().iterator();
+			r.add(message + "\n");
 			int k = 1;
-			while (i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
-				Integer j = (Integer) e.getValue();
+			for (Map.Entry<String, Integer> e : count.entrySet()) {
+				Integer j = e.getValue();
 				if (j.intValue() == 1) {
-					channel.ret(stack, k + ". " + e.getKey() + "\n");
+					r.add(k + ". " + e.getKey() + "\n");
 				}
 				else {
-					channel.ret(stack, k + ". " + e.getKey() + " (" + j.intValue() + " times)\n");
+					r.add(k + ". " + e.getKey() + " (" + j.intValue() + " times)\n");
 				}
 				k++;
 			}

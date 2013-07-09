@@ -44,7 +44,7 @@ public class AbsFile implements GeneralizedFileFormat {
 		if (pi == -1) {
 			protocol = "file";
 			host = "localhost";
-			path = url;
+			path = normalize(url);
 		}
 		else {
 			protocol = url.substring(0, pi);
@@ -54,7 +54,7 @@ public class AbsFile implements GeneralizedFileFormat {
 				if (rp.startsWith("localhost/")) {
 					rp = rp.substring("localhost/".length());
 				}
-                path = rp;
+                path = normalize(rp);
 			}
 			else {
 				int si = url.indexOf('/', pi + 3);
@@ -64,13 +64,19 @@ public class AbsFile implements GeneralizedFileFormat {
 				}
 				else {
 					host = url.substring(pi + 3, si);
-					path = url.substring(si + 1);
+					path = normalize(url.substring(si + 1));
 				}
 			}
 		}
 		initDirAndName();
 	}
     
+    private String normalize(String path) {
+        // there is a slight performance penalty here, but it makes things
+        // cleaner
+        return path.replace("/./", "/");
+    }
+
     private void initDirAndName() {
     	int di = path.lastIndexOf('/');
         if (di == 0) {
@@ -126,8 +132,31 @@ public class AbsFile implements GeneralizedFileFormat {
 	}
 
 	private static final AbsFile[] FILE_ARRAY = new AbsFile[0];
+	
+	public List<AbsFile> listDirectories(FilenameFilter filter) {
+	    try {
+            FileResource fr = getFileResource();
+            try {
+                List<AbsFile> l = new ArrayList<AbsFile>();
+                for (GridFile gf : fr.list(path)) {
+                    AbsFile f = new AbsFile(protocol, host, gf.getAbsolutePathName());
+                    if (gf.isDirectory() && (filter == null || filter.accept(new File(f.getDir()), f.getName()))) {
+                        l.add(f);
+                    }
+                }
+                return l;
+            }
+            finally {
+                releaseResource(fr);
+            }
+        }
+        catch (Exception e) {
+            // TODO this should be a proper exception
+            throw new RuntimeException(e);
+        }
+	}
 
-	public AbsFile[] listFiles(FilenameFilter filter) {
+	public List<AbsFile> listFiles(FilenameFilter filter) {
 		try {
 			FileResource fr = getFileResource();
 			try {
@@ -138,7 +167,7 @@ public class AbsFile implements GeneralizedFileFormat {
 						l.add(f);
 					}
 				}
-				return l.toArray(FILE_ARRAY);
+				return l;
 			}
 			finally {
 				releaseResource(fr);
@@ -149,7 +178,7 @@ public class AbsFile implements GeneralizedFileFormat {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	public String getName() {
 		return name;
 	}
@@ -168,6 +197,10 @@ public class AbsFile implements GeneralizedFileFormat {
 
 	public String getPath() {
 		return path;
+	}
+	
+	public boolean isAbsolute() {
+	    return !path.isEmpty() && path.startsWith("/");
 	}
 	
 	public String getType() {

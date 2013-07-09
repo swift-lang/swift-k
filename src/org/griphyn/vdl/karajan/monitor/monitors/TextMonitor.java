@@ -20,10 +20,21 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors;
 
+import org.griphyn.vdl.karajan.monitor.SystemStateListener;
+import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
+
 
 public class TextMonitor extends AbstractMonitor {
+    
+    @Override
+    public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
+        System.out.println(updateType + " -> " + item);
+    }
 
     public void shutdown() {
     }
 
+    @Override
+    public void setParams(String params) {
+    }
 }

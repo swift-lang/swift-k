@@ -39,26 +39,24 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.Context;
+
 import org.apache.log4j.Appender;
 import org.apache.log4j.AsyncAppender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.globus.cog.karajan.compiled.nodes.Main;
+import org.globus.cog.karajan.compiled.nodes.grid.AbstractGridNode;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
-import org.globus.cog.karajan.stack.LinkedStack;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.Monitor;
-import org.globus.cog.karajan.workflow.ElementTree;
-import org.globus.cog.karajan.workflow.PrintStreamChannel;
-import org.globus.cog.karajan.workflow.nodes.FlowElement;
-import org.globus.cog.karajan.workflow.nodes.grid.AbstractGridNode;
+import org.globus.cog.karajan.util.KarajanProperties;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 import org.globus.cog.util.TextFileLoader;
 import org.globus.swift.data.Director;
 import org.griphyn.vdl.engine.Karajan;
-import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.karajan.lib.Execute;
 import org.griphyn.vdl.karajan.lib.Log;
 import org.griphyn.vdl.karajan.lib.New;
@@ -67,6 +65,7 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.IncorrectInvocationException;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
+import org.griphyn.vdl.util.LazyFileAppender;
 import org.griphyn.vdl.util.VDL2Config;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 import org.griphyn.vdl.util.VDL2ConfigProperties.PropInfo;
@@ -76,7 +75,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     public static final String ARG_HELP = "help";
     public static final String ARG_VERSION = "version";
-    public static final String ARG_MONITOR = "monitor";
     public static final String ARG_RESUME = "resume";
     public static final String ARG_INSTANCE_CONFIG = "config";
     public static final String ARG_TYPECHECK = "typecheck";
@@ -86,7 +84,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_LOGFILE = "logfile";
     public static final String ARG_CDMFILE = "cdm.file";
     public static final String ARG_RUNID = "runid";
-    public static final String ARG_TUI = "tui";
+    public static final String ARG_UI = "ui";
     public static final String ARG_RECOMPILE = "recompile";
     public static final String ARG_REDUCED_LOGGING = "reduced.logging";
     public static final String ARG_MINIMAL_LOGGING = "minimal.logging";
@@ -99,9 +97,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static String buildVersion;
 
     public static void main(String[] argv) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Swift started");
-        }
         ArgumentParser ap = buildArgumentParser();
         String project = null;
         try {
@@ -114,9 +109,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
             if (ap.isPresent(ARG_VERSION)){
             	version();
             	System.exit(0);
-            }
-            if (ap.isPresent(ARG_MONITOR)) {
-                new Monitor().start();
             }
             if (!ap.hasValue(ArgumentParser.DEFAULT)) {
                 version();
@@ -179,7 +171,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                     System.exit(3);
                 }
             }
-            ElementTree tree = null;
+            WrapperNode tree = null;
             if (project != null) {
                 tree = load(project);
             }
@@ -188,50 +180,48 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 shortUsage();
                 System.exit(1);
             }
+            
+            tree.setProperty("name", projectName + "-" + runID);
+            tree.setProperty(WrapperNode.FILENAME, project);
 
-            tree.setName(projectName + "-" + runID);
-            tree.getRoot().setProperty(FlowElement.FILENAME, project);
-
-            VDL2ExecutionContext ec = new VDL2ExecutionContext(tree,
-                projectName);
-            ec.setRunID(runID);
-            // no order
-            ec.setStdout(new PrintStreamChannel(System.out, true));
-
-            VariableStack stack = new LinkedStack(ec);
-            VDL2Config config = loadConfig(ap, stack);
+            VDL2Config config = loadConfig(ap);
+            Context context = new Context();
+            context.setArguments(ap.getArguments());
+            context.setAttribute("SWIFT:CONFIG", config);
+            context.setAttribute("projectName", projectName);
+            context.setAttribute("SWIFT:SCRIPT_NAME", projectName);
+            context.setAttribute("SWIFT:RUN_ID", runID);
+            context.setAttribute("SWIFT:DRY_RUN", ap.isPresent(ARG_DRYRUN));
+            context.setAttribute("SWIFT:HOME", System.getProperty("swift.home"));
+           
             addCommandLineProperties(config, ap);
             if (logger.isDebugEnabled()) {
                 logger.debug(config);
             }
             debugSitesText(config);
             
-            if (ap.isPresent(ARG_DRYRUN)) {
-                stack.setGlobal(CONST_VDL_OPERATION, VDL_OPERATION_DRYRUN);
-            }
-            else if (ap.isPresent(ARG_TYPECHECK)) {
-                stack.setGlobal(CONST_VDL_OPERATION, VDL_OPERATION_TYPECHECK);
-            }
-            else {
-                stack.setGlobal(CONST_VDL_OPERATION, VDL_OPERATION_RUN);
-            }
-            stack.setGlobal("swift.home", System.getProperty("swift.home"));
-            stack.setGlobal("PATH_SEPARATOR", File.separator);
+            Main root = compileKarajan(tree, context);
+            root.setFileName(projectName);
 
+            SwiftExecutor ec = new SwiftExecutor(root);
+            
             List<String> arguments = ap.getArguments();
             if (ap.hasValue(ARG_RESUME)) {
                 arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
             }
-            ec.setArguments(arguments);
-            new HangChecker(stack).start();
-            ec.start(stack);
+           
+            new HangChecker(context).start();
+            long start = System.currentTimeMillis();
+            ec.start(context);
             ec.waitFor();
-
+            long end = System.currentTimeMillis();
+            //System.out.println(JobSubmissionTaskHandler.jobsRun + " jobs, " + JobSubmissionTaskHandler.jobsRun * 1000 / (end - start) + " j/s");
             if (ec.isFailed()) {
                 runerror = true;
             }
         }
         catch (Exception e) {
+            e.printStackTrace();
             logger.debug("Detailed exception:", e);
             error("Could not start execution" + getMessages(e));
         }
@@ -242,7 +232,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         else {
             logger.info("Swift finished with no errors");
         }
-        if (ap.isPresent(ARG_TUI)) {
+        if (ma != null) {
             ma.close();
         }
         System.exit(runerror ? 2 : 0);
@@ -250,17 +240,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     private static String getMessages(Throwable e) {
         StringBuilder sb = new StringBuilder();
-        String lastMessage = null;
         while (e != null) {
-            String msg = e.getMessage();
-            if (msg == null) {
-                msg = e.toString();
-            }
-            sb.append("\n\t");
-            if (lastMessage == null || !lastMessage.contains(msg)) {
-                sb.append(msg);
-                lastMessage = msg;
-            }
+            sb.append(":\n\t");
+            sb.append(e.toString());
             e = e.getCause();
         }
         return sb.toString();
@@ -276,13 +258,19 @@ public class Loader extends org.globus.cog.karajan.Loader {
             cdmString = ap.getStringValue(ARG_CDMFILE);
             File cdmFile = new File(cdmString);
             debugText("CDM FILE", cdmFile);
-            Director.load(cdmFile); 
+            Director.load(cdmFile);
         }
         catch (IOException e) { 
             logger.debug("Detailed exception:", e);
             error("Could not start execution.\n\t" +
                   "Could not read given CDM policy file: " + cdmString);
         }
+    }
+    
+    private static Main compileKarajan(WrapperNode n, Context context) 
+    throws org.globus.cog.karajan.analyzer.CompilationException {
+        return (Main) n.compile(null, new SwiftRootScope(KarajanProperties.getDefault(), 
+                (String) n.getProperty(WrapperNode.FILENAME), context));
     }
     
     public static String compile(String project) throws FileNotFoundException,
@@ -319,7 +307,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 recompile = true;
             }
             else {
-                String prefix = "<!-- CACHE ID ";
+            	firstLine = firstLine.trim();
+                String prefix = "// CACHE ID ";
                 int offset = firstLine.indexOf(prefix);
                 if (offset < 0) {
                     // no build version in the KML
@@ -328,9 +317,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                     recompile = true;
                 }
                 else {
-                    String cut = firstLine.substring(offset + prefix.length());
-                    int endOffset = cut.indexOf(" -->");
-                    String kmlversion = cut.substring(0, endOffset);
+                    String kmlversion = firstLine.substring(offset + prefix.length());
                     logger.debug("kmlversion is >" + kmlversion + "<");
                     logger.debug("build version is >" + buildVersion + "<");
                     if (!(kmlversion.equals(buildVersion))) {
@@ -346,6 +333,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         if (recompile) {
             VDLt2VDLx.compile(new FileInputStream(swiftscript),
                 new PrintStream(new FileOutputStream(xml)));
+
             try {
                 FileOutputStream f = new FileOutputStream(kml);
                 Karajan.compile(xml.getAbsolutePath(), new PrintStream(f), provenanceEnabled);
@@ -366,12 +354,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 // if we leave a kml file around, then a subsequent
                 // re-run will skip recompiling and cause a different
                 // error message for the user
-                if (e instanceof NullPointerException) {
-                    e.printStackTrace();
-                }
                 kml.delete();
                 throw new CompilationException(
-                    "Failed to convert .swiftx to .kml for " + project, e);
+                    "Failed to convert .xml to .kml for " + project, e);
             }
         }
         else {
@@ -427,18 +412,15 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
     }
 
-    private static VDL2Config loadConfig(ArgumentParser ap, VariableStack stack)
-            throws IOException {
+    private static VDL2Config loadConfig(ArgumentParser ap) throws IOException {
         VDL2Config conf;
         if (ap.hasValue(ARG_INSTANCE_CONFIG)) {
             String configFile = ap.getStringValue(ARG_INSTANCE_CONFIG);
-            stack.setGlobal(ConfigProperty.INSTANCE_CONFIG_FILE, configFile);
             conf = VDL2Config.getConfig(configFile);
         }
         else {
             conf = (VDL2Config) VDL2Config.getConfig().clone();
         }
-        stack.setGlobal(ConfigProperty.INSTANCE_CONFIG, conf);
         return conf;
     }
 
@@ -522,7 +504,16 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 ARG_RUNID,
                 "Specifies the run identifier. This must be unique for every invocation of a workflow and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier.",
                 "string", ArgumentParser.OPTIONAL);
-        ap.addFlag(ARG_TUI);
+        ap.addOption(
+            ARG_UI, 
+            "Indicates how swift should display run-time information. The following are valid values:" +
+            "\n\t'summary' (default) - causesSswift to regularly print a count of jobs for each state that a job can be in" +
+            "\n\t'text' - regularly prints a more detailed table with Swift run-time information" +
+            "\n\t'TUI' - displays Swift run-time information using an interactive text user interface." +
+            " The terminal must standard ANSI/VT100 escape sequences. If a port is specified," +
+            " the interface will also be available via telnet at the specified port." +
+            "\n\t'http' - enables an http server allowing access to swift run-time information using a web browser",
+            "<summary|text|TUI[:port]|http[:[password@]port]>", ArgumentParser.OPTIONAL);
         ap.addFlag(ARG_REDUCED_LOGGING, "Makes logging more terse by disabling provenance " +
         		"information and low-level task messages");
         ap.addFlag(ARG_MINIMAL_LOGGING, "Makes logging much more terse: " +
@@ -556,17 +547,19 @@ public class Loader extends org.globus.cog.karajan.Loader {
         File f = new File(logfile);
 
         FileAppender fa = (FileAppender) getAppender(FileAppender.class);
+        AsyncAppender aa = new AsyncAppender();
+        aa.addAppender(fa);
+        
+        replaceAppender(fa, aa);
         if (fa == null) {
             logger.warn("Failed to configure log file name");
         }
         else {
             fa.setFile(f.getAbsolutePath());
+            if (fa instanceof LazyFileAppender) {
+                ((LazyFileAppender) fa).fileNameConfigured();
+            }
             fa.activateOptions();
-            
-            AsyncAppender aa = new AsyncAppender();
-            aa.addAppender(fa);
-
-            replaceAppender(fa, aa);
         }
         Level level = Level.WARN;
         if (ap.isPresent(ARG_VERBOSE)) {
@@ -584,18 +577,19 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ca.activateOptions();
         }
         Logger.getLogger(Log.class).setLevel(Level.INFO);
-        if (ap.isPresent(ARG_TUI)) {
-            ma = new MonitorAppender(projectName);
+        if (ap.isPresent(ARG_UI) && !"summary".equals(ap.getStringValue(ARG_UI))) {
+            ma = new MonitorAppender(projectName, ap.getStringValue(ARG_UI));
             Logger.getRootLogger().addAppender(ma);
             Logger.getLogger(Log.class).setLevel(Level.DEBUG);
             Logger.getLogger(AbstractGridNode.class).setLevel(Level.DEBUG);
             Logger.getLogger(Execute.class).setLevel(Level.DEBUG);
-            Logger.getLogger(VDL2ExecutionContext.class).setLevel(Level.INFO);
+            Logger.getLogger(SwiftExecutor.class).setLevel(Level.INFO);
             Logger.getLogger(WeightedHostScoreScheduler.class).setLevel(
                 Level.INFO);
             ca.setThreshold(Level.FATAL);
         }
         else if (ap.isPresent(ARG_MINIMAL_LOGGING)) {
+            Logger.getLogger("swift").setLevel(Level.WARN);
             Logger.getRootLogger().setLevel(Level.WARN);
         }
         else if (ap.isPresent(ARG_REDUCED_LOGGING)) {
@@ -605,12 +599,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
     }
 
+    
     private static void replaceAppender(FileAppender fa, AsyncAppender aa) {
         Logger root = Logger.getRootLogger();
         root.removeAppender(fa);
         root.addAppender(aa);
     }
-    
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected static Appender getAppender(Class cls) {
         Logger root = Logger.getRootLogger();
@@ -647,7 +642,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
             else {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(1);
                 }
                 catch (InterruptedException e) {
                 }

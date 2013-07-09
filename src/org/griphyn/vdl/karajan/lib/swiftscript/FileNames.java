@@ -20,28 +20,35 @@
  */
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.griphyn.vdl.karajan.lib.VDLFunction;
+import k.rt.ExecutionException;
+import k.rt.Stack;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.type.Types;
 
-public class FileNames extends VDLFunction {
-	static {
-		setArguments(FileNames.class, new Arg[] { PA_VAR });
-	}
+public class FileNames extends SwiftFunction {
+	private ArgRef<AbstractDataNode> var;
 
-	public Object function(VariableStack stack) throws ExecutionException {
-		String[] f = filename(stack);
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("var"));
+    }
+
+    @Override
+	public Object function(Stack stack) {
+        AbstractDataNode var = this.var.getValue(stack);
+		String[] f = filename(var);
 		DSHandle returnArray = new RootArrayDataNode(Types.STRING.arrayType());
 		try {
 			for (int i = 0; i < f.length; i++) {
-				Path p = parsePath("["+i+"]", stack);
+				Path p = parsePath("["+i+"]");
 				DSHandle h = returnArray.getField(p);
 				h.setValue(relativize(f[i]));
 			}
@@ -50,9 +57,11 @@ public class FileNames extends VDLFunction {
 		}
 		returnArray.closeShallow();
 		
-		int provid = VDLFunction.nextProvenanceID();
-		logProvenanceParameter(provid, (DSHandle) PA_VAR.getValue(stack), "input");
-		logProvenanceResult(provid, returnArray, "filenames");
+		if (PROVENANCE_ENABLED) {
+		    int provid = SwiftFunction.nextProvenanceID();
+		    logProvenanceParameter(provid, var, "input");
+		    logProvenanceResult(provid, returnArray, "filenames");
+		}
 
 		return returnArray;
 	}

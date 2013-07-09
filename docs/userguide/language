@@ -182,6 +182,64 @@ This fragment will initialise the 0-th element of the step array to
 some initial condition, and then repeatedly run the simulate
 procedure, using each execution's outputs as input to the next step.
 
+Associative Arrays
+~~~~~~~~~~~~~~~~~~
+
+By default, array keys are integers. However, other primitive types are also
+allowed as array keys. The syntax for declaring an array with a key type different
+than the default is:
+
+----
+<valueType>[<keyType>] array;
+----
+
+For example, the following code declares and assigns items to an array with string 
+keys and float values:
+
+----
+float[string] a;
+a["one"] = 0.2;
+a["two"] = 0.4;
+----
+
+In addition to primitive types, a special type named *auto* can be used to 
+declare an array for which an additional *append* operation is available:
+
+----
+int[auto] array;
+
+foreach i in [1:100] {
+  append(array, i * 2);
+}
+
+foreach v in array {
+  trace(v);
+}
+----
+
+Items in an array with *auto* keys cannot be accessed directly using a primitive
+type. The following example results in a compile-time error:
+
+----
+int[auto] array;
+array[0] = 1;
+----
+
+However, it is possible to use *auto* key values from one array to access another:
+
+----
+int[auto] a;
+int[auto] b;
+
+append(a, 1);
+append(a, 2);
+
+foreach v, k in a {
+  b[k] = a[k] * 2;
+}
+----
+
+
 Ordering of execution
 ~~~~~~~~~~~~~~~~~~~~~
 Non-array variables are single-assignment, which means that they must

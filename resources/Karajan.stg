@@ -4,75 +4,82 @@ group Karajan;
 // are smaller
 
 program(types,procedures,declarations,statements,constants,buildversion,cleanups) ::= <<
-<project><!-- CACHE ID $buildversion$ -->
-  <import file="sys.xml"/>
-  <import file="scheduler.xml"/>
-  <import file="rlog.xml"/>
-  <import file="vdl.k"/>
-  $if(types)$
-  <types>
-     <xs:schema targetNamespace="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-     $types;separator="\n"$
-     </xs:schema>
-  </types>
-  $endif$
-  $constants;separator="\n"$
-  $procedures;separator="\n"$
-  $declarations;separator="\n"$
-  $if(statements)$
-  <restartLog>
-  	<vdl:mains>
-		<vdl:startprogressticker />
-		<vdl:mainp>
-		    $parallel(statements=statements)$
-		</vdl:mainp>
-		<vdl:stopprogressticker />
-	</vdl:mains>
-  </restartLog>
-  $endif$
-  $cleanups:vdl_cleandataset();separator="\n"$
-  <vdl:cleandataset shutdown="true"/>
-</project>
+// CACHE ID $buildversion$
+import(sys)
+import(scheduler)
+import(rlog)
+import(swift)
+
+$if(types)$
+types(
+	xs:schema(
+    	$types;separator="\n"$
+    )
+)
+
+$endif$
+$constants;separator="\n"$
+$declarations;separator="\n"$
+$procedures;separator="\n"$
+$if(statements)$
+
+restartLog(name = k:concat(contextAttribute("SWIFT:SCRIPT_NAME"), "-", contextAttribute("SWIFT:RUN_ID"))) {
+	swift:mains(
+		swift:startProgressTicker()
+		swift:mainp(
+			$parallel(statements=statements)$
+		)
+		swift:stopProgressTicker()
+	)
+}
+$endif$
+
+$cleanups:swift_cleandataset();separator="\n"$
+swift:cleanDataset(shutdown=true)
 >>
 
 typeDef(name,type,members,sourcelocation) ::= <<
- $if(type)$
-   	 <xs:element name="$name$" type="$type$"/>
- $else$
-   $if(!members)$
- 	   <xs:simpleType name="$name$">
- 	   <xs:restriction base="string"/>
- 	   </xs:simpleType>
-   $else$
- 	   <xs:complexType name="$name$">
- 	   <xs:sequence>
- 	     $members;separator="\n"$
- 	   </xs:sequence>
- 	   </xs:complexType>
-   $endif$
- $endif$
+$if(type)$
+	xs:element("$name$", "$type$") 
+$else$
+	$if(!members)$
+		xs:simpleType("$name$", xs:restriction("string"))
+	$else$
+		xs:complexType("$name$",
+			xs:sequence(
+				$members;separator="\n"$
+			)
+ 	    )
+	$endif$
+$endif$
 >>
 
 memberdefinition(type,name,sourcelocation) ::= <<
-   <xs:element name="$name$" type="$type$"/>
+	xs:element("$name$", "$type$")
 >>
 
 procedure(name, outputs, inputs, arguments, optargs, binding, declarations, statements, config, line, initWaitCounts, cleanups, closes) ::= <<
-<element name="$name$"$if(arguments)$ arguments="$proc_args(args=arguments)$"$endif$$if(optargs)$ optargs="$proc_args(args=optargs)$"$endif$ _defline="$line$">
-  $optargs:default_arg();separator="\n"$
-  $inputs:vdl_log_input();separator="\n"$
-  $outputs:vdl_log_output();separator="\n"$
-$if(binding)$
-  $vdl_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name,line=line)$
-$else$
-  $compound(outputs=outputs, inputs=inputs, declarations=declarations, statements=statements, name=name, initWaitCounts=initWaitCounts, cleanups=cleanups)$
-$endif$
-</element>
 
+$name$ := function($if(optargs)$$proc_oargs(args=optargs)$$if(arguments)$, $endif$$endif$$if(arguments)$$proc_args(args=arguments)$$endif$) {
+	$swift_log_inputs(inputs)$
+	$swift_log_outputs(outputs)$
+$if(binding)$
+	$swift_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name,line=line)$
+$else$
+	$compound(outputs=outputs, inputs=inputs, declarations=declarations, statements=statements, name=name, initWaitCounts=initWaitCounts, cleanups=cleanups)$
+$endif$
+}
+>>
+
+swift_log_inputs(params) ::= <<
+$params:log_param("input");separator="\n"$
+>>
+swift_log_outputs(params) ::= <<
+$params:log_param("output");separator="\n"$
 >>
 
 compound(outputs, inputs, declarations, statements, config, name, initWaitCounts, cleanups) ::= <<
-<unitStart name="$name$" type="COMPOUND" outputs="$outputs:list();separator=","$"/>
+swift:unitStart("COMPOUND", name="$name$", outputs="$outputs:list();separator=","$")
 $if(initWaitCounts)$
 $initWaitCounts;separator="\n"$
 $endif$
@@ -81,131 +88,101 @@ $if(statements)$
 $parallel(statements=statements)$
 $endif$
 
-$outputs:vdl_closedataset();separator="\n"$
+$outputs:swift_closedataset();separator="\n"$
 
-$cleanups:vdl_cleandataset();separator="\n"$
-<unitEnd name="$name$" type="COMPOUND"/>
-
+$cleanups:swift_cleandataset();separator="\n"$
+swift:unitEnd("COMPOUND", name="$name$")
 >>
 
 proc_args(args) ::= <<
-$args:arg_name();separator=","$
+$args:arg_name();separator=", "$
 >>
 
 arg_name() ::= <<
 $it.name$
 >>
 
-default_arg() ::= <<
-$if(it.default)$
-<default name="$it.name$">
-$it.default$
-</default>
-$endif$
+proc_oargs(args) ::= <<
+$args:proc_optarg()$
 >>
 
-vdl_execute(outputs,inputs,attributes,application,name,line) ::= <<
-<unitStart name="$name$" line="$line$" type="PROCEDURE" outputs="$outputs:list();separator=","$"/>
-<vdl:execute>
-  $attributes$
-  <vdl:tr>$application.exec$</vdl:tr>
-  $inputs:vdl_stagein();separator="\n"$
-  $outputs:vdl_stageout();separator="\n"$
-  $vdl_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
-</vdl:execute>
-$outputs:vdl_closedataset();separator="\n"$
-<unitEnd name="$name$" line="$line$" type="PROCEDURE"/>
+proc_optarg() ::= <<
+$it.name$=$if(it.default)$$it.default$$else$null$endif$
 >>
 
-vdl_log_input() ::= <<
-<parameterlog>
-<string>input</string>
-<string>$it.name$</string>
-<vdl:getdatasetprovenanceid var="{$it.name$}" />
-<string>{#thread}</string>
-</parameterlog>
+swift_execute(outputs,inputs,attributes,application,name,line) ::= <<
+swift:unitStart("PROCEDURE", name="$name$", line="$line$", outputs="$outputs:list();separator=","$")
+swift:execute(
+	$attributes$
+	swift:tr("$application.exec$")
+	$inputs:swift_stagein();separator="\n"$
+	$outputs:swift_stageout();separator="\n"$
+	$swift_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
+)
+$outputs:swift_closedataset();separator="\n"$
+swift:unitEnd("PROCEDURE", name="$name$", line="$line$")
 >>
 
-vdl_log_output() ::= <<
-<parameterlog>
-<string>output</string>
-<string>$it.name$</string>
-<vdl:getdatasetprovenanceid var="{$it.name$}" />
-<string>{#thread}</string>
-</parameterlog>
+log_param(dir) ::= <<
+parameterLog("$dir$", "$it.name$", swift:getDatasetProvenanceID($it.name$))
 >>
 
-vdl_stagein() ::= <<
-<vdl:stagein var="{$it.name$}"/>
+swift_stagein() ::= <<
+swift:stageIn($it.name$)
 >>
 
-vdl_stageout(outputs) ::= <<
-<vdl:stageout var="{$it.name$}"/>
+swift_stageout(outputs) ::= <<
+swift:stageOut($it.name$)
 >>
 
-vdl_closedataset() ::= <<
-<vdl:closedataset var="{$it.name$}"/>
+swift_closedataset() ::= <<
+swift:closeDataset($it.name$)
 >>
 
-vdl_cleandataset() ::= <<
-<vdl:cleandataset var="{$it$}"/>
+swift_cleandataset() ::= <<
+swift:cleanDataset($it$)
 >>
 
 list() ::= <<$it.name$>>
 
-vdl_arguments(attributes,arguments,stdin,stdout,stderr) ::= <<
-  $attributes$
-<vdl:arguments>
-  $arguments;separator="\n"$
-</vdl:arguments>
+swift_arguments(attributes,arguments,stdin,stdout,stderr) ::= <<
+$attributes$
+swift:arguments(
+	$arguments;separator=", "$
+)
+
 $if (stdin)$
-<vdl:stdin>
-  $stdin$
-</vdl:stdin>
+swift:stdin($stdin$)
 $endif$
+
 $if (stdout)$
-<vdl:stdout>
-  $stdout$
-</vdl:stdout>
+swift:stdout($stdout$)
 $endif$
+
 $if (stderr)$
-<vdl:stderr>
-  $stderr$
-</vdl:stderr>
+swift:stderr($stderr$)
 $endif$
 >>
 
-vdl_attributes(entries) ::= <<
-<vdl:attributes>
-   <map>
-    $entries;separator="\n"$
-  </map>
-</vdl:attributes>
-
+swift_attributes(entries) ::= <<
+swift:attributes(
+	map:map(
+		$entries;separator="\n"$
+	)
+)
 >>
 
 map_entry(key,value) ::= <<
-      <entry>
-        <vdl:getfieldvalue>
-          $key$
-        </vdl:getfieldvalue>
-        <vdl:getfieldvalue>
-          $value$
-        </vdl:getfieldvalue>
-      </entry>
+	map:entry(swift:getFieldValue($key$), swift:getFieldValue($value$))
 >>
 
-// use unbuffered parallel here
-// since calls don't use this macro
 parallel(statements) ::= <<
 $if(rest(statements))$
-<uparallel>
-  $statements;separator="\n"$
-</uparallel>
+uparallel(
+	$statements;separator="\n"$
+)
 $else$
-<sequentialWithID>
-  $statements$
-</sequentialWithID>
+$statements$
 $endif$
 >>
 
@@ -214,51 +191,38 @@ $endif$
 // that calls a function in the 'swiftscript' namespace.
 
 function(name, args, datatype, line) ::= <<
-<swiftscript:$name$ _traceline="$line$">
-  $if(args)$ $args$ $endif$
-</swiftscript:$name$>
+swiftscript:$name$(
+	$if(args)$$args;separator=", "$$endif$
+)
 >>
 
-iterate(declarations,statements,cond,var,cleanups,trace,line) ::= <<
-
-<vdl:infinitecountingwhile var="$var$" $if(trace)$ _traceline="$line$"$endif$>
-  $sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
-  <sys:if>
-    <vdl:getfieldvalue>$cond$</vdl:getfieldvalue>
-    <sys:break/>
-  </sys:if>
-
-</vdl:infinitecountingwhile>
+iterate(declarations, statements, cond, var, refs, cleanups, trace, line) ::= <<
+swift:while($var$$if(trace)$, _traceline="$line$"$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$) {
+	if (!swift:getFieldValue($cond$)) {
+		$sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
+		next(swiftop:inc($var$))
+	}
+}
 >>
 
 foreach(var, in, indexVar, indexVarType, declarations, statements, line, refs, selfClose, cleanups, trace) ::= <<
-<vdl:tparallelFor name="\$"$if(trace)$ _traceline="$line$"$endif$$if(indexVar)$_kvar="$indexVar$"$endif$ _vvar="$var$"$if(selfClose)$ selfClose="true"$endif$$if(refs)$ refs="$refs;separator=" "$"$endif$>
+swift:tParallelFor(\$$if(trace)$, _traceline="$line$"$endif$$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
 $! The iterator !$
-	<getarrayiterator>
-		$in$
-	</getarrayiterator>
-$! Body !$
-	<set names="\$\$, $var$">
-		<each items="{\$}"/>
-	</set>
+	getArrayIterator($in$)) {
+	(\$\$, $var$) := each(\$)
 $if(indexVar)$
-	<set name="$indexVar$">
-		<vdl:new type="$indexVarType$" value="{\$\$}"/>
-	</set>
-	
+	$indexVar$ := swift:new("$indexVarType$", value=\$\$)
 $endif$
-<unitStart line="$line$" type="FOREACH_IT"/>
+
+	swift:unitStart("FOREACH_IT", line="$line$") 
 	$declarations;separator="\n"$
 $if(statements)$
 	$parallel(statements=statements)$
-	$cleanups:vdl_cleandataset();separator="\n"$
+	$cleanups:swift_cleandataset();separator="\n"$
 $endif$
-	<unitEnd line="$line$" type="FOREACH_IT"/>
-</vdl:tparallelFor>
->>
 
-cs() ::= <<
-	<set name="swift#cs"><variable>#thread</variable></set>
+	swift:unitEnd("FOREACH_IT", line="$line$")
+}
 >>
 
 // need to log inputs and outputs at the calling stage here because
@@ -266,212 +230,165 @@ cs() ::= <<
 // $outputs:vdl_log_output();separator="\n"$
 
 callInternal(func, outputs, inputs, line, serialize) ::= <<
-<sequential>
-<unitStart name="$func$" type="INTERNALPROC" outputs="$outputs:list();separator=","$"/>
-$cs()$
-<$func$ _traceline="$line$">
-  $if(!serialize)$<parallel>$endif$
-    $outputs:callInternal_log_output();separator="\n"$
-    $inputs:callInternal_log_input();separator="\n"$
-  $if(!serialize)$</parallel>$endif$
-</$func$>
-<unitEnd name="$func$" type="INTERNALPROC"/>
-</sequential>
+sequential(
+	swift:unitStart("INTERNALPROC", name="$func$", outputs="$outputs:list();separator=","$")
+	$func$(
+		$if(!serialize)$parallel($endif$
+    	$outputs:callInternal_log_output();separator="\n"$
+    	$inputs:callInternal_log_input();separator="\n"$
+  		$if(!serialize)$)$endif$
+	)
+	swift:unitEnd("INTERNALPROC", name="$func$")
+)
 >>
 
 callInternal_log_input() ::= <<
-<sequential>
-  <set name="swift#callInternalValue">$it$</set>
-  <parameterlog>
-    <string>input</string>
-    <string>TODO_name_or_pos</string>
-    <vdl:getdatasetprovenanceid var="{swift#callInternalValue}" />
-    <string>{swift#cs}</string>
-  </parameterlog>
-  <variable>swift#callInternalValue</variable>
-</sequential>
+sequential(
+	swift:parameterLog("input", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
+	$it$
+)
 >>
 
 callInternal_log_output() ::= <<
-<sequential>
-  <set name="swift#callInternalValue">$it$</set>
-  <parameterlog>
-    <string>output</string>
-    <string>TODO_name_or_pos</string>
-    <vdl:getdatasetprovenanceid var="{swift#callInternalValue}" />
-    <string>{swift#cs}</string>
-  </parameterlog>
-  <variable>swift#callInternalValue</variable>
-</sequential>
+sequential(
+	swift:parameterLog("output", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
+	$it$
+)
 >>
 
 callUserDefined(func, outputs, inputs, line, serialize, partialClose) ::= <<
-<$func$ _traceline="$line$">
-  $if(!serialize)$<parallel>$endif$
-    $outputs;separator="\n"$
-    $inputs;separator="\n"$
-  $if(!serialize)$</parallel>$endif$
-</$func$>
+$if(partialClose)$
+sequential(
+$endif$
+$func$(
+	$if(!serialize)$parallel($endif$
+	$outputs;separator=", "$
+	$inputs;separator=", "$
+	$if(!serialize)$)$endif$
+)
 $if(partialClose)$
 $partialClose$
+)
 $endif$
 >>
 
 call_arg(bind, expr, datatype) ::= <<
 $if(bind)$
-<argument name="$bind$">
-  $expr$
-</argument>
+$bind$ = $expr$
 $else$
 $expr$
 $endif$
 >>
 
 globalConstant(name, expr, datatype) ::= <<
-<global name="$name$">
-  $expr$
-</global>
+$name$ := $expr$
 >>
 
 variable(name, type, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line) ::= <<
-$if(isGlobal)$<global name="$name$">$else$<set name="$name$">$endif$
-  $if(mapping)$
-  <vdl:new type="$type$" dbgname="$name$"$if(waitCount)$ waitCount="$waitCount$"$endif$ _defline="$line$"$if(input)$ input="true"$endif$>
-    $vdl_mapping(mapping=mapping, file=file)$
-  </vdl:new>
-  $else$
-    $if(file)$
-      <vdl:new type="$type$" dbgname="$name$"$if(waitCount)$ waitCount="$waitCount$"$endif$ _defline="$line$"$if(input)$ input="true"$endif$>
-        $vdl_mapping(mapping=mapping, file=file)$
-      </vdl:new>
-    $else$
-      <vdl:new type="$type$" dbgname="$name$"$if(waitCount)$ waitCount="$waitCount$"$endif$ _defline="$line$"$if(input)$ input="true"$endif$/>
-    $endif$
-  $endif$
-$if(isGlobal)$</global>$else$</set>$endif$
+$name$ := 
+	$if(mapping)$
+	swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline="$line$"$endif$$if(input)$, input=true$endif$
+		$swift_mapping(mapping=mapping, file=file)$
+	)
+	$else$
+		$if(file)$
+			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline="$line$"$endif$$if(input)$, input=true$endif$
+				$swift_mapping(mapping=mapping, file=file)$
+			)
+		$else$
+			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline="$line$"$endif$$if(input)$, input=true$endif$)
+		$endif$
+	$endif$
 $variable_log()$
 >>
 
 variable_log() ::= <<
-	<parameterlog>
-		<string>intermediate</string>
-		<string>$name$</string>
-		<vdl:getdatasetprovenanceid var="{$name$}" />
-		<string>{#thread}</string>
-	</parameterlog>
+	swift:parameterLog("intermediate", "$name$", swift:getDatasetProvenanceID($name$))
 >>
 
-vdl_mapping(mapping, file) ::= <<
+swift_mapping(mapping, file) ::= <<
 $if(file)$
-<vdl:mapping descriptor="single_file_mapper">
-  <vdl:parameter name="file" value="$file.name$"/>
-  $if(file.params)$$file.params;separator="\n"$$endif$
-</vdl:mapping>
+swift:mapping("single_file_mapper", swift:parameter("file", "$file.name$") $if(file.params)$$file.params;separator="\n"$$endif$)
 $else$
-<vdl:mapping descriptor="$mapping.descriptor$">
-  $mapping.params;separator="\n"$
-</vdl:mapping>
+swift:mapping("$mapping.descriptor$", $mapping.params;separator="\n"$)
 $endif$
 >>
 
-vdl_parameter(name,expr) ::= <<
-<vdl:parameter name="$name$">$expr$</vdl:parameter>
+swift_parameter(name,expr) ::= <<
+swift:parameter("$name$", $expr$)
 >>
 
 assign(var, value, line, partialClose) ::= <<
-   <vdl:setfieldvalue $if(line)$_traceline="$line$"$else$_traceline="-1"$endif$>
-       $var$
-       $value$
-   </vdl:setfieldvalue>
-   $if(partialClose)$
-$partialClose$
-   $endif$
+$if(partialClose)$
+sequential(
+$endif$
+swift:setFieldValue($if(line)$_traceline="$line$"$endif$
+	$var$
+	$value$
+)
+$if(partialClose)$
+$partialClose$)
+$endif$
 >>
 
 append(array, value, partialClose) ::= <<
-	<vdl:appendArray>
-		$array$
-		$value$
-	</vdl:appendArray>
-	$if(partialClose)$
-$partialClose$
-    $endif$
+$if(partialClose)$
+sequential(
+$endif$
+swift:appendArray(
+	$array$
+	$value$
+)
+$if(partialClose)$
+$partialClose$)
+$endif$
 >>
 
 callexpr(call, datatype, prefix) ::= <<
-<sequential>
-	<set name="swift#callintermediate">
-		<vdl:new type="$datatype$" dbgname="swift#callintermediate">
-			<vdl:mapping descriptor="concurrent_mapper">
-				<vdl:parameter name="prefix">_callintermediate-$prefix$</vdl:parameter>
-			</vdl:mapping>
-		</vdl:new>
-	</set>
+sequential(
+	swift#callintermediate := swift:new("$datatype$", dbgname="swift#callintermediate",
+		swift:mapping("concurrent_mapper",
+			swift:parameter("prefix", "_callintermediate-$prefix$")
+		)
+	)
 	$call$
-	<variable>swift#callintermediate</variable>
-</sequential>
+	swift#callintermediate
+)
 >>
 
 array(elements, datatype) ::= <<
-<vdl:createarray>
-  <list>
-    $elements;separator="\n"$
-  </list>
-</vdl:createarray>
+swift:createArray(
+	list(
+		$elements;separator="\n"$
+	)
+)
 >>
 
 range(from, to, step, datatype) ::= <<
-	<sequential>
-		<set name="swift#rangeout">
-			<vdl:range>
-				<argument name="from">$from$</argument>
-				<argument name="to">$to$</argument>
-$if(step)$
-				<argument name="step">$step$</argument>
-$endif$
-			</vdl:range>
-		</set>
-		$range_log(from=from, to=to, step=step)$
-		<variable>swift#rangeout</variable>
-	</sequential> 
+sequential(
+	tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$)
+	tmp
+	$range_log(from=from, to=to, step=step, out=tmp)$
+) 
 >>
 
-range_log(from, to, step) ::= <<
-	<if>
-		<equals><vdl:configProperty><string>provenance.log</string></vdl:configProperty><string>true</string></equals>
- 		<then>
- 			<log level="info">
- 				<concat>
-    				<string>ARRAYRANGE thread={#thread} array=</string>
-    				<vdl:getdatasetprovenanceid var="{swift#rangeout}" />
-    				<string> from=</string> <vdl:getdatasetprovenanceid>$from$</vdl:getdatasetprovenanceid>
-    				<string> to=</string> <vdl:getdatasetprovenanceid>$to$</vdl:getdatasetprovenanceid>
-    				$if(step)$
-    					<string> step=</string> <vdl:getdatasetprovenanceid>$step$</vdl:getdatasetprovenanceid>
-    				$else$
-    					<string> step=none</string>
-    				$endif$
- 				</concat>
- 			</log>
- 		</then>
- 	</if>
+range_log(from, to, step, out) ::= <<
+	swift:log(INFO, str:concat("ARRAYRANGE thread=", currentThread(), " array=", getDatasetProvenanceId($out$),
+		" from=", getDatasetProvenanceId($from$), "to=", getDatasetProvenanceId($to$)
+		$if(step)$", step=", getDatasetProvenanceId($step$)$else$, "step=none"$endif$))
 >>
 
 if(condition,vthen,velse,line,trace) ::= <<
-<if $if(trace)$ _traceline="$line$"$endif$>
-	<vdl:getfieldvalue>$condition$</vdl:getfieldvalue>
-	<then>
-		<unitStart type="CONDITION_BLOCK"/>
-		$vthen$
-	</then>
+if (swift:getFieldValue($condition$)) {
+	swift:unitStart("CONDITION_BLOCK")
+	$vthen$
+}
 $if(velse)$
-	<else>
-		<unitStart type="CONDITION_BLOCK"/>
-		$velse$
-	</else>
+else {
+	swift:unitStart("CONDITION_BLOCK")
+	$velse$
+}
 $endif$
-
-</if>
 >>
 
 sub_comp(declarations, statements, cleanups, preClose) ::= <<
@@ -481,158 +398,131 @@ $endif$
 $declarations;separator="\n"$
 $if(statements)$
 $parallel(statements=statements)$
-$cleanups:vdl_cleandataset();separator="\n"$
+$cleanups:swift_cleandataset();separator="\n"$
 $endif$
 >>
 
 switch(condition,cases,sdefault) ::= <<
-<sequential>
-  <set name="\$_sw">
-    $condition$
-  </set>
-  <if>
+sequential(
+	swc := $condition$
 $cases:{case |
-    <vdl:getfieldvalue>
-    <vdlop:eq>
-       <variable>\$_sw</variable>
-       $case.value$
-    </vdlop:eq>
-    </vdl:getfieldvalue>
-    <then>
-      $sub_comp(declarations=case.declarations, statements=case.statements)$
-    </then>
+	if (swift:getFieldValue(swiftop:eq(swc, $case.value$))) {
+		$sub_comp(declarations=case.declarations, statements=case.statements)$
+	}
+	$if(rest(cases))$else$else$$if(sdefault)$else$endif$$endif$
 }$
 $if(sdefault)$
-    <else>
+    {
       $sdefault$
-    </else>
-
+    }
 $endif$
-  </if>
-</sequential>
+)
 >>
 
 // TODO can optimise this like we do with parallel statements so that
 // the wrapping layer disappers in the (perhaps common?) case of a
 // single layer.
 sequential(statements) ::= <<
-  <sequential>
-    $statements;separator="\n"$
-  </sequential>
+$if(rest(statements))$
+sequential(
+   	$statements;separator="\n"$
+)
+$else$
+$statements$
+$endif$
 >>
 
 
 partialclose(var, count) ::= <<
-<partialCloseDataset var="{$var$}"$if(count)$ count="$count$"$endif$/>
+swift:partialCloseDataset($var$$if(count)$, count=$count$$endif$)
 >>
 
 setWaitCount(name, waitCount) ::= <<
-<setWaitCount var="{$name$}"$if(waitCount)$ count="$waitCount$"$endif$/>
+swift:setWaitCount($name$$if(waitCount)$, count=$waitCount$$endif$)
+
 >>
 
 unitStart(type, outputs) ::= <<
-  <unitStart type="$type$" outputs="$outputs$"/>
+swift:unitStart("$type$", outputs="$outputs$")
 >>
 
 unitEnd(type) ::= <<
-  <unitEnd type="$type$"/>
+  swift:unitEnd("$type$")
 >>
 
 operator ::= [
-  "+":"vdlop:sum",
-  "-":"vdlop:subtraction",
-  "*":"vdlop:product",
-  "/":"vdlop:fquotient",
-  "%/":"vdlop:iquotient",
-  "%%":"vdlop:remainder",
-  "&lt;=":"vdlop:le",
-  "&gt;=":"vdlop:ge",
-  "&gt;":"vdlop:gt",
-  "&lt;":"vdlop:lt",
-  "<=":"vdlop:le",
-  ">=":"vdlop:ge",
-  ">":"vdlop:gt",
-  "<":"vdlop:lt",
-  "==":"vdlop:eq",
-  "!=":"vdlop:ne",
-  "&amp;&amp;":"vdlop:and",
-  "||":"vdlop:or"
+  "+":"swiftop:sum",
+  "-":"swiftop:subtraction",
+  "*":"swiftop:product",
+  "/":"swiftop:fquotient",
+  "%/":"swiftop:iquotient",
+  "%%":"swiftop:remainder",
+  "&lt;=":"swiftop:le",
+  "&gt;=":"swiftop:ge",
+  "&gt;":"swiftop:gt",
+  "&lt;":"swiftop:lt",
+  "<=":"swiftop:le",
+  ">=":"swiftop:ge",
+  ">":"swiftop:gt",
+  "<":"swiftop:lt",
+  "==":"swiftop:eq",
+  "!=":"swiftop:ne",
+  "&amp;&amp;":"swiftop:and",
+  "||":"swiftop:or"
 ]
 
 unaryNegation(exp, datatype) ::= <<
-<vdlop:product>
-  <vdl:new type="int" value="-1" />
-  $exp$
-</vdlop:product>
+swiftop:product(swift:new("int", value = -1), $exp$)
 >>
 
 binaryop(op,left,right,datatype) ::= <<
-<$operator.(op)$>
-  $left$
-  $right$
-</$operator.(op)$>
+$operator.(op)$($left$, $right$)
 >>
 
 not(exp, datatype) ::= <<
-<vdlop:not>
-  $exp$
-</vdlop:not>
+swiftop:not($exp$)
 >>
 
 id(var, datatype) ::= <<
-<variable>$var$</variable>
+$var$
 >>
 
 extractarrayelement(parent, arraychild, datatype) ::= <<
-<vdl:getfieldsubscript>
-  <argument name="var">$parent$</argument>
-  <argument name="subscript">$arraychild$</argument>
-</vdl:getfieldsubscript>
+swift:getFieldSubscript($parent$, $arraychild$)
 >>
 
 extractstructelement(parent, memberchild, datatype) ::= <<
-<getfield>
-  <argument name="var">$parent$</argument>
-  <argument name="path">$memberchild$</argument>
-</getfield>
+getField($parent$, "$memberchild$")
 >>
 
 slicearray(parent, memberchild, datatype) ::= <<
-<sequential>
- <set name="swift#array">$parent$</set>
- <set name="swift#slice">
-  <vdl:slicearray>
-    <argument name="var"><variable>swift#array</variable></argument>
-    <argument name="path">$memberchild$</argument>
-    <argument name="type">$datatype$</argument>
-  </vdl:slicearray>
- </set>
+sequential(
+	slice := swift:sliceArray($parent$, "$memberchild$", "$datatype$")
+ 	$logSliceArray(memberchild=memberchild, array=parent, slice=slice)$
+ 	slice
+)
+>>
 
- <log level="debug"><concat>
-   <string>SLICEARRAY thread={#thread} slice=</string>
-   <vdl:getdatasetprovenanceid var="{swift#slice}" />
-   <string> member=$memberchild$ array=</string>
-   <vdl:getdatasetprovenanceid var="{swift#array}" />
- </concat></log>
-
- <variable>swift#slice</variable>
-</sequential>
+logSliceArray(memberchild, array, slice) ::= <<
+	swift:log(DEBUG, str:concat("SLICEARRAY thread=", currentThread(), " slice=", swift:getDatasetProvenanceID($slice$),
+		" member=$member$ array=", swift:getDatasetProvenanceID($array$))
 >>
 
 
 iConst(value, datatype) ::= <<
-<vdl:new type="int" value="$value$" />
+swift:new("int", value=$value$)
 >>
 
 fConst(value, datatype) ::= <<
-<vdl:new type="float" value="$value$" />
+swift:new("float", value=$value$)
 >>
 
 bConst(value, datatype) ::= <<
-<vdl:new type="boolean" value="$value$" />
+swift:new("boolean", value=$value$)
 >>
 
+// Why is there a value attribute?
 sConst(value,innervalue,datatype) ::= <<
-<vdl:new type="string" value="$innervalue$" />
+swift:new("string", value="$innervalue$")
 >>
 

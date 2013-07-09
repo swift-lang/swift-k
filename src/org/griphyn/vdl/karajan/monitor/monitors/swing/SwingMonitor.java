@@ -30,6 +30,7 @@ import javax.swing.JTabbedPane;
 
 import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.SystemStateListener;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
@@ -38,12 +39,12 @@ import org.griphyn.vdl.karajan.monitor.monitors.AbstractMonitor;
 public class SwingMonitor extends AbstractMonitor {
 	private JFrame frame;
 	private Timer timer;
-	private Map tablemap;
+	private Map<StatefulItemClass, ClassRenderer> tablemap;
 	private GanttChart gantt;
 
 	public SwingMonitor() {
 		createFrame();
-		tablemap = new HashMap();
+		tablemap = new HashMap<StatefulItemClass, ClassRenderer>();
 	}
 
 	private void createFrame() {
@@ -82,8 +83,8 @@ public class SwingMonitor extends AbstractMonitor {
 		tabs.add("Gantt Chart", gantt);
 	}
 
-	public void itemUpdated(int updateType, StatefulItem item) {
-		ClassRenderer table = (ClassRenderer) tablemap.get(item.getItemClass());
+	public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
+		ClassRenderer table = tablemap.get(item.getItemClass());
 		if (table != null) {
 			table.dataChanged();
 		}
@@ -91,5 +92,9 @@ public class SwingMonitor extends AbstractMonitor {
 	}
 
     public void shutdown() {
+    }
+
+    @Override
+    public void setParams(String params) {
     }
 }

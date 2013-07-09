@@ -20,52 +20,60 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import k.rt.Stack;
+import k.thr.LWThread;
+
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.AbstractSequentialWithArguments;
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
+import org.griphyn.vdl.util.VDL2Config;
 
-public class Parameterlog extends AbstractSequentialWithArguments {
+public class Parameterlog extends InternalFunction {
     public static final Logger logger = Logger.getLogger(Parameterlog.class);
-
-    public static final Arg DIRECTION = new Arg.Positional("direction");
-    public static final Arg VAR = new Arg.Positional("variable");
-    public static final Arg ID = new Arg.Positional("id");
-    public static final Arg THREAD = new Arg.Positional("thread");
-
-    static {
-        setArguments(Parameterlog.class, new Arg[] { DIRECTION, VAR, ID, THREAD });
+    
+    private ArgRef<String> direction;
+    private ArgRef<String> variable;
+    private ArgRef<String> id;
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("direction", "variable", "id"));
     }
 
     private Boolean enabled;
+    private VarRef<VDL2Config> config;
     
     @Override
-    public void pre(VariableStack stack) throws ExecutionException {
-        if (enabled == null) {
-            enabled = "true".equals(ConfigProperty.getProperty("provenance.log", true, stack));
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+        config = scope.getVarRef("SWIFT_CONFIG");
+        return super.compileBody(w, argScope, scope);
+    }
+
+
+
+    @Override
+    protected void runBody(LWThread thr) {
+        Stack stack = thr.getStack();
+        boolean run;
+        synchronized(this) {
+            if (enabled == null) {
+                enabled = "true".equals(ConfigProperty.getProperty("provenance.log", true, config.getValue(stack)));
+            }
+            run = enabled;
         }
-    }
-    
-    
-
-    @Override
-    protected void executeChildren(VariableStack stack) throws ExecutionException {
-    	if (enabled) {
-    	    super.executeChildren(stack);
-    	}
-    	else {
-    		complete(stack);
-    	}
-    }
-
-    @Override
-    protected void post(VariableStack stack) throws ExecutionException {
-        if (enabled) {
-            logger.info("PARAM thread=" + THREAD.getValue(stack) + " direction="
-                    + DIRECTION.getValue(stack) + " variable=" + VAR.getValue(stack)
-                    + " provenanceid=" + ID.getValue(stack));
+        if (run) {
+            super.run(thr);
+            logger.info("PARAM thread=" + thr.getName() + " direction="
+                    + direction.getValue(stack) + " variable=" + variable.getValue(stack)
+                    + " provenanceid=" + id.getValue(stack));
         }
     }
 }

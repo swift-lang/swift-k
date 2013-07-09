@@ -300,10 +300,6 @@ getarg "-of" "$@"
 OUTF=$VALUE
 shift $SHIFTCOUNT
 
-getarg "-k" "$@"
-KICKSTART=$VALUE
-shift $SHIFTCOUNT
-
 getarg "-cdmfile" "$@"
 CDM_FILE=
 if [ "X$VALUE" != "X" ]; then

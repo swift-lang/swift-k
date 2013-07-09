@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,15 +43,26 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
         public static final MappingParam PARAM_SOURCE = new MappingParam("source");
 	public static final MappingParam PARAM_MATCH = new MappingParam("match");
 	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
+	
+	private String match, transform;
+		
+	@Override
+    protected void getValidMappingParams(Set<String> s) {
+	    addParams(s, PARAM_SOURCE, PARAM_MATCH, PARAM_TRANSFORM);
+        super.getValidMappingParams(s);
+    }
 
 	public StructuredRegularExpressionMapper() {
 	}
 
-	public void setParams(MappingParamSet params) {
+	public void setParams(MappingParamSet params) throws HandleOpenException {
 		super.setParams(params);
 		if (!PARAM_MATCH.isPresent(this)) {
 			throw new RuntimeException("Missing parameter match!");
 		}
+		
+		match = PARAM_MATCH.getStringValue(this);
+        transform = PARAM_TRANSFORM.getStringValue(this);
 	}
 
 	public Collection<Path> existing() {
@@ -81,9 +93,6 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 	public PhysicalFormat map(Path path) {
 
                 logger.debug("map(): path: " + path); 
-
-		String match = PARAM_MATCH.getStringValue(this);
-		String transform = PARAM_TRANSFORM.getStringValue(this);
 
 		DSHandle sourceHandle = (DSHandle) PARAM_SOURCE.getRawValue(this);
 		DSHandle hereHandle;

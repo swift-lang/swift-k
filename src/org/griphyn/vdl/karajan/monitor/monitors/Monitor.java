@@ -32,4 +32,6 @@ public interface Monitor {
     void setOffline(boolean offline);
     
     TimelineController getTimelineController();
+
+    void setParams(String params);
 }

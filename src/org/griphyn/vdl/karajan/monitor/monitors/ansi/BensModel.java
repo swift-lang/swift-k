@@ -100,7 +100,7 @@ public class BensModel extends AbstractTableModel implements SystemStateListener
     public void setValueAt(Object value, int rowIndex, int columnIndex) {
     }
 
-    public void itemUpdated(int updateType, StatefulItem item) {
+    public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
         if (item.getItemClass().equals(StatefulItemClass.TRACE)) {
             fireTableDataChanged();
         }

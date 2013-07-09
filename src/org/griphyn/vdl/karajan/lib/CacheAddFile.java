@@ -20,37 +20,72 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import org.globus.cog.karajan.arguments.Arg;
-import org.globus.cog.karajan.stack.VariableStack;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.cog.karajan.workflow.ExecutionException;
+import java.util.List;
+
+import k.rt.ExecutionException;
+import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
+
+import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.util.BoundContact;
 import org.griphyn.vdl.karajan.lib.cache.CacheReturn;
 import org.griphyn.vdl.karajan.lib.cache.File;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
 
 public class CacheAddFile extends CacheFunction {
-	public static final Arg FILE = new Arg.Positional("file");
-	public static final Arg DIR = new Arg.Positional("dir");
-	public static final Arg HOST = new Arg.Positional("host");
-	public static final Arg SIZE = new Arg.Positional("size");
+	private ArgRef<String> file;
+    private ArgRef<String> dir;
+    private ArgRef<BoundContact> host;
+    private ArgRef<Number> size;
+    private Node body;
+    
+    private VarRef<List<?>> cacheFilesToRemove;
 
-	static {
-		setArguments(CacheAddFile.class, new Arg[] { FILE, DIR, HOST, SIZE });
-	}
+	@Override
+    protected Signature getSignature() {
+        return new Signature(params("file", "dir", "host", "size", block("body")));
+    }
+	
+	@Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        cacheFilesToRemove = scope.getVarRef(scope.addVar(CACHE_FILES_TO_REMOVE));
+    }
 
-	public void partialArgumentsEvaluated(VariableStack stack) throws ExecutionException {
-		String file = TypeUtil.toString(FILE.getValue(stack));
-		String dir = TypeUtil.toString(DIR.getValue(stack));
-		Object host = HOST.getValue(stack);
-		long size = TypeUtil.toLong(SIZE.getValue(stack));
-		VDLFileCache cache = getCache(stack);
+    @Override
+    protected void runBody(LWThread thr) {
+        int i = thr.checkSliceAndPopState();
+        try {
+            switch (i) {
+                case 0:
+                    add(thr.getStack());
+                    i++;
+                case 1:
+                    body.run(thr);
+            }
+        }
+        catch (Yield y) {
+            y.getState().push(i);
+            throw y;
+        }
+    }
+
+    public void add(Stack stack) {
+    	String file = this.file.getValue(stack);
+        String dir = this.dir.getValue(stack);
+        BoundContact host = this.host.getValue(stack);
+        long size = this.size.getValue(stack).longValue();
+        VDLFileCache cache = getCache(stack);
 		File f = new File(file, dir, host, size);
 		CacheReturn cr = cache.addEntry(f);
 		if (cr.alreadyCached) {
-			throw new ExecutionException("The cache already contains " + f + ".");
+			throw new ExecutionException(this, "The cache already contains " + f + ".");
 		}
-		super.partialArgumentsEvaluated(stack);
-		stack.setVar(CacheFunction.CACHE_FILES_TO_REMOVE, cr.remove);
-		startNext(stack);
+		cacheFilesToRemove.setValue(stack, cr.remove);
 	}
 }
