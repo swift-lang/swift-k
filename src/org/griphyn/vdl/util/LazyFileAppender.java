@@ -27,7 +27,11 @@ public class LazyFileAppender extends FileAppender {
     public synchronized void setFile(String fileName, boolean append, boolean bufferedIO, int bufferSize)
             throws IOException {
         LogLog.debug("setFile called: " + fileName + ", " + append);
-
+        
+        if (this.qw != null) {
+            return;
+        }
+        
         // set a stdout writer just in case
         reset();
         Writer fw = createWriter(System.out);
@@ -55,6 +59,9 @@ public class LazyFileAppender extends FileAppender {
 
         // Save file name since reset() sets it to null
         String fileName = this.fileName;
+        
+        // Set to null to prevent parent class from closing System.out
+        this.qw = null;
         reset();
         this.fileName = fileName;
         FileOutputStream ostream = null;
