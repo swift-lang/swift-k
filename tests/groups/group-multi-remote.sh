@@ -1,7 +1,7 @@
 
 # GROUPLIST definition to run all local tests
 
-GROUPLIST=( $TESTDIR/stress/user_profile \
+GROUPLIST=(
             $TESTDIR/multi_remote        \
           )
 

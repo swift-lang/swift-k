@@ -2,7 +2,6 @@
 # GROUPLIST definition to run all local tests
 
 GROUPLIST=( # Remote sanity test-group
-            $TESTDIR/stress/user_profile         \
             $TESTDIR/stress/remote_sanity/beagle \
             $TESTDIR/stress/remote_sanity/mcs    \
             $TESTDIR/stress/remote_sanity/midway \

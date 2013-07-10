@@ -1,8 +1,7 @@
 
 # GROUPLIST definition to run all local tests
 
-GROUPLIST=( 
-            $TESTDIR/stress/user_profile       \
+GROUPLIST=(             
             $TESTDIR/stress/apps/modis_beagle  \
 	    $TESTDIR/stress/apps/modis_local   \
 	    $TESTDIR/stress/apps/modis_midway  \
