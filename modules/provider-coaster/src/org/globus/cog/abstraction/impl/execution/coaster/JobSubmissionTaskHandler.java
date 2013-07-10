@@ -236,7 +236,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             if (logger.isDebugEnabled()) {
                 logger.debug("Submitted task " + getTask() + ". Job id: " + jobid);
             }
-            NotificationManager.getDefault().registerTask(jobid, getTask(), this);
+            NotificationManager.getDefault().registerListener(jobid, getTask(), this);
         }
     }
 
