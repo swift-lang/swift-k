@@ -34,7 +34,7 @@ public class TaskNotifier implements StatusListener, ExtendedStatusListener, Cal
         this.task = task;
         this.channelContext = channelContext;
         this.task.addStatusListener(this);
-        NotificationManager.getDefault().registerTask(task.getIdentity().getValue(), task, this);
+        NotificationManager.getDefault().registerListener(task.getIdentity().getValue(), task, this);
     }
     
    
