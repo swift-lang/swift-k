@@ -58,7 +58,7 @@ public class NotificationManager {
         lastNotificationTime = System.currentTimeMillis();
     }
 
-    public void registerTask(String id, Task task, ExtendedStatusListener l) {
+    public void registerListener(String id, Task task, ExtendedStatusListener l) {
         List<ExtendedStatus> p;
         synchronized (listeners) {
             listeners.put(id, new TaskListenerPair(task, l));
@@ -74,21 +74,22 @@ public class NotificationManager {
     public void notificationReceived(String id, Status s, String out, String err) {
         if (logger.isDebugEnabled())
             logger.debug("recvd: for: " + id + " " + s);
-        TaskListenerPair l;
+        TaskListenerPair ls;
         synchronized (listeners) {
             if (s.isTerminal()) {
-                l = listeners.remove(id);
+                ls = listeners.remove(id);
             }
             else {
-                l = listeners.get(id);
+                ls = listeners.get(id);
             }
             lastNotificationTime = System.currentTimeMillis();
-            if (l == null) {
+            if (ls == null) {
             	addPending(id, new ExtendedStatus(s, out, err));
             }
         }
-        if (l != null) {
-            l.listener.statusChanged(s, out, err);
+        if (ls != null) {
+            for (ExtendedStatusListener l : ls.listeners)
+            l.statusChanged(s, out, err);
         }
     }
 
@@ -165,11 +166,16 @@ public class NotificationManager {
     
     private static final class TaskListenerPair {
         public final Task task;
-        public final ExtendedStatusListener listener;
+        public final List<ExtendedStatusListener> listeners;
         
         public TaskListenerPair(Task task, ExtendedStatusListener listener) {
             this.task = task;
-            this.listener = listener;
+            this.listeners = new LinkedList<ExtendedStatusListener>();
+            this.listeners.add(listener);
+        }
+        
+        public void addListener(ExtendedStatusListener l) {
+            this.listeners.add(l);
         }
     }
 }

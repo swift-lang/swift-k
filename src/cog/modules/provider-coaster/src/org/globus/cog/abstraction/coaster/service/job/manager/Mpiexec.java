@@ -339,7 +339,7 @@ public class Mpiexec implements ProcessListener, ExtendedStatusListener {
         String value = cloneID.getValue() + ":" + i;
         cloneID.setValue(value);
         clone.setIdentity(cloneID);
-        NotificationManager.getDefault().registerTask(value, clone, this);
+        NotificationManager.getDefault().registerListener(value, clone, this);
 
         // Update Task Specification
         JobSpecification spec = (JobSpecification) clone.getSpecification();

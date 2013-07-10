@@ -14,17 +14,16 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
-import org.globus.cog.abstraction.impl.common.StatusEvent;
+import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.impl.execution.coaster.SubmitJobCommand;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
-import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.workflow.service.channels.KarajanChannel;
 import org.globus.cog.karajan.workflow.service.commands.Command;
 import org.globus.cog.karajan.workflow.service.commands.Command.Callback;
 
-public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
+public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
     public static final Logger logger = Logger.getLogger(Cpu.class);
 
     private static PullThread pullThread;
@@ -215,7 +214,8 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
     }
 
     boolean launchSequential() {
-        running.getTask().addStatusListener(this);
+        Task t = running.getTask();
+        NotificationManager.getDefault().registerListener(t.getIdentity().getValue(), t, this);
         idleTime += timeDiff();
         timelast = running.getEndTime();
         if (timelast == null) {
@@ -360,14 +360,13 @@ public class Cpu implements Comparable<Cpu>, Callback, StatusListener {
         task.setStatus(Status.SUBMITTED);
     }
 
-     public synchronized void statusChanged(StatusEvent event) {
+     public synchronized void statusChanged(Status s, String out, String err) {
          if (logger.isDebugEnabled()) {
-             logger.debug(event);
+             logger.debug(s);
          }
-         if (event.getStatus().isTerminal()) {
-             running.getTask().removeStatusListener(this);
+         if (s.isTerminal()) {
              running.setEndTime(Time.now());
-             if (event.getStatus().getStatusCode() == Status.FAILED) {
+             if (s.getStatusCode() == Status.FAILED) {
                  failedJobs++;
                  totalFailedJobs++;
              }
