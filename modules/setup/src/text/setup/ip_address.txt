@@ -1,0 +1,3 @@
+ Please enter the IP address of this machine.
+ 
+ To use an automatic probing mechanism (which may fail occasionally), press the "Probe" button.

@@ -1,0 +1,27 @@
+//----------------------------------------------------------------------
+//This code is developed as part of the Java CoG Kit project
+//The terms of the license can be found at http://www.cogkit.org/license
+//This message may not be removed or altered.
+//----------------------------------------------------------------------
+
+/*
+ * Created on Dec 18, 2012
+ */
+package org.globus.cog.karajan.compiled.nodes.functions;
+
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
+
+
+public abstract class AbstractMultiValuedFunction extends AbstractFunction {
+
+	@Override
+	public Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
+		Var.Channel crv = scope.lookupChannel("...");
+		crv.setDynamic();
+		return this;
+	}
+}

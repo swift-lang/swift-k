@@ -1,0 +1,87 @@
+<html>
+<body>
+
+<center><h1>Certificate Management Tools</h1></center>
+
+<br>
+The certificate management module is a set of tools that make it easier for users to manage their certificates. For instance there are tools to generate a certificate request, store credential on MyProxy server, view local credential, renew certificates and revoke certificates.<br>
+<br>
+Administrators have to choice of deploying these tools as signed Java Applets and/or as signed Java WebStart Applets.<br>
+<br>
+The benefits of signed Java Applet are integration into web pages however they required Java capable browsers. Java singed WebStart Applets do not have this requirement. The WebStart mechanism also has the advantage of caching the jars used by the applets. One disadvantage to the WebStart mechanism is that the Applet will not integrate into web page.<br>
+<br>
+Both of these deployment methods are appealing because they don’t require any installation of OGSA or CoG by the client. The deployment mechanism will install the necessary jars to run the certificate management tools.<br>
+<br>
+
+<br>
+<b>Applets (html)</b><br>
+<br>
+These applets are signed by my personal credentials which are certified by Grid Canada CA.<br>
+<br>
+Most browsers come with a list of known CA that they trust. Since Grid Canada CA is not known to your browser you will get a warning "The security certificate was issued by a company that is not trusted". Since we trust Grid Canada simply ignore the warning.<br>
+<br>
+<a href="./CertReqApplet.html">Certificate Request</a><br>
+<a href="./HostCertReqApplet.html">Host Certificate Request</a><br>
+<a href="./CertInfoApplet.html">Certificate Information</a><br>
+<a href="./MyProxyApplet.html">MyProxy</a><br>
+<a href="./CertRenewApplet.html">Certificate Renewal</a><br>
+<a href="./CertDestroyApplet.html">Certificate Revocation</a><br>
+<br>
+<br>
+<b>Applets (jsp)</b><br>
+<br>
+These applets are signed by my personal credentials which are certified by Grid Canada CA.<br>
+<br>
+Most browsers come with a list of known CA that they trust. Since Grid Canada CA is not known to your browser you will get a warning "The security certificate was issued by a company that is not trusted". Since we trust Grid Canada simply ignore the warning.<br>
+<br>
+<a href="./certreq.jsp">Certificate Request</a><br>
+<a href="./hostcertreq.jsp">Host Certificate Request</a><br>
+<a href="./certinfo.jsp">Certificate Information</a><br>
+<a href="./myproxy.jsp">MyProxy</a><br>
+<a href="./certrenew.jsp">Certificate Renewal</a><br>
+<a href="./certdestroy.jsp">Certificate Revocation</a><br>
+<br>
+<br>
+<b>WebStart Applets</b><br>
+<br>
+In order for the Java WebStart client to verify the signature of the jars it needs to know the CA that issued the signing certificate to the entity that signed the jars. That means that before using any of the applets a user needs to import the Globus and Sun's "JCE Code Signing CA" certificate authorities into their Java WebStart client.</br>
+<br>
+Download the CA certificates:<br>
+<a href="http://www.gridcanada.ca/ca/index.html">Grid Cadanda CA</a><br>
+<a href="JCE Code Signing CA.pem">JCE Code Signing CA</a><br>
+<br>
+Here are the steps to install the CA certificates into Java WebStart:<br>
+<br>
+Start Java WebStart console<br>
+Go to File->Perferences<br>
+Go to Root Certificates<br>
+Click on Import<br>
+Select the file containing the Root Certificate<br>
+Click open and give it a name can be anything<br>
+<br>
+Only then will Java WebStart be able to validate the signature of the jars.<br>
+<br>
+Note: At the moment the jce jar is not signed properly by Bouncy Castle. Once we use the latest jar it will be ok but for the moment you will get a "error parsing certificate" warning dialog. Simply press the X button <b>do not press the abort button</b>.<br>
+<br>
+<a href="./certreq.jnlp">Certificate Request</a><br>
+<a href="./hostcertreq.jnlp">Host Certificate Request</a><br>
+<a href="./certinfo.jnlp">Certificate Information</a><br>
+<a href="./myproxy.jnlp">MyProxy</a><br>
+<a href="./certrenew.jnlp">Certificate Renewal</a><br>
+<a href="./certdestroy.jnlp">Certificate Revocation</a><br>
+<br>
+<br>
+<a href="readme.html">Readme</a><br>
+<br>
+<br>
+Jean-Claude Cote<br >
+High Performance Computing / Calcul de haute performance<br>
+National Research Council Canada / Conseil national de recherches Canada<br>
+www.grid.nrc.ca<br>
+<br>
+
+
+
+</body>
+</html>
+

@@ -1,0 +1,13 @@
+#Root category
+log4j.rootCategory=WARN, CONSOLE
+
+# CONSOLE is set to be a ConsoleAppender using a PatternLayout
+# The class is not printed
+log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
+log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONSOLE.layout.ConversionPattern=%-5p %x - %m%n
+
+# CONSOLE-C is the same as above, but the class is printed
+log4j.appender.CONSOLE-C=org.apache.log4j.ConsoleAppender
+log4j.appender.CONSOLE-C.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONSOLE-C.layout.ConversionPattern=%-5p [%c] %x - %m%n

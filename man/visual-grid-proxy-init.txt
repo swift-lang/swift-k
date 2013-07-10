@@ -1,0 +1,11 @@
+NAME
+    vizual-grid-proxy-init
+
+SYNOPSIS
+
+DESCRIPTION
+
+OPTIONS
+
+BUGS
+    no -help

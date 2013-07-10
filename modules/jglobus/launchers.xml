@@ -1,0 +1,69 @@
+<project name="Launchers" default="create" basedir=".">
+	<target name="create">
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="grid-proxy-init"/>
+			<property name="class-name" value="org.globus.tools.ProxyInit"/>
+			<property name="umask" value="umask 077"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="grid-proxy-info"/>
+			<property name="class-name" value="org.globus.tools.ProxyInfo"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="grid-proxy-destroy"/>
+			<property name="class-name" value="org.globus.tools.ProxyDestroy"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="grid-cert-info"/>
+			<property name="class-name" value="org.globus.tools.CertInfo"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="grid-info-search"/>
+			<property name="class-name" value="org.globus.tools.GridInfoSearch"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="globusrun"/>
+			<property name="class-name" value="org.globus.tools.GlobusRun"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="globus-url-copy"/>
+			<property name="class-name" value="org.globus.tools.GlobusUrlCopy"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="globus-gass-server"/>
+			<property name="class-name" value="org.globus.tools.GassServer"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="globus-gass-server-shutdown"/>
+			<property name="class-name" value="org.globus.tools.GassServerShutdown"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="globus-personal-gatekeeper"/>
+			<property name="class-name" value="org.globus.gatekeeper.Gatekeeper"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="grid-change-pass-phrase"/>
+			<property name="class-name" value="org.globus.tools.ChangePassPhrase"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="cog-myproxy"/>
+			<property name="class-name" value="org.globus.tools.MyProxy"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="globus2jks"/>
+			<property name="class-name" value="org.globus.tools.KeyStoreConvert"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="cog-proxy-init"/>
+			<property name="class-name" value="org.globus.tools.proxy.GridProxyInit"/>
+			<property name="umask" value="umask 077"/>
+		</ant>
+	</target>
+	<target name="webstart">
+		<ant antfile="${main.buildfile}" target="webstart.launcher">
+			<property name="launcher-name" value="cog-proxy-init"/>
+			<property name="class-name" value="org.globus.tools.proxy.GridProxyInit"/>
+			<property name="display-name" value="Grid Proxy Init"/>
+		</ant>
+	</target>
+</project>

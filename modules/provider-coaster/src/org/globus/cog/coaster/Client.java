@@ -1,0 +1,159 @@
+//----------------------------------------------------------------------
+//This code is developed as part of the Java CoG Kit project
+//The terms of the license can be found at http://www.cogkit.org/license
+//This message may not be removed or altered.
+//----------------------------------------------------------------------
+
+/*
+ * Created on Jul 19, 2005
+ */
+package org.globus.cog.coaster;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.VersionCommand;
+
+public class Client {
+	private static final Logger logger = Logger.getLogger(Client.class);
+
+	private final URI contact;
+	private CoasterChannel channel;
+	private RequestManager requestManager;
+	private ChannelContext sc;
+	private static Service callback;
+	private boolean connected, connecting;
+	private Exception e;
+
+	private static Map<String, Client> clients = new HashMap<String, Client>();
+	private static Service service;
+
+	public static Client getClient(String contact) throws Exception {
+		Client client;
+		synchronized (clients) {
+			if (!clients.containsKey(contact)) {
+				client = new Client(contact);
+				clients.put(contact, client);
+			}
+			client = clients.get(contact);
+		}
+		try {
+			synchronized (client) {
+				client.connect();
+			}
+		}
+		catch (Exception e) {
+			synchronized (clients) {
+				clients.remove(contact);
+			}
+			throw e;
+		}
+		return client;
+	}
+
+	public static Client newClient(String contact, ChannelContext context) throws Exception {
+		return newClient(contact, context, new ClientRequestManager());
+	}
+
+	public static Client newClient(String contact, ChannelContext context,
+			RequestManager requestManager) throws Exception {
+		Client client = new Client(contact, requestManager);
+		client.setChannelContext(context);
+		context.getChannelID().setClient(true);
+		synchronized (client) {
+			client.connect();
+		}
+		return client;
+	}
+
+	private void setChannelContext(ChannelContext context) {
+		this.sc = context;
+	}
+
+	public Client(String contact) throws URISyntaxException {
+		this(contact, new ClientRequestManager());
+	}
+
+	public Client(String contact, RequestManager requestManager) throws URISyntaxException {
+		this.contact = new URI(contact);
+		this.requestManager = requestManager;
+	}
+
+	public void connect() throws Exception {
+		synchronized (this) {
+			while (connecting) {
+				wait();
+			}
+			if (e != null) {
+				throw e;
+			}
+			if (connected) {
+				return;
+			}
+			else {
+				connecting = true;
+			}
+		}
+		try {
+			if (sc == null) {
+				sc = new ChannelContext(contact.toString());
+				sc.setConfiguration(RemoteConfiguration.getDefault().find(contact.toString()));
+			}
+			URI c = contact;
+			String host = contact.getHost();
+			int port = contact.getPort();
+			if (port == -1) {
+				c = new URI(contact.getScheme(), null, contact.getHost(), 1984, null, null, null);
+			}
+			channel = ChannelFactory.newChannel(c, sc, requestManager);
+			connected = true;
+		}
+		catch (Exception e) {
+			this.e = e;
+			throw e;
+		}
+		finally {
+			synchronized (this) {
+				connecting = false;
+				notifyAll();
+			}
+		}
+	}
+
+	public void execute(Command command) throws IOException, ProtocolException, InterruptedException {
+		command.execute(channel);
+	}
+
+	public void executeAsync(Command command) throws ProtocolException, IOException {
+		command.executeAsync(channel);
+	}
+
+	public void close() throws IOException {
+		channel.close();
+	}
+
+	public CoasterChannel getChannel() {
+		return channel;
+	}
+
+	public static void main(String[] args) {
+		try {
+			Client client = new Client("https://localhost:50000");
+			client.connect();
+			VersionCommand ver = new VersionCommand();
+			client.execute(ver);
+			System.out.println("Server version: " + ver.getServerVersion());
+			client.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}

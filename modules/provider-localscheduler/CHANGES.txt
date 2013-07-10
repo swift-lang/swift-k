@@ -1,0 +1,67 @@
+(02/17/10)
+
+*** Added prototype SGE provider
+
+*** Added handling of multi jobs using ssh
+
+(06/25/09)
+
+*** Held condor jobs are treated as failures if the heldIsFailure attribute
+    is set to true.
+
+(04/15/09)
+
+*** Support for Condor-G submissions, by setting a job specification attribute
+    of "grid" and specifying a gridResource attribute containing the string
+    to be placed into the Condor-G grid_resource classad.
+
+(03/13/09)
+
+*** Refactored common portions of providers into abstract parts
+
+*** Added condor provider
+
+(04/24/08)
+
+*** Added job canceling to PBS
+
+(09/19/07)
+
+*** Cobalt: 'count' attribute mapped to '-c'. The default should
+    be figured by cqsub from 'hostCount'. Looking at the cqsub
+    code, it seems like count = 2 * hostCount on a BG/L and
+    count = 4 * hostCount on a BG/P. That's in vn mode. In
+    co mode count = hostCount.
+
+*** Cobalt: 'hostCount' attribute mapped to '-n', with a default
+    of 1
+
+(08/22/07)
+
+*** The cobalt provider was not passing command line arguments
+    to the job
+    
+*** Added -k <kernel profile> option for cobalt. The spec attribute
+    is "kernelprofile".
+    
+*** Configurable exit code extraction regexps (Kevin Harms points
+    out that looking for a string containing "BG/L job exit status"
+    is likely to not work on a BG/P). D'oh!
+
+(08/20/07)
+
+*** Redirection updates
+
+(02/27/07)
+
+*** I think Process.waitFor() can deadlock if there's too
+    much stuff on std*. The processing of stdout from qstat
+	is now done while the qstat process is running.
+
+(02/14/07)
+
+*** Fixed Cobalt
+
+(02/12/07)
+
+*** Initial version

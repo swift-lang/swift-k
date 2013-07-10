@@ -1,0 +1,1 @@
+Utility classes that are re-used by various Java CoG Kit components.

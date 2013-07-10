@@ -1,0 +1,3 @@
+Karajan GUI is a graphical interface to the Karajan workflow engine. It
+can be used for features otherwise not available in the command line
+interface (such as setting breakpoints, interactive error handling, visualization, etc.)

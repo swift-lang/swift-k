@@ -1,0 +1,9 @@
+<project name="Launchers" default="create" basedir=".">
+	<target name="create">
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="cog-register"/>
+			<property name="class-name" value="org.globus.cog.gui.util.RegistrationFrame"/>
+		</ant>
+	</target>
+	<target name="webstart"/>
+</project>
