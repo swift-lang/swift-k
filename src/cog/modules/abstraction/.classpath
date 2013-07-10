@@ -7,7 +7,6 @@
 	<classpathentry exported="true" kind="src" path="/abstraction-provider-gt2"/>
 	<classpathentry exported="true" kind="src" path="/abstraction-provider-ssh"/>
 	<classpathentry exported="true" kind="src" path="/abstraction-provider-webdav"/>
-	<classpathentry exported="true" kind="src" path="/abstraction-provider-gt4_0_0"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-local"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-condor"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/abstraction-provider-localscheduler"/>

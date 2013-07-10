@@ -11,6 +11,6 @@
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/util"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/jglobus"/>
-        <classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>

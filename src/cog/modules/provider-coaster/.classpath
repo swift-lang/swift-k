@@ -13,6 +13,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/jglobus"/>
 	<classpathentry kind="src" path="/abstraction-provider-local"/>
 	<classpathentry kind="src" path="/util"/>
-        <classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
