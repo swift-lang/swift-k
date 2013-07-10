@@ -156,6 +156,7 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 		if (hasProperty("_processed")) {
 			return;
 		}
+		int childCountBeforeInclude = this.elementCount();
 		A_FILE.setStatic(this, iname);
 		logger.debug("Importing: " + iname);
 		Reader reader = null;
@@ -289,7 +290,7 @@ public class Include extends AbstractSequentialWithArguments implements LoadList
 				throw new ExecutionException("Internal error. No reader set");
 			}
 		}
-		setProperty("_processed", elementCount());
+		setProperty("_processed", childCountBeforeInclude);
 	}
 
 	public void loadStarted() {
