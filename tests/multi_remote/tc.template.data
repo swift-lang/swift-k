@@ -1,0 +1,6 @@
+beagle    bgl /bin/bash null null null
+uc3       uc3 /bin/bash null null null
+midway    mid /bin/bash null null null
+frisbee	  fsb /bin/bash null null null
+crush	  csh /bin/bash null null null
+local  l_bash /bin/bash null null null
