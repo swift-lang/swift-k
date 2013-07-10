@@ -42,7 +42,7 @@ public class SGEExecutor extends AbstractExecutor {
     public static final Pattern JOB_ID_LINE = Pattern.compile(".*[Yy]our job (\\d+) \\(.*\\) has been submitted");
 	public static final Logger logger = Logger.getLogger(SGEExecutor.class);
     private static QueuePoller poller;
-    private static final String[] QSUB_PARAMS = new String[] {};
+    private static final String[] QSUB_PARAMS = new String[] {"-S", "/bin/bash"};
     private static int unique = 0; 
     private static NumberFormat IDF = new DecimalFormat("000000");
     
