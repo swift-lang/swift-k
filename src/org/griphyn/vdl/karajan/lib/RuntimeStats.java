@@ -68,7 +68,7 @@ public class RuntimeStats {
 	public static SimpleDateFormat formatter = 
 		new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
 	public static final int MIN_PERIOD_MS=1000;
-	public static final int MAX_PERIOD_MS=1000;
+	public static final int MAX_PERIOD_MS=30000;
 
 	public static final String[] preferredOutputOrder = {
 		"uninitialized",
