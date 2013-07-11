@@ -178,13 +178,15 @@ public class TCProfile extends SwiftFunction {
 
 	private void addEnvironment(Stack stack, BoundContact bc) {
 		Map<String,Object> props = bc.getProperties();
-		for (Map.Entry<String,Object> e : props.entrySet()) {
-			String name = e.getKey();
-			FQN fqn = new FQN(name); 
-			String value = (String) e.getValue();
-			if (Profile.ENV.equalsIgnoreCase(fqn.getNamespace())) {
-			    cr_environment.append(stack, new Entry(fqn.getName(), value));
-			}
+		if (props != null) {
+    		for (Map.Entry<String,Object> e : props.entrySet()) {
+    			String name = e.getKey();
+    			FQN fqn = new FQN(name); 
+    			String value = (String) e.getValue();
+    			if (Profile.ENV.equalsIgnoreCase(fqn.getNamespace())) {
+    			    cr_environment.append(stack, new Entry(fqn.getName(), value));
+    			}
+    		}
 		}
 	}
 	
