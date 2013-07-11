@@ -61,7 +61,14 @@ public class NotificationManager {
     public void registerListener(String id, Task task, ExtendedStatusListener l) {
         List<ExtendedStatus> p;
         synchronized (listeners) {
-            listeners.put(id, new TaskListenerPair(task, l));
+            TaskListenerPair tlp = listeners.get(id);
+            if (tlp == null) {
+                tlp = new TaskListenerPair(task, l);
+                listeners.put(id, tlp);
+            }
+            else {
+                tlp.addListener(l);
+            }
             p = pending.remove(id);
         }
         if (p != null) {
@@ -88,8 +95,9 @@ public class NotificationManager {
             }
         }
         if (ls != null) {
-            for (ExtendedStatusListener l : ls.listeners)
-            l.statusChanged(s, out, err);
+            for (ExtendedStatusListener l : ls.listeners) {
+                l.statusChanged(s, out, err);
+            }
         }
     }
 
