@@ -1705,25 +1705,89 @@ public class Karajan {
 
 	void checkTypesInArithmExpr(String op, String left, String right, StringTemplate st)
 			throws CompilationException {
-		if (left.equals(right))
-			st.setAttribute("datatype", left);
-		else
-			throw new CompilationException("Arithmetic operation can only be applied to parameters of same type.");
-
-		if (op.equals("+") && !left.equals("int") && !left.equals("float") && !left.equals("string"))
-				throw new CompilationException("Arithmetic operation + can only be applied to parameters of type int, float and string.");
-		if ((op.equals("-") || op.equals("*")) && !left.equals("int") && !left.equals("float"))
-			throw new CompilationException("Arithmetic operation " + op +
-					" can only be applied to parameters of type int and float.");
-		if (op.equals("/") && !left.equals("float"))
-				throw new CompilationException("Arithmetic operation / can only be applied to parameters of type float.");
-		if (op.equals("%/") && !left.equals("int"))
-			throw new CompilationException("Arithmetic operation %/ can only be applied to parameters of type int.");
-		if (op.equals("%%") && !left.equals("int"))
-			throw new CompilationException("Arithmetic operation %% can only be applied to parameters of type int.");
+	    /* 
+	     * +, -, /, * : int, int -> int
+	     * +, -, /, *: float, float -> float
+	     * +, -, /, * : int, float -> float
+	     * +, -, /, * : float, int -> float
+	     * 
+	     * + : string, string -> string
+         * + : string, int -> string
+         * + : int, string -> string
+         * + : string, float -> string
+         * + : float, string -> string
+         * 
+         * %/ : int, int -> int
+         * %% : int, int -> int
+	     */
+	    
+	    switch (op.charAt(0)) {
+	        case '+':
+	            if (left.equals("string")) {
+	                if (!right.equals("string") && !right.equals("int") && !right.equals("float")) {
+	                    throw new CompilationException("Operator '+' cannot be applied to 'string'  and '" + right + "'");
+	                }
+	                st.setAttribute("datatype", "string");
+	            }
+	            else if (right.equals("string")) {
+	                if (!left.equals("string") && !left.equals("int") && !left.equals("float")) {
+                        throw new CompilationException("Operator '+' cannot be applied to '" + left + "'  and 'string'");
+                    }
+	                st.setAttribute("datatype", "string");
+	            }
+	            else {
+	                checkTypesInType1ArithmExpr(op, left, right, st);
+	            }
+	            break;
+	        case '-':
+	        case '/':
+	        case '*':
+	            checkTypesInType1ArithmExpr(op, left, right, st);
+	            break;
+	        case '%':
+	            checkTypesInType2ArithmExpr(op, left, right, st);
+	            break;
+	        default:
+	            throw new CompilationException("Unknown operator '" + op + "'");
+	    }
 	}
 
-	public String abstractExpressionToRootVariable(XmlObject expression) throws CompilationException {
+	private void checkTypesInType1ArithmExpr(String op, String left, String right, StringTemplate st) 
+	        throws CompilationException {
+	    /* 
+         * int, int -> int
+         * float, float -> float
+         * int, float -> float
+         * float, int -> float
+         */
+	    if (left.equals("int")) {
+	        if (right.equals("int")) {
+	            st.setAttribute("datatype", "int");
+	            return;
+	        }
+	        else if (right.equals("float")) {
+	            st.setAttribute("datatype", "float");
+	            return;
+	        }
+	    }
+	    else if (left.equals("float")) {
+	        if (right.equals("int") || right.equals("float")) {
+	            st.setAttribute("datatype", "float");
+	            return;
+            }
+	    }
+	    throw new CompilationException("Operator '" + op + "' cannot be applied to '" + left + "' and '" + right + "'");
+    }
+
+    private void checkTypesInType2ArithmExpr(String op, String left, String right, StringTemplate st) 
+            throws CompilationException {
+        if (!left.equals("int") || !right.equals("int")) {
+            throw new CompilationException("Operator '" + op + "' can only be applied to 'int' and 'int'");
+        }
+        st.setAttribute("datatype", "int");
+    }
+
+    public String abstractExpressionToRootVariable(XmlObject expression) throws CompilationException {
 		Node expressionDOM = expression.getDomNode();
 		String namespaceURI = expressionDOM.getNamespaceURI();
 		String localName = expressionDOM.getLocalName();
