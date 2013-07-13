@@ -153,10 +153,11 @@ public class NotificationManager {
             ServiceContact contact2 = 
                 e.getValue().task.getService(0).getServiceContact();
             logger.info(contact2.toString());
-            if (contact2.equals(contact1))
+            if (contact2.equals(contact1)) {
                 notificationReceived(e.getKey(), 
                                      new StatusImpl(Status.FAILED, 
                                                     msg, null), null, null);
+            }
         }
     }
     
