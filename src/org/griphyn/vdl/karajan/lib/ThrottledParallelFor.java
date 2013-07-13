@@ -181,16 +181,22 @@ public class ThrottledParallelFor extends UParallelFor {
         LWThread ct = thr.fork(new KRunnable() {
             @Override
             public void run(LWThread thr2) {
+                int i = thr2.checkSliceAndPopState();
                 try {
-                    if (iterationTracer.isEnabled()) {
-                        iterationTracer.trace(thr2, unwrap(value));
-                    }
+                    switch (i) {
+                        case 0:
+                            if (iterationTracer.isEnabled()) {
+                                iterationTracer.trace(thr2, unwrap(value));
+                            }
 
-                    if (CompilerSettings.PERFORMANCE_COUNTERS) {
-                        startCount++;
+                            if (CompilerSettings.PERFORMANCE_COUNTERS) {
+                                startCount++;
+                            }
+                            i++;
+                        case 1:
+                            body.run(thr2);
+                            ts.threadDone(thr2, null);
                     }
-                    body.run(thr2);
-                    ts.threadDone(thr2, null);
                 }
                 catch (ExecutionException e) {
                     thr2.getStack().dropToFrame(fcf);
@@ -203,6 +209,10 @@ public class ThrottledParallelFor extends UParallelFor {
                     ts.threadDone(thr2, new ExecutionException(ThrottledParallelFor.this, e));
                     ts.abortAll();
                     thr.awake();
+                }
+                catch (Yield y) {
+                    y.getState().push(i);
+                    throw y;
                 }
             }
         });
@@ -232,8 +242,8 @@ public class ThrottledParallelFor extends UParallelFor {
 	}
 	
 	protected Object unwrap(Object value) {
-        if (value instanceof Pair) {
-            Pair<?> p = (Pair<?>) value;
+        if (value instanceof List) {
+            List<?> p = (List<?>) value;
             if (_kvar.getValue() != null) {
                 return _kvar.getValue() + "=" + p.get(0) + ", " + _vvar.getValue() + "=" + Tracer.unwrapHandle(p.get(1));
             }

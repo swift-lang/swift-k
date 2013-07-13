@@ -205,8 +205,8 @@ swift:while($var$$if(trace)$, _traceline="$line$"$endif$$if(refs)$, refs="$refs;
 }
 >>
 
-foreach(var, in, indexVar, indexVarType, declarations, statements, line, refs, selfClose, cleanups, trace) ::= <<
-swift:tParallelFor(\$$if(trace)$, _traceline="$line$"$endif$$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
+foreach(var, in, indexVar, indexVarType, declarations, statements, line, refs, selfClose, cleanups) ::= <<
+swift:tParallelFor(\$, _traceline="$line$"$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
 $! The iterator !$
 	getArrayIterator($in$)) {
 	(\$\$, $var$) := each(\$)
