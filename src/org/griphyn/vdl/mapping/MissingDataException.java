@@ -11,6 +11,6 @@ package org.griphyn.vdl.mapping;
 
 public class MissingDataException extends RuntimeException {
     public MissingDataException(AbstractDataNode n, PhysicalFormat pf) {
-        super("Data not found for " + n.getFullName() + ": " + pf);
+        super("File not found for variable '" + n.getFullName() + "': " + pf);
     }
 }
