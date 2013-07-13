@@ -257,4 +257,9 @@ public class New extends SwiftFunction {
             sb.append(v);
         }
     }
+
+    @Override
+    public String getTextualName() {
+        return "Variable declaration";
+    }
 }
