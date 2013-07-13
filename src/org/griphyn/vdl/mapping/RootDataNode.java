@@ -179,6 +179,11 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
                 throw new IllegalStateException("Structure of mapped data is " +
                         "incompatible with the mapped variable type: " + e.getMessage());
             }
+            catch (NotCompositeException e) {
+                throw new IllegalStateException("Cannot map multiple files to variable '" + 
+                    e.getDataNode().getDisplayableName() + "' of non composite type '" + 
+                    e.getDataNode().getType() + "'");
+            }
         }
         root.closeDeep();
         if (!any && tracer.isEnabled()) {

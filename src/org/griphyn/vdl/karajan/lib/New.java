@@ -231,4 +231,9 @@ public class New extends VDLFunction {
             sb.append(v);
         }
     }
+
+    @Override
+    public String getTextualName() {
+        return "Variable declaration";
+    }
 }

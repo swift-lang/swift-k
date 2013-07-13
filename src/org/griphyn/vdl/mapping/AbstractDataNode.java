@@ -332,6 +332,10 @@ public abstract class AbstractDataNode implements DSHandle {
             throw new RuntimeException("Cannot write to closed handle: " + this + " (" + key + ")");
         }
         
+        if (!getType().isComposite()) {
+            throw new NotCompositeException(this);
+        }
+        
         return addHandle(key, newNode(getChildField(key)));
     }
     
