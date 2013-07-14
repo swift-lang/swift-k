@@ -159,7 +159,6 @@ public class ScreenBuffer {
 			}
 		}
 		os.flush();
-		System.err.println("Written: " + os.get());
 		System.arraycopy(buf, 0, actual, 0, buf.length);
 	}
 
