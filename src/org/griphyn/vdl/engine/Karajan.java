@@ -712,9 +712,16 @@ public class Karajan {
 		try {
 			// Check is called procedure declared previously
 			String procName = call.getProc().getLocalPart();
-			if (proceduresMap.get(procName) == null)
-				throw new CompilationException
-				("Procedure " + procName + " is not declared.");
+			if (proceduresMap.get(procName) == null) {
+			    if (functionsMap.containsKey(procName)) {
+                    StringTemplate st = functionAsCall(call, scope);
+                    if (!inhibitOutput) {
+                        scope.appendStatement(st);
+                    }
+                    return st;
+                }
+				throw new CompilationException("No function or procedure '" + procName + "' found.");
+			}
 
 			// Check procedure arguments
 			int noOfOptInArgs = 0;
@@ -1262,8 +1269,9 @@ public class Karajan {
 				String actualType = datatype(exprST);
 				FormalArgumentSignature fas = funcSignature.getInputArray(i);
 				if (!fas.isAnyType() && !fas.getType().equals(actualType))
-					throw new CompilationException("Wrong type for parameter number " + i +
-							", expected " + fas.getType() + ", got " + actualType);
+					throw new CompilationException("Wrong type for parameter " + i +
+					    (fas.getName() == null ? "" : "('" + fas.getName() + "')") + 
+							"; expected " + fas.getType() + ", got " + actualType);
 				}
 		}
 
@@ -1642,11 +1650,7 @@ public class Karajan {
             throw new CompilationException("Function " + name + " is not defined.");
         }
         
-        XmlObject[] params = new XmlObject[c.getInputArray().length];
-        for (int i = 0; i < params.length; i++) {
-            params[i] = c.getInputArray(i).getAbstractExpression();
-        }
-        StringTemplate st = function(c, name, params, scope);
+        StringTemplate st = function(c, name, getCallParams(c), scope);
         /* Set function output type */
         /* Functions have only one output parameter */
         st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
@@ -1684,6 +1688,59 @@ public class Karajan {
     
         return st;
     }
+    
+    /**
+     * Translates a call(output, params) into a output = function(params) form.
+     */
+    private StringTemplate functionAsCall(Call call, VariableScope scope) throws CompilationException {
+        String name = call.getProc().getLocalPart();
+        ProcedureSignature sig = functionsMap.get(name);
+        if (sig == null) {
+            throw new CompilationException("Function " + name + " is not defined.");
+        }
+        if (call.getOutputArray().length == 0) {
+            throw new CompilationException("Call to a function that does not return a value");
+        }
+        if (call.getOutputArray().length > 1) {
+            throw new CompilationException("Cannot assign multiple values with a function invocation");
+        }
+        
+        StringTemplate value = function(call, name, getCallParams(call), scope);
+        value.setAttribute("datatype", sig.getOutputArray(0).getType());
+        StringTemplate assign = assignFromCallReturn(call, value, scope);
+        
+        if (sig.isDeprecated()) {
+            Warnings.warn(Warnings.Type.DEPRECATION, call, "Function " + name + " is deprecated");
+        }
+    
+        return assign;
+    }
+
+    private XmlObject[] getCallParams(Call call) {
+        XmlObject[] params = new XmlObject[call.getInputArray().length];
+        for (int i = 0; i < params.length; i++) {
+            params[i] = call.getInputArray(i).getAbstractExpression();
+        }
+        return params;
+    }
+
+    private StringTemplate assignFromCallReturn(Call call, StringTemplate valueST, VariableScope scope) 
+            throws CompilationException {
+        StringTemplate assignST = template("assign");
+        XmlObject var = call.getOutputArray(0).getAbstractExpression();
+        StringTemplate varST = expressionToKarajan(var, scope, true);
+        if (! (datatype(varST).equals(datatype(valueST)) || datatype(valueST).equals("java"))) {
+            throw new CompilationException("You cannot assign value of type " + datatype(valueST) +
+                    " to a variable of type " + datatype(varST));
+        }
+        assignST.setAttribute("var", varST);
+        assignST.setAttribute("value", valueST);
+        assignST.setAttribute("line", getLine(call));
+        String rootvar = abstractExpressionToRootVariable(var);
+        scope.addWriter(rootvar, getRootVariableWriteType(var), call, assignST);
+        return assignST;
+    }
+
 
     void checkTypesInCondExpr(String op, String left, String right, StringTemplate st)
 			throws CompilationException {
