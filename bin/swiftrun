@@ -22,11 +22,26 @@ my @original_swift_args;	# Original arguments
 
 # List of xml shortcuts. Keep in lower case.
 my %xml_aliases = (
-                   'provider'     => 'provider.coaster',
-                   'jobspernode'  => 'globus.jobspernode',
-                   'maxwalltime'  => 'globus.maxwalltime',
-                   'queue'        => 'globus.queue',
-                   'initialscore' => 'karajan.initialscore',
+                   'allocationstepsize'        => 'globus.allocationstepsize',
+                   'delaybase'                 => 'karajan.delaybase',
+                   'highoverallocation'        => 'globus.highoverallocation',
+                   'initialscore'              => 'karajan.initialscore',
+                   'internalhostname'          => 'globus.internalhostname',
+                   'jobspernode'               => 'globus.jobspernode',
+                   'jobthrottle'               => 'karajan.jobthrottle',
+                   'lowoverallocation'         => 'globus.lowoverallocation',
+                   'maxnodes'                  => 'globus.maxnodes',
+                   'maxsubmitrate'             => 'karajan.maxsubmitrate',
+                   'maxtime'                   => 'globus.maxtime',
+                   'maxwalltime'               => 'globus.maxwalltime',
+                   'nodegranularity'           => 'globus.nodegranularity',
+                   'overallocationdecayfactor' => 'globus.overallocationdecayfactor',
+                   'provider'                  => 'provider.coaster',
+                   'queue'                     => 'globus.queue',
+                   'slots'                     => 'globus.slots',
+                   'spread'                    => 'globus.spread',
+                   'remotemonitorenabled'      => 'globus.remotemonitorenabled',
+                   'reserve'                   => 'globus.reserve',
 );
 
 # Verify a property file exists and add it to the search path
