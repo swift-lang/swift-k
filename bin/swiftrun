@@ -162,12 +162,31 @@ if( ! -d $swift_etc_directory ) { die "Unable to find a valid Swift installation
 # Set property values
 foreach my $property_file(@property_files) {
    open(PROPERTIES, $property_file) || die "Unable to open $property_file";
+
    while( <PROPERTIES> ) {
       chomp;
       next if /^\s*#/ || /^(\s)*$/; # Ignore blank lines and comments
-      my ($key, $value) = split('=', $_, 2);
-      $value =~ s/\$(\w+)/$ENV{$1}/g; # Substitute environment variables
-      $properties{ $key } = $value;
+      $_ =~ s/^\s+//;               # Remove leading whitespace
+
+      # Handle brackets 
+      if( /^site\./ && /{/ ) { 
+         my $prefix = (split /\s+{/)[0];
+         while( <PROPERTIES> ) {
+            chomp;
+            next if /^\s*#/ || /^(\s)*$/; 
+            $_ =~ s/^\s+//;               
+            if( /^}/ ) { last; } 
+            my ($key, $value) = split('=', ($prefix . ".$_"), 2);
+            $value =~ s/\$(\w+)/$ENV{$1}/g;
+            $properties{ $key } = $value;
+         }
+      }
+
+      else {
+         my ($key, $value) = split('=', $_, 2);
+         $value =~ s/\$(\w+)/$ENV{$1}/g; # Substitute environment variables
+         $properties{ $key } = $value;
+      }
    }
 }
 
