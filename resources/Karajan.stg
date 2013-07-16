@@ -229,7 +229,7 @@ $endif$
 // they are not
 // $outputs:vdl_log_output();separator="\n"$
 
-callInternal(func, outputs, inputs, line, serialize) ::= <<
+callInternal(func, outputs, inputs, line, serialize, partialClose) ::= <<
 sequential(
 	swift:unitStart("INTERNALPROC", name="$func$", outputs="$outputs:list();separator=","$")
 	$func$(
@@ -238,6 +238,7 @@ sequential(
     	$inputs:callInternal_log_input();separator="\n"$
   		$if(!serialize)$)$endif$
 	)
+	$if(partialClose)$$partialClose$$endif$
 	swift:unitEnd("INTERNALPROC", name="$func$")
 )
 >>
