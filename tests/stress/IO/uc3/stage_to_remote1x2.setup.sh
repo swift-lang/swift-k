@@ -1,40 +1,16 @@
 #!/bin/bash
 
-if [[ -z $MIDWAY_USERNAME ]]
-then
-    echo "Remote username not provided. Skipping sites configs"
-else
-    ls *xml
-    cat sites.xml  | sed "s/{mid.USER}/$MIDWAY_USERNAME/" > tmp && mv tmp\
- sites.xml
-fi
-if [[ -z $UC3_USERNAME ]]
-then
-    echo "Remote username not provided. Skipping sites configs"
-else
-    ls *xml
-    cat sites.xml  | sed "s/{uc3.USER}/$UC3_USERNAME/" > tmp && mv tmp si\
-tes.xml
-fi
-if [[ -z $BEAGLE_USERNAME ]]
-then
-    echo "Remote username not provided. Skipping sites configs"
-else
-    ls *xml
-    cat sites.xml  | sed "s/{beagle.USER}/$BEAGLE_USERNAME/" > tmp && mv \
-tmp sites.xml
-fi
-
 ARGS_FILE=${0%.setup.sh}.args
+UC3_USERNAME=$UC3_USERNAME
 
 case $STRESS in
     "S1")
 	FILES=100
-        LOOPS=0
-        ;;
+	LOOPS=0
+	;;
     "S2")
 	FILES=500
-        LOOPS=0
+	LOOPS=0
         ;;
     *)
         FILES=100
@@ -69,3 +45,11 @@ fi
 rm $ARG1 $ARG1.test
 echo "Residual files cleaned up"
 EOF
+
+if [[ -z $UC3_USERNAME ]]
+then
+    echo "Remote username not provided. Skipping sites configs"
+else
+    ls *xml
+    cat sites.xml  | sed "s/{env.USER}/$UC3_USERNAME/" > tmp && mv tmp sites.xml
+fi

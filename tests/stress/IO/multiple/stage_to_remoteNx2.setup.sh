@@ -1,5 +1,9 @@
 #!/bin/bash
 
+
+
+
+
 if [[ -z $MIDWAY_USERNAME ]]
 then
     echo "Remote username not provided. Skipping sites configs"
@@ -29,19 +33,18 @@ ARGS_FILE=${0%.setup.sh}.args
 
 case $STRESS in
     "S1")
-	FILES=100
-        LOOPS=0
+        FILES=50
+        LOOPS=50
         ;;
     "S2")
-	FILES=500
-        LOOPS=0
+        FILES=100
+        LOOPS=100
         ;;
     *)
-        FILES=100
-        LOOPS=0
+        FILES=50
+        LOOPS=50
         ;;
 esac
-
 
 dd if=/dev/zero of=dummy bs=1024 count=0 seek=$((1024*FILES))
 echo "-loops=$LOOPS" > $ARGS_FILE

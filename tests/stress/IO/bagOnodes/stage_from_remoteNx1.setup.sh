@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ARGS_FILE=${0%.setup.sh}.args
-USERNAME=$MCS_USERNAME
+MCS_USERNAME=$MCS_USERNAME
 
 case $STRESS in
     "S1")
@@ -30,10 +30,10 @@ dd if=/dev/zero of=$OUT bs=1024 count=0 seek=$((1024*MAXSIZE))
 
 EOF
 
-if [[ -z $USERNAME ]]
+if [[ -z $MCS_USERNAME ]]
 then
     echo "Remote username not provided. Skipping sites configs"
 else
     ls *xml
-    cat sites.xml  | sed "s/{env.USER}/$USERNAME/" > tmp && mv tmp sites.xml
+    cat sites.xml  | sed "s/{env.USER}/$MCS_USERNAME/" > tmp && mv tmp sites.xml
 fi

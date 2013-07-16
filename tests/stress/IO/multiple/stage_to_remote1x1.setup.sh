@@ -29,6 +29,14 @@ fi
 ARGS_FILE=${0%.setup.sh}.args
 
 case $STRESS in
+    "S1")
+	FILES=50
+        LOOPS=0
+        ;;
+    "S2")
+	FILES=100
+        LOOPS=0
+        ;;
     *)
         FILES=50
         LOOPS=0

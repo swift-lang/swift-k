@@ -1,4 +1,9 @@
 #!/bin/bash
+#OVERRIDE_GLOBUS_HOST swift.rcc.uchicago.edu
+#OVERRIDE_GLOBUS_TCP_PORT_RANGE 50000,51000
+
+
+
 
 if [[ -z $MIDWAY_USERNAME ]]
 then
@@ -29,43 +34,27 @@ ARGS_FILE=${0%.setup.sh}.args
 
 case $STRESS in
     "S1")
-	FILES=100
+        SIZE=10
         LOOPS=0
         ;;
     "S2")
-	FILES=500
+        SIZE=15
         LOOPS=0
         ;;
     *)
-        FILES=100
+        SIZE=10
         LOOPS=0
         ;;
 esac
 
+echo "-loops=$LOOPS -size=$SIZE " > $ARGS_FILE
 
-dd if=/dev/zero of=dummy bs=1024 count=0 seek=$((1024*FILES))
-echo "-loops=$LOOPS" > $ARGS_FILE
-
-cat <<'EOF' > wrapper.sh
+cat <<'EOF' > filemaker.sh 
 #!/bin/bash
-ARG1=$1
-ls | grep "$1" &> /dev/null
-if [ $? == 0 ]
-then
-    echo "Hey this is wrapper and the $1 exists as a file";
-    ls -lah;
-else
-    echo "Doinks! the file we need isn't here";
-    ls -lah
-fi
-cat $ARG1 > $ARG1.test
-if [ $? == 0 ]
-then
-    echo "The cat worked! ";
-else
-    echo "The cat failed ";
-fi
 
-rm $ARG1 $ARG1.test
-echo "Residual files cleaned up"
+echo "From filemaker.sh $1 $2 on Host:$HOSTNAME"
+MAXSIZE=$1
+OUT=$2
+dd if=/dev/zero of=$OUT bs=1024 count=0 seek=$((1024*MAXSIZE))
+
 EOF

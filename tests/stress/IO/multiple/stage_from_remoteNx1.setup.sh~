@@ -1,5 +1,9 @@
 #!/bin/bash
 
+
+BEAGLE_USERNAME="yadunandb"
+UC3_USERNAME="yadunand"
+
 if [[ -z $MIDWAY_USERNAME ]]
 then
     echo "Remote username not provided. Skipping sites configs"
@@ -29,43 +33,27 @@ ARGS_FILE=${0%.setup.sh}.args
 
 case $STRESS in
     "S1")
-	FILES=100
-        LOOPS=0
+        SIZE=20
+        LOOPS=10
         ;;
     "S2")
-	FILES=500
-        LOOPS=0
+        SIZE=30
+        LOOPS=20
         ;;
     *)
-        FILES=100
-        LOOPS=0
+        SIZE=20
+        LOOPS=10
         ;;
 esac
 
+echo "-loops=$LOOPS -size=$SIZE " > $ARGS_FILE
 
-dd if=/dev/zero of=dummy bs=1024 count=0 seek=$((1024*FILES))
-echo "-loops=$LOOPS" > $ARGS_FILE
-
-cat <<'EOF' > wrapper.sh
+cat <<'EOF' > filemaker.sh 
 #!/bin/bash
-ARG1=$1
-ls | grep "$1" &> /dev/null
-if [ $? == 0 ]
-then
-    echo "Hey this is wrapper and the $1 exists as a file";
-    ls -lah;
-else
-    echo "Doinks! the file we need isn't here";
-    ls -lah
-fi
-cat $ARG1 > $ARG1.test
-if [ $? == 0 ]
-then
-    echo "The cat worked! ";
-else
-    echo "The cat failed ";
-fi
 
-rm $ARG1 $ARG1.test
-echo "Residual files cleaned up"
+echo "From filemaker.sh $1 $2 on Host:$HOSTNAME"
+MAXSIZE=$1
+OUT=$2
+dd if=/dev/zero of=$OUT bs=1024 count=0 seek=$((1024*MAXSIZE))
+
 EOF

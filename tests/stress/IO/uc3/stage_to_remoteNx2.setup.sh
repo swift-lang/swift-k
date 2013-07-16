@@ -1,20 +1,20 @@
 #!/bin/bash
 
 ARGS_FILE=${0%.setup.sh}.args
-MCS_USERNAME=$MCS_USERNAME
+UC3_USERNAME=$UC3_USERNAME
 
 case $STRESS in
     "S1")
-        FILES=10
-        LOOPS=10
-        ;;
-    "S2")
-        FILES=10
+        FILES=50
         LOOPS=50
         ;;
+    "S2")
+        FILES=100
+        LOOPS=100
+        ;;
     *)
-        FILES=10
-        LOOPS=10
+        FILES=50
+        LOOPS=50
         ;;
 esac
 
@@ -46,10 +46,10 @@ rm $ARG1 $ARG1.test
 echo "Residual files cleaned up"
 EOF
 
-if [[ -z $MCS_USERNAME ]]
+if [[ -z $UC3_USERNAME ]]
 then
     echo "Remote username not provided. Skipping sites configs"
 else
     ls *xml
-    cat sites.xml  | sed "s/{env.USER}/$MCS_USERNAME/" > tmp && mv tmp sites.xml
+    cat sites.xml  | sed "s/{env.USER}/$UC3_USERNAME/" > tmp && mv tmp sites.xml
 fi
