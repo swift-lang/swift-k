@@ -66,6 +66,7 @@ public class ReadStructured extends VDLFunction {
         src.waitFor();
 		if (src.getType().equals(Types.STRING)) {
 			readData(dest, (String) src.getValue());
+			dest.closeDeep();
 		}
 		else {
 			PhysicalFormat pf = src.getMapper().map(src.getPathFromRoot());
@@ -75,6 +76,7 @@ public class ReadStructured extends VDLFunction {
 					throw new ExecutionException("readData2 only supports local files");
 				}
 				readData(dest, af.getPath());
+				dest.closeDeep();
 			}
 			else {
 				throw new ExecutionException("readData2 only supports reading from files");
