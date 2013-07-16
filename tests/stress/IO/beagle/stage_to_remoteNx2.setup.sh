@@ -6,7 +6,7 @@ BEAGLE_USERNAME=$BEAGLE_USERNAME
 case $STRESS in
     "S1")
         FILES=50
-        LOOPS=100
+        LOOPS=50
         ;;
     "S2")
         FILES=100
@@ -14,7 +14,7 @@ case $STRESS in
         ;;
     *)
         FILES=50
-        LOOPS=100
+        LOOPS=50
         ;;
 esac
 

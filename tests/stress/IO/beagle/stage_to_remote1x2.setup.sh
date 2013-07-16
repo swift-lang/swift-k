@@ -4,6 +4,14 @@ ARGS_FILE=${0%.setup.sh}.args
 BEAGLE_USERNAME=$BEAGLE_USERNAME
 
 case $STRESS in
+    "S1")
+	FILES=100
+	LOOPS=0
+	;;
+    "S2")
+	FILES=500
+	LOOPS=0
+        ;;
     *)
         FILES=100
         LOOPS=0
