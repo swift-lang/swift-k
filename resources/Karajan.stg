@@ -264,7 +264,7 @@ cs() ::= <<
 // they are not
 // $outputs:vdl_log_output();separator="\n"$
 
-callInternal(func, outputs, inputs, line, serialize) ::= <<
+callInternal(func, outputs, inputs, line, serialize, partialClose) ::= <<
 <sequential>
 <unitStart name="$func$" type="INTERNALPROC" outputs="$outputs:list();separator=","$"/>
 $cs()$
@@ -274,6 +274,9 @@ $cs()$
     $inputs:callInternal_log_input();separator="\n"$
   $if(!serialize)$</parallel>$endif$
 </$func$>
+$if(partialClose)$
+$partialClose$
+$endif$
 <unitEnd name="$func$" type="INTERNALPROC"/>
 </sequential>
 >>
