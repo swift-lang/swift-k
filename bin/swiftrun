@@ -15,6 +15,7 @@ my $option_tcfile;		# Value of -tc.file option
 my $option_sitesfile;		# Value of -sites.file option
 my $option_siteslist;		# Value of -sites option, comma separated
 my $option_config;		# Value of -config option
+my $option_listconfig; 		# List configuration files used, values, then exit
 my @sites;			# List of sites from -sites in array
 my $run_directory;		# Run directory to be created, run.NNNN
 my @new_swift_args;		# New command line arguments
@@ -157,6 +158,7 @@ GetOptionsFromArray(
            'tcfile=s'        => \$option_tcfile,
            'config=s'        => \$option_config,
            'site|sites=s'    => \$option_siteslist,
+           'listconfig'       => \$option_listconfig,
 );
 
 # Set @sites array from comma separated list of sites
@@ -170,7 +172,7 @@ if( ! -d $swift_etc_directory ) { die "Unable to find a valid Swift installation
 
 # Set the search order for properties
 &add_property_file("$swift_etc_directory/swift.properties");
-&add_property_file("$ENV{SWIFT_CONFIG}/swift.properties") if defined($ENV{SWIFT_CONFIG});
+&add_property_file("$ENV{SWIFT_SITE_CONF}/swift.properties") if defined($ENV{SWIFT_SITE_CONF});
 &add_property_file("$ENV{HOME}/.swift/swift.properties");
 &add_property_file("swift.properties");
 
@@ -203,6 +205,19 @@ foreach my $property_file(@property_files) {
          $properties{ $key } = $value;
       }
    }
+}
+
+# If -listconfig is specified, print values and exit
+if( $option_listconfig ) {
+   print "\n";
+   foreach my $site(@property_files) {
+      print "Reading from: $site\n";
+   }
+   print "\nValues:\n";
+   while ( my ($key, $value) = each(%properties) ) {
+      print "\t$key=$value\n";
+   }
+   exit;
 }
 
 # Create/increment run directory
