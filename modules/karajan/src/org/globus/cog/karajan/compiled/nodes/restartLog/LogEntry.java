@@ -35,7 +35,7 @@ public class LogEntry {
 
 	public static LogEntry build(LWThread thr, Node n) throws ExecutionException {
 		LogEntry entry = new LogEntry();
-		entry.key = thr.getName() + ":" + n.toString();
+		entry.key = thr.getQualifiedName() + ":" + n.toString();
 		return entry;
 	}
 

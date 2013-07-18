@@ -38,11 +38,11 @@ public class LWThread implements Runnable {
     public static final int ALIVE = 0x02;
     public static final int ABORTING = 0x10;
 
-    private int tstate, forkIndex;
+    private int tstate, forkIndex, forkId = -1;
     private LWThread parent;
     private KRunnable runnable;
     private State state;
-    private String name;
+    private String name, qualifiedName;
     private Stack stack;
     private int runCount;
     private long deadline;
@@ -50,7 +50,7 @@ public class LWThread implements Runnable {
     public static int contextSwitches;
 
     private static int id = 1;
-    
+        
     public class Listener implements FutureListener {
 		@Override
         public void futureUpdated(Future fv) {
@@ -78,6 +78,12 @@ public class LWThread implements Runnable {
         this.name = name;
         this.runnable = r;
         this.stack = stack;
+    }
+    
+    protected LWThread(int forkId, KRunnable r, Stack stack) {
+    	this.forkId = forkId;
+    	this.runnable = r;
+    	this.stack = stack;
     }
 
     public void start() {
@@ -380,8 +386,78 @@ public class LWThread implements Runnable {
     public final void setName(String name) {
         this.name = name;
     }
+    
+    private static int gqnc = 0;
+    
+    public final String getQualifiedName() {
+    	synchronized(this) {
+    		if (qualifiedName != null) {
+    			return qualifiedName;
+    		}
+    	}
+    	java.util.Stack<LWThread> s = new java.util.Stack<LWThread>();
+    	LWThread t = this;
+    	while (t != null) {
+    		s.push(t);
+    		t = t.parent;
+    	}
+    	StringBuilder sb = new StringBuilder();
+    	int sameIdCount = 1;
+    	int prevId = -1;
+    	boolean first = true;
+    	while (!s.isEmpty()) {
+    		t = s.pop();
+    		if (t.name != null) {
+    			first = flushRun(prevId, sameIdCount, t.forkId, sb, first);
+    			sameIdCount = 1;
+    			prevId = t.forkId;
+    			if (!first) {
+    				sb.append('-');
+    			}
+   				first = false;
+    			sb.append(t.name);			
+    		}
+    		else if (t.forkId != -1) {
+    			if (t.forkId == prevId) {
+    				sameIdCount++;
+    			}
+    			else {
+    				first = flushRun(prevId, sameIdCount, t.forkId, sb, first);
+    				sameIdCount = 1;
+    				prevId = t.forkId;
+    			}
+    		}
+    	}
+    	flushRun(prevId, sameIdCount, t.forkId, sb, first);
+    	synchronized(this) {
+    		qualifiedName = sb.toString();
+    	}
+    	return qualifiedName;
+    }
 
-    public String toString() {
+    private boolean flushRun(int prevId, int sameIdCount, int forkId, StringBuilder sb, boolean first) {
+    	if (sameIdCount > 1) {
+    		if (!first) {
+    			sb.append('-');
+    		}
+			sb.append(String.valueOf(prevId));
+			sb.append('x');
+			sb.append(String.valueOf(sameIdCount));
+			first = false;
+		}
+		else {
+			if (prevId != -1) {
+				if (!first) {
+					sb.append('-');
+				}
+				sb.append(String.valueOf(prevId));
+				first = false;
+			}
+		}
+    	return first;
+	}
+
+	public String toString() {
         return "LWThread-" + name;
     }
     
@@ -459,7 +535,7 @@ public class LWThread implements Runnable {
         if (DEBUG)
             System.out.println(this + " fork(" + state + ")");
         int id = forkIndex++;
-        LWThread child = new LWThread(name + "-" + id, runnable, stack.copy());
+        LWThread child = new LWThread(id, runnable, stack.copy());
         
         child.state = new State();
         child.state.replaceBottom(state);
@@ -474,7 +550,7 @@ public class LWThread implements Runnable {
         if (DEBUG)
             System.out.println(this + " fork(" + state + ")");
         int id = forkIndex++;
-        LWThread child = new LWThread(name + "-" + id, r, stack.copy());
+        LWThread child = new LWThread(id, r, stack.copy());
                 
         if (DEBUG) {
         	Exception e = new Exception();
