@@ -165,40 +165,41 @@ public class UnitStart extends InternalFunction {
     protected static void log(boolean start, String type, LWThread thread,
             String name, String line) {
         if (logger.isInfoEnabled()) {
+            String threadName = SwiftFunction.getThreadPrefix(thread);
             if (type.equals("COMPOUND")) {
                 logger.info((start ? "START" : "END") + type + " thread="
-                        + thread.getName() + " name=" + name);
+                        + threadName + " name=" + name);
             }
             else {
                 if (logger.isDebugEnabled()) {
                     if (type.equals("PROCEDURE")) {
                         if (start) {
                             logger.debug("PROCEDURE line=" + line + " thread="
-                                    + thread.getName() + " name=" + name);
+                                    + threadName + " name=" + name);
                         }
                         else {
                             logger.debug("PROCEDURE_END line=" + line
                                     + " thread="
-                                    + thread.getName() + " name=" + name);
+                                    + threadName + " name=" + name);
                         }
                     }
                     else if (type.equals("FOREACH_IT")) {
                         logger.debug("FOREACH_IT_" + (start ? "START" : "END")
                                 + " line=" + line + " thread="
-                                + thread.getName());
+                                + threadName);
                         if (start) {
-                            logger.debug("SCOPE thread=" + thread.getName());
+                            logger.debug("SCOPE thread=" + threadName);
                         }
                     }
                     else if (type.equals("INTERNALPROC")) {
                         logger.debug("INTERNALPROC_"
                                 + (start ? "START" : "END")
-                                + " thread=" + thread.getName() + " name="
+                                + " thread=" + threadName + " name="
                                 + name);
                     }
                     else if (type.equals("CONDITION_BLOCK")) {
                         if (start) {
-                            logger.debug("SCOPE thread=" + thread.getName());
+                            logger.debug("SCOPE thread=" + threadName);
                         }
                     }
                 }

@@ -154,7 +154,7 @@ public class Tracer {
     }
     
     private String threadName(LWThread thr) throws VariableNotFoundException {
-        return thr.getName();
+        return SwiftFunction.getThreadPrefix(thr);
     }
     
     private static Tracer disabledTracer, enabledTracer;

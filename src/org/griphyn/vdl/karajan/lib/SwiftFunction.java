@@ -123,8 +123,12 @@ public abstract class SwiftFunction extends AbstractFunction {
 	 * depends on the fact that iteration variable is named '$' in this
 	 * particular implementation.
 	 */
-	public static String getThreadPrefix() throws ExecutionException {
-		return LWThread.currentThread().getName();
+	public static String getThreadPrefix() {
+		return getThreadPrefix(LWThread.currentThread());
+	}
+		
+	public static String getThreadPrefix(LWThread thr) {
+	    return thr.getQualifiedName();
 	}
 
 	// TODO - is this needed any more? its doing some type inferencing and
@@ -141,7 +145,7 @@ public abstract class SwiftFunction extends AbstractFunction {
 	// this is only used by VDL new (and really should only be used by
 	// VDL new, and should perhaps move to the VDL new source?)
 
-	protected Object internalValue(Type type, Object value) {
+    protected Object internalValue(Type type, Object value) {
 		if (Types.FLOAT.equals(type)) {
 			return new Double(TypeUtil.toDouble(value));
 		}

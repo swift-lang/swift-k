@@ -71,7 +71,7 @@ public class Parameterlog extends InternalFunction {
         }
         if (run) {
             super.run(thr);
-            logger.info("PARAM thread=" + thr.getName() + " direction="
+            logger.info("PARAM thread=" + SwiftFunction.getThreadPrefix(thr) + " direction="
                     + direction.getValue(stack) + " variable=" + variable.getValue(stack)
                     + " provenanceid=" + id.getValue(stack));
         }

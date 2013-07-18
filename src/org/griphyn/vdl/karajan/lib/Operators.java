@@ -276,7 +276,7 @@ public class Operators {
 
 	private static void logBinaryProvenance(String name, DSHandle v1, DSHandle v2, DSHandle result) throws ExecutionException {
 		if (PROVENANCE_ENABLED) {
-			String thread = LWThread.currentThread().getName();
+			String thread = SwiftFunction.getThreadPrefix();
 			String lhsid = v1.getIdentifier();
 			String rhsid = v2.getIdentifier();
 			String rid = result.getIdentifier();
@@ -287,7 +287,7 @@ public class Operators {
 
 	private static void logUnaryProvenance(String name, DSHandle v, DSHandle r) throws ExecutionException {
 		if (PROVENANCE_ENABLED) {
-			String thread = LWThread.currentThread().getName();
+			String thread = SwiftFunction.getThreadPrefix();
 			String vid = v.getIdentifier();
 			String rid = r.getIdentifier();
 			provenanceLogger.info("UNARYOPERATOR thread=" + thread + " operator=" + name + 

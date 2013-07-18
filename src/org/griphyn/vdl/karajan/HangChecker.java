@@ -43,6 +43,7 @@ import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.grid.SchedulerNode;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
+import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
@@ -121,7 +122,7 @@ public class HangChecker extends TimerTask {
 
     public static void dumpThread(PrintStream pw, LWThread thr, DSHandle handle) {
         try {
-            pw.println("Thread: " + thr.getName() 
+            pw.println("Thread: " + SwiftFunction.getThreadPrefix(thr) 
                 + (handle == null ? "" : ", waiting on " + varWithLine(handle)));
 
             for (String t : getSwiftTrace(thr)) {

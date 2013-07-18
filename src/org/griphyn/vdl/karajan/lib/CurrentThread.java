@@ -25,6 +25,6 @@ public class CurrentThread extends InternalFunction {
 
     @Override
     public void run(LWThread thr) {
-    	cr_vargs.append(thr.getStack(), thr.getName());
+    	cr_vargs.append(thr.getStack(), SwiftFunction.getThreadPrefix(thr));
     }
 }
