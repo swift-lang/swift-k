@@ -50,7 +50,13 @@ public class Executable extends SwiftFunction {
 			return tr;
 		}
 		else {
-			return tce.getPhysicalTransformation();
+			String pt = tce.getPhysicalTransformation();
+			if ("*".equals(pt)) {
+			    return tr;
+			}
+			else {
+			    return pt;
+			}
 		}
 	}
 }

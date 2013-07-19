@@ -39,18 +39,48 @@ public class TCCache {
 		cache = new HashMap<Entry, List<TCEntry>>();
 		entry = new Entry();
 	}
+	
+	public static final FQN ANY_APP = new FQN("*");
 
 	public synchronized List<TCEntry> getTCEntries(FQN tr, String host, TCType tctype) throws Exception {
+		List<TCEntry> l;
+		// try exact entry
 		entry.set(tr, host, tctype);
-		List<TCEntry> l = cache.get(entry);
-		if (l == null && !cache.containsKey(entry)) {
-			l = tc.getTCEntries(tr.getNamespace(), tr.getName(), tr.getVersion(), host, tctype);
-			cache.put(new Entry(tr, host, tctype), l);
+		l = getTCEntries_(entry);
+		if (l != null) {
+			return l;
 		}
+		
+		// try host app wildcard on this host
+		entry.set(ANY_APP, host, tctype);
+		l = getTCEntries_(entry);
+		if (l != null) {
+			return l;
+		}
+		// try this app on wildcard host
+		entry.set(tr, "*", tctype);
+		l = getTCEntries_(entry);
+		if (l != null) {
+			return l;
+		}
+		
+		// finally try app wildcard on wildcard host
+		entry.set(ANY_APP, "*", tctype);
+		l = getTCEntries_(entry);
 		return l;
 	}
 
-	private class Entry {
+	private List<TCEntry> getTCEntries_(Entry e) throws Exception {
+		List<TCEntry> l = cache.get(e);
+        if (l == null && !cache.containsKey(e)) {
+            l = tc.getTCEntries(e.tr.getNamespace(), e.tr.getName(), e.tr.getVersion(), e.host, e.tctype);
+            cache.put(new Entry(e), l);
+        }
+        
+        return l;
+    }
+
+    private class Entry {
 		public FQN tr;
 		public String host;
 		public TCType tctype;
@@ -61,6 +91,10 @@ public class TCCache {
 		public Entry(FQN tr, String host, TCType tctype) {
 			set(tr, host, tctype);
 		}
+		
+		public Entry(Entry e) {
+            set(e.tr, e.host, e.tctype);
+        }
 
 		public void set(FQN tr, String host, TCType tctype) {
 			this.tr = tr;

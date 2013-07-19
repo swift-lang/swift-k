@@ -22,7 +22,6 @@ package org.griphyn.vdl.karajan;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -35,9 +34,6 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.scheduler.TaskTransformer;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
-import org.globus.swift.catalog.TCEntry;
-import org.globus.swift.catalog.types.TCType;
-import org.griphyn.vdl.util.FQN;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class VDSTaskTransformer implements TaskTransformer {
@@ -68,9 +64,9 @@ public class VDSTaskTransformer implements TaskTransformer {
 			}
 		}
 
-		private static Set opsWithDirInFirstArg = new HashSet();
+		private static Set<String> opsWithDirInFirstArg = new HashSet<String>();
 		static {
-			Set s = opsWithDirInFirstArg;
+			Set<String> s = opsWithDirInFirstArg;
 			s.add(FileOperationSpecification.LS);
 			s.add(FileOperationSpecification.MKDIR);
 			s.add(FileOperationSpecification.MKDIRS);
@@ -142,19 +138,22 @@ public class VDSTaskTransformer implements TaskTransformer {
 					}
 				}
 			}
-			List l =   spec.getArgumentsAsList();
-			// perhaps should check for /bin/bash in the executable, or some other way of detecting we need to do a substitution here... or equally could assume that the second parameter always needs to undergo this substitution...
-			String executable = (String)l.get(0);
+			List<String> l =   spec.getArgumentsAsList();
+			// perhaps should check for /bin/bash in the executable, or some 
+			// other way of detecting we need to do a substitution here... 
+			// or equally could assume that the second parameter always needs to 
+			// undergo this substitution...
+			String executable = l.get(0);
 
 			try {
 				VDL2Config config = VDL2Config.getConfig();
 
-				if(config.getProperty("wrapper.invocation.mode", bc).equals("absolute")
-			 	 &&(executable.endsWith("shared/_swiftwrap")
-			   	  || executable.endsWith("shared/_swiftseq"))) {
+				if (config.getProperty("wrapper.invocation.mode", bc).equals("absolute")
+				        && (executable.endsWith("shared/_swiftwrap")
+				        || executable.endsWith("shared/_swiftseq"))) {
 
-				String s  = spec.getDirectory()+"/"+executable;
-				l.set(0,s);
+				    String s  = spec.getDirectory() + "/" + executable;
+				    l.set(0, s);
 				}
 			} 
 			catch(IOException ioe) {
@@ -167,42 +166,16 @@ public class VDSTaskTransformer implements TaskTransformer {
 
 	public static class TCTransformer extends AbstractTransformer {
 		private TCCache tc;
-		private Set warnset = new HashSet();
 
 		public TCTransformer(TCCache tc) {
 			this.tc = tc;
 		}
 
 		protected void applyTCEntry(Task task, Contact[] contacts) {
-			JobSpecification spec = (JobSpecification) task.getSpecification();
-			BoundContact bc = (BoundContact) contacts[0];
-
-			FQN fqn = new FQN(spec.getExecutable());
-			List l;
-			try {
-				l = tc.getTCEntries(fqn, bc.getHost(), TCType.INSTALLED);
-			}
-			catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-			if (l == null || l.isEmpty()) {
-				return;
-			}
-			if (l.size() > 1) {
-				synchronized (warnset) {
-					LinkedList wl = new LinkedList();
-					wl.add(fqn);
-					wl.add(bc);
-					if (!warnset.contains(wl)) {
-						logger.warn("Multiple entries found for " + fqn + " on " + bc
-								+ ". Using the first one");
-						warnset.add(wl);
-					}
-				}
-			}
-
-			TCEntry tce = (TCEntry) l.get(0);
-			spec.setExecutable(tce.getPhysicalTransformation());
+			// this method used to filter the task executable through
+		    // tc.data, but the task executable at this point was
+		    // always set to /bin/bash (or whatever the wrapper interpreter was).
+		    // That was useless.
 		}
 	}
 }
