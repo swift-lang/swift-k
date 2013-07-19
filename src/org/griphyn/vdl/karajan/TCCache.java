@@ -51,7 +51,7 @@ public class TCCache {
 			return l;
 		}
 		
-		// try host app wildcard on this host
+		// try app wildcard on this host
 		entry.set(ANY_APP, host, tctype);
 		l = getTCEntries_(entry);
 		if (l != null) {
