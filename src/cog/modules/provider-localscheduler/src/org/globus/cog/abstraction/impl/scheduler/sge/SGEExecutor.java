@@ -307,6 +307,32 @@ public class SGEExecutor extends AbstractExecutor {
         }
     }
 
+    protected void writeMultiJobPostamble(Writer wr) throws IOException {
+        wr.write("; echo \\\\\\$? > $ECF.$INDEX \\\" ; done\" &\n");
+        wr.write("  INDEX=$((INDEX + 1))\n");
+        wr.write("done < $PE_HOSTFILE\n");
+        wr.write("wait\n");
+        wr.write("EC=\"0\"\n");
+        wr.write("INDEX=0\n");
+        wr.write("PATH=$PATH:/bin:/usr/bin\n");
+        wr.write("for NODE in $NODES; do\n");
+        wr.write("  TEC=\"N\"\n");
+        wr.write("  while [ \"$TEC\" = \"N\" ]; do\n");
+        wr.write("    read TEC < $ECF.$INDEX\n");
+        wr.write("    if [ \"$TEC\" = \"N\" ]; then\n");
+        wr.write("      sleep 1\n");
+        wr.write("    fi\n");
+        wr.write("  done\n");
+        wr.write("  rm $ECF.$INDEX\n");
+        wr.write("  if [ \"$EC\" = \"0\" -a \"$TEC\" != \"0\" ]; then\n");
+        wr.write("    EC=$TEC\n");
+        wr.write("    echo $EC > $ECF\n");
+        wr.write("  fi\n");
+        wr.write("  INDEX=$((INDEX + 1))\n");
+        wr.write("done\n");
+        wr.write("echo $EC > $ECF\n");
+    }
+
     /**
      * writeMultiJobPreamble - Add multiple jobs to a single submit file
      * @param wr Writer A Writer object representing the submit file
@@ -315,12 +341,14 @@ public class SGEExecutor extends AbstractExecutor {
      */
     protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
             throws IOException {
-        wr.write("NODES=`cat $PE_HOSTFILE | awk '{print $1}'`\n");
         wr.write("ECF=" + exitcodefile + "\n");
         wr.write("INDEX=0\n");
-        wr.write("for NODE in $NODES; do\n");
-        wr.write("  echo \"N\" >$ECF.$INDEX\n");
-        wr.write("  ssh $NODE /bin/bash -c \\\" \"");
+        wr.write("NODES=$( cat $PE_HOSTFILE | awk '{print $1}' )\n");
+        wr.write("while read hostinfo\n");
+        wr.write("do\n");
+        wr.write("HOST=$( echo $hostinfo | cut -d' ' -f1 )\n");
+        wr.write("NUMJOBS=$( echo $hostinfo | cut -d' ' -f2 )\n");
+        wr.write("ssh -n $HOST \"for t in {1..$NUMJOBS}; do /bin/bash -c \\\"");
     }
 
 
