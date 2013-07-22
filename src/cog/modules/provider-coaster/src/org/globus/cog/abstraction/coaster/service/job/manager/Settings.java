@@ -50,6 +50,7 @@ public class Settings {
                        "workerLoggingDirectory",
                        "ldLibraryPath", "workerCopies",
                        "directory", "useHashBang",
+                       "maxBlockIdleTime",
                        "parallelism",
                        "coresPerNode"};
 
@@ -107,6 +108,8 @@ public class Settings {
     private int maxNodes = Integer.MAX_VALUE / 1024;
 
     private int maxtime = Integer.MAX_VALUE;
+    
+    private int maxBlockIdleTime = 30; //s
 
     private final Set<URI> callbackURIs;
 
@@ -287,6 +290,14 @@ public class Settings {
 
     public void setMaxtime(int maxtime) {
         this.maxtime = maxtime;
+    }
+
+    public int getMaxBlockIdleTime() {
+        return maxBlockIdleTime;
+    }
+
+    public void setMaxBlockIdleTime(int maxBlockIdleTime) {
+        this.maxBlockIdleTime = maxBlockIdleTime;
     }
 
     public String getWorkerManager() {

@@ -32,9 +32,6 @@ public class Block implements StatusListener, Comparable<Block> {
     /** milliseconds */
     public static final long SHUTDOWN_WATCHDOG_DELAY = 2 * 60 * 1000;
 
-    /** milliseconds */
-    public static final long SUSPEND_SHUTDOWN_DELAY = 30 * 1000;
-
     private static BlockTaskSubmitter submitter;
 
     private synchronized static BlockTaskSubmitter getSubmitter() {

@@ -442,7 +442,7 @@ implements RegistrationManager, Runnable {
         for (Block b : sorted.values()) {
             if (sum >= needed
                     && !b.isSuspended()
-                    && (System.currentTimeMillis() - b.getLastUsed()) > Block.SUSPEND_SHUTDOWN_DELAY) {
+                    && (System.currentTimeMillis() - b.getLastUsed()) > (1000 * settings.getMaxBlockIdleTime())) {
                 b.suspend();
             }
             sum += b.sizeLeft();
