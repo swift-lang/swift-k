@@ -1,13 +1,13 @@
 
 # GROUPLIST definition to run all local tests
 
-GROUPLIST=( # Remote sanity test-group
-            $TESTDIR/stress/remote_sanity/beagle \
-            $TESTDIR/stress/remote_sanity/mcs    \
-            $TESTDIR/stress/remote_sanity/midway \
-            $TESTDIR/stress/remote_sanity/uc3    \
+GROUPLIST=( # Site testing test-group
+            $TESTDIR/sites/beagle \
+            $TESTDIR/sites/mcs    \
+            $TESTDIR/sites/midway \
+            $TESTDIR/sites/uc3    \
 	    # Frisbee will fail due to Bug 1030  
-            #TESTDIR/stress/remote_sanity/mac-frisbee  \
+            #TESTDIR/sites/mac-frisbee  \
 	    
 	    # Remote-cluster IO tests
 	    $TESTDIR/stress/IO/beagle \
