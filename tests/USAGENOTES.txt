@@ -252,12 +252,3 @@ If you have a problem:
 - *run-suite.sh*:
  a. Wrapper for *suite.sh*.
  b. Env variables set may be customized by user.
-
-- *meta.sh*:
- a. Wrapper for *run-suite.sh*.
- b. used to execute _run-suite/suite.sh_ from a remote site using *ssh*.
-
-.Example usage:
-*********************************************************************************************
- meta.sh login.pads.ci.uchicago.edu /home/skenny/swift_runs/tests sites/pads-pbs-coasters.sh
-*********************************************************************************************

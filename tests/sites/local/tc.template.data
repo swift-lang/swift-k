@@ -1,8 +1,0 @@
-localhost 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
-localhost 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
-localhost 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
-localhost 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
-localhost 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
-localhost 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
-localhost	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
-

@@ -1,8 +1,0 @@
-ibicluster 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
-ibicluster 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
-ibicluster 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
-ibicluster 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
-ibicluster 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
-ibicluster 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
-ibicluster	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
-
