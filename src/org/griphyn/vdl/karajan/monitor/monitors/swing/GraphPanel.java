@@ -11,6 +11,7 @@ package org.griphyn.vdl.karajan.monitor.monitors.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimerTask;
+import java.util.prefs.Preferences;
 
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
@@ -43,13 +45,15 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 public class GraphPanel extends JPanel {
     private SystemState state;
-    private JFreeChart states;
+    private JFreeChart chart;
     private final List<SummaryItem.State> enabled;
     private TimeSeriesCollection col;
     private JPanel legend;
+    private GraphsPanel gp;
 
-    public GraphPanel(SystemState state) {
+    public GraphPanel(SystemState state, GraphsPanel gp) {
         this.state = state;
+        this.gp = gp;
         this.setLayout(new BorderLayout());
         enabled = new ArrayList<SummaryItem.State>();
         createChart();
@@ -67,9 +71,9 @@ public class GraphPanel extends JPanel {
             TimeSeries ts = new TimeSeries(s.getName());
             col.addSeries(ts);
         }
-        states = ChartFactory.createTimeSeriesChart(null, "Time", "Count", col, false, true, false);
-        ChartPanel cp = new ChartPanel(states);
-        XYPlot plot = (XYPlot) states.getPlot();
+        chart = ChartFactory.createTimeSeriesChart(null, "Time", "Count", col, false, true, false);
+        ChartPanel cp = new ChartPanel(chart);
+        XYPlot plot = (XYPlot) chart.getPlot();
         plot.setBackgroundPaint(UIManager.getColor("TextField.background"));
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
@@ -89,7 +93,7 @@ public class GraphPanel extends JPanel {
     private void rebuildLegend() {
         legend.removeAll();
         for (int i = 0; i < enabled.size(); i++) {
-            makeLegendEntry(legend, states, enabled.get(i).getShortName(), i);
+            makeLegendEntry(legend, chart, enabled.get(i).getShortName(), i);
         }
         legend.add(new JLabel());
         legend.add(new JLabel());
@@ -102,7 +106,7 @@ public class GraphPanel extends JPanel {
             } 
         });
         
-        legend.add(newb);              
+        legend.add(newb);         
     }
 
     protected void displayAddPopup(JButton src) {
@@ -143,6 +147,7 @@ public class GraphPanel extends JPanel {
         col.removeSeries(series);
         rebuildLegend();
         repaint();
+        gp.saveLayout();
     }
     
     protected void displaySeriesPopup(final JFreeChart chart, final String label, final int series, final ColorButton button) {
@@ -173,6 +178,21 @@ public class GraphPanel extends JPanel {
         Color newColor = JColorChooser.showDialog(this, "Pick a color for " + label, color);
         button.setColor(newColor);
         ((XYPlot) chart.getPlot()).getRenderer().setSeriesPaint(series, newColor);
+        gp.saveLayout();
+    }
+    
+    public void setColor(State s, Color color) {
+        int series = enabled.indexOf(s);
+        ((XYPlot) chart.getPlot()).getRenderer().setSeriesPaint(series, color);
+        int i = 0;
+        for (Component c : legend.getComponents()) {
+            if (c instanceof JButton) {
+                i++;
+                if (i == series + 1) {
+                    ((ColorButton) c).setColor(color);
+                }
+            }
+        }
     }
 
     private void update() {
@@ -185,12 +205,50 @@ public class GraphPanel extends JPanel {
             ts.add(new Second(new Date()), summary.getCount(s));
         }
     }
-
+    
     public void enable(State s) {
+        enable(s, true);
+    }
+
+    public void enable(State s, boolean save) {
         TimeSeries ts = new TimeSeries(s.getName());
         col.addSeries(ts);
         enabled.add(s);
         rebuildLegend();
         repaint();
+        if (save) {
+            gp.saveLayout();
+        }
+    }
+
+    public void store(Preferences p) {
+        p.putInt("enabledCount", enabled.size());
+        for (int i = 0; i < enabled.size(); i++) {
+            Preferences gp = p.node("series" + i);
+            gp.put("key", enabled.get(i).getName());
+            Color color = (Color) chart.getPlot().getLegendItems().get(i).getLinePaint();
+            gp.putInt("color.r", color.getRed());
+            gp.putInt("color.g", color.getGreen());
+            gp.putInt("color.b", color.getBlue());
+        }
+    }
+    
+    public static GraphPanel load(Preferences p, SystemState state, GraphsPanel gps) {
+        GraphPanel g = new GraphPanel(state, gps);
+        int ec = p.getInt("enabledCount", 0);
+        for (int i = 0; i < ec; i++) {
+            Preferences gp = p.node("series" + i);
+            String key = gp.get("key", null);
+            if (key == null) {
+                throw new RuntimeException("Null series key");
+            }
+            int cr = gp.getInt("color.r", 255);
+            int cg = gp.getInt("color.g", 0);
+            int cb = gp.getInt("color.b", 0);
+            SummaryItem.State s = SummaryItem.getStateByKey(key);
+            g.enable(s, false);
+            g.setColor(s, new Color(cr, cg, cb));
+        }
+        return g;
     }
 }

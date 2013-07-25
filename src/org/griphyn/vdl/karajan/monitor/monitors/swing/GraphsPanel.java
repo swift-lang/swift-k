@@ -15,8 +15,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.net.URL;
-import java.util.Deque;
 import java.util.LinkedList;
+import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -78,15 +78,14 @@ public class GraphsPanel extends JPanel {
     
     private SystemState state;
     
-    private int rows, columns;
     private JPanel toolBar;
     private JPopupMenu layoutPopup;
-    private Deque<JComponent> graphs;
+    private LinkedList<GraphPanel> graphs;
     private GridView grid;
     
     public GraphsPanel(SystemState state) {
         this.state = state;
-        this.graphs = new LinkedList<JComponent>();
+        this.graphs = new LinkedList<GraphPanel>();
         setLayout(new BorderLayout());
 
         toolBar = new JPanel();
@@ -108,12 +107,7 @@ public class GraphsPanel extends JPanel {
         grid = new GridView();
         add(grid, BorderLayout.CENTER);
         
-        GraphPanel gp = new GraphPanel(state);
-        gp.enable(SummaryItem.State.ACTIVE);
-        gp.enable(SummaryItem.State.STAGE_IN);
-        gp.enable(SummaryItem.State.STAGE_OUT);
-        graphs.add(gp);
-        grid.add(gp);
+        loadLayout();
     }
 
     private void makeLayoutPopup() {
@@ -147,7 +141,7 @@ public class GraphsPanel extends JPanel {
         grid.setLayout(t.copy());
         int count = grid.getCellCount();
         while (count > graphs.size()) {
-            GraphPanel gp = new GraphPanel(state);
+            GraphPanel gp = new GraphPanel(state, this);
             graphs.add(gp);
             grid.add(gp);
         }
@@ -155,6 +149,67 @@ public class GraphsPanel extends JPanel {
             JComponent gp = graphs.removeLast();
             grid.remove(gp);
         }
+        
+        saveLayout();
+    }
+
+    void saveLayout() {
+        /*
+         * Stored are:
+         * - the layout itself
+         * - the graph count and what's being graphed in each
+         * - the graph colors
+         */
+        try {
+            Preferences prefs = Preferences.userNodeForPackage(GraphsPanel.class);
+            Preferences layout = prefs.node("layout");
+            grid.getTree().store(layout);
+            prefs.putInt("graphCount", graphs.size());
+            for (int i = 0; i < graphs.size(); i++) {
+                Preferences gp = prefs.node("graph" + i);
+                graphs.get(i).store(gp);
+            }
+        }
+        catch (Exception e) {
+            System.err.println("Failed to save layout: "  + e);
+        }
+    }
+    
+    private void loadLayout() {
+        grid.clear();
+        graphs.clear();
+        try {
+            Preferences prefs = Preferences.userNodeForPackage(GraphsPanel.class);
+            if (prefs.nodeExists("layout")) {
+                grid.setLayout(GridView.Tree.load(prefs.node("layout")));
+                int gc = prefs.getInt("graphCount", 0);
+                for (int i = 0; i < gc; i++) {
+                    GraphPanel gp = GraphPanel.load(prefs.node("graph" + i), state, this);
+                    graphs.add(gp);
+                    grid.add(gp);
+                }
+            }
+            else {
+                setDefaultLayout();
+            }
+        }
+        catch (Exception e) {
+            System.err.println("Failed to load layout: "  + e + ". Using default.");
+            setDefaultLayout();
+        }
+    }
+    
+    private void setDefaultLayout() {
+        grid.clear();
+        graphs.clear();
+        grid.setLayout(new Tree());
+        GraphPanel gp = new GraphPanel(state, this);
+        gp.enable(SummaryItem.State.ACTIVE);
+        gp.enable(SummaryItem.State.STAGE_IN);
+        gp.enable(SummaryItem.State.STAGE_OUT);
+        graphs.add(gp);
+        grid.add(gp);
+        saveLayout();
     }
 
     protected void displayLayoutPopup(JButton src) {

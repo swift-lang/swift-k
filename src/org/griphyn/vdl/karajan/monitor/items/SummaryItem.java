@@ -63,6 +63,15 @@ public class SummaryItem extends AbstractStatefulItem {
     
     public static final State[] STATES = State.values();
     
+    public static State getStateByKey(String key) {
+        for (State s : STATES) {
+            if (s.getName().equals(key)) {
+                return s;
+            }
+        }
+        return null;
+    }
+    
 	private Map<String, Integer> counts;
 	private int status;
 	
