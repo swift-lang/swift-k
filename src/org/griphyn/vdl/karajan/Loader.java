@@ -510,7 +510,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             "\n\t'summary' (default) - causesSswift to regularly print a count of jobs for each state that a job can be in" +
             "\n\t'text' - regularly prints a more detailed table with Swift run-time information" +
             "\n\t'TUI' - displays Swift run-time information using an interactive text user interface." +
-            " The terminal must standard ANSI/VT100 escape sequences. If a port is specified," +
+            " The terminal must support standard ANSI/VT100 escape sequences. If a port is specified," +
             " the interface will also be available via telnet at the specified port." +
             "\n\t'http' - enables an http server allowing access to swift run-time information using a web browser",
             "<summary|text|TUI[:port]|http[:[password@]port]>", ArgumentParser.OPTIONAL);

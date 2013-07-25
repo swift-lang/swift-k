@@ -53,6 +53,8 @@ public abstract class AbstractMonitor implements Monitor, SystemStateListener {
     public TimelineController getTimelineController() {
         throw new UnsupportedOperationException();
     }
-	
-	
+
+    @Override
+    public void start() {
+    }
 }

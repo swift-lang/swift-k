@@ -73,6 +73,17 @@ public class RadixTree<T> {
 							return add(sn, key, pos + j, value);
 						}
 					}
+					else if (j + pos == key.length()) {
+					    String common = sk.substring(0, j);
+					    String left = sk.substring(j);
+					    Node<T> ln = new Node<T>(left, sn.value);
+                        ln.nodes = sn.nodes;
+                        sn.key = common;
+                        sn.nodes = null;
+                        sn.value = value;
+                        sn.addNode(ln);
+                        return null;
+					}
 					else {
 						String common = sk.substring(0, j);
 						String left = sk.substring(j);
@@ -211,7 +222,7 @@ public class RadixTree<T> {
 	}
 	
 	private void toString(StringBuffer sb, Node<T> n) {
-		n.toString(sb);
+		n.toString(sb, 0);
 	}
 
 	private class Node<S> {
@@ -240,11 +251,15 @@ public class RadixTree<T> {
 		
 		public String toString() {
 			StringBuffer sb = new StringBuffer();
-			toString(sb);
+			toString(sb, 0);
 			return sb.toString();
 		}
 		
-		private void toString(StringBuffer sb) {
+		private void toString(StringBuffer sb, int level) {
+		    sb.append('\n');
+		    for (int i = 0; i < level; i++) {
+		        sb.append('\t');
+		    }
 			if (key != null) {
 				sb.append('\'');
 				sb.append(key);
@@ -254,7 +269,9 @@ public class RadixTree<T> {
 			sb.append(value);
 			if (nodes != null) {
 				sb.append(", ");
-				sb.append(nodes);
+				for (Node<S> n : nodes) {
+				    n.toString(sb, level + 1);
+				}
 			}
 			sb.append(')');
 		}
@@ -274,7 +291,7 @@ public class RadixTree<T> {
 		p(rt);
 		rt.put("the dog", "0");
 		p(rt);
-		rt.put("the cat", "1");
+		rt.put("the cats", "1");
 		p(rt);
 		rt.put("the cat", "3");
 		p(rt);

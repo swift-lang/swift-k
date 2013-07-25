@@ -1,0 +1,94 @@
+<html>
+	<head>
+		<title>Swift System Monitor</title>
+		<link href="css/style.css" rel="stylesheet" type="text/css" />
+		<link href="css/theme-light.css" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="async.js"></script>
+		<link href="css/theme-light/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+		<script src="js/jquery-1.9.1.js"></script>
+		<script src="js/jquery-ui-1.10.3.custom.js"></script>
+	</head>
+	<body>
+		<div id="tabs">
+			<ul>
+				<li><a href="#tab-summary">Summary</a></li>
+				<li><a href="#tab-apps">Applications</a></li>
+				<li><a href="#tab-tasks">Tasks</a></li>
+			</ul>
+			<div id="tab-summary">
+				<div class="mlabel">App Summary</div>
+				<div class="ui-corner-all bordered fixed-width">
+					<table id="appSummary">
+					
+					</table>
+				</div>
+				<div class="ui-corner-all bordered fixed-width">
+					<table>
+						<tr><td><span class="label">Heap:</span></td><td width="100%"><div class="pbi" id="pbi-heap"><span class="pbl"></span></div></td></tr>
+					</table>
+				</div>
+				<div class="pbi" id="pbi-main"><span class="pbl emph"></span></div>
+			</div>
+			<div id="tab-apps"></div>
+			<div id="tab-tasks"></div>
+		</div>
+		
+		<div id="error-text">
+		</div>
+
+		<script language="JavaScript" type="text/javascript">
+			states = ["Initializing", "Selecting site", "Stage in", "Submitting", "Submitted", "Active", "Stage out", "Failed", "Replicating", "Finished successfully"];
+			for (var i = 0; i < states.length; i++) {
+				$("#appSummary").append('<tr><td><span class="label nowrap">' + states[i] + 
+						':</span></td><td width="100%"><div class="pbi" id="pb' + i + '"><span class="pbl"></span></div></td></tr>');
+			}
+		
+			registerUpdate("summary.state", update);
+			
+			$("#tabs").tabs();
+			
+			for (var i = 0; i < states.length; i++) {
+				$("#pb" + i).progressbar({ value: 0	});
+			}
+			
+			$("#pbi-heap").progressbar({ value: 0 });
+			$("#pbi-main").progressbar({ value: 0 });
+						
+			function update(data, error) {
+				if (error != null) {
+					$("#error-text").html(error);
+				}
+				else if (data["error"] != null) {
+					$("#error-text").html(data["error"]);
+					stopUpdates();
+				}
+				else {
+					s = "";
+					for (var k in data) {
+						s = s + "\n" + k + ": " + data[k];
+					}
+					var max = parseInt(data["maxCount"]);
+					for (i = 0; i < states.length; i++) {
+						if (data[states[i]] != null) {
+							var v = data[states[i]];
+							var sel = "#pb" + i;
+							$(".pbl", sel).text(data[states[i]]);
+							$(sel).progressbar("option", "max", max);
+							$(sel).progressbar("option", "value", parseInt(data[states[i]]));
+						}
+					}
+					
+					$("#pbi-heap").progressbar("option", "max", parseInt(data["maxHeap"]));
+					$("#pbi-heap").progressbar("option", "value", parseInt(data["crtHeap"]));
+					$(".pbl", "#pbi-heap").text(data["crtHeapFormatted"] + "/" + data["maxHeapFormatted"]);
+					
+					$("#pbi-main").progressbar("option", "max", parseInt(data["total"]));
+					$("#pbi-main").progressbar("option", "value", parseInt(data["completed"]));
+					$(".pbl", "#pbi-main").text(data["progressString"]);
+					
+					$("#error-text").html(s);
+				}
+			}
+		</script>
+	</body>
+</html>

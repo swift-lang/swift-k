@@ -100,9 +100,9 @@ public class Menu extends Container {
 		}
 		height = getComponents().size() + 2;
 		int max = 10;
-		List l = getComponents();
+		List<Component> l = getComponents();
 		for (int i = 0; i < l.size(); i++) {
-			Component c = (Component) l.get(i);
+			Component c = l.get(i);
 			c.setLocation(sx + 1, sy + i + 1);
 			c.validate();
 			int sz = c.width;
@@ -111,7 +111,7 @@ public class Menu extends Container {
 			}
 		}
 		for (int i = 0; i < l.size(); i++) {
-			Component c = (Component) l.get(i);
+			Component c = l.get(i);
 			c.setSize(max, 1);
 		}
 		width = max + 2;

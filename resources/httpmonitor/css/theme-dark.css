@@ -1,0 +1,15 @@
+body {
+	background-color: #000000;
+	font-family: Sans;
+	font-size: 12px;
+	color: #ffffff;
+}
+
+
+.bordered {
+	border: 2px solid black;
+}
+
+.mlabel {
+	background-color: #3c3c3c;
+}

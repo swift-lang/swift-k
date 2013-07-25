@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Priority;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 
 public class SwiftProcessorDispatcher implements LogMessageProcessor {

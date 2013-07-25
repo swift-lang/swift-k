@@ -53,10 +53,10 @@ public class LevelBars extends Container {
     }
 
     protected void validate() {
-        Iterator i = getComponents().iterator();
+        Iterator<Component> i = getComponents().iterator();
         int j = 0;
         while (i.hasNext()) {
-            ((Component) i.next()).setSize(width, 1);
+            i.next().setSize(width, 1);
         }
         super.validate();
     }

@@ -24,14 +24,14 @@ import java.util.ListIterator;
 public class Terminal extends Component {
     public static final int SCROLLBACK_BUFFER_SIZE = 512;
     
-    private LinkedList lines;
+    private LinkedList<String> lines;
     private String prompt;
     private StringBuffer input;
     private InputHandler inputHandler;
     private int end = -1;
 
     public Terminal() {
-        lines = new LinkedList();
+        lines = new LinkedList<String>();
         bgColor = ANSI.BLACK;
         fgColor = ANSI.WHITE;
         prompt = "> ";
@@ -58,14 +58,14 @@ public class Terminal extends Component {
             else {
                 System.out.println();
             }
-            ListIterator li = lines.listIterator(lines.size());
+            ListIterator<String> li = lines.listIterator(lines.size());
             int skip = end;
             while (li.hasPrevious() && skip > 0) {
                 li.previous();
                 skip--;
             }
             while (li.hasPrevious() && crt >= 0) {
-                String line = (String) li.previous();
+                String line = li.previous();
                 context.moveTo(sx, sy + crt);
                 context.text(line);
                 crt--;

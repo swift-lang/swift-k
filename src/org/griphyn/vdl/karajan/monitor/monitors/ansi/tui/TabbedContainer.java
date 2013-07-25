@@ -91,7 +91,7 @@ public class TabbedContainer extends Container {
             context.bgColor(bgColor);
             context.fgColor(fgColor);
             context.spaces(width);
-            Iterator i = components.iterator();
+            Iterator<Component> i = components.iterator();
             while (i.hasNext()) {
                 Tab c = (Tab) i.next();
                 int newLabelPos = currentLabelPos + c.getLabel().getLabelSize() + 3;
@@ -147,7 +147,7 @@ public class TabbedContainer extends Container {
         if (isValid()) {
             return;
         }
-        Iterator i;
+        Iterator<Component> i;
         i = components.iterator();
         int totalLabelWidth = 0;
         while (i.hasNext()) {

@@ -22,14 +22,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 public class Graph extends Component {
-    private LinkedList data;
+    private LinkedList<Double> data;
 
     public Graph() {
-        data = new LinkedList();
+        data = new LinkedList<Double>();
     }
 
     public void push(double value) {
-        data.addLast(new Double(value));
+        data.addLast(Double.valueOf(value));
         if (data.size() >= getWidth() - 2) {
             data.removeFirst();
         }
@@ -38,9 +38,9 @@ public class Graph extends Component {
     protected void draw(ANSIContext context) throws IOException {
         double max = 1;
         double min = 0;
-        Iterator i = data.iterator();
+        Iterator<Double> i = data.iterator();
         while (i.hasNext()) {
-            Double d = (Double) i.next();
+            Double d = i.next();
             if (d.doubleValue() > max) {
                 max = d.doubleValue();
             }
@@ -55,7 +55,7 @@ public class Graph extends Component {
         i = data.iterator();
         int j = sx + 1;
         while (i.hasNext()) {
-            Double d = (Double) i.next();
+            Double d = i.next();
             double v = (d.doubleValue() - min) / (max - min) * (height - 3);
             int c = (int) v;
             if (last == Integer.MIN_VALUE || last == c) {

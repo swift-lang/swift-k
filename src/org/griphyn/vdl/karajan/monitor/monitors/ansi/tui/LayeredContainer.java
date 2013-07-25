@@ -26,16 +26,17 @@ import java.util.Iterator;
 import java.util.List;
 
 public class LayeredContainer extends Container {
-	protected List[] layers;
+	protected List<Component>[] layers;
 
-	public LayeredContainer() {
+	@SuppressWarnings("unchecked")
+    public LayeredContainer() {
 		layers = new List[3];
 	}
 
 	public void add(Component comp) {
 		int layer = comp.getLayer();
 		if (layers[layer] == null) {
-			layers[layer] = new ArrayList();
+			layers[layer] = new ArrayList<Component>();
 		}
 		layers[layer].add(comp);
 		comp.setParent(this);
@@ -53,7 +54,7 @@ public class LayeredContainer extends Container {
 		invalidate();
 	}
 
-	public List[] getLayers() {
+	public List<Component>[] getLayers() {
 		return layers;
 	}
 
@@ -76,9 +77,9 @@ public class LayeredContainer extends Container {
 		if (layers[layer] == null) {
 			return;
 		}
-		Iterator i = layers[layer].iterator();
+		Iterator<Component> i = layers[layer].iterator();
 		while (i.hasNext()) {
-			Component c = (Component) i.next();
+			Component c = i.next();
 			if (c.isVisible()) {
 				c.drawTree(context);
 			}
@@ -99,10 +100,10 @@ public class LayeredContainer extends Container {
 		if (layers[layer] == null) {
 			return;
 		}
-		Iterator i = layers[layer].iterator();
+		Iterator<Component> i = layers[layer].iterator();
 		boolean focus = false;
 		while (i.hasNext()) {
-			Component c = (Component) i.next();
+			Component c = i.next();
 			if (c.hasFocus() && !hasFocus()) {
 				focus();
 			}
@@ -156,10 +157,10 @@ public class LayeredContainer extends Container {
 	public boolean focusFirst() {
 	    for (int i = 0; i < layers.length; i++) {
 	        if (layers[i] != null) {
-	            Iterator j = layers[i].iterator();
+	            Iterator<Component> j = layers[i].iterator();
 	            if (j.hasNext()) {
-	                Component comp = (Component) j.next();
-	                if (((Component) j.next()).focusFirst()) {
+	                Component comp = j.next();
+	                if (j.next().focusFirst()) {
 	                    return true;
 	                }
 	            }
@@ -180,10 +181,10 @@ public class LayeredContainer extends Container {
         
         for (int i = 0; i < layers.length; i++) {
             if (layers[i] != null) {
-                Iterator j = layers[i].iterator();
+                Iterator<Component> j = layers[i].iterator();
                 while (j.hasNext()) {
                     if (found) {
-                        if (((Component) j.next()).focusFirst()) {
+                        if (j.next().focusFirst()) {
                             return true;
                         }
                     }
@@ -200,9 +201,9 @@ public class LayeredContainer extends Container {
 		if (layers[layer] == null) {
 			return false;
 		}
-		Iterator i = layers[layer].iterator();
+		Iterator<Component> i = layers[layer].iterator();
 		while (i.hasNext()) {
-			if (((Component) i.next()).keyboardEvent(key)) {
+			if (i.next().keyboardEvent(key)) {
 				return true;
 			}
 		}

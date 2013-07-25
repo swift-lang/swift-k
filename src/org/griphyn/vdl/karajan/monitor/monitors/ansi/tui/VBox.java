@@ -49,7 +49,7 @@ public class VBox extends Container {
 	}
 	
 	protected Component get(int index) {
-		Component c = (Component) components.get(index);
+		Component c = components.get(index);
 		if (c == DUMMY) {
 			return null;
 		}

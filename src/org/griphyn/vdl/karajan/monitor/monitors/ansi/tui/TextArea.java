@@ -31,7 +31,7 @@ public class TextArea extends Container {
 
 	private int justification;
 	private String text;
-	private List lines;
+	private List<String> lines;
 	private VScrollbar sb;
 	private int top;
 	private boolean scrollBarVisible;
@@ -54,7 +54,7 @@ public class TextArea extends Container {
 	}
 
 	private void updateLines() {
-		lines = new ArrayList();
+		lines = new ArrayList<String>();
 		if (text == null) {
 			return;
 		}
@@ -92,7 +92,7 @@ public class TextArea extends Container {
 			context.filledRect(sx, sy, width, height);
 			for (int i = top; i < Math.min(top + height, lines.size()); i++) {
 				context.moveTo(sx, sy + i - top);
-				context.text((String) lines.get(i));
+				context.text(lines.get(i));
 			}
 		}
 		finally {

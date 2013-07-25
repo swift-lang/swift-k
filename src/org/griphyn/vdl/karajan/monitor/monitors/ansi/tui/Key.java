@@ -64,14 +64,14 @@ public class Key {
     public static final int ESC = 0x1b;
     public static final int TAB = 0x09;
 
-    private static Map names;
+    private static Map<Integer, String> names;
 
     private static void putName(int key, String name) {
-        names.put(new Integer(key), name);
+        names.put(Integer.valueOf(key), name);
     }
 
     static {
-        names = new HashMap();
+        names = new HashMap<Integer, String>();
         putName(CR, "CR");
         putName(LF, "LF");
         putName(F1, "F1");
@@ -164,7 +164,7 @@ public class Key {
             if (modSHIFT()) {
                 sb.append("SHIFT+");
             }
-            String name = (String) names.get(new Integer(key));
+            String name = names.get(new Integer(key));
             if (name != null) {
                 sb.append(name);
             }

@@ -22,8 +22,6 @@ package org.griphyn.vdl.karajan.monitor.monitors.ansi.tui;
 
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
-
 public class Component {
     public static final int BOTTOM_LAYER = 0;
     public static final int NORMAL_LAYER = 1;

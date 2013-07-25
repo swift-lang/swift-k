@@ -18,8 +18,6 @@
 package org.griphyn.vdl.karajan.monitor.monitors.ansi;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Map;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
@@ -35,10 +33,6 @@ import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.LevelBars;
 
 public class SummaryPane extends Container {
     private SystemState state;
-
-    public static final String[] STATES = new String[] { "Initializing", "Selecting site",
-            "Stage in", "Submitting", "Submitted", "Active", "Stage out",
-            "Failed", "Replicating", "Finished successfully" };
     
     private LevelBars bars;
     private LevelBar memory;
@@ -46,16 +40,16 @@ public class SummaryPane extends Container {
 
     public SummaryPane(SystemState state) {
         this.state = state;
-        bars = new LevelBars(STATES.length);
+        bars = new LevelBars(SummaryItem.STATES.length);
         bars.setLocation(26, 2);
         add(bars);
-        for (int i = 0; i < STATES.length; i++) {
-            addLabel(STATES[i] + ": ", 2, 2 + i, 24);
+        for (int i = 0; i < SummaryItem.STATES.length; i++) {
+            addLabel(SummaryItem.STATES[i] + ": ", 2, 2 + i, 24);
         }
         
-        memlabel = addLabel("Heap: ", 2, 4 + STATES.length, 24);
+        memlabel = addLabel("Heap: ", 2, 4 + SummaryItem.STATES.length, 24);
         memory = new LevelBar();
-        memory.setLocation(26, 4 + STATES.length);
+        memory.setLocation(26, 4 + SummaryItem.STATES.length);
         add(memory);
 
         GlobalTimer.getTimer().schedule(new SafeTimerTask(getScreen()) {
@@ -70,8 +64,8 @@ public class SummaryPane extends Container {
             SummaryItem summary = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
             if (summary != null) {
                 Map<String, Integer> counts = summary.getCounts(state);
-                for (int i = 0; i < STATES.length; i++) {
-                    Integer v = counts.get(STATES[i]);
+                for (int i = 0; i < SummaryItem.STATES.length; i++) {
+                    Integer v = counts.get(SummaryItem.STATES[i]);
                     if (v != null) {
                         bars.setValue(i, v);
                         bars.setText(i, v.toString());
@@ -84,11 +78,11 @@ public class SummaryPane extends Container {
             }
             // mem
             Runtime r = Runtime.getRuntime();
-            long heapMax = r.maxMemory();
-            long heapCrt = r.totalMemory() - r.freeMemory();
+            long heapMax = state.getMaxHeap();
+            long heapCrt = state.getCurrentHeap();
             double fraction = (double) heapCrt / heapMax;
             memory.setValue((float) fraction);
-            memory.setText(formatMemory(heapCrt) + " / " + formatMemory(heapMax));
+            memory.setText(state.getCurrentHeapFormatted() + " / " + state.getMaxHeapFormatted());
             redraw();
         }
         catch (Exception e) {
@@ -96,34 +90,6 @@ public class SummaryPane extends Container {
         }
     }
     
-    private static final NumberFormat NF = new DecimalFormat("###.##");
-
-    private String formatMemory(long v) {
-        int l = 1;
-        while (v > 512 * 1024) {
-            v = v / 1024;
-            l++;
-        }
-        return NF.format(v / 1024.0) + unit(l);
-    }
-
-    private String unit(int l) {
-        switch(l) {
-            case 0:
-                return "b";
-            case 1:
-                return "Kb";
-            case 2:
-                return "Mb";
-            case 3:
-                return "Gb";
-            case 4:
-                return "Tb";
-            default:
-                return "?";
-        }
-    }
-
     private Label addLabel(String text, int x, int y, int w) {
         Label l = new Label(text);
         l.setLocation(x, y);
@@ -140,7 +106,7 @@ public class SummaryPane extends Container {
     }
 
     protected void validate() {
-        bars.setSize(width - 27, STATES.length);
+        bars.setSize(width - 27, SummaryItem.STATES.length);
         memory.setSize(width - 27, 1);
         super.validate();
     }    

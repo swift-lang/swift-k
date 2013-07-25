@@ -25,13 +25,14 @@ import javax.swing.JSplitPane;
 
 import org.globus.cog.abstraction.interfaces.Task;
 import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
+import org.griphyn.vdl.karajan.monitor.items.TaskItem;
 
 public class TasksRenderer extends JSplitPane implements ClassRenderer {
 	private String name;
-	private StatefulItemClassSet set;
+	private StatefulItemClassSet<TaskItem> set;
 	private FilteringTaskTable jobs, transfers, fileops;
 
-	public TasksRenderer(String name, StatefulItemClassSet set) {
+	public TasksRenderer(String name, StatefulItemClassSet<TaskItem> set) {
 		super(VERTICAL_SPLIT);
 		this.name = name;
 		this.set = set;

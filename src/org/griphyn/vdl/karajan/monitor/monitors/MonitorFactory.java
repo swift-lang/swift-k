@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.ANSIMonitor;
+import org.griphyn.vdl.karajan.monitor.monitors.http.HTTPMonitor;
 import org.griphyn.vdl.karajan.monitor.monitors.swing.SwingMonitor;
 
 public class MonitorFactory {
@@ -35,6 +36,7 @@ public class MonitorFactory {
 		classes.put("ANSI", ANSIMonitor.class);
 		classes.put("TUI", ANSIMonitor.class);
 		classes.put("Swing", SwingMonitor.class);
+		classes.put("http", HTTPMonitor.class);
 	}
 
 	public static Monitor newInstance(String type) throws InstantiationException,
@@ -42,8 +44,8 @@ public class MonitorFactory {
 		String params = null;
 		if (type.contains(":")) {
 			int index = type.indexOf(':');
-			type = type.substring(0, index);
 			params = type.substring(index + 1, type.length());
+			type = type.substring(0, index);
 		}
 		Class<? extends Monitor> cls = classes.get(type);
 		if (cls == null) {
@@ -54,6 +56,7 @@ public class MonitorFactory {
 		if (params != null) {
 			m.setParams(params);
 		}
+		m.start();
 		return m;
 	}
 }

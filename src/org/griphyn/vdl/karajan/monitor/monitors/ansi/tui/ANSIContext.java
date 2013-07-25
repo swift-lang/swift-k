@@ -178,7 +178,7 @@ public class ANSIContext {
         os.flush();
         try {
             expect(ANSI.AESC, 250);
-            List nums = readNums();
+            List<Integer> nums = readNums();
             if (nums == null || nums.size() < 2) {
                 if (buf != null) {
                     return new int[] { buf.getWidth(), buf.getHeight() };
@@ -191,8 +191,8 @@ public class ANSIContext {
                 nums.remove(0);
             }
             int[] sz = new int[2];
-            sz[0] = ((Integer) nums.get(1)).intValue();
-            sz[1] = ((Integer) nums.get(0)).intValue();
+            sz[0] = nums.get(1).intValue();
+            sz[1] = nums.get(0).intValue();
             if (logger.isDebugEnabled()) {
                 logger.debug("Terminal size is " + sz[0] + "x" + sz[1]);
             }
@@ -253,8 +253,8 @@ public class ANSIContext {
         } while (true);
     }
 
-    protected List readNums() throws IOException {
-        List nums = new LinkedList();
+    protected List<Integer> readNums() throws IOException {
+        List<Integer> nums = new LinkedList<Integer>();
         StringBuffer sb = new StringBuffer();
         int c;
         do {

@@ -28,7 +28,7 @@ import java.util.List;
 public class Button extends Component {
 	private String label;
 	private LabelWithAccelerator twlabel;
-	private List listeners;
+	private List<ActionListener> listeners;
 
 	public Button(String label) {
 		setLabel(label);
@@ -98,7 +98,7 @@ public class Button extends Component {
 
 	public void addActionListener(ActionListener l) {
 		if (listeners == null) {
-			listeners = new LinkedList();
+			listeners = new LinkedList<ActionListener>();
 		}
 		listeners.add(l);
 	}
@@ -114,10 +114,10 @@ public class Button extends Component {
 		if (listeners == null) {
 			return;
 		}
-		List l = new LinkedList(listeners);
-		Iterator i = l.iterator();
+		List<ActionListener> l = new LinkedList<ActionListener>(listeners);
+		Iterator<ActionListener> i = l.iterator();
 		while (i.hasNext()) {
-			((ActionListener) i.next()).actionPerformed(this);
+			i.next().actionPerformed(this);
 		}
 	}
 }

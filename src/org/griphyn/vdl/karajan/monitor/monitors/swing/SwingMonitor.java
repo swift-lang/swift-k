@@ -20,13 +20,19 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.swing;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Font;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JFrame;
+import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
+import javax.swing.UIManager;
+import javax.swing.plaf.synth.SynthLookAndFeel;
 
 import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
 import org.griphyn.vdl.karajan.monitor.SystemState;
@@ -34,39 +40,84 @@ import org.griphyn.vdl.karajan.monitor.SystemStateListener;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
+import org.griphyn.vdl.karajan.monitor.items.TaskItem;
 import org.griphyn.vdl.karajan.monitor.monitors.AbstractMonitor;
+import org.griphyn.vdl.karajan.monitor.monitors.ansi.GlobalTimer;
 
 public class SwingMonitor extends AbstractMonitor {
 	private JFrame frame;
 	private Timer timer;
 	private Map<StatefulItemClass, ClassRenderer> tablemap;
 	private GanttChart gantt;
+	private JProgressBar progress;
 
 	public SwingMonitor() {
+	    setLookAndFeel(); 
 		createFrame();
 		tablemap = new HashMap<StatefulItemClass, ClassRenderer>();
+		GlobalTimer.getTimer().schedule(new TimerTask() {
+            public void run() {
+                update();
+            }
+        }, 1000, 1000);
 	}
 
-	private void createFrame() {
+	private void setLookAndFeel() {
+	    //setSynthLookAndFeel();
+	    setNativeLookAndFeel();
+    }
+
+    private void setNativeLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setSynthLookAndFeel() {
+        SynthLookAndFeel laf = new SynthLookAndFeel();
+        try {
+            laf.load(this.getClass().getClassLoader().getResourceAsStream("laf.xml"), SwingMonitor.class);
+            UIManager.setLookAndFeel(laf);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void createFrame() {
 		frame = new JFrame();
 		frame.setTitle("Swift System Monitor");
 		frame.setSize(800, 600);
-		frame.setVisible(true);
 	}
 
 	public void setState(SystemState state) {
 		super.setState(state);
 		createTabs(frame);
+		frame.setVisible(true);
 	}
 
 	private void createTabs(JFrame frame) {
+	    frame.getContentPane().setLayout(new BorderLayout());
 		JTabbedPane tabs = new JTabbedPane();
-		frame.getContentPane().add(tabs);
+		frame.getContentPane().add(tabs, BorderLayout.CENTER);
+		
+		progress = new JProgressBar();
+        progress.setString("");
+        progress.setStringPainted(true);
+        frame.getContentPane().add(progress, BorderLayout.SOUTH);
+        progress.setString("Est. progress: 0%    Elapsed time: 00:00:00    Est. time left: N/A");
+        
+        Font orig = progress.getFont();
+        progress.setFont(new Font(orig.getFamily(), Font.BOLD, orig.getSize() + 1));
 
-		ClassRenderer workflows = new SimpleTableClassRenderer("Workflows",
-				getState().getItemClassSet(StatefulItemClass.WORKFLOW));
-		tablemap.put(StatefulItemClass.WORKFLOW, workflows);
-		tabs.add("Workflows", (Component) workflows);
+		SummaryPanel summary = new SummaryPanel(getState());
+		tabs.add("Summary", summary);
+		
+		GraphsPanel graphs = new GraphsPanel(getState());
+		tabs.add("Graphs", graphs);
 		
 		StatefulItemClassSet<ApplicationItem> appSet =
 		    getState().getItemClassSet(StatefulItemClass.APPLICATION);
@@ -74,8 +125,10 @@ public class SwingMonitor extends AbstractMonitor {
 		tablemap.put(StatefulItemClass.APPLICATION, applications);
 		tabs.add("Applications", (Component) applications);
 		
-		ClassRenderer tasks = new TasksRenderer("Tasks",
-				getState().getItemClassSet(StatefulItemClass.TASK));
+		StatefulItemClassSet<TaskItem> taskSet = 
+		    getState().getItemClassSet(StatefulItemClass.TASK);
+		ClassRenderer tasks = new TasksRenderer("Tasks", taskSet);
+
 		tablemap.put(StatefulItemClass.TASK, tasks);
 		tabs.add("Tasks", (Component) tasks);
 		
@@ -96,5 +149,14 @@ public class SwingMonitor extends AbstractMonitor {
 
     @Override
     public void setParams(String params) {
+    }
+    
+    private void update() {
+        SystemState state = getState();
+        int crt = state.getCompleted();
+        int total = state.getTotal();
+        progress.setMaximum(total);
+        progress.setValue(crt);
+        progress.setString(state.getGlobalProgressString());
     }
 }

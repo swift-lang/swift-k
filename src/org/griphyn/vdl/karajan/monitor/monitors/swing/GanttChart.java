@@ -25,7 +25,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Rectangle;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
@@ -36,15 +37,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.BoundedRangeModel;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
@@ -60,20 +64,30 @@ import org.griphyn.vdl.karajan.monitor.items.TaskItem;
 
 public class GanttChart extends JPanel implements SystemStateListener, ActionListener,
 		ChangeListener {
+    
+    public static final double INITIAL_SCALE = 1;
+    public static final Color QUEUED = new Color(255, 230, 0, 200);
+    public static final Color RUNNING = new Color(0, 255, 0, 200);
+    public static final Color LINE_COLOR = UIManager.getColor("Label.foreground");
+
+    
 	private JTable table, header;
 	private HeaderModel hmodel;
 	private ChartModel cmodel;
 	private List<Job> jobs;
 	private Map<String, Job> jobmap;
-	private JScrollPane csp, hsp;
+	private JScrollPane csp;
+	private JScrollBar hsb;
 	private JSpinner scalesp;
 	private long firstEvent;
 	private Timer timer;
 	private double scale;
+	private int offset, maxX;
 	private JLabel ctime;
+	private boolean scrollVerticallyOnNextUpdate;
 
 	public GanttChart() {
-		scale = 1.0 / SCALE;
+		scale = INITIAL_SCALE;
 		jobs = new ArrayList<Job>();
 		jobmap = new HashMap<String, Job>();
 
@@ -89,6 +103,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 		header.setDefaultRenderer(Job.class, new JobNameRenderer());
 
 		table = new JTable();
+		table.setDoubleBuffered(true);
 		table.setModel(cmodel = new ChartModel());
 		table.setShowHorizontalLines(true);
 		table.setDefaultRenderer(Job.class, new JobRenderer());
@@ -98,17 +113,24 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 
 		csp = new JScrollPane(jp);
 		csp.setColumnHeaderView(new Tickmarks());
-		csp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		csp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		csp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		csp.setRowHeaderView(header);
+		csp.getVerticalScrollBar().getModel().addChangeListener(this);
+		
+		hsb = new JScrollBar(JScrollBar.HORIZONTAL);
+		hsb.setVisible(true);
+		hsb.getModel().addChangeListener(this);
 
 		setLayout(new BorderLayout());
 		add(csp, BorderLayout.CENTER);
 		add(createTools(), BorderLayout.NORTH);
+		add(hsb, BorderLayout.SOUTH);
+		
 		timer = new Timer(1000, this);
 		timer.start();
 	}
-
+	
 	private JComponent createTools() {
 		JPanel p = new JPanel();
 		p.setLayout(new BorderLayout());
@@ -116,15 +138,30 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 		p.add(l = new JLabel("Scale: "), BorderLayout.CENTER);
 		l.setAlignmentX(1.0f);
 		l.setHorizontalAlignment(SwingConstants.RIGHT);
-		p.add(scalesp = new JSpinner(new SpinnerNumberModel(1, 0.01, 100, 0.01)), BorderLayout.EAST);
+		p.add(scalesp = new JSpinner(new SpinnerNumberModel(1, 0.01, 100, 0.05)), BorderLayout.EAST);
 		p.add(ctime = new JLabel("Current time: 0s"));
 		scalesp.addChangeListener(this);
 		return p;
 	}
 
 	public void stateChanged(ChangeEvent e) {
-		scale = ((Number) scalesp.getValue()).doubleValue() / SCALE;
-		repaint();
+	    if (e.getSource() == scalesp) {
+	        scale = ((Number) scalesp.getValue()).doubleValue() * INITIAL_SCALE;
+	        repaint();
+	    }
+	    else if (e.getSource() == hsb.getModel()) {
+	        BoundedRangeModel m = hsb.getModel();
+	        if (offset != m.getValue()) {
+    	        offset = m.getValue();
+    	        repaint();
+	        }
+	    }
+	    else if (e.getSource() == csp.getVerticalScrollBar().getModel()) {
+	        if (scrollVerticallyOnNextUpdate) {
+	            scrollVerticallyOnNextUpdate = false;
+	            csp.getVerticalScrollBar().getModel().setValue(Integer.MAX_VALUE);
+	        }
+	    }
 	}
 
 	public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
@@ -160,12 +197,40 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 				else if (task.getType() == Task.JOB_SUBMISSION) {
 					if (updateType == SystemStateListener.UpdateType.ITEM_UPDATED) {
 						job.setJobStatus(ti.getStatus());
-						hmodel.fireTableDataChanged();
+						repaint();
 					}
 				}
 			}
 		}
 		repaint();
+	}
+	
+	public void updateMaxX(int maxX) {
+	    int extent = table.getWidth();
+        int empty = extent * 3 / 4;
+        maxX += empty;
+	    if (this.maxX < maxX) {
+	        int oldMaxX = this.maxX;
+	        this.maxX = maxX;
+	        
+	        int visible = (maxX - empty) - offset;
+	        int oldVisible = (oldMaxX - empty) - offset;
+	        
+	        if (visible > empty && oldVisible < empty) {
+	            int newOffset = maxX - extent;
+	            if (newOffset > offset) {
+	                offset = newOffset;
+	                hsb.getModel().setRangeProperties(offset, table.getWidth(), 0, maxX, false);
+	                repaint();
+	            }
+	        }
+	        else {
+	            hsb.getModel().setMaximum(maxX);
+	        }
+	    }
+	    if (hsb.getModel().getExtent() != table.getWidth()) {
+	        hsb.getModel().setExtent(table.getWidth());
+	    }
 	}
 
 	protected void addJob(ApplicationItem ai) {
@@ -173,8 +238,12 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 		j.start();
 		jobmap.put(ai.getID(), j);
 		jobs.add(j);
-		hmodel.fireTableStructureChanged();
-		cmodel.fireTableStructureChanged();
+		BoundedRangeModel m = csp.getVerticalScrollBar().getModel();
+		if (m.getValue() + m.getExtent() == m.getMaximum()) {
+		    scrollVerticallyOnNextUpdate = true;
+		}
+		hmodel.fireTableRowsInserted(jobs.size(), jobs.size());
+        cmodel.fireTableRowsInserted(jobs.size(), jobs.size());
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -211,7 +280,6 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 	private class ChartModel extends AbstractTableModel {
 
 		public ChartModel() {
-
 		}
 
 		public Class<?> getColumnClass(int columnIndex) {
@@ -233,26 +301,63 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 
 	private class Tickmarks extends Component {
 		public void paint(Graphics g) {
-			super.paint(g);
-			Rectangle r = g.getClipBounds();
-			double start = toReal(r.x);
-			double end = toReal(r.x + r.width);
-			double sticks = 10 * Math.pow(10, (int) (Math.log(scale) / Math.log(10))) / scale;
-			double x = r.x;
-			int count = 0;
-			while (x < r.x + r.width) {
-				int ix = (int)x;
-				g.drawLine(ix, 0, ix, 3);
-				if (count % 5 == 0) {
-					g.drawLine(ix, 0, ix, 10);
-					g.drawString(formatTime(toReal(ix)), ix + 2, 14);
-				}
-				x += sticks;
-				count++;
+			((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			
+			int width = getWidth();
+			int X = 75;
+			// - space major ticks at least X pixels
+			// - scale = width / time
+			// - timeForXPixels = X / scale
+			// - the major tick size must the smallest power of 10
+			//   larger than timeForXPixels
+			
+			double timeFor100Pixels = 75 / scale;
+			int majorTickMagnitude = (int) Math.ceil((Math.log(timeFor100Pixels) / Math.log(10)));
+			double majorTickSize = Math.pow(10, majorTickMagnitude);
+			double minorTickSize = majorTickSize / 10;
+			
+			// the first pixel we could draw
+			int left = - (offset % width);
+			int right = width;
+			
+			double minorLeft = round(minorTickSize, pixelToTime(left));
+			double tright = pixelToTime(right);
+			
+			int minorCount = 1 + (int) ((tright - minorLeft) / minorTickSize);
+			
+			// draw minor ticks
+			for (int i = 0; i < minorCount; i++) {
+			    int ix = timeToPixel(minorLeft + i * minorTickSize);
+			    g.drawLine(ix, 0, ix, 3);
 			}
+			
+			double majorLeft = round(majorTickSize, pixelToTime(left));
+            
+            int majorCount = 1 + (int) ((tright - majorLeft) / majorTickSize);
+            
+            // draw major ticks
+            for (int i = 0; i < majorCount; i++) {
+                double time = majorLeft + i * majorTickSize;
+                int ix = timeToPixel(time);
+                g.drawLine(ix, 0, ix, 10);
+                g.drawString(formatTime(time), ix + 2, 14);
+            }
 		}
 
-		public Dimension getPreferredSize() {
+		private double round(double order, double value) {
+            return order * (int) (value / order);
+        }
+
+        private double pixelToTime(int x) {
+            int absoluteX = x + offset;
+            return absoluteX / scale;
+        }
+        
+        private int timeToPixel(double time) {
+            return (int) (time * scale) - offset;
+        }
+
+        public Dimension getPreferredSize() {
 			return new Dimension(1, 15);
 		}
 
@@ -260,8 +365,12 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 			return screen / scale;
 		}
 		
-		private String formatTime(double ms) {
-			return TF.format(ms / 1000) + "s";
+		private double toReal(double screen) {
+            return screen / scale;
+        }
+		
+		private String formatTime(double s) {
+			return TF.format(s) + "s";
 		}
 	}
 	
@@ -270,7 +379,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 	static {
 		TF = new DecimalFormat();
 		TF.setMaximumFractionDigits(2);
-		TF.setMinimumFractionDigits(2);
+		TF.setMinimumFractionDigits(0);
 	}
 
 	private class Job {
@@ -391,10 +500,6 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 		}
 	}
 
-	public static final int SCALE = 500;
-	public static final Color QUEUED = new Color(255, 230, 0, 128);
-	public static final Color RUNNING = new Color(0, 255, 0, 128);
-
 	private class JobComponent extends Component {
 		private Job job;
 
@@ -411,6 +516,9 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 		}
 
 		public void paint(Graphics g) {
+		    // we work in milliseconds here and the scale
+		    // is in pixels per second
+		    double scale = GanttChart.this.scale / 1000;
 			List<Event> events;
 			synchronized (job.events) {
 				events = new ArrayList<Event>(job.events);
@@ -436,9 +544,9 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 				ex = (int) (System.currentTimeMillis() - firstEvent);
 			}
 
-			g.setColor(Color.BLACK);
-			ox = (int) (ox * scale);
-			ex = (int) (ex * scale);
+			g.setColor(LINE_COLOR);
+			ox = (int) (ox * scale) - offset;
+			ex = (int) (ex * scale) - offset;
 			g.drawLine(ox, 1, ox, 11);
 			g.drawLine(ox + 1, 1, ox + 1, 11);
 			if (endcap) {
@@ -453,7 +561,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 			i = events.iterator();
 			while (i.hasNext()) {
 				Event e = i.next();
-				int x = (int) (e.time * scale);
+				int x = (int) (e.time * scale) - offset;
 				// System.err.println(crt+", "+lx+", "+x);
 				if (crt != null) {
 					g.setColor(crt);
@@ -491,6 +599,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 				g.setColor(crt);
 				g.fillRect(lx, 2, ex - lx, 9);
 			}
+			updateMaxX(ex + offset);
 		}
 	}
 }

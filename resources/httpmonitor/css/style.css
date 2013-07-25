@@ -1,0 +1,77 @@
+#appSummary {
+	padding-top: 8px;
+}
+
+#tabs {
+	width: 100px;
+
+    position: absolute;
+    top:32px;
+    left: 0;
+    right: 0;
+	
+	margin: auto;
+}
+
+.fixed-width {
+	width: 720px;
+}
+
+.bordered {
+	margin: 4px;
+	padding: 4px;
+}
+
+.mlabel {
+	position: relative;
+	top: 14px;
+	left: 16px;
+	padding-left: 9px;
+	padding-right: 4px;
+	width: 80px;
+}
+
+#appSummary .label {
+	padding-right: 8px;
+}
+
+.pbl {
+	position: absolute; 
+	left: 0px;
+	width: 100%;
+	text-align: center;
+	line-height: 1.9em; 
+}
+
+#tabs {
+	width: 840px;
+}
+
+.pbi {
+	position: relative;
+	width: 100%;
+}
+
+#error-text {
+	white-space: pre;
+}
+
+.label {
+	font-size: 12px;
+}
+
+.nowrap {
+	white-space: pre;
+}
+
+.expand {
+	width: 100%;
+}
+
+#pbi-main {
+	margin-top: 16px;
+	height: 24px;
+	font-size: 14px;
+	font-weight: bold;
+	white-space: pre;
+}

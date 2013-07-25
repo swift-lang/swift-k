@@ -34,4 +34,6 @@ public interface Monitor {
     TimelineController getTimelineController();
 
     void setParams(String params);
+
+    void start();
 }

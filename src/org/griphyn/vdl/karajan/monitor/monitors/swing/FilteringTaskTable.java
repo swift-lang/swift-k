@@ -28,6 +28,7 @@ import java.util.TimerTask;
 import javax.swing.BorderFactory;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.border.EtchedBorder;
 import javax.swing.table.AbstractTableModel;
 
 import org.globus.cog.abstraction.interfaces.FileOperationSpecification;
@@ -51,7 +52,8 @@ public class FilteringTaskTable extends JScrollPane {
 		this.name = name;
 		this.items = itemClassSet;
 		this.taskType = taskType;
-		this.setBorder(BorderFactory.createTitledBorder(name));
+		this.setBorder(BorderFactory.createTitledBorder(
+		    BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), name));
 		this.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		this.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		table.setModel(newModel(taskType));

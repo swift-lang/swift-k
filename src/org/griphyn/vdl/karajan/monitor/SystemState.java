@@ -20,15 +20,19 @@
  */
 package org.griphyn.vdl.karajan.monitor;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimerTask;
 
 import k.rt.Stack;
 
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
+import org.griphyn.vdl.karajan.monitor.monitors.ansi.GlobalTimer;
 
 public class SystemState {
 	private Map<StatefulItemClass, StatefulItemClassSet<? extends StatefulItem>> classes;
@@ -38,12 +42,23 @@ public class SystemState {
     private long start;
     private Stack stack;
     private String projectName;
+    private final Runtime runtime;
 
 	public SystemState(String projectName) {
 	    this.projectName = projectName;
 		classes = new HashMap<StatefulItemClass, StatefulItemClassSet<? extends StatefulItem>>();
         listeners = new HashSet<SystemStateListener>();
         stats = new HashMap<String, Stats>();
+        runtime = Runtime.getRuntime();
+        GlobalTimer.getTimer().schedule(new TimerTask() {
+            public void run() {
+                update();
+            }
+        }, 1000, 1000);
+	}
+	
+	protected void update() {
+	    
 	}
 
 	public void addItem(StatefulItem item) {
@@ -143,5 +158,105 @@ public class SystemState {
 
     public String getProjectName() {
         return projectName;
+    }
+    
+    public String getMaxHeapFormatted() {
+        return formatMemory(getMaxHeap());
+    }
+    
+    public String getCurrentHeapFormatted() {
+        return formatMemory(getCurrentHeap());
+    }
+    
+    public String getElapsedTimeFormatted() {
+        return format(System.currentTimeMillis() - start);
+    }
+    
+    public String getEstimatedTimeLeftFormatted() {
+        long time = System.currentTimeMillis() - start;
+        long et = (time * total / completed) - time;
+        return format(et);
+    }
+    
+    public String getGlobalProgressString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("Est. progress: ");
+        if (total != 0) {
+            sb.append(completed * 100 / total);
+            sb.append("%");
+        }
+        else {
+            sb.append("N/A");
+        }
+        sb.append("   Elapsed time: ");
+        sb.append(getElapsedTimeFormatted());
+        sb.append("   Est. time left: ");
+        if (total != 0 && completed != 0) {
+            sb.append(getEstimatedTimeLeftFormatted());
+        }
+        else {
+            sb.append("N/A");
+        }
+        return sb.toString();
+    }
+
+    public static String format(long v) {
+        v = v / 1000;
+        StringBuffer sb = new StringBuffer();
+        int h = (int) (v / 3600);
+        if (h < 10) {
+            sb.append('0');
+        }
+        sb.append(v / 3600);
+        sb.append(':');
+        int m = (int) ((v % 3600) / 60);
+        if (m < 10) {
+            sb.append('0');
+        }
+        sb.append(m);
+        sb.append(':');
+        int s = (int) (v % 60);
+        if (s < 10) {
+            sb.append('0');
+        }
+        sb.append(s);
+        return sb.toString();
+    }
+
+    
+    public long getMaxHeap() {
+        return runtime.maxMemory();
+    }
+    
+    public long getCurrentHeap() {
+        return runtime.totalMemory() - runtime.freeMemory();
+    }
+    
+    private static final NumberFormat NF = new DecimalFormat("###.##");
+
+    public static String formatMemory(long v) {
+        int l = 1;
+        while (v > 512 * 1024) {
+            v = v / 1024;
+            l++;
+        }
+        return NF.format(v / 1024.0) + unit(l);
+    }
+
+    private static String unit(int l) {
+        switch(l) {
+            case 0:
+                return "b";
+            case 1:
+                return "Kb";
+            case 2:
+                return "Mb";
+            case 3:
+                return "Gb";
+            case 4:
+                return "Tb";
+            default:
+                return "?";
+        }
     }
 }

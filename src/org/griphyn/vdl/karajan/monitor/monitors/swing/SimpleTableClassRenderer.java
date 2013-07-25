@@ -33,19 +33,19 @@ import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.GlobalTimer;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.SafeTimerTask;
 
-public class SimpleTableClassRenderer extends JScrollPane implements ClassRenderer {
+public class SimpleTableClassRenderer<T extends StatefulItem> extends JScrollPane implements ClassRenderer {
     private JTable table;
     private String name;
-    private StatefulItemClassSet items;
+    private StatefulItemClassSet<T> items;
 
-	public SimpleTableClassRenderer(String name, StatefulItemClassSet itemClassSet) {
+	public SimpleTableClassRenderer(String name, StatefulItemClassSet<T> itemClassSet) {
         super(new JTable());
         this.table = (JTable) super.getViewport().getView();
         this.name = name;
         this.items = itemClassSet;
         this.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         this.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        table.setModel(new Model(items));
+        table.setModel(new Model<T>(items));
 	}
     
     public AbstractTableModel getTableModel() {
@@ -60,19 +60,19 @@ public class SimpleTableClassRenderer extends JScrollPane implements ClassRender
         getTableModel().fireTableDataChanged();
     }
     
-    public static class Model extends AbstractTableModel implements StatefulItemModel {
+    public static class Model<T extends StatefulItem> extends AbstractTableModel implements StatefulItemModel {
     	public static final int DEFAULT_UPDATE_INTERVAL = 4000;
     	
     	private int updateInterval;
-    	private StatefulItemClassSet items;
-    	private List snapShot;
+    	private StatefulItemClassSet<T> items;
+    	private List<T> snapShot;
     	private TimerTask ta;
     	
-    	public Model(StatefulItemClassSet items) {
+    	public Model(StatefulItemClassSet<T> items) {
     		this(items, DEFAULT_UPDATE_INTERVAL);
     	}
         
-        public Model(StatefulItemClassSet items, int updateInterval) {
+        public Model(StatefulItemClassSet<T> items, int updateInterval) {
             this.items = items;
             update();
             GlobalTimer.getTimer().schedule(ta = new SafeTimerTask() {
@@ -99,7 +99,7 @@ public class SimpleTableClassRenderer extends JScrollPane implements ClassRender
 		}
 		
 		public StatefulItem getItem(int rowIndex) {
-			return (StatefulItem) snapShot.get(rowIndex);
+			return snapShot.get(rowIndex);
 		}
 		
 		public String getDetails(int rowIndex) {

@@ -87,7 +87,7 @@ public class MenuBar extends Container {
 
 			context.moveTo(sx + 1, sy);
 
-			Iterator i = components.iterator();
+			Iterator<Component> i = components.iterator();
 			while (i.hasNext()) {
 				Menu c = (Menu) i.next();
 
@@ -123,7 +123,7 @@ public class MenuBar extends Container {
 			return;
 		}
 		int cx = 1;
-		Iterator i = components.iterator();
+		Iterator<Component> i = components.iterator();
 		while (i.hasNext()) {
 			Menu c = (Menu) i.next();
 			c.setLocation(cx, 1);

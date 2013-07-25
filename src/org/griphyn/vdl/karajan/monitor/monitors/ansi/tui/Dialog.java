@@ -111,11 +111,11 @@ public class Dialog extends Frame {
         else if (focused.focusNext()) {
             return true;
         }
-        Iterator i = components.iterator();
+        Iterator<Component> i = components.iterator();
         while (i.hasNext()) {
             if (i.next() == focused) {
                 while (i.hasNext()) {
-                    Component comp = (Component) i.next();
+                    Component comp = i.next();
                     if (comp.focusFirst()) {
                         return true;
                     }
