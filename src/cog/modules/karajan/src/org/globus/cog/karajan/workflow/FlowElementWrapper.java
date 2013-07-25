@@ -290,11 +290,13 @@ public final class FlowElementWrapper implements FlowElement {
 	private void replaceElement(FlowElement parent, FlowElementWrapper s,
 			FlowElement d) {
 		if (parent != null) {
-			List<FlowElement> l = parent.elements();
-			for (int i = 0; i < l.size(); i++) {
-				if (l.get(i) == s) {
-					l.set(i, d);
-					break;
+			synchronized(parent) {
+				List<FlowElement> l = parent.elements();
+				for (int i = 0; i < l.size(); i++) {
+					if (l.get(i) == s) {
+						l.set(i, d);
+						break;
+					}
 				}
 			}
 		}
