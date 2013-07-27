@@ -143,7 +143,7 @@ public class SummaryPanel extends JPanel {
         if (summary != null) {
             Map<String, Integer> counts = summary.getCounts(state);
             for (int i = 0; i < SummaryItem.STATES.length; i++) {
-                Integer v = counts.get(SummaryItem.STATES[i]);
+                Integer v = counts.get(SummaryItem.STATES[i].getName());
                 if (v != null) {
                     if (v > maxCount) {
                         maxCount = v;
