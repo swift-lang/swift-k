@@ -12,6 +12,7 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers;
 import java.io.File;
 
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
+import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.handlers.RequestHandler;
 
@@ -19,14 +20,12 @@ public abstract class CoasterFileRequestHandler extends RequestHandler {
     // private static final String HOME = System.getProperty("user.home");
     private static final String CWD = new File(".").getAbsolutePath();
 
-    public static File normalize(String name) {
-        File f = new File(name);
-
-        if (f.isAbsolute()) {
-            return f;
+    public static File normalize(RemoteFile rf) {
+        if (rf.isAbsolute()) {
+            return new File(rf.getPath());
         }
         else {
-            return new File(CWD, name);
+            return new File(CWD, rf.getPath());
         }
     }
 
