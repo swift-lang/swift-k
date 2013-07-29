@@ -62,7 +62,7 @@ public class OutFileDirs extends VDLFunction {
                     	}
                     }
                     else {
-                        ret.add(af.getHost() + "/" + dir);
+                        ret.append(af.getHost() + "/" + dir);
                     }
                 }
             }
