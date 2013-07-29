@@ -45,7 +45,7 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
 	}
 	
 	public AbsFile(String protocol, String host, int port, String dir, String name) {
-        super(protocol, host, port, dir, name);    
+        super(protocol, host, port, dir, name); 
     }
 
     public AbsFile(String protocol, String host, int port, String path) {
@@ -62,7 +62,7 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
             setHost("localhost");
         }
     }
-
+    
     protected FileResource getFileResource() throws IOException {
 		Service s = new ServiceImpl();
 		s.setProvider(getProtocol());

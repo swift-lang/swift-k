@@ -40,7 +40,13 @@ public class PathUtils {
 
         @Override
         public Object function(Stack stack) {
-            return new AbsFile(path.getValue(stack)).getDirectory();
+            String dir = new AbsFile(path.getValue(stack)).getDirectory();
+            if (dir == null) {
+                return ".";
+            }
+            else {
+                return dir;
+            }
         }
     }
     
@@ -59,7 +65,7 @@ public class PathUtils {
                 return remotePathName(dir);
             }
             else {
-                return null;
+                return "";
             }
         }
     }
