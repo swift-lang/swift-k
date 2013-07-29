@@ -63,8 +63,8 @@ public class AppStageins extends AbstractSequentialWithArguments {
             if (protocol.equals("file")) {
                 protocol = TypeUtil.toString(STAGING_METHOD.getValue(stack));
             }
-            String path = file.getDir().equals("") ? 
-                    file.getName() : file.getDir() + "/" + file.getName();
+            String path = file.getDirectory() == null ? 
+                    file.getName() : file.getDirectory() + "/" + file.getName();
             String relpath = path.startsWith("/") ? path.substring(1) : path;
             if (logger.isDebugEnabled()) {
                 logger.debug("will stage in: " + relpath + " via: " + protocol);

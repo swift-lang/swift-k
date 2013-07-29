@@ -431,7 +431,7 @@ public class Misc extends FunctionsCollection {
 	    AbstractDataNode n = (AbstractDataNode) PA_FILE.getRawValue(stack);
 	    n.waitFor();
         String name = VDLFunction.filename(n)[0];
-        String result = new AbsFile(name).getDir();
+        String result = new AbsFile(name).getDirectory();
         return new RootDataNode(Types.STRING, result);
 	}
 

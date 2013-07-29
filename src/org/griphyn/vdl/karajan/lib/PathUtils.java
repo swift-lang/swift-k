@@ -39,7 +39,7 @@ public class PathUtils extends FunctionsCollection {
 
 	public String vdl_dirname(VariableStack stack) throws ExecutionException {
 		String path = TypeUtil.toString(PATH.getValue(stack));
-		return new AbsFile(path).getDir();
+		return new AbsFile(path).getDirectory();
 	}
     
     static {
@@ -48,12 +48,14 @@ public class PathUtils extends FunctionsCollection {
 
     public String vdl_reldirname(VariableStack stack) throws ExecutionException {
         String path = TypeUtil.toString(PATH.getValue(stack));
-        String dir = new AbsFile(path).getDir();
-        if (dir.startsWith("/")) {
-            return dir.substring(1);
-        }
-        else {
-            return dir;
+        String dir = new AbsFile(path).getDirectory();
+        if (dir != null) {
+            if (dir.startsWith("/")) {
+                return dir.substring(1);
+            }
+            else {
+                return dir;
+            }
         }
     }
     

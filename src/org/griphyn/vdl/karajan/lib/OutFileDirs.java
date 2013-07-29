@@ -51,17 +51,19 @@ public class OutFileDirs extends VDLFunction {
                 DSHandle leaf = handle.getField(p);
                 String fname = VDLFunction.filename(leaf)[0];
                 AbsFile af = new AbsFile(fname);
-                if ("file".equals(af.getProtocol())) {
-                    String dir = af.getDir();
-                    if (dir.startsWith("/") && dir.length() != 1) {
-                        ret.append(dir.substring(1));
+                String dir = af.getDirectory();
+                if (dir != null) {
+                    if ("file".equals(af.getProtocol())) {
+                    	if (dir.startsWith("/") && dir.length() != 1) {
+                    		ret.append(dir.substring(1));
+                    	}
+                    	else {
+                    		ret.append(dir);
+                    	}
                     }
-                    else if (dir.length() != 0) {
-                        ret.append(dir);
+                    else {
+                        ret.add(af.getHost() + "/" + dir);
                     }
-                }
-                else {
-                	ret.append(af.getHost() + "/" + af.getDir());
                 }
             }
         }
