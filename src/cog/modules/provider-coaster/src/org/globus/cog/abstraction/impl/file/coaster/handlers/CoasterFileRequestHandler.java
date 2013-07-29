@@ -28,6 +28,10 @@ public abstract class CoasterFileRequestHandler extends RequestHandler {
             return new File(CWD, rf.getPath());
         }
     }
+    
+    public static File normalize(String path) {
+    	return normalize(new RemoteFile(path));
+    }
 
     protected String getProtocol(String file) {
         int index = file.indexOf(':');
