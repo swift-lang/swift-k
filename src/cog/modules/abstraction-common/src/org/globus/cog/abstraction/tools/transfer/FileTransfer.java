@@ -6,8 +6,6 @@
 
 package org.globus.cog.abstraction.tools.transfer;
 
-import java.net.URI;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
@@ -21,6 +19,7 @@ import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.FileTransferSpecification;
+import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
@@ -39,25 +38,25 @@ public class FileTransfer implements StatusListener {
     static Logger logger = Logger.getLogger(FileTransfer.class);
 
     private Task task = null;
-    private URI sourceURI = null;
-    private URI destinationURI = null;
+    private RemoteFile sourceURI = null;
+    private RemoteFile destinationURI = null;
     private boolean commandLine = false;
     private boolean thirdparty = false;
 
     public FileTransfer(String name, String sourceURI, String destinationURI)
             throws Exception {
-        this.sourceURI = new URI(sourceURI);
-        this.destinationURI = new URI(destinationURI);
+        this.sourceURI = new RemoteFile(sourceURI);
+        this.destinationURI = new RemoteFile(destinationURI);
         this.task = new FileTransferTask(name);
         logger.debug("Task Identity: " + this.task.getIdentity().toString());
     }
 
     public void setSourceURI(String sourceURI) throws Exception {
-        this.sourceURI = new URI(sourceURI);
+        this.sourceURI = new RemoteFile(sourceURI);
     }
 
     public void setDestinationURI(String destinationURI) throws Exception {
-        this.destinationURI = new URI(destinationURI);
+        this.destinationURI = new RemoteFile(destinationURI);
     }
 
     public String getSourceURI() {
@@ -97,9 +96,9 @@ public class FileTransfer implements StatusListener {
         sourceServiceContact.setPort(sourceURI.getPort());
         
         SecurityContext sourceSecurityContext = 
-            AbstractionFactory.getSecurityContext(sourceURI.getScheme(), sourceServiceContact);
+            AbstractionFactory.getSecurityContext(sourceURI.getProtocol(), sourceServiceContact);
 
-        Service sourceService = new ServiceImpl(sourceURI.getScheme(),
+        Service sourceService = new ServiceImpl(sourceURI.getProtocol(),
                 Service.FILE_TRANSFER, sourceServiceContact,
                 sourceSecurityContext);
 
@@ -108,10 +107,10 @@ public class FileTransfer implements StatusListener {
         destinationServiceContact.setPort(destinationURI.getPort());
         
         SecurityContext destinationSecurityContext = 
-            AbstractionFactory.getSecurityContext(destinationURI.getScheme(), destinationServiceContact);
+            AbstractionFactory.getSecurityContext(destinationURI.getProtocol(), destinationServiceContact);
 
         Service destinationService = new ServiceImpl(
-                destinationURI.getScheme(), Service.FILE_TRANSFER,
+                destinationURI.getProtocol(), Service.FILE_TRANSFER,
                 destinationServiceContact, destinationSecurityContext);
 
         // add the source service at index 0

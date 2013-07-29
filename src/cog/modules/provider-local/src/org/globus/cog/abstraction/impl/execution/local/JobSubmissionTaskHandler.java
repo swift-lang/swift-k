@@ -13,7 +13,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -41,6 +40,7 @@ import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Specification;
@@ -341,19 +341,19 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     private void copy(String src, String dest, File dir, EnumSet<Mode> mode, boolean jobSucceeded) throws Exception {
         src = dropCDMPrefix(src);
-        URI suri = new URI(src);
-        URI duri = new URI(dest);
+        RemoteFile srf = new RemoteFile(src);
+        RemoteFile drf = new RemoteFile(dest);
 
-        String srcScheme = defaultToLocal(suri.getScheme());
-        String dstScheme = defaultToLocal(duri.getScheme());
+        String srcScheme = defaultToLocal(srf.getProtocol());
+        String dstScheme = defaultToLocal(drf.getProtocol());
 
-        Service ss = new ServiceImpl(srcScheme, getServiceContact(suri), null);
-        Service ds = new ServiceImpl(dstScheme, getServiceContact(duri), null);
+        Service ss = new ServiceImpl(srcScheme, getServiceContact(srf), null);
+        Service ds = new ServiceImpl(dstScheme, getServiceContact(drf), null);
         
         FileResource sres = FileResourceCache.getDefault().getResource(ss);
         FileResource dres = FileResourceCache.getDefault().getResource(ds);
                 
-        String srcPath = getPath(suri, dir);
+        String srcPath = getPath(srf, dir);
         
         if (mode.contains(Mode.IF_PRESENT) && !sres.exists(srcPath)) {
             return;
@@ -366,7 +366,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
 
         InputStream is = sres.openInputStream(srcPath);
-        OutputStream os = dres.openOutputStream(getPath(duri, dir));
+        OutputStream os = dres.openOutputStream(getPath(drf, dir));
         byte[] buffer = new byte[BUFFER_SIZE];
 
         int len = is.read(buffer);
@@ -379,22 +379,22 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         FileResourceCache.getDefault().releaseResource(dres);
     }
 
-    private String getPath(URI uri, File dir) {
-        if (uri.getScheme() == null && !uri.getPath().startsWith("//")) {
-            return new File(dir, uri.getPath()).getAbsolutePath();
+    private String getPath(RemoteFile rf, File dir) {
+        if (rf.getProtocol() == null && !rf.isAbsolute()) {
+            return new File(dir, rf.getPath()).getAbsolutePath();
         }
         else {
-            return uri.getPath().substring(1);
+            return rf.getPath();
         }
     }
 
-    protected ServiceContact getServiceContact(URI uri) {
+    protected ServiceContact getServiceContact(RemoteFile rf) {
         ServiceContact sc = new ServiceContactImpl();
-        if (uri.getHost() != null) {
-            sc.setHost(uri.getHost());
+        if (rf.getHost() != null) {
+            sc.setHost(rf.getHost());
         }
-        if (uri.getPort() != -1) {
-            sc.setPort(uri.getPort());
+        if (rf.getPort() != -1) {
+            sc.setPort(rf.getPort());
         }
         return sc;
     }

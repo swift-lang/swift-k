@@ -26,6 +26,7 @@ import org.globus.cog.abstraction.impl.file.coaster.buffers.ThrottleManager;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBuffer;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.WriteBufferCallback;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.CoasterFileRequestHandler;
+import org.globus.cog.abstraction.interfaces.RemoteFile;
 
 public class LocalIOProvider implements IOProvider {
     public static final Logger logger = Logger.getLogger(LocalIOProvider.class); 
@@ -48,12 +49,12 @@ public class LocalIOProvider implements IOProvider {
         return true;
     }
     
-    private static URI newURI(String src) throws IOException {
+    private static RemoteFile newRemoteFile(String src) throws IOException {
         try {
-            return new URI(src);
+            return new RemoteFile(src);
         }
-        catch (URISyntaxException e) {
-            throw new IOException("Malformed URI: " + e.getMessage());
+        catch (Exception e) {
+            throw new IOException("Invalid name: " + e.getMessage());
         }
     }
 
@@ -67,8 +68,8 @@ public class LocalIOProvider implements IOProvider {
 
         public Writer(String dest, WriteIOCallback cb) throws IOException {
             this.cb = cb;
-            URI destURI = newURI(dest);
-            f = CoasterFileRequestHandler.normalize(destURI.getPath().substring(1));
+            RemoteFile destURI = newRemoteFile(dest);
+            f = CoasterFileRequestHandler.normalize(destURI);
         }
         
         public String toString() {
@@ -148,8 +149,8 @@ public class LocalIOProvider implements IOProvider {
             if (logger.isDebugEnabled()) {
                 logger.debug("LocalIOProvider.Reader " + src);
             }
-            URI srcURI = newURI(src);
-            f = CoasterFileRequestHandler.normalize(srcURI.getPath().substring(1));
+            RemoteFile srcURI = newRemoteFile(src);
+            f = CoasterFileRequestHandler.normalize(srcURI);
             this.cb = cb;
             fc = new FileInputStream(f).getChannel();
         }

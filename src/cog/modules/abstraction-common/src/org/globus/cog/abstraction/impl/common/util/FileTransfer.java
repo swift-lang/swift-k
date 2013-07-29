@@ -11,6 +11,7 @@ import org.globus.cog.abstraction.impl.common.task.FileTransferSpecificationImpl
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
+import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -71,15 +72,18 @@ public class FileTransfer implements StatusListener {
 
 		Service sourceService = new ServiceImpl();
 		Service destService = new ServiceImpl();
+		
+		RemoteFile src = new RemoteFile(sourceUri);
+		RemoteFile dst = new RemoteFile(destUri);
 
-		configureService(sourceService, sourceUri, sourceCredentials);
-		configureService(destService, destUri, destCredentials);
+		configureService(sourceService, src, sourceCredentials);
+		configureService(destService, dst, destCredentials);
 
-		spec.setSourceDirectory(getDirectory(sourceUri));
-		spec.setSourceFile(getFile(sourceUri));
+		spec.setSourceDirectory(src.getDirectory());
+		spec.setSourceFile(src.getName());
 
-		spec.setDestinationDirectory(getDirectory(destUri));
-		spec.setDestinationFile(getFile(destUri));
+		spec.setDestinationDirectory(dst.getDirectory());
+		spec.setDestinationFile(dst.getName());
 
 		Task task = getTask(spec, sourceService, destService);
 
@@ -112,10 +116,9 @@ public class FileTransfer implements StatusListener {
 		return task;
 	}
 
-	void configureService(Service service, String uri, Object credentials) throws Exception {
+	void configureService(Service service, RemoteFile rf, Object credentials) throws Exception {
 		SecurityContext securityContext = null;
-		URI u = new URI(uri);
-		String protocol = u.getScheme();
+		String protocol = rf.getProtocol();
 		if (protocol.equals("file")) {
 			service.setProvider("local");
 		}
@@ -134,20 +137,11 @@ public class FileTransfer implements StatusListener {
 			securityContext.setCredentials(credentials);
 			service.setSecurityContext(securityContext);
 		}
-		String host = u.getHost();
+		String host = rf.getHost();
 		if (host == null) {
 			host = "localhost";
 		}
 		service.setServiceContact(new ServiceContactImpl(host));
-	}
-
-	String getDirectory(String uri) throws Exception {
-		String parent = (new File((new URI(uri)).getPath().substring(1))).getParent();
-		return (parent == null) ? "" : parent;
-	}
-
-	String getFile(String uri) throws Exception {
-		return (new File((new URI(uri)).getPath().substring(1))).getName();
 	}
 
 	synchronized void setIsComplete(boolean ic) {
