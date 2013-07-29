@@ -69,7 +69,7 @@ public class HTTPServer implements Runnable {
 
     public void start() throws IOException {
         channel = ServerSocketChannel.open();
-        channel.bind(new InetSocketAddress(port));
+        channel.socket().bind(new InetSocketAddress(port));
         logger.info("HTTPMonitor server created");
         Thread t = new Thread(this);
         t.setDaemon(true);

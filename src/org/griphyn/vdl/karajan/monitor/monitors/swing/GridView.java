@@ -341,7 +341,7 @@ public class GridView extends JPanel {
             }
             double pos = (double) v / range;
             tree.splitPosition = pos;
-            getParent().revalidate();
+            getParent().invalidate();
             getParent().repaint();
         }
 
