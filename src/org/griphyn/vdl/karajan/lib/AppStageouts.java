@@ -73,7 +73,7 @@ public class AppStageouts extends InternalFunction {
                 if (protocol.equals("file")) {
                     protocol = stagingMethod;
                 }
-                String path = file.getDir().equals("") ? file.getName() : file.getDir()
+                String path = file.getDirectory() == null ? file.getName() : file.getDirectory()
                         + "/" + file.getName();
                 String relpath = path.startsWith("/") ? path.substring(1) : path;
                 cr_stageout.append(stack, 

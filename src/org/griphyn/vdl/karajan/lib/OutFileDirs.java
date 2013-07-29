@@ -22,6 +22,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
+import k.rt.Channel;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
@@ -46,6 +47,7 @@ public class OutFileDirs extends SwiftFunction {
     @Override
     public Object function(Stack stack) {
         List<List<Object>> files = stageouts.getValue(stack);
+        Channel<Object> ret = cr_vargs.get(stack);
         try {
             for (List<Object> pv : files) {
                 Path p = parsePath(pv.get(0));
@@ -53,17 +55,14 @@ public class OutFileDirs extends SwiftFunction {
                 DSHandle leaf = handle.getField(p);
                 String fname = SwiftFunction.filename(leaf)[0];
                 AbsFile af = new AbsFile(fname);
-                if ("file".equals(af.getProtocol())) {
-                    String dir = af.getDir();
-                    if (dir.startsWith("/") && dir.length() != 1) {
-                        cr_vargs.append(stack, dir.substring(1));
+                String dir = af.getDirectory();
+                if (dir != null) {
+                    if ("file".equals(af.getProtocol())) {
+                        ret.add(PathUtils.remotePathName(dir));
                     }
-                    else if (dir.length() != 0) {
-                        cr_vargs.append(stack, dir);
+                    else {
+                        ret.add(af.getHost() + "/" + PathUtils.remotePathName(dir));
                     }
-                }
-                else {
-                	cr_vargs.append(stack, af.getHost() + "/" + af.getDir());
                 }
             }
         }

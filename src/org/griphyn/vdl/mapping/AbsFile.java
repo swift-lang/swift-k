@@ -31,78 +31,43 @@ import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.impl.file.FileResourceCache;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
+import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.abstraction.interfaces.Service;
 
-public class AbsFile implements GeneralizedFileFormat {
-	private final String protocol;
-	private final String host;
-	private final String path;
-	private String dir, name;
+public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
 	
 	public AbsFile(String url) {
-		int pi = url.indexOf("://");
-		if (pi == -1) {
-			protocol = "file";
-			host = "localhost";
-			path = normalize(url);
-		}
-		else {
-			protocol = url.substring(0, pi);
-			if (protocol.equals("file")) {
-				host = "localhost";
-				String rp = url.substring(pi + 3);
-				if (rp.startsWith("localhost/")) {
-					rp = rp.substring("localhost/".length());
-				}
-                path = normalize(rp);
-			}
-			else {
-				int si = url.indexOf('/', pi + 3);
-				if (si == -1) {
-					host = url.substring(pi + 3);
-					path = "";
-				}
-				else {
-					host = url.substring(pi + 3, si);
-					path = normalize(url.substring(si + 1));
-				}
-			}
-		}
-		initDirAndName();
+	    super(url);
 	}
     
-    private String normalize(String path) {
-        // there is a slight performance penalty here, but it makes things
-        // cleaner
-        return path.replace("/./", "/");
-    }
-
-    private void initDirAndName() {
-    	int di = path.lastIndexOf('/');
-        if (di == 0) {
-            dir = "/";
-        }
-        else if (di > 0) {
-            dir = path.substring(0, di);
-        }
-        else {
-            dir = "";
-        }
-        name = path.substring(di + 1);        
-    }
-
 	public AbsFile(String protocol, String host, String path) {
-		this.protocol = protocol;
-		this.host = host;
-		this.path = path;
-		initDirAndName();
+	    super(protocol, host, path);
 	}
+	
+	public AbsFile(String protocol, String host, int port, String dir, String name) {
+        super(protocol, host, port, dir, name);    
+    }
 
-	protected FileResource getFileResource() throws IOException {
+    public AbsFile(String protocol, String host, int port, String path) {
+        super(protocol, host, port, path);    
+    }
+
+    @Override
+    protected void parse(String str) {
+        super.parse(str);
+        if (getProtocol() == null) {
+            setProtocol("file");
+        }
+        if (getHost() == null) {
+            setHost("localhost");
+        }
+    }
+
+    protected FileResource getFileResource() throws IOException {
 		Service s = new ServiceImpl();
-		s.setProvider(protocol);
+		s.setProvider(getProtocol());
 		s.setType(Service.FILE_OPERATION);
-		s.setServiceContact(new ServiceContactImpl(host));
+		s.setServiceContact(new ServiceContactImpl(getHost(), getPort()));
 		try {
 			return FileResourceCache.getDefault().getResource(s);
 		}
@@ -119,7 +84,7 @@ public class AbsFile implements GeneralizedFileFormat {
 		try {
 			FileResource fr = getFileResource();
 			try {
-				return fr.exists(path);
+				return fr.exists(getPath());
 			}
 			finally {
 				releaseResource(fr);
@@ -137,10 +102,16 @@ public class AbsFile implements GeneralizedFileFormat {
 	    try {
             FileResource fr = getFileResource();
             try {
+                String protocol = getProtocol();
+                String host = getHost();
+                int port = getPort();
+                String dir = getPath();
                 List<AbsFile> l = new ArrayList<AbsFile>();
-                for (GridFile gf : fr.list(path)) {
-                    AbsFile f = new AbsFile(protocol, host, gf.getAbsolutePathName());
-                    if (gf.isDirectory() && (filter == null || filter.accept(new File(f.getDir()), f.getName()))) {
+                for (GridFile gf : fr.list(dir)) {
+                    AbsFile f = new AbsFile(protocol, host, port, dir, gf.getName());
+                    // f.getDirectory() cannot be null since dir cannot be null since getPath() returns
+                    // a non-null string
+                    if (gf.isDirectory() && (filter == null || filter.accept(new File(f.getDirectory()), f.getName()))) {
                         l.add(f);
                     }
                 }
@@ -160,10 +131,14 @@ public class AbsFile implements GeneralizedFileFormat {
 		try {
 			FileResource fr = getFileResource();
 			try {
+			    String protocol = getProtocol();
+                String host = getHost();
+                int port = getPort();
+                String dir = getPath();
 				List<AbsFile> l = new ArrayList<AbsFile>();
-				for (GridFile gf : fr.list(path)) {
-					AbsFile f = new AbsFile(protocol, host, gf.getAbsolutePathName());
-					if (filter == null || filter.accept(new File(f.getDir()), f.getName())) {
+				for (GridFile gf : fr.list(dir)) {
+					AbsFile f = new AbsFile(protocol, host, port, dir, gf.getName());
+					if (filter == null || filter.accept(new File(f.getDirectory()), f.getName())) {
 						l.add(f);
 					}
 				}
@@ -179,64 +154,16 @@ public class AbsFile implements GeneralizedFileFormat {
 		}
 	}
 	
-	public String getName() {
-		return name;
-	}
-
-	public String getDir() {
-		return dir;
-	}
-
-	public String getProtocol() {
-		return protocol;
-	}
-
-	public String getHost() {
-		return host;
-	}
-
-	public String getPath() {
-		return path;
-	}
-	
-	public boolean isAbsolute() {
-	    return !path.isEmpty() && path.startsWith("/");
-	}
-	
 	public String getType() {
 		return "file";
 	}
 	
-	public String getURIAsString() {
-		return protocol + "://" + host + '/' + path;
-	}
-	
-	public String toString() {
-		return getURIAsString();
-	}
-
     public void clean() {
         try {
-            getFileResource().deleteFile(path);
+            getFileResource().deleteFile(getPath());
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof AbsFile) {
-            AbsFile a = (AbsFile) obj;
-            return protocol.equals(a.protocol) && host.equals(a.host) && path.equals(a.path);
-        }
-        else {
-            return false;
-        }
-    }
-
-    @Override
-    public int hashCode() {
-        return protocol.hashCode() + host.hashCode() + path.hashCode();
     }
 }

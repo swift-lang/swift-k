@@ -50,13 +50,15 @@ public class InFileDirs extends InternalFunction {
         Channel<Object> ret = cr_vargs.get(stack);
         for (String path : files) {
         	AbsFile af = new AbsFile(path);
-        	String dir = af.getDir();
-        	if ("file".equals(af.getProtocol())) {
-                ret.add(PathUtils.remotePathName(dir));
-        	}
-        	else {
-        	    // also prepend host name to the path
-        	    ret.add(af.getHost() + "/" + PathUtils.remotePathName(dir));
+        	String dir = af.getDirectory();
+        	if (dir != null) {
+            	if ("file".equals(af.getProtocol())) {
+                    ret.add(PathUtils.remotePathName(dir));
+            	}
+            	else {
+            	    // also prepend host name to the path
+            	    ret.add(af.getHost() + "/" + PathUtils.remotePathName(dir));
+            	}
         	}
         }
     }

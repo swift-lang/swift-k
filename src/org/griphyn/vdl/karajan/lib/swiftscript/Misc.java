@@ -584,8 +584,8 @@ public class Misc {
             AbstractDataNode dn = file.getValue(stack);
             String name = SwiftFunction.filename(dn)[0];
 
-            String result = new AbsFile(name).getDir();
-            DSHandle handle = new RootDataNode(Types.BOOLEAN, result);
+            String result = new AbsFile(name).getDirectory();
+            DSHandle handle = new RootDataNode(Types.STRING, result);
     
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
