@@ -12,7 +12,6 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.HashSet;
@@ -27,6 +26,7 @@ import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry.Mode;
@@ -181,16 +181,16 @@ public class SubmitJobCommand extends Command {
 
     private String absolutize(String file) throws IOException {
         try {
-            URL u = new URL(file);
+            RemoteFile u = new RemoteFile(file);
             if (ABSOLUTIZE.contains(u.getProtocol())) {
                 return u.getProtocol() + "://" + u.getHost() + 
-                    (u.getPort() != -1 ? ":" + u.getPort() : "") + "/" + new File(u.getPath().substring(1)).getAbsolutePath(); 
+                    (u.getPort() != -1 ? ":" + u.getPort() : "") + "/" + new File(u.getPath()).getAbsolutePath(); 
             }
             else {
                 return file;
             }
         }
-        catch (MalformedURLException e) {
+        catch (Exception e) {
             throw new IOException("Invalid file specification: " + file);
         }
     }
