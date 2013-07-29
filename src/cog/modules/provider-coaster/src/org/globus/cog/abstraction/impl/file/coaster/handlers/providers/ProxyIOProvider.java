@@ -11,8 +11,6 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers.providers;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -30,6 +28,7 @@ import org.globus.cog.abstraction.impl.file.coaster.commands.GetFileCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.PutFileCommand;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
+import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.karajan.workflow.service.ProtocolException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelException;
 import org.globus.cog.karajan.workflow.service.channels.ChannelManager;
@@ -93,8 +92,8 @@ public class ProxyIOProvider implements IOProvider {
 
         public void setLength(long len) throws IOException {
             try {
-                URI uri = new URI(dst);
-                cmd = new CustomPutFileCmd(src, "file://localhost/" + uri.getPath().substring(1), len, this);
+                RemoteFile uri = new RemoteFile(dst);
+                cmd = new CustomPutFileCmd(src, "file://localhost/" + uri.getPath(), len, this);
                 channel = ChannelManager.getManager().reserveChannel("id://" + uri.getHost(), null);
                 cmd.executeAsync(channel, this);
                 cb.info(String.valueOf(cmd.getId()));
@@ -264,8 +263,8 @@ public class ProxyIOProvider implements IOProvider {
             }
             this.cb = cb;
             this.src = src;
-            URI uri = newURI(src);
-            cmd = new CustomGetFileCmd("file://localhost/" + uri.getPath().substring(1), dst, this);
+            RemoteFile uri = newRemoteFile(src);
+            cmd = new CustomGetFileCmd("file://localhost/" + uri.getPath(), dst, this);
             try {
                 channel = ChannelManager.getManager().reserveChannel("id://" + uri.getHost(), null);
             }
@@ -291,12 +290,12 @@ public class ProxyIOProvider implements IOProvider {
             }
         }
 
-        private URI newURI(String src) throws IOException {
+        private RemoteFile newRemoteFile(String src) throws IOException {
             try {
-                return new URI(src);
+                return new RemoteFile(src);
             }
-            catch (URISyntaxException e) {
-                throw new IOException("Malformed URI: " + e.getMessage());
+            catch (Exception e) {
+                throw new IOException("Invalid file name: " + e.getMessage());
             }
         }
 

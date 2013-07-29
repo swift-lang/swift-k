@@ -54,7 +54,9 @@ public class FileTransferSpecificationImpl implements FileTransferSpecification 
 	}
 
 	public void setSourceDirectory(String directory) {
-		this.sourceDirectory = directory.trim();
+	    if (directory != null) {
+	        this.sourceDirectory = directory.trim();
+	    }
 	}
 
 	public String getSourceDirectory() {

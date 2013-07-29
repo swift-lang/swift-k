@@ -12,8 +12,8 @@ package org.globus.cog.abstraction.impl.execution.coaster;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
@@ -178,16 +178,16 @@ public class SubmitJobCommand extends Command {
 
     private String absolutize(String file) throws IOException {
         try {            
-            URI u = new URI(file);
-            if (ABSOLUTIZE.contains(u.getScheme())) {
-                return u.getScheme() + "://" + u.getHost() + 
+            URL u = new URL(file);
+            if (ABSOLUTIZE.contains(u.getProtocol())) {
+                return u.getProtocol() + "://" + u.getHost() + 
                     (u.getPort() != -1 ? ":" + u.getPort() : "") + "/" + new File(u.getPath().substring(1)).getAbsolutePath(); 
             }
             else {
                 return file;
             }
         }
-        catch (URISyntaxException e) {
+        catch (MalformedURLException e) {
             throw new IOException("Invalid file specification: " + file);
         }
     }
@@ -234,5 +234,18 @@ public class SubmitJobCommand extends Command {
 
     public void setSimple(boolean simple) {
         this.simple = simple;
+    }
+    
+    public static void main(String[] args) {
+        try {
+            URL u = new URL("/some path");
+            System.out.println(u.getProtocol());
+            System.out.println(u.getHost());
+            System.out.println(u.getPort());
+            System.out.println(u.getPath());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.interfaces.RemoteFile;
 
 /**
  * Sample indirect provider
@@ -65,10 +66,10 @@ public class LocalCopyIOProvider implements IOProvider {
 
         protected static String getPath(String suri) throws IOException {
             try {
-                URI uri = new URI(suri);
-                return uri.getPath().substring(1);
+                RemoteFile rf = new RemoteFile(suri);
+                return rf.getPath();
             }
-            catch (URISyntaxException e) {
+            catch (Exception e) {
                 throw new IOException(e.toString());
             }
         }
