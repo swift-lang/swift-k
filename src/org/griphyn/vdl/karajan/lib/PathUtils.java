@@ -57,6 +57,7 @@ public class PathUtils extends FunctionsCollection {
                 return dir;
             }
         }
+	return "";
     }
     
     static {
