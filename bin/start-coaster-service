@@ -220,7 +220,7 @@ start-workers-ssh()
    do
       # Enable ssh tunneling if needed
       if [ "$SSH_TUNNELING" == "yes" ]; then
-         ssh -R *:$PORT:localhost:$PORT $WORKER_USERNAME@$MACHINE sleep 999 &
+         ssh -f -n -N $WORKER_USERNAME@$MACHINE -R $PORT:localhost:$PORT
          echo $! >> $PID_FILE
       fi
 
