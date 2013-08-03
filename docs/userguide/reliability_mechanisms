@@ -19,6 +19,40 @@ the entire run to fail - either immediately (if the lazy.errors
 property is false) or after all other possible work has been attempted
 (if the lazy.errors property is true).
 
+With or without lazy errors, each app is re-tried <execution.retries>
+times before it is considered failed for good. An app that has failed
+but still has retries left will appear as "Failed but can retry".
+
+Without lazy errors, once the first (time-wise) app has run out of
+retries, the whole run is stopped and the error reported.
+
+With lazy errors, if an app fails after all retries, its outputs are
+marked as failed. All apps that depend on failed outputs will also fail
+and their outputs marked as failed. All apps that have non-failed
+outputs will continue to run normally until everything that can proceed
+completes. 
+
+For example, if you have:
+
+----
+foreach x in [1:1024] {
+   app(x);
+}
+----
+
+... and if the first started app fails, all the other ones can still
+continue, and if they don't otherwise fail, the run will only terminate
+when all 1023 of them will complete.
+
+So basically the idea behind lazy errors is to run EVERYTHING that can
+safely be run before stopping.
+
+Some types of errors (such as internal swift errors happening in an app
+thread) will still stop the run immediately even in lazy errors mode.
+But we all know there are no such things as internal swift errors :)
+
+
+
 Restarts
 ~~~~~~~~
 If a run fails, Swift can resume the program from the point of failure.
