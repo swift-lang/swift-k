@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#usage: ./extract4plots <swift.logfile>
+#usage: ./plotswiftlogs.ketan <swift-logfile.log>
 
 SWIFTLOGFILE=$1
 
@@ -51,16 +51,16 @@ paste cumultics.txt cumulative.txt > plot_cumulative.txt
 
 cat << EOF1 > plotit.gp
 set terminal png enhanced
-set output "activeplot.png"
 set nokey
-set xlabel "Time in sec"
-set ylabel "number of active jobs"
-set title "Active jobs"
-plot "plot_active.txt" using 1:2 with line
 set output "cumulativeplot.png"
 set ylabel "number of completed jobs"
 set title "Cumulative jobs"
 plot "plot_cumulative.txt" using 1:2 with lines
+set output "activeplot.png"
+set xlabel "Time in sec"
+set ylabel "number of active jobs"
+set title "Active jobs"
+plot "plot_active.txt" using 1:2 with line
 EOF1
 
 gnuplot plotit.gp 2>/dev/null
