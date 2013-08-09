@@ -30,9 +30,6 @@ public class NumericValue extends Node {
 
     @Override
     public Node compile(WrapperNode w, Scope scope) throws CompilationException {
-    	if (w.toString().equals("k:number @ stress.k, line: 17")) {
-    		System.out.println();
-    	}
     	super.compile(w, scope);
         value = Double.parseDouble(w.getText());
         
