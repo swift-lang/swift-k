@@ -10,6 +10,7 @@
 package org.globus.cog.abstraction.coaster.service;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -101,16 +102,37 @@ public class LocalTCPService implements Registering, Service, Runnable {
         try {
             channel = ServerSocketChannel.open();
             channel.configureBlocking(true);
-            if(port == 0) {
+            if (port == 0) {
                 PortRange portRange = PortRange.getTcpInstance();
-                if(portRange != null && portRange.isEnabled()) {
-                    synchronized(portRange) {
-                        port = portRange.getFreePort(port);
-                        portRange.setUsed(port);
+                if (portRange != null && portRange.isEnabled()) {
+                    while (true) {
+                        synchronized(portRange) {
+                            port = portRange.getFreePort(port);
+                            portRange.setUsed(port);
+                        }
+                        /*
+                         *  the jglobus port range only parses the cog configuration
+                         *  options, but does not check if a port is actually in use
+                         *  or not, so try to bind the port and if that fails, increment
+                         *  and continue. If the jglobus tcp range runs out of ports,
+                         *  it will throw an I/O exception.
+                         */
+                        
+                        if (bindPort()) {
+                            break;
+                        }
+                        port++;
                     }
                 }
+                else {
+                    /*
+                     *  if no port is specified and no port range is defined,
+                     *  let the TCP implementation pick
+                     */
+                    channel.socket().bind(null);
+                    port = channel.socket().getLocalPort();
+                }
             }
-            channel.socket().bind(new InetSocketAddress(port));
             
             if (serverThread == null) {
                 serverThread = new Thread(this);
@@ -121,6 +143,16 @@ public class LocalTCPService implements Registering, Service, Runnable {
         }
         catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+    
+    public boolean bindPort() throws IOException {
+        try {
+            channel.socket().bind(new InetSocketAddress(port));
+            return true;
+        }
+        catch (BindException e) {
+            return false;
         }
     }
     
