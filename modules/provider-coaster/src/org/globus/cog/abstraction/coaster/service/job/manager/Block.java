@@ -45,7 +45,7 @@ public class Block implements StatusListener, Comparable<Block> {
         return submitter;
     }
 
-    private int workers, workersStarting;
+    private int workers, activeWorkers;
     private TimeInterval walltime;
     private Time endtime, starttime, deadline, creationtime;
     private final SortedSet<Cpu> scpus;
@@ -66,7 +66,7 @@ public class Block implements StatusListener, Comparable<Block> {
 
     private static final NumberFormat IDF = new DecimalFormat("000000");
     
-    public static int requestedWorkers, activeWorkers, failedWorkers, completedWorkers, completedJobs;
+    public static int totalRequestedWorkers, totalActiveWorkers, totalFailedWorkers, totalCompletedWorkers, totalCompletedJobs;
 
     public Block(String id) {
         this.id = id;
@@ -86,7 +86,7 @@ public class Block implements StatusListener, Comparable<Block> {
         this.bqp = ap;
         this.creationtime = Time.now();
         setDeadline(Time.now().add(ap.getSettings().getReserve()));
-        requestedWorkers += workers;
+        totalRequestedWorkers += workers;
     }
 
     public void start() {
@@ -94,11 +94,11 @@ public class Block implements StatusListener, Comparable<Block> {
             logger.info("Starting block: workers=" + workers + ", walltime=" + walltime);
         }
         bqp.getRLogger().log(
-            "BLOCK_REQUESTED id=" + getId() + ", workers=" + getWorkerCount() + ", walltime="
-                    + getWalltime().getSeconds());
+            "BLOCK_REQUESTED id=" + getId() + ", cores=" + getWorkerCount() + ", coresPerWorker=" + 
+                    bqp.getSettings().getCoresPerNode() + ", walltime=" + getWalltime().getSeconds());
         task = new BlockTask(this);
         synchronized(cpus) {
-            workersStarting = workers;
+            activeWorkers = 0;
         }
         task.addStatusListener(this);
         try {
@@ -246,6 +246,12 @@ public class Block implements StatusListener, Comparable<Block> {
     public int getWorkerCount() {
         return workers;
     }
+    
+    public int getActiveWorkerCount() {
+        synchronized (cpus) {
+            return activeWorkers;
+        }
+    }
 
     public void setWorkerCount(int v) {
         this.workers = v;
@@ -351,15 +357,16 @@ public class Block implements StatusListener, Comparable<Block> {
         // cpus get notified separately by the dead channel
         List<Cpu> cpusToNotify = new ArrayList<Cpu>();
         synchronized (cpus) {
-            requestedWorkers -= workers;
-            activeWorkers -= workers;
+            totalRequestedWorkers -= workers;
+            totalActiveWorkers -= this.activeWorkers; // only count the ones actually started
             failed = true;
             running = false;
-            for (int j = cpus.size(); j < workersStarting; j++) {
+            for (int j = cpus.size(); j < (workers - this.activeWorkers); j++) {
                 Cpu cpu = new Cpu(j, new Node(j, this, null));
                 scpus.add(cpu);
                 cpus.add(cpu);
             }
+            this.activeWorkers = 0;
             cpusToNotify.addAll(cpus);
         }
         for (Cpu cpu : cpusToNotify) {
@@ -380,8 +387,9 @@ public class Block implements StatusListener, Comparable<Block> {
                               channelContext);
             nodes.add(n);
             int jobsPerNode = bqp.getSettings().getJobsPerNode();
-            workersStarting -= jobsPerNode;
-            activeWorkers += jobsPerNode;
+            this.activeWorkers += jobsPerNode;
+            totalActiveWorkers += jobsPerNode;
+            bqp.getRLogger().log("WORKER_ACTIVE blockid=" + getId());
             for (int i = 0; i < jobsPerNode; i++) {
                 //this id scheme works out because the sid is based on the
                 //number of cpus already added (i.e. cpus.size()).
@@ -440,13 +448,15 @@ public class Block implements StatusListener, Comparable<Block> {
                                     + prettifyOut(task.getStdOutput())
                                     + prettifyOut(task.getStdError()), null);
                         }
-                        failedWorkers += workers;
+                        bqp.getRLogger().log("BLOCK_FAILED id=" + getId());
+                        totalFailedWorkers += workers;
                     }
                     else {
-                        completedWorkers += workers;
+                        totalCompletedWorkers += workers;
+                        bqp.getRLogger().log("BLOCK_DONE id=" + getId());
                     }
                     bqp.blockTaskFinished(this);
-                    activeWorkers -= workers;
+                    totalActiveWorkers -= this.activeWorkers;
                     running = false;
                     task = null;
                 }

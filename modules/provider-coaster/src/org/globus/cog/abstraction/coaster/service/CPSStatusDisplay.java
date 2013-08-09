@@ -69,11 +69,11 @@ private static final String CLS = ((char) (27)) + "[2J";
         tabbed(1, "Worker connect URL ", 30, s.getLocalService().getContact());
         if (passive) {
             header(2, "Workers", 32, "Active", 48, "Completed", 64, "Failed");
-            tabbed(0, "", 32, Block.activeWorkers, 48, Block.completedWorkers, 64, Block.failedWorkers);
+            tabbed(0, "", 32, Block.totalActiveWorkers, 48, Block.totalCompletedWorkers, 64, Block.totalFailedWorkers);
         }
         else {
             header(2, "Workers", 16, "Requested", 32, "Active", 48, "Completed", 64, "Failed");
-            tabbed(0, "", 16, Block.requestedWorkers, 32, Block.activeWorkers, 48, Block.completedWorkers, 64, Block.failedWorkers);
+            tabbed(0, "", 16, Block.totalRequestedWorkers, 32, Block.totalActiveWorkers, 48, Block.totalCompletedWorkers, 64, Block.totalFailedWorkers);
         }
         
         header(2, "Jobs", 16, "Queued", 32, "Active", 48, "Completed", 64, "Failed");

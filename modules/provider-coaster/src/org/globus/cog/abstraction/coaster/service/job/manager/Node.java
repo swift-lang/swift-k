@@ -107,6 +107,7 @@ public class Node implements Callback, ChannelListener {
         	getChannel().close();
             channel.close();
             ChannelManager.getManager().removeChannel(channelContext);
+            block.getAllocationProcessor().getRLogger().log("WORKER_SHUTDOWN blockid=" + block.getId());
         }
         catch (ChannelException e) {
             logger.warn(this + " failed to remove channel after shutdown");
@@ -157,8 +158,11 @@ public class Node implements Callback, ChannelListener {
         catch (ChannelException ee) {
             logger.warn("Failed to remove channel", ee);
         }
-        getBlock().removeNode(this);
-        Block.activeWorkers -= getBlock().getWorkerCount();
-        Block.failedWorkers += getBlock().getWorkerCount();
+        Settings settings = block.getAllocationProcessor().getSettings();
+        Block block = getBlock();
+        block.removeNode(this);
+        Block.totalActiveWorkers -= settings.getJobsPerNode();
+        Block.totalFailedWorkers += settings.getJobsPerNode();
+        block.getAllocationProcessor().getRLogger().log("WORKER_LOST blockid=" + block.getId());
     }
 }
