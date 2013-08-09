@@ -78,7 +78,6 @@ namespace(swift) {
 	
 	export(stdin,
 		function(file) {
-			echo(file)
 			stdin = file
 		}
 	)
