@@ -3,6 +3,9 @@ body {
 	font-size: 12px;
 }
 
+.plot {
+	background-color: #ffffff;
+}
 
 .bordered {
 	border: 2px solid black;

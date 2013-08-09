@@ -2,16 +2,25 @@
 	<head>
 		<title>Swift System Monitor</title>
 		<link href="css/style.css" rel="stylesheet" type="text/css" />
+		<link href="css/spectrum.css" rel="stylesheet" type="text/css" />
 		<link href="css/theme-light.css" rel="stylesheet" type="text/css" />
-		<script type="text/javascript" src="async.js"></script>
-		<link href="css/theme-light/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+		<link href="css/theme-light/jquery-ui-1.10.3.custom.css" rel="stylesheet" />
 		<script src="js/jquery-1.9.1.js"></script>
 		<script src="js/jquery-ui-1.10.3.custom.js"></script>
+		<script language="javascript" type="text/javascript" src="js/jquery.flot.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.flot.selection.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.flot.axislabels.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.flot.time.min.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.flot.crosshair.min.js"></script>
+        <script language="javascript" type="text/javascript" src="js/spectrum.js"></script>
+        <script type="text/javascript" src="js/async.js"></script>
+		<script type="text/javascript" src="js/plots.js"></script>
 	</head>
 	<body>
 		<div id="tabs">
 			<ul>
 				<li><a href="#tab-summary">Summary</a></li>
+				<li><a href="#tab-graphs">Graphs</a></li>
 				<li><a href="#tab-apps">Applications</a></li>
 				<li><a href="#tab-tasks">Tasks</a></li>
 			</ul>
@@ -29,23 +38,47 @@
 				</div>
 				<div class="pbi" id="pbi-main"><span class="pbl emph"></span></div>
 			</div>
+			<div id="tab-graphs">
+				<div class="expand toolbar" id="#graphs-toolbar">
+					<div id="addGraph" class="button"><img src="images/plus.png" alt="Add graph"/></div>	
+				</div>
+				<div id="plots" class="expand">
+				</div>
+			</div>
 			<div id="tab-apps"></div>
 			<div id="tab-tasks"></div>
 		</div>
 		
 		<div id="error-text">
 		</div>
-
+		
 		<script language="JavaScript" type="text/javascript">
+		
+			setupUpdates();
+			$("#addGraph").button();
+			$("#addGraph").click(function() {
+				addPlot();
+			});
 			states = ["Initializing", "Selecting site", "Stage in", "Submitting", "Submitted", "Active", "Stage out", "Failed", "Replicating", "Finished successfully"];
 			for (var i = 0; i < states.length; i++) {
 				$("#appSummary").append('<tr><td><span class="label nowrap">' + states[i] + 
 						':</span></td><td width="100%"><div class="pbi" id="pb' + i + '"><span class="pbl"></span></div></td></tr>');
 			}
 		
-			registerUpdate("summary.state", update);
+			registerUpdate("summary", "summary.state", update);
 			
-			$("#tabs").tabs();
+			$("#tabs").tabs({
+				activate: function(event, ui) {
+					var label = ui.newTab.children("a").html();
+					if (label == "Graphs") {
+						resizePlotsContainer();	
+					}
+					else {
+						$("#tabs").css("width", "100%");
+						$("#tabs").css("height", "100%");
+					}
+				}
+			});
 			
 			for (var i = 0; i < states.length; i++) {
 				$("#pb" + i).progressbar({ value: 0	});
@@ -54,7 +87,7 @@
 			$("#pbi-heap").progressbar({ value: 0 });
 			$("#pbi-main").progressbar({ value: 0 });
 						
-			function update(data, error) {
+			function update(id, data, error) {
 				if (error != null) {
 					$("#error-text").html(error);
 				}

@@ -13,12 +13,9 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.net.URL;
 import java.util.LinkedList;
 import java.util.prefs.Preferences;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -28,7 +25,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
-import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
+import org.griphyn.vdl.karajan.monitor.common.DataSampler;
+import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.monitors.swing.GridView.Tree;
 
 public class GraphsPanel extends JPanel {    
@@ -77,6 +75,7 @@ public class GraphsPanel extends JPanel {
     
     
     private SystemState state;
+    private DataSampler sampler;
     
     private JPanel toolBar;
     private JPopupMenu layoutPopup;
@@ -85,6 +84,7 @@ public class GraphsPanel extends JPanel {
     
     public GraphsPanel(SystemState state) {
         this.state = state;
+        sampler = (DataSampler) state.getItemByID(DataSampler.ID, StatefulItemClass.WORKFLOW);
         this.graphs = new LinkedList<GraphPanel>();
         setLayout(new BorderLayout());
 
@@ -93,7 +93,7 @@ public class GraphsPanel extends JPanel {
         
         toolBar.setLayout(new FlowLayout(FlowLayout.LEFT));
         
-        final JButton layout = makeButton("gui/icons/layout.png", "Layout...");        
+        final JButton layout = IconLoader.makeImageButton("gui/icons/layout.png", "Layout...");        
         toolBar.add(layout);
         layout.addActionListener(new ActionListener() {
             @Override
@@ -204,9 +204,9 @@ public class GraphsPanel extends JPanel {
         graphs.clear();
         grid.setLayout(new Tree());
         GraphPanel gp = new GraphPanel(state, this);
-        gp.enable(SummaryItem.State.ACTIVE);
-        gp.enable(SummaryItem.State.STAGE_IN);
-        gp.enable(SummaryItem.State.STAGE_OUT);
+        gp.enable(sampler.getSeries("apps/Active"));
+        gp.enable(sampler.getSeries("apps/Stage in"));
+        gp.enable(sampler.getSeries("apps/Stage out"));
         graphs.add(gp);
         grid.add(gp);
         saveLayout();
@@ -214,24 +214,5 @@ public class GraphsPanel extends JPanel {
 
     protected void displayLayoutPopup(JButton src) {
         layoutPopup.show(src, 6, 6);
-    }
-
-    public static JButton makeButton(String res, String alt) {
-        JButton button;
-        try {
-            URL url = GraphsPanel.class.getClassLoader().getResource(res);
-            if (url == null) {
-                button = new JButton(alt);
-            }
-            else {
-                BufferedImage icon = ImageIO.read(url);
-                button = new JButton(new ImageIcon(icon));
-            }
-        }
-        catch (Exception e) {
-            button = new JButton(alt);
-        }
-        button.setToolTipText(alt);
-        return button;
     }
 }

@@ -20,22 +20,32 @@
  */
 package org.griphyn.vdl.karajan.monitor.items;
 
-import java.util.Date;
 
 public class ApplicationItem extends AbstractStatefulItem {
 	private String name, arguments, host;
-	private Date startTime;
+	private long startTime, currentStateTime;
+	/**
+	 * The state of the app. Currently swift does not log app state transitions
+	 * so the state is inferred from various other log events. This should
+	 * probably change in that every transition should be logged.
+	 * 
+	 * More importantly, transitions could be logged in a prevState -> currentState
+	 * format allowing a summary to be built without keeping a map of thread id states
+	 */
+	private ApplicationState state;
 
-	public ApplicationItem(String id, String name, String arguments, String host, Date startTime) {
+	public ApplicationItem(String id, String name, String arguments, String host, long startTime) {
 		super(id);
 		this.name = name;
 		this.arguments = arguments;
 		this.host = host;
 		this.startTime = startTime;
+		this.state = ApplicationState.INITIALIZING;
+		this.currentStateTime = startTime;
 	}
 	
 	public ApplicationItem(String id) {
-		this(id, null, null, null, null);
+		this(id, null, null, null, 0);
 	}
 
 	public StatefulItemClass getItemClass() {
@@ -66,15 +76,28 @@ public class ApplicationItem extends AbstractStatefulItem {
 		return name;
 	}
 
-	public Date getStartTime() {
+	public long getStartTime() {
 		return startTime;
 	}
 
-	public void setStartTime(Date startTime) {
+	public void setStartTime(long startTime) {
 		this.startTime = startTime;
 	}
+	
+	public void setState(ApplicationState state, long time) {
+	    this.state = state;
+	    this.currentStateTime = time;
+	}
 
-	public String toString() {
+	public long getCurrentStateTime() {
+        return currentStateTime;
+    }
+
+    public ApplicationState getState() {
+        return state;
+    }
+
+    public String toString() {
 		return "APP[" + name + ", " + arguments + ", " + host + "]";
 	}
 }

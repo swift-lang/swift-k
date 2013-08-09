@@ -27,44 +27,10 @@ import java.util.Map;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 
 public class SummaryItem extends AbstractStatefulItem {
-    public enum State {
-        INITIALIZING("Initializing"), SELECTING_SITE("Selecting site", "Sel. site"), STAGE_IN("Stage in"),
-        SUBMITTING("Submitting"), SUBMITTED("Submitted"), ACTIVE("Active"), STAGE_OUT("Stage out"),
-        FAILED("Failed"), REPLICATING("Replicating"), FINISHED_SUCCESSFULLY("Finished successfully", "Finished");
-        
-        private String name, shortName;
-        
-        private State(String name) {
-            this.name = name;
-            this.shortName = name;
-        }
-        
-        private State(String name, String shortName) {
-            this.name = name;
-            this.shortName = shortName;
-        }
-        
-        public String getName() {
-            return name;
-        }
-        
-        public String getShortName() {
-            return shortName;
-        }
-
-        public void setShortName(String shortName) {
-            this.shortName = shortName;
-        }
-
-        public String toString() {
-            return name;
-        }
-    }
+    public static final ApplicationState[] STATES = ApplicationState.values();
     
-    public static final State[] STATES = State.values();
-    
-    public static State getStateByKey(String key) {
-        for (State s : STATES) {
+    public static ApplicationState getStateByKey(String key) {
+        for (ApplicationState s : STATES) {
             if (s.getName().equals(key)) {
                 return s;
             }
@@ -100,7 +66,7 @@ public class SummaryItem extends AbstractStatefulItem {
 	    }
 	}
 	
-	public synchronized int getCount(State key) {
+	public synchronized int getCount(ApplicationState key) {
         Integer i = counts.get(key.getName());
         if (i == null) {
             return 0;

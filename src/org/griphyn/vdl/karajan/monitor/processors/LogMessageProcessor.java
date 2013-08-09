@@ -29,4 +29,6 @@ public interface LogMessageProcessor {
 	String getSupportedSourceName();
 	
 	Level getSupportedLevel();
+	
+	void initialize(SystemState state);
 }

@@ -25,6 +25,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.SystemStateListener;
+import org.griphyn.vdl.karajan.monitor.common.DataSampler;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.monitors.AbstractMonitor;
 
@@ -42,10 +43,24 @@ public class HTTPMonitor extends AbstractMonitor {
 	
 	@Override
     public void start() {
+	    Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try {
+                    // sleep 2 seconds before shutting down to allow monitor to get
+                    // latest data
+                    Thread.sleep(2000);
+                }
+                catch (Exception e) {
+                    //ignored
+                }
+            } 
+	    });
     }
 
     @Override
     public void setState(SystemState state) {
+        DataSampler.install(state);
         super.setState(state);
         server = new HTTPServer(port, password, getState());
         try {

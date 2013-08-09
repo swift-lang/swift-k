@@ -33,20 +33,30 @@ import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
 import org.griphyn.vdl.karajan.monitor.monitors.Monitor;
 import org.griphyn.vdl.karajan.monitor.monitors.MonitorFactory;
-import org.griphyn.vdl.karajan.monitor.processors.AbstractSwiftProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.AppEndProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.AppStartProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.AppThreadProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.ExecutionContextProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.ForeachItEndProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.ForeachItStartProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.JobProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.ProcedureEndProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.ProcedureStartProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.SchedulerInfoProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.SummaryProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.SwiftProcessorDispatcher;
-import org.griphyn.vdl.karajan.monitor.processors.TaskProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.AbstractFilteringProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.FilteringProcessorDispatcher;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.BlockActiveProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.BlockDoneProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.BlockFailedProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.BlockRequestedProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.RemoteLogProcessorDispatcher;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerLostProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerShutDownProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerActiveProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.karajan.ExecutionContextProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.karajan.SchedulerInfoProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.karajan.TaskProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.AppEndProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.AppStartProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.AppThreadProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.ForeachItEndProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.ForeachItStartProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.JobProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.ProcedureEndProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.ProcedureStartProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.StartSomethingProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.SummaryProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.SwiftProcessorDispatcher;
 
 public class MonitorAppender implements Appender {
     public static final Logger logger = Logger.getLogger(MonitorAppender.class);
@@ -83,32 +93,47 @@ public class MonitorAppender implements Appender {
     	updater.addProcessor(new SchedulerInfoProcessor());
     	updater.addProcessor(new ExecutionContextProcessor());
     	
-    	addSwiftProcessors(updater, 
+    	addFilteredProcessors(updater, SwiftProcessorDispatcher.class, 
     	    new AppStartProcessor(),
     	    new AppEndProcessor(),
     	    new AppThreadProcessor(),
     	    new ProcedureStartProcessor(),
     	    new ProcedureEndProcessor(),
     	    new ForeachItStartProcessor(),
-    	    new ForeachItEndProcessor());
+    	    new ForeachItEndProcessor(),
+    	    new StartSomethingProcessor());
+    	
+    	addFilteredProcessors(updater, RemoteLogProcessorDispatcher.class,
+    	    new BlockRequestedProcessor(),
+    	    new BlockActiveProcessor(),
+    	    new BlockDoneProcessor(),
+    	    new BlockFailedProcessor(),
+    	    new WorkerActiveProcessor(),
+    	    new WorkerLostProcessor(),
+    	    new WorkerShutDownProcessor());
     }
 
-	private void addSwiftProcessors(StateUpdater updater, AbstractSwiftProcessor... ps) {
-	    Map<Priority, SwiftProcessorDispatcher> m = new HashMap<Priority, SwiftProcessorDispatcher>();
+	private void addFilteredProcessors(StateUpdater updater, 
+	        Class<? extends FilteringProcessorDispatcher> dcls, 
+	        AbstractFilteringProcessor... ps) {
+	    Map<Priority, FilteringProcessorDispatcher> m = new HashMap<Priority, FilteringProcessorDispatcher>();
 	    
-	    for (AbstractSwiftProcessor p : ps) {
+	    for (AbstractFilteringProcessor p : ps) {
 	        Level l = p.getSupportedLevel();
-	        SwiftProcessorDispatcher d = m.get(l);
+	        FilteringProcessorDispatcher d = m.get(l);
 	        if (d == null) {
-	            d = new SwiftProcessorDispatcher(l);
-	            m.put(l, d);
+	            try {
+    	            d = dcls.newInstance();
+    	            d.setLevel(l);
+    	            m.put(l, d);
+    	            updater.addProcessor(d);
+	            }
+	            catch (Exception e) {
+	                throw new RuntimeException("Cannot instantiate dispatcher " + dcls, e);
+	            }
 	        }
 	        d.add(p);
-	    }
-	    
-	    for (SwiftProcessorDispatcher d : m.values()) {
-	        updater.addProcessor(d);
-	    }
+	    }	    
     }
 
     public void addFilter(Filter newFilter) {

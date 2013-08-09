@@ -22,7 +22,6 @@ package org.griphyn.vdl.karajan.monitor.monitors.swing;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
@@ -69,8 +68,8 @@ public class ApplicationTable extends SimpleTableClassRenderer<ApplicationItem> 
 			return sb.toString();
 		}
 		
-		private String getDuration(Date date) {
-			long diff = System.currentTimeMillis() - date.getTime();
+		private String getDuration(long date) {
+			long diff = System.currentTimeMillis() - date;
 			StringBuffer sb = new StringBuffer();
 			int ms = (int) (diff % 1000);
 			diff /= 1000;

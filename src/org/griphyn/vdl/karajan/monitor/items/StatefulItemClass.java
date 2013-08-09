@@ -26,6 +26,7 @@ public class StatefulItemClass {
     public static final StatefulItemClass TASK = new StatefulItemClass("Tasks");
     public static final StatefulItemClass BRIDGE = new StatefulItemClass("Bridge");
     public static final StatefulItemClass HOST = new StatefulItemClass("Host");
+    public static final StatefulItemClass MISC = new StatefulItemClass("Misc");
     public static final StatefulItemClass TRACE = new StatefulItemClass("Trace");
     
     private static final StatefulItemClass[] CLASSES = new StatefulItemClass[] {

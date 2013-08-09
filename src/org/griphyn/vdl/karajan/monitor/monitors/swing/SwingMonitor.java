@@ -22,11 +22,15 @@ package org.griphyn.vdl.karajan.monitor.monitors.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
 import javax.swing.JProgressBar;
@@ -37,12 +41,13 @@ import javax.swing.plaf.synth.SynthLookAndFeel;
 import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.SystemStateListener;
+import org.griphyn.vdl.karajan.monitor.common.DataSampler;
+import org.griphyn.vdl.karajan.monitor.common.GlobalTimer;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.TaskItem;
 import org.griphyn.vdl.karajan.monitor.monitors.AbstractMonitor;
-import org.griphyn.vdl.karajan.monitor.monitors.ansi.GlobalTimer;
 
 public class SwingMonitor extends AbstractMonitor {
 	private JFrame frame;
@@ -52,14 +57,9 @@ public class SwingMonitor extends AbstractMonitor {
 	private JProgressBar progress;
 
 	public SwingMonitor() {
-	    setLookAndFeel(); 
+	    setLookAndFeel();
 		createFrame();
 		tablemap = new HashMap<StatefulItemClass, ClassRenderer>();
-		GlobalTimer.getTimer().schedule(new TimerTask() {
-            public void run() {
-                update();
-            }
-        }, 1000, 1000);
 	}
 
 	private void setLookAndFeel() {
@@ -90,13 +90,37 @@ public class SwingMonitor extends AbstractMonitor {
     private void createFrame() {
 		frame = new JFrame();
 		frame.setTitle("Swift System Monitor");
-		frame.setSize(800, 600);
+		frame.setSize(getSavedFrameSize());
+		frame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                saveFrameSize();
+            } 
+		});
 	}
 
-	public void setState(SystemState state) {
+	private Dimension getSavedFrameSize() {
+	    Preferences prefs = Preferences.userNodeForPackage(SwingMonitor.class);
+	    return new Dimension(prefs.getInt("frameWidth", 800), prefs.getInt("frameHeight", 600));
+    }
+	
+	private void saveFrameSize() {
+	    Preferences prefs = Preferences.userNodeForPackage(SwingMonitor.class);
+	    prefs.putInt("frameWidth", frame.getWidth());
+	    prefs.putInt("frameHeight", frame.getHeight());
+	}
+
+    public void setState(SystemState state) {
 		super.setState(state);
+		DataSampler.install(state);
 		createTabs(frame);
 		frame.setVisible(true);
+		
+		GlobalTimer.getTimer().schedule(new TimerTask() {
+            public void run() {
+                update();
+            }
+        }, 1000, 1000);
 	}
 
 	private void createTabs(JFrame frame) {
@@ -134,6 +158,7 @@ public class SwingMonitor extends AbstractMonitor {
 		
 		gantt = new GanttChart();
 		tabs.add("Gantt Chart", gantt);
+		
 	}
 
 	public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
@@ -141,7 +166,9 @@ public class SwingMonitor extends AbstractMonitor {
 		if (table != null) {
 			table.dataChanged();
 		}
-		gantt.itemUpdated(updateType, item);
+		if (gantt != null) {
+		    gantt.itemUpdated(updateType, item);
+		}
 	}
 
     public void shutdown() {

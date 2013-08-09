@@ -3,18 +3,12 @@
 }
 
 #tabs {
-	width: 100px;
-
-    position: absolute;
-    top:32px;
-    left: 0;
-    right: 0;
-	
-	margin: auto;
+    margin: 8px;
+    margin-top: 16px;
 }
 
 .fixed-width {
-	width: 720px;
+	width: 100%;
 }
 
 .bordered {
@@ -41,10 +35,6 @@
 	width: 100%;
 	text-align: center;
 	line-height: 1.9em; 
-}
-
-#tabs {
-	width: 840px;
 }
 
 .pbi {
@@ -74,4 +64,91 @@
 	font-size: 14px;
 	font-weight: bold;
 	white-space: pre;
+}
+
+.plot {
+	border: thin dotted black;
+	width: 400px;
+	height: 300px;
+}
+
+.plot-area {
+	height: 100%;
+	width: 100%;
+}
+
+.toolbar {
+	margin-bottom: 16px;
+}
+
+.button {
+	padding: 2px;
+}
+
+span .small-button {
+	padding: 4px;
+	margin: 0px;
+}
+
+#tab-graphs {
+	height: 85%;
+}
+
+.template {
+	visibility: hidden;
+	left: -10000px;
+}
+
+.plot-legend {
+	padding: 4px;
+	height: 24px;
+}
+
+.plot-legend ul {
+	padding: 4px;
+	vertical-align: bottom;
+	margin: 0px;
+}
+
+.legend-button span.ui-button-text {
+	padding: 2px;
+}
+
+.plot-legend li {
+	list-style: none;
+	display: inline;
+	vertical-align: bottom;
+}
+
+.legend-color {
+	width: 16px;
+	height: 10px;
+	display: inline-block;
+	margin: 1px;
+}
+
+.legend-label {
+	font-size: 14px;
+	margin-left: 4px;
+}
+
+#plot-popup {
+	width: 150px;
+}
+
+.popup-menu {
+	z-index: 100;
+}
+
+.popup-menu a {
+	white-space: pre;
+}
+
+.plot-hover-detail {
+	position: absolute;
+	white-space: pre;
+	border: thin solid black;
+	margin: 2px;
+	padding: 4px;
+	background-color: white;
 }

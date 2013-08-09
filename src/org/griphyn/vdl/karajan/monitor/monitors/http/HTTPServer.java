@@ -9,12 +9,16 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
@@ -52,7 +56,7 @@ public class HTTPServer implements Runnable {
     private int port;
     private ClassLoader loader = HTTPServer.class.getClassLoader();
     private String password;
-    SystemState state;
+    private SystemState state;
     private Map<String, StateDataBuilder> stateKeys;
     
     public HTTPServer(int port, String password, SystemState state) {
@@ -65,6 +69,8 @@ public class HTTPServer implements Runnable {
     private void buildStateKeys() {
         stateKeys = new HashMap<String, StateDataBuilder>();
         stateKeys.put("/summary.state", new SummaryDataBuilder(state));
+        stateKeys.put("/plotSeriesInfo.state", new PlotInfoBuilder(state));
+        stateKeys.put("/plotData.state", new PlotDataBuilder(state));
     }
 
     public void start() throws IOException {
@@ -217,7 +223,7 @@ public class HTTPServer implements Runnable {
         public static final String ERROR_BAD_REQUEST = "<html><head><title>Error</title></head><body>"
                 + "<h1>Error: The request could not be understood by this server</h1></body></html>\n";
         public static final String ERROR_INTERNAL = "<html><head><title>Error</title></head><body>"
-                + "<h1>Error: Internal server error</h1></body></html>\n";
+                + "<h1>Error: Internal server error</h1><h2>@1</h2><pre>@2</pre></body></html>\n";
 
         private SocketChannel channel;
         private int state;
@@ -273,7 +279,6 @@ public class HTTPServer implements Runnable {
                             int ix = line.indexOf(":");
                             if (ix == -1) {
                                 sendError("400 Bad request", null);
-                                System.err.println("bad request");
                                 break;
                             }
                             else {
@@ -328,7 +333,6 @@ public class HTTPServer implements Runnable {
             if (logger.isDebugEnabled()) {
                 logger.debug("Headers: " + headers);
             }
-            System.out.println(cmd);
             String[] tokens = cmd.split("\\s+");
             if (tokens[0].equals("GET")) {
                 String page = getPage(tokens[1]);
@@ -344,7 +348,6 @@ public class HTTPServer implements Runnable {
                     createFileBuffer(page, cgiParams);
                 }
                 else {
-                    System.out.println("GET " + page + ": not found");
                     sendError("404 Not Found", ERROR_NOTFOUND);
                 }
                 key.interestOps(SelectionKey.OP_WRITE);
@@ -392,8 +395,15 @@ public class HTTPServer implements Runnable {
 
         private void createFileBuffer(String file, Map<String, String> params) {
             if (stateKeys.containsKey(file)) {
-                System.out.println("GET " + file);
-                sdata = stateKeys.get(file).getData(params);
+                try {
+                    sdata = stateKeys.get(file).getData(params);
+                }
+                catch (Exception e) {
+                    sendError("500 Internal Server Error", 
+                        processTemplate(ERROR_INTERNAL, e.toString(), getStackTrace(e)));
+                    e.printStackTrace();
+                    return;
+                }
                 fileChannel = null;
                 sendHeader(sdata.capacity(), "text/ascii");
             }
@@ -404,14 +414,15 @@ public class HTTPServer implements Runnable {
                 }
                 else {
                     try {
-                        System.out.println("GET " + file);
                         URLConnection conn = url.openConnection();
                         total = conn.getContentLength();
                         fileChannel = Channels.newChannel(conn.getInputStream());
                         sendHeader(conn.getContentLength(), getContentType(file, conn.getContentType()));
                     }
                     catch (Exception e) {
-                        sendError("500 Internal Server Error", ERROR_INTERNAL);
+                        e.printStackTrace();
+                        sendError("500 Internal Server Error", 
+                            processTemplate(ERROR_INTERNAL, e.toString(), getStackTrace(e)));
                     }
                 }
             }
@@ -459,11 +470,35 @@ public class HTTPServer implements Runnable {
                     }
                     else {
                         m.put(params[j].substring(0, k), 
-                              params[j].substring(k + 1));
+                              urlDecode(params[j].substring(k + 1)));
                     }
                 }
                 return m;
             }
         }
+    }
+
+    public String getStackTrace(Exception e) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintWriter pw = new PrintWriter(baos);
+        e.printStackTrace(pw);
+        return baos.toString();
+    }
+
+    public String urlDecode(String s) {
+        try {
+            return URLDecoder.decode(s, "ASCII");
+        }
+        catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return s;
+        }
+    }
+
+    public String processTemplate(String s, String... ps) {
+        for (int i = 0; i < ps.length; i++) {
+            s = s.replace("@" + (i + 1), ps[i]);
+        }
+        return s;
     }
 }

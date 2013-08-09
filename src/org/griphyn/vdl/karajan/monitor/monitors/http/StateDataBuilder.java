@@ -14,25 +14,4 @@ import java.util.Map;
 
 public abstract class StateDataBuilder {
     public abstract ByteBuffer getData(Map<String, String> params);
-    
-    protected void add(StringBuilder sb, String key, String value) {
-        sb.append(key);
-        sb.append(": ");
-        sb.append(value);
-        sb.append('\n');
-    }
-    
-    protected void add(StringBuilder sb, String key, int value) {
-        sb.append(key);
-        sb.append(": ");
-        sb.append(value);
-        sb.append('\n');
-    }
-    
-    protected void add(StringBuilder sb, String key, long value) {
-        sb.append(key);
-        sb.append(": ");
-        sb.append(value);
-        sb.append('\n');
-    }
 }

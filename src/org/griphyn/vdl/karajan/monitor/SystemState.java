@@ -20,8 +20,6 @@
  */
 package org.griphyn.vdl.karajan.monitor;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -30,19 +28,22 @@ import java.util.TimerTask;
 
 import k.rt.Stack;
 
+import org.griphyn.vdl.karajan.monitor.common.GlobalTimer;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
-import org.griphyn.vdl.karajan.monitor.monitors.ansi.GlobalTimer;
+import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
 
 public class SystemState {
 	private Map<StatefulItemClass, StatefulItemClassSet<? extends StatefulItem>> classes;
     private Set<SystemStateListener> listeners;
     private Map<String, Stats> stats;
     private int total, completed;
-    private long start;
+    private long start, currentTime;
     private Stack stack;
     private String projectName;
     private final Runtime runtime;
+    
+    private static final Unit BYTES = new Unit.P2("B");
 
 	public SystemState(String projectName) {
 	    this.projectName = projectName;
@@ -50,6 +51,7 @@ public class SystemState {
         listeners = new HashSet<SystemStateListener>();
         stats = new HashMap<String, Stats>();
         runtime = Runtime.getRuntime();
+        addItem(new SummaryItem());
         GlobalTimer.getTimer().schedule(new TimerTask() {
             public void run() {
                 update();
@@ -161,11 +163,11 @@ public class SystemState {
     }
     
     public String getMaxHeapFormatted() {
-        return formatMemory(getMaxHeap());
+        return BYTES.format(getMaxHeap());
     }
     
     public String getCurrentHeapFormatted() {
-        return formatMemory(getCurrentHeap());
+        return BYTES.format(getCurrentHeap());
     }
     
     public String getElapsedTimeFormatted() {
@@ -173,9 +175,14 @@ public class SystemState {
     }
     
     public String getEstimatedTimeLeftFormatted() {
-        long time = System.currentTimeMillis() - start;
-        long et = (time * total / completed) - time;
-        return format(et);
+        if (completed == 0) {
+            return "N/A";
+        }
+        else {
+            long time = System.currentTimeMillis() - start;
+            long et = (time * total / completed) - time;
+            return format(et);
+        }
     }
     
     public String getGlobalProgressString() {
@@ -231,32 +238,12 @@ public class SystemState {
     public long getCurrentHeap() {
         return runtime.totalMemory() - runtime.freeMemory();
     }
-    
-    private static final NumberFormat NF = new DecimalFormat("###.##");
 
-    public static String formatMemory(long v) {
-        int l = 1;
-        while (v > 512 * 1024) {
-            v = v / 1024;
-            l++;
-        }
-        return NF.format(v / 1024.0) + unit(l);
+    public long getCurrentTime() {
+        return currentTime;
     }
 
-    private static String unit(int l) {
-        switch(l) {
-            case 0:
-                return "b";
-            case 1:
-                return "Kb";
-            case 2:
-                return "Mb";
-            case 3:
-                return "Gb";
-            case 4:
-                return "Tb";
-            default:
-                return "?";
-        }
+    public void setCurrentTime(long currentTime) {
+        this.currentTime = currentTime;
     }
 }

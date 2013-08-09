@@ -22,9 +22,9 @@ import javax.swing.SpringLayout;
 import javax.swing.border.EtchedBorder;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.common.GlobalTimer;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
-import org.griphyn.vdl.karajan.monitor.monitors.ansi.GlobalTimer;
 
 public class SummaryPanel extends JPanel {
     private SystemState state;

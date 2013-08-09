@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.common.GlobalTimer;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.ANSI;

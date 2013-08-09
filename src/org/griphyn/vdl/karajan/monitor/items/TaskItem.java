@@ -24,12 +24,17 @@ import org.globus.cog.abstraction.interfaces.Task;
 
 public class TaskItem extends AbstractStatefulItem {
 	private Task task;
-	private int status;
+	private int status, type;
 	
 	public TaskItem(String id, Task task) {
 		super(id);
 		this.task = task;
 	}
+	
+	public TaskItem(String id, int type) {
+        super(id);
+        this.type = type;
+    }
 	
 	public TaskItem(String id) {
 		this(id, null);
@@ -45,6 +50,19 @@ public class TaskItem extends AbstractStatefulItem {
 
 	public void setTask(Task task) {
 		this.task = task;
+	}
+	
+	public int getType() {
+	    if (task != null) {
+	        return task.getType();
+	    }
+	    else {
+	        return type;
+	    }
+	}
+	
+	public void setType(int type) {
+	    this.type = type;
 	}
 
 	public String toString() {

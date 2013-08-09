@@ -20,6 +20,7 @@ public class SummaryDataBuilder extends StateDataBuilder {
     
     private final SystemState state;
     private int maxCount;
+    private JSONEncoder e;
 
     SummaryDataBuilder(SystemState state) {
         this.state = state;
@@ -27,40 +28,44 @@ public class SummaryDataBuilder extends StateDataBuilder {
 
     @Override
     public ByteBuffer getData(Map<String, String> params) {
-        StringBuilder sb = new StringBuilder();
-        add(sb, "start", state.getStart());
-        add(sb, "total", state.getTotal());
-        add(sb, "completed", state.getCompleted());
-        add(sb, "maxHeap", state.getMaxHeap());
-        add(sb, "maxHeapFormatted", state.getMaxHeapFormatted());
-        add(sb, "crtHeap", state.getCurrentHeap());
-        add(sb, "crtHeapFormatted", state.getCurrentHeapFormatted());
-        add(sb, "timeLeftFormatted", state.getEstimatedTimeLeftFormatted());
-        add(sb, "elapsedTimeFormatetd", state.getElapsedTimeFormatted());
-        add(sb, "progressString", state.getGlobalProgressString());
+        e = new JSONEncoder();
+        e.beginMap();
+        
+        e.writeMapItem("start", state.getStart());
+        e.writeMapItem("total", state.getTotal());
+        e.writeMapItem("completed", state.getCompleted());
+        e.writeMapItem("maxHeap", state.getMaxHeap());
+        e.writeMapItem("maxHeapFormatted", state.getMaxHeapFormatted());
+        e.writeMapItem("crtHeap", state.getCurrentHeap());
+        e.writeMapItem("crtHeapFormatted", state.getCurrentHeapFormatted());
+        e.writeMapItem("timeLeftFormatted", state.getEstimatedTimeLeftFormatted());
+        e.writeMapItem("elapsedTimeFormatetd", state.getElapsedTimeFormatted());
+        e.writeMapItem("progressString", state.getGlobalProgressString());
         
         SummaryItem summary = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
         if (summary != null) {
             Map<String, Integer> counts = summary.getCounts(state);
             for (int i = 0; i < SummaryItem.STATES.length; i++) {
-                Integer v = counts.get(SummaryItem.STATES[i]);
+                Integer v = counts.get(SummaryItem.STATES[i].getName());
                 if (v != null) {
                     if (v > maxCount) {
                         maxCount = v;
                     }
                 }
             }
-            add(sb, "maxCount", maxCount);
+            e.writeMapItem("maxCount", maxCount);
             for (int i = 0; i < SummaryItem.STATES.length; i++) {
-                Integer v = counts.get(SummaryItem.STATES[i]);
+                String name = SummaryItem.STATES[i].getName();
+                Integer v = counts.get(name);
                 if (v != null) {
-                    add(sb, SummaryItem.STATES[i].getName(), v);
+                    e.writeMapItem(name, v);
                 }
                 else {
-                    add(sb, SummaryItem.STATES[i].getName(), 0);
+                    e.writeMapItem(name, 0);
                 }
             }
         }
-        return ByteBuffer.wrap(sb.toString().getBytes());
+        e.endMap();
+        return ByteBuffer.wrap(e.toString().getBytes());
     }
 }

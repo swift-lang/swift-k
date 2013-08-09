@@ -9,6 +9,8 @@
  */
 package org.griphyn.vdl.karajan.monitor.processors;
 
+import org.griphyn.vdl.karajan.monitor.SystemState;
+
 public abstract class AbstractMessageProcessor implements LogMessageProcessor {
 
     protected abstract Class<?> getSupportedSource();
@@ -17,5 +19,8 @@ public abstract class AbstractMessageProcessor implements LogMessageProcessor {
     public String getSupportedSourceName() {
         return getSupportedSource().getName();
     }
-    
+
+    @Override
+    public void initialize(SystemState state) {
+    }
 }

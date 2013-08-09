@@ -28,9 +28,9 @@ import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
 import org.griphyn.vdl.karajan.monitor.StatefulItemClassSet;
+import org.griphyn.vdl.karajan.monitor.common.GlobalTimer;
 import org.griphyn.vdl.karajan.monitor.common.StatefulItemModel;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
-import org.griphyn.vdl.karajan.monitor.monitors.ansi.GlobalTimer;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.SafeTimerTask;
 
 public class SimpleTableClassRenderer<T extends StatefulItem> extends JScrollPane implements ClassRenderer {

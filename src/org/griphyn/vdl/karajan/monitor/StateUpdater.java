@@ -60,9 +60,11 @@ public class StateUpdater {
         	}
             l.add(processor);
         }
+        processor.initialize(state);
     }
     
     public void logEvent(Object category, String source, Object message, Object details) {
+        state.setCurrentTime(System.currentTimeMillis());
     	Map<String, List<LogMessageProcessor>> sources = levels.get(category);
         if (sources == null) {
             return;
