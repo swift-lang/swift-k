@@ -417,7 +417,6 @@ public abstract class SwiftFunction extends AbstractFunction {
 			TCCache tc = (TCCache) c.getAttribute(TC);
 			if (tc == null) {
 				String prop = ConfigProperty.getProperty(VDL2ConfigProperties.TC_FILE, (VDL2Config) c.getAttribute("SWIFT:CONFIG"));
-				Loader.debugText("TC", new java.io.File(prop));
 				tc = new TCCache(File.getNonSingletonInstance(prop));
 				c.setAttribute(TC, tc);
 			}

@@ -98,67 +98,30 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     public static void main(String[] argv) {
         ArgumentParser ap = buildArgumentParser();
-        String project = null;
-        try {
-            ap.parse(argv);
-
-            if (ap.isPresent(ARG_HELP)) {
-                ap.usage();
-                System.exit(0);
-            }
-            if (ap.isPresent(ARG_VERSION)){
-            	version();
-            	System.exit(0);
-            }
-            if (!ap.hasValue(ArgumentParser.DEFAULT)) {
-                version();
-                error("No Swift script specified");
-            }
-            project = ap.getStringValue(ArgumentParser.DEFAULT);
-        }
-        catch (ArgumentParserException e) {
-            System.err.println("Error parsing arguments: " + e.getMessage()
-                    + "\n");
-            shortUsage();
-            System.exit(1);
-        }
-
-        if (!new File(project).exists()) {
-            System.err.println("SwiftScript program does not exist: " + project
-                    + "\n");
-            shortUsage();
-            System.exit(1);
-        }
-
+        checkImmediateFlags(ap, argv);
+         
         boolean runerror = false;
-        String projectName = projectName(project);
-
-        String runID;
-        if (ap.isPresent(ARG_RUNID)) {
-            runID = ap.getStringValue(ARG_RUNID);
-        }
-        else {
-            runID = getUUID();
-        }
-
+        
+        String runID = makeRunId(ap);
+        
         try {
-            boolean provenanceEnabled = VDL2Config.getConfig().getProvenanceLog();
-
+            String project = ap.getStringValue(ArgumentParser.DEFAULT);
+            checkValidProject(project);
+            String projectName = projectName(project);
+       
             setupLogging(ap, projectName, runID);
-            if (logger.isDebugEnabled()) {
-                logger.debug("arguments: " + Arrays.asList(argv));
-                logger.debug("Max heap: " + Runtime.getRuntime().maxMemory());
-            }
+            VDL2Config config = loadConfig(ap);
+            addCommandLineProperties(config, ap);
+            logBasicInfo(argv, runID, config);
+            debugSitesText(config);
+            debugTCText(config);
+            
+            boolean provenanceEnabled = VDL2Config.getConfig().getProvenanceLog();
             
             if (ap.isPresent(ARG_CDMFILE)) {
-                loadCDM(ap); 
+                loadCDM(ap);
             }
             
-            if (!(new File(project).exists())) {
-                logger.error("Input file " + project + " does not exist.");
-                System.exit(4);
-            }
-
             if (project.endsWith(".swift")) {
                 try {
                     project = compile(project, ap.isPresent(ARG_RECOMPILE), provenanceEnabled);
@@ -171,20 +134,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
                     System.exit(3);
                 }
             }
-            WrapperNode tree = null;
-            if (project != null) {
-                tree = load(project);
-            }
-            else {
-                System.err.println("No source file specified");
-                shortUsage();
-                System.exit(1);
-            }
+            WrapperNode tree = load(project);
             
             tree.setProperty("name", projectName + "-" + runID);
             tree.setProperty(WrapperNode.FILENAME, project);
 
-            VDL2Config config = loadConfig(ap);
             Context context = new Context();
             context.setArguments(ap.getArguments());
             context.setAttribute("SWIFT:CONFIG", config);
@@ -193,12 +147,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
             context.setAttribute("SWIFT:RUN_ID", runID);
             context.setAttribute("SWIFT:DRY_RUN", ap.isPresent(ARG_DRYRUN));
             context.setAttribute("SWIFT:HOME", System.getProperty("swift.home"));
-           
-            addCommandLineProperties(config, ap);
-            if (logger.isDebugEnabled()) {
-                logger.debug(config);
-            }
-            debugSitesText(config);
             
             Main root = compileKarajan(tree, context);
             root.setFileName(projectName);
@@ -209,13 +157,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
             if (ap.hasValue(ARG_RESUME)) {
                 arguments.add("-rlog:resume=" + ap.getStringValue(ARG_RESUME));
             }
-           
+          
+            logger.info("RUN_START");
             new HangChecker(context).start();
             long start = System.currentTimeMillis();
             ec.start(context);
             ec.waitFor();
             long end = System.currentTimeMillis();
-            //System.out.println(JobSubmissionTaskHandler.jobsRun + " jobs, " + JobSubmissionTaskHandler.jobsRun * 1000 / (end - start) + " j/s");
             if (ec.isFailed()) {
                 runerror = true;
             }
@@ -236,6 +184,72 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ma.close();
         }
         System.exit(runerror ? 2 : 0);
+    }
+
+    private static void logBasicInfo(String[] argv, String runID, VDL2Config conf) {
+        String version = loadVersion();
+        System.out.println(version);
+        System.out.println("RunID: " + runID);
+        if (logger.isInfoEnabled()) {
+            logger.info("VERSION " + version);
+            logger.info("RUN_ID " + runID);
+            logger.info("ARGUMENTS " + Arrays.asList(argv));
+            logger.info("MAX_HEAP " + Runtime.getRuntime().maxMemory());
+            logger.info("GLOBUS_HOSTNAME " + System.getProperty("GLOBUS_HOSTNAME"));
+            logger.info("CWD " + new File(".").getAbsolutePath());
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("SWIFT_CONFIGURATION " + conf);
+        }
+    }
+
+    private static void checkValidProject(String project) {
+        if (project == null) {
+            System.err.println("No source file specified");
+            shortUsage();
+            System.exit(1);
+        }
+        
+        if (!new File(project).exists()) {
+            System.err.println("SwiftScript program does not exist: " + project + "\n");
+            shortUsage();
+            System.exit(4);
+        }
+    }
+
+    private static void checkImmediateFlags(ArgumentParser ap, String[] argv) {
+        try {
+            ap.parse(argv);
+
+            if (ap.isPresent(ARG_HELP)) {
+                ap.usage();
+                System.exit(0);
+            }
+            if (ap.isPresent(ARG_VERSION)) {
+                System.out.println(loadVersion());
+                System.exit(0);
+            }
+            if (!ap.hasValue(ArgumentParser.DEFAULT)) {
+                System.out.println(loadVersion());
+                error("No Swift script specified");
+            }
+        }
+        catch (ArgumentParserException e) {
+            System.err.println("Error parsing arguments: " + e.getMessage()
+                    + "\n");
+            shortUsage();
+            System.exit(1);
+        }
+
+    }
+
+    private static String makeRunId(ArgumentParser ap) {
+        if (ap.isPresent(ARG_RUNID)) {
+            return ap.getStringValue(ARG_RUNID);
+        }
+        else {
+            return getUUID();
+        }
     }
 
     private static String getMessages(Throwable e) {
@@ -386,26 +400,33 @@ public class Loader extends org.globus.cog.karajan.Loader {
 	}
 
     static void debugSitesText(VDL2Config config) {
-    	String defaultPoolFile = 
-        	System.getProperty("swift.home") + File.separator + 
-        	"etc" + File.separator + "sites.xml";
-
 		String poolFile = config.getPoolFile();
-		if (poolFile.equals(defaultPoolFile)) {
-			Logger textLogger = Logger.getLogger("swift.textfiles");
-			textLogger.debug("using default sites file");
-		}
-		else {
-			debugText("SITES", new File(poolFile));
-		}
+		logger.info("SITES_FILE " + poolFile);
+		debugText("SITES", new File(poolFile));
     }
     
+    static void debugTCText(VDL2Config config) {
+        String tcFile = config.getTCFile();
+        logger.info("TC_FILE " + tcFile);
+        debugText("TC", new File(tcFile));
+    }
+
+    
+    /**
+     * The build ID is a UID that gets generated with each build. It is
+     * used to decide whether an already compiled swift script can be 
+     * re-used or needs to be re-compiled.
+     */
 	private static void loadBuildVersion(boolean provenanceEnabled) {
         try {
-            File f = new File(System.getProperty("swift.home")
-                    + "/libexec/buildid.txt");
+            File f = new File(System.getProperty("swift.home") + "/libexec/buildid.txt");
             BufferedReader br = new BufferedReader(new FileReader(f));
-            buildVersion = br.readLine() + "-" + (provenanceEnabled ? "provenance" : "no-provenance");
+            try {
+                buildVersion = br.readLine() + "-" + (provenanceEnabled ? "provenance" : "no-provenance");
+            }
+            finally {
+                br.close();
+            }
         }
         catch (IOException e) {
             buildVersion = null;
@@ -676,15 +697,21 @@ public class Loader extends org.globus.cog.karajan.Loader {
         return sb.toString();
     }
     
-    public static void version() {
-        String shome = System.getProperty("swift.home", "unknown version, can't determine SWIFT_HOME");
+    public static String loadVersion() {
+        String shome = System.getProperty("swift.home", null);
+        if (shome == null) {
+            logger.info("Cannot determine Swift home: swift.home system property missing");
+            return "<error>";
+        }
         File file = new File(shome + "/libexec/version.txt");
+        StringBuilder sb = new StringBuilder();
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             try {
                 String line;
                 while ((line = br.readLine()) != null) {
-                    System.out.println(line);
+                    sb.append(line);
+                    sb.append('\n');
                 }
             }
             finally {
@@ -692,10 +719,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
         }
         catch (Exception e) {
-            e.printStackTrace();
+            logger.info("Error getting swift version", e);
+            sb.append("<error>");
         }
 
-        System.out.println();
+        return sb.toString().trim();
     }
-
 }
