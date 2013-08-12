@@ -44,7 +44,7 @@ public class ANSIContext {
     private ScreenBuffer buf;
     private boolean doubleBuffered;
     private int lock;
-    private boolean done, unicode;
+    private boolean done, unicode, initialized;
 
     private Terminal terminal;
     private boolean redraw;
@@ -151,6 +151,9 @@ public class ANSIContext {
         terminal = Terminal.setupTerminal();
         try {
             terminal.initializeTerminal();
+            if (!this.vt100CodesSupported()) {
+                return false;
+            }
             os.write(ANSI.cursorVisible(false));
             os.flush();
             Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -158,13 +161,21 @@ public class ANSIContext {
                     exit();
                 }
             });
+            initialized = true;
+            return true;
         }
         catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-        return terminal.isANSISupported();
     }
     
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+
+
     private boolean querySizeWorks = true, alternate = false;
 
     public int[] querySize() throws IOException {
@@ -208,6 +219,14 @@ public class ANSIContext {
             return null;
         }
     }
+    
+    public boolean vt100CodesSupported() throws IOException {
+        os.write(ANSI.AESC + "c");
+        os.flush();
+        String reply = readReply(100);
+        logger.debug("Terminal status code: " + reply);
+        return reply.length() > 0;
+    }
 
     protected void expect(char c) throws IOException {
         if (is.read() != c) {
@@ -219,6 +238,23 @@ public class ANSIContext {
         for (int i = 0; i < what.length(); i++) {
             expect(what.charAt(i));
         }
+    }
+    
+    protected String readReply(int wait) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        while (wait > 0 && is.available() == 0) {
+            try {
+                Thread.sleep(1);
+                wait--;
+            }
+            catch (InterruptedException e) {
+                throw new IOException("Interrupted");
+            }
+        }
+        while (is.available() > 0) {
+            sb.append((char) is.read());
+        }
+        return sb.toString();
     }
 
     protected void expect(String what, int wait) throws IOException {

@@ -80,6 +80,7 @@ public class AbstractANSIDisplay extends Thread {
             }));
             Screen screen = new Screen(context);
             if (!screen.init()) {
+                this.cleanup();
                 System.err
                     .println("Your terminal does not support ANSI escape codes");
             }

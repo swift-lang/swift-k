@@ -54,10 +54,12 @@ public class LocalANSIDisplay extends AbstractANSIDisplay {
     protected void cleanup() throws IOException {
         m.remove(this);
         super.cleanup();
-        getContext().bgColor(ANSI.BLACK);
-        getContext().fgColor(ANSI.WHITE);
-        getContext().clear();
-        getContext().sync();
+        if (getContext().isInitialized()) {
+            getContext().bgColor(ANSI.BLACK);
+            getContext().fgColor(ANSI.WHITE);
+            getContext().clear();
+            getContext().sync();
+        }
         System.setOut(sout);
         System.setErr(serr);
     }
