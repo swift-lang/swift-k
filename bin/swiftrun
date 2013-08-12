@@ -122,7 +122,7 @@ sub write_properties {
    while( my( $key, $value ) = each( %properties ) ) {
       # Ignore properties that start with app. or site.
       next if $key =~ /^\s*app./;
-      next if $key =~ /^\s*site./;
+      next if $key =~ /^\s*site/;
       print PROPERTY_FILE "$key=$value\n";
    }
    push( @new_swift_args, "-config $run_directory/$property_filename" );
@@ -134,6 +134,10 @@ sub write_sites {
    open(SITES, ">$run_directory/$filename") || die "Unable to open $run_directory/$filename\n";
    print SITES "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
    print SITES "<config xmlns=\"http://www.ci.uchicago.edu/swift/SwiftSites\">\n";
+
+   if(defined ($properties{site})) { 
+      push(@sites, split(',', $properties{site}))
+   } 
 
    foreach my $site(@sites) {
       print SITES &create_pool_entry($site);
@@ -234,8 +238,8 @@ $run_directory = getcwd() . "/" . sprintf "run%04s", $run_number;
 mkdir($run_directory) || die "Unable to create run directory $run_directory\n";
 
 # Write swift configuration files
-&write_sites("sites.xml") if defined( $option_siteslist );
-&write_apps("tc.data")    if ( !defined( $option_tcfile ) && defined( $option_siteslist ));
+&write_sites("sites.xml") if defined( $option_siteslist ) || defined($properties{site});
+&write_apps("tc.data")    if !defined( $option_tcfile ) && ( defined( $option_siteslist ) || defined($properties{site}));
 &write_properties("cf")   if !defined( $option_config );
 
 # Repair args with dots
