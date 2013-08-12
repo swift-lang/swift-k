@@ -92,6 +92,7 @@ sub property_to_xml {
 sub write_apps {
    my $app_filename = $_[0];
    open( APP_FILE, ">$run_directory/$app_filename" ) || die "Unable to open $run_directory/$app_filename\n";
+   print APP_FILE "* * * INSTALLED INTEL32::LINUX null\n";
 
    # Find app definitions
    while( my( $key, $value ) = each( %properties ) ) {
