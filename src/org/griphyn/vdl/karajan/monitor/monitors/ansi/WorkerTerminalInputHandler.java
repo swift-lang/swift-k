@@ -29,6 +29,8 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Dialog;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Terminal;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.Terminal.InputHandler;
@@ -61,55 +63,73 @@ public class WorkerTerminalInputHandler implements InputHandler {
         }
     }
 
-    public void handleInput(String in) {
+    public WorkerShellCommand startCommand(String in) {
         if (in.equals("exit")) {
             dialog.close();
+            return null;
         }
         else {
-            String result = runcmd(in);
-            if (result != null && !result.equals("")) {
-                term.append(runcmd(in));
-            }
+            return startCmd(in, term, new Callback() {
+                @Override
+                public void replyReceived(Command cmd) {
+                    term.commandCompleted();
+                }
+
+                @Override
+                public void errorReceived(Command cmd, String msg, Exception t) {
+                    term.commandFailed(msg, t);
+                }
+            });
         }
     }
 
-    private String runcmd(String cmd) {
+    private WorkerShellCommand startCmd(String cmd, final Terminal term, final Callback cb) {
         try {
             CoasterChannel channel = ChannelManager.getManager()
                 .reserveChannel(contact, cred, LocalRequestManager.INSTANCE);
-            WorkerShellCommand wsc = new WorkerShellCommand(workerId, cmd);
-            wsc.execute(channel);
-            return wsc.getInDataAsString(0);
+            WorkerShellCommand wsc = new WorkerShellCommand(workerId, cmd) {
+                @Override
+                public void handleSignal(byte[] data) {
+                    term.append(new String(data));
+                }
+            };
+            wsc.executeAsync(channel, cb);
+            return wsc;
         }
         catch (ProtocolException e) {
             term.append(e.getMessage());
-            return null;
         }
         catch (Exception e) {
             logger.warn("Cannot execute worker command", e);
             CharArrayWriter caw = new CharArrayWriter();
             e.printStackTrace(new PrintWriter(caw));
             term.append(caw.toString());
-            return null;
         }
+        return null;
     }
 
-    public String autoComplete(String in) {
-        String result = runcmd("mls " + in + "*");
-        if (result == null) {
-            return null;
-        }
-        String[] r = result.split("\\s+");
-        if (r.length == 0) {
-            return null;
-        }
-        else if (r.length == 1) {
-            return r[0];
-        }
-        else {
-            term.append(join(r));
-            return null;
-        }
+    public void autoComplete(String in, final Terminal term) {
+        startCmd("mls " + in + "*", term, new Callback() {
+
+            @Override
+            public void replyReceived(Command cmd) {
+                String result = cmd.getInDataAsString(1);
+                if (result != null) {
+                    String[] r = result.split("\\s+");
+                    if (r.length == 1) {
+                        term.autoCompleteCallback(r[0]);
+                    }
+                    else {
+                        term.append(join(r));
+                    }
+                }
+            }
+
+            @Override
+            public void errorReceived(Command cmd, String msg, Exception t) {
+                term.append(msg);
+            }
+        });
     }
     
     private String join(String[] s) {
