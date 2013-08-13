@@ -22,4 +22,8 @@ public class WorkerShellCommand extends Command {
         addOutData(workerId);
         addOutData(command);
     }
+
+    public void input(String str) {
+        // TBD
+    }
 }

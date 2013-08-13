@@ -28,7 +28,12 @@ public class WorkerShellHandler extends RequestHandler implements Callback {
     public void requestComplete() throws ProtocolException {
         String workerId = getInDataAsString(0);
         String command = getInDataAsString(1);
-        WorkerShellCommand wsc = new WorkerShellCommand(workerId, command);
+        WorkerShellCommand wsc = new WorkerShellCommand(workerId, command) {
+            @Override
+            public void handleSignal(byte[] data) {
+                forwardSignal(data);
+            }
+        };
         BlockQueueProcessor bqp = (BlockQueueProcessor) ((CoasterService) getChannel().getChannelContext().
                 getService()).getJobQueue().getCoasterQueueProcessor();
         try {
@@ -45,6 +50,10 @@ public class WorkerShellHandler extends RequestHandler implements Callback {
         catch (ChannelException e) {
             sendError("Cannot contact worker", e);
         }
+    }
+
+    protected void forwardSignal(byte[] data) {
+        this.getChannel().sendTaggedReply(getId(), data, CoasterChannel.SIGNAL_FLAG);
     }
 
     public void errorReceived(Command cmd, String msg, Exception t) {
