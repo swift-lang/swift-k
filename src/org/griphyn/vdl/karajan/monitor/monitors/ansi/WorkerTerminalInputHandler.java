@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.impl.execution.coaster.WorkerShellCommand;
+import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.ProtocolException;
@@ -54,8 +55,10 @@ public class WorkerTerminalInputHandler implements InputHandler {
         if (this.contact == null) {
             this.contact = task.getService(0).getServiceContact().getContact();
         }
-        this.cred = (GSSCredential) task.getService(0).getSecurityContext()
-            .getCredentials();
+        SecurityContext sc = task.getService(0).getSecurityContext();
+        if (sc != null) {
+            this.cred = (GSSCredential) sc.getCredentials();
+        }
     }
 
     public void handleInput(String in) {
