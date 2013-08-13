@@ -58,6 +58,7 @@ public class TextArea extends Container {
 		if (text == null) {
 			return;
 		}
+		text = text.replace("\t", "    ");
 		int crt = 0;
 		int w = width - 1;
 		while (crt < text.length()) {
