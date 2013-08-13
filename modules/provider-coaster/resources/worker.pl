@@ -1331,7 +1331,7 @@ sub stagein {
 	if (scalar @$STAGE <= $STAGEINDEX) {
 		wlog INFO, "$jobid Done staging in files ($STAGEINDEX, $STAGE)\n";
 		$JOBDATA{$jobid}{"stageindex"} = 0;
-		queueJobStatusCmd($jobid, ACTIVE, 0, "workerid=$ID");
+		queueJobStatusCmd($jobid, ACTIVE, 0, "workerid=$BLOCKID:$ID");
 		forkjob($jobid);
 	}
 	else {
