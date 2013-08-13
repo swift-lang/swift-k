@@ -49,6 +49,8 @@ public class ANSIContext {
     private Terminal terminal;
     private boolean redraw;
     private UnicodeDrawingScheme uds;
+    private Dialog errorDialog;
+    private TextArea errorTA;
 
     public ANSIContext(OutputStream os, InputStream is) {
         unicode = "true".equals(System.getProperty("tui.use.unicode"));
@@ -410,17 +412,12 @@ public class ANSIContext {
 
                 if (key != null) {
                     if (screen != null) {
-                        try {
-                            if (doubleBuffered) {
-                                // buf.invalidate();
-                            }
-                            screen.keyboardEvent(key);
-                            if (screen != null) {
-                                screen.redraw();
-                            }
+                        if (doubleBuffered) {
+                            // buf.invalidate();
                         }
-                        catch (Exception e) {
-                            e.printStackTrace();
+                        screen.keyboardEvent(key);
+                        if (screen != null) {
+                            screen.redraw();
                         }
                     }
                     //screen.status(key.toString());
@@ -428,18 +425,58 @@ public class ANSIContext {
             }
             catch (Exception e) {
                 if (!done) {
-                    logger.warn("Rendering exception", e);
-                    moveTo(1, 1);
-                    bgColor(ANSI.RED);
-                    fgColor(ANSI.WHITE);
-                    CharArrayWriter cr = new CharArrayWriter();
-                    PrintWriter wr = new PrintWriter(cr);
-                    e.printStackTrace(wr);
-                    text(cr.toString());
-                    sync();
+                    logger.info("Rendering exception", e);
+                    displayErrorDialog(e);
                 }
             }
         }
+    }
+
+    private void displayErrorDialog(Exception e) {
+        CharArrayWriter cr = new CharArrayWriter();
+        PrintWriter wr = new PrintWriter(cr);
+        e.printStackTrace(wr);
+        
+        synchronized(this) {
+            if (errorDialog == null) {
+                createErrorDialog();
+            }
+            if (errorTA.getText() == null) {
+                errorTA.setText(cr.toString());
+            }
+            else {
+                errorTA.setText(errorTA.getText() + "\n" + cr.toString());
+            }
+        }
+    }
+
+    private void createErrorDialog() {
+        Dialog d = new Dialog();
+        d.setFgColor(ANSI.RED);
+        errorDialog = d;
+        d.setTitle("Error");
+        d.setSize(getScreen().getWidth() * 3 / 4, getScreen().getHeight() * 3 / 4);
+        errorTA = new TextArea();
+        d.add(errorTA);
+        errorTA.setFgColor(ANSI.RED);
+        errorTA.setLocation(1, 1);
+        errorTA.setSize(d.getWidth() - 2, d.getHeight() - 3);
+        errorTA.setScrollBarVisible(true);
+        Button close = new Button("Close");
+        d.add(close);
+        close.setLocation((d.getWidth() - close.getWidth()) / 2, d.getHeight() - 1);
+        close.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(Component source) {
+                synchronized(ANSIContext.this) {
+                    errorDialog.close();
+                    errorDialog = null;
+                }
+            }  
+        });
+        
+        d.center(getScreen());
+        d.display(getScreen());
     }
 
     private int read() throws IOException {
