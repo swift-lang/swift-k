@@ -24,6 +24,7 @@ import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.ChannelException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class BlockQueueProcessor
@@ -898,6 +899,22 @@ implements RegistrationManager, Runnable {
        Get the KarajanChannel for the worker with given id
      */
     public CoasterChannel getWorkerChannel(String id) {
+        int sep = id.indexOf(':');
+        String blockID = id.substring(0, sep);
+        String workerID = id.substring(sep + 1);
+        Block b = getBlock(blockID);
+        if (b != null) {
+            Node n = b.findNode(workerID);
+            if (n != null) {
+                try {
+                    return n.getChannel();
+                }
+                catch (ChannelException e) {
+                    logger.info("Cannot get node channel", e);
+                    return null;
+                }
+            }
+        }
         return null;
     }
 

@@ -34,8 +34,13 @@ public class WorkerShellHandler extends RequestHandler implements Callback {
         try {
             ChannelManager manager = ChannelManager.getManager();
             CoasterChannel worker = bqp.getWorkerChannel(workerId);
-            CoasterChannel reserved = manager.reserveChannel(worker);
-            wsc.executeAsync(reserved, this);
+            if (worker == null) {
+                sendReply("Error: worker not found");
+            }
+            else {
+                CoasterChannel reserved = manager.reserveChannel(worker);
+                wsc.executeAsync(reserved, this);
+            }
         }
         catch (ChannelException e) {
             sendError("Cannot contact worker", e);
