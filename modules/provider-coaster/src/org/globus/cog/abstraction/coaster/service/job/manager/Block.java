@@ -424,8 +424,20 @@ public class Block implements StatusListener, Comparable<Block> {
         return "Block " + id + " (" + workers + "x" + walltime + ")";
     }
     
-    public List<Node> getNodes(){
+    public List<Node> getNodes() {
         return nodes;
+    }
+    
+    public Node findNode(String nodeID) {
+        Integer id = Integer.parseInt(nodeID);
+        synchronized (cpus) {
+            for (Node n : nodes) {
+                if (n.getId() == id) {
+                    return n;
+                }
+            }
+        }
+        return null;
     }
 
     public void statusChanged(StatusEvent event) {

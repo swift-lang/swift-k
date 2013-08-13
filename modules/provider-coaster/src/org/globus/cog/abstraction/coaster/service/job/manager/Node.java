@@ -165,4 +165,8 @@ public class Node implements Callback, ChannelListener {
         Block.totalFailedWorkers += settings.getJobsPerNode();
         block.getAllocationProcessor().getRLogger().log("WORKER_LOST blockid=" + block.getId());
     }
+
+    public int getId() {
+        return id;
+    }
 }
