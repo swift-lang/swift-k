@@ -11,8 +11,8 @@ Swift. The goal of these changes is to make configuration easier for Swift
 users. This document will attempt to explain the reasons for these changes and
 document how these new configuration mechanisms work.
 
-Configuration in previous releases
-----------------------------------
+Running older Swift releases
+----------------------------
 In Swift 0.94 and earlier versions, configuring Swift usually required setting
 up files called sites.xml, tc.data, and cf. These files typically needed to be
 specified on the command line. The following command line was pretty typical 
@@ -24,7 +24,7 @@ $ swift -sites.file sites.xml -tc.file tc.data -config cf myscript.swift
 
 sites.xml
 ~~~~~~~~~
-The sites.xml file was an XML configuration file that defined site paramaters.
+The sites.xml file was an XML configuration file that defined site parameters.
 It was used to determine how Swift should interact with the scheduler. Below
 is an example sites.xml for a campus cluster called midway
 
@@ -48,7 +48,7 @@ is an example sites.xml for a campus cluster called midway
 tc.data
 ~~~~~~~~
 The tc.data was a basic catalog that defined the location of applications on a
-given sites.
+given site.
 
 .tc.data
 -----
@@ -58,7 +58,7 @@ localhost  cat  /bin/cat null null null
 cf
 ~~
 The cf file (also called swift.properties) was a file that defined various 
-swift configuration values, like retries and error handlinng.
+swift configuration values, like retries and error handling.
 
 .cf
 -----
@@ -68,8 +68,8 @@ file.gc.enabled=false
 status.mode=provider
 -----
 
-The new swift.properties
-------------------------
+Running Swift 0.95
+------------------
 Previous versions of Swift required users to create multiple files, each in
 stored in a different format. In an attempt to make things easier, Swift 0.95
 merges these different configuration files into a single, common configuration
@@ -81,7 +81,7 @@ The new swift.properties file is responsible for:
 2. Defining applications
 3. Defining various swift settings
 
-Here is an example of a new swift.properties file:
+Here is an example of a new swift.properties file.
 
 -----
 wrapperlog.always.transfer=true
@@ -100,4 +100,276 @@ app.westmere.cat=/bin/cat
 -----
 
 This single swift.properties file works identically to using the sites.xml,
-tc.data, and cf files listed in the previous section.
+tc.data, and cf files listed in the previous section. The details of this file
+will be explained more later. Let's first look at an example of running Swift
+with this new file.
+
+Using the swift.properties file above, the new Swift command a user would run
+is:
+
+-----
+$ swift script.swift
+-----
+
+That is all that is needed. Everything Swift needs to know is defined in
+swift.properties.
+
+Location of swift.properties
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Swift searches for swift.properties files in multiple locations:
+
+1. The etc/swift.properties file included with the Swift distribution.
+2. $SWIFT_SITE_CONF/swift.properties - used for defining site templates.
+3. $HOME/.swift/swift.properties
+4. swift.properties in your current directory.
+
+Settings get read in this order. Definitions in the later files will override
+any previous definitions. For example, if you have execution.retries=10 in
+$HOME/.swift/swift.properties, and execution.retries=0 in the swift.properties
+in your current directory, execution.retries will be set to 0.
+
+To verify what files are being read, and what values will be set, run:
+-----
+$ swift -listconfig
+-----
+
+Selecting a site
+~~~~~~~~~~~~~~~~
+There are two ways Swift knows where to run. The first is via
+swift.properties. The site command specified which site entries
+should be used for a particular run. 
+
+-----
+site=sandyb
+-----
+
+Sites can also be selected on the command line by using the -site option.
+
+-----
+$ swift -site westmere script.swift
+-----
+
+The -site command line argument will override any sites selected in
+swift.properties.
+
+Selecting multiple sites
+~~~~~~~~~~~~~~~~~~~~~~~~
+To use multiple sites, use a list of site names separated by commas. In
+swift.properties:
+
+-----
+site=westmere,sandyb
+-----
+
+The same format can be used on the command line:
+
+-----
+$ swift -site westmere,sandyb script.swift
+-----
+
+NOTE: You can also use "sites=" in swift.properties, and "-sites x,y,z" on the
+command line.
+
+Run directories
+~~~~~~~~~~~~~~~
+When you run Swift, you will see a run directory get created. The run
+directory has the name of runNNN, where NNN starts at 000 and increments for
+every run.
+
+The run directories can be useful for debugging. They contain:
+.Run directory contents
+|======================
+|runNNN.log|The log file generated during the Swift run
+|*.d       |Debug directory containing info logs generated during app
+executions. This will be moved to the runNNN directory after execution has
+completed.
+|sites.xml|A sites.xml generated from swift.properties
+|apps     |An apps generated from swift.properties
+|cf       |A configuration file generated from swift.properties
+|======================
+
+Using site templates
+~~~~~~~~~~~~~~~~~~~~
+This new configuration mechanism should make it easier to use site templates.
+To use this, set the environment variable $SWIFT_SITE_CONF to a directory 
+containing a swift.properties file. This swift.properties can contain multiple 
+site definitions for the various queues available on the cluster you are using.
+
+Your local swift.properties then does not need to define the entire site. It 
+may contain only differences you need to make that are specific to your 
+application, like walltime.
+
+Backward compatability
+~~~~~~~~~~~~~~~~~~~~~~~
+Swift 0.95 should be backwards compatible with Swift 0.94. If you would like
+to use XML files and tc.data/app files in the previous style, things should
+work as before. If you notice an instance where this is not true, please send
+an email to swift-support@ci.uchicago.edu.
+
+The swift.properties file format
+--------------------------------
+
+Site definitions
+~~~~~~~~~~~~~~~~
+Site definitions in the swift.properties files begin with "site".
+The second word is the name of the site you are defining. In these examples we
+will define a site called westmere.
+The third word is the property.
+
+For example:
+-----
+site.westmere.queue=fast
+-----
+
+Below is the list of valid site properties, with links to the Swift User Guide
+which explanations of what they do, and an example swift.properties entry.
+
+.swift.properties site properties
+[options="header"]
+|================================
+|Property|Description|Example
+
+|allocationstepsize|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.allocationstepsize=0.1
+
+|delaybase|
+link:../userguide/userguide.html#_karajan_namespace[Swift User Guide entry]
+|site.westmere.delaybase=1
+
+|highoverallocation|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.highoverallocation=100
+
+|initialscore|
+link:../userguide/userguide.html#_karajan_namespace[Swift User Guide entry]
+|site.westmere.initialscore=10000
+
+|internalhostname|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.internalhostname=10.x.x.x
+
+|jobspernode|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.jobspernode=12
+
+|jobthrottle|
+Set the job throttle factor. The value should be (N-1)/100 to run N jobs at a
+time. To run 16 jobs at a time, set jobthrottle to .15.
+|site.westmere.jobthrottle=0.15
+
+|lowoverallocation|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.lowoverallocation=100
+
+|maxnodes|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.maxnodes=2
+
+|maxsubmitrate|
+link:../userguide/userguide.html#_karajan_namespace[Swift User Guide entry]
+|site.westmere.maxsubmitrate=5
+
+|maxtime|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.maxtime=3600
+
+|maxwalltime|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.maxwalltime=00:05:00
+
+|nodegranularity|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.nodegranularity=2
+
+|overallocationdecayfactor|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.overallocationdecayfactor=0.001
+
+|provider|
+Set which CoG provider to use. This will assume that you want to use coasters.
+|site.westmere.provider=local:slurm
+
+|queue|
+Set the name of the scheduler queue to use.
+|site.westmere.queue=westmere
+
+|remotemonitorenabled|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.remotemonitorenabled=true
+
+|reserve|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.reserve=10
+
+|site    |Name of site or sites to run on. This is the same as running with
+swift -site <sitename>|site=westmere
+
+|slots|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.slots=20
+
+|spread|
+link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
+|site.westmere.spread=0.9
+|================================
+
+Grouping site properties
+~~~~~~~~~~~~~~~~~~~~~~~~
+The example swift.properties in this document listed the following site
+related properties:
+
+-----
+site.westmere.provider=local:slurm
+site.westmere.jobsPerNode=12
+site.westmere.maxWalltime=00:05:00
+site.westmere.queue=westmere
+site.westmere.initialScore=10000
+site.westmere.filesystem=local
+site.westmere.workdirectory=/scratch/midway/davidkelly999
+-----
+
+However, it is also simplify this by grouping these properties together with
+curly brackets.
+
+------
+site.westmere {
+   provider=local:slurm
+   jobsPerNode=12
+   maxWalltime=00:05:00
+   queue=westmere
+   initialScore=10000
+   filesystem=local
+   workdirectory=/scratch/midway/$USER/work
+}
+-----
+
+App definitions
+~~~~~~~~~~~~~~~
+Swift 0.95 introduces app wildcards. This new configuration mechanism will
+take advantage of that and use wildcards first by default. This means that, as
+long as an application is specified in your PATH, you will not need to supply
+the path.
+
+However, in the case where you have multiple sites defined, and you want
+control over where things run, you may still have a need to define this. In
+this scenario, you will can define apps in swift.properties with something
+like this:
+
+-----
+app.westmere.cat=/bin/cat
+-----
+
+General Swift properties
+~~~~~~~~~~~~~~~~~~~~~~~~
+Swift properties can be used in the new swift.properties file with no changes.
+Example:
+
+-----
+sitedir.keep=true
+-----
+
+For the list of available properties and their descriptions, please see the
+http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html#_swift_configuration_properties[User
+Guide entry for Swift configuration properties].
+
