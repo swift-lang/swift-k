@@ -21,6 +21,7 @@ my $run_directory;		# Run directory to be created, run.NNNN
 my @new_swift_args;		# New command line arguments
 my @original_swift_args;	# Original arguments
 
+
 # List of xml shortcuts. Keep in lower case.
 my %xml_aliases = (
                    'allocationstepsize'        => 'globus.allocationstepsize',
@@ -136,7 +137,7 @@ sub write_sites {
    print SITES "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
    print SITES "<config xmlns=\"http://www.ci.uchicago.edu/swift/SwiftSites\">\n";
 
-   if(defined ($properties{site})) { 
+   if(defined ($properties{site}) && !defined($option_siteslist) ) { 
       push(@sites, split(',', $properties{site}))
    } 
 
@@ -199,6 +200,7 @@ foreach my $property_file(@property_files) {
             $_ =~ s/^\s+//;               
             if( /^}/ ) { last; } 
             my ($key, $value) = split('=', ($prefix . ".$_"), 2);
+            if($key eq "sites") { $key = "site"; }
             $value =~ s/\$(\w+)/$ENV{$1}/g;
             $properties{ $key } = $value;
          }
@@ -206,6 +208,7 @@ foreach my $property_file(@property_files) {
 
       else {
          my ($key, $value) = split('=', $_, 2);
+         if($key eq "sites") { $key = "site"; }
          $value =~ s/\$(\w+)/$ENV{$1}/g; # Substitute environment variables
          $properties{ $key } = $value;
       }
@@ -227,7 +230,7 @@ if( $option_listconfig ) {
 
 # Create/increment run directory
 my $run_number = 0;
-my @run_directories = <run????>;
+my @run_directories = <run???>;
 
 if(@run_directories) {
    $run_number = $run_directories[-1];
@@ -235,12 +238,12 @@ if(@run_directories) {
    $run_number++;
 }
 
-$run_directory = getcwd() . "/" . sprintf "run%04s", $run_number;
+$run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
 mkdir($run_directory) || die "Unable to create run directory $run_directory\n";
 
 # Write swift configuration files
 &write_sites("sites.xml") if defined( $option_siteslist ) || defined($properties{site});
-&write_apps("tc.data")    if !defined( $option_tcfile ) && ( defined( $option_siteslist ) || defined($properties{site}));
+&write_apps("apps")    if !defined( $option_tcfile ) && ( defined( $option_siteslist ) || defined($properties{site}));
 &write_properties("cf")   if !defined( $option_config );
 
 # Repair args with dots
@@ -259,7 +262,7 @@ while( @ARGV ) {
    }
 }
 
-push( @new_swift_args, sprintf( "-logfile $run_directory/run%04s.log", $run_number ));
+push( @new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
 
 foreach my $arg( @new_swift_args ) {
    print "$arg ";
