@@ -20,7 +20,6 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.ansi;
 
-import java.util.Date;
 import java.util.Iterator;
 
 import javax.swing.event.TableModelEvent;
@@ -45,6 +44,7 @@ import org.griphyn.vdl.karajan.monitor.monitors.swing.FilteringTaskTable;
 import org.griphyn.vdl.karajan.monitor.monitors.swing.SimpleTableClassRenderer.Model;
 
 public class STable extends Table implements ActionListener {
+    
     private Dialog d, term;
     private Button close, wterm;
     private Task termTask;
