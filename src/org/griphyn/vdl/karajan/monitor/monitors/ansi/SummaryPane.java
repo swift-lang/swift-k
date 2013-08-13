@@ -66,7 +66,7 @@ public class SummaryPane extends Container {
             if (summary != null) {
                 Map<String, Integer> counts = summary.getCounts(state);
                 for (int i = 0; i < SummaryItem.STATES.length; i++) {
-                    Integer v = counts.get(SummaryItem.STATES[i]);
+                    Integer v = counts.get(SummaryItem.STATES[i].getName());
                     if (v != null) {
                         bars.setValue(i, v);
                         bars.setText(i, v.toString());
