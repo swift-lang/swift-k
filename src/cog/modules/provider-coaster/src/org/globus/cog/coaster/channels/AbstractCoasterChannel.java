@@ -414,18 +414,18 @@ public abstract class AbstractCoasterChannel implements CoasterChannel {
                 }
 				else {
 					cmd.replyReceived(fin, err, data);
-				}
-				if (fin) {
-					if (logger.isDebugEnabled()) {
-						logger.debug(this + " REPL: " + cmd);
-					}
-					if (err) {
-						cmd.errorReceived();
-					}
-					else {
-						cmd.receiveCompleted();
-					}
-					unregisterCommand(cmd);
+    				if (fin) {
+    					if (logger.isDebugEnabled()) {
+    						logger.debug(this + " REPL: " + cmd);
+    					}
+    					if (err) {
+    						cmd.errorReceived();
+    					}
+    					else {
+    						cmd.receiveCompleted();
+    					}
+    					unregisterCommand(cmd);
+    				}
 				}
 			}
 			catch (ProtocolException e) {
