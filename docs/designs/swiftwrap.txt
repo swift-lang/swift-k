@@ -70,6 +70,22 @@ directory. Files get copied using dd with a 10MB block size.
 file data <"stage:///home/davidkelly999/staging/absolute/stage/data.txt">;
 -----
 
+Adding new protocols
+~~~~~~~~~~~~~~~~~~~~
+The file cog/modules/provider-local/resources/cog-provider.properties allows you to set aliases.
+Define your new file protocol as an alias to "local". Suppose you would like
+to add a new protocol called "megaftp", you could add a line that looks like
+this:
+
+-----
+alias=megaftp:local
+-----
+
+In your swift script, you would reference the file as
+megaftp://path/to/file.txt.
+
+NOTE: You will need to recompile after making this change.
+
 Examples of how swiftwrap is called
 -----------------------------------
 
