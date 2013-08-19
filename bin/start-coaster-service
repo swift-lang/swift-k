@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 # crash: Report a problem and exit
 crash()
@@ -90,7 +90,7 @@ start-workers-gp()
       crash "SWIFTVMBOOT_DIR incorrectly defined in coaster-service.conf"
    fi
 
-   SEDFILE=`mktemp`
+   SEDFILE=`mktemp XXXXXX`
    {
       echo "s@_CLUSTER-NODES_@$EC2_NODES@"
       echo "s@_INSTANCE-TYPE_@$EC2_INSTANCE_TYPE@"
@@ -218,9 +218,11 @@ start-workers-ssh()
 
    for MACHINE in $WORKER_HOSTS
    do
+      SSH_COMMAND="ssh -A "
+
       # Enable ssh tunneling if needed
       if [ "$SSH_TUNNELING" == "yes" ]; then
-         ssh -f -n -N $WORKER_USERNAME@$MACHINE -R $PORT:localhost:$PORT
+         SSH_COMMAND="$SSH_COMMAND -n -R $PORT:localhost:$PORT"
          echo $! >> $PID_FILE
       fi
 
@@ -229,14 +231,14 @@ start-workers-ssh()
          ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
          ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST "scp /tmp/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION" > /dev/null 2>&1
          echo Starting worker on $MACHINE
-         ssh -A $WORKER_USERNAME@$WORKER_RELAY_HOST ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTIONURL $MACHINE $WORKER_LOG_DIR" &
+         eval "$SSH_COMMAND $WORKER_USERNAME@WORKER_RELAY_HOST WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTIONURL $MACHINE $WORKER_LOG_DIR" &
          echo $! >> $PID_FILE
       # Connect directly
       else
          ssh $WORKER_USERNAME@$MACHINE mkdir -p $WORKER_LOCATION > /dev/null 2>&1
          scp $SWIFT_BIN/$WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION > /dev/null 2>&1
          echo Starting worker on $MACHINE
-         ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTIONURL $MACHINE $WORKER_LOG_DIR" &
+         eval "$SSH_COMMAND $WORKER_USERNAME@$MACHINE WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/$WORKER $EXECUTIONURL $MACHINE $WORKER_LOG_DIR" &
          echo $! >> $PID_FILE
       fi
    done
@@ -473,11 +475,11 @@ fi
 
 # Create files for storing port info, if needed
 if [ -z "$LOCAL_PORT" ]; then
-   LOCAL_PORT_FILE=`mktemp`
+   LOCAL_PORT_FILE=`mktemp XXXXXX`
 fi
 
 if [ -z "$SERVICE_PORT" ]; then
-   SERVICE_PORT_FILE=`mktemp`
+   SERVICE_PORT_FILE=`mktemp XXXXXX`
 fi
 
 # Check values in configuration file to determine how we should start coaster-service
@@ -527,12 +529,13 @@ else
    gensites persistent-coasters -p $CONFIG_FILE > $RUN_DIR/sites.xml
 fi
 
-# For evil bug #467 
-echo "app echo (string i) { echo i; }" > hi.swift
-echo "echo(\"hi\");" >> hi.swift
-swift -sites.file sites.xml -tc.file tc.data -config cf hi.swift > /dev/null 2>&1 &
+# Workaround for bug #467. This is needed to property set jobspernode when using persistent coasters.
+echo "app echo (string i) { echo i; }" > jobspernode.swift
+echo "echo(\"hi\");" >> jobspernode.swift
+echo "persistent-coasters echo /bin/echo null null null" >> jobspernode.apps
+swift -sites.file sites.xml -tc.file jobspernode.apps -config cf jobspernode.swift > /dev/null 2>&1 &
 DUMMYPID=$!
-sleep 15
+sleep 15 # This won't run until later when the workers are started
 
 # Start workers
 case $WORKER_MODE in
@@ -570,6 +573,7 @@ esac
 
 # Wait for dummy script to finish
 wait $DUMMYPID
+rm -rf jobspernode* swift.log > /dev/null 2>&1
 
 # Generate config file
 if [ "$SHARED_FILESYSTEM" == "no" ]; then
