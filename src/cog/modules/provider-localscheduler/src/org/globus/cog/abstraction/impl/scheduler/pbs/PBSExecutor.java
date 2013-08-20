@@ -341,7 +341,7 @@ public class PBSExecutor extends AbstractExecutor {
 
 	protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
             throws IOException {
-        wr.write("NODES=`cat $PBS_NODEFILE`\n");
+        wr.write("NODES=$( cat $PBS_NODEFILE | uniq )\n");
         wr.write("ECF=" + exitcodefile + "\n");
         wr.write("INDEX=0\n");
         wr.write("for NODE in $NODES; do\n");
