@@ -3,6 +3,7 @@ type script;
 
 file swift_package <"swift.tar">;
 script wrapper     <"wrapper.sh">;
+script publish     <"publish.sh">;
 
 file out[] <simple_mapper;prefix="out/driver", suffix=".out">;
 file err[] <simple_mapper;prefix="out/driver", suffix=".err">;
@@ -25,15 +26,21 @@ app (file out, file err, file log) remote_midway  (script run, file tar)
     mid @run @filename(tar) @log stdout=@filename(out) stderr=@filename(err);
 }
 
-app (file out, file err, file log) remote_crush   (script run, file tar)
+app (file out, file err, file log) remote_mcs   (script run, file tar)
 {
-    csh @run @filename(tar) @log stdout=@filename(out) stderr=@filename(err);
+    mcs @run @filename(tar) @log stdout=@filename(out) stderr=@filename(err);
 }
 
 app (file out, file err, file log) remote_frisbee (script run, file tar)
 {
     fsb @run @filename(tar) @log stdout=@filename(out) stderr=@filename(err);
 }
+
+app (file out, file err) publish_results (script publish, file tar, file out, file err)
+{
+    pub @publish stdout=@out stderr=@err;
+}
+
 
 tracef("Filename of the wraper  : %s \n", @filename(wrapper));
 tracef("Filename of the package : %s \n", @filename(swift_package));
@@ -45,19 +52,19 @@ foreach site, i in sites {
     {
 	case 0: 
 	     	tracef("Calling uc3\n");
-		(out[i], err[i], log[i]) = remote_uc3     (wrapper, swift_package);
+		//(out[i], err[i], log[i]) = remote_uc3     (wrapper, swift_package);
 	case 1:
 	     	tracef("Calling beagle \n");
-		(out[i], err[i], log[i]) = remote_beagle (wrapper, swift_package);
+		//(out[i], err[i], log[i]) = remote_beagle (wrapper, swift_package);
 	case 2: 
 	     	tracef("Calling Midway\n");	     	
-		(out[i], err[i], log[i]) = remote_midway (wrapper, swift_package);
+		//(out[i], err[i], log[i]) = remote_midway (wrapper, swift_package);
 	case 3: 
-	     	tracef("Skipping Crush on MCS\n");
-//		(out[i], err[i], log[i]) = remote_crush(wrapper, swift_package);
+	     	tracef("Calling thwomp on MCS\n");
+		(out[i], err[i], log[i]) = remote_mcs (wrapper, swift_package);
 	case 4:	
      	     	tracef("Skipping Frisbee on MCS (Will fail due to BUG:1030)\n");
-//		(out[i], err[i], log[i]) = remote_frisbee(wrapper, swift_package);
+		//(out[i], err[i], log[i]) = remote_frisbee(wrapper, swift_package);
 	default:
 		tracef("Fail: Unknown site %s : %i \n", site, i);
     }
