@@ -13,6 +13,9 @@ import java.util.Collections;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.arguments.ArgUtil;
+import org.globus.cog.karajan.arguments.VariableArguments;
+import org.globus.cog.karajan.stack.StackFrame;
 import org.globus.cog.karajan.stack.VariableNotFoundException;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.Identifier;
@@ -57,7 +60,7 @@ public class Variable extends AbstractFunction {
 				frame = stack.getVarFrameFromTop(name);
 			}
 		}
-		
+				
 		switch (frame) {
 			case VariableStack.NO_FRAME:
 				throw new VariableNotFoundException(name);
@@ -68,7 +71,37 @@ public class Variable extends AbstractFunction {
 			case VariableStack.DYNAMIC_FRAME:
 				return stack.getVar(name);
 			default:
-				return stack.getFrameFromTop(frame).getVar(name);
+				StackFrame sf = stack.getFrameFromTop(frame);
+				value = sf.getVar(name);
+				/*
+				 * Must still check if defined since in the case of optional
+				 * arguments, an initial invocation of this function may find
+				 * a valid value at the relevant frame, while a subsequent
+				 * invocation may not.
+				 * 
+				 * The converse (initial invocation getting a NO_FRAME) is handled
+				 * since the frame is always looked up in that case (see above if)
+				 */
+				if (value == null) {
+					if (sf.isDefined(name)) {
+						return null;
+					}
+					else {
+						throw new VariableNotFoundException(name);
+					}
+				}
+				else {
+					return value;
+				}
 		}
+	}
+	
+	/*
+	 * Override to allow returning java null values. Even though these are not used much,
+	 * it is still possible to manipulate them using the java library.
+	 */
+	protected void ret(VariableStack stack, final Object value) throws ExecutionException {
+		final VariableArguments vret = ArgUtil.getVariableReturn(stack);
+		vret.append(value);
 	}
 }
