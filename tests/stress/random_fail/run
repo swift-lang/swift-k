@@ -1,0 +1,8 @@
+#!/bin/bash
+
+
+cat title.txt
+
+./rand_fail_Bug1067.setup.sh
+
+swift -tc.file tc.template.data -config swift.properties -sites.file sites.template.xml rand_fail_Bug1067.swift
