@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # Setup script will just output the following file
 
 cat<<'EOF' > randfail.sh
