@@ -1,0 +1,27 @@
+#!/bin/bash
+
+PATH=/scratch/midway/yadunand/swift-0.94RC2/cog/modules/swift/dist/swift-svn/bin:$PATH
+
+echo "Swift location: "; which swift
+echo "Swift version : "; swift -version
+
+export MIDWAY_USERNAME=yadunand
+export BEAGLE_USERNAME=yadunandb
+export MCS_USERNAME=yadunand
+export UC3_USERNAME=yadunand
+
+SCRIPT=simple_MapRed.swift
+BASE=${SCRIPT%.swift}
+
+rm $BASE.stdout
+cat title.txt
+
+cp sites.template.xml sites.xml
+./$BASE.setup.sh
+
+ARGS=$(cat $BASE.args)
+swift -tc.file tc.data -config swift.properties -sites.file sites.xml $BASE.swift ${ARGS[*]} | tee -a $BASE.stdout
+
+rm -rf *{swiftx,kml} $BASE-* _concurrent* failed* &> /dev/null
+
+./$BASE.check.sh
