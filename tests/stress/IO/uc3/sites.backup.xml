@@ -1,0 +1,19 @@
+<config>
+  <pool handle="uc3">
+    <execution provider="coaster" url="uc3-sub.uchicago.edu" jobmanager="local:condor"/>
+    <profile namespace="karajan" key="jobThrottle">.99</profile>
+    <profile namespace="karajan" key="initialScore">1000</profile>
+    <profile namespace="globus"  key="jobsPerNode">1</profile>
+    <profile namespace="globus"  key="maxWalltime">3600</profile>
+    <profile namespace="globus"  key="nodeGranularity">10</profile>
+    <profile namespace="globus"  key="highOverAllocation">100</profile>
+    <profile namespace="globus"  key="lowOverAllocation">100</profile>
+    <profile namespace="globus"  key="slots">1</profile>
+    <profile namespace="globus" key="condor.Requirements">UidDomain == "osg-gk.mwt2.org"</profile>
+    <profile namespace="globus"  key="maxNodes">10</profile>
+    <profile namespace="globus"  key="condor.+AccountingGroup">"group_friends.{env.USER}"</profile>
+    <profile namespace="globus"  key="jobType">nonshared</profile>
+    <filesystem provider="local" url="none" />
+    <workdirectory>/tmp/workdir</workdirectory>
+  </pool>
+</config>
