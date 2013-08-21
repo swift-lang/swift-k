@@ -25,6 +25,7 @@ public class ServiceShutdownHandler extends RequestHandler {
                     .getChannelContext().getService();
             sendReply("OK");
             Thread.sleep(100);
+            logger.info("Shutdown command received");
             cs.shutdown();
         }
         catch (Exception e) {
