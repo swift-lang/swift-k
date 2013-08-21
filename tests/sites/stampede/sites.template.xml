@@ -1,0 +1,17 @@
+<config>
+  <pool handle="stampede">
+    <execution provider="coaster"  jobmanager="local:slurm"/>
+    <filesystem provider="local"/>
+    <profile namespace="globus"  key="jobsPerNode">16</profile>
+    <profile namespace="globus"  key="ppn">16</profile>
+    <profile namespace="globus"  key="maxwalltime">00:01:00</profile>
+    <profile namespace="globus"  key="queue">development</profile>
+    <profile namespace="globus"  key="nodeGranularity">2</profile>
+    <profile namespace="globus"  key="maxNodes">2</profile>
+    <profile namespace="globus"  key="project">TG-MCA94P017</profile>
+    <profile namespace="karajan" key="jobThrottle">2</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>{env.SCRATCH}</workdirectory>
+  </pool>
+</config>
+

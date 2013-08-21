@@ -1,0 +1,1 @@
+MCS remote sanity test - Running on CRUSH
