@@ -18,6 +18,7 @@ printhelp() {
   printf "\t -v         Verbose (set -x, HTML comments)    \n"
   printf "\t -l         Stress level < 1/ 2/ 3/ 4>         \n"
   printf "\t -o output  Location for cog and output        \n"
+  printf "\t -z file    Set environment for entire run     \n"
   printf "\t <GROUP>    GROUP argument                     \n"
 }
 
@@ -86,6 +87,9 @@ while [ $# -gt 0 ]; do
     -l)
       STRESS=$2
       shift 2;;
+    -z)
+      ENV_FILE=$2
+      shift 2;;
     -v)
       VERBOSE=1
       shift;;
@@ -116,6 +120,13 @@ else
 fi
 
 export STRESS="S$STRESS"
+if [ -x "$ENV_FILE" ]
+then
+  source $ENV_FILE
+else
+  echo "Could not load $ENV_FILE"
+fi
+
 # Iterations per test (may want to run each test multiple times?)
 ITERS_LOCAL=1
 
@@ -534,7 +545,7 @@ process_trap() {
   PROCESS_INTERNAL_PID=$1
   echo "process_trap: killing: $PROCESS_INTERNAL_PID"
   # ps -H
-  kill -TERM $PROCESS_INTERNAL_PID
+  kill -TERM -$PROCESS_INTERNAL_PID
 }
 
 # Execute process in the background
