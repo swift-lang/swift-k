@@ -3,7 +3,7 @@ type matrix {
 }
 
 matrix m;
-m = readStructured("readStructured.in");
+m = readStructured("readStructured02.in");
 
 foreach item,index in m.rows {
     tracef("Row[%i] : %s \n", index, item);
