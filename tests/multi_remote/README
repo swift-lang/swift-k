@@ -1,0 +1,50 @@
+What
+====
+
+This test-group multi-remote is recursive call on the test-suite from itself.
+
+
+How
+===
+Assuming that the site of execution of the top-level run has sufficient auth
+for connecting to all remote sites, the remote-driver.swift script will connect
+with several remote sites, and initiate an instance of the test-suite at the 
+remote login nodes.
+
+Get started
+===========
+
+I have made this with the assumption that swift.rcc will be the site from which
+the top-level run and hence the multi-remote.swift script will be invoked. Yet,
+it should be quite possible to run this anywhere.
+
+- Setup keys to have passwordless access to the following sites:
+  Beagle, UC3, MCS, Midway
+  - For connecting to MCS machines frisbee and crush directly you could add 
+  the following to the .ssh/config file :
+  Host frisbee.mcs.anl.gov
+    Hostname frisbee.mcs.anl.gov
+    ProxyCommand ssh -A <USERNAME>@login.mcs.anl.gov nc %h %p 2> /dev/null
+    ForwardAgent yes
+  Host crush.mcs.anl.gov
+    Hostname crush.mcs.anl.gov
+    ProxyCommand ssh -A <USERNAME>@login.mcs.anl.gov nc %h %p 2> /dev/null
+    ForwardAgent yes
+
+- Get keychain on the machine for more ease of use.
+  Add following to ~/.bashrc
+  # Start keychain and point it to private key
+  /PATH/TO/KEYCHAIN /PATH/TO/PRIVATE-KEY/id_rsa
+  # Let the shell know the agent
+  # The file will be <HOSTNAME>.sh under ~/.keychain
+  source ~/.keychain/midway001-sh > /dev/null
+
+- Start a screen session and ensure that an agent is present which will 
+  hold the auth for you.
+
+- Use cron / script to schedule regular runs of the tests
+  - On swift.rcc slurm-cron is supposed to work, but I haven't been
+  able to schedule on midway001 node due to an error when submitting the 
+  cron.sbatch script
+
+
