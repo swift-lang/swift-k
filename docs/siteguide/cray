@@ -25,7 +25,7 @@ Follow the steps below to have the latest Swift release installed.
 
 -----
 #1. Download the latest package from http://swiftlang.org/downloads
-$ wget http://swiftlang.org/packages/swift-<version>.tar.gz ~
+$ wget http://swiftlang.org/packages/swift-latest.tar.gz ~
 
 #2. Untar the file
 $ tar -xzf ~/swift-<version>.tar.gz
