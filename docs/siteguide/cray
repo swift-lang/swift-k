@@ -1,0 +1,382 @@
+Cray
+----
+
+This section will provide an overview of running Swift on Cray machines. Details specific
+to cray machines, Beagle and Kraken are provided in the later sections.
+
+Get Swift in your environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the system administrator for the machine has installed swift as a module
+you can load swift and sun-java modules as follows:
+-----
+# check whether swift is available
+$ module avail swift
+
+# check whether sun-java is available
+$ module avail sun-java
+
+# Load the modules (if) available
+$ module load swift sun-java
+-----
+
+Installing swift on Cray is no different from installing on any other machine. 
+Follow the steps below to have the latest Swift release installed.
+
+-----
+#1. Download the latest package from http://swiftlang.org/downloads
+$ wget http://swiftlang.org/packages/swift-<version>.tar.gz ~
+
+#2. Untar the file
+$ tar -xzf ~/swift-<version>.tar.gz
+
+#3. Add the swift-<release>/bin directory to your $PATH
+$ export PATH=~/swift-<version>/bin:$PATH
+
+# Bash users could add the statement in step 3 to their .bashrc or .bash_profile
+# to have swift available on login.
+-----
+
+More details about how to install from the latest source can be found in the 
+http://www.swiftlang.org/guides/release-0.94/quickstart/quickstart.html[Swift Quickstart guide].
+
+Run a simple swift script
+~~~~~~~~~~~~~~~~~~~~~~~~~
+To run a swift script 3 key components are required: +
+1. sites.xml file +
+2. apps file +
+3. swift script
+
+Creating a sites.xml
+~~~~~~~~~~~~~~~~~~~~
+The sites.xml file descibes the interface between Swift and a supercomputer or cluster.
+It defines things like which work directory to use and how to control parallelism.
+
+Below is an example of a sites.xml file for a Cray XE6 supercomputer at the
+University of Chicago called Beagle.
+
+.Example Cray sites.xml
+-----
+<config>
+  <pool handle="cray">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <!-- replace with your project --> 
+    <profile namespace="globus" key="project">CI-CCR000013</profile>
+
+    <profile namespace="globus" key="providerAttributes">
+                     pbs.aprun;pbs.mpp;depth=24</profile>
+
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="maxTime">1000</profile>
+    <profile namespace="globus" key="slots">1</profile>
+    <profile namespace="globus" key="nodeGranularity">1</profile>
+    <profile namespace="globus" key="maxNodes">1</profile>
+
+    <profile namespace="karajan" key="jobThrottle">.63</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+
+    <filesystem provider="local"/>
+    <!-- replace this with your home on lustre --> 
+    <workdirectory >/lustre/beagle/{env.USER}/swift.workdir</workdirectory>
+  </pool>
+</config>
+-----
+
+Customizing sites.xml
+~~~~~~~~~~~~~~~~~~~~~
+The following sites.xml parameters must be set to scale that is intended for a large run: +
+* *jobThrottle* : A factor that determines the number of tasks dispatched simultaneously. The intended number of simultaneous tasks must match the number of cores targeted. The number of tasks is calculated from the jobThrottle factor is as follows: +
+* *maxNodes* : Determines the maximum number of nodes a job must pack into its qsub. This parameter determines the largest single job that your run will submit. +
+* *maxTime* : The expected walltime for completion of your run. This parameter is accepted in seconds. +
+* *nodeGranularity* : Determines the number of nodes per job. It restricts the number of nodes in a job to a multiple of this value. The total number of workers will then be a multiple of jobsPerNode * nodeGranularity. For Beagle, jobsPerNode value is 24 corresponding to its 24 cores per node. +
+* *project* : Specified the name of a project to the PBS scheduler +
+* *slots* : This parameter specifies the maximum number of PBS jobs/blocks that the coaster scheduler will have running at any given time. On Beagle, this number will determine how many qsubs swift will submit for your run. Typical values range between 40 and 60 for large runs. +
+
+----
+Number of Tasks = (JobThrottle x 100) + 1
+----
+
+Creating an apps file
+~~~~~~~~~~~~~~~~~~~~~
+The "apps" file defines the path to applications for given sites. In the
+catsn.swift example, we have one application, cat.
+
+.apps file
+-----
+beagle cat /bin/cat
+-----
+
+Running the test script
+~~~~~~~~~~~~~~~~~~~~~~~
+The catsn.swift script is a simple script used for sanity testing. It runs the 
+"cat" command on a file N number of times and brings each results back as a new
+file.
+
+.catsn.swift
+-----
+type file;
+
+/* App definition */
+app (file o) cat (file i)
+{
+  cat @i stdout=@o;
+}
+
+file out[]<simple_mapper; location="outdir", prefix="f.",suffix=".out">;
+file data<"data.txt">;
+
+/* App invocation: n times */
+foreach j in [1:@toint(@arg("n","1"))] {
+  out[j] = cat(data);
+}
+-----
+
+Now we have all the pieces we need to run: a sites.xml file, an apps file,
+and a Swift script. The following command will run catsn.swift.
+
+-----
+$ swift -sites.file sites.xml -tc.file apps catsn.swift
+-----
+			
+Installing Swift as a Module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+System administrators may install Swift system-wide using the Modules 
+environment management system. Below is a sample module definition that 
+administrators could use to make this task simpler:
+
+-----
+#%Module1.0#########################################################
+##
+
+proc moduleVersion { } { 
+        if { ! [regexp {[^/]*$} [module-info name] ver] } { 
+                puts stderr "Internal modulefile error, please send a bug report to email@here"
+        }   
+        return $ver
+}
+
+proc pythonVersion { } { 
+        if { ! [regexp {python/([0-9]+.[0-9]+)} [module-info name] match pyver] } { 
+                puts stderr "Internal modulefile error, please send a bug report to email@here"
+        }   
+        return $pyver
+}
+
+set ver [moduleVersion]
+set path /soft/swift/$ver
+set name Swift
+
+proc ModulesHelp { } { 
+   puts stderr "This module adds the Swift framework to various paths"
+   puts stderr "See http://www.ci.uchicago.edu/swift for further details"
+}
+
+module-whatis   "Sets up $name in your environment"
+
+module load java
+prepend-path PATH $path/bin
+
+if [ module-info mode load ] { 
+        puts stderr "$name version $ver loaded"
+}
+
+if [ module-info mode switch2 ] { 
+        puts stderr "$name version $ver loaded"
+}
+
+if [ module-info mode remove ] { 
+        puts stderr "$name version $ver unloaded"
+}
+------
+
+
+Beagle (Cray XE6)
+~~~~~~~~~~~~~~~~
+
+Beagle is a Cray XE6 supercomputer at the University of Chicago. It employs a 
+batch-oriented computational model where-in a PBS schedular accepts user's 
+jobs and queues them in the queueing system for execution. The computational 
+model requires a user to prepare the submit files, track job submissions, 
+checkpointing, managing input/output data and handling exceptional conditions 
+manually. Running Swift under Beagle can accomplish the above tasks with the least 
+manual user intervention and maximal oppurtunistic computation time on Beagle
+queues. In the following sections, we discuss more about specifics of
+running Swift on Beagle. A more detailed information about Swift and its
+workings can be found on Swift http://swiftlang.org/docs/index.php[documentation page].
+More information on Beagle can be found on http://beagle.ci.uchicago.edu[Beagle website].
+
+Loading the Swift module
+^^^^^^^^^^^^^^^^^^^^^^^^
+Swift is installed as a module on Beagle. To load the module, run the following command:
+
+-----
+$ module load swift
+Swift version 0.94.1-RC2 loaded
+------
+
+Create the sites file
+^^^^^^^^^^^^^^^^^^^^^
+The next step is to create a sites file. An example sites file (sites.xml) is shown as follows:
+
+.sites.xml file
+-----
+<config>
+  <pool handle="pbs">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <!-- replace with your project -->
+    <profile namespace="globus" key="project">CI-CCR000013</profile>
+
+    <profile namespace="globus" key="providerAttributes">
+                     pbs.aprun;pbs.mpp;depth=24</profile>
+
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="maxTime">1000</profile>
+    <profile namespace="globus" key="slots">1</profile>
+    <profile namespace="globus" key="nodeGranularity">1</profile>
+    <profile namespace="globus" key="maxNodes">1</profile>
+
+    <profile namespace="karajan" key="jobThrottle">.63</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+
+    <filesystem provider="local"/>
+    <!-- replace this with your home on lustre -->
+    <workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+  </pool>
+</config>
+-----
+
+NOTE: Running from sandbox node or requesting 30 minutes walltime for upto 3 nodes
+will get fast prioritized execution. Suitable for small tests.
+
+.SWIFT_USERHOME
+NOTE: On Beagle, the user's home is _not_ accessible from the compute nodes. Instead
+a lustre shared filesystem is available which the compute nodes can access. In such 
+cases the environment variable SWIFT_USERHOME should be set to a directory on the 
+lustre filesystem.
+
+Following is an example sites.xml for a 50 slots run with each slot occupying 4 nodes (thus, a 200 node run):
+
+-----
+<config>
+  <pool handle="pbs">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <profile namespace="globus" key="project">CI-CCR000013</profile>
+
+    <profile namespace="globus" key="ppn">24:cray:pack</profile>
+
+    <!-- For swift 0.93
+    <profile namespace="globus" key="ppn">pbs.aprun;pbs.mpp;depth=24</profile>
+    -->
+
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="maxTime">50000</profile>
+    <profile namespace="globus" key="slots">50</profile>
+    <profile namespace="globus" key="nodeGranularity">4</profile>
+    <profile namespace="globus" key="maxNodes">4</profile>
+
+    <profile namespace="karajan" key="jobThrottle">48.00</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+
+    <filesystem provider="local"/>
+    <workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+  </pool>
+</config>
+-----
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+In this section we will discuss some of the common issues and remedies while using Swift on Beagle. The origin of these issues can be Swift or the Beagle's configuration, state and user configuration among other factors. We try to identify maximum known issues and address them here:
+
+* Command not found: Swift is installed on Beagle as a module. If you see the following error message:
+
+-----
+If 'swift' is not a typo you can run the following command to lookup the package that contains the binary:
+    command-not-found swift
+-bash: swift: command not found
+-----
+
+The most likely cause is the module is not loaded. Do the following to load the Swift module:
+
+-----
+$ module load swift
+Swift version swift-0.93RC5 loaded
+-----
+
+* Failed to transfer wrapperlog for job cat-nmobtbkk and/or Job failed with an exit code of 254. Check the <workdirectory> element on the sites.xml file.
+
+-----
+<workdirectory >/home/ketan/swift.workdir</workdirectory>
+-----
+
+It is likely that it is set to a path where the compute nodes can not write, e.g. your /home directory. The remedy for this error is to set your workdirectory to the /lustre path where swift could write from compute nodes.
+
+----
+<workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+----
+
+
+Kraken (Cray XT5)
+~~~~~~~~~~~~~~~~
+
+Kraken is a Cray XT5 supercomputer at the National Institute for Computational
+Sciences (NICS) at the University of Tennessee, Knoxville. The configuration
+specifics required for Kraken are outlined below.
+
+More information on Kraken can be found on NICS website here:
+http://www.nics.tennessee.edu/computing-resources/kraken
+
+
+Requesting Access
+^^^^^^^^^^^^^^^^^
+To get information on how to get an allocation, get access and login to Kraken:
+http://www.nics.tennessee.edu/quick-start
+
+Getting started with Swift
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Since swift is not available Kraken as a module currently, you could install
+from the latest binary release or from source as described in the 
+section. + 
++http://swift-lang.org/guides/release-0.94/quickstart/quickstart.html+
+
+
+Kraken specific configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sites.xml for running a single MPI job.
+-----
+<config>
+    <pool handle="kraken">
+	<execution provider="coaster" jobmanager="local:pbs"/>
+	<profile namespace="globus" key="slots">1</profile>
+	<profile namespace="globus" key="maxnodes">16</profile>
+	<profile namespace="globus" key="nodegranularity">16</profile>
+
+	<!-- Provide project ID in the following declaration and uncomment the tag -->
+	<!-- <profile namespace="globus" key="project">PROJECT-ID</profile> -->
+
+	<!-- For Cray MPI: -->
+	<!-- one coaster worker per job  -->
+	<profile namespace="globus" key="jobtype">single</profile> 
+	<profile namespace="globus" key="jobsPerNode">1</profile>
+	<profile namespace="globus" key="ppn">12</profile>
+    </pool>
+</config>
+-----
+
+The following is a sample swift config file 
+
+-----
+wrapperlog.always.transfer=true
+sitedir.keep=true
+execution.retries=1
+lazy.errors=true
+use.provider.staging=true
+provider.staging.pin.swiftfiles=false
+foreach.max.threads=100
+provenance.log=false
+-----
+
+More about config and tc file options can be found in the swift userguide 
+here: http://www.ci.uchicago.edu/swift/wwwdev/guides/release-0.93/userguide/userguide.html#_swift_configuration_properties.
+
