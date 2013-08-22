@@ -2,6 +2,8 @@
 
 use strict;
 use warnings;
+use FindBin qw($Bin);
+use lib "$FindBin::Bin/../lib/perl";
 use File::Basename;
 use Getopt::Long qw(GetOptionsFromArray);
 use Switch;
@@ -31,6 +33,7 @@ my %xml_aliases = (
                    'internalhostname'          => 'globus.internalhostname',
                    'jobspernode'               => 'globus.jobspernode',
                    'jobthrottle'               => 'karajan.jobthrottle',
+                   'jobtype'                   => 'globus.jobtype',
                    'lowoverallocation'         => 'globus.lowoverallocation',
                    'maxnodes'                  => 'globus.maxnodes',
                    'maxsubmitrate'             => 'karajan.maxsubmitrate',
