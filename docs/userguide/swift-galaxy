@@ -1,0 +1,44 @@
+
+Swift Enabled Galaxy Workflows
+-------------------------------
+
+This section documents running Swift enabled workflows in Galaxy environment.
+
+Galaxy is a workflow portal environment through which users can compose
+workflows via galaxy-tools chained together via inputs and outputs. See Galaxy
+home page to know more about Galaxy user environment.
+
+Writing Swift-enabled Galaxy Tool
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Following is a template to write Swift-enabled Galaxy tools. It contains a
+single self contained script.
+
+Following is an example Galaxy-tool generated with the above mentioned template
+script.
+
+It has capability to process a dataset that resides outside of Galaxy, and to
+create a new dataset that resides outside of Galaxy. Each dataset could be a
+list of one or more external references such as GridFTP URIs or authenticated
+GO transfers.
+
+The tool can invoke other (non-swift) Galaxy tools as app() functions within
+the embedded Swift script.
+
+Generic Swift Galaxy Tool
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+A Generic Swift Galaxy Tool which allows users to add arbitrary Swift scripts,
+input data and designated outputs. This tool can be used as a hosted
+'try-swift' capability. User can push in new Swift workflows as tools. User can
+set config related values using web forms: drop-downs or checkboxes for various
+throttle levels, site options, tc elements, etc. Reuse existing Galaxy tools to
+upload scripts and/or input data.
+
+A Special Swift Galaxy Tool: The foreach-tool
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The for-each can enable many workflows with parallel iteration ("foreach") to
+be composed in Galaxy.
+
+Convert Galaxy Workflows to Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A tool that converts existing Galaxy workflow representation to Swift script.
