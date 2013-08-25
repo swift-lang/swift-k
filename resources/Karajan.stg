@@ -238,7 +238,7 @@ sequential(
     	$inputs:callInternal_log_input();separator="\n"$
   		$if(!serialize)$)$endif$
 	)
-	$if(partialClose)$$partialClose$$endif$
+	$if(partialClose)$$partialClose;separator="\n"$$endif$
 	swift:unitEnd("INTERNALPROC", name="$func$")
 )
 >>
@@ -268,7 +268,7 @@ $func$(
 	$if(!serialize)$)$endif$
 )
 $if(partialClose)$
-$partialClose$
+$partialClose;separator="\n"$
 )
 $endif$
 >>
