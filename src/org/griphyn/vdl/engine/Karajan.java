@@ -799,13 +799,14 @@ public class Karajan {
 				int noOfMandArgs = 0;
 				for (int i = 0; i < call.sizeOfInputArray(); i++) {
 					ActualParameter input = call.getInputArray(i);
-					StringTemplate argST = actualParameter(input, scope);
+					if (!inArgs.containsKey(input.getBind()))
+                        throw new CompilationException("Formal argument " + input.getBind() + " doesn't exist");
+                    FormalArgumentSignature formalArg = inArgs.get(input.getBind());
+                    String formalType = formalArg.getType();
+					
+					StringTemplate argST = actualParameter(input, scope, false, formalType);
 					callST.setAttribute("inputs", argST);
 
-					if (!inArgs.containsKey(input.getBind()))
-						throw new CompilationException("Formal argument " + input.getBind() + " doesn't exist");
-					FormalArgumentSignature formalArg = inArgs.get(input.getBind());
-					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
 						throw new CompilationException("Wrong type for parameter number " + i +
@@ -868,13 +869,14 @@ public class Karajan {
 				/* if ALL arguments are specified by name=value */
 				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
 					ActualParameter output = call.getOutputArray(i);
-					StringTemplate argST = actualParameter(output, scope);
+					if (!outArgs.containsKey(output.getBind()))
+                        throw new CompilationException("Formal argument " + output.getBind() + " doesn't exist");
+                    FormalArgumentSignature formalArg = outArgs.get(output.getBind());
+                    String formalType = formalArg.getType();
+					
+					StringTemplate argST = actualParameter(output, scope, false, formalType);
 					callST.setAttribute("outputs", argST);
 
-					if (!outArgs.containsKey(output.getBind()))
-						throw new CompilationException("Formal argument " + output.getBind() + " doesn't exist");
-					FormalArgumentSignature formalArg = outArgs.get(output.getBind());
-					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
 						throw new CompilationException("Wrong type for output parameter number " + i +
@@ -885,7 +887,7 @@ public class Karajan {
 			} else { /* Positional arguments */
 				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
 					ActualParameter output = call.getOutputArray(i);
-					FormalArgumentSignature formalArg =proceduresMap.get(procName).getOutputArray(i);
+					FormalArgumentSignature formalArg = proceduresMap.get(procName).getOutputArray(i);
 					StringTemplate argST = actualParameter(output, scope, true, formalArg.getType());
 					callST.setAttribute("outputs", argST);
 
@@ -1220,7 +1222,10 @@ public class Karajan {
 					arguments.length + " and should be " + funcSignature.sizeOfInputArray());
 
 		for(int i = 0; i < arguments.length; i++ ) {
-		    String type = funcSignature.getInputArray(i).getType();
+		    String type = null;
+		    if (!funcSignature.getAnyNumOfInputArgs()) {
+		        funcSignature.getInputArray(i).getType();
+		    }
 			StringTemplate exprST = expressionToKarajan(arguments[i], scope, false, type);
 			funcST.setAttribute("args", exprST);
 
