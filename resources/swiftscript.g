@@ -240,11 +240,10 @@ declpart [StringTemplate code, StringTemplate t, boolean isGlobal]
 
 // TODO: mapping does here...
 // which means construction of the variable template goes here, rather than
-// in procedurecallDecl/variableDecl
+// in variableDecl
 
     (
-      (predictProcedurecallDecl) => procedurecallDecl[code, thisTypeTemplate, n, variable]
-    | variableDecl[code, thisTypeTemplate, n, variable]
+      variableDecl[code, thisTypeTemplate, n, variable]
 // nice to lose this distinction entirely...
 //    | (predictDatasetdecl) => datasetdecl[code, thisTypeTemplate, n]
 // TODO can shorten variableDecl predictor now we dont' need to
@@ -764,25 +763,6 @@ procedureCallExpr returns [StringTemplate code=template("call")]
         procedureInvocationExpr[code]
     ;
 
-
-predictProcedurecallDecl : ASSIGN ID LPAREN ;
-
-procedurecallDecl [StringTemplate container, StringTemplate type, StringTemplate decl, StringTemplate var]
-{
-StringTemplate code=template("call");
-StringTemplate f=template("returnParam");
-
-StringTemplate declref=template("variableReference");
-declref.setAttribute("name",decl);
-f.setAttribute("name", declref);
-code.setAttribute("outputs", f);
-container.setAttribute("statements",code);
-
-}
-    :
-        ASSIGN
-        procedureInvocationWithoutSemi[code]
-    ;
 
 procedurecallStatAssignManyReturnParam [StringTemplate s]
 { StringTemplate code=template("call"); }
