@@ -41,6 +41,9 @@ public class FormalArgumentSignature {
 	public FormalArgumentSignature(boolean anyType) {
 		this.anyType = anyType;
 		this.optionalArg = false;
+		if (anyType) {
+		    this.type = ProcedureSignature.ANY;
+		}
 	}
 	
 	public FormalArgumentSignature(String type) {

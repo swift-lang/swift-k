@@ -583,11 +583,34 @@ public class Karajan {
 		try {
 			StringTemplate assignST = template("assign");
 			StringTemplate varST = expressionToKarajan(assign.getAbstractExpressionArray(0), scope, true);
-			StringTemplate valueST = expressionToKarajan(assign.getAbstractExpressionArray(1),scope);
-			if (! (datatype(varST).equals(datatype(valueST)) ||
-			       datatype(valueST).equals("java")))
-				throw new CompilationException("You cannot assign value of type " + datatype(valueST) +
-						" to a variable of type " + datatype(varST));
+			String lValueType = datatype(varST);
+			
+			StringTemplate valueST = expressionToKarajan(assign.getAbstractExpressionArray(1), scope, false, lValueType);
+			
+			String rValueType = datatype(valueST);
+			
+			if (isAnyType(lValueType)) {
+			    if (isAnyType(rValueType)) {
+			        // any <- any
+			    }
+			    else {
+			        // any <- someType, so infer lValueType as rValueType
+			        setDatatype(varST, rValueType);
+			    }
+			}
+			else {
+			    if (isAnyType(rValueType)) {
+			        // someType <- any
+			        // only expressions that are allowed to return 'any' are procedures
+			        // for example readData(ret, file). These are special procedures that
+			        // need to look at the return type at run-time.
+			    }
+			    else if (!lValueType.equals(rValueType)){
+			        throw new CompilationException("You cannot assign value of type " + rValueType +
+                        " to a variable of type " + lValueType);
+			    }
+			}
+				
 			assignST.setAttribute("var", varST);
 			assignST.setAttribute("value", valueST);
 			assignST.setAttribute("line", getLine(assign));
@@ -599,7 +622,11 @@ public class Karajan {
 		}
 	}
 	
-	public void append(Append append, VariableScope scope) throws CompilationException {
+    private boolean isAnyType(String type) {
+        return ProcedureSignature.ANY.equals(type);
+    }
+    
+    public void append(Append append, VariableScope scope) throws CompilationException {
         try {
             StringTemplate appendST = template("append");
             StringTemplate array = expressionToKarajan(append.getAbstractExpressionArray(0),scope);
@@ -1228,14 +1255,20 @@ public class Karajan {
 	static final QName CALL_EXPR = new QName(SWIFTSCRIPT_NS, "call");
 	
 	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope) throws CompilationException {
-	    return expressionToKarajan(expression, scope, false);
+	    return expressionToKarajan(expression, scope, false, null);
     }
+	
+	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope, 
+            boolean lvalue) throws CompilationException {
+	    return expressionToKarajan(expression, scope, lvalue, null);
+	}
 
 	/** converts an XML intermediate form expression into a
 	 *  Karajan expression.
 	 */
-	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope, boolean lvalue) throws CompilationException
-	{
+	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope, 
+	        boolean lvalue, String expectedType) throws CompilationException {
+	    
 		Node expressionDOM = expression.getDomNode();
 		String namespaceURI = expressionDOM.getNamespaceURI();
 		String localName = expressionDOM.getLocalName();
@@ -1559,6 +1592,14 @@ public class Karajan {
 		    StringTemplate call = template("callexpr");
 
 		    String type = funcSignature.getOutputArray(0).getType();
+		    if (isAnyType(type)) {
+		        if (expectedType != null) {
+		            type = expectedType;
+		        }
+		        else {
+		            throw new CompilationException("Cannot infer return type of procedure call");
+		        }
+		    }
 		    subscope.addInternalVariable("swift#callintermediate", type, null);
 
 		    call.setAttribute("datatype", type);
@@ -1718,5 +1759,10 @@ public class Karajan {
 	    catch (Exception e) {
 	        throw new RuntimeException("Not typed properly: " + st);
 	    }
+	}
+	
+	protected void setDatatype(StringTemplate st, String type) {
+	    st.removeAttribute("datatype");
+	    st.setAttribute("datatype", type);
 	}
 }
