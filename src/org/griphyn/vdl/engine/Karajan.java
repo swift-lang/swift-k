@@ -1218,7 +1218,8 @@ public class Karajan {
 					arguments.length + " and should be " + funcSignature.sizeOfInputArray());
 
 		for(int i = 0; i < arguments.length; i++ ) {
-			StringTemplate exprST = expressionToKarajan(arguments[i], scope);
+		    String type = funcSignature.getInputArray(i).getType();
+			StringTemplate exprST = expressionToKarajan(arguments[i], scope, false, type);
 			funcST.setAttribute("args", exprST);
 
 			/* Type check of function arguments */
