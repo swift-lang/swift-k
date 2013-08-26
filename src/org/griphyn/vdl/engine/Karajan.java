@@ -820,10 +820,10 @@ public class Karajan {
 				/* Checking types of mandatory arguments */
 				for (int i = 0; i < proc.sizeOfInputArray() - noOfOptInArgs; i++) {
 					ActualParameter input = call.getInputArray(i);
-					StringTemplate argST = actualParameter(input, scope);
+					FormalArgumentSignature formalArg = proceduresMap.get(procName).getInputArray(i);
+					StringTemplate argST = actualParameter(input, scope, false, formalArg.getType());
 					callST.setAttribute("inputs", argST);
 
-					FormalArgumentSignature formalArg = proceduresMap.get(procName).getInputArray(i);
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -885,10 +885,11 @@ public class Karajan {
 			} else { /* Positional arguments */
 				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
 					ActualParameter output = call.getOutputArray(i);
-					StringTemplate argST = actualParameter(output, scope, true);
+					FormalArgumentSignature formalArg =proceduresMap.get(procName).getOutputArray(i);
+					StringTemplate argST = actualParameter(output, scope, true, formalArg.getType());
 					callST.setAttribute("outputs", argST);
 
-					FormalArgumentSignature formalArg =proceduresMap.get(procName).getOutputArray(i);
+					
 					String formalType = formalArg.getType();
 
 					/* type check positional output args */
@@ -1110,12 +1111,13 @@ public class Karajan {
 	}
 	
 	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope) throws CompilationException {
-	    return actualParameter(arg, scope, false);
+	    return actualParameter(arg, scope, false, null);
 	}
 
-	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope, boolean lvalue) throws CompilationException {
+	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope, 
+	        boolean lvalue, String expectedType) throws CompilationException {
 		StringTemplate argST = template("call_arg");
-		StringTemplate expST = expressionToKarajan(arg.getAbstractExpression(), scope, lvalue);
+		StringTemplate expST = expressionToKarajan(arg.getAbstractExpression(), scope, lvalue, expectedType);
 		argST.setAttribute("bind", arg.getBind());
 		argST.setAttribute("expr", expST);
 		argST.setAttribute("datatype", datatype(expST));
