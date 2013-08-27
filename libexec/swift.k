@@ -20,13 +20,6 @@ namespace(swift) {
 	
 	import(java)
 
-	once("vdl.k-print-version") {
-		log(LOG:INFO,sys:file:read("{SWIFT:HOME}/libexec/version.txt"))
-		echo(sys:file:read("{SWIFT:HOME}/libexec/version.txt"))
-		log(LOG:INFO,"RUNID id=run:{SWIFT:RUN_ID}")
-		echo("RunID: {SWIFT:RUN_ID}")
-	}
-
 	export(stageIn, def("org.griphyn.vdl.karajan.lib.Stagein"))
 	export(stageOut, def("org.griphyn.vdl.karajan.lib.Stageout"))
 
