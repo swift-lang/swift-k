@@ -45,8 +45,7 @@ import org.globus.common.CoGProperties;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 
 public class HTTPServer implements Runnable {
-    public static final Logger logger = Logger
-            .getLogger(HTTPServer.class);
+    public static final Logger logger = Logger.getLogger(HTTPServer.class);
 
     public static final String WEB_DIR = "httpmonitor/";
     
@@ -129,8 +128,7 @@ public class HTTPServer implements Runnable {
                 connectionProcessor.addChannel(s);
             }
             catch (Exception e) {
-                logger.info("Caught exception in coaster bootstrap service",
-                        e);
+                logger.info("Caught exception in HTTP monitor service", e);
             }
         }
     }
@@ -278,7 +276,7 @@ public class HTTPServer implements Runnable {
                         else {
                             int ix = line.indexOf(":");
                             if (ix == -1) {
-                                sendError("400 Bad request", null);
+                                sendError(line, "400 Bad request", null);
                                 break;
                             }
                             else {
@@ -348,16 +346,16 @@ public class HTTPServer implements Runnable {
                     createFileBuffer(page, cgiParams);
                 }
                 else {
-                    sendError("404 Not Found", ERROR_NOTFOUND);
+                    sendError(cmd, "404 Not Found", ERROR_NOTFOUND);
                 }
                 key.interestOps(SelectionKey.OP_WRITE);
             }
             else {
-                sendError("400 Bad Request", ERROR_BAD_REQUEST);
+                sendError(cmd, "400 Bad Request", ERROR_BAD_REQUEST);
             }
         }
 
-        private void sendError(String error, String html) {
+        private void sendError(String request, String error, String html) {
             state = SENDING_ERROR;
             List<ByteBuffer> l = new LinkedList<ByteBuffer>();
             addReply(l, "HTTP/1.1 " + error + "\n");
@@ -372,6 +370,7 @@ public class HTTPServer implements Runnable {
                 addReply(l, html);
             }
             replies = l.iterator();
+            logger.info(request + " - ERROR: " + error);
         }
 
         private void sendHeader(long len, String contentType) {
@@ -399,7 +398,7 @@ public class HTTPServer implements Runnable {
                     sdata = stateKeys.get(file).getData(params);
                 }
                 catch (Exception e) {
-                    sendError("500 Internal Server Error", 
+                    sendError("GET " + file, "500 Internal Server Error", 
                         processTemplate(ERROR_INTERNAL, e.toString(), getStackTrace(e)));
                     e.printStackTrace();
                     return;
@@ -410,7 +409,7 @@ public class HTTPServer implements Runnable {
             else {
                 URL url = loader.getResource(WEB_DIR + file);
                 if (url == null) {
-                    sendError("404 Not Found", ERROR_NOTFOUND);
+                    sendError("GET " + file, "404 Not Found", ERROR_NOTFOUND);
                 }
                 else {
                     try {
@@ -421,7 +420,7 @@ public class HTTPServer implements Runnable {
                     }
                     catch (Exception e) {
                         e.printStackTrace();
-                        sendError("500 Internal Server Error", 
+                        sendError("GET " + file, "500 Internal Server Error", 
                             processTemplate(ERROR_INTERNAL, e.toString(), getStackTrace(e)));
                     }
                 }
