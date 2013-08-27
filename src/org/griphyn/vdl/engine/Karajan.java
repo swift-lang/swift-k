@@ -591,11 +591,34 @@ public class Karajan {
 		try {
 			StringTemplate assignST = template("assign");
 			StringTemplate varST = expressionToKarajan(assign.getAbstractExpressionArray(0), scope, true);
-			StringTemplate valueST = expressionToKarajan(assign.getAbstractExpressionArray(1),scope);
-			if (! (datatype(varST).equals(datatype(valueST)) ||
-			       datatype(valueST).equals("java")))
-				throw new CompilationException("You cannot assign value of type " + datatype(valueST) +
-						" to a variable of type " + datatype(varST));
+			String lValueType = datatype(varST);
+			
+			StringTemplate valueST = expressionToKarajan(assign.getAbstractExpressionArray(1), scope, false, lValueType);
+			
+			String rValueType = datatype(valueST);
+			
+			if (isAnyType(lValueType)) {
+			    if (isAnyType(rValueType)) {
+			        // any <- any
+			    }
+			    else {
+			        // any <- someType, so infer lValueType as rValueType
+			        setDatatype(varST, rValueType);
+			    }
+			}
+			else {
+			    if (isAnyType(rValueType)) {
+			        // someType <- any
+			        // only expressions that are allowed to return 'any' are procedures
+			        // for example readData(ret, file). These are special procedures that
+			        // need to look at the return type at run-time.
+			    }
+			    else if (!lValueType.equals(rValueType)){
+			        throw new CompilationException("You cannot assign value of type " + rValueType +
+                        " to a variable of type " + lValueType);
+			    }
+			}
+				
 			assignST.setAttribute("var", varST);
 			assignST.setAttribute("value", valueST);
 			assignST.setAttribute("line", getLine(assign));
@@ -607,7 +630,11 @@ public class Karajan {
 		}
 	}
 	
-	public void append(Append append, VariableScope scope) throws CompilationException {
+    private boolean isAnyType(String type) {
+        return ProcedureSignature.ANY.equals(type);
+    }
+    
+    public void append(Append append, VariableScope scope) throws CompilationException {
         try {
             StringTemplate appendST = template("append");
             StringTemplate array = expressionToKarajan(append.getAbstractExpressionArray(0),scope);
@@ -810,17 +837,17 @@ public class Karajan {
                         continue;
                     }
 					FormalArgumentSignature formal = inArgs.get(actual.getBind());
+					String formalType = formal.getType();
 					
 					StringTemplate argST;
 					if (formal.isOptional()) {
-                        argST = actualParameter(actual, formal.getName(), scope);
+                        argST = actualParameter(actual, formal.getName(), scope, false, formalType);
                     }
                     else {
-                        argST = actualParameter(actual, scope);
+                        argST = actualParameter(actual, null, scope, false, formalType);
                     }
 					callST.setAttribute("inputs", argST);
 
-					String formalType = formal.getType();
 					String actualType = datatype(argST);
 					if (!formal.isAnyType() && !actualType.equals(formalType))
 						throw new CompilationException("Wrong type for '" + formal.getName() + "' parameter;" +
@@ -838,9 +865,9 @@ public class Karajan {
 				for (int i = 0; i < proc.sizeOfInputArray() - noOfOptInArgs; i++) {
 					ActualParameter input = call.getInputArray(i);
 					FormalArgumentSignature formalArg = proceduresMap.get(procName).getInputArray(i);
-					StringTemplate argST = actualParameter(input, scope);
+					StringTemplate argST = actualParameter(input, null, scope, false, formalArg.getType());
 					callST.setAttribute("inputs", argST);
-					
+
 					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
@@ -855,11 +882,11 @@ public class Karajan {
 					if (!inArgs.containsKey(formalName))
 						throw new CompilationException("Formal argument " + formalName + " doesn't exist");
 					FormalArgumentSignature formalArg = inArgs.get(formalName);
+					String formalType = formalArg.getType();
 					
-					StringTemplate argST = actualParameter(input, formalArg.getName(), scope);
+					StringTemplate argST = actualParameter(input, formalArg.getName(), scope, false, formalType);
                     callST.setAttribute("inputs", argST);
 					
-					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
 						throw new CompilationException("Wrong type for parameter " + formalName +
@@ -903,11 +930,14 @@ public class Karajan {
 			        }
 			    }
 				for (ActualParameter actual : actuals) {
-					StringTemplate argST = actualParameter(actual, null, scope);
+                    if (!outArgs.containsKey(actual.getBind()))
+                        throw new CompilationException("Formal argument " + actual.getBind() + " doesn't exist");
+                    FormalArgumentSignature formalArg = outArgs.get(actual.getBind());
+                    String formalType = formalArg.getType();
+
+					StringTemplate argST = actualParameter(actual, null, scope, false, formalType);
 					callST.setAttribute("outputs", argST);
 
-					FormalArgumentSignature formalArg = outArgs.get(actual.getBind());
-					String formalType = formalArg.getType();
 					String actualType = datatype(argST);
 					if (!formalArg.isAnyType() && !actualType.equals(formalType))
 						throw new CompilationException("Wrong type for output parameter '" + actual.getBind() +
@@ -918,11 +948,11 @@ public class Karajan {
 			} else { /* Positional arguments */
 				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
 					ActualParameter output = call.getOutputArray(i);
-					StringTemplate argST = actualParameter(output, scope, true);
-					callST.setAttribute("outputs", argST);
-
-					FormalArgumentSignature formalArg =proceduresMap.get(procName).getOutputArray(i);
+					FormalArgumentSignature formalArg = proceduresMap.get(procName).getOutputArray(i);
 					String formalType = formalArg.getType();
+					
+					StringTemplate argST = actualParameter(output, null, scope, true, formalType);
+					callST.setAttribute("outputs", argST);
 
 					/* type check positional output args */
 					String actualType = datatype(argST);
@@ -1143,20 +1173,21 @@ public class Karajan {
 	}
 	
 	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope) throws CompilationException {
-        return actualParameter(arg, null, scope, false);
+        return actualParameter(arg, null, scope, false, null);
     }
 	
 	public StringTemplate actualParameter(ActualParameter arg, String bind, VariableScope scope) throws CompilationException {
-	    return actualParameter(arg, bind, scope, false);
+	    return actualParameter(arg, bind, scope, false, null);
 	}
 	
 	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope, boolean lvalue) throws CompilationException {
-        return actualParameter(arg, null, scope, lvalue);
+        return actualParameter(arg, null, scope, lvalue, null);
     }
 
-	public StringTemplate actualParameter(ActualParameter arg, String bind, VariableScope scope, boolean lvalue) throws CompilationException {
+	public StringTemplate actualParameter(ActualParameter arg, String bind, VariableScope scope, 
+	        boolean lvalue, String expectedType) throws CompilationException {
 		StringTemplate argST = template("call_arg");
-		StringTemplate expST = expressionToKarajan(arg.getAbstractExpression(), scope, lvalue);
+		StringTemplate expST = expressionToKarajan(arg.getAbstractExpression(), scope, lvalue, expectedType);
 		if (bind != null) {
 		    argST.setAttribute("bind", arg.getBind());
 		}
@@ -1261,7 +1292,11 @@ public class Karajan {
 					arguments.length + " and should be " + funcSignature.sizeOfInputArray());
 
 		for(int i = 0; i < arguments.length; i++ ) {
-			StringTemplate exprST = expressionToKarajan(arguments[i], scope);
+		    String type = null;
+		    if (!funcSignature.getAnyNumOfInputArgs()) {
+		        funcSignature.getInputArray(i).getType();
+		    }
+			StringTemplate exprST = expressionToKarajan(arguments[i], scope, false, type);
 			funcST.setAttribute("args", exprST);
 
 			/* Type check of function arguments */
@@ -1299,14 +1334,20 @@ public class Karajan {
 	static final QName CALL_EXPR = new QName(SWIFTSCRIPT_NS, "call");
 	
 	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope) throws CompilationException {
-	    return expressionToKarajan(expression, scope, false);
+	    return expressionToKarajan(expression, scope, false, null);
     }
+	
+	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope, 
+            boolean lvalue) throws CompilationException {
+	    return expressionToKarajan(expression, scope, lvalue, null);
+	}
 
 	/** converts an XML intermediate form expression into a
 	 *  Karajan expression.
 	 */
-	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope, boolean lvalue) throws CompilationException
-	{
+	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope, 
+	        boolean lvalue, String expectedType) throws CompilationException {
+	    
 		Node expressionDOM = expression.getDomNode();
 		String namespaceURI = expressionDOM.getNamespaceURI();
 		String localName = expressionDOM.getLocalName();
@@ -1601,7 +1642,7 @@ public class Karajan {
 		    String name = c.getProc().getLocalPart();
 		    
 		    if (proceduresMap.containsKey(name)) {
-		        return callExpr(c, scope);
+		        return callExpr(c, scope, expectedType);
 		    }
 		    else {
 		        if (functionsMap.containsKey(name)) {
@@ -1618,7 +1659,7 @@ public class Karajan {
 		// which shows Compiler Exception and line number of error
 	}
 
-    private StringTemplate callExpr(Call c, VariableScope scope) throws CompilationException {
+    private StringTemplate callExpr(Call c, VariableScope scope, String expectedType) throws CompilationException {
         c.addNewOutput();
         VariableScope subscope = new VariableScope(this, scope, c);
         VariableReferenceDocument ref = VariableReferenceDocument.Factory.newInstance();
@@ -1635,6 +1676,16 @@ public class Karajan {
         StringTemplate call = template("callexpr");
 
         String type = funcSignature.getOutputArray(0).getType();
+        
+        if (isAnyType(type)) {
+            if (expectedType != null) {
+                type = expectedType;
+            }
+            else {
+                throw new CompilationException("Cannot infer return type of procedure call");
+            }
+        }
+        
         subscope.addInternalVariable("swift#callintermediate", type, null);
 
         call.setAttribute("datatype", type);
@@ -1941,5 +1992,10 @@ public class Karajan {
 	    catch (Exception e) {
 	        throw new RuntimeException("Not typed properly: " + st);
 	    }
+	}
+	
+	protected void setDatatype(StringTemplate st, String type) {
+	    st.removeAttribute("datatype");
+	    st.setAttribute("datatype", type);
 	}
 }

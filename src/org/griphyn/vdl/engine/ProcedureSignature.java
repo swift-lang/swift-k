@@ -147,7 +147,7 @@ public class ProcedureSignature {
     public static final String INT = "int";
     public static final String FLOAT = "float";
     public static final String BOOLEAN = "boolean";
-    public static final String ANY = "-any";
+    public static final String ANY = "any";
     public static final String VARGS = "-vargs";
 
 	public static Map<String,ProcedureSignature>
@@ -205,7 +205,7 @@ public class ProcedureSignature {
 		add(functionsMap, "format", returns(STRING), args(FLOAT, INT));
 		add(functionsMap, "pad", returns(STRING), args(INT, INT));
 		
-		add(functionsMap, "java", returns("java"), args(VARGS));
+		add(functionsMap, "java", returns(ANY), args(VARGS));
 
 		add(functionsMap, "exists", returns(BOOLEAN), args(VARGS));
 		
