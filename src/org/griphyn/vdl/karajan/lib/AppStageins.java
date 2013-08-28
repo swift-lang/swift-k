@@ -81,7 +81,7 @@ public class AppStageins extends InternalFunction {
             }
             String path = file.getDirectory() == null ? 
                     file.getName() : file.getDirectory() + "/" + file.getName();
-            String relpath = path.startsWith("/") ? path.substring(1) : path;
+            String relpath = PathUtils.remotePathName(path);
             if (logger.isDebugEnabled()) {
                 logger.debug("will stage in: " + relpath + " via: " + protocol);
             }
