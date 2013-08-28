@@ -399,7 +399,7 @@ if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
 
 	logstate "CREATE_INPUTDIR"
 	for D in $DIRS ; do
-		mkdir -p "$DIR/$D" 2>&1 >>"$INFO"
+		mkdir -p "$DIR/$D" 2>&1 >& "$INFO"
 		checkError 254 "Failed to create input directory $D"
 		log "Created output directory: $DIR/$D"
 	done
