@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.execution.coaster.ServiceManager;
 import org.globus.common.CoGProperties;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 
@@ -335,10 +334,6 @@ public class HTTPServer implements Runnable {
             if (tokens[0].equals("GET")) {
                 String page = getPage(tokens[1]);
                 Map<String,String> cgiParams = getCGIParams(tokens[1]);
-                String coasterId = cgiParams.get("serviceId");
-                if (coasterId != null) {
-                    ServiceManager.getDefault().serviceIsActive(coasterId);
-                }
                 if (page.equals("/")) {
                     page = "/index.html";
                 }
