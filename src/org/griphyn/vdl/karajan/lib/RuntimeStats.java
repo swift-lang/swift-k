@@ -67,8 +67,8 @@ public class RuntimeStats {
     //formatter for timestamp against std.err lines
 	public static SimpleDateFormat formatter = 
 		new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
-	public static final int MIN_PERIOD_MS=1000;
-	public static final int MAX_PERIOD_MS=1000;
+	public static final int MIN_PERIOD_MS = 1000;
+	public static final int MAX_PERIOD_MS = 30000;
 
 	public static final String[] preferredOutputOrder = {
 		"uninitialized",
@@ -185,6 +185,22 @@ public class RuntimeStats {
 	    public String toString() {
 	        return String.valueOf(value);
 	    }
+
+        @Override
+        public int hashCode() {
+            return value;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof MutableInt) {
+                MutableInt o = (MutableInt) obj;
+                return o.value == value;
+            }
+            else {
+                return false;
+            }
+        }
 	}
 
 	public static class StopProgressTicker extends Node {
@@ -230,6 +246,7 @@ public class RuntimeStats {
 		long lastDumpTime = 0;
 		private boolean disabled;
 		private boolean shutdown;
+		private Map<String, MutableInt> lastState;
 
 		String tickerPrefix;
 		
@@ -264,9 +281,10 @@ public class RuntimeStats {
 				dumpState();
 
 				try {
-					Thread.sleep(MAX_PERIOD_MS);
-				} catch(InterruptedException e) {
-					System.err.println("Runtime ticker interrupted. Looping immediately.");
+					Thread.sleep(MIN_PERIOD_MS);
+				} 
+				catch (InterruptedException e) {
+					break;
 				}
 			}
 		}
@@ -280,16 +298,17 @@ public class RuntimeStats {
 				return;
 			}
 			long now = System.currentTimeMillis();
-			if(lastDumpTime + MIN_PERIOD_MS > now) return;
-			lastDumpTime = now;
-			printStates(tickerPrefix);
+			boolean updated = printStates(tickerPrefix, now - lastDumpTime > MAX_PERIOD_MS);
+			if (updated) {
+			    lastDumpTime = now;
+			}
 		}
 
 		void finalDumpState() {
 			if (disabled) {
 				return;
 			}
-			printStates("Final status:");
+			printStates("Final status:", true);
 		}
 		
 		private Map<String, MutableInt> getSummary() {
@@ -317,8 +336,14 @@ public class RuntimeStats {
 		    i.inc();
         }
 
-        synchronized void printStates(String prefix) {
+        synchronized boolean printStates(String prefix, boolean forced) {
 			Map<String, MutableInt> summary = getSummary();
+			long now = System.currentTimeMillis();
+			
+			if (!forced && lastState != null && lastState.equals(summary)) {
+			    return false;
+			}
+			lastState = new HashMap<String, MutableInt>(summary);
 			
 			StringBuilder sb = new StringBuilder();
 
@@ -327,7 +352,7 @@ public class RuntimeStats {
 			// and then anything remaining
 			System.err.print(prefix);
 			System.err.print(" ");
-			System.err.print(formatter.format(System.currentTimeMillis()));
+			System.err.print(formatter.format(now));
 						
 			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
 				String key = preferredOutputOrder[pos];
@@ -354,6 +379,8 @@ public class RuntimeStats {
 			if (logger.isInfoEnabled()) {
 			    logger.info(msg);
 			}
+			
+			return true;
 		}
 
 	}
