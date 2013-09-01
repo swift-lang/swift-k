@@ -208,7 +208,7 @@ public class LocalTCPService implements Registering, Service, Runnable {
     }
 
     public void irrecoverableChannelError(KarajanChannel channel, Exception e) {
-        System.err.println("Irrecoverable channel exception: " + e.getMessage());
+        logger.error("Irrecoverable channel exception: " + e.getMessage(), e);
         System.exit(2);
     }
     
