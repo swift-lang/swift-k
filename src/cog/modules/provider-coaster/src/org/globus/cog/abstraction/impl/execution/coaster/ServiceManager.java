@@ -55,6 +55,7 @@ import org.globus.cog.coaster.channels.IrrecoverableException;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
 import org.globus.common.CoGProperties;
+import org.globus.common.CoGProperties;
 import org.ietf.jgss.GSSCredential;
 
 public class ServiceManager implements StatusListener {
@@ -224,9 +225,25 @@ public class ServiceManager implements StatusListener {
     }
 
     private void setupGSIProxy() throws IOException, GeneralSecurityException {
-        AutoCA.Info result = AutoCA.getInstance().createProxy();
-        System.setProperty("X509_USER_PROXY", result.proxyPath);
-        System.setProperty("X509_CERT_DIR", result.caCertPath);
+        if (!checkStandardProxy()) {
+            /*
+             *  only do the automatic CA if a standard proxy file does not exist
+             *  to allow using things like GridFTP from the coaster service through
+             *  delegation (which won't work with the auto-generated proxy).
+             */
+            logger.info("No standard proxy found. Using AutoCA.");
+            AutoCA.Info result = AutoCA.getInstance().createProxy();
+            System.setProperty("X509_USER_PROXY", result.proxyPath);
+            System.setProperty("X509_CERT_DIR", result.caCertPath);
+        }
+        else {
+            logger.info("Standard proxy file found. Disabling AutoCA.");
+        }
+    }
+
+    private boolean checkStandardProxy() {
+        File proxy = new File(CoGProperties.getDefault().getProxyFile());
+        return proxy.exists();
     }
 
     private void setSecurityContext(Task t, SecurityContext sc, String provider)
