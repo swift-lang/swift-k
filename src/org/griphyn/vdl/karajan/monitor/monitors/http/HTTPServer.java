@@ -46,7 +46,7 @@ import org.griphyn.vdl.karajan.monitor.SystemState;
 public class HTTPServer implements Runnable {
     public static final Logger logger = Logger.getLogger(HTTPServer.class);
 
-    public static final String WEB_DIR = "httpmonitor/";
+    public static final String WEB_DIR = "httpmonitor";
     
     private ServerSocketChannel channel;
     private ConnectionProcessor connectionProcessor;
