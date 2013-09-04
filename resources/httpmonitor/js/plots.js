@@ -1,6 +1,9 @@
 var DEFAULT_PLOT_COLORS = ["#bf5b17", "#33a02c", "#386cb0", "#f0027f", "#ffff99", "#fdc086", 
                            "#beaed4", "#666666", "#7fc97f", "#ff7f00", "#fdbf6f", "#e31a1c"];
 
+var MIN_AREA_WIDTH = 640;
+var MIN_AREA_HEIGHT = 200;
+
 function addPlot() {
 	var index = document.currentPlotIndex++;
 	$("#plots").append('\
@@ -190,6 +193,8 @@ function makePlot(index) {
 	document.plots[index] = plot;
 	plot.setupGrid();
 	plot.draw();
+	
+	resizePlotsContainer();
 }
 
 function removePlot(index) {
@@ -702,6 +707,13 @@ function resizePlotsContainer() {
 				h = hi;
 			}
 		}
+	}
+	
+	if (w < MIN_AREA_WIDTH) {
+		w = MIN_AREA_WIDTH;
+	}
+	if (h < MIN_AREA_HEIGHT) {
+		h = MIN_AREA_HEIGHT;
 	}
 	
 	$("#tabs").css("width", (w + 8) + "px");
