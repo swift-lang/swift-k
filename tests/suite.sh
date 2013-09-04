@@ -979,7 +979,7 @@ else
   IFCONFIG=/sbin/ifconfig
 fi
 $IFCONFIG > /dev/null 2>&1 || crash "Cannot run ifconfig!"
-export GLOBUS_HOSTNAME=$( $IFCONFIG | grep inet | head -1 | cut -d ':' -f 2 | \
+export GLOBUS_HOSTNAME=$( $IFCONFIG 2>/dev/null | grep inet | head -1 | cut -d ':' -f 2 | \
                    awk '{print $1}' )
 [ $? != 0 ] && crash "Could not obtain GLOBUS_HOSTNAME!"
 

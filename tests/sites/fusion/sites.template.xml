@@ -1,8 +1,8 @@
 <config>
    <pool handle="fusion">
-      <execution jobmanager="local:pbs" provider="coaster" url="none"/>
+      <execution jobmanager="ssh-cl:pbs" provider="coaster" url="fusion.lcrc.anl.gov"/>
       <filesystem provider="local" url="none" />
-      <profile namespace="globus" key="maxtime">3600</profile>
+      <profile namespace="globus" key="maxWallTime">00:00:30</profile>
       <profile namespace="globus" key="jobsPerNode">2</profile>
       <profile namespace="globus" key="slots">1</profile>
       <profile namespace="globus" key="nodeGranularity">2</profile>
@@ -10,9 +10,7 @@
       <profile namespace="globus" key="queue">shared</profile>
       <profile namespace="karajan" key="jobThrottle">5.99</profile>
       <profile namespace="karajan" key="initialScore">10000</profile>
-      <profile namespace="globus" key="HighOverAllocation">1000</profile>
-      <profile namespace="globus" key="LowOverAllocation">1000</profile>
-      <workdirectory>/homes/davidk/test4</workdirectory>
+      <workdirectory>/homes/{env.USER}/swiftwork</workdirectory>
    </pool>
 </config>
 
