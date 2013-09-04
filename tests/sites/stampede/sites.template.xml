@@ -1,6 +1,22 @@
 <config>
+
   <pool handle="stampede">
-    <execution provider="coaster"  jobmanager="local:slurm"/>
+    <execution provider="coaster" jobmanager="gt2:gt2:slurm" url="login5.stampede.tacc.utexas.edu:2119/jobmanager-slurm"/>
+    <filesystem provider="gsiftp" url="gsiftp://gridftp.stampede.tacc.utexas.edu:2811"/>
+    <profile namespace="globus"  key="jobsPerNode">16</profile>
+    <profile namespace="globus"  key="ppn">16</profile>
+    <profile namespace="globus"  key="maxwalltime">00:00:30</profile>
+    <profile namespace="globus"  key="queue">normal</profile>
+    <profile namespace="globus"  key="nodeGranularity">1</profile>
+    <profile namespace="globus"  key="maxNodes">1</profile>
+    <profile namespace="globus"  key="project">TG-MCA94P017</profile>
+    <profile namespace="karajan" key="jobThrottle">.3199</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>/scratch/01503/{env.USER}/work</workdirectory>
+  </pool>
+
+  <pool handle="stampede-ssh">
+    <execution provider="coaster" jobmanager="ssh-cl:slurm" url="stampede.tacc.utexas.edu"/>
     <filesystem provider="local"/>
     <profile namespace="globus"  key="jobsPerNode">16</profile>
     <profile namespace="globus"  key="ppn">16</profile>
@@ -11,7 +27,8 @@
     <profile namespace="globus"  key="project">TG-MCA94P017</profile>
     <profile namespace="karajan" key="jobThrottle">2</profile>
     <profile namespace="karajan" key="initialScore">10000</profile>
-    <workdirectory>{env.SCRATCH}</workdirectory>
+    <workdirectory>/scratch/01503/{env.USER}/work</workdirectory>
   </pool>
+
 </config>
 
