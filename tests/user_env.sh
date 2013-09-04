@@ -1,6 +1,10 @@
 export BEAGLE_USERNAME=""
-export MIDWAY_USERNAME=""
+export BLUES_USERNAME=""
+export FUSION_USERNAME=""
 export MCS_USERNAME=""
+export MIDWAY_USERNAME=""
+export RAVEN_USERNAME=""
+export STAMPEDE_USERNAME=""
 export UC3_USERNAME=""
 
 if [ $( hostname ) == "midway001" ]

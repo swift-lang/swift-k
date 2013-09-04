@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USERNAME=$BLUES_USERNAME
+USERNAME=$FUSION_USERNAME
 
 if [[ -z $USERNAME ]] 
 then
