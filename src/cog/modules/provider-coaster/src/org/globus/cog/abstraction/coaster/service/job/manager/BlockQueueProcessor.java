@@ -79,7 +79,7 @@ implements RegistrationManager, Runnable {
 
     private ChannelContext clientChannelContext;
 
-    private boolean done, planning;
+    private boolean done, planning, shuttingDown;
 
     private final Metric metric;
 
@@ -131,7 +131,7 @@ implements RegistrationManager, Runnable {
         try {
             script = ScriptManager.writeScript();
             int planTimeMillis = 1;
-            while (!done) {
+            while (!done && !shuttingDown) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Holding queue job count: " +
                              holding.size());
@@ -148,6 +148,9 @@ implements RegistrationManager, Runnable {
                 synchronized (incoming) {
                     incoming.wait(Math.min(planTimeMillis * 20, 10000) + 1000);
                 }
+            }
+            if (shuttingDown) {
+                logger.info("Service shutting down. Exiting planning loop.");
             }
         }
         catch (Exception e) {
@@ -787,6 +790,9 @@ implements RegistrationManager, Runnable {
 
     @Override
     public void shutdown() {
+        synchronized(holding) {
+            shuttingDown = true;
+        }
         shutdownBlocks();
         done = true;
     }
