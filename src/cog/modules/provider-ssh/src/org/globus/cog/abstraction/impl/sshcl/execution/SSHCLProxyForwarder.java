@@ -44,6 +44,8 @@ import org.globus.util.Util;
 public class SSHCLProxyForwarder extends ProxyForwarder {
     public static final Logger logger = Logger.getLogger(SSHCLProxyForwarder.class);
     
+    public static final int DELETE_BULK_SIZE = 10;
+    
     private String host;
     private int port;
     private Properties properties;
@@ -150,6 +152,7 @@ public class SSHCLProxyForwarder extends ProxyForwarder {
             logger.info("Cleaning up old proxies");
             String output = runSSH(new String[] {"ls", "-1", globusDir + "/ssh*-*-*"});
             String[] files = output.split("\\n");
+            List<String> deleteQueue = new ArrayList<String>();
             long nowSecs = System.currentTimeMillis() / 1000;
             for (String f : files) {
                 f = f.substring(f.lastIndexOf('/') + 1);
@@ -157,11 +160,16 @@ public class SSHCLProxyForwarder extends ProxyForwarder {
                 if (m.matches()) {
                     long expirationTime = Long.parseLong(m.group(3));
                     if (expirationTime < nowSecs) {
-                        logger.info("Removing " + f);
-                        runSSH(new String[] {"rm", "-f", globusDir + "/" + f});
+                        deleteQueue.add(globusDir + "/" + f);
+                        if (deleteQueue.size() == DELETE_BULK_SIZE) {
+                            deleteFiles(deleteQueue);
+                        }
                     }
                 }
             }
+            // delete remaining files
+            deleteFiles(deleteQueue);
+            
         }
         catch (IOException e) {
             if (e.getMessage() == null 
@@ -173,6 +181,21 @@ public class SSHCLProxyForwarder extends ProxyForwarder {
                 // nothing to clean
             }
         }
+    }
+
+    private void deleteFiles(List<String> l) throws IOException {
+        if (l.isEmpty()) {
+            return;
+        }
+        
+        logger.info("Removing " + l);
+        String[] cmdline = new String[l.size() + 2];
+        cmdline[0] = "rm";
+        cmdline[1] = "-f";
+        for (int i = 0; i < l.size(); i++) {
+            cmdline[i + 2] = l.get(i);
+        }
+        runSSH(cmdline);
     }
 
     private String makeGlobusDir() throws IOException {
