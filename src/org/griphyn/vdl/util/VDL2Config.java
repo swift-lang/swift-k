@@ -24,12 +24,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.common.CoGProperties;
 
@@ -82,44 +83,47 @@ public class VDL2Config extends Properties {
 	}
 
 	private List<String> files, tried;
+	private Map<Object, ConfigPropertyType> types;
 
 	private VDL2Config() {
 		files = new LinkedList<String>();
 		tried = new LinkedList<String>();
-		put(VDL2ConfigProperties.POOL_FILE, "${vds.home}/etc/sites.xml");
-		put(VDL2ConfigProperties.TC_FILE, "${vds.home}/var/tc.data");
-		put(VDL2ConfigProperties.LAZY_ERRORS, "false");
-		put(VDL2ConfigProperties.CACHING_ALGORITHM, "LRU");
-		put(VDL2ConfigProperties.PGRAPH, "false");
-		put(VDL2ConfigProperties.PGRAPH_GRAPH_OPTIONS, "splines=\"compound\", rankdir=\"TB\"");
-		put(VDL2ConfigProperties.PGRAPH_NODE_OPTIONS, "color=\"seagreen\", style=\"filled\"");
-		put(VDL2ConfigProperties.CLUSTERING_ENABLED, "false");
-		put(VDL2ConfigProperties.CLUSTERING_QUEUE_DELAY, "4");
-		put(VDL2ConfigProperties.CLUSTERING_MIN_TIME, "60");
-		put(VDL2ConfigProperties.KICKSTART_ENABLED, "maybe");
-		put(VDL2ConfigProperties.KICKSTART_ALWAYS_TRANSFER, "false");
-		put("throttle.submit", "4");
-		put("throttle.host.submit", "2");
-		put("throttle.transfers", "4");
-		put("throttle.file.operations", "8");
-		put("throttle.score.job.factor", "4");
-		put(VDL2ConfigProperties.SITEDIR_KEEP, "false");
-		put(VDL2ConfigProperties.PROVENANCE_LOG, "false");
+		types = new HashMap<Object, ConfigPropertyType>();
+		put(VDL2ConfigProperties.POOL_FILE, "${swift.home}/etc/sites.xml", ConfigPropertyType.FILE);
+		put(VDL2ConfigProperties.TC_FILE, "${swift.home}/etc/tc.data", ConfigPropertyType.FILE);
+		put(VDL2ConfigProperties.LAZY_ERRORS, "false", ConfigPropertyType.BOOLEAN);
+		put(VDL2ConfigProperties.CACHING_ALGORITHM, "LRU", ConfigPropertyType.STRING);
+		put(VDL2ConfigProperties.PGRAPH, "false", ConfigPropertyType.BOOLEAN);
+		put(VDL2ConfigProperties.PGRAPH_GRAPH_OPTIONS, "splines=\"compound\", rankdir=\"TB\"", ConfigPropertyType.STRING);
+		put(VDL2ConfigProperties.PGRAPH_NODE_OPTIONS, "color=\"seagreen\", style=\"filled\"", ConfigPropertyType.STRING);
+		put(VDL2ConfigProperties.CLUSTERING_ENABLED, "false", ConfigPropertyType.BOOLEAN);
+		put(VDL2ConfigProperties.CLUSTERING_QUEUE_DELAY, "4", ConfigPropertyType.INT);
+		put(VDL2ConfigProperties.CLUSTERING_MIN_TIME, "60", ConfigPropertyType.INT);
+		put(VDL2ConfigProperties.KICKSTART_ENABLED, "maybe", ConfigPropertyType.choices("true", "false", "maybe"));
+		put(VDL2ConfigProperties.KICKSTART_ALWAYS_TRANSFER, "false", ConfigPropertyType.BOOLEAN);
+		put("throttle.submit", "4", ConfigPropertyType.INT);
+		put("throttle.host.submit", "2", ConfigPropertyType.INT);
+		put("throttle.transfers", "4", ConfigPropertyType.INT);
+		put("throttle.file.operations", "8", ConfigPropertyType.INT);
+		put("throttle.score.job.factor", "4", ConfigPropertyType.FLOAT);
+		put(VDL2ConfigProperties.SITEDIR_KEEP, "false", ConfigPropertyType.BOOLEAN);
+		put(VDL2ConfigProperties.PROVENANCE_LOG, "false", ConfigPropertyType.BOOLEAN);
 		
-		put("replication.enabled", "false");
-		put("replication.min.queue.time", "60");
-		put("replication.limit", "3");
-		put("status.mode", "files");
-		put("wrapper.parameter.mode", "args");
-		put("wrapper.invocation.mode", "absolute");
+		put("replication.enabled", "false", ConfigPropertyType.BOOLEAN);
+		put("replication.min.queue.time", "60", ConfigPropertyType.INT);
+		put("replication.limit", "3", ConfigPropertyType.INT);
+		put("status.mode", "files", ConfigPropertyType.choices("files", "provider"));
+		put("wrapper.parameter.mode", "args", ConfigPropertyType.choices("args", "files"));
+		put("wrapper.invocation.mode", "absolute", ConfigPropertyType.choices("absolute", "relative"));
 		
+		// TODO what are the valid values here?
 		put("cdm.broadcast.mode", "file");
-		put("use.provider.staging", "false");
-		put("ticker.date.format", "");
-		put("ticker.prefix", "Progress:  time:");
+		put("use.provider.staging", "false", ConfigPropertyType.BOOLEAN);
+		put("ticker.date.format", "", ConfigPropertyType.STRING);
+		put("ticker.prefix", "Progress:  time:", ConfigPropertyType.STRING);
 		
-		put(VDL2ConfigProperties.FILE_GC_ENABLED, "true");
-		put(VDL2ConfigProperties.DM_CHECKER, "on");
+		put(VDL2ConfigProperties.FILE_GC_ENABLED, "true", ConfigPropertyType.BOOLEAN);
+		put(VDL2ConfigProperties.DM_CHECKER, "on", ConfigPropertyType.ONOFF);
 	}
 
 	private VDL2Config(VDL2Config other) {
@@ -156,6 +160,11 @@ public class VDL2Config extends Properties {
 			return this;
 		}
 	}
+	
+	public synchronized Object put(Object key, Object value, ConfigPropertyType type) {
+	    types.put(key, type);
+	    return put(key, value);
+	}
 
 	/**
 	 * Overridden to do variable expansion. Variables will be expanded if there
@@ -165,6 +174,7 @@ public class VDL2Config extends Properties {
 	public synchronized Object put(Object key, Object value) {
 		String svalue = (String) value;
 		if (svalue.indexOf("${") == -1) {
+		    checkType(key, value);
 			return super.put(key, value);
 		}
 		else {
@@ -197,11 +207,20 @@ public class VDL2Config extends Properties {
 				}
 			}
 			sb.append(svalue.substring(last));
-			return super.put(key, sb.toString());
+			value = sb.toString();
+			checkType(key, value);
+			return super.put(key, value);
 		}
 	}
 
-	public String getPoolFile() {
+	private void checkType(Object key, Object value) {
+	    ConfigPropertyType type = types.get(key);
+	    if (type != null) {
+	        type.checkValue((String) key, (String) value);
+	    }
+    }
+
+    public String getPoolFile() {
 		return getProperty(VDL2ConfigProperties.POOL_FILE);
 	}
 
