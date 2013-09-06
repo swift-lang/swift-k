@@ -169,7 +169,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
         }
         catch (Exception e) {
-            e.printStackTrace();
             logger.debug("Detailed exception:", e);
             error("Could not start execution" + getMessages(e));
         }
@@ -256,7 +255,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
         StringBuilder sb = new StringBuilder();
         while (e != null) {
             sb.append(":\n\t");
-            sb.append(e.toString());
+            if (e.getMessage() != null) {
+                sb.append(e.getMessage());
+            }
+            else {
+                sb.append(e.toString());
+            }
             e = e.getCause();
         }
         return sb.toString();
