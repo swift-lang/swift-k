@@ -24,9 +24,10 @@ namespace(swift) {
 	export(stageOut, def("org.griphyn.vdl.karajan.lib.Stageout"))
 
 	export(parameterLog,
-		function(direction, variable, id, thread) {
+		function(direction, variable, id) {
 			if (configProperty("provenance.log") == "true") {
-				log("info","PARAM thread={thread} direction={direction} variable={variable} provenanceid={id}")
+				thread := currentThread()
+				log("info", "PARAM thread={thread} direction={direction} variable={variable} provenanceid={id}")
 			}
 		}
 	)
