@@ -369,14 +369,14 @@ range(from, to, step, datatype) ::= <<
 sequential(
 	tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$)
 	tmp
-	$range_log(from=from, to=to, step=step, out=tmp)$
-) 
+	$range_log(from=from, to=to, step=step, out="tmp")$
+)
 >>
 
 range_log(from, to, step, out) ::= <<
-	swift:log(INFO, str:concat("ARRAYRANGE thread=", currentThread(), " array=", getDatasetProvenanceId($out$),
-		" from=", getDatasetProvenanceId($from$), "to=", getDatasetProvenanceId($to$)
-		$if(step)$", step=", getDatasetProvenanceId($step$)$else$, "step=none"$endif$))
+	swift:log(LOG:INFO, k:concat("ARRAYRANGE thread=", currentThread(), " array=", getDatasetProvenanceID($out$),
+		" from=", getDatasetProvenanceID($from$), "to=", getDatasetProvenanceID($to$),
+		$if(step)$"step=", getDatasetProvenanceID($step$)$else$"step=none"$endif$))
 >>
 
 if(condition,vthen,velse,line,trace) ::= <<
@@ -505,7 +505,7 @@ sequential(
 >>
 
 logSliceArray(memberchild, array, slice) ::= <<
-	swift:log(DEBUG, str:concat("SLICEARRAY thread=", currentThread(), " slice=", swift:getDatasetProvenanceID($slice$),
+	swift:log(LOG:DEBUG, k:concat("SLICEARRAY thread=", currentThread(), " slice=", swift:getDatasetProvenanceID($slice$),
 		" member=$member$ array=", swift:getDatasetProvenanceID($array$))
 >>
 
