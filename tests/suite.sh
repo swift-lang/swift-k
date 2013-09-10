@@ -39,8 +39,8 @@ TOTAL_TIME=0
 INDIVIDUAL_TEST_TIME=0
 COLORIZE=0
 # The directory in which to start:
-TOPDIR=`readlink -f $PWD/../../../..`
-CRTDIR=`pwd`
+TOPDIR=$( cd ../../../.. && echo $PWD )
+CRTDIR=$PWD
 
 # Disable usage stats in test suite
 export SWIFT_USAGE_STATS=0
@@ -544,8 +544,15 @@ result() {
 process_trap() {
   PROCESS_INTERNAL_PID=$1
   echo "process_trap: killing: $PROCESS_INTERNAL_PID"
-  # ps -H
-  kill -TERM $PROCESS_INTERNAL_PID
+  ps -o "pid,ppid"|sed 1d | while read PROC
+  do
+     PROC_PID=$( echo $PROC | awk '{print $1}' )
+     PROC_PPID=$( echo $PROC | awk '{print $2}' )
+     if [ $PROC_PPID == $PROCESS_INTERNAL_PID ]
+     then
+        kill $PROC_PID
+     fi
+  done
 }
 
 # Execute process in the background
@@ -633,7 +640,7 @@ monitor() {
   wait
   [ $? != 0 ] && verbose "monitor($V) cancelled" && return 0
 
-  if ps | grep $PID
+  if ps | grep $PID > /dev/null 2>&1
   then
     echo "monitor: killing test process $PID"
     touch killed_test
@@ -679,8 +686,11 @@ monitored_exec()
 
   # If the test was killed, monitor() may have work to do
   rm killed_test > /dev/null 2>&1 && sleep 5
-  verbose "killing monitor: $MONITOR_PID..."
-  kill $MONITOR_PID
+  if ps -p $MONITOR_PID > /dev/null 2>&1
+  then
+     verbose "killing monitor: $MONITOR_PID..."
+     kill $MONITOR_PID
+  fi
 
   INDIVIDUAL_TEST_TIME=$(( STOP-START ))
   TOTAL_TIME=$(( INDIVIDUAL_TEST_TIME+TOTAL_TIME ))
@@ -807,7 +817,6 @@ swift_test_case() {
     cp "$GROUP/$SOURCESCRIPT" .
     source ./$SOURCESCRIPT 
   fi
-  echo "GLOBUS_HOSTNAME : $GLOBUS_HOSTNAME"
 
   if [ -x "$GROUP/$SETUPSCRIPT" ]; then
     cp "$GROUP/$SETUPSCRIPT" .
@@ -972,17 +981,6 @@ build_package() {
   output_report package "swift-$DATE.tar.gz"
 }
 
-# Setup coasters variables
-if which ifconfig > /dev/null 2>&1; then
-  IFCONFIG=ifconfig
-else
-  IFCONFIG=/sbin/ifconfig
-fi
-$IFCONFIG > /dev/null 2>&1 || crash "Cannot run ifconfig!"
-export GLOBUS_HOSTNAME=$( $IFCONFIG 2>/dev/null | grep inet | head -1 | cut -d ':' -f 2 | \
-                   awk '{print $1}' )
-[ $? != 0 ] && crash "Could not obtain GLOBUS_HOSTNAME!"
-
 # Generate sites.xml
 group_sites_xml() {
 
@@ -1105,12 +1103,12 @@ test_group() {
   for TEST in $SWIFTS; do
 
     (( SKIP_COUNTER++ < SKIP_TESTS )) && continue
-
-   # Use repeat.txt to determine number of test iterations
-    SCRIPT_BASENAME=`basename $TESTNAME .swift`
+   # Use scriptname.repeat to determine number of test iterations
+    SCRIPT_BASENAME=`basename $TEST .swift`
     TESTLINK="$TESTNAMEDIR/$TESTNAME"
+    GROUP_DIRNAME=$( dirname $GROUP )
     if [ -f "$GROUP/$SCRIPT_BASENAME.repeat" ]; then
-      ITERS_LOCAL=`cat $GROUP/$SCRIPT_BASENAME.repeat`
+       ITERS_LOCAL=$( cat $GROUP/$SCRIPT_BASENAME.repeat )
     else
        ITERS_LOCAL=1
     fi 
