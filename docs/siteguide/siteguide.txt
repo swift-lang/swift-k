@@ -28,6 +28,8 @@ include::midway[]
 
 include::ssh[]
 
+include::ssh-cl[]
+
 include::stampede[]
 
 include::uc3[]
