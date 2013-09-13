@@ -17,6 +17,7 @@ pinOption := configProperty("provider.staging.pin.swiftfiles")
 
 PIN := if(pinOption == "true", "pinned:", "")
 PROVENANCE_GRAPH_ENABLED := (configProperty("pgraph") != "false")
+CLEANUP_ENABLED := (configProperty("sitedir.keep") != "true")
 
 namespace(swift) {
 
@@ -137,8 +138,10 @@ namespace(swift) {
 						stageOut("wrapper.error", "{stagingMethod}://localhost/{ddir}/{jobid}.error", 
 							mode = STAGING_MODE:IF_PRESENT)
 						appStageouts(jobid, stageout, stagingMethod)
-
-						task:cleanUp(".")
+						
+						if (CLEANUP_ENABLED) {
+							task:cleanUp(".")
+						}
 					)
 					
 					
