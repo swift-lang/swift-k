@@ -164,7 +164,12 @@ public class AutoCA {
                 int index = discoverNextIndex();
                 this.info = new Info(makeFile(PROXY_NAME_PREFIX, index), makeFile(CA_CRT_NAME_PREFIX, index));
                 if (logger.isInfoEnabled()) {
-                    logger.info("No certificates with enough lifetime. Creating new certificate: " + info.proxyPath);
+                    if (!SHARED_PROXIES) {
+                        logger.info("Shared proxies are disabled. Creating new certificate: " + info.proxyPath);
+                    }
+                    else {
+                        logger.info("No certificates with enough lifetime. Creating new certificate: " + info.proxyPath);
+                    }
                 }
                 this.cert = createAll(index);
             }
