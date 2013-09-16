@@ -24,7 +24,9 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -83,6 +85,8 @@ public class AutoCA {
     public static final long WEEK_IN_MS = 1000 * 3600 * 24 * 7;
     public static final long CA_CERT_LIFETIME = 2 * WEEK_IN_MS;
     public static final long MIN_CA_CERT_LIFETIME_LEFT = WEEK_IN_MS;
+    
+    public static final int MAX_PROXY_INDEX = 99;
     
     public static final int ID_BYTES = 4;
     
@@ -208,13 +212,18 @@ public class AutoCA {
     private int getIndex(File c) {
         String name = c.getName();
         int i2 = name.lastIndexOf('.');
-        return Integer.parseInt(name.substring(i2 - 1, i2));
+        int i1 = name.lastIndexOf('.', i2 - 1);
+        return Integer.parseInt(name.substring(i1 + 1, i2));
     }
 
     private int discoverNextIndex() throws GeneralSecurityException {
-        for (int i = 0; i < 10; i++) {
-            File f = makeFile(PROXY_NAME_PREFIX, i);
-            if (!f.exists()) {
+        File[] existing = discoverProxies();
+        Set<Integer> usedIndices = new HashSet<Integer>();
+        for (File e : existing) {
+            usedIndices.add(getIndex(e));
+        }
+        for (int i = 0; i < MAX_PROXY_INDEX; i++) {
+            if (!usedIndices.contains(i)) {
                 return i;
             }
         }
@@ -262,7 +271,11 @@ public class AutoCA {
     }
 
     private void copySigningPolicy(int index) throws IOException {
-        FileOutputStream fos = new FileOutputStream(CA_DIR + File.separator + CA_CRT_NAME_PREFIX + "." + index + ".signing_policy");
+        File f = new File(CA_DIR + File.separator + CA_CRT_NAME_PREFIX + "." + index + ".signing_policy");
+        if (!SHARED_PROXIES) {
+            f.deleteOnExit();
+        }
+        FileOutputStream fos = new FileOutputStream(f);
         try {
             InputStream is = AutoCA.class.getClassLoader().getResource(SIGNING_POLICY_RES_NAME).openStream();
             try {
@@ -324,6 +337,9 @@ public class AutoCA {
     private void writeProxy(GlobusCredential proxy, File f) throws GeneralSecurityException {
         try {
             OutputStream fw = openStream(f);
+            if (!SHARED_PROXIES) {
+                f.deleteOnExit();
+            }
             try {
                 proxy.save(fw);
             }
@@ -349,6 +365,9 @@ public class AutoCA {
     private void writeCert(X509Certificate cert, File f) throws GeneralSecurityException {
         try {
             OutputStream fw = openStream(f);
+            if (!SHARED_PROXIES) {
+                f.deleteOnExit();
+            }
             CertUtil.writeCertificate(fw, cert);
         }
         catch (Exception e) {
@@ -387,6 +406,9 @@ public class AutoCA {
     private void writeKey(OpenSSLKey key, File f) throws GeneralSecurityException {
         try {
             OutputStream keyStream = openStream(f);
+            if (!SHARED_PROXIES) {
+                f.deleteOnExit();
+            }
             try {
                 key.writeTo(keyStream);
             }
