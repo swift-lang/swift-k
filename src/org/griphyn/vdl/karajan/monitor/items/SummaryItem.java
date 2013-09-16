@@ -27,7 +27,7 @@ import java.util.Map;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 
 public class SummaryItem extends AbstractStatefulItem {
-    public static final ApplicationState[] STATES = ApplicationState.values();
+    public static final ApplicationState[] STATES = ApplicationState.enabledValues();
     
     public static ApplicationState getStateByKey(String key) {
         for (ApplicationState s : STATES) {

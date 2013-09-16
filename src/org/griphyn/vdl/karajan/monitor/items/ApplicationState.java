@@ -9,21 +9,30 @@
  */
 package org.griphyn.vdl.karajan.monitor.items;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum ApplicationState {
     INITIALIZING("Initializing"), SELECTING_SITE("Selecting site", "Sel. site"), STAGE_IN("Stage in"),
     SUBMITTING("Submitting"), SUBMITTED("Submitted"), ACTIVE("Active"), STAGE_OUT("Stage out"),
-    FAILED("Failed"), REPLICATING("Replicating"), FINISHED_SUCCESSFULLY("Finished successfully", "Finished");
+    FAILED("Failed"), REPLICATING("Replicating"), FINISHED_IN_PREVIOUS_RUN("Finished in previous run", "Finished in prev. run", false), 
+    FINISHED_SUCCESSFULLY("Finished successfully");
     
     private String name, shortName;
+    private boolean enabled;
     
     private ApplicationState(String name) {
-        this.name = name;
-        this.shortName = name;
+        this(name, name);
     }
     
     private ApplicationState(String name, String shortName) {
+        this(name, name, true);
+    }
+    
+    private ApplicationState(String name, String shortName, boolean enabled) {
         this.name = name;
         this.shortName = shortName;
+        this.enabled = enabled;
     }
     
     public String getName() {
@@ -37,8 +46,29 @@ public enum ApplicationState {
     public void setShortName(String shortName) {
         this.shortName = shortName;
     }
+    
+    public boolean isEnabled() {
+        return enabled;
+    }
 
     public String toString() {
         return name;
+    }
+    
+    private static ApplicationState[] enabledValues;
+    
+    public synchronized static ApplicationState[] enabledValues() {
+        if (enabledValues == null) {
+            List<ApplicationState> l = new ArrayList<ApplicationState>();
+            for (ApplicationState s : values()) {
+                if (s.isEnabled()) {
+                    l.add(s);
+                }
+            }
+            enabledValues = new ApplicationState[l.size()];
+            l.toArray(enabledValues);
+        }
+        
+        return enabledValues;
     }
 }

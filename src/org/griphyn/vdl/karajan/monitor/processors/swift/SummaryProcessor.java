@@ -50,7 +50,12 @@ public class SummaryProcessor extends AbstractMessageProcessor {
 		        continue;
 		    }
 		    String[] v = pair.split(":");
-		    s.setCount(v[0].trim(), Integer.parseInt(v[1]));
+		    String key = v[0].trim();
+		    int value = Integer.parseInt(v[1]);
+		    if (key.equals(ApplicationState.FINISHED_IN_PREVIOUS_RUN.getName())) {
+		        state.setCompletedPreviously(value);
+		    }
+		    s.setCount(key, value);
 		}
 		state.itemUpdated(s);
 	}

@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.common.GlobalTimer;
+import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
 import org.griphyn.vdl.karajan.monitor.monitors.ansi.tui.ANSI;
@@ -66,14 +67,29 @@ public class SummaryPane extends Container {
             if (summary != null) {
                 Map<String, Integer> counts = summary.getCounts(state);
                 for (int i = 0; i < SummaryItem.STATES.length; i++) {
-                    Integer v = counts.get(SummaryItem.STATES[i].getName());
-                    if (v != null) {
-                        bars.setValue(i, v);
-                        bars.setText(i, v.toString());
-                    }
-                    else {
-                        bars.setValue(i, 0);
-                        bars.setText(i, "0");
+                    if (SummaryItem.STATES[i].isEnabled()) {
+                        Integer v = counts.get(SummaryItem.STATES[i].getName());
+                        int iv = 0, prev = 0;
+                        if (v != null) {
+                            iv = v.intValue();
+                        }
+                        
+                        if (SummaryItem.STATES[i] == ApplicationState.FINISHED_SUCCESSFULLY) {
+                            v = counts.get(ApplicationState.FINISHED_IN_PREVIOUS_RUN.getName());
+                            if (v != null) {
+                                prev = v.intValue();
+                            }
+                        }
+                        
+                        if (prev == 0) {
+                            bars.setValue(i, iv);
+                            bars.setText(i, String.valueOf(iv));
+                        }
+                        else {
+                            bars.setValue(i, iv + prev);
+                            bars.setOtherValue(i, prev);
+                            bars.setText(i, String.valueOf(iv + prev) + " (" + String.valueOf(prev) + ")");
+                        }
                     }
                 }
             }

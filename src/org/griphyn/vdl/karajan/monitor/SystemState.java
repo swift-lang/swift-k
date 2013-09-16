@@ -34,10 +34,12 @@ import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
 
 public class SystemState {
+    public static final boolean SHOW_SECONDS = false; 
+    
 	private Map<StatefulItemClass, StatefulItemClassSet<? extends StatefulItem>> classes;
     private Set<SystemStateListener> listeners;
     private Map<String, Stats> stats;
-    private int total, completed;
+    private int total, completed, completedPreviously;
     private long start, currentTime;
     private Stack stack;
     private String projectName;
@@ -146,6 +148,14 @@ public class SystemState {
         return completed;
     }
 
+    public int getCompletedPreviously() {
+        return completedPreviously;
+    }
+
+    public void setCompletedPreviously(int completedPreviously) {
+        this.completedPreviously = completedPreviously;
+    }
+
     public long getStart() {
         return start;
     }
@@ -175,12 +185,16 @@ public class SystemState {
     }
     
     public String getEstimatedTimeLeftFormatted() {
-        if (completed == 0) {
+        // don't use previously completed jobs to estimate remaining time
+        // since they "finish" pretty quickly
+        int c = completed - completedPreviously;
+        int t = total - completedPreviously;
+        if (c == 0) {
             return "N/A";
         }
         else {
             long time = System.currentTimeMillis() - start;
-            long et = (time * total / completed) - time;
+            long et = (time * t / c) - time;
             return format(et);
         }
     }
@@ -221,12 +235,14 @@ public class SystemState {
             sb.append('0');
         }
         sb.append(m);
-        sb.append(':');
-        int s = (int) (v % 60);
-        if (s < 10) {
-            sb.append('0');
+        if (SHOW_SECONDS) {
+            sb.append(':');
+            int s = (int) (v % 60);
+            if (s < 10) {
+                sb.append('0');
+            }
+            sb.append(s);
         }
-        sb.append(s);
         return sb.toString();
     }
 

@@ -20,14 +20,15 @@ package org.griphyn.vdl.karajan.monitor.monitors.ansi.tui;
 import java.io.IOException;
 
 public class LevelBar extends Component {
-    private float value;
+    private float value, other;
     private String text;
-    private int textColor;
+    private int textColor, otherColor;
     
     public LevelBar() {
         bgColor = ANSI.BLACK;
         fgColor = ANSI.RED;
         textColor = ANSI.WHITE;
+        otherColor = ANSI.MAGENTA;
     }
 
     public float getValue() {
@@ -36,6 +37,10 @@ public class LevelBar extends Component {
 
     public void setValue(float value) {
         this.value = value;
+    }
+    
+    public void setOtherValue(float ov) {
+        this.other = ov;
     }
 
     protected void draw(ANSIContext context) throws IOException {
@@ -49,11 +54,17 @@ public class LevelBar extends Component {
 
     private void drawWithoutText(ANSIContext context) throws IOException {
         context.moveTo(sx, sy);
-        context.bgColor(fgColor);
-        int c = (int) (value * width);
-        context.spaces(c);
-        context.bgColor(bgColor);
-        context.spaces(width - c);
+        int crt;
+        crt = spaces(context, 0, other * width, otherColor);
+        crt = spaces(context, crt, (value - other) * width, fgColor);
+        crt = spaces(context, crt, width, bgColor);
+    }
+    
+    private int spaces(ANSIContext context, int pos, float count, int color) throws IOException {
+        int c = (int) count;
+        context.bgColor(color);
+        context.spaces(Math.min(c, width - pos));
+        return pos + c;
     }
     
     private void drawWithText(ANSIContext context) throws IOException {
@@ -65,12 +76,21 @@ public class LevelBar extends Component {
         String s = sb.toString();
         
         context.moveTo(sx, sy);
-        context.bgColor(fgColor);
         context.fgColor(textColor);
-        int c = (int) (value * width);
-        context.text(s.substring(0, c));
-        context.bgColor(bgColor);
-        context.text(s.substring(c));
+        
+        int crt;
+        crt = text(context, s, 0, other * width, otherColor);
+        crt = text(context, s, crt, (value - other) * width, fgColor);
+        crt = text(context, s, crt, width, bgColor);
+    }
+    
+    private int text(ANSIContext context, String str, int pos, float count, int color) throws IOException {
+        int c = (int) count;
+        context.bgColor(color);
+        for (int i = 0; i < c && pos + i < str.length(); i++) {
+            context.putChar(str.charAt(pos + i));
+        }
+        return pos + c;
     }
     
      private void spaces(StringBuilder sb, int count) {

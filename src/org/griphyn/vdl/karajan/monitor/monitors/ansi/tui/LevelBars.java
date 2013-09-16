@@ -40,7 +40,21 @@ public class LevelBars extends Container {
             }
         }
         for (int i = 0; i < values.length; i++) {
-            getBar(i).setValue((float) values[i] / range);
+            if (range > 0) {
+                getBar(i).setValue((float) values[i] / range);
+            }
+            else {
+                getBar(i).setValue(0);
+            }
+        }
+    }
+    
+    public void setOtherValue(int i, int ov) {
+        if (range != 0) {
+            getBar(i).setOtherValue((float) ov / range);
+        }
+        else {
+            getBar(i).setOtherValue(0);
         }
     }
     
@@ -60,6 +74,4 @@ public class LevelBars extends Container {
         }
         super.validate();
     }
-    
-    
 }
