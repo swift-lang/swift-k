@@ -62,8 +62,11 @@ import org.globus.util.Util;
 public class AutoCA {
     public static final Logger logger = Logger.getLogger(AutoCA.class);
     
+    public static final boolean SHARED_PROXIES = 
+        "true".equals(System.getProperty("autoCA.shared.proxies"));
+    
     public static final String CA_DIR = System.getProperty("user.home") + File.separator 
-    + ".globus" + File.separator + "coasters";
+        + ".globus" + File.separator + "coasters";
     public static final String CA_CRT_NAME_PREFIX = "CAcert";
     public static final String CA_KEY_NAME_PREFIX = "CAkey";
     public static final String USER_CRT_NAME_PREFIX = "usercert";
@@ -120,13 +123,8 @@ public class AutoCA {
     private void ensureCACertsExist() throws IOException, GeneralSecurityException {
         // delete expired CAs, make a new one if the existing ones don't have
         // at least MIN_CA_LIFETIME_LEFT
-        FileLock fl = new FileLock(CA_DIR);
-        try {
-            fl.lock();
-        }
-        catch (Exception e) {
-            logger.warn("Failed to lock CA dir", e);
-        }
+        FileLock fl = lockDir(CA_DIR);
+        
         try {
             File[] certs = discoverProxies();
             long now = System.currentTimeMillis();
@@ -153,7 +151,7 @@ public class AutoCA {
                 }
             }
             
-            if (now + MIN_CA_CERT_LIFETIME_LEFT > maxExpirationTime) {
+            if (now + MIN_CA_CERT_LIFETIME_LEFT > maxExpirationTime && SHARED_PROXIES) {
                 int index = discoverNextIndex();
                 this.info = new Info(makeFile(PROXY_NAME_PREFIX, index), makeFile(CA_CRT_NAME_PREFIX, index));
                 if (logger.isInfoEnabled()) {
@@ -168,10 +166,32 @@ public class AutoCA {
             }
         }
         finally {
-            fl.unlock();
+            unlock(fl);
         }
     }
     
+    private void unlock(FileLock fl) throws IOException {
+        if (fl != null) {
+            fl.unlock();
+        }
+    }
+
+    private FileLock lockDir(String caDir) {
+        if (SHARED_PROXIES) {
+            FileLock fl = new FileLock(CA_DIR);
+            try {
+                fl.lock();
+            }
+            catch (Exception e) {
+                logger.warn("Failed to lock CA dir", e);
+            }
+            return fl;
+        }
+        else {
+            return null;
+        }
+    }
+
     private File makeFile(String prefix, int index) {
         return new File(CA_DIR + File.separator + prefix + "." + index + ".pem");
     }
@@ -204,7 +224,7 @@ public class AutoCA {
     private File[] discoverProxies() {
         return new File(CA_DIR).listFiles(new FileFilter() {
             public boolean accept(File f) {
-                return f.isFile() && f.getName().matches(PROXY_NAME_PREFIX + "\\.[0-9]\\.pem");
+                return f.isFile() && f.getName().matches(PROXY_NAME_PREFIX + "\\.[0-9]+\\.pem");
             }
         });
     }
