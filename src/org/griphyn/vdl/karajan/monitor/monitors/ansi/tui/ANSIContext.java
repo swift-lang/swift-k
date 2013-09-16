@@ -687,6 +687,10 @@ public class ANSIContext {
     public void exit() {
         done = true;
         try {
+            Screen scr = getScreen();
+            if (screen != null) {
+                moveTo(0, getScreen().getHeight() - 1);
+            }
             os.write(ANSI.cursorVisible(true));
             os.flush();
         }
