@@ -138,24 +138,29 @@ public class AutoCA {
                 if (logger.isInfoEnabled()) {
                     logger.info("Checking certificate " + c);
                 }
-                X509Certificate cert = CertUtil.loadCertificate(c.getAbsolutePath());
-                long certExpirationTime = cert.getNotAfter().getTime();
-                if (certExpirationTime < now) {
-                    // delete cert and key
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Certificate expired. Deleting.");
+                try {
+                    X509Certificate cert = CertUtil.loadCertificate(c.getAbsolutePath());
+                    long certExpirationTime = cert.getNotAfter().getTime();
+                    if (certExpirationTime < now) {
+                        // delete cert and key
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Certificate expired. Deleting.");
+                        }
+                        deleteAll(getIndex(c));
                     }
-                    deleteAll(getIndex(c));
+                    if (certExpirationTime > maxExpirationTime) {
+                        maxExpirationTime = certExpirationTime;
+                        int index = getIndex(c);
+                        this.info = new Info(makeFile(PROXY_NAME_PREFIX, index), makeFile(CA_CRT_NAME_PREFIX, index));
+                        this.cert = cert;
+                    }
                 }
-                if (certExpirationTime > maxExpirationTime) {
-                    maxExpirationTime = certExpirationTime;
-                    int index = getIndex(c);
-                    this.info = new Info(makeFile(PROXY_NAME_PREFIX, index), makeFile(CA_CRT_NAME_PREFIX, index));
-                    this.cert = cert;
+                catch (Exception e) {
+                    logger.info("Failed to check " + c + ". Ignoring.", e);
                 }
             }
             
-            if (now + MIN_CA_CERT_LIFETIME_LEFT > maxExpirationTime && SHARED_PROXIES) {
+            if (now + MIN_CA_CERT_LIFETIME_LEFT > maxExpirationTime || !SHARED_PROXIES) {
                 int index = discoverNextIndex();
                 this.info = new Info(makeFile(PROXY_NAME_PREFIX, index), makeFile(CA_CRT_NAME_PREFIX, index));
                 if (logger.isInfoEnabled()) {
