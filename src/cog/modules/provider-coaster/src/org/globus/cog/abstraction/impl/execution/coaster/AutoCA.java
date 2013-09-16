@@ -24,7 +24,9 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -62,8 +64,11 @@ import org.globus.util.Util;
 public class AutoCA {
     public static final Logger logger = Logger.getLogger(AutoCA.class);
     
+    public static final boolean SHARED_PROXIES = 
+        "true".equals(System.getProperty("autoCA.shared.proxies"));
+    
     public static final String CA_DIR = System.getProperty("user.home") + File.separator 
-    + ".globus" + File.separator + "coasters";
+        + ".globus" + File.separator + "coasters";
     public static final String CA_CRT_NAME_PREFIX = "CAcert";
     public static final String CA_KEY_NAME_PREFIX = "CAkey";
     public static final String USER_CRT_NAME_PREFIX = "usercert";
@@ -80,6 +85,8 @@ public class AutoCA {
     public static final long WEEK_IN_MS = 1000 * 3600 * 24 * 7;
     public static final long CA_CERT_LIFETIME = 2 * WEEK_IN_MS;
     public static final long MIN_CA_CERT_LIFETIME_LEFT = WEEK_IN_MS;
+    
+    public static final int MAX_PROXY_INDEX = 99;
     
     public static final int ID_BYTES = 4;
     
@@ -120,17 +127,13 @@ public class AutoCA {
     private void ensureCACertsExist() throws IOException, GeneralSecurityException {
         // delete expired CAs, make a new one if the existing ones don't have
         // at least MIN_CA_LIFETIME_LEFT
-        FileLock fl = new FileLock(CA_DIR);
-        try {
-            fl.lock();
-        }
-        catch (Exception e) {
-            logger.warn("Failed to lock CA dir", e);
-        }
+        FileLock fl = lockDir(CA_DIR);
+        
         try {
             File[] certs = discoverProxies();
             long now = System.currentTimeMillis();
             long maxExpirationTime = 0;
+            
             
             for (File c : certs) {
                 if (logger.isInfoEnabled()) {
@@ -153,11 +156,16 @@ public class AutoCA {
                 }
             }
             
-            if (now + MIN_CA_CERT_LIFETIME_LEFT > maxExpirationTime) {
+            if (now + MIN_CA_CERT_LIFETIME_LEFT > maxExpirationTime && SHARED_PROXIES) {
                 int index = discoverNextIndex();
                 this.info = new Info(makeFile(PROXY_NAME_PREFIX, index), makeFile(CA_CRT_NAME_PREFIX, index));
                 if (logger.isInfoEnabled()) {
-                    logger.info("No certificates with enough lifetime. Creating new certificate: " + info.proxyPath);
+                    if (!SHARED_PROXIES) {
+                        logger.info("Shared proxies are disabled. Creating new certificate: " + info.proxyPath);
+                    }
+                    else {
+                        logger.info("No certificates with enough lifetime. Creating new certificate: " + info.proxyPath);
+                    }
                 }
                 this.cert = createAll(index);
             }
@@ -168,10 +176,32 @@ public class AutoCA {
             }
         }
         finally {
-            fl.unlock();
+            unlock(fl);
         }
     }
     
+    private void unlock(FileLock fl) throws IOException {
+        if (fl != null) {
+            fl.unlock();
+        }
+    }
+
+    private FileLock lockDir(String caDir) {
+        if (SHARED_PROXIES) {
+            FileLock fl = new FileLock(CA_DIR);
+            try {
+                fl.lock();
+            }
+            catch (Exception e) {
+                logger.warn("Failed to lock CA dir", e);
+            }
+            return fl;
+        }
+        else {
+            return null;
+        }
+    }
+
     private File makeFile(String prefix, int index) {
         return new File(CA_DIR + File.separator + prefix + "." + index + ".pem");
     }
@@ -188,13 +218,18 @@ public class AutoCA {
     private int getIndex(File c) {
         String name = c.getName();
         int i2 = name.lastIndexOf('.');
-        return Integer.parseInt(name.substring(i2 - 1, i2));
+        int i1 = name.lastIndexOf('.', i2 - 1);
+        return Integer.parseInt(name.substring(i1 + 1, i2));
     }
 
     private int discoverNextIndex() throws GeneralSecurityException {
-        for (int i = 0; i < 10; i++) {
-            File f = makeFile(PROXY_NAME_PREFIX, i);
-            if (!f.exists()) {
+        File[] existing = discoverProxies();
+        Set<Integer> usedIndices = new HashSet<Integer>();
+        for (File e : existing) {
+            usedIndices.add(getIndex(e));
+        }
+        for (int i = 0; i < MAX_PROXY_INDEX; i++) {
+            if (!usedIndices.contains(i)) {
                 return i;
             }
         }
@@ -204,7 +239,7 @@ public class AutoCA {
     private File[] discoverProxies() {
         return new File(CA_DIR).listFiles(new FileFilter() {
             public boolean accept(File f) {
-                return f.isFile() && f.getName().matches(PROXY_NAME_PREFIX + "\\.[0-9]\\.pem");
+                return f.isFile() && f.getName().matches(PROXY_NAME_PREFIX + "\\.[0-9]+\\.pem");
             }
         });
     }
@@ -242,7 +277,11 @@ public class AutoCA {
     }
 
     private void copySigningPolicy(int index) throws IOException {
-        FileOutputStream fos = new FileOutputStream(CA_DIR + File.separator + CA_CRT_NAME_PREFIX + "." + index + ".signing_policy");
+        File f = new File(CA_DIR + File.separator + CA_CRT_NAME_PREFIX + "." + index + ".signing_policy");
+        if (!SHARED_PROXIES) {
+            f.deleteOnExit();
+        }
+        FileOutputStream fos = new FileOutputStream(f);
         try {
             InputStream is = AutoCA.class.getClassLoader().getResource(SIGNING_POLICY_RES_NAME).openStream();
             try {
@@ -304,6 +343,9 @@ public class AutoCA {
     private void writeProxy(GlobusCredential proxy, File f) throws GeneralSecurityException {
         try {
             OutputStream fw = openStream(f);
+            if (!SHARED_PROXIES) {
+                f.deleteOnExit();
+            }
             try {
                 proxy.save(fw);
             }
@@ -329,6 +371,9 @@ public class AutoCA {
     private void writeCert(X509Certificate cert, File f) throws GeneralSecurityException {
         try {
             OutputStream fw = openStream(f);
+            if (!SHARED_PROXIES) {
+                f.deleteOnExit();
+            }
             CertUtil.writeCertificate(fw, cert);
         }
         catch (Exception e) {
@@ -367,6 +412,9 @@ public class AutoCA {
     private void writeKey(OpenSSLKey key, File f) throws GeneralSecurityException {
         try {
             OutputStream keyStream = openStream(f);
+            if (!SHARED_PROXIES) {
+                f.deleteOnExit();
+            }
             try {
                 key.writeTo(keyStream);
             }
