@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -94,6 +96,7 @@ public class AutoCA {
     private Info info;
     private X509Certificate cert;
     private X509V3CertificateGenerator gen;
+    private Lock jvmLock;
 
     public synchronized static AutoCA getInstance() {
         if (instance == null) {
@@ -104,6 +107,7 @@ public class AutoCA {
     
     public AutoCA() {
          gen = new X509V3CertificateGenerator();
+         jvmLock = new ReentrantLock();
     }
     
     public static class Info {
@@ -127,7 +131,7 @@ public class AutoCA {
     private void ensureCACertsExist() throws IOException, GeneralSecurityException {
         // delete expired CAs, make a new one if the existing ones don't have
         // at least MIN_CA_LIFETIME_LEFT
-        FileLock fl = lockDir(CA_DIR);
+        Object fl = lockDir(CA_DIR);
         
         try {
             File[] certs = discoverProxies();
@@ -184,13 +188,16 @@ public class AutoCA {
         }
     }
     
-    private void unlock(FileLock fl) throws IOException {
-        if (fl != null) {
-            fl.unlock();
+    private void unlock(Object fl) throws IOException {
+        if (SHARED_PROXIES) {
+            ((FileLock) fl).unlock();
+        }
+        else {
+            ((Lock) fl).unlock();
         }
     }
 
-    private FileLock lockDir(String caDir) {
+    private Object lockDir(String caDir) {
         if (SHARED_PROXIES) {
             FileLock fl = new FileLock(CA_DIR);
             try {
@@ -202,7 +209,8 @@ public class AutoCA {
             return fl;
         }
         else {
-            return null;
+            jvmLock.lock();
+            return jvmLock;
         }
     }
 
