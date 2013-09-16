@@ -119,6 +119,7 @@ public class VDL2Config extends Properties {
 		// TODO what are the valid values here?
 		put("cdm.broadcast.mode", "file");
 		put("use.provider.staging", "false", ConfigPropertyType.BOOLEAN);
+		put("use.wrapper.staging", "false", ConfigPropertyType.BOOLEAN);
 		put("ticker.date.format", "", ConfigPropertyType.STRING);
 		put("ticker.prefix", "Progress:  time:", ConfigPropertyType.STRING);
 		
