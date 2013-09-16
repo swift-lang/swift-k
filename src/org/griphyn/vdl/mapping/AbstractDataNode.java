@@ -37,6 +37,7 @@ import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
+import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.util.VDL2Config;
@@ -88,6 +89,8 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     
     private int writeRefCount;
     private List<FutureListener> listeners;
+    
+    protected static final Tracer variableTracer = Tracer.getTracer("VARIABLE");
 
     protected AbstractDataNode(Field field) {
         this.field = field;
@@ -789,9 +792,8 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             logger.debug(this + " writeRefCount " + this.writeRefCount);
         }
         if (this.writeRefCount == 0) {
-            if(logger.isInfoEnabled()) {
-                logger.info("All partial closes for " + this + 
-                             " have happened. Closing fully.");
+            if (variableTracer.isEnabled()) {
+                variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " CLOSE write ref count is zero");
             }
             closeDeep();
         }

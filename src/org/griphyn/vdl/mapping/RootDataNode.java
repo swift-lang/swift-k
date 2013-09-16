@@ -39,8 +39,6 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	private AbstractDataNode waitingMapperParam;
 	private DuplicateMappingChecker dmc;
 	
-	private static final Tracer tracer = Tracer.getTracer("VARIABLE");
-
 	public RootDataNode(Type type, DuplicateMappingChecker dmc) {
 		super(Field.Factory.createField(null, type));
 		this.dmc = dmc;
@@ -73,8 +71,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	    waitingMapperParam = params.getFirstOpenParamValue();
 	    if (waitingMapperParam != null) {
             waitingMapperParam.addListener(this);
-            if (tracer.isEnabled()) {
-                tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
+            if (variableTracer.isEnabled()) {
+                variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
             }
             return;
@@ -149,8 +147,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 					// Try to get the path in order to check that the 
 				    // path is valid - we'll get an exception if not
 					DSHandle h = root.getField(p);
-					if (tracer.isEnabled()) {
-					    tracer.trace(root.getThread(), root.getDeclarationLine(), 
+					if (variableTracer.isEnabled()) {
+					    variableTracer.trace(root.getThread(), root.getDeclarationLine(), 
 					        root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
 					}
 				}
@@ -174,8 +172,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
             try {
                 DSHandle field = root.getField(p);
                 field.setValue(FILE_VALUE);
-                if (tracer.isEnabled()) {
-                    tracer.trace(root.getThread(), root.getDeclarationLine(), 
+                if (variableTracer.isEnabled()) {
+                    variableTracer.trace(root.getThread(), root.getDeclarationLine(), 
                         root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
                 }
                 any = true;
@@ -191,8 +189,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
             }
         }
         root.closeDeep();
-        if (!any && tracer.isEnabled()) {
-            tracer.trace(root.getThread(), root.getDeclarationLine(), 
+        if (!any && variableTracer.isEnabled()) {
+            variableTracer.trace(root.getThread(), root.getDeclarationLine(), 
                 root.getDisplayableName() + " MAPPING no files found");
         }
     }
@@ -288,8 +286,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	private synchronized void initialized() {
 		initialized = true;
 		waitingMapperParam = null;
-		if (tracer.isEnabled()) {
-            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
+		if (variableTracer.isEnabled()) {
+            variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
         }
 	}
 }

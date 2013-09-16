@@ -35,8 +35,6 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	private MappingParamSet params;
 	private AbstractDataNode waitingMapperParam;
 	private DuplicateMappingChecker dmc;
-	
-	private static final Tracer tracer = Tracer.getTracer("VARIABLE");
 
 	/**
 	 * Instantiate a root array data node with specified type.
@@ -68,8 +66,8 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 		waitingMapperParam = params.getFirstOpenParamValue();
         if (waitingMapperParam != null) {
             waitingMapperParam.addListener(this);
-            if (tracer.isEnabled()) {
-                tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
+            if (variableTracer.isEnabled()) {
+                variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
             }
             return;
@@ -163,8 +161,8 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
     private synchronized void initialized() {
         initialized = true;
         waitingMapperParam = null;
-        if (tracer.isEnabled()) {
-            tracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
+        if (variableTracer.isEnabled()) {
+            variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
         }
     }
 }
