@@ -71,7 +71,7 @@ public class FileLock {
             return Integer.parseInt(new File("/proc/self").getCanonicalFile().getName());
         }
         catch (Exception e) {
-            logger.warn("Failed to get PID of current process", e);
+            logger.info("Failed to get PID of current process", e);
             try {
                 SecureRandom rnd = SecureRandom.getInstance("SHA1PRNG");
                 return rnd.nextInt() & 0x7fffffff;
@@ -120,6 +120,7 @@ public class FileLock {
                 // all remaining NUMBER[j] and ENTERING[j] are 0
                 break;
             }
+            
             File e = makeFile(ENTERING, minIndex);
             
             while (e.exists()) {
@@ -135,6 +136,8 @@ public class FileLock {
                 }
                 Thread.sleep(100);
             }
+            // this guarantees that the getMinIndex(last) call
+            // above will only return indices > the_current_minIndex
             last = minIndex;
         }
     }
