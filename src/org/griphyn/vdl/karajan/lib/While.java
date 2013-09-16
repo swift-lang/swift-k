@@ -97,8 +97,15 @@ public class While extends InternalFunction {
                     while (true) {
                         body.run(thr);
                         if (next.isEmpty()) {
+                            // must do this twice since the closeDataSet calls
+                            // inside the iterate won't be called if the iterate 
+                            // condition is true
+                            RefCount.decRefs(drefs);
                             RefCount.decRefs(drefs);
                             break;
+                        }
+                        else {
+                            RefCount.incRefs(drefs);
                         }
                         Object val = next.removeFirst();
                         if (tracer.isEnabled()) {
