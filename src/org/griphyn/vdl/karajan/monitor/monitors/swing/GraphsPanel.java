@@ -19,10 +19,14 @@ import java.util.prefs.Preferences;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.common.DataSampler;
@@ -30,6 +34,9 @@ import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.monitors.swing.GridView.Tree;
 
 public class GraphsPanel extends JPanel {    
+    public static final int RANGE_MIN = 1;
+    public static final int RANGE_MAX = 4 * 60 + 1;
+    
     private static final int V = GridView.Tree.V;
     private static final int H = GridView.Tree.H;
     
@@ -81,6 +88,8 @@ public class GraphsPanel extends JPanel {
     private JPopupMenu layoutPopup;
     private LinkedList<GraphPanel> graphs;
     private GridView grid;
+    private JSlider rangeSlider;
+    private JLabel rangeLabel;
     
     public GraphsPanel(SystemState state) {
         this.state = state;
@@ -99,8 +108,20 @@ public class GraphsPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 displayLayoutPopup(layout);
+            }
+        });
+        
+        toolBar.add(new JLabel("Max. range: "));
+        toolBar.add(rangeSlider = new JSlider(JSlider.HORIZONTAL, RANGE_MIN, RANGE_MAX, 30));
+        rangeSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                setGraphRanges(rangeSlider.getValue());
             } 
         });
+        toolBar.add(rangeSlider);
+        toolBar.add(rangeLabel = new JLabel("00:01"));
+        setGraphRanges(rangeSlider.getValue());
         
         makeLayoutPopup();
         
@@ -108,6 +129,33 @@ public class GraphsPanel extends JPanel {
         add(grid, BorderLayout.CENTER);
         
         loadLayout();
+    }
+
+    protected void setGraphRanges(int value) {
+        if (value == RANGE_MAX) {
+            rangeLabel.setText("unlimited");
+            for (GraphPanel gp : graphs) {
+                gp.setMaxRange(0);
+            }
+        }
+        else {
+            int mins = value / 60;
+            int secs = value % 60;
+            
+            rangeLabel.setText(pad(mins) + ":" + pad(secs));
+            for (GraphPanel gp : graphs) {
+                gp.setMaxRange(value);
+            }
+        }
+    }
+
+    private String pad(int ms) {
+        if (ms < 10) {
+            return "0" + ms;
+        }
+        else {
+            return String.valueOf(ms);
+        }
     }
 
     private void makeLayoutPopup() {

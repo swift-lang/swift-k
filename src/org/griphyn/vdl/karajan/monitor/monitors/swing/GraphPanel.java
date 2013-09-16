@@ -54,9 +54,12 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.event.ChartChangeEvent;
 import org.jfree.chart.event.ChartChangeEventType;
 import org.jfree.chart.event.ChartChangeListener;
+import org.jfree.chart.event.PlotChangeEvent;
+import org.jfree.chart.event.PlotChangeListener;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.Range;
@@ -71,6 +74,7 @@ public class GraphPanel extends JPanel implements ChartMouseListener {
     public static final DateFormat DATE = DateFormat.getDateInstance();
     public static final DateFormat TIME = DateFormat.getTimeInstance();
     
+    
     private SystemState state;
     private DataSampler sampler;
     private JFreeChart chart;
@@ -84,6 +88,7 @@ public class GraphPanel extends JPanel implements ChartMouseListener {
     private TimerTask tooltipTimerTask;
     private JToolTip toolTip;
     private double toolTipValue;
+    private int maxRange;
 
     public GraphPanel(SystemState state, GraphsPanel gp) {
         this.state = state;
@@ -122,6 +127,7 @@ public class GraphPanel extends JPanel implements ChartMouseListener {
             @Override
             public void chartChanged(ChartChangeEvent e) {
                 if (e.getType() == ChartChangeEventType.DATASET_UPDATED) {
+                    updateMaxRange();
                     updateToolTipLocation();
                 }
             }
@@ -488,6 +494,22 @@ public class GraphPanel extends JPanel implements ChartMouseListener {
         repaint();
         if (save) {
             gp.saveLayout();
+        }
+    }
+    
+    public void setMaxRange(int value) {
+        this.maxRange = value;
+        updateMaxRange();
+    }
+
+    private void updateMaxRange() {
+        ValueAxis x = chart.getXYPlot().getDomainAxis();
+        if (maxRange == 0) {
+            x.setAutoRange(true);
+        }
+        else {
+            Range dr = chart.getXYPlot().getDataRange(x);
+            x.setRange(Math.max(dr.getLowerBound(), dr.getUpperBound() - maxRange * 60 * 1000), dr.getUpperBound());
         }
     }
 
