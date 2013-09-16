@@ -12,7 +12,7 @@
 	<classpathentry kind="lib" path="lib/j2ssh-common-0.2.2.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jglobus"/>
 	<classpathentry kind="lib" path="lib/j2ssh-core-0.2.2-patch-b.jar"/>
-	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
 	<classpathentry kind="src" path="/abstraction-provider-local"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
