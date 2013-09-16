@@ -245,14 +245,14 @@ sequential(
 
 callInternal_log_input() ::= <<
 sequential(
-	swift:parameterLog("input", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
+	swift:parameterLog("input", "TODO_name_or_pos", swift:getDatasetProvenanceID($it$))
 	$it$
 )
 >>
 
 callInternal_log_output() ::= <<
 sequential(
-	swift:parameterLog("output", "TODO_name_or_pos", vdl:getDatasetProvenanceID($it$))
+	swift:parameterLog("output", "TODO_name_or_pos", swift:getDatasetProvenanceID($it$))
 	$it$
 )
 >>
