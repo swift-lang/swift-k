@@ -93,6 +93,9 @@ public class HangChecker extends TimerTask {
                     if (!found) {
                         found = findJVMDeadlocks(ps);
                     }
+                    if (!found) {
+                        dumpJVMThreads(ps);
+                    }
                     logger.warn(os.toString());
                     ps.close();
                     if (found) {
@@ -108,9 +111,26 @@ public class HangChecker extends TimerTask {
         }
     }
     
+    private void dumpJVMThreads(PrintStream pw) {
+        ThreadMXBean b = ManagementFactory.getThreadMXBean();
+        if (b != null) {
+            long[] ids = b.getAllThreadIds();
+            if (ids != null && ids.length != 0) {
+                ThreadInfo[] tis = b.getThreadInfo(ids, true, true); 
+                pw.println("\nWaiting JVM threads:");
+                for (ThreadInfo ti : tis) {
+                    Thread.State state = ti.getThreadState();
+                    if (state != Thread.State.RUNNABLE && state != Thread.State.TERMINATED) {
+                        printThreadInfo(pw, ti);
+                    }
+                }
+            }
+        }
+    }
+
     private boolean findJVMDeadlocks(PrintStream pw) {;
-        try {
-            ThreadMXBean b = ManagementFactory.getThreadMXBean();
+        ThreadMXBean b = ManagementFactory.getThreadMXBean();
+        if (b != null) {
             long[] ids = b.findDeadlockedThreads();
             if (ids != null && ids.length != 0) {
                 ThreadInfo[] tis = b.getThreadInfo(ids, true, true); 
@@ -120,9 +140,6 @@ public class HangChecker extends TimerTask {
                 }
                 return true;
             }
-        }
-        catch (Exception e) {
-            logger.warn("Exception caught trying to find JVM deadlocks", e);
         }
         return false;
     }
