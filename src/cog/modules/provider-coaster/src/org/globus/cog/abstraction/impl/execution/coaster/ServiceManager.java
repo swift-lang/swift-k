@@ -65,6 +65,11 @@ public class ServiceManager implements StatusListener {
 
     public static final String TASK_ATTR_ID = "coaster:serviceid";
     public static final String ATTR_USER_HOME_OVERRIDE = "userHomeOverride";
+    
+    /**
+     * Maximum time to wait for services to acknowledge shutdown
+     */
+    public static final int REAPER_MAX_WAIT_TIME = 10 * 1000;
 
     private static ServiceManager defaultManager;
 
@@ -472,6 +477,7 @@ public class ServiceManager implements StatusListener {
         public void run() {
             logger.info("Cleaning up...");
             count = services.size();
+            int waited = 0;
             for (String url : services.values()) {
                 Object cred = credentials.get(url);
                 try {
@@ -489,9 +495,10 @@ public class ServiceManager implements StatusListener {
                 }
             }
             synchronized (this) {
-                while (count > 0) {
+                while (count > 0 && waited < REAPER_MAX_WAIT_TIME) {
                     try {
                         wait(100);
+                        waited += 100;
                     }
                     catch (InterruptedException e) {
                         return;
