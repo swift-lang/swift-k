@@ -19,6 +19,11 @@ package org.griphyn.vdl.karajan;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.management.LockInfo;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MonitorInfo;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,6 +72,7 @@ public class HangChecker extends TimerTask {
                 boolean allOverloaded = s.allOverloaded();
                 if (running == 0 && EventBus.eventCount == lastEventCount && 
                         !EventBus.getBus().isAnythingRunning() && !allOverloaded) {
+                    boolean found = false;
                     logger.warn("No events in " + (CHECK_INTERVAL / 1000) + "s.");
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     PrintStream ps = new PrintStream(os);
@@ -74,15 +80,25 @@ public class HangChecker extends TimerTask {
                     Monitor.dumpThreads(ps);
                     try {
                         Graph g = buildGraph();
-                        if (!findCycles(ps, g)) {
-                            findThreadsToBlame(ps, g);
+                        if (!found) {
+                            found = findCycles(ps, g);
+                        }
+                        if (!found) {
+                            found = findThreadsToBlame(ps, g);
                         }
                     }
                     catch (Exception e) {
                         logger.warn("Failed to build dependency graph", e);
                     }
+                    if (!found) {
+                        found = findJVMDeadlocks(ps);
+                    }
                     logger.warn(os.toString());
                     ps.close();
+                    if (found) {
+                        System.err.println("Irrecoverable error found. Exiting.");
+                        System.exit(99);
+                    }
                 }
             }
             lastEventCount = EventBus.eventCount;
@@ -92,7 +108,66 @@ public class HangChecker extends TimerTask {
         }
     }
     
-    private void findThreadsToBlame(PrintStream ps, Graph g) {
+    private boolean findJVMDeadlocks(PrintStream pw) {;
+        try {
+            ThreadMXBean b = ManagementFactory.getThreadMXBean();
+            long[] ids = b.findDeadlockedThreads();
+            if (ids != null && ids.length != 0) {
+                ThreadInfo[] tis = b.getThreadInfo(ids, true, true); 
+                pw.println("\nDeadlocked Java threads found:");
+                for (ThreadInfo ti : tis) {
+                    printThreadInfo(pw, ti);
+                }
+                return true;
+            }
+        }
+        catch (Exception e) {
+            logger.warn("Exception caught trying to find JVM deadlocks", e);
+        }
+        return false;
+    }
+
+    private void printThreadInfo(PrintStream pw, ThreadInfo ti) {
+        pw.println("\tThread \"" + ti.getThreadName() + "\" (" + hex(ti.getThreadId()) + ")");
+        LockInfo l = ti.getLockInfo();
+        pw.println("\t\twaiting for " + format(l) + " held by " + ti.getLockOwnerName() + " (" + hex(ti.getLockOwnerId()) + ")");
+        Map<StackTraceElement, MonitorInfo> mlocs = new HashMap<StackTraceElement, MonitorInfo>();
+        MonitorInfo[] mis = ti.getLockedMonitors();
+        if (mis.length > 0) {
+            pw.println("\tMonitors held:");
+            for (MonitorInfo mi : mis) {
+                mlocs.put(mi.getLockedStackFrame(), mi);
+                pw.println("\t\t" + format(mi));
+            }
+        }
+        LockInfo[] lis = ti.getLockedSynchronizers();
+        if (lis.length > 0) {
+            pw.println("\tSynchronizers held:");
+            for (LockInfo li : lis) {
+                pw.println("\t\t" + format(li));
+            }
+        }
+        pw.println("\tStack trace:");
+        StackTraceElement[] stes = ti.getStackTrace();
+        for (StackTraceElement ste : stes) {
+            pw.print("\t\t" + ste.getClassName() + "." + ste.getMethodName() + ":" + ste.getLineNumber());
+            if (mlocs.containsKey(ste)) {
+                pw.print(" -> locked " + format(mlocs.get(ste)));
+            }
+            pw.println();
+        }
+        pw.println();
+    }
+
+    private String format(LockInfo l) {
+        return l.getClassName() + " (" + hex(l.getIdentityHashCode()) + ")";
+    }
+
+    private String hex(long x) {
+        return String.format("0x%08x", x);
+    }
+
+    private boolean findThreadsToBlame(PrintStream ps, Graph g) {
         Map<VariableStack, DSHandle> wt = WaitingThreadsMonitor.getAllThreads();
         Set<VariableStack> sl = g.nodeSet();
         Set<VariableStack> loners = new HashSet<VariableStack>(wt.keySet());
@@ -110,6 +185,7 @@ public class HangChecker extends TimerTask {
             }
             ps.println("----");
         }
+        return !loners.isEmpty();
     }
 
     private Graph buildGraph() throws VariableNotFoundException {
