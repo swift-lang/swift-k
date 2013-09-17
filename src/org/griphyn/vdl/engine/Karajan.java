@@ -524,32 +524,38 @@ public class Karajan {
         QName expressionQName = new QName(namespaceURI, localName);
         if (expressionQName.equals(VARIABLE_REFERENCE_EXPR))     {
             paramST.setAttribute("expr", expressionToKarajan(param.getAbstractExpression(), scope));
-        } 
+        }
         else {
-            String parameterVariableName="swift#mapper#"+(internedIDCounter++);
+            String parameterVariableName = "swift#mapper#" + (internedIDCounter++);
             // make template for variable declaration (need to compute type of this variable too?)
             StringTemplate variableDeclarationST = template("variable");
             // TODO factorise this and other code in variable()?
             StringTemplate pmappingST = new StringTemplate("mapping");
             pmappingST.setAttribute("descriptor", "concurrent_mapper");
+            
             StringTemplate pparamST = template("vdl_parameter");
             pparamST.setAttribute("name", "prefix");
             pparamST.setAttribute("expr", parameterVariableName + "-" + 
                 UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
             pmappingST.setAttribute("params", pparamST);
+            
             variableDeclarationST.setAttribute("nil", Boolean.TRUE);
             variableDeclarationST.setAttribute("name", parameterVariableName);
             scope.bodyTemplate.setAttribute("declarations", variableDeclarationST);
-            StringTemplate paramValueST=expressionToKarajan(param.getAbstractExpression(),scope);
+            
+            StringTemplate paramValueST = expressionToKarajan(param.getAbstractExpression(), scope);
             String paramValueType = datatype(paramValueST);
             scope.addVariable(parameterVariableName, paramValueType, "Variable", param);
             variableDeclarationST.setAttribute("type", paramValueType);
+            
             StringTemplate variableReferenceST = template("id");
-            variableReferenceST.setAttribute("var",parameterVariableName);
+            variableReferenceST.setAttribute("var", parameterVariableName);
+            
             StringTemplate variableAssignmentST = template("assign");
-            variableAssignmentST.setAttribute("var",variableReferenceST);
-            variableAssignmentST.setAttribute("value",paramValueST);
+            variableAssignmentST.setAttribute("var", variableReferenceST);
+            variableAssignmentST.setAttribute("value", paramValueST);
             scope.appendStatement(variableAssignmentST);
+            
             if (param.getAbstractExpression().getDomNode().getNodeName().equals("stringConstant")) {
                 StringTemplate valueST = template("sConst");
                 valueST.setAttribute("innervalue", param.getAbstractExpression().getDomNode().getFirstChild().getNodeValue());
@@ -1605,7 +1611,7 @@ public class Karajan {
 		            type = expectedType;
 		        }
 		        else {
-		            throw new CompilationException("Cannot infer return type of procedure call");
+		            throw new CompilationException("Cannot infer return type of procedure call for " + name);
 		        }
 		    }
 		    subscope.addInternalVariable("swift#callintermediate", type, null);
