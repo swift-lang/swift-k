@@ -34,19 +34,24 @@ public class LevelBars extends Container {
     
     public void setValue(int index, int v) {
         values[index] = v;
+        int r = range;
         for (int i = 0; i < values.length; i++) {
-            if (values[i] > range) {
-                range = values[i];
+            if (values[i] > r) {
+                r = values[i];
             }
         }
         for (int i = 0; i < values.length; i++) {
-            if (range > 0) {
-                getBar(i).setValue((float) values[i] / range);
+            if (r > 0) {
+                getBar(i).setValue((float) values[i] / r);
             }
             else {
                 getBar(i).setValue(0);
             }
         }
+    }
+    
+    public void setRange(int range) {
+        this.range = range;
     }
     
     public void setOtherValue(int i, int ov) {

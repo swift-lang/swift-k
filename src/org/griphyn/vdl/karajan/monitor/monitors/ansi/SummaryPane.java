@@ -66,6 +66,7 @@ public class SummaryPane extends Container {
             SummaryItem summary = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
             if (summary != null) {
                 Map<String, Integer> counts = summary.getCounts(state);
+                bars.setRange(state.getTotal());
                 for (int i = 0; i < SummaryItem.STATES.length; i++) {
                     if (SummaryItem.STATES[i].isEnabled()) {
                         Integer v = counts.get(SummaryItem.STATES[i].getName());
