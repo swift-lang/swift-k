@@ -20,7 +20,7 @@
 
 grep ' swift ' | iso-to-secs | \
 grep -E '^[^ ]+ +[^ ]+ +swift ' | \
-sed 's/^\(.*\) DEBUG swift THREAD_ASSOCIATION jobid=\([^ ]*\) thread=\([0-9\-]*\) host=\([^ ]*\) replicationGroup=\([^ ]*\).*$/\1 \2 ASSOCIATED \3 \4 \5/'  | \
+sed 's/^\(.*\) DEBUG swift THREAD_ASSOCIATION jobid=\([^ ]*\) thread=\(R-[0-9\-]*\) host=\([^ ]*\) replicationGroup=\([^ ]*\).*$/\1 \2 ASSOCIATED \3 \4 \5/'  | \
 \
 sed 's/^\([^ ]*\) DEBUG swift \([^ ]*\) jobid=\([^ ]*\).*/\1 \3 \2/' | grep -v DEBUG | grep -v INFO
 
