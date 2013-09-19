@@ -29,6 +29,19 @@ public class FixedArgChannel<T> extends Sink<T> {
 	public void setNames(List<String> names) {
 		this.names = names;
 	}
+	
+	public boolean isEmpty() {
+	    return index > getStartIndex();
+	}
+
+	private int getStartIndex() {
+		return bounds >> 16;
+	}
+
+	@Override
+	public int size() {
+		return index - getStartIndex();
+	}
 
 	@Override
 	public synchronized boolean add(T value) {

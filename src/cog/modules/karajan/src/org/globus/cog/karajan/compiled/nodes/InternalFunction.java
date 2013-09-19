@@ -49,7 +49,7 @@ public abstract class InternalFunction extends Sequential {
 	protected ChannelRef<Object> _vargs;
 	
 	protected abstract Signature getSignature();
-	private int firstOptionalIndex, lastOptionalIndex;
+	private int firstOptionalIndex = -1, lastOptionalIndex;
 		
 	protected Param[] params(Object... p) {
 		Param[] a = new Param[p.length];
@@ -146,8 +146,9 @@ public abstract class InternalFunction extends Sequential {
 				            for (; i <= ec; i++) {
 				            	runChild(i - 1, thr);
 				            }
+				            checkArgs(stack);
 	        			}
-	        			catch (IllegalExtraArgumentException e) {
+	        			catch (IllegalArgumentException e) {
 	        				throw new ExecutionException(this, e.getMessage());
 	        			}
 			            try {
@@ -177,6 +178,12 @@ public abstract class InternalFunction extends Sequential {
 			}
 		}
 		initializeOptional(stack);
+	}
+	
+	protected void checkArgs(final Stack stack) {
+		if (_vargs != null) {
+			_vargs.check(stack);
+		}
 	}
 	
 	protected void initializeOptional(Stack stack) {
@@ -335,22 +342,18 @@ public abstract class InternalFunction extends Sequential {
 			}
 			else {
 				_vargs = makeArgMappingChannel(firstDynamicIndex, dynamicCount, ai.vargs.getIndex());
-				if (CompilerSettings.DEBUG) {
-					int i1 = ai.positional.size() - dynamicCount;
-					int i2 = ai.positional.size();
-					((ChannelRef.ArgMapping<Object>) _vargs).setNamesP(ai.positional.subList(i1, i2));
-				}
+				int i1 = ai.positional.size() - dynamicCount;
+				int i2 = ai.positional.size();
+				((ChannelRef.ArgMapping<Object>) _vargs).setNamesP(ai.positional.subList(i1, i2));
 			}
 			setChannelArg(w, Param.VARGS, _vargs);
         }
         else {
             if (!allPosStatic) {
             	_vargs = makeArgMappingFixedChannel(firstDynamicIndex, dynamicCount, ai.vargs.getIndex());
-            	if (CompilerSettings.DEBUG) {
-					int i1 = ai.positional.size() - dynamicCount;
-					int i2 = ai.positional.size();
-					((ChannelRef.ArgMapping<Object>) _vargs).setNamesP(ai.positional.subList(i1, i2));
-				}
+				int i1 = ai.positional.size() - dynamicCount;
+				int i2 = ai.positional.size();
+				((ChannelRef.ArgMapping<Object>) _vargs).setNamesP(ai.positional.subList(i1, i2));
             }
             else if (ai.vargs != null) {
             	_vargs = makeInvalidArgChannel(ai.vargs.getIndex());

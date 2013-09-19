@@ -21,7 +21,6 @@ import k.thr.Yield;
 
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
-import org.globus.cog.karajan.analyzer.CompilerSettings;
 import org.globus.cog.karajan.analyzer.NamedValue;
 import org.globus.cog.karajan.analyzer.Pure;
 import org.globus.cog.karajan.analyzer.RecursiveFunctionChannel;
@@ -36,7 +35,7 @@ public class SetVarK extends CompoundNode {
 	private ChannelRef.ArgMapping<Object> values;
 
 	@Override
-	public void run(LWThread thr) throws ExecutionException {
+	public void run(LWThread thr) {
         int i = thr.checkSliceAndPopState();
         Stack stack = thr.getStack();
         try {
@@ -51,7 +50,11 @@ public class SetVarK extends CompoundNode {
 	        		for (; i <= nc; i++) {
 	        			runChild(i - 1, thr);
 	        		}
+	        		values.check(stack);
 		    }
+        }
+        catch (Exception e) {
+        	throw new ExecutionException(this, e);
         }
         catch (Yield y) {
             y.getState().push(i);
@@ -106,9 +109,7 @@ public class SetVarK extends CompoundNode {
 		}
 		
 		values = new ChannelRef.ArgMappingFixed<Object>(startIndex, vars.size(), svalues.getIndex());
-		if (CompilerSettings.DEBUG) {
-			values.setNamesS(vars);
-		}
+		values.setNamesS(vars);
 		addChild(cn);
 		return this;
 	}
