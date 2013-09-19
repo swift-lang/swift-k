@@ -9,25 +9,36 @@
  */
 package org.globus.cog.karajan.compiled.nodes.functions;
 
+import k.rt.Channel;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
-import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.util.TypeUtil;
 
 public class KException extends AbstractSingleValuedFunction {
-    private ArgRef<String> message;
-    private ArgRef<Throwable> exception;
-   
+	private ChannelRef<Object> c_vargs;
+    
 	@Override
 	protected Param[] getParams() {
-		return params("message", "exception");
+		return params("...");
 	}
 
-	public Object function(Stack stack) { 
-		Object message = this.message.getValue(stack);
-		Throwable detail = this.exception.getValue(stack);
+	public Object function(Stack stack) {
+		Channel<Object> args = c_vargs.get(stack);
+		
+		if (args.size() == 0) {
+			throw new ExecutionException(this, "Missing argument(s)");
+		}
+		if (args.size() > 2) {
+			throw new ExecutionException(this, "Too many arguments");
+		}
+		Object message = args.get(0);
+		Throwable detail = null;
+		if (args.size() == 2) {
+			detail = (Throwable) args.get(1);
+		}
 		if (message instanceof String) {
 			return new ExecutionException(this, (String) message, detail);
 		}
