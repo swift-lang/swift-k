@@ -26,11 +26,14 @@ import java.util.Map;
 
 import k.rt.ExecutionException;
 import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -46,7 +49,7 @@ public class FnArg extends SwiftFunction {
     
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("name", "value"));
+        return new Signature(params("name", optional("value", null)));
     }
 
     @Override
