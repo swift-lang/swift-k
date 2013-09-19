@@ -42,7 +42,7 @@ namespace(swiftscript) {
 
 namespace(swift) {
 	import(sys)
-	export(SWIFT_CONFIG, contextAttribute("config"))
+	export(SWIFT_CONFIG, contextAttribute("SWIFT:CONFIG"))
 	export(SWIFT_TICKER, null)
 
 	export(getDatasetProvenanceID, def("org.griphyn.vdl.karajan.lib.GetDatasetProvenanceID"))
