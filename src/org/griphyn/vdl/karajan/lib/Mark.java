@@ -22,6 +22,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
+import k.rt.Channel;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
@@ -33,7 +34,7 @@ import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 
 public class Mark extends SwiftFunction {
-    private ArgRef<List<List<Object>>> restarts;
+    private ArgRef<Channel<List<Object>>> restarts;
     private ArgRef<Boolean> err;
     private ArgRef<Boolean> mapping;
     
@@ -47,7 +48,7 @@ public class Mark extends SwiftFunction {
         try {
             if (err.getValue(stack)) {
                 boolean mapping = this.mapping.getValue(stack);
-                List<List<Object>> files = this.restarts.getValue(stack);
+                Channel<List<Object>> files = this.restarts.getValue(stack);
                 for (List<Object> pv : files) {
                     Path p = parsePath(pv.get(0));
                     DSHandle handle = (DSHandle) pv.get(1);
