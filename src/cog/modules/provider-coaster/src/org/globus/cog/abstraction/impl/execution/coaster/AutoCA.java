@@ -97,6 +97,7 @@ public class AutoCA {
     private X509Certificate cert;
     private X509V3CertificateGenerator gen;
     private Lock jvmLock;
+    private int localBundleIndex = -1;
 
     public synchronized static AutoCA getInstance() {
         if (instance == null) {
@@ -165,17 +166,35 @@ public class AutoCA {
             }
             
             if (now + MIN_CA_CERT_LIFETIME_LEFT > maxExpirationTime || !SHARED_PROXIES) {
-                int index = discoverNextIndex();
-                this.info = new Info(makeFile(PROXY_NAME_PREFIX, index), makeFile(CA_CRT_NAME_PREFIX, index));
-                if (logger.isInfoEnabled()) {
-                    if (!SHARED_PROXIES) {
-                        logger.info("Shared proxies are disabled. Creating new certificate: " + info.proxyPath);
-                    }
-                    else {
-                        logger.info("No certificates with enough lifetime. Creating new certificate: " + info.proxyPath);
-                    }
+                int index;
+                boolean create;
+                if (this.localBundleIndex == -1) {
+                    index = discoverNextIndex();
+                    this.localBundleIndex = index;
+                    create = true;
                 }
-                this.cert = createAll(index);
+                else {
+                    index = this.localBundleIndex;
+                    create = false;
+                }
+                this.info = new Info(makeFile(PROXY_NAME_PREFIX, index), makeFile(CA_CRT_NAME_PREFIX, index));
+                if (create) {
+                    if (logger.isInfoEnabled()) {
+                        if (!SHARED_PROXIES) {
+                            logger.info("Shared proxies are disabled. Creating new certificate: " + info.proxyPath);
+                        }
+                        else {
+                            logger.info("No certificates with enough lifetime. Creating new certificate: " + info.proxyPath);
+                        }
+                    }
+                    this.cert = createAll(index);
+                }
+                else {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Using local JVM certificate " + this.info.proxyPath);
+                    }
+                    this.cert = CertUtil.loadCertificate(this.info.caCertPath);
+                }
             }
             else {
                 if (logger.isInfoEnabled()) {
