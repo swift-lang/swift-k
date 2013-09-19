@@ -24,16 +24,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.Channel;
 import k.rt.ExecutionException;
 import k.rt.Stack;
-import k.thr.LWThread;
 
-import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -42,14 +40,13 @@ import org.griphyn.vdl.type.Types;
 
 
 public class FnArg extends SwiftFunction {
-    private ArgRef<AbstractDataNode> name;
-    private ArgRef<AbstractDataNode> value;
+    private ChannelRef<AbstractDataNode> c_vargs;
     
     private VarRef<Map<String, String>> parsedArgs;
     
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("name", optional("value", null)));
+        return new Signature(params("..."));
     }
 
     @Override
@@ -58,12 +55,22 @@ public class FnArg extends SwiftFunction {
         parsedArgs = scope.getVarRef("SWIFT:PARSED_ARGS");
     }
 
+    @SuppressWarnings("cast")
     @Override
     public Object function(Stack stack) {
 		Map<String, String> args = this.parsedArgs.getValue(stack);
-		AbstractDataNode hname = this.name.getValue(stack);
+		Channel<AbstractDataNode> fargs = c_vargs.get(stack);
+		
+		if (fargs.size() < 1) {
+		    throw new ExecutionException(this, "Missing argument 'name'");
+		}
+		
+        AbstractDataNode hname = (AbstractDataNode) fargs.get(0);
 		hname.waitFor(this);
-		AbstractDataNode hvalue = this.value.getValue(stack);
+		AbstractDataNode hvalue = null;
+		if (fargs.size() == 2) {
+		    hvalue = (AbstractDataNode) fargs.get(1);
+		}
 		if (hvalue != null) {
 		    hvalue.waitFor(this);
 		}
