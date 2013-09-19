@@ -347,8 +347,6 @@ public class Misc {
             return params("name");
         }
         
-        
-        
         @Override
 		protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
 				throws CompilationException {

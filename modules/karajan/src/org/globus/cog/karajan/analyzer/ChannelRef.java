@@ -47,6 +47,12 @@ public abstract class ChannelRef<T> {
 		get(stack).add(value);
 	}
 	
+	public void check(Stack stack) {
+		// implementations that require restrictions
+		// on the structure of the channel (like the number of items)
+		// should override this
+	}
+	
 	public StaticChannel getValue() {
 		throw new UnsupportedOperationException();
 	}
@@ -419,6 +425,15 @@ public abstract class ChannelRef<T> {
 			}
 		}
 		
+		@Override
+		public void check(Stack stack) {
+			@SuppressWarnings("unchecked")
+			VarArgChannel<T> c = (VarArgChannel<T>) stack.top().get(index);
+			if (c.argSize() < names.size()) {
+				throw new IllegalArgumentException("Missing argument '" + names.get(c.argSize()) + "'");
+			}
+		}
+		
 		public void setNamesP(List<Param> l) {
 			names = new ArrayList<String>();
 			for (Param p : l) {
@@ -478,6 +493,15 @@ public abstract class ChannelRef<T> {
 			stack.top().set(index, c);
 			if (CompilerSettings.DEBUG) {
 				c.setNames(names);
+			}
+		}
+		
+		@Override
+		public void check(Stack stack) {
+			@SuppressWarnings("unchecked")
+			FixedArgChannel<T> c = (FixedArgChannel<T>) stack.top().get(index);
+			if (c.size() < names.size()) {
+				throw new IllegalArgumentException("Missing argument '" + names.get(c.size()) + "'");
 			}
 		}
 	}

@@ -125,6 +125,10 @@ public class VarArgChannel<T> implements Channel<T> {
 			return vargs.size();
 		}
 	}
+	
+	public int argSize() {
+		return index - startIndex;
+	}
 
 	@Override
 	public T get(int index) {
