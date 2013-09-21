@@ -64,14 +64,18 @@ fi
 
 detectPaths
 DJ=`mktemp /tmp/bootstrap.XXXXXX`
+UNAME=`uname`
 echo "BS: $BS" >>$L
 WGET=`$WR which wget`
 if [ "X$WGET" == "X" ]; then
 	WGET=`$WR which curl`
 	if [ "X$WGET" == "X" ]; then
-		error "No wget or curl available"
+	    error "No wget or curl available"
+	elif [ "$UNAME" == "Darwin" ]; then
+	    WGET="$WGET -o $DJ $BS/$B.jar >>$L 2>&1"
+	else
+	    WGET="$WGET -O $DJ $BS/$B.jar >>$L 2>&1"  
 	fi
-	WGET="$WGET -O $DJ $BS/$B.jar >>$L 2>&1"
 else
 	WGET="$WGET -c -q $BS/$B.jar -O $DJ >>$L 2>&1"
 fi
@@ -79,12 +83,20 @@ eval $WGET
 if [ "$?" != "0" ]; then
 	error "Failed to download bootstrap jar from $BS"
 fi
+
 MD5SUM=`$WR which gmd5sum 2>>$L`
 if [ "X$MD5SUM" == "X" ]; then
-	MD5SUM=`$WR which md5sum 2>>$L`
-	if [ "X$MD5SUM" == "X" ]; then
-		error "No md5sum or gmd5sum found"
-	fi
+    MD5SUM=`$WR which md5sum 2>>$L`
+    if [ "X$MD5SUM" == "X" ]; then
+        MD5SUM=`$WR which md5 2>>$L`
+        if [ "X$MD5SUM" == "X" ]; then
+            error "No md5/md5sum/gmd5sum found"
+        else
+            if [ "$UNAME" == "Darwin" ]; then
+               MD5SUM="$MD5SUM -r"
+            fi
+        fi
+    fi
 fi
 AMD5=`$MD5SUM $DJ`
 AAMD5=`eval echo \$\{AMD5:0:32\}`
