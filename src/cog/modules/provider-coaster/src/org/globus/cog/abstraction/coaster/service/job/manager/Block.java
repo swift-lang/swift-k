@@ -14,9 +14,9 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.SortedSet;
+import java.util.SortedMap;
 import java.util.TimerTask;
-import java.util.TreeSet;
+import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
@@ -48,7 +48,7 @@ public class Block implements StatusListener, Comparable<Block> {
     private int workers, activeWorkers;
     private TimeInterval walltime;
     private Time endtime, starttime, deadline, creationtime;
-    private final SortedSet<Cpu> scpus;
+    private final SortedMap<Cpu, Time> scpus;
     private final List<Cpu> cpus;
     private final List<Node> nodes;
     private boolean running = false, failed, shutdown, suspended;
@@ -70,7 +70,7 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public Block(String id) {
         this.id = id;
-        scpus = new TreeSet<Cpu>();
+        scpus = new TreeMap<Cpu, Time>();
         cpus = new ArrayList<Cpu>();
         nodes = new ArrayList<Node>();
     }
@@ -164,14 +164,18 @@ public class Block implements StatusListener, Comparable<Block> {
             // if the simple tests before fail try to see if there is a
             // cpu that can specifically fit this job.
             synchronized (cpus) {
-                for (Cpu cpu : cpus) {
-                    Job running = cpu.getRunning();
-                    if (running == null) {
-                        return true;
-                    }
-                    else if (j.getMaxWallTime().isLessThan(endtime.subtract(running.getEndTime()))) {
-                        return true;
-                    }
+                if (scpus.size() < cpus.size()) {
+                    // there are some cores not running any jobs
+                    return true;
+                }
+                if (scpus.size() == 0) {
+                    // started, but workers not connected yet
+                    return true;
+                }
+                Cpu cpu = scpus.firstKey();
+                Time jobEndTime = scpus.get(cpu);
+                if (j.getMaxWallTime().isLessThan(endtime.subtract(jobEndTime))) {
+                    return true;
                 }
             }
             return false;
@@ -180,25 +184,25 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public void remove(Cpu cpu) {
         synchronized (cpus) {
-            if (!scpus.remove(cpu)) {
+            if (scpus.remove(cpu) == null) {
                 CoasterService.error(16, "CPU was not in the block", new Throwable());
             }
-            if (scpus.contains(cpu)) {
+            if (scpus.containsKey(cpu)) {
                 CoasterService.error(17, "CPU not removed", new Throwable());
             }
         }
     }
 
-    public void add(Cpu cpu) {
+    public void add(Cpu cpu, Time estJobCompletionTime) {
     	Cpu last = null;
         synchronized (cpus) {
-            if (!scpus.add(cpu)) {
+            if (scpus.put(cpu, estJobCompletionTime) != null) {
                 CoasterService.error(15, "CPU is already in the block", new Throwable());
             }
-            last = scpus.last();
+            last = scpus.lastKey();
         }
         if (last == cpu) {
-            setDeadline(Time.min(cpu.getTimeLast().add(bqp.getSettings().getReserve()),
+            setDeadline(Time.min(estJobCompletionTime.add(bqp.getSettings().getReserve()),
                 getEndTime()));
         }
     }
@@ -363,7 +367,7 @@ public class Block implements StatusListener, Comparable<Block> {
             running = false;
             for (int j = cpus.size(); j < (workers - this.activeWorkers); j++) {
                 Cpu cpu = new Cpu(j, new Node(j, this, null));
-                scpus.add(cpu);
+                scpus.put(cpu, null);
                 cpus.add(cpu);
             }
             this.activeWorkers = 0;
@@ -394,7 +398,7 @@ public class Block implements StatusListener, Comparable<Block> {
                 //this id scheme works out because the sid is based on the
                 //number of cpus already added (i.e. cpus.size()).
                 Cpu cpu = new Cpu(wid + i, n);
-                scpus.add(cpu);
+                scpus.put(cpu, cpu.getTimeLast());
                 cpus.add(cpu);
                 n.add(cpu);
                 cpu.workerStarted();
