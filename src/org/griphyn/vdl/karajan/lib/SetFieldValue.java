@@ -50,7 +50,7 @@ public class SetFieldValue extends VDLFunction {
 		setArguments(SetFieldValue.class, new Arg[] { OA_PATH, PA_VAR, PA_VALUE });
 	}
 	
-	private String src, dest;
+	private String dst;
 	private Tracer tracer;
 
 	@Override
@@ -66,13 +66,17 @@ public class SetFieldValue extends VDLFunction {
 			DSHandle leaf = var.getField(path);
 			AbstractDataNode value = (AbstractDataNode) PA_VALUE.getValue(stack);
 			
-			if (src == null) {
-			    dest = Tracer.getVarName(var);
-			    src = Tracer.getVarName(value);
+			String mdst = dst;
+			
+			if (mdst == null) {
+			    mdst = Tracer.getVarName(var);
+			    if (var.getParent() == null) {
+			        dst = mdst;
+			    }
 			}
 			
 			if (tracer.isEnabled()) {
-			    log(leaf, value, stack);
+			    log(leaf, value, stack, mdst);
 			}
 			    
             // TODO want to do a type check here, for runtime type checking
@@ -96,8 +100,8 @@ public class SetFieldValue extends VDLFunction {
 		}
 	}
 
-    private void log(DSHandle leaf, DSHandle value, VariableStack stack) throws VariableNotFoundException {
-        tracer.trace(stack, dest + " = " + Tracer.unwrapHandle(value));
+    private void log(DSHandle leaf, DSHandle value, VariableStack stack, String dst) throws VariableNotFoundException {
+        tracer.trace(stack, dst + " = " + Tracer.unwrapHandle(value));
     }
 
 	String unpackHandles(DSHandle handle, Map<Comparable<?>, DSHandle> handles) { 
@@ -139,12 +143,7 @@ public class SetFieldValue extends VDLFunction {
 
     @Override
     public String getTextualName() {
-        if (src == null) {
-            return "assignment";
-        }
-        else {
-            return dest + " = " + src;
-        }
+        return "assignment";
     }
 
     @SuppressWarnings("unchecked")
