@@ -162,10 +162,10 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
             if (logger.isTraceEnabled()) {
                 logger.trace(block.getId() + ":" + getId() + " pull");
             }
+            if (isShutDown()) {
+                return;
+            }
             synchronized (this) {
-                if (shutdown) {
-                    return;
-                }
                 if (!started()) {
                     sleep();
                 }
@@ -221,7 +221,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
         if (timelast == null) {
             CoasterService.error(20, "Timelast is null", new Throwable());
         }
-        block.add(this);
+        block.add(this, timelast);
         submit(running);
         return true;
     }
@@ -274,11 +274,10 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
     }
 
     public void shutdown() {
+        if (raiseShutdown()) {
+            return;
+        }
         synchronized(this) {
-            if (shutdown) {
-                return;
-            }
-            shutdown = true;
     		Block block = node.getBlock();
             done.clear();
             if (running != null) {
@@ -325,28 +324,47 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
     public List<Job> getDoneJobs() {
         return done;
     }
+    
+    private Object shutdownLock = new Object();
+    
+    private boolean raiseShutdown() {
+        synchronized(shutdownLock) {
+            if (shutdown) {
+                return true;
+            }
+            shutdown = true;
+            return false;
+        }
+    }
+    
+    private boolean isShutDown() {
+        synchronized(shutdownLock) {
+            return shutdown;
+        }
+    }
 
-    public synchronized void taskFailed(String msg, Exception e) {
-        if (shutdown) {
+    public void taskFailed(String msg, Exception e) {
+        if (raiseShutdown()) {
             return;
         }
-		shutdown = true;
-        if (running == null) {
-            if (starttime == null) {
-                starttime = Time.now();
+        synchronized(this) {
+            if (running == null) {
+                if (starttime == null) {
+                    starttime = Time.now();
+                }
+                if (endtime == null) {
+                    endtime = starttime.add(block.getWalltime());
+                }
+                TimeInterval time = endtime.subtract(Time.now());
+                int cpus = 1 + getPullThread(node.getBlock()).sleepers();
+                running = bqp.request(time, cpus);
+                // no listener is added to this task, so make sure
+                // it won't linger in the BQP running set
+                bqp.jobTerminated(running);
             }
-            if (endtime == null) {
-                endtime = starttime.add(block.getWalltime());
+            if (running != null) {
+                running.fail("Block task failed: " + msg, e);
             }
-            TimeInterval time = endtime.subtract(Time.now());
-            int cpus = 1 + getPullThread(node.getBlock()).sleepers();
-            running = bqp.request(time, cpus);
-            // no listener is added to this task, so make sure
-            // it won't linger in the BQP running set
-            bqp.jobTerminated(running);
-        }
-        if (running != null) {
-            running.fail("Block task failed: " + msg, e);
         }
     }
 
