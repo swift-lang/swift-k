@@ -159,9 +159,12 @@ public class HangChecker extends TimerTask {
     }
 
     private void printThreadInfo(PrintStream pw, ThreadInfo ti) {
-        pw.println("\tThread \"" + ti.getThreadName() + "\" (" + hex(ti.getThreadId()) + ")");
+        pw.println("\tThread \"" + ti.getThreadName() + "\" (" + hex(ti.getThreadId()) + ") " + ti.getThreadState());
         LockInfo l = ti.getLockInfo();
-        pw.println("\t\twaiting for " + format(l) + " held by " + ti.getLockOwnerName() + " (" + hex(ti.getLockOwnerId()) + ")");
+        if (l != null) {
+            pw.println("\t\twaiting for " + format(l) + 
+                    (ti.getLockOwnerName() == null ? "" : " held by " + ti.getLockOwnerName() + " (" + hex(ti.getLockOwnerId()) + ")"));
+        }
         Map<StackTraceElement, MonitorInfo> mlocs = new HashMap<StackTraceElement, MonitorInfo>();
         MonitorInfo[] mis = ti.getLockedMonitors();
         if (mis.length > 0) {
@@ -181,7 +184,7 @@ public class HangChecker extends TimerTask {
         pw.println("\tStack trace:");
         StackTraceElement[] stes = ti.getStackTrace();
         for (StackTraceElement ste : stes) {
-            pw.print("\t\t" + ste.getClassName() + "." + ste.getMethodName() + ":" + ste.getLineNumber());
+            pw.print("\t\t" + ste.getClassName() + "." + ste.getMethodName() + formatLineNumber(":", ste.getLineNumber()));
             if (mlocs.containsKey(ste)) {
                 pw.print(" -> locked " + format(mlocs.get(ste)));
             }
@@ -190,8 +193,22 @@ public class HangChecker extends TimerTask {
         pw.println();
     }
 
+    private String formatLineNumber(String prefix, int n) {
+        if (n < 0) {
+            return "";
+        }
+        else {
+            return prefix + String.valueOf(n);
+        }
+    }
+
     private String format(LockInfo l) {
-        return l.getClassName() + " (" + hex(l.getIdentityHashCode()) + ")";
+        if (l != null) {
+            return l.getClassName() + " (" + hex(l.getIdentityHashCode()) + ")";
+        }
+        else {
+            return "<unknown>";
+        }
     }
 
     private String hex(long x) {
