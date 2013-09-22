@@ -732,15 +732,19 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     	boolean closed;
     	WaitingThreadsMonitor.addThread(l, this);
     	synchronized(this) {
-        	if (this.listeners == null) {
-        		this.listeners = new ArrayList<FutureListener>();
-        	}
-        	this.listeners.add(l);
-        	closed = this.closed;
+    	    closed = addListener0(l);
     	}
     	if (closed) {
     		notifyListeners();
     	}
+    }
+    
+    protected boolean addListener0(FutureListener l) {
+        if (this.listeners == null) {
+            this.listeners = new ArrayList<FutureListener>();
+        }
+        this.listeners.add(l);
+        return this.closed;
     }
         
     protected void notifyListeners() {

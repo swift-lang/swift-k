@@ -24,7 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.FutureListener;
+
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
+import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.type.Field;
 
 public class ArrayDataNode extends DataNode { 
@@ -100,6 +103,21 @@ public class ArrayDataNode extends DataNode {
         notifyListeners();
     }
     
+    @Override
+    public void addListener(FutureListener l) {
+        boolean shouldNotify;
+        WaitingThreadsMonitor.addThread(l, this);
+        synchronized(this) {
+            shouldNotify = addListener0(l);
+            if (keyList != null) {
+                shouldNotify = true;
+            }
+        }
+        if (shouldNotify) {
+            notifyListeners();
+        }
+    }
+
     @Override
     public synchronized DSHandle createField(Comparable<?> key) throws NoSuchFieldException {
         DSHandle h = super.createField(key);
