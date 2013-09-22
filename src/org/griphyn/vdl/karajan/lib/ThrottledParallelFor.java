@@ -107,13 +107,15 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
 		int available = tc.available();
 		try {
 		    int j = 0;
-		    try {
-    		    for (; j < available && i.hasNext(); j++) {
-    		        startIteration(tc, var, i.current(), i.next(), stack);
+		    synchronized(tc) {
+    		    try {
+        		    for (; j < available && i.hasNext(); j++) {
+        		        startIteration(tc, var, i.current(), i.next(), stack);
+        		    }
     		    }
-		    }
-		    finally {
-		        tc.add(j);
+    		    finally {
+    		        tc.add(j);
+    		    }
 		    }
 			while (i.hasNext()) {
 			    startIteration(tc, var, i.current(), tc.tryIncrement(), stack);
@@ -314,11 +316,11 @@ public class ThrottledParallelFor extends AbstractParallelIterator {
             }
         }
         
-        public synchronized int available() {
+        public int available() {
             return maxThreadCount - crt;
         }
         
-        public synchronized void add(int count) {
+        public void add(int count) {
             crt += count;
         }
 

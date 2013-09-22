@@ -129,7 +129,7 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
             }
             listeners.add(new ListenerStackPair(target, stack));
             WaitingThreadsMonitor.addThread(stack, node);
-            if (!node.isClosed()) {
+            if (!node.isClosed() && keys.isEmpty()) {
                 return;
             }
         }
