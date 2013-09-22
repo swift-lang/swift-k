@@ -64,7 +64,7 @@ public class SetFieldValue extends SwiftFunction {
         return new Signature(params("var", "value", optional("path", Path.EMPTY_PATH), optional("_traceline", null)));
     }
 
-    private String src, dest;
+    private String dst;
 	private Tracer tracer;
 	
 	protected VarRef<State> state;
@@ -129,13 +129,17 @@ public class SetFieldValue extends SwiftFunction {
 			DSHandle leaf = var.getField(path);
 			AbstractDataNode value = this.value.getValue(stack);
 			
-			if (src == null) {
-			    dest = Tracer.getVarName(var);
-			    src = Tracer.getVarName(value);
+			String mdst = this.dst;
+			
+			if (mdst == null) {
+			    mdst = Tracer.getVarName(var);
+			    if (var.getParent() == null) {
+			        this.dst = mdst;
+			    }
 			}
 			
 			if (tracer.isEnabled()) {
-			    log(leaf, value, LWThread.currentThread());
+			    log(leaf, value, LWThread.currentThread(), mdst);
 			}
 			    
             // TODO want to do a type check here, for runtime type checking
@@ -161,7 +165,7 @@ public class SetFieldValue extends SwiftFunction {
 		}
 	}
 
-    private void log(DSHandle leaf, DSHandle value, LWThread thr) throws VariableNotFoundException {
+    private void log(DSHandle leaf, DSHandle value, LWThread thr, String dest) throws VariableNotFoundException {
         tracer.trace(thr, dest + " = " + Tracer.unwrapHandle(value));
     }
 
@@ -223,12 +227,7 @@ public class SetFieldValue extends SwiftFunction {
 
     @Override
     public String getTextualName() {
-        if (src == null) {
-            return "assignment";
-        }
-        else {
-            return dest + " = " + src;
-        }
+        return "assignment";
     }
 
     private void copyStructure(DSHandle dest, DSHandle source, State state, int level) {
