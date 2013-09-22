@@ -18,10 +18,11 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 // import org.apache.log4j.Logger;
+import k.rt.Channel;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
-import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.AssertFailedException;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
@@ -34,17 +35,29 @@ import org.griphyn.vdl.type.Types;
     Optional second argument is string message printed on failure. 
  */
 public class Assert extends SwiftFunction {
-    private ArgRef<AbstractDataNode> value;
-    private ArgRef<AbstractDataNode> message;
-    
+    private ChannelRef<AbstractDataNode> c_vargs;
+        
     @Override
     protected Signature getSignature() {
-        return new Signature(params("value", "message"));
+        return new Signature(params("..."));
     }
 
     @Override
     public Object function(Stack stack) {
-        AbstractDataNode hmessage = this.message.getValue(stack);
+        Channel<AbstractDataNode> fargs = c_vargs.get(stack);
+        
+        if (fargs.size() < 1) {
+            throw new ExecutionException(this, "Missing condition");
+        }
+        if (fargs.size() > 2) {
+            throw new ExecutionException(this, "Too many arguments");
+        }
+        
+        AbstractDataNode hmessage = null;
+        if (fargs.size() == 2) {
+            hmessage = fargs.get(1);
+        }
+        
         String message;
         if (hmessage != null) {
             hmessage.waitFor(this);
@@ -53,7 +66,7 @@ public class Assert extends SwiftFunction {
         else {
             message = "Assertion failed";
         }
-        AbstractDataNode hvalue = this.value.getValue(stack);
+        AbstractDataNode hvalue = fargs.get(0);
         hvalue.waitFor(this);
                  
         checkAssert(hvalue, message);
