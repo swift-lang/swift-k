@@ -1,2 +1,0 @@
-local perl /usr/bin/perl null null null
-local sh   /bin/bash

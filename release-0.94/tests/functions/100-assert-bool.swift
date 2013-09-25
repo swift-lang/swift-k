@@ -1,4 +1,0 @@
-
-// THIS-SCRIPT-SHOULD-FAIL
-
-assert(false, "ASSERT_MESSAGE");

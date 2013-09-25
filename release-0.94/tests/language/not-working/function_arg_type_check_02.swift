@@ -1,1 +1,0 @@
-string a = @toint("12");

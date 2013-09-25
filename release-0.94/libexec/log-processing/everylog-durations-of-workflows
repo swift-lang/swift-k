@@ -1,3 +1,0 @@
-#!/bin/bash
-
-find $1 -name \*.log -and -not -name cluster-\* -exec duration-of-workflow {} \;

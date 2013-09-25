@@ -1,6 +1,0 @@
-echo(greeting) echo(greeting)
-echo(greeting) echo(greeting)
-echo(greeting) echo(greeting)
-echo(greeting) echo(greeting)
-echo(greeting) echo(greeting)
-echo(greeting) echo(greeting)

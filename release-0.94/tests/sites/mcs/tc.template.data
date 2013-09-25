@@ -1,5 +1,0 @@
-local  date /bin/date null null null
-beagle date /bin/date null null null
-uc3    date /bin/date null null null
-crush  date /bin/date null null null
-midway date /bin/date null null null

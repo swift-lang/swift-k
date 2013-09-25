@@ -1,3 +1,0 @@
-#!/bin/bash
-
-grep ' Execute ' | iso-to-secs | sed 's/^[^ ]* INFO  Execute jobid=\([^ ]*\) task=Task(type=JOB_SUBMISSION, identity=urn:\([^ )]*\).*$/\1 \2/'

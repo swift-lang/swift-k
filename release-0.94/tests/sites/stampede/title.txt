@@ -1,1 +1,0 @@
-Stampede remote sanity test

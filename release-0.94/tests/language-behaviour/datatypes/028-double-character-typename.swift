@@ -1,4 +1,0 @@
-type qq;
-
-qq i;
-

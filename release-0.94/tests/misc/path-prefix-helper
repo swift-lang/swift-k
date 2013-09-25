@@ -1,8 +1,0 @@
-#!/bin/bash
-
-
-echo PATH is $PATH
-
-env
-path-prefix-helper2
-

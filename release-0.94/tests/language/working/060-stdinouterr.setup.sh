@@ -1,1 +1,0 @@
-cp $GROUP/test.in .

@@ -1,4 +1,0 @@
-
-echo() { app { echo; }}
-
-echo();

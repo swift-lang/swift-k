@@ -1,3 +1,0 @@
-
-error-summary.txt: $(LOG)
-	error-summary $< > $@

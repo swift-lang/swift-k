@@ -1,3 +1,0 @@
-Recursive Test-run
-| This test will connect to several remote login nodes and
-| initiate several local, local-cluster, and remote-cluster tests

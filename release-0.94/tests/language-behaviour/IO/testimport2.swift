@@ -1,4 +1,0 @@
-import "testimport";
-
-type F;
-

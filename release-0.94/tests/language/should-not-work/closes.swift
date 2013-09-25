@@ -1,5 +1,0 @@
-
-// THIS-SCRIPT-SHOULD-FAIL
-
-}}}}
-

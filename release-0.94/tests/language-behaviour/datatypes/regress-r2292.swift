@@ -1,1 +1,0 @@
-type row { int column[]; }
