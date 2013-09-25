@@ -1,0 +1,41 @@
+<karajan>
+	<!-- factorial -->
+	<map>
+		<map:entry key="name" value="factorial"/>
+		
+		<map:entry key="test">
+			<element arguments="">
+				<!-- define the factorial -->
+				<element name="factorial" arguments="n">
+					<if>
+						<equalsNumeric value1="{n}" value2="1"/>
+			
+						<then>
+							<number>1</number>
+						</then>
+						
+						<else>
+							<product>
+								<argument value="{n}"/>
+								<factorial>
+									<sum>
+										<variable>n</variable>
+										<number>-1</number>
+									</sum>
+								</factorial>
+							</product>
+						</else>
+					</if>
+				</element>
+				
+				<!-- execute factorial(10) -->
+				<factorial n="10"/>
+			</element>
+		</map:entry>
+		
+		<map:entry key="expected-result" value="3628800"/>
+		
+		<map:entry key="comparison" value="{math_comparison}"/>
+		
+	</map>
+</karajan>

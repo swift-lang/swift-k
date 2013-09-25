@@ -1,0 +1,4 @@
+Karajan is a workflow language and execution engine. It allows specification 
+of concurrent programs in a declarative fashion, while providing the flexibility
+of a general purpose language. It offers a library that interfaces directly with
+the CoG abstractions.

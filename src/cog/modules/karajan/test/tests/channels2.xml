@@ -1,0 +1,37 @@
+<karajan>
+	<map>
+		<map:entry key="name" value="channels 2"/>
+		<map:entry key="test">
+			<element arguments="">
+				<list>
+					<channel:from name="list">
+						<set name="one">
+							<channel:from name="one">
+								<set name="two">
+									<channel:from name="two">
+										<channel:to name="one">
+											<string>1</string>
+										</channel:to>
+										<channel:to name="two">
+											<string>2</string>
+										</channel:to>
+									</channel:from>
+								</set>
+								<channel:to name="list">
+									<variable>two</variable>
+								</channel:to>
+							</channel:from>
+						</set>
+						<channel:to name="list">
+							<variable>one</variable>
+						</channel:to>
+					</channel:from>
+				</list>
+			</element>
+		</map:entry>
+		<map:entry key="expected-result">
+			<list items="2, 1"/>
+		</map:entry>
+		<map:entry key="comparison" value="{math_comparison}"/>
+	</map>
+</karajan>

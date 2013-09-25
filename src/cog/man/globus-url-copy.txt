@@ -1,0 +1,46 @@
+NAME
+    globus-url-copy
+
+SYNOPSIS
+    globus-url-copy [-help] 
+        [-s subject]
+	[-ss source subject]
+	[-ds subject]
+	[-noopt]
+	[-nodcau]
+        fromURL toURL
+
+DESCRIPTION
+    TBD
+
+
+OPTIONS 
+    -s  <subject> | -subject <subject>
+	      Use this subject to match with both the source
+	      and destination servers
+
+    -ss <subject> | -source-subject <subject>
+	      Use this subject to match with the source server
+
+    -ds <subject> | -dest-subject <subject>
+	      Use this subject to match with the destination server
+
+    -notpt | -no-third-party-transfers
+	      Turn third-party transfers off (on by default)
+
+    -nodcau | -no-data-channel-authentication
+	      Turn off data channel authentication for ftp transfers
+	      Applies to FTP protocols only.
+
+PROTOCOLS SUPPORTED
+    - gass (http and https)
+    - ftp 
+    - gsiftp
+    - file
+
+BUGS
+    This should in future have a replacement in cog-transfer
+    which is not the same as url copy.
+
+SEE ALSO 
+    GlobusUrlCopy

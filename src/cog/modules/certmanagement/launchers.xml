@@ -1,0 +1,86 @@
+<project name="Launchers" default="create" basedir=".">
+
+    <target name="create">
+    </target>
+    
+    <target name="webstart">
+        <ant antfile="${main.buildfile}" target="webstart.launcher">
+            <property name="launcher-name" value="myproxy"/>
+            <property name="class-name" value="org.globus.cog.security.cert.management.MyProxyApplet"/>
+            <property name="display-name" value="MyProxy Applet"/>
+            <property name="applet" value="true"/>
+            <property name="width" value="527"/>
+            <property name="height" value="428"/>
+            <property name="applet-params" value="&lt;param name=&quot;myProxyHost&quot; value=&quot;@MYPROXY_ADDRESS@&quot;/&gt;"/>
+        </ant>
+        <ant antfile="${main.buildfile}" target="webstart.launcher">
+            <property name="launcher-name" value="certreq"/>
+            <property name="class-name" value="org.globus.cog.security.cert.management.CertReqApplet"/>
+            <property name="display-name" value="Certificate Request Applet"/>
+            <property name="applet" value="true"/>
+            <property name="width" value="527"/>
+            <property name="height" value="428"/>
+            <property name="applet-params" value="&lt;param name=&quot;emailAddressOfCA&quot; value=&quot;@CA_EMAIL_ADDRESS@&quot;/&gt;"/>
+        </ant>
+        <ant antfile="${main.buildfile}" target="webstart.launcher">
+            <property name="launcher-name" value="certdestroy"/>
+            <property name="class-name" value="org.globus.cog.security.cert.management.CertDestroyApplet"/>
+            <property name="display-name" value="Certificate Revocation Applet"/>
+            <property name="applet" value="true"/>
+            <property name="width" value="527"/>
+            <property name="height" value="428"/>
+            <property name="applet-params" value="&lt;param name=&quot;emailAddressOfCA&quot; value=&quot;@CA_EMAIL_ADDRESS@&quot;/&gt;"/>
+        </ant>
+        <ant antfile="${main.buildfile}" target="webstart.launcher">
+            <property name="launcher-name" value="certinfo"/>
+            <property name="class-name" value="org.globus.cog.security.cert.management.CertInfoApplet"/>
+            <property name="display-name" value="Certificate Information Applet"/>
+            <property name="applet" value="true"/>
+            <property name="width" value="527"/>
+            <property name="height" value="428"/>
+        </ant>
+        <ant antfile="${main.buildfile}" target="webstart.launcher">
+            <property name="launcher-name" value="certrenew"/>
+            <property name="class-name" value="org.globus.cog.security.cert.management.CertRenewApplet"/>
+            <property name="display-name" value="Certificate Renewal Applet"/>
+            <property name="applet" value="true"/>
+            <property name="width" value="527"/>
+            <property name="height" value="428"/>
+            <property name="applet-params" value="&lt;param name=&quot;emailAddressOfCA&quot; value=&quot;@CA_EMAIL_ADDRESS@&quot;/&gt;"/>
+        </ant>
+        <ant antfile="${main.buildfile}" target="webstart.launcher">
+            <property name="launcher-name" value="hostcertreq"/>
+            <property name="class-name" value="org.globus.cog.security.cert.management.CertReqApplet"/>
+            <property name="display-name" value="Host Certificate Request Applet"/>
+            <property name="applet" value="true"/>
+            <property name="width" value="527"/>
+            <property name="height" value="428"/>
+            <property name="applet-params" value="&lt;param name=&quot;emailAddressOfCA&quot; value=&quot;@CA_EMAIL_ADDRESS@&quot;/&gt;&lt;param name=&quot;certificateRequestType&quot; value=&quot;host&quot;/&gt;"/>
+        </ant>
+
+        <!-- values used by the certificate managment applets. -->
+        
+        <!-- CA email address. -->
+        <property name="CA_EMAIL_ADDRESS" value="ca@globus.org"/>
+        <!-- default MyProxy server to use. -->
+        <property name="MYPROXY_ADDRESS" value="myproxy@x.y.z"/>
+        <!-- jar files required by applets launched by html or jsp pages. -->
+        <property name="ARCHIVE" value="./cog-${module.name}-${version}.jar,./cog-jglobus.jar,./cryptix.jar,./cryptix32.jar,./jgss.jar,./jce-jdk13-120.jnlp,./cryptix-asn1.jar,./junit.jar,./puretls.jar,./log4j-1.2.8.jar,./cog-axis.jar,./mail.jar,./activation.jar"/>
+        
+        <!-- copy main page, readme, html and jsp pages to webstart dir. -->        
+        <copy overwrite="true" todir="${dist.dir}/webstart">
+            <fileset dir="applets">
+                <include name="**"/>
+            </fileset>
+        </copy>
+        
+        <!-- replace keywords -->
+        <replace dir="${dist.dir}/webstart" includes="*.html,*.jsp,*.jnlp" token="@CA_EMAIL_ADDRESS@" value="${CA_EMAIL_ADDRESS}"/>
+        <replace dir="${dist.dir}/webstart" includes="*.html,*.jsp,*.jnlp" token="@MYPROXY_ADDRESS@" value="${MYPROXY_ADDRESS}"/>
+        <replace dir="${dist.dir}/webstart" includes="*.html,*.jsp,*.jnlp" token="@CODEBASE@" value="${codebase}"/>
+        <replace dir="${dist.dir}/webstart" includes="*.html,*.jsp,*.jnlp" token="@ARCHIVE@" value="${ARCHIVE}"/>
+        
+                
+    </target>
+  
+</project>

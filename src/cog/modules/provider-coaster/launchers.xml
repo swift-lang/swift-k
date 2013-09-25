@@ -1,0 +1,11 @@
+<project name="Launchers" default="create" basedir=".">
+  <target name="create">
+	<ant antfile="${main.buildfile}" target="launcher">
+		<property name="launcher-name" value="coaster-service"/>
+		<property name="class-name" 
+                         value="org.globus.cog.abstraction.coaster.service.CoasterPersistentService"/>
+	</ant>
+  </target>
+  <target name="webstart">
+   </target>
+</project>

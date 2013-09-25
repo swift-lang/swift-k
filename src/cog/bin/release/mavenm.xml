@@ -1,0 +1,52 @@
+<project
+  xmlns:j="jelly:core"
+  xmlns:u="jelly:util">
+
+<!--
+==================================================
+
+These are the required "ogce" goals.  In this case,
+the build and deploy goals are identical, since this is
+the same for any portlet container. However, I am assuming
+"deploy" will be used exclusively for uPortal.
+==================================================
+-->
+  <goal name="ogceClean:ogceClean">
+    <attainGoal name="clean:clean"/>
+  </goal>
+
+ <goal name="ogceBuild:ogceBuild">
+ </goal>
+
+  <goal name="ogceDeploy:ogceDeploy">
+    <attainGoal name="deploy-shared-libs"/>
+  </goal>
+
+  <goal name="ogceGridSphere:ogceGridSphere">
+    <attainGoal name="ogceBuild:ogceBuild"/>
+  </goal>
+
+  <goal name="ogceReport:ogceReport">
+     <attainGoal name="clean"/>
+     <attainGoal name="junit-report:report"/>
+     <attainGoal name="clean"/>
+  </goal>
+
+
+<!--
+==================================================
+
+These are custom goals, possibly called from 
+one or more of the ogce goals.
+
+==================================================
+-->
+  <goal name="deploy-shared-libs">
+    <attainGoal name="war:clean"/>
+    <attainGoal name="war:webapp"/>
+    <copy overwrite="true" todir="${tomcat.home}/shared/@DEST@/">
+      <fileset dir="${maven.build.dir}/@ID@/WEB-INF/lib/"/>
+    </copy>     
+  </goal>
+  
+</project>

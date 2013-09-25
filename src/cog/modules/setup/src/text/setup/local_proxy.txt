@@ -1,0 +1,3 @@
+ Please enter the location of your proxy file.
+ 
+ It is recommended that you leave this entry as it is.

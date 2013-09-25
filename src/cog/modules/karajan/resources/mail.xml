@@ -1,0 +1,60 @@
+<karajan>
+  <namespace prefix="mail">
+	<export name="mail:setSMTPServer"><element arguments="host">
+		<global name="mail:SMPTServer" value="{host}"/>
+		<set name="sysprops">
+			<java:invokeMethod classname="java.lang.System" method="getProperties"/>
+		</set>
+		<discard>
+			<java:invokeMethod object="{sysprops}" method="put" types="java.lang.Object, java.lang.Object">
+				<argument value="mail.smtp.host"/>
+				<argument value="{host}"/>
+			</java:invokeMethod>
+		</discard>
+	</element></export>
+	
+	<export name="mail:send"><element arguments="from, to, subject" vargs="true">
+		<set name="session">
+			<java:invokeMethod classname="javax.mail.Session" method="getDefaultInstance"
+				types="java.util.Properties, javax.mail.Authenticator">
+					<java:invokeMethod classname="java.lang.System" method="getProperties"/>
+					<java:null/>
+			</java:invokeMethod>
+		</set>
+		<set name="msg">
+			<java:new classname="javax.mail.internet.MimeMessage">
+				<argument value="{session}"/>
+			</java:new>
+		</set>
+		<discard>
+			<java:invokeMethod object="{msg}" method="setFrom" types="javax.mail.Address">
+				<java:new classname="javax.mail.internet.InternetAddress">
+					<argument value="{from}"/>
+				</java:new>
+			</java:invokeMethod>
+			<java:invokeMethod object="{msg}" method="setRecipients" 
+				types="javax.mail.Message$RecipientType, javax.mail.Address[]">
+					<java:getField classname="javax.mail.Message$RecipientType" field="TO"/>
+					<java:invokeMethod classname="javax.mail.internet.InternetAddress" method="parse"
+						types="java.lang.String, boolean">
+							<argument value="{to}"/>
+							<false/>
+					</java:invokeMethod>
+			</java:invokeMethod>
+			<java:invokeMethod object="{msg}" method="setSubject">
+				<argument value="{subject}"/>
+			</java:invokeMethod>
+			<java:invokeMethod object="{msg}" method="setText">
+				<concat>
+					<foreach name="arg" in="{vargs}">
+						<argument value="{arg}"/>
+					</foreach>
+				</concat>
+			</java:invokeMethod>
+			<java:invokeMethod classname="javax.mail.Transport" method="send" types="javax.mail.Message">
+				<argument value="{msg}"/>
+			</java:invokeMethod>
+		</discard>
+	</element></export>
+  </namespace>
+</karajan>

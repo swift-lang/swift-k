@@ -1,0 +1,1 @@
+The provider-fake module is a component of the abstractions framework.

@@ -1,0 +1,3 @@
+The provider-ssh module is a component of the abstractions framework.
+It provides the implementation of the execution task handler
+supporting secure shell (SSH) protocol. 

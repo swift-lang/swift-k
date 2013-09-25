@@ -1,0 +1,3 @@
+The provider-dcache module is a component of the abstractions framework.
+It provides the implementation for transfering files to and from dCache
+using dccp.

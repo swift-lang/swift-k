@@ -1,0 +1,60 @@
+<!--Conceptual Bioinformatics BLAST demostration-->
+<project>
+	<include file="sys.xml"/>
+	<include file="task.xml"/>
+	<include file="scheduler.xml"/>
+	
+	<element name="blast" arguments="host, input">
+		<allocateHost name="host">
+			<set names="inputfile, outputfile" _annotation="Prepare">
+				<uid context="input"/>
+				<uid context="output"/>
+			</set>
+			<gridTransfer srchost="{host}" srcfile="{input}" desthost="{host}" destfile="{inputfile}"
+				_annotation="Get input"/>
+			<gridExecute executable="blast" arguments="{inputfile} {outputfile}"
+				_annotation="Run Blast"/>
+			<argument value="{host}"/>
+			<argument value="{outputfile}"/>
+		</allocateHost>
+	</element>
+	
+	<element name="diff" arguments="host1, file1, host2, file2">
+		<allocateHost name="host">
+			<set names="inputfile1, inputfile2, outputfile" _annotation="Prepare">
+				<uid context="input1"/>
+				<uid context="input2"/>
+				<uid context="diffoutput"/>
+			</set>
+			<parallel>
+				<gridTransfer srchost="{host1}" srcfile="{file1}" desthost="{host}" destfile="{inputfile1}"
+					_annotation="Get file1"/>
+				<gridTransfer srchost="{host2}" srcfile="{file2}" desthost="{host}" destfile="{inputfile2}"
+					_annotation="Get file2"/>
+			</parallel>
+			<gridExecute executable="bdiff" arguments="{inputfile1} {inputfile2} {diffoutput}"
+				_annotation="Diff"/>
+			<argument value="{host}"/>
+			<argument value="{diffoutput}"/>
+		</allocateHost>
+	</element>
+	
+	<element name="getOutput" arguments="host, file, destination">
+		<gridTransfer srchost="{host}" srcfile="{file}" destdir="dataDir" destfile="{destination}"
+			_annotation="Get result"/>
+	</element>
+	
+	<parallelFor name="input">
+		<range from="1" to="1"/>
+		<getOutput host="{1}" file="{2}" destination="DIFF{input}.out">
+			<diff host1="{1}" file1="{2}" host2="{3}" file2="{4}">
+				<parallel>
+					<blast host="localhost" input="dataDir/A{input}.in"/>
+					<blast host="localhost" input="dataDir/B{input}.in"/>
+				</parallel>
+			</diff>
+		</getOutput>
+	</parallelFor>
+</project>
+
+

@@ -1,0 +1,6 @@
+The provider-gt2 module is a component of the abstractions framework. 
+It provides the implementation for the execution task handler
+supporting GT 2.* GRAM service, pre-WS GRAM service, and pre-WSRF GRAM
+service. It also provides the implementation for the file-operation task
+handler supporting GridFTP v1.0, GridFTP v2.0, and the FTP file
+resources.  

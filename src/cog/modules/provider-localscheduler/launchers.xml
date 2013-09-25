@@ -1,0 +1,6 @@
+<project name="Launchers" default="create" basedir=".">
+  <target name="create">
+  </target>
+  <target name="webstart">
+   </target>
+</project>

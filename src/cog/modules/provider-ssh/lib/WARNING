@@ -1,0 +1,6 @@
+The patched classes are both in the provider jar and in 
+the j2ssh jar. This isn't necessary, but it is how things
+are done right now. An alternative would be to make sure 
+they are in only one place. However, what must not happen
+is to have different versions of the classes in the aforementioned
+jar files, because it may lead to jar loading order issues.
