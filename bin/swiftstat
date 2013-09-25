@@ -1,0 +1,3 @@
+#!/bin/bash
+
+watch --no-title -n 5 "find -L $HOME/.swift/runs/current -name swift.out -exec echo \; -exec dirname {} \; -exec tail -1 {} \;"

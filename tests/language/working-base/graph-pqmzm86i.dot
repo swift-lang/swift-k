@@ -1,0 +1,10 @@
+digraph VDL2provenance {
+	graph [splines="compound", rankdir="TB"];
+	node [color="seagreen", style="filled"];
+	"0" [label=echo]
+	"english2.txt" [shape=parallelogram,label=english]
+	"0" -> "english2.txt"
+	"1" [label=echo]
+	"francais2.txt" [shape=parallelogram,label=french]
+	"1" -> "francais2.txt"
+}

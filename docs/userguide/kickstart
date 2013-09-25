@@ -1,0 +1,31 @@
+Kickstart
+---------
+Kickstart is a tool that can be used to gather various information about
+the remote execution environment for each job that Swift tries to run.
+
+For each job, Kickstart generates an XML invocation record. By default
+this record is staged back to the submit host if the job fails.
+
+Before it can be used it must be installed on the remote site and the
+sites file must be configured to point to kickstart.
+
+Kickstart can be downloaded as part of the Pegasus 'worker package'
+available from the worker packages section of the Pegasus download page
+<http://pegasus.isi.edu/code.php>.
+
+Untar the relevant worker package somewhere where it is visible to all
+of the worker nodes on the remote execution machine (such as in a shared
+application filesystem).
+
+Now configure the gridlaunch attribute of the sites catalog to point to
+that path, by adding a gridlaunch attribute to the pool element in
+the site catalog:
+
+----
+<pool handle="example" gridlaunch="/usr/local/bin/kickstart" sysinfo="INTEL32::LINUX">
+...
+</pool>
+----
+
+There are various kickstat.* properties, which have sensible default
+values. These are documented in the properties section.

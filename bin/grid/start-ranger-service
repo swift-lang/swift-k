@@ -1,0 +1,123 @@
+#! /bin/bash
+
+function usage ()
+{
+       echo "Usage:"
+       echo " $0 --nodes nnodes --walltime hh:mm:ss --project proj-name --queue q-name --user user-name" --startservice true
+}
+
+if [ $# -ne 12 ]
+then
+    usage
+    exit 1
+fi
+
+
+# NODES=${1:-1}
+# WALLTIME=${2:-00:10:00}
+# PROJECT=${3:-TG-DBS080004N}
+# QUEUE=${4:-development}
+# REMOTE_USER=${5:-$USER}
+# STARTSERVICE=false
+
+
+
+while test "$1" != "" ; do
+    case $1 in
+        --nodes|-n)
+                NODES="$2"
+                shift
+        ;;
+        --walltime|-t)
+                WALLTIME="$2"
+                shift
+        ;;
+        --project|-p)
+                PROJECT="$2"
+                shift
+        ;;
+        --queue|-q)
+                QUEUE="$2"
+                shift
+        ;;
+        --user|-u)
+                REMOTE_USER="$2"
+                shift
+        ;;
+        --startservice|-)
+                STARTSERVICE="$2"
+		shift
+        ;;
+        -*)
+                echo "Error: no such option $1"
+                usage
+                exit 1
+        ;;
+    esac
+    shift
+done
+
+HOST=tg-login.ranger.tacc.teragrid.org
+BIN=$(cd $(dirname $0); pwd)
+
+echo NODES=$NODES WALLTIME=$WALLTIME PROJECT=$PROJECT REMOTE_USER=$REMOTE_USER QUEUE=$QUEUE STARTSERVICE=$STARTSERVICE
+LOGLEVEL=INFO # INFO, DEBUG, TRACE for increasing detail
+
+CORESPERNODE=16
+
+THROTTLE=$(echo "scale=2; ($NODES*$CORESPERNODE)/100 -.01"|bc)
+
+echo THROTTLE=$THROTTLE
+
+# This lets user run this script to add another job full of workers to an existing coaster service
+# Must be started in the same directory where start-swift-service created the service.wports file.
+
+if [ $STARTSERVICE = true ]; then
+  start-swift-service 1 &
+  sleep 5
+  SPORT=$(cat service.sports)
+  cat >sites.pecos.xml <<EOF
+
+  <config>
+    <pool handle="localhost">
+      <execution provider="coaster-persistent" url="http://localhost:$SPORT" jobmanager="local:local"/>
+      <profile namespace="globus" key="workerManager">passive</profile>
+      <profile namespace="globus" key="jobsPerNode">$CORESPERNODE</profile>
+      <profile key="jobThrottle" namespace="karajan">$THROTTLE</profile>
+      <profile namespace="karajan" key="initialScore">10000</profile>
+      <!-- <filesystem provider="local" url="none" /> -->
+      <profile namespace="swift" key="stagingMethod">proxy</profile>
+      <workdirectory>/tmp/$USER</workdirectory>
+    </pool>
+  </config>
+EOF
+fi
+
+WPORT=$(cat service.wports)
+SERVICE_URL=http://$(hostname -f):$WPORT
+echo swift service started - SPORT=$(cat service.sports) WPORT=$WPORT SERVICE_URL=$SERVICE_URL
+
+# FIXME: scp the right worker.pl, worker.sh and .sub files to the dest system (Ranger)
+
+rdir=swift_gridtools
+ssh $REMOTE_USER@$HOST mkdir -p $rdir
+
+if [ $? != 0 ]; then
+  echo $0: unable to create remote directory $rdir
+  exit 1
+fi
+
+echo Created remote dir: $rdir
+
+scp $BIN/{worker.pl,workers.ranger.sh,workers.ranger.sub} $REMOTE_USER@$HOST:$rdir
+
+echo Copied grid tools to remote dir: $rdir
+
+echo Submitting ...
+
+echo "ssh $REMOTE_USER@$HOST qsub -A $PROJECT -N runworkers -pe 16way $(($NODES * 16)) -q $QUEUE -l h_rt=$WALLTIME -v SERVICE_URL=$SERVICE_URL, WORKER_LOGLEVEL=$LOGLEVEL $rdir/workers.ranger.sub"
+
+ssh $REMOTE_USER@$HOST qsub -A $PROJECT -N runworkers -pe 16way $(($NODES * 16)) -q $QUEUE -l h_rt=$WALLTIME -v SERVICE_URL=$SERVICE_URL,WORKER_LOGLEVEL=$LOGLEVEL $rdir/workers.ranger.sub
+
+echo Submitted remote worker launching script
+

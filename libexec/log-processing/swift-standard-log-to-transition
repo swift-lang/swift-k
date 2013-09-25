@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# converts swift standard log notation into the transition format
+# needed by this
+
+# $1 is the log subject of interest (eg vdl:initshareddir)
+
+# 2007-09-30 11:54:17,903+0100 INFO  vdl:initshareddir START host=soju.hawaga.org.uk - Initializing shared directory
+
+grep -E "[^ ]+ +[^ ]+ +[^ ]+ +$1 " | iso-to-secs
+
+# each line coming out of above is relevant and in the format:
+# 1191149657.885 INFO  vdl:execute START thread=0-1-1 tr=badmonkey
+
+sed 's/^\([^ =]* \).*$/\1/'
+

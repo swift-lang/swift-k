@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# specify task on $1
+# and log file on $2
+
+# output will be list of tasks in that cluster
+
+grep $1 $2 | grep 'clustered in' | sed 's/^.* Task urn:\(.*\)clustered in.*$/\1/' 
+

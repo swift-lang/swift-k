@@ -1,0 +1,113 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <procedure name="combine" src="line 7">
+
+    <output name="res" type="int"  xsi:nil="true"/>
+
+    <input name="a" type="int"  xsi:nil="true"/>
+
+    <input name="b" type="int"  xsi:nil="true"/>
+    <assign src="line 10">
+     <variableReference>res</variableReference>
+     <arith op="+">
+       <variableReference>a</variableReference>
+       <variableReference>b</variableReference>
+     </arith>
+    </assign>
+  </procedure>
+  <variable name="N" type="int" isGlobal="false" xsi:nil="true" src="line 2"/>
+  <assign src="line 4">
+   <variableReference>N</variableReference>
+   <integerConstant>15</integerConstant>
+  </assign>
+  <variable name="tree_results" type="int[][]" isGlobal="false" xsi:nil="true" src="line 4"/>
+  <assign src="line 7">
+   <arraySubscript>
+    <variableReference>tree_results</variableReference>
+    <integerConstant>0</integerConstant>
+   </arraySubscript>
+
+     <range>
+       <integerConstant>0</integerConstant>
+       <variableReference>N</variableReference>
+       <integerConstant>1</integerConstant>
+     </range>
+
+  </assign>
+  <variable name="depth" type="int" isGlobal="false" xsi:nil="true" src="line 19"/>
+  <assign src="line 20">
+   <variableReference>depth</variableReference>
+   <integerConstant>0</integerConstant>
+  </assign>
+  <call proc="tracef" src="line 20">
+    <input><stringConstant>depth = %i \n</stringConstant></input>
+    <input><variableReference>depth</variableReference></input>
+  </call>
+  <foreach var="v"  indexVar="i" src="line 21">
+  <in><arraySubscript>
+   <variableReference>tree_results</variableReference>
+   <variableReference>depth</variableReference>
+  </arraySubscript></in>
+  <body><if src="line 22">
+      <cond op="==">
+        <arith op="%%">
+          <variableReference>i</variableReference>
+          <integerConstant>2</integerConstant>
+        </arith>
+        <integerConstant>0</integerConstant>
+      </cond>
+      <then>
+        <call proc="combine" src="line 24">
+          <output><arraySubscript>
+           <arraySubscript>
+            <variableReference>tree_results</variableReference>
+            <arith op="+">
+              <variableReference>depth</variableReference>
+              <integerConstant>1</integerConstant>
+            </arith>
+           </arraySubscript>
+           <arith op="%/">
+             <variableReference>i</variableReference>
+             <integerConstant>2</integerConstant>
+           </arith>
+          </arraySubscript></output>
+          <input><arraySubscript>
+           <arraySubscript>
+            <variableReference>tree_results</variableReference>
+            <variableReference>depth</variableReference>
+           </arraySubscript>
+           <variableReference>i</variableReference>
+          </arraySubscript></input>
+          <input><arraySubscript>
+           <arraySubscript>
+            <variableReference>tree_results</variableReference>
+            <variableReference>depth</variableReference>
+           </arraySubscript>
+           <arith op="+">
+             <variableReference>i</variableReference>
+             <integerConstant>1</integerConstant>
+           </arith>
+          </arraySubscript></input>
+        </call>
+      </then>
+    </if></body>
+  </foreach>
+  <variable name="dep" type="int" isGlobal="false" xsi:nil="true" src="line 32"/>
+  <assign src="line 33">
+   <variableReference>dep</variableReference>
+   <integerConstant>1</integerConstant>
+  </assign>
+  <foreach var="v"  indexVar="i" src="line 33">
+  <in><arraySubscript>
+   <variableReference>tree_results</variableReference>
+   <variableReference>dep</variableReference>
+  </arraySubscript></in>
+  <body><call proc="tracef" src="line 34">
+      <input><stringConstant>Results_tree[%i][%i] : %i\n</stringConstant></input>
+      <input><variableReference>dep</variableReference></input>
+      <input><variableReference>i</variableReference></input>
+      <input><variableReference>v</variableReference></input>
+    </call></body>
+  </foreach>
+</program>

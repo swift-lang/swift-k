@@ -1,0 +1,8 @@
+#! /bin/sh
+
+now=$(date "+%Y.%m%d.%H:%M:%S")
+echo $now $0: $* >> $HOME/pbslog
+
+qdel $*
+
+

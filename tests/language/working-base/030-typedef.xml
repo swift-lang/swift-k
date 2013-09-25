@@ -1,0 +1,25 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>order</typename>
+     		<typealias></typealias>
+     		<typestructure>
+     			    <member>
+     					<membername>orderNumber</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>description</membername>
+     					<membertype>string</membertype>
+     				</member>
+     			    <member>
+     					<membername>itemNumbers</membername>
+     					<membertype>int[]</membertype>
+     				</member>
+     		</typestructure>
+     	</type>   
+  </types>  
+</program>

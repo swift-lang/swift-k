@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cat execute.transitions | swap-and-sort |last-transition-line > execute.last
+
+cat execute.last | sed 's/^\([^ ]*\) \([^ ]*\) \([^ ]*\)\(.*\)/\3/' | sort | uniq -c > execute.lastsummary
+

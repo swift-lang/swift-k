@@ -1,0 +1,131 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>file</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>   
+  </types>  
+  <procedure name="generate" src="line 3">
+
+      <output 
+    name="f" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="p1" type="float"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 4">
+        <executable>generate</executable>
+        <stringConstant>-aTOP -T4</stringConstant><stringConstant>-p</stringConstant><variableReference>p1</variableReference><stringConstant>-o</stringConstant><function name="filename">
+          <variableReference>f</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="process" src="line 9">
+
+      <output 
+    name="f2" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="f1" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="name" type="string"
+
+     xsi:nil="true" />
+
+      <input 
+    name="p2" type="float"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 10">
+        <executable>process</executable>
+        <stringConstant>-a</stringConstant><variableReference>name</variableReference><stringConstant>-T4</stringConstant><stringConstant>-p</stringConstant><variableReference>p2</variableReference><stringConstant>-i</stringConstant><function name="filename">
+          <variableReference>f1</variableReference></function><stringConstant>-o</stringConstant><function name="filename">
+          <variableReference>f2</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="combine" src="line 15">
+
+      <output 
+    name="f3" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="f1" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="f2" type="file"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 16">
+        <executable>combine</executable>
+        <stringConstant>-aBOTTOM -T4</stringConstant><stringConstant>-i</stringConstant><function name="filename">
+          <variableReference>f1</variableReference></function><function name="filename">
+          <variableReference>f2</variableReference></function><stringConstant>-o</stringConstant><function name="filename">
+          <variableReference>f3</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="diamond" src="line 21">
+
+      <output 
+    name="fd" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="p1" type="float"
+
+     xsi:nil="true" />
+
+      <input 
+    name="p2" type="float"
+
+     xsi:nil="true" />
+    <variable name="fa" type="file" isGlobal="false" xsi:nil="true"/>
+    <variable name="fb" type="file" isGlobal="false" xsi:nil="true"/>
+    <variable name="fc" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="generate" src="line 26">
+      <output><variableReference>fa</variableReference></output>
+      <input><variableReference>p1</variableReference></input>
+    </call>
+    <call proc="process" src="line 27">
+      <output><variableReference>fb</variableReference></output>
+      <input><variableReference>fa</variableReference></input>
+      <input><stringConstant>LEFT</stringConstant></input>
+      <input><variableReference>p2</variableReference></input>
+    </call>
+    <call proc="process" src="line 28">
+      <output><variableReference>fc</variableReference></output>
+      <input><variableReference>fa</variableReference></input>
+      <input><stringConstant>RIGHT</stringConstant></input>
+      <input><variableReference>p2</variableReference></input>
+    </call>
+    <call proc="combine" src="line 29">
+      <output><variableReference>fd</variableReference></output>
+      <input><variableReference>fb</variableReference></input>
+      <input><variableReference>fc</variableReference></input>
+    </call>
+  </procedure>
+  <variable name="final" type="file" isGlobal="false"><file name="FINAL"/></variable>
+  <call proc="diamond" src="line 33">
+    <output><variableReference>final</variableReference></output>
+    <input><floatConstant>1.0</floatConstant></input>
+    <input><floatConstant>100.0</floatConstant></input>
+  </call>
+</program>

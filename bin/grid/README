@@ -1,0 +1,86 @@
+Coaster Pool generator
+======================
+
+Description: This set of scripts creates configuration files and workflows to request pilot
+  jobs to OSG.
+Author: Allan Espinosa
+Date: 2010 November 24
+
+
+>> 0.a setup OSG package
+
+$ source /opt/osg-1.2.16/setup.sh
+
+>> 0. create a voms proxy
+
+$ voms-proxy-init -voms Engage -valid 12:00
+
+
+Scripts
+-------
+
+1.  start_services.sh - Starts coaster services
+    Usage: start_services.sh [number of services]
+
+2.  mk_catalog.rb - Generates sites.xml files for submitting condor, coaster and
+      gram2 jobs to a list of OSG jobs.  The whitelist is formatted as
+      [GlueSiteUniqueID]_[GlueCEInfoHostName] per site. 
+    Usage: mk_catalog.rb [whitelist] [<optional: app_name>]
+
+3.  nqueue.rb - Submits pilot coaster jobs to a list of sites by saturating it
+      queueing n-jobs at a time.
+    Usage: nqueue.rb [whitelist]
+
+
+Example usage
+-------------
+
+Here, an app called 'extenci' will be installed on the SPRACE site resource.
+
+1. Create a whitelist file.  (use ../site_gen/gensites.sh )
+
+$ cat > whitelist << EOF
+SPRACE_osg-ce.sprace.org.br
+EOF
+
+
+2. Generate gram2 sites.xml (gt2_osg.xml) file. 
+   
+$ ./mk_catalog.rb whitelist extenci
+
+# Modify to use specified portlist (from start-services)
+# Note that if port changes  you will need to regen...
+
+3. Upload worker.pl script to the site.  The setup.k script also cleans up the
+
+#   data directory of the site.
+#
+# $ swift setup.k  # Modify this script - upload not needed, but cleanup still needed
+
+4. Spawn 2 coaster services.  The first one is for PADS.
+   
+$ ./start_services.sh 2
+
+# 2 is just for a test...actually need Nsites+1 services (+1 for PADS, +N for other fixed sites eg Beagle)
+
+5. Configure the service to run in passive mode.  Any swift job that will use
+   coaster_osg.xml can be used aside from the slave.swift script.
+
+$ swift -config swift.properties -sites.file coaster_osg.xml slave.swift 
+
+6. Request coaster jobs.  The script will request (2.5 * total_cpus) pilot jobs
+   throughout the duration of the workflow
+   
+   Method 1: via direct condor-g
+
+$ ./nqueue.rb whitelist
+
+   Method 2: via swift
+
+$ swift -config swift.properties -sites.file condor_osg.xml worker.swift
+
+
+7. Run your workflow.  Here, the sleep.swift sample included in the package will
+   be used.
+
+$ swift -config swift.properties -sites.file coaster_osg.xml sleep.swift

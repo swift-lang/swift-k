@@ -1,0 +1,256 @@
+
+== Collective Data Management
+
+=== Description
+
+Collective Data Management (CDM) is a set of optimizations in Swift to
+improve data access patterns by Swift.  In particular, it can be used
+to avoid data staging (extra file copies) on an HPC system or cluster
+with a shared file system.
+
+=== Usage Overview
+
+. The user specifies a CDM policy in a file, customarily +fs.data+.
+. +fs.data+ is given to Swift on the command line.
+. The Swift data module is informed of the CDM policy.
+. At job launch time, for each file, the Swift mechanics query the CDM file,
+   .. altering the file staging phase, and
+   .. sending +fs.data+ to the compute site.
+. At job run time, the Swift wrapper script
+   .. consults a Perl script to obtain policy from +fs.data+, and
+   .. uses wrapper extensions to modify data movement.
+. Similarly, stage out can be changed.
+
+.Command line
+-----
+$ swift -sites.file sites.xml -tc.file tc.data -cdm.file fs.data stream.swift
+-----
+
+=== CDM policy file format
+A CDM policy file contains four space separated fields as follows:
+. The keyword 'rule'
+. The filename pattern expressed as a regexp
+. The rulename: DIRECT, GATHER, BROADCAST etc.
+. The path where to look for the files (optional)
+
+==== Example
+-----
+# Describe CDM for my job
+property GATHER_LIMIT 1
+rule .*input.txt DIRECT /gpfs/homes/wozniak/data
+rule .*xfile*.data BROADCAST /dev/shm
+rule .* DEFAULT
+-----
+
+The lines contain:
+
+. A directive, either +rule+ or +property+.
+. A rule has:
+   .. A regular expression to match on the file name.
+   .. A policy token.
+   .. Additional policy-specific arguments.
+. A property has:
+   .. A policy property token.
+   .. The token value.
+. Comments with +#+.
+. Blank lines are ignored.
+
+==== Notes
+
+. The policy file is used as a lookup database by Swift and Perl
+methods.  Thus, one should only use basic features such as +.*+ .
+. Swift treats file names as URLs, while the wrapper script treats
+them as Unix file names.  Thus, one should use a wildcard in the
+beginning of each file name, as shown in the example.
+. For example, a lookup with the database above given the argument
++input.txt+ would result in the +DIRECT+ policy.
+. Each rule is considered in the order given; the first match results
+in that policy line.
+. If the lookup does not succeed, the result is +DEFAULT+.
+
+=== Policy Descriptions
+==== DEFAULT
+
+* Just use file staging as provided by Swift.
+Identical to behavior if no CDM file is given.
+
+==== DIRECT
+-----
+rule .*input.txt DIRECT /gpfs/scratch/wozniak/
+-----
+* Allows for direct I/O to the parallel FS without staging.
+* The input files matching the pattern must already exist in the
+given directory, a shared file system location.
+Links will be placed in the job directory.
+* The output files matching the pattern will be stored in the given
+directory, with links in the job directory.
+* Example: In the rule above, the Swift-generated file name
++./data/input.txt+ would be accessed by the user job in
++/gpfs/homes/wozniak/data/input.txt+ .
+
+==== LOCAL
+-----
+rule .*input.txt LOCAL dd /gpfs/homes/user/data obs=64K
+-----
+* Allows for client-directed input copy to the compute node.
+* The user may specify +cp+ or +dd+ as the input transfer program.
+* The input files matching the pattern must already exist in the
+given directory, a shared file system location.
+Copies will be placed in the job directory for use by the user job.
+* Argument list: [tool] [directory] [tool arguments]*
+
+=== Specific use cases
+
+==== Matching on all file names
+
+To match all file names produced by Swift, simply use pattern +.*+
+
+A common use case is to redirect all file operations to a given
+directory, say, +/fs/dir+.  To do this, use a rule such as:
+
+----
+rule .* DIRECT /fs/dir
+----
+
+==== Absolute paths
+
+If your Swift script operates on files with absolute path names such as:
+
+----
+file f<"/fs/dir/f.txt">;
+----
+
+use:
+
+----
+rule .*f.txt DIRECT /
+----
+
+==== Use of symbolic links
+
+Swift may provide a symbolic link to the application, which the
+application may read and write normally.  The application may not
+unlink these links; if it does, the application will not be able to
+find or create Swift-compatible data.
+
+=== Debugging
+
+To troubleshoot CDM, check the Swift log and the wrapper logs
+(+*-info+ files).  These will indicate the CDM policy that Swift finds
+for each file and resulting action, such as skipping stage in for
+DIRECT and the creation of links.  Common errors include specifying
+the wrong directory which will result in an error that the file was
+not found, or that a link could not be created.
+
+// .Gather
+// -----
+// property GATHER_LIMIT 500000000 # 500 MB
+// property GATHER_DIR /dev/shm/gather
+// property GATHER_TARGET /gpfs/wozniak/data/gather_target
+// rule .*.output.txt GATHER
+// -----
+
+// * The output files matching the pattern will be present to tasks in the job directory as usual but noted in a _swiftwrap shell array GATHER_OUTPUT.
+// * The GATHER_OUTPUT files will be cached in the GATHER_DIR, an LFS location.
+// * The cache will be flushed when a job ends if a du on GATHER_DIR exceeds GATHER_LIMIT.
+// * As the cache fills or on stage out, the files will be bundled into randomly named tarballs in GATHER_TARGET, a GFS location.
+// * If the compute node is an SMP, GATHER_DIR is a shared resource.  It is protected by the link file GATHER_DIR/.cdm.lock .
+// * Unpacking the tarballs in GATHER_TARGET will produce the user-specified filenames.
+
+// .Summary
+
+// . Files created by application
+// . Acquire lock
+// . Move files to cache
+// . Check cache size
+// . If limit exceeded, move all cache files to outbox
+// . Release lock
+// . If limit was exceeded, stream outbox as tarball to target
+
+// .Notes
+
+// * Gather required quite a bit of shell functionality to manage the lock, etc. This is placed in cdm_lib.sh .
+// * vdl_int.k needed an additional task submission (cdm_cleanup.sh) to perform the final flush at workflow completion time .  This task also uses cdm_lib.sh .
+
+
+// VDL/Karajan processing
+// ~~~~~~~~~~~~~~~~~~~~~~
+// . CDM functions are available in Karajan via the cdm namespace.
+// . These functions are defined in org.globus.swift.data.Query .
+// . If CDM is enabled, VDL skips file staging for files unless the policy is DEFAULT.
+
+
+// Swift wrapper CDM routines
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~
+// . The cdm.pl script is shipped to the compute node if CDM is enabled.
+// . When linking in inputs, CDM is consulted by _swiftwrap:cdm_lookup().
+// . The cdm_action() shell function handles CDM methods, typically just producing a link.
+
+
+// Test cases
+// ~~~~~~~~~~
+
+// . Simple test cases are in:
+//       https://svn.mcs.anl.gov/repos/wozniak/collab/cdm/scripts/cdm-direct and
+//       https://svn.mcs.anl.gov/repos/wozniak/collab/cdm/scripts/all-pairs
+// . Do a:
+//       mkdir cdm
+//       cd cdm
+//       svn co https://svn.mcs.anl.gov/repos/wozniak/collab/cdm/scripts
+// . In cdm-direct, run:
+//       source ./setup.sh local local local
+// . Run workflow:
+//       swift -sites.file sites.xml -tc.file tc.data -cdm.file fs.data stream.swift
+// . Note that staging is skipped for input.txt
+//       policy: file://localhost/input.txt : DIRECT
+//       FILE_STAGE_IN_START file=input.txt ...
+//       FILE_STAGE_IN_SKIP file=input.txt policy=DIRECT
+//       FILE_STAGE_IN_END file=input.txt ...
+// . In the wrapper output, the input file is handled by CDM functionality:
+//       Progress  2010-01-21 13:50:32.466572727-0600  LINK_INPUTS
+//       CDM_POLICY: DIRECT /homes/wozniak/cdm/scripts/cdm-direct
+//       CDM: jobs/t/cp_sh-tkul4nmj input.txt DIRECT /homes/wozniak/cdm/scripts/cdm-direct
+//       CDM[DIRECT]: Linking jobs/t/cp_sh-tkul4nmj/input.txt to /homes/wozniak/cdm/scripts/cdm-direct/input.txt
+//       Progress  2010-01-21 13:50:32.486016708-0600  EXECUTE
+// . all-pairs is quite similar but uses more policies.
+
+
+// PTMap case
+// ^^^^^^^^^^
+// . Start with vanilla PTMap:
+//    .. cd cdm
+//    .. mkdir apps
+//    .. cd apps
+//    .. https://svn.mcs.anl.gov/repos/wozniak/collab/cdm/apps/ptmap
+// . Source setup.sh
+// . Use start.sh, which
+//    .. applies CDM policy from fs.local.data
+
+
+// CDM site-aware policy file format
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// Example
+
+// -----
+// #Describe CDM for my job
+// #Use DIRECT and BROADCAST if on cluster1, else use DEFAULT behavior
+// property GATHER_LIMIT 1
+// rule cluster1 .*input.txt DIRECT /gpfs/homes/wozniak/data
+// rule cluster1 .*xfile*.data BROADCAST /dev/shm
+// rule ANYWHERE .* DEFAULT
+// -----
+
+// The lines contain:
+
+// . A directive, either rule or property
+// . A rule has:
+//    .. A regular expression for site matching
+//    .. A regular expression for filename matching
+//    .. A policy token
+//    .. Additional policy-specific arguments
+// . A property has
+//    .. A policy property token
+//    .. The token value
+// . Comments with # .
+// . Blank lines are ignored.

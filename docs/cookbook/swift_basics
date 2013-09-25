@@ -1,0 +1,451 @@
+Swift Basics
+------------
+
+Installation
+~~~~~~~~~~~~
+
+This section takes you through the installation of the Swift system on your
+computer. We will start with the prerequisites as explained in the subsequent
+section.
+
+Prerequisites
+^^^^^^^^^^^^^^
+.Check your Java
+Swift is a Java application. Make sure you are running Java version 5 or higher. You
+can make sure you have Java in your $PATH (or file such as $HOME/.soft depending upon
+your environment) 
+
+Following are some possible ways to detect and run Java:
+
+----
+$ grep java $HOME/.soft
+#+java-sun # Gives you Java 5
++java-1.6.0_03-sun-r1
+$ which java
+/soft/java-1.6.0_11-sun-r1/bin/java
+$ java -version
+java version "1.6.0_11"
+Java(TM) SE Runtime Environment (build 1.6.0_11-b03)
+Java HotSpot(TM) 64-Bit Server VM (build 11.0-b16, mixed mode)
+----
+
+Setting up to run Swift
+~~~~~~~~~~~~~~~~~~~~~~~~
+This is simple. We will be using a pre-compiled version of Swift that can be
+downloaded from
+link:http://www.ci.uchicago.edu/swift/downloads/index.php[here]. Download and
+untar the latest precompiled version as follows:
+
+----
+$ tar zxf swift-0.92.1.tar.gz
+----
+
+Environment Setup
+^^^^^^^^^^^^^^^^^^
+
+The examples were tested with Java version 1.6. Make sure you do not already
+have Swift in your PATH. If you do, remove it, or remove any +swift or @swift
+lines from your $HOME/.soft or $HOME/.bash_profile file. Then do:
+
+----
+PATH=$PATH:/path/to/swift/bin
+----
+
+Note that the environment will be different when using Swift from prebuilt distribution (as above) and trunk. The PATH setup when using swift from trunk would be as follows:
+
+----
+PATH=$PATH:/path/to/swift/dist/swift-svn/bin
+----
+
+WARNING: Do NOT set SWIFT_HOME or CLASSPATH in your environment unless you
+fully understand how these will affect Swift's execution.
+
+To execute your Swift script on a login host (or "localhost") use
+the following command: 
+
+----
+swift -tc.file tc somescript.swift
+----
+
+Setting transformation catalog
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The transformation catalog lists where application executables are located on
+remote sites.
+
+By default, the site catalog is stored in etc/tc.data. This path can be
+overridden with the tc.file configuration property, either in the Swift
+configuration file or on the command line.
+
+The format is one line per executable per site, with fields separated by tabs
+or spaces.
+
+Some example entries: 
+
+----
+localhost  echo    /bin/echo       INSTALLED       INTEL32::LINUX  null
+TGUC       touch   /usr/bin/touch  INSTALLED       INTEL32::LINUX GLOBUS::maxwalltime="00:00:10"
+----
+The fields are: _site_, _transformation-name_, _executable-path_, _installation-status_, _platform_, and _profile_ entries.
+
+The _site_ field should correspond to a site name listed in the sites catalog.
+
+The _transformation-name_ should correspond to the transformation name used in a
+Swift script app procedure.
+
+The _executable-path_ should specify where the particular executable is located
+on that site.
+
+The _installation-status_ and _platform_ fields are not used. Set them to
+**INSTALLED** and **INTEL32::LINUX** respectively.
+
+The _profiles_ field should be set to null if no profile entries are to be
+specified, or should contain the profile entries separated by semicolons. 
+
+Setting Swift configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Many configuration properties could be set using the Swift configuration file.
+We will not cover them all in this section. see
+link:http://www.ci.uchicago.edu/swift/guides/userguide.php#engineconfiguration[here] for details. In this section we will cover a simple configuration file with the most basic properties.
+
+----
+# A comment 
+wrapperlog.always.transfer=true
+sitedir.keep=true
+execution.retries=1
+lazy.errors=true
+status.mode=provider
+use.provider.staging=true
+provider.staging.pin.swiftfiles=false
+clustering.enabled=false
+clustering.queue.delay=10
+clustering.min.time=86400
+foreach.max.threads=100
+provenance.log=true
+----
+
+Setting sites.xml
+^^^^^^^^^^^^^^^^^^
+sites.xml specifies details of the sites that Swift can run on. Following is
+an example of a simple sites.xml file entry for running Swift on local
+environment:
+
+[xml]
+source~~~~~~
+<pool handle="localhost">
+<filesystem provider="local" />
+<execution provider="local" />
+<workdirectory >/var/tmp</workdirectory>
+<profile namespace="karajan" key="jobThrottle">.07</profile>
+<profile namespace="karajan"
+key="initialScore">100000</profile>
+</pool>
+source~~~~~~
+
+First Swift script
+~~~~~~~~~~~~~~~~~
+Your first Swift script
+Hello Swift-World!
+
+A good sanity check that Swift is set up and running OK locally is this:
+
+----
+$ which swift
+
+/home/wilde/swift/src/stable/cog/modules/swift/dist/swift-svn/bin/swift
+
+$ echo 'trace("Hello, Swift world!");' >hello.swift
+
+$ swift hello.swift
+
+Swift svn swift-r3202 cog-r2682
+
+RunID: 20100115-1240-6xhzxuz3
+
+Progress:
+
+Swift trace: Hello, Swift world!
+
+Final status:
+
+$ 
+----
+A good first tutorial in using Swift is at:
+http://www.ci.uchicago.edu/swift/guides/tutorial.php. Follow the steps in that
+tutorial to learn how to run a few simple scripts on the login host.
+
+second Swift script
+~~~~~~~~~~~~~~~~~~~
+Following is a more involved Swift script.
+[java]
+source~~~~~~~
+type file;
+
+app (file o) cat (file i)
+{
+    cat @i stdout=@o;   
+}
+
+file out[]<simple_mapper; location="outdir", prefix="f.",suffix=".out">; 
+
+foreach j in [1:@toint(@arg("n","1"))] {    
+
+    file data<"data.txt">;  
+
+    out[j] = cat(data);    
+}
+source~~~~~~~
+
+Swift Commandline Options
+~~~~~~~~~~~~~~~~~~~~~~~~~
+A description of Swift Commandline Options
+
+Also includes a description of Swift inputs and outputs.
+
+What if Swift hangs
+~~~~~~~~~~~~~~~~~~~
+Owing to its multi-threaded architecture it is often the case that the
+underlying java virtual machine gets into deadlock situations or Swift hangs
+because of other complications in its operations. Under such
+situations, Swift _hang-checker_ chips in and gives indication of the situation.
+
+. how to use the information to identify and correct the deadlock.
+
+. How close to the Swift source code can we make the hang-checker messages, so that the user can relate it to Swift functions, expressions, and ideally source code lines?
+
+. The Hang Checker output is nice and useful:
+
+----
+Registered futures:
+Rupture[] rups  Closed, 1 elements, 0 listeners
+Variation vars - Closed, no listeners
+SgtDim sub - Open, 1 listeners
+string site  Closed, no listeners
+Variation[] vars  Closed, 72 elements, 0 listeners
+----
+
+Resuming a stopped or crashed Swift Run
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+I had a .rlog file from a Swift run that ran out of time. I resumed the run
+using the -resume flag described in section 16.2 of the Swift User Guide and
+it picked up where it left off. Then I killed it because I wanted to make
+changes to my sites file.
+
+----
+. . .
+Progress:  Selecting site:1150  Stage in:55  Active:3  Checking status:1
+Stage out:37  Finished in previous run:2462  Finished successfully:96
+Progress:  Selecting site:1150  Stage in:55  Active:2  Checking status:1
+Stage out:38  Finished in previous run:2462  Finished successfully:96
+Cleaning up...
+Shutting down service at https://192.5.86.6:54813
+Got channel MetaChannel: 1293358091 -> null
++ Done
+Canceling job 9297.svc.pads.ci.uchicago.edu
+----
+
+No new rlog file was emitted but it did recognize the progress that had been
+made, the 96 tasks that finished sucessfully above and resumed from 2558 tasks
+finished.
+
+----
+[nbest@login2 files]$ pwd
+/home/nbest/bigdata/files
+[nbest@login2 files]$
+~wilde/swift/src/stable/cog/modules/swift/dist/swift-svn/bin/swift -resume \
+> -tc.file tc -sites.file pbs.xml ~/scripts/mcd12q1.swift 
+> mcd12q1-20100310-1326-ptxe1x1d.0.rlog
+Swift svn swift-r3255 (swift modified locally) cog-r2723 (cog modified
+locally)
+RunID: 20100311-1027-148caf0a
+Progress:
+Progress:  uninitialized:4
+Progress:  Selecting site:671  Initializing site shared directory:1  Finished
+in previous run:1864
+Progress:  uninitialized:1  Selecting site:576  Stage in:96  Finished in
+previous run:1864
+Progress:  Selecting site:1150  Stage in:94  Submitting:2  Finished in
+previous run:2558
+Progress:  Selecting site:1150  Stage in:94  Submitted:2  Finished in previous
+run:2558
+Progress:  Selecting site:1150  Stage in:93  Submitting:1  Submitted:2
+Finished in previous run:2558
+Progress:  Selecting site:1150  Stage in:90  Submitting:1  Submitted:5
+Finished in previous run:2558
+Progress:  Selecting site:1150  Stage in:90  Submitted:5  Active:1  Finished
+in previous run:2558
+----
+
+Notes to add (from Mike):
+
+- explain what aspects of a Swift script make it restartable, and which
+  aspects are notrestartable. Eg, if your mappers can return different data at
+different times, what happens? What other non-determinsitc behavior would
+cause unpredictable, unexpected, or undesired behavior on resumption?
+
+- explain what changes you can make in the execution environment (eg
+  increasing or reducing CPUs to run on or throttles, etc); fixing tc.data
+entries, env vars, or apps, etc.
+
+- note that resume will again retry failed app() calls. Explain if the retry
+  count starts over or not.
+
+- explain how to resume after multiple failures and resumes - i.e. if a .rlog
+  is generated on each run, which one should you resume from? Do you have a
+choice of resuming from any of them, and what happens if you go backwards to
+an older resume file?
+
+- whap happens when you kill (eg with ^C) a running swift script? Is the
+  signal caught, and the resume file written out at that point? Or written out
+all along? (Note case in which script ws running for hours, then hit ^C, but
+resume fie was short (54 bbytes) and swift shows no sign of doing a resume?
+(It silently ignored resume file instead of acknowleging that it found one
+with not useful resume state in it???) Swift should clearly state that its
+resuming and what its resume state is. 
+
++swift -resume ftdock-[id].0.rlog \[rest of the exact command line from initial
+run\]+
+
+
+Passing an array to swift?
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Arrays can be passed to Swift in one of the following ways:
+
+. You can write the array to a file and read in in swift using
+readData (or readData2).
+. Direct the array into a file (possibly with a "here document" which expands the array) and then read the file in Swift with readData() or process it with a Swift app() function?
+. You can use @strsplit on a comma separated command line arg and that works well for me.
+
+Mappers
+^^^^^^^^
+SimpleMapper
+
+----
+$ cat swiftapply.swift
+----
+
+[java]
+source~~~~
+type RFile;
+trace("hi 1");
+app (RFile result) RunR (RFile rcall)
+{
+  RunR @rcall @result;
+}
+trace("hi 2");
+RFile rcalls[] ;
+RFile results[] ;
+trace("start");
+foreach c, i in rcalls {
+  trace("c",i,@c);
+  trace("r",i,@filename(results[i]));
+  results[i] = RunR(c);
+}
+source~~~~
+
+----
+$ ls calldir resdir
+calldir:
+rcall.1.Rdata  rcall.2.Rdata  rcall.3.Rdata  rcall.4.Rdata
+resdir:
+result.1.Rdata result.2.Rdata result.3.Rdata result.4.Rdata
+$ 
+----
+
+Notes:
+
+how the .'s match
+prefix and suffix dont span dirs
+intervening pattern must be digits
+these digits become the array indices
+explain how padding= arg works & helps (including padding=0)
+figure out and explain differences between simple_mapper and
+filesys_mapper
+FIXME: Use the "filesys_mapper" and its "location=" parameter to map the
+input data from /home/wilde/bigdata/* 
+
+Abbreviations for SingleFileMapper
+Notes:
+
+within <> you can only have a literal string as in <"filename">, not an
+expression. Someday we will fix this to make <> accept a general expression.
+you can use @filenames( ) (note: plural) to pull off a list of filenames. 
+
+writeData()
+
+example here 
+
+----
+$ cat writedata.swift
+----
+
+[java]
+source~~~~
+type file;
+
+file f <"filea">;
+file nf <"filenames">;
+nf = writeData(@f);
+source~~~~
+
+----
+$ swift writedata.swift
+Swift svn swift-r3264 (swift modified locally) cog-r2730 (cog modified
+locally)
+RunID: 20100319-2002-s9vpo0pe
+Progress:
+Final status:
+$ cat filenames
+filea$ 
+----
+
+StructuredRegexpMapper
+IN PROGRESS This mapper can be used to base the mapped filenames of an output
+array on the mapped filenames of an existing array. landuse outputfiles[]
+<structured_regexp_mapper; source=inputfiles,
+location="./output",match="(.)*tif", transform="\\1histogram">;
+
+Use the undocumented "structured_regexp_mapper" to name the output
+filenames based on the input filenames: 
+
+For example:
+
+----
+login2$ ls /home/wilde/bigdata/data/sample
+h11v04.histogram  h11v05.histogram  h12v04.histogram  h32v08.histogram
+h11v04.tif        h11v05.tif        h12v04.tif        h32v08.tif
+login2$
+
+login2$ cat regexp2.swift
+type tif;
+type mytype;
+
+tif  images[]<filesys_mapper; 
+location="/home/wilde/bigdata/data/sample", prefix="h", suffix=".tif">;
+
+mytype of[] <structured_regexp_mapper; source=images, match="(h..v..)", 
+transform="output/myfile.\\1.mytype">;
+
+foreach image, i in images {
+   trace(i,@filename(images));
+   trace(i,@filename(of[i]));
+}
+login2$
+
+login1$ swift regexp2.swift
+Swift svn swift-r3255 (swift modified locally) cog-r2723 (cog modified
+locally)
+
+RunID: 20100310-1105-4okarq08
+Progress:
+Swift script trace: 1, output/myfile.h11v04.mytype
+Swift script trace: 2, home/wilde/bigdata/data/sample/h11v05.tif
+Swift script trace: 3, home/wilde/bigdata/data/sample/h12v04.tif
+Swift script trace: 0, output/myfile.h32v08.mytype
+Swift script trace: 0, home/wilde/bigdata/data/sample/h32v08.tif
+Swift script trace: 3, output/myfile.h12v04.mytype
+Swift script trace: 1, home/wilde/bigdata/data/sample/h11v04.tif
+Swift script trace: 2, output/myfile.h11v05.mytype
+Final status:
+login1$ 
+----

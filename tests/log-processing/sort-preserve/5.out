@@ -1,0 +1,16 @@
+bar 3 III
+bar 6 VI
+bar 10 X
+fol 11 XI
+foo 1 I
+foo 2 II
+foo 4 IV2
+foo 4 IV1
+foo 5 EEEEE
+foo 5 DDDDD
+foo 5.32787 CCCCC
+foo 5.32787 BBBBB
+foo 5.32789 AAAAA
+foo 7 VII
+foo 9 IX
+qux 8 VIII

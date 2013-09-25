@@ -1,0 +1,32 @@
+#! /bin/bash
+
+bin=$(cd $(dirname $0); pwd)
+
+work=$(mktemp -d gen_gridsites.run.XXX)
+if [ $? != 0 ]; then
+  echo $0: failed to create work directory
+  exit 1
+fi
+echo $0: working directory is $work
+cd $work
+
+ruby -I $bin $bin/mk_osg_sitetest.rb 
+
+cat >cf <<END
+lazy.errors=true
+execution.retries=0
+status.mode=files
+use.provider.staging=false
+wrapperlog.always.transfer=false
+END
+
+swift -config cf -tc.file tc.data -sites.file sites.xml test_osg.swift >& swift.out &
+
+echo $0: Started test_osg.swift script - process id is $!
+
+# To Do: 
+#  harvest new sites with an updated goodsites file every few minutes
+#  plot (print) a histogram of site aquisition over time
+#  FIXME: move mk_test.rb to libexec/grid
+#  check for or create valid proxy
+

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+everylog-to-event $@
+
+gnuplot ${SWIFT_PLOT_HOME}/everylog-vs-versions.plot
+
+cat everylog-vs-versions.data  | cut -f 2 -d ' ' | sort -n | number-sites-list > everylog-versions-cumulative.data
+
+gnuplot ${SWIFT_PLOT_HOME}/everylog-version-cumulative.plot 
+

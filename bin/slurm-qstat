@@ -1,0 +1,13 @@
+#! /bin/sh
+
+now=$(date "+%Y.%m%d.%H:%M:%S")
+echo $now $0: $* >> $HOME/pbslog
+
+#echo 'Job id              Name             User            Time Use S Queue'
+#echo '------------------- ---------------- --------------- -------- - -----'
+
+#/software/slurm-2.4-el6-x86_64/bin/qstat $* | tail -n +2
+qstat $* | sed -e 's/\t/    /' -e 's/:  */: /'
+
+
+

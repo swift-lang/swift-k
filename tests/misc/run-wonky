@@ -1,0 +1,18 @@
+#!/bin/sh
+for a in wonky-clusters-wrongdir \
+         wonky-slow-queue-fast-queue \
+         wonky-failfirst \
+         wonky-wrongdir \
+         wonky-replication \
+         wonky \
+         wonky80 \
+	wonky-wrongdir-relative-fail \
+; do
+ ./${a}.sh
+ R=$?
+ echo test $a ended with return value $R
+ if [ "$R" != "0" ] ; then
+   exit $R
+ fi
+done
+echo All misc. tests passed ok

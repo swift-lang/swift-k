@@ -1,0 +1,51 @@
+/*
+ * Copyright 2012 University of Chicago
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package org.griphyn.vdl.karajan.lib;
+
+import org.apache.log4j.Logger;
+import org.globus.cog.karajan.arguments.Arg;
+import org.globus.cog.karajan.stack.VariableStack;
+import org.globus.cog.karajan.util.TypeUtil;
+import org.globus.cog.karajan.workflow.ExecutionException;
+import org.griphyn.vdl.mapping.DSHandle;
+
+public class PartialCloseDataset extends VDLFunction {
+	public static final Logger logger = Logger.getLogger(CloseDataset.class);
+
+	public static final Arg OA_COUNT = new Arg.Optional("count", 1);
+
+	static {
+		setArguments(PartialCloseDataset.class, new Arg[] { PA_VAR, OA_COUNT });
+	}
+
+	public Object function(VariableStack stack) throws ExecutionException {
+		DSHandle var = (DSHandle) PA_VAR.getValue(stack);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Partially closing " + var);
+		}
+
+		if (var.isClosed()) {
+			logger.debug("variable already closed - skipping partial close processing");
+			return null;
+		}
+		
+		int count = TypeUtil.toInt(OA_COUNT.getValue(stack));
+		var.updateWriteRefCount(-count);
+		return null;
+	}
+}

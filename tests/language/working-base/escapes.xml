@@ -1,0 +1,44 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="s" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 4">
+   <variableReference>s</variableReference>
+   <stringConstant>\n</stringConstant>
+  </assign>
+  <variable name="t" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 6">
+   <variableReference>t</variableReference>
+   <stringConstant>\r</stringConstant>
+  </assign>
+  <variable name="u" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 8">
+   <variableReference>u</variableReference>
+   <stringConstant>\t</stringConstant>
+  </assign>
+  <variable name="v" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 10">
+   <variableReference>v</variableReference>
+   <stringConstant>\b</stringConstant>
+  </assign>
+  <variable name="w" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 12">
+   <variableReference>w</variableReference>
+   <stringConstant>\f</stringConstant>
+  </assign>
+  <variable name="x" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 14">
+   <variableReference>x</variableReference>
+   <stringConstant>&quot;</stringConstant>
+  </assign>
+  <variable name="y" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 16">
+   <variableReference>y</variableReference>
+   <stringConstant>\'</stringConstant>
+  </assign>
+  <variable name="z" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 17">
+   <variableReference>z</variableReference>
+   <stringConstant>\</stringConstant>
+  </assign>
+</program>

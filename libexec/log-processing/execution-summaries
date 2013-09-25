@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# output total number of executions according to execute, execute2 and
+# kickstart
+
+EX="$(cat execute.event | wc -l)"
+EX2="$(cat execute2.event | wc -l)"
+KICK="$(cat kickstart.event | wc -l)"
+
+echo "Total executes (derivations) attempted:" $EX
+echo "Total execute2s (program executions) attempted:" $EX2
+echo "execute2 / execute - average execution attempts per derivation: " $(echo " $EX2 / $EX " | bc -l )
+echo
+echo "Total kickstart records available:" $KICK
+echo "kickstart records / execute2 = kickstart collection success rate:" $(echo " $KICK * 100 / $EX2 " | bc -l) "%"

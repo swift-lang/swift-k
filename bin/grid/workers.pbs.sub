@@ -1,0 +1,36 @@
+#!/bin/bash
+#$ -N SGEtest
+#$ -pe 16way 256
+#$ -l h_rt=00:05:00
+#$ -o $HOME/swift/lab/t.stdout
+#$ -e $HOME/swift/lab/t.stderr
+#$ -v WORKER_LOGGING_LEVEL=NONE
+#$ -q development
+#$ -A TG-DBS080004N
+#$ -V
+#$ -S /bin/bash
+
+echo PE_HOSTFILE:
+echo
+cat $PE_HOSTFILE
+echo
+
+#cd / && NODES=`cat $PE_HOSTFILE | awk '{ for(i=0;i<$2;i++){print $1} }'`
+cd / && NODES=`cat $PE_HOSTFILE | awk '{print $1}'`
+ECF=/home/mwilde/.globus/scripts/t.exitcode
+INDEX=0
+for NODE in $NODES; do
+echo launch on node $NODE
+#  echo "N" >$ECF.$INDEX
+#  ssh $NODE /bin/bash -c \" "sleep 300; echo \\\$? > $ECF.$INDEX " \" &
+#  qrsh -nostdin -l hostname=$NODE hostname -f 2>&1 &
+  ssh $NODE hostname -f &
+   rc=$?
+   if [ $rc != 0 ]; then
+     echo ssh failed for $NODE
+   fi
+   #  sleep .33
+  INDEX=$((INDEX + 1))
+done
+
+wait

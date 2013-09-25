@@ -1,0 +1,26 @@
+Clustering
+----------
+Swift can group a number of short job submissions into a single larger
+job submission to minimize overhead involved in launching jobs (for
+example, caused by security negotiation and queuing delay). In general,
+CoG coasters should be used in preference to the clustering
+mechanism documented in this section.
+
+By default, clustering is disabled. It can be activated by setting the
+clustering.enabled property to true.
+
+A job is eligible for clustering if the GLOBUS::maxwalltime profile 
+is specified in the tc.data entry for that job, and its value is 
+less than the value of the clustering.min.time property.
+
+Two or more jobs are considered compatible if they share the same site
+and do not have conflicting profiles (e.g. different values for the same
+environment variable).
+
+When a submitted job is eligible for clustering, it will be put in a
+clustering queue rather than being submitted to a remote site. The
+clustering queue is processed at intervals specified by the
+clustering.queue.delay property. The
+processing of the clustering queue consists of selecting compatible jobs
+and grouping them into clusters whose maximum wall time does not exceed
+twice the value of the clustering.min.time property.

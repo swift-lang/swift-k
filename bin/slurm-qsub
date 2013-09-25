@@ -1,0 +1,78 @@
+#! /bin/sh
+
+now=$(date "+%Y.%m%d.%H:%M:%S")
+echo $now $0: $* >> $HOME/pbslog
+
+slurmqsub=$( which slurm-qsub-emulator )
+script=$1.slurm
+echo '#! /bin/sh' >$script
+# echo 'export PBS_NODELIST=SLURM_NODELIST'' >>$script  # FIXME: convert SLURM_NODELIST to PBS_NODEFILE here...
+cat $1 | grep -v '^#PBS' >>$script
+chmod +x $script
+
+srunargs=$(awk <$1 '
+/#PBS -S/ { shell=$3 }
+/#PBS -N/ { jobname=$3 }
+/#PBS -m/ { m = $3 }
+/#PBS -l nodes/ { nodes = $3; ppn=$3;
+                  sub(/nodes=/,"",nodes); sub(/:.*/,"",nodes);
+                  sub(/^.*ppn=/,"",ppn);  }
+/#PBS -l walltime/ { walltime = $3; sub(/walltime=/,"",walltime);}
+#/#PBS -l advres/ { advres = "," $3; sub(/advres=/,"",advres); advres="," advres }
+/#PBS -l advres/ { advres = "," $3; }
+/#PBS -q/ { queue = $3 }
+/#PBS -o/ { sofile = $3 }
+/#PBS -e/ { sefile = $3 }
+
+END {
+   #printf("shell=%s jobname=%s m=%s nodespec=%s nodes=%s ppn=%s walltime=%s queue=%s sofile=%s sefile=%s\n",
+   #        shell, jobname, m, nodespec, nodes, ppn, walltime, queue, sofile, sefile);
+   #printf("-p %s -t %s -N %s -D %s -J %s -e %s -o %s", queue, walltime, nodes, "/tmp", jobname, sefile, sofile);
+
+#   printf("-S %s -N %s -m %s -l nodes=%s:ppn=%s -l walltime=%s -q %s -o %s -e %s",
+#            shell, jobname, m, nodes, ppn, walltime, queue, sofile, sefile);
+   printf("-N %s -m %s -l nodes=%s:ppn=%s,walltime=%s%s -q %s -o %s -e %s",
+             jobname, m, nodes, ppn, walltime, advres, queue, sofile, sefile);
+
+}')
+
+echo "  " qsub args: $slurmqsub $srunargs $script >>$HOME/pbslog
+job=$($slurmqsub $srunargs $script)
+echo "  " qsub output: $job >>$HOME/pbslog
+
+jid=$(echo $job | sed -e 's/^.* //')
+echo "  " qsub job id: $jid >>$HOME/pbslog
+echo $jid
+
+# srun $srunargs $script
+
+#   cqsub -q ${QUEUE}   \
+#         -k zeptoos    \
+#         -t ${MAXTIME} \ # minutes
+#         -n ${NODES}   \
+#         --cwd ${LOGDIR} \
+#         -E ${LOGDIR}/cobalt.${$}.stderr \
+#         -o ${LOGDIR}/cobalt.${$}.stdout \
+#         -e "WORKER_LOGGING_LEVEL=DEBUG:ZOID_ENABLE_NAT=true" \
+#         $WORKER $EXECUTION_URL $ID $LOG_DIR
+
+# LOGDIR=/tmp/swiftlog
+# 
+#        WORKER_LOGGING_LEVEL=DEBUG srun \
+#          -p ${QUEUE} \
+#          -t ${MAXTIME} \
+#          -N ${NODES}   \
+#          -D ${LOGDIR} \
+#          -J swift-worker \
+#          -e ${LOGDIR}/cobalt.${$}.stderr \
+#          -o ${LOGDIR}/cobalt.${$}.stdout \
+#             $SWIFT_BIN/$WORKER $EXECUTION_URL $ID $LOG_DIR
+
+#PBS -S /bin/bash
+#PBS -N cog-000000
+#PBS -m n
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=00:05:00
+#PBS -q sandyb
+#PBS -o /home/wilde/.globus/scripts/PBS4051523028032512638.submit.stdout
+#PBS -e /home/wilde/.globus/scripts/PBS4051523028032512638.submit.stderr

@@ -1,0 +1,16 @@
+#! /bin/bash
+
+bin=$(cd $(dirname $0); pwd)
+
+work=$(mktemp -d run_workers.run.XXX)
+if [ $? != 0 ]; then
+  echo $0: failed to create work directory
+  exit 1
+fi
+echo $0: working directory is $work
+cd $work
+
+ruby -I $bin $bin/nqueued.rb ../greensites mwildeT1
+
+# To Do: 
+# manage a total running worker pool based on demand from swift + slack

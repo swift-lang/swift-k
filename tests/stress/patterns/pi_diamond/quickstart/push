@@ -1,0 +1,5 @@
+#!/bin/bash
+
+~davidk/asciidoc-8.6.4/asciidoc -a toplevels=2 -a stylesheet=~davidk/swift-0.94/cog/modules/swift/docs/stylesheets/asciidoc.css -a max-width=800px -o quickstart.html quickstart.txt
+
+cp quickstart.html ~/public_html/

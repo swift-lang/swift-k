@@ -1,0 +1,35 @@
+Site Configuration Guide
+========================
+
+:toc:
+:icons:
+:website: http://www.ci.uchicago.edu/swift/guides/siteguide.php
+:numbered:
+
+include::overview[]
+
+include::prereqs[]
+
+include::beagle[]
+
+include::fusion[]
+
+include::futuregrid[]
+
+include::geyser[]
+
+include::grid[]
+
+include::intrepid[]
+
+include::mcs[]
+
+include::midway[]
+
+include::ssh[]
+
+include::ssh-cl[]
+
+include::stampede[]
+
+include::uc3[]

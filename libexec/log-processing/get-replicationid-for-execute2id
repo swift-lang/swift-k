@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# given an execute2 ID as $1, return the replication id (if any)
+
+# needs execute2.event to exist
+
+#1219825024.716 91.3469998836517 sleep-nkcz2kyi JOB_END 0-6-1 wonkyA ckcz2kyi
+
+grep -e "^[^ ]* [^ ]* $1 .*\$" execute2.event | cut -d ' ' -f 7

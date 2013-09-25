@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./normalise-event-start-time-to-any $(cat start-time.tmp)
+

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# $1 should be the pathname of the log file to plot
+# The rest of the line is passed to make 
+#    They must be figures
+
+ORIGDIR=$(pwd)
+WORKINGDIR=$(mktemp -d /tmp/swift-plot-log-XXXXXXXXXXXXXXXX)
+
+LOG_CODE_HOME="`dirname $0`/../libexec/log-processing/"
+export SWIFT_PLOT_HOME=$LOG_CODE_HOME
+
+export PATH=${LOG_CODE_HOME}:${PATH}
+
+FC="${1:0:1}"
+
+if [ "$FC" = "/" ]; then # absolute path
+  LOG_FILE_PATH=$1
+else
+  LOG_FILE_PATH="`pwd`/$1"
+fi
+
+LOG_DIRECTORY=`dirname $LOG_FILE_PATH`
+
+LOG_FILE_BASE=`basename $LOG_FILE_PATH .log`
+
+echo Log file path is $LOG_FILE_PATH
+echo Log is in directory $LOG_DIRECTORY
+echo Log basename is $LOG_FILE_BASE
+
+cd $WORKINGDIR
+echo Now in directory $(pwd)
+
+MAKEENV="-f ${LOG_CODE_HOME}/makefile -I ${LOG_CODE_HOME}"
+MAKETARGETS=""
+
+INFODIR=${LOG_DIRECTORY}/${LOG_FILE_BASE}.d
+
+if [ -d $INFODIR ]; then
+ MAKEENV="$MAKEENV IDIR=${LOG_DIRECTORY}/${LOG_FILE_BASE}.d/"
+ MAKETARGETS="webpage.info"
+fi
+
+if [ "X$2" = "X" ]; then
+make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH webpage.kara webpage.weights webpage.coasters karatasks.JOB_SUBMISSION.Queue.transitions karatasks.JOB_SUBMISSION.Queue.event karatasks.JOB_SUBMISSION.eip  $MAKETARGETS webpage distribute
+else
+shift
+make $MAKEENV SDL=${ORIGDIR}/report-${LOG_FILE_BASE} LOG=$LOG_FILE_PATH $@
+cp $@ $ORIGDIR/
+fi
+
+# mv report-$LOG_FILE_BASE $LOG_DIRECTORY/
+
+# rm -r $WORKINGDIR

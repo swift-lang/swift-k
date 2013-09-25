@@ -1,0 +1,5 @@
+#! /bin/sh
+
+set -x
+
+swift -config cf -sites.file local.xml -tc.file tc ../modis.swift -modisdir=input/

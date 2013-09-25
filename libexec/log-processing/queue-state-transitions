@@ -1,0 +1,36 @@
+#!/usr/bin/env perl
+
+# pull out transitions that go to submitted state and the immediately
+# following transition
+
+use Time::Local;
+
+$prevjob = "queue-state-transitions no previous event";
+
+$prevline = "";
+
+$active = 0;
+
+foreach $n (<STDIN>) {
+  $n =~ /^([^ ]*) ([^ ]*) ([^ ]*) (.*)$/;
+  $ts = $1;
+  $job = $2;
+  $state = $3;
+  $linerest = $4;
+
+  if($state eq "Submitted") {
+    print "$n";
+    $active = 1;
+  } elsif( ($job eq $prevjob) && ($active) ) {
+    if($active == 1) {
+      print $n;
+      print "$ts $job DoneQueueing $linerest\n";
+      $active = 0;
+    }
+  } else {
+    $prevjob = $job;
+  };
+  $prevline = $n;
+}
+
+# print $prevline;

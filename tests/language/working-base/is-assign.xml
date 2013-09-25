@@ -1,0 +1,8 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <assign>
+     <variableReference>i</variableReference>
+     <integerConstant>7</integerConstant>
+    </assign>
+</program>

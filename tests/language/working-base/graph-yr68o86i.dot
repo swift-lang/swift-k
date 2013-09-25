@@ -1,0 +1,19 @@
+digraph VDL2provenance {
+	graph [splines="compound", rankdir="TB"];
+	node [color="seagreen", style="filled"];
+	"0-2-0" [label=wc]
+	"three.txt" [shape=parallelogram]
+	"three.txt" -> "0-2-0"
+	"three.count" [shape=parallelogram,label=c]
+	"0-2-0" -> "three.count"
+	"0-0-0" [label=wc]
+	"one.txt" [shape=parallelogram]
+	"one.txt" -> "0-0-0"
+	"one.count" [shape=parallelogram,label=c]
+	"0-0-0" -> "one.count"
+	"0-1-0" [label=wc]
+	"two.txt" [shape=parallelogram]
+	"two.txt" -> "0-1-0"
+	"two.count" [shape=parallelogram,label=c]
+	"0-1-0" -> "two.count"
+}

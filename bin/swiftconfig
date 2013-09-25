@@ -1,0 +1,419 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use File::Copy;
+use File::Path;
+use Pod::Usage;
+use Cwd;
+use Cwd qw(abs_path);
+use FindBin qw($Bin);
+use lib "$FindBin::Bin/../lib/perl";   # Use libs in swiftconfig_home/lib/perl
+use SwiftConfig;
+use Getopt::Long;
+use XML::Simple;
+use File::Which qw(which where);
+use Data::Dumper;
+
+# Variables for command line options
+my $option_list         = q{};      # List information about config
+my $option_remove       = q{};      # Remove entry from sites.xml
+my $option_edit         = q{};      # Edit mode
+my $option_default      = q{};      # When adding a site, use all defaults
+my @option_templates    = ();       # Create config from template specified
+my $option_copy         = q{};      # Copy an existing configuration
+my $option_applications = q{};      # Edit applications
+my $option_import       = q{};      # Import existing configuration
+my @option_profiles 	= ();       # Specify one or more profiles to edit
+my $option_groups       = q{};      # Edit site groupings
+
+# Assign variables from command line options
+GetOptions(
+    'remove=s'              	=> \$option_remove,
+    'default|defaults'      	=> \$option_default,
+    'full'                  	=> sub { $option_default = 0; },
+    'template|templates=s{,}'   => \@option_templates,
+    'edit=s'                	=> \$option_edit,
+    'copy=s'                	=> \$option_copy,
+    'apps|applications'     	=> \$option_applications,
+    'import=s'              	=> \$option_import,
+    'list=s'                	=> \$option_list,
+    'help|man|h'              	=> sub { pod2usage(-verbose => 2); },
+    'profile|profiles=s{,}' 	=> \@option_profiles,
+    'group|groups'              => \$option_groups,
+);
+
+# Prepare data
+my $xml = new XML::Simple();
+initialize_swiftconfig();
+
+# Check command line options
+if(    !$option_remove 
+    && !@option_templates 
+    && !$option_edit 
+    && !$option_copy 
+    && !$option_applications 
+    && !$option_import 
+    && !$option_list
+    && !$option_groups) {
+    print "Incorrect usage. See swiftconfig -help for more information\n";  
+    exit;
+}
+
+# Create all required directories
+my $dotswift_directory = "$ENV{'HOME'}/.swift";
+create_directory("$ENV{'HOME'}/.ssh");
+create_directory("$dotswift_directory");
+create_directory("$dotswift_directory/sites");
+
+# Determine the template directory
+my @execution_path = split( '/', abs_path($0) );
+@execution_path = splice( @execution_path, 0, $#execution_path - 1 );
+my $template_directory = join( '/', @execution_path ) . '/etc/sites';
+
+# Add configuration from a template
+if (@option_templates) {
+
+    foreach my $option_template(@option_templates) {
+    	# Update XML info
+    	my $from_directory   = "$template_directory/$option_template";
+    	my $sites_input_file = "$from_directory/sites.xml";
+    	if ( !-e "$sites_input_file" ) {
+    	    die "Unable to find template for $option_template\n";
+    	}
+	    my $xml_ref          = update_xml("$sites_input_file", 0, $option_default);
+    	my $new_sitename     = $xml_ref->{handle};
+    	my $output_directory = "$dotswift_directory/sites/$new_sitename";
+    	if ( -d "$output_directory" ) {
+    	    print "Configuration for $new_sitename already exists\n";
+	    next;
+    	}
+
+    	# Update and copy files to reflect input
+    	my @files_to_copy = <$from_directory/*>;
+    	create_directory("$output_directory");
+    	foreach my $file_to_copy (@files_to_copy) {
+    	    copy_file($file_to_copy, $output_directory);
+    	}
+    	my $xml_out_ref = $xml->XMLout(
+    	    $xml_ref,
+    	    RootName      => 'pool',
+    	    SuppressEmpty => 1,
+    	);
+    	write_file( "$output_directory/sites.xml", $xml_out_ref );
+    	update_site_applications($new_sitename, $option_default);
+
+    	# Handle SSH
+    	if ( $xml_ref->{execution}{provider} eq 'ssh' ) {
+        	add_ssh( $new_sitename, $xml_ref->{execution}{url} );
+    	}
+    
+    	print "Successfully added $option_template\n";
+    }
+}
+
+# Remove an entry
+if ($option_remove) {
+
+    if ( !-d "$dotswift_directory/sites/$option_remove" ) {
+        die "Unable to find configuration named $option_remove\n";
+    }
+
+    # Remove directory           
+    rmtree("$dotswift_directory/sites/$option_remove")
+        || die 'Unable to remove directory '
+        . "$dotswift_directory/sites/$option_remove\n";
+}
+
+# Modify a site entry
+if ($option_edit) {
+    my $output_directory = "$dotswift_directory/sites/$option_edit";
+
+    my $xml_filename = "$output_directory/sites.xml";
+    if ( !-e "$xml_filename" ) {
+        die "Unable to find configuration for $option_edit\n";
+    }
+
+    my $xml_ref = $xml->XMLin(
+        $xml_filename,
+        ForceArray => [qw(workdirectory profile)],
+        KeyAttr    => [],
+    );
+
+    if(@option_profiles) {
+	$xml_ref = edit_profile($xml_filename, @option_profiles);	
+    }
+    else {
+    	$xml_ref = update_xml("$xml_filename", 1, $option_default);
+	    update_site_applications($option_edit, $option_default);
+    }
+
+   # Save
+    my $xml_out_ref = $xml->XMLout(
+        $xml_ref,
+        RootName      => 'pool',
+        SuppressEmpty => 1,
+    );
+    write_file( "$output_directory/sites.xml", $xml_out_ref );
+    
+    # Add/modify/remove ssh entries as needed
+    if ( $xml_ref->{execution}{provider} eq 'ssh' ) {
+        add_ssh( $xml_ref->{handle}, $xml_ref->{execution}{url} );
+    }
+}
+
+# Copy a configuration
+if($option_copy) {
+    my $input_directory = "$dotswift_directory/sites/$option_copy";
+    my $input_site = "$input_directory/sites.xml";
+    if( !-e $input_site) {
+        die "Unable to find configuration for $option_copy\n";
+    }
+    
+    my $new_config_name = get_entry( 'New Configuration Name', '', 0);
+    my $output_directory = "$dotswift_directory/sites/$new_config_name";
+    if(-d "$output_directory") {
+        die "Configuration for $new_config_name already exists\n";
+    }
+    create_directory($output_directory);
+
+    my @files_to_copy = <$input_directory/*>;
+    foreach my $file_to_copy (@files_to_copy) {
+        copy_file($file_to_copy, $output_directory);
+    }
+    
+    # Rename and save
+    my $xml_filename = "$output_directory/sites.xml";
+    my $xml_ref = $xml->XMLin(
+        $xml_filename,
+        ForceArray => [qw(workdirectory profile)],
+        KeyAttr    => [],
+    );
+    $xml_ref->{handle} = $new_config_name;
+    my $xml_out_ref = $xml->XMLout(
+        $xml_ref,
+        RootName      => 'pool',
+        SuppressEmpty => 1,
+    );
+    write_file( "$output_directory/sites.xml", $xml_out_ref );
+
+    # Edit sites
+    my $initial_exurl = $xml_ref->{execution}{url}; 
+    $xml_ref = update_xml( "$output_directory/sites.xml", 1, $option_default,);
+    my $new_exurl = $xml_ref->{execution}{url};
+    
+    $xml_out_ref = $xml->XMLout(
+        $xml_ref,
+        RootName      => 'pool',
+        SuppressEmpty => 1,
+    );
+    
+    write_file( "$output_directory/sites.xml", $xml_out_ref );
+
+    # Add ssh entries as needed
+    if ( $xml_ref->{execution}{provider} eq 'ssh' ) {
+        add_ssh( $xml_ref->{handle}, $xml_ref->{execution}{url} );
+    }
+}
+
+# Edit site groupings
+if($option_groups) {
+    my @groups = glob("$dotswift_directory/groups/*");
+    foreach(@groups) {
+        $_ = strip_directory($_);
+        my ($base, $ext) = split('\.');
+        $_ = $base;
+    }
+    push(@groups, 'new');
+    my $group_selection = get_entry('Select group', 'new', 0, @groups);
+    if($group_selection eq 'new') {
+        $group_selection = get_entry('Name of new group', '', 0);
+        if(-e "$dotswift_directory/groups/$group_selection.group") {
+            print "Group named $group_selection already exists!\n";
+            exit;
+        }
+        open(GROUPFILE, ">$dotswift_directory/groups/$group_selection.group")
+            || die "Unable to create group file $dotswift_directory/groups/$group_selection.group";
+        print "Group $group_selection created\n";
+        close(GROUPFILE);
+    }
+    
+    my $quit = 0;
+    my $group_filename = "$dotswift_directory/groups/$group_selection.group";
+    
+    while($quit == 0) {
+        print "\n(A)dd, (r)emove, (l)ist, or (q)uit: ";
+           my $command = <STDIN>;
+           chomp($command);
+           
+           if(lc($command) eq 'a') {
+               add_to_group($group_filename);
+           }
+           elsif(lc($command) eq 'q') {
+               $quit = 1;
+           }
+           elsif(lc($command) eq 'r') {
+                remove_from_group($group_filename);
+           }
+           elsif(lc($command) eq 'l') {
+                list_group($group_filename);
+           }
+           else {
+               print "Unknown option: $command\n";
+           }
+     }
+}
+
+# Add/Edit applications
+if($option_applications) {
+       my @applications = glob("$dotswift_directory/apps/*");
+       foreach(@applications) {
+           $_ = strip_directory($_);
+           my ($base, $ext) = split('\.');
+           $_ = $base;
+       }      
+       push(@applications, 'new');
+       
+       my $application_set = get_entry('Select application set', 'linux', 0, 
+                                       @applications);
+       if($application_set eq 'new') {
+           $application_set = get_entry('Name of new application set', '', 0);
+           my $now = time();
+           if(-e "$dotswift_directory/apps/$application_set.apps") {
+               print "Set named $application_set already exists\n";
+               exit;
+           }
+           open(APPFILE, ">$dotswift_directory/apps/$application_set.apps")
+               || die "Unable to create file $dotswift_directory/apps/$application_set.apps";
+           print "$application_set set created\n";
+           close(APPFILE);
+       }
+       
+       my $quit = 0;
+       while($quit == 0) {
+           print "\n(E)dit, (a)dd, (r)emove, (l)ist, or (q)uit: ";
+           my $command = <STDIN>;
+           chomp($command);
+           
+           if(lc($command) eq 'a') {
+               add_application("$dotswift_directory/apps/$application_set.apps");
+           }
+           elsif(lc($command) eq 'q') {
+               $quit = 1;
+           }
+           elsif(lc($command) eq 'r') {
+                remove_application("$dotswift_directory/apps/$application_set.apps");
+           }
+           elsif(lc($command) eq 'l') {
+                list_applications("$dotswift_directory/apps/$application_set.apps");
+           }
+           elsif(lc($command) eq 'e') {
+                edit_application("$dotswift_directory/apps/$application_set.apps");
+           }
+           else {
+               print "Unknown option: $command\n";
+           }
+     }
+}
+
+# Import existing configurations
+if($option_import) {
+    if($option_import =~ m/\.xml/gi) {
+        import_xml($option_import);
+    }
+    if($option_import =~ m/\.data/gi) {
+        import_tc($option_import);
+    }
+}
+
+# List various about swiftconfig
+if($option_list) {
+
+    if ($option_list eq "templates") {
+        print_directory($template_directory);
+    }
+    elsif ($option_list eq "configs" || $option_list eq "sites") {
+        print_directory("$dotswift_directory/sites");
+    }
+    # Assume it's the name of a configuration
+    else {
+        my @matched_configs = glob("$dotswift_directory/sites/$option_list");
+        foreach my $site (@matched_configs) {
+            if(-e "$site/sites.xml") {
+                print "sites.xml:\n";
+                system("cat $site/sites.xml");
+                print "\n";
+            }
+            else {
+                print "Unable to find configuration $option_list\n";
+            }
+            if(-e "$site/apps") {
+                open(APPFILE, "$site/apps") || die "Unable to open $site/apps";
+                my @appdata = <APPFILE>;
+                close(APPFILE);
+                print "Application sets: ";
+                foreach my $app(@appdata) {
+                    chomp($app);
+                    print "$app ";
+                }
+                print "\n\n";
+            }
+        }
+    }
+}
+
+
+__END__
+
+=head1 NAME
+
+swiftconfig - Utility for managing Swift configuration
+
+=head1 SYNOPSIS
+
+swiftconfig [B<-option> value]
+
+=head1 OVERVIEW
+
+The swiftconfig program allows users to configure Swift. It enables users to 
+add configurations based on templates, copy configurations, remove configurations, 
+and edit configurations.
+
+=head1 DESCRIPTION
+
+General operations:
+   -template sitename	Add a configuration based on a template
+   -remove site	     Removes a site configuration
+   -edit site	          Specifies the name of a configuration to edit
+   -copy site            Copies a configuration
+   -defaults             Do not prompt for values, always use defaults
+   -full                 Edit every available configuration option
+   -import               Import a sites.xml file into swiftconfig
+   -list                 Options: templates, configs, or a config
+   -apps                 Edit or create application sets
+   -groups               Edit site groupings
+   
+=head1 EXAMPLES
+
+List all templates available for adding
+   swiftconfig -list templates
+
+Add a site from template into a working configuration
+   swiftconfig -template ssh
+
+Edit a configuration
+   swiftconfig -edit teraport
+
+Remove a site
+   swiftconfig -remove teraport
+   
+Edit application sets
+    swiftconfig -apps 
+    
+List all configurations
+    swiftconfig -list configs
+
+List information about one particular configuration
+    swiftconfig -list configuration_name
+
+=cut

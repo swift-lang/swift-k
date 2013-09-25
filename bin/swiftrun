@@ -1,0 +1,116 @@
+#!/bin/bash
+
+# Verify an argument is not null
+verify_not_null()
+{
+   argname=$1; shift
+   if [ _$1 != _ ]; then
+      return 0;
+   else
+      echo $0: value for $argname can not be null
+      exit 1
+   fi
+}
+
+# crash: Report a problem and exit
+crash()
+{
+    MSG=$1
+    echo ${MSG}  >&2
+    exit 1
+}
+
+# Create .swift structure
+create_dotswift()
+{
+   if [ ! -d "$HOME/.swift" ]; then
+      mkdir $HOME/.swift || crash "Unable to mkdir $HOME/.swift"
+   fi
+
+   if [ ! -d "$HOME/.swift/runs" ]; then
+      mkdir $HOME/.swift/runs || crash "Unable to mkdir $HOME/.swift/runs"
+   fi
+
+   if [ ! -d "$HOME/.swift/runs/current" ]; then
+      mkdir $HOME/.swift/runs/current || crash "Unable to mkdir $HOME/.swift/runs/current"
+   fi
+
+  if [ ! -d "$HOME/.swift/runs/completed" ]; then
+     mkdir $HOME/.swift/runs/completed || crash "Unable to mkdir $HOME/.swift/runs/completed"
+  fi
+}
+
+# Parse command line arguments
+args=""
+script=""
+while [ $# -gt 0 ]
+do
+   case "$1" in
+      -site|-sites|-s) SITES=$2; verify_not_null sites $SITES; shift ;;
+      -config|-c) CONFIG=$2; verify_not_null config $CONFIG; shift ;;
+      *) if [ -z "$script" ] && [[ $1 == *.swift ]]; then script="$1"
+         else args+="$1 "
+         fi ;;
+   esac
+   shift
+done
+
+# Create run directory
+create_dotswift
+rundir=$( echo run??? | sed -e 's/^.*run//' | awk '{ printf("run%03d\n", $1+1)}' )
+mkdir $rundir
+
+# Link input_files
+if [ -d "input_files" ]; then
+   for input_file in input_files/*
+   do
+      ln -s $PWD/$input_file $rundir
+   done
+fi
+
+# Swift script
+if [ -f "$script" ]; then 
+   cp $script $rundir
+fi
+
+# Copy config file if specified
+if [ -f "$CONFIG" ]; then
+   cp $CONFIG $rundir
+   CONFIG=$( basename $CONFIG )
+fi
+
+# Create sites.xml
+IFS=","
+echo "<config>" > $rundir/sites.xml
+for site in $SITES
+do
+   # If config is not defined, but there is a config in conf/ that matches, use that
+   if [ -z "$CONFIG" ] && [ -f "conf/$site.cf" ]; then
+      cp conf/$site.cf $rundir
+      config=$site.cf
+   fi  
+
+   if [ -f "conf/$config" ]; then
+      gensites -p conf/$config $site >> $rundir/sites.xml
+   else
+      gensites $site >> $rundir/sites.xml
+   fi
+
+done
+echo "</config>" >> $rundir/sites.xml
+mv tc.data $rundir
+cd $rundir
+
+if [ -z "$CONFIG" ]; then
+   CONFIG=$config
+fi
+
+# Run
+timestamp=$( date +%s )
+ln -s $PWD $HOME/.swift/runs/current/$rundir.$timestamp 
+if [ -n "$CONFIG" ]; then
+   eval time swift -sites.file sites.xml -tc.file tc.data -config $CONFIG $( basename $script ) $args 2>&1 | tee swift.out
+else
+   eval time swift -sites.file sites.xml -tc.file tc.data $( basename $script ) $args 2>&1 | tee swift.out
+fi
+mv $HOME/.swift/runs/current/$rundir.$timestamp $HOME/.swift/runs/completed

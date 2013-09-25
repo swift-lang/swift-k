@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# given a karajan task ID as $1, return the execute2 jobid (if any)
+# associated with the task
+
+# needs karajan->jobid bindings file, jobid-karajanid-bindings, to
+# exist already
+
+grep -e "^[^ ]* $1.*\$" jobid-karajanid-bindings | cut -d ' ' -f 1

@@ -1,0 +1,61 @@
+webpage: pngs htmls
+
+htmls: index.html execute2.html execute.html karajan.html info.html \
+assorted.html kickstart.html falkon.html scheduler.html coasters.html
+
+webpage.kara: karatasks.png karatasks-coloured.png karatasks-type-counts.txt \
+karatasks.lastsummary karatasks-coloured-sorted.png \
+karatasks.FILE_TRANSFER.sorted-start.png \
+karatasks.FILE_OPERATION.sorted-start.png \
+karatasks.JOB_SUBMISSION.sorted-start.png \
+karatasks.FILE_TRANSFER-total.png karatasks.JOB_SUBMISSION-total.png  \
+karatasks.FILE_OPERATION-total.png  karatasks.JOB_SUBMISSION-trails.png \
+karatasks.FILE_OPERATION-trails.png karatasks.FILE_TRANSFER-trails.png \
+karatasks.FILE_TRANSFER.stats karatasks.FILE_OPERATION.stats \
+karatasks.JOB_SUBMISSION.stats karatasks-total.png \
+karatasks.JOB_SUBMISSION.Active-total.png index.html.kara \
+karatasks.JOB_SUBMISSION.Active.sorted-start.png \
+karatasks.JOB_SUBMISSION.Active.stats \
+karatasks.JOB_SUBMISSION.Active-duration-histogram.png \
+karatasks.JOB_SUBMISSION.Queue-total.png \
+karatasks.JOB_SUBMISSION.Queue.sorted-start.png \
+karatasks.JOB_SUBMISSION.Queue.stats \
+karatasks.JOB_SUBMISSION.Queue-duration-histogram.png
+
+webpage.coasters: coaster-block-timeline.png coaster-qwait-count.png coaster-qwait-size.png \
+	coaster-qwait-wtime.png coaster-block-utilization.png coaster-block-utilization-vs-count.png
+
+webpage.clusters: karatasks.clusters.png karatasks.clusters-total.png \
+karatasks.clusters.sorted-start.png karatasks.clusters-duration-histogram.png
+
+webpage.falkon: falkon.png falkon-total.png falkon-task-status-trails.png
+
+webpage.weights: weights.png tscores.png
+
+webpage.info: info.png info.sorted-start.png info-trails.png \
+info-duration-histogram.png info.zeroed-trailsx.png info.stats info-total.png
+
+webpage.kickstart: kickstart.png kickstart-total.png \
+kickstart-duration-histogram.png \
+index.html.kickstart kickstart.sorted-start.png
+
+pngs: workflow.png execute2.png execute.png execute2-total.png \
+execute-total.png execute2-coloured.png execute.sorted-start.png \
+initshareddir.png createdirset.png createdirset-total.png dostagein.png \
+dostagein-total.png dostageout.png dostageout-total.png execstages.png \
+dostageout.sorted-start.png dostagein-duration-histogram.png \
+dostageout-duration-histogram.png execute-trails.png execute2-trails.png \
+info-and-karajan-actives.png info-and-karajan-actives.2.png
+
+htmldeps: $(SWIFT_PLOT_HOME)/index.html.template execution-counts.txt jobs-sites.html site-duration.txt execute2.lastsummary execute.lastsummary jobs.retrycount.summary trname-summary
+
+%.html: htmldeps
+	m4 -I$(SWIFT_PLOT_HOME) $(SWIFT_PLOT_HOME)/$@.template > $@
+
+
+index.html.kara: karatasks.lastsummary karatasks.FILE_OPERATION.stats karatasks.FILE_TRANSFER.stats karatasks.JOB_SUBMISSION.stats karatasks-type-counts.txt 
+
+index.html.kickstart: kickstart.stats
+
+info-and-karajan-actives.png info-and-karajan-actives.2.png: execute2.event karatasks.transitions
+	info-and-karajan-actives $(IDIR)

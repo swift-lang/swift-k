@@ -1,0 +1,15 @@
+#!/bin/bash
+
+ST=$(cat start-time.tmp)
+
+I=0
+for a in ${KDIR}/*kickstart.xml;  do
+  #<mainjob start="2007-09-21T13:21:37.525+01:00" duration="26.016" pid="4584">
+
+  START=$(grep "<mainjob " $a | sed 's/^.*start="\([^"]*\)".*$/\1/' | iso-to-secs)
+  DURATION=$(grep "<mainjob " $a | sed 's/^.*duration="\([^"]*\)".*$/\1/')
+
+echo $(( $START - $ST )) $I $DURATION 0 $a
+
+I=$(( $I + 1 ))
+done

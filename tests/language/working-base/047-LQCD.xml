@@ -1,0 +1,423 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>file</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>   
+  </types>  
+  <procedure name="stageIn" src="line 3">
+
+      <output 
+    name="gauge" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="input" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="config" type="int"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 4">
+        <executable>stageIn</executable>
+        <stringConstant>-v</stringConstant><stringConstant>-i</stringConstant><function name="filename">
+          <variableReference>input</variableReference></function><stringConstant>-c</stringConstant><variableReference>config</variableReference><stringConstant>-o</stringConstant><function name="filename">
+          <variableReference>gauge</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="stagSolve" src="line 9">
+
+      <output 
+    name="output" type="file[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="gauge" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="mass" type="string"
+
+     xsi:nil="true" />
+
+      <input 
+    name="source" type="string"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 10">
+        <executable>stagSolve</executable>
+        <stringConstant>-v</stringConstant><stringConstant>-g</stringConstant><function name="filename">
+          <variableReference>gauge</variableReference></function><stringConstant>-m</stringConstant><variableReference>mass</variableReference><stringConstant>-s</stringConstant><variableReference>source</variableReference><stringConstant>-o</stringConstant><function name="filename">
+          <arraySubscript>
+           <variableReference>output</variableReference>
+           <stringConstant>*</stringConstant>
+          </arraySubscript></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="cloverSolve" src="line 15">
+
+      <output 
+    name="output" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="kappa" type="float"
+
+     xsi:nil="true" />
+
+      <input 
+    name="cSW" type="float"
+
+     xsi:nil="true" />
+
+      <input 
+    name="gauge" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="source" type="string"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 16">
+        <executable>cloverSolve</executable>
+        <stringConstant>-v</stringConstant><stringConstant>-k</stringConstant><variableReference>kappa</variableReference><stringConstant>-c</stringConstant><variableReference>cSW</variableReference><stringConstant>-g</stringConstant><function name="filename">
+          <variableReference>gauge</variableReference></function><stringConstant>-s</stringConstant><variableReference>source</variableReference><stringConstant>-o</stringConstant><function name="filename">
+          <variableReference>output</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="cvt12x12" src="line 21">
+
+      <output 
+    name="output" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="input" type="file"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 22">
+        <executable>CVT12x12</executable>
+        <stringConstant>-v</stringConstant><stringConstant>-i</stringConstant><function name="filename">
+          <variableReference>input</variableReference></function><stringConstant>-o</stringConstant><function name="filename">
+          <variableReference>output</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="archive" src="line 27">
+
+      <output 
+    name="output" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="input" type="file"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 28">
+        <executable>Archive</executable>
+        <stringConstant>-v</stringConstant><stringConstant>-i</stringConstant><function name="filename">
+          <variableReference>input</variableReference></function><stringConstant>-o</stringConstant><function name="filename">
+          <variableReference>output</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="archiveStag" src="line 33">
+
+      <output 
+    name="output" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="mass" type="string"
+
+     xsi:nil="true" />
+
+      <input 
+    name="input" type="file[]"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 34">
+        <executable>ArchiveStag</executable>
+        <stringConstant>-v</stringConstant><stringConstant>-m</stringConstant><variableReference>mass</variableReference><stringConstant>-i</stringConstant><function name="filename">
+          <arraySubscript>
+           <variableReference>input</variableReference>
+           <stringConstant>*</stringConstant>
+          </arraySubscript></function><stringConstant>-o</stringConstant><function name="filename">
+          <variableReference>output</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="twoPtHH" src="line 39">
+
+      <output 
+    name="sdo" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="gauge" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="antiQ" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="Q0" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="Q1" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="Q2" type="file"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 40">
+        <executable>TwoPtHH</executable>
+        <stdout><function name="filename">
+          <variableReference>sdo</variableReference></function></stdout><stringConstant>-v</stringConstant><stringConstant>-g</stringConstant><function name="filename">
+          <variableReference>gauge</variableReference></function><stringConstant>-a</stringConstant><function name="filename">
+          <variableReference>antiQ</variableReference></function><stringConstant>-0</stringConstant><function name="filename">
+          <variableReference>Q0</variableReference></function><stringConstant>-1</stringConstant><function name="filename">
+          <variableReference>Q1</variableReference></function><stringConstant>-2</stringConstant><function name="filename">
+          <variableReference>Q2</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="twoPtSH" src="line 45">
+
+      <output 
+    name="sdo" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="gauge" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="stag" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="antiQ" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="Q0" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="Q1" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="Q2" type="file"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 46">
+        <executable>TwoPtSH</executable>
+        <stdout><function name="filename">
+          <variableReference>sdo</variableReference></function></stdout><stringConstant>-v</stringConstant><stringConstant>-g</stringConstant><function name="filename">
+          <variableReference>gauge</variableReference></function><stringConstant>-s</stringConstant><function name="filename">
+          <variableReference>stag</variableReference></function><stringConstant>-a</stringConstant><function name="filename">
+          <variableReference>antiQ</variableReference></function><stringConstant>-0</stringConstant><function name="filename">
+          <variableReference>Q0</variableReference></function><stringConstant>-1</stringConstant><function name="filename">
+          <variableReference>Q1</variableReference></function><stringConstant>-2</stringConstant><function name="filename">
+          <variableReference>Q2</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <variable name="confList" type="string[]" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 54">
+   <variableReference>confList</variableReference>
+
+     <array>
+       <stringConstant>000102</stringConstant><stringConstant>000108</stringConstant><stringConstant>000114</stringConstant>
+     </array>
+
+  </assign>
+  <variable name="kappaQ" type="float" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 55">
+   <variableReference>kappaQ</variableReference>
+   <floatConstant>0.127</floatConstant>
+  </assign>
+  <variable name="cSW" type="float" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 57">
+   <variableReference>cSW</variableReference>
+   <floatConstant>1.75</floatConstant>
+  </assign>
+  <variable name="mass" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 58">
+   <variableReference>mass</variableReference>
+   <stringConstant>0.005,0.007,0.01,0.02,0.03</stringConstant>
+  </assign>
+  <variable name="fn" type="string[]" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 62">
+   <variableReference>fn</variableReference>
+
+     <array>
+       <stringConstant>m0.005_000102 m0.007_000102 m0.01_000102 m0.02_000102 m0.03_000102</stringConstant><stringConstant>m0.005_000108 m0.007_000108 m0.01_000108 m0.02_000108 m0.03_000108</stringConstant><stringConstant>m0.005_000114 m0.007_000114 m0.01_000114 m0.02_000114 m0.03_000114</stringConstant>
+     </array>
+
+  </assign>
+  <variable name="conflist" type="int[]" isGlobal="false" xsi:nil="true"/>
+  <foreach var="config"  indexVar="i" src="line 64">
+  <in><variableReference>conflist</variableReference></in>
+  <body><variable name="source" type="string" isGlobal="false" xsi:nil="true"/>
+    <assign src="line 68">
+     <variableReference>source</variableReference>
+     <stringConstant>local,0,0,0,0</stringConstant>
+    </assign>
+    <variable name="template" type="file" isGlobal="false"><file name="foo"/></variable>
+    <variable name="gauge" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="stageIn" src="line 70">
+      <output><variableReference>gauge</variableReference></output>
+      <input><variableReference>template</variableReference></input>
+      <input><variableReference>config</variableReference></input>
+    </call>
+    <variable name="stags" type="file[]" isGlobal="false">
+      <mapping descriptor="fixed_array_mapper">
+        <param name="files"><arraySubscript>
+         <variableReference>fn</variableReference>
+         <variableReference>i</variableReference>
+        </arraySubscript></param>
+      </mapping>
+    </variable>
+    <call proc="stagSolve" src="line 76">
+      <output><variableReference>stags</variableReference></output>
+      <input><variableReference>gauge</variableReference></input>
+      <input><variableReference>mass</variableReference></input>
+      <input><variableReference>source</variableReference></input>
+    </call>
+    <variable name="stagTar" type="file" isGlobal="false">
+      <mapping descriptor="simple_mapper">
+        <param name="suffix"><stringConstant>.tar</stringConstant></param>
+      </mapping>
+    </variable>
+    <call proc="archiveStag" src="line 79">
+      <output><variableReference>stagTar</variableReference></output>
+      <input><variableReference>mass</variableReference></input>
+      <input><variableReference>stags</variableReference></input>
+    </call>
+    <variable name="clover0" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="cloverSolve" src="line 81">
+      <output><variableReference>clover0</variableReference></output>
+      <input><variableReference>kappaQ</variableReference></input>
+      <input><variableReference>cSW</variableReference></input>
+      <input><variableReference>gauge</variableReference></input>
+      <input><variableReference>source</variableReference></input>
+    </call>
+    <variable name="q0" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="cvt12x12" src="line 82">
+      <output><variableReference>q0</variableReference></output>
+      <input><variableReference>clover0</variableReference></input>
+    </call>
+    <variable name="cvtArch0" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="archive" src="line 83">
+      <output><variableReference>cvtArch0</variableReference></output>
+      <input><variableReference>q0</variableReference></input>
+    </call>
+    <variable name="source1" type="string" isGlobal="false" xsi:nil="true"/>
+    <assign src="line 86">
+     <variableReference>source1</variableReference>
+     <stringConstant>wavefunction,0,1S</stringConstant>
+    </assign>
+    <variable name="clover1" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="cloverSolve" src="line 86">
+      <output><variableReference>clover1</variableReference></output>
+      <input><variableReference>kappaQ</variableReference></input>
+      <input><variableReference>cSW</variableReference></input>
+      <input><variableReference>gauge</variableReference></input>
+      <input><variableReference>source1</variableReference></input>
+    </call>
+    <variable name="q1" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="cvt12x12" src="line 87">
+      <output><variableReference>q1</variableReference></output>
+      <input><variableReference>clover1</variableReference></input>
+    </call>
+    <variable name="cvtArch1" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="archive" src="line 88">
+      <output><variableReference>cvtArch1</variableReference></output>
+      <input><variableReference>q1</variableReference></input>
+    </call>
+    <variable name="source2" type="string" isGlobal="false" xsi:nil="true"/>
+    <assign src="line 91">
+     <variableReference>source2</variableReference>
+     <stringConstant>wavefunction,0,2S</stringConstant>
+    </assign>
+    <variable name="clover2" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="cloverSolve" src="line 91">
+      <output><variableReference>clover2</variableReference></output>
+      <input><variableReference>kappaQ</variableReference></input>
+      <input><variableReference>cSW</variableReference></input>
+      <input><variableReference>gauge</variableReference></input>
+      <input><variableReference>source2</variableReference></input>
+    </call>
+    <variable name="q2" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="cvt12x12" src="line 92">
+      <output><variableReference>q2</variableReference></output>
+      <input><variableReference>clover2</variableReference></input>
+    </call>
+    <variable name="cvtArch2" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="archive" src="line 93">
+      <output><variableReference>cvtArch2</variableReference></output>
+      <input><variableReference>q2</variableReference></input>
+    </call>
+    <variable name="antiQ" type="file" isGlobal="false" xsi:nil="true"/>
+    <assign src="line 96">
+     <variableReference>antiQ</variableReference>
+     <variableReference>q0</variableReference>
+    </assign>
+    <variable name="pStdout" type="file" isGlobal="false" xsi:nil="true"/>
+    <call proc="twoPtHH" src="line 96">
+      <output><variableReference>pStdout</variableReference></output>
+      <input><variableReference>gauge</variableReference></input>
+      <input><variableReference>antiQ</variableReference></input>
+      <input><variableReference>q0</variableReference></input>
+      <input><variableReference>q1</variableReference></input>
+      <input><variableReference>q2</variableReference></input>
+    </call>
+    <foreach var="stag"  src="line 97">
+    <in><variableReference>stags</variableReference></in>
+    <body><variable name="sStdout" type="file" isGlobal="false" xsi:nil="true"/>
+      <call proc="twoPtSH" src="line 98">
+        <output><variableReference>sStdout</variableReference></output>
+        <input><variableReference>gauge</variableReference></input>
+        <input><variableReference>stag</variableReference></input>
+        <input><variableReference>antiQ</variableReference></input>
+        <input><variableReference>q0</variableReference></input>
+        <input><variableReference>q1</variableReference></input>
+        <input><variableReference>q2</variableReference></input>
+      </call></body>
+    </foreach></body>
+  </foreach>
+</program>

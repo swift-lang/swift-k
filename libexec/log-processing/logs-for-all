@@ -1,0 +1,14 @@
+#!/bin/bash
+
+for a in `find ~/swift-logs -name Mol\*.log -and -not -name cluster-\* ` ; do
+  echo Processing log file $a
+  SDL=$(basename $a .log)
+  D=$(dirname $a)
+  if [ -d report-$SDL ]; then
+    echo Skipping
+  else
+    make KDIR=$D LOG=$a SDL=$SDL clean webpage.kara webpage.kickstart webpage
+    make KDIR=$D LOG=$a SDL=$SDL distributable distribute
+  fi
+done
+

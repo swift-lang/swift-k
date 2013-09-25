@@ -1,0 +1,19 @@
+#!/bin/bash
+
+create-everylog-vs-versions-data $1
+
+gnuplot ${SWIFT_PLOT_HOME}/everylog-vs-versions.plot
+
+cat everylog-vs-versions.data  | cut -f 2 -d ' ' | sort -n | number-sites-list > everylog-versions-cumulative.data
+
+gnuplot ${SWIFT_PLOT_HOME}/everylog-version-cumulative.plot
+
+cat everylog-vs-versions.data | cut -f 1 -d ' ' | sort -n | number-sites-list  | while read l r ; do  echo $(sec-to-utc-day $l) $r ; done > everylog-time-cumulative.data
+
+gnuplot ${SWIFT_PLOT_HOME}/everylog-time-cumulative.plot
+
+find $1 -name \*.log -and -not -name cluster-\*  -exec basename {} \; | sed 's/^\(.*\)-........-....-........\.log$/\1/' | sort | uniq -c | sort -nr > everylog-basenames-scores.txt
+
+everylog-durations-of-workflows $1 | sort -k 2 > tmp-evl-duration
+sum-tt1.pl < tmp-evl-duration  | sort -r -n -k 2 > everylog-cumulative-durations-per-basename.txt
+

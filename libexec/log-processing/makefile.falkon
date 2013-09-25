@@ -1,0 +1,11 @@
+falkon.event: $(FDIR)
+	falkon-to-event $(FDIR)/falkon_task_perf.txt  > falkon.event
+
+execute2-by-falkon.coloured-event: falkon.event execute2.event
+	colour-execute2-by-falkon > execute2-by-falkon.coloured-event
+
+execute2-by-falkon-coloured.png: execute2-by-falkon.coloured-event start-time.tmp workflow.event
+	coloured-event-plot execute2-by-falkon.coloured-event execute2-by-falkon-coloured.png execute2-by-falkon.channels
+
+falkon-task-status.transitions: $(FDIR)/falkon_task_status.txt
+	falkon/task-status-to-transitions < $(FDIR)/falkon_task_status.txt > $@

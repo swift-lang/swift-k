@@ -1,0 +1,42 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>file</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>   
+  </types>  
+  <procedure name="echo" src="line 3">
+
+      <output 
+    name="t" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="s" type="string"
+
+    > 
+    <stringConstant>hello world</stringConstant>
+
+      </input>
+    <binding>
+      <application src="line 4">
+        <executable>echo</executable>
+        <stdout><function name="filename">
+          <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
+    </binding>
+  </procedure>
+  <variable name="hw1" type="file" isGlobal="false" xsi:nil="true"/>
+  <variable name="hw2" type="file" isGlobal="false" xsi:nil="true"/>
+  <call proc="echo" src="line 10">
+    <output><variableReference>hw1</variableReference></output>
+  </call>
+  <call proc="echo" src="line 11">
+    <output><variableReference>hw2</variableReference></output>
+    <input bind="s"><stringConstant>hello again</stringConstant></input>
+  </call>
+</program>

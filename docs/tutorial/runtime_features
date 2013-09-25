@@ -1,0 +1,160 @@
+Runtime features
+----------------
+
+Visualizing the workflow as a graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When running a workflow, its possible to generate a provenance graph at
+the same time:
+
+ 
+-----
+$ swift -pgraph graph.dot first.swift
+$ dot -ograph.png -Tpng graph.dot
+----
+
+graph.png can then be viewed using your favourite image viewer. The dot application is part of the graphViz project. More information can be found at http://www.graphviz.org.
+
+Running on a remote site
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+As configured by default, all jobs are run locally. In the previous
+examples, we've invoked echo and tr executables from our SwiftScript
+program. These have been run on the local system (the same computer on
+which you ran swift). We can also make our computations run on a
+remote resource. For more information on running Swift on a remote site
+please see the http://www.ci.uchicago.edu/swift/guides/release-0.93/siteguide/siteguide.html[Site Configuration Guide].
+
+
+Starting and restarting
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Now we're going to try out the restart capabilities of Swift. We will
+make a workflow that will deliberately fail, and then we will fix the
+problem so that Swift can continue with the workflow.
+
+First we have the program in working form, restart.swift.
+
+.restart.swift
+************** 
+----
+include::../../examples/tutorial/restart.swift[]
+----
+**************
+
+We must define some transformation catalog entries:
+ 
+----
+localhost   touch   /usr/bin/touch  INSTALLED   INTEL32::LINUX  null  
+localhost   broken  /bin/true   INSTALLED   INTEL32::LINUX  null  
+----
+
+Now we can run the program:
+ 
+----
+$ swift restart.swift    
+Swift 0.9 swift-r2860 cog-r2388  
+  
+RunID: 20100526-1119-3kgzzi15  
+Progress:  
+Final status:  Finished successfully:4  
+----
+
+Four jobs run - touch, echo, broken and a final echo. (note that broken
+isn't actually broken yet).
+
+Now we will break the broken job and see what happens. Replace the
+definition in tc.data for broken with this:
+
+----
+localhost    broken     /bin/false   INSTALLED       INTEL32::LINUX  null  
+----
+
+Now when we run the workflow, the broken task fails:
+ 
+----
+$ swift restart.swift   
+  
+Swift 0.9 swift-r2860 cog-r2388  
+  
+RunID: 20100526-1121-tssdcljg  
+Progress:  
+Progress:  Stage in:1  Finished successfully:2  
+Execution failed:  
+    Exception in broken:  
+Arguments: [process]  
+Host: localhost  
+Directory: restart-20100526-1121-tssdcljg/jobs/1/broken-1i6ufisj  
+stderr.txt:   
+stdout.txt:   
+----
+
+From the output we can see that touch and the first echo completed, but
+then broken failed and so swift did not attempt to execute the final echo.
+
+There will be a restart log with the same name as the RunID:
+
+ 
+----
+$ ls *20100526-1121-tssdcljg*rlog  
+restart-20100526-1121-tssdcljg.0.rlog  
+----
+
+This restart log contains enough information for swift to know which
+parts of the workflow were executed successfully.
+
+We can try to rerun it immediately, like this:
+
+ 
+----
+$ swift -resume restart-20100526-1121-tssdcljg.0.rlog restart.swift   
+  
+Swift 0.9 swift-r2860 cog-r2388  
+  
+RunID: 20100526-1125-7yx0zi6d  
+Progress:  
+Execution failed:  
+    Exception in broken:  
+Arguments: [process]  
+Host: localhost  
+Directory: restart-20100526-1125-7yx0zi6d/jobs/m/broken-msn1gisj  
+stderr.txt:   
+stdout.txt:   
+  
+Caused by:  
+    Exit code 1  
+----
+
+Swift tried to resume the workflow by executing "broken" again. It did
+not try to run the touch or first echo jobs, because the restart log
+says that they do not need to be executed again.
+
+Broken failed again, leaving the original restart log in place.
+
+Now we will fix the problem with "broken" by restoring the original
+tc.data line that works.
+
+Remove the existing "broken" line and replace it with the successful
+tc.data entry above:
+
+ 
+----
+localhost       broken          /bin/true   INSTALLED       INTEL32::LINUX  null  
+----
+
+Now run again:
+
+ 
+----
+$ swift -resume restart-20100526-1121-tssdcljg.0.rlog restart.swift  
+  
+Swift 0.9 swift-r2860 cog-r2388  
+  
+RunID: 20100526-1128-a2gfuxhg  
+Progress:  
+Final status:  Initializing:2  Finished successfully:2  
+----
+
+Swift tries to run "broken" again. This time it works, and so Swift
+continues on to execute the final piece of the workflow as if nothing
+had ever gone wrong.

@@ -1,0 +1,15 @@
+   <pool handle="fusion">
+        <execution jobmanager="local:pbs" provider="coaster" url="none"/>
+        <filesystem provider="local" url="none" />
+        <profile namespace="globus" key="maxtime">3600</profile>
+        <profile namespace="globus" key="jobsPerNode">8</profile>
+        <profile namespace="globus" key="queue">shared</profile>
+        <profile namespace="globus" key="nodeGranularity">1</profile>
+        <profile namespace="globus" key="maxNodes">1</profile>
+        <profile namespace="globus" key="slots">1</profile>
+        <profile namespace="karajan" key="jobThrottle">1.0</profile>
+        <profile namespace="karajan" key="initialScore">100</profile>
+        <profile namespace="globus" key="HighOverAllocation">100</profile>
+        <profile namespace="globus" key="LowOverAllocation">100</profile>
+        <workdirectory>/home/{env.USER}/swiftwork</workdirectory>
+    </pool>
