@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.coaster.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.text.DateFormat;
@@ -97,6 +98,28 @@ public class CoasterService extends GSSService {
         this.id = id;
         setAuthorization(new SelfAuthorization());
         initializeLocalService();
+        setPollingIntervals();
+    }
+
+    private void setPollingIntervals() {
+        setPollingInterval("pbs", 15);
+        setPollingInterval("slurm", 15);
+        setPollingInterval("lsf", 15);
+        setPollingInterval("sge", 15);
+    }
+
+    private void setPollingInterval(String p, int t) {
+        try {
+            String clsName = "org.globus.cog.abstraction.impl.scheduler." + p + ".Properties";
+            Class<?> cls = CoasterService.class.getClassLoader().loadClass(clsName);
+            Method getProperties = cls.getMethod("getProperties", (Class<?>[]) null); 
+            Object instance = getProperties.invoke(null, (Object[]) null);
+            Method setPollInterval = cls.getMethod("setPollInterval", new Class<?>[] {int.class});
+            setPollInterval.invoke(instance, new Object[] {t});
+        }
+        catch (Exception e) {
+            logger.warn("Failed to set polling interval for " + p, e);
+        }
     }
 
     private RequestManager newLocalRequestManager() {
