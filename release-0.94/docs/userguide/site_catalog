@@ -1,0 +1,173 @@
+The Site Catalog - sites.xml
+----------------------------
+The site catalog lists details of each site that Swift can use. The
+default file contains one entry for local execution, and a large number
+of commented-out example entries for other sites.
+
+By default, the site catalog is stored in etc/sites.xml. This path can
+be overridden with the sites.file configuration property, either in
+the Swift configuration file or on the command line.
+
+The sites file is formatted as XML. It consists of <pool> elements,
+one for each site that Swift will use.
+
+
+Pool element
+~~~~~~~~~~~~
+Each pool element must have a handle attribute, giving a symbolic
+name for the site. This can be any name, but must correspond to entries
+for that site in the transformation catalog.
+
+Optionally, the gridlaunch attribute can be used to specify the path
+to kickstart on the site.
+
+Each pool must specify a file transfer method, an execution method and
+a remote working directory. Optionally, profile settings can
+be specified.
+
+
+File transfer method
+~~~~~~~~~~~~~~~~~~~~
+Transfer methods are specified with either the <gridftp> element or
+the <filesystem> element.
+
+To use gridftp or local filesystem copy, use the <gridftp> element:
+
+----
+<gridftp  url="gsiftp://evitable.ci.uchicago.edu" />
+----
+
+The url attribute may specify a GridFTP server, using the gsiftp URI
+scheme; or it may specify that filesystem copying will be used (which
+assumes that the site has access to the same filesystem as the
+submitting machine) using the URI local://localhost.
+
+Filesystem access using scp (the SSH copy protocol) can be specified
+using the <filesystem> element:
+
+----
+<filesystem url="www11.i2u2.org" provider="ssh"/>
+----
+
+For additional ssh configuration information, see the ssh execution
+provider documentation below.
+
+Filesystem access using CoG coasters can be also be
+specified using the <filesystem> element. More detail about
+configuring that can be found in the CoG coasters section.
+
+Execution method
+~~~~~~~~~~~~~~~~
+Execution methods may be specified either with the <jobmanager> or
+<execution> element.
+
+The <jobmanager> element can be used to specify execution through
+GRAM2. For example,
+
+----
+<jobmanager universe="vanilla" url="evitable.ci.uchicago.edu/jobmanager-fork" major="2" />
+----
+The universe attribute should always be set to vanilla. The url
+attribute should specify the name of the GRAM2 gatekeeper host, and the
+name of the jobmanager to use. The major attribute should always be set
+to 2.
+
+The <execution> element can be used to specify execution through other
+execution providers:
+
+To use GRAM4, specify the gt4 provider. For example:
+
+----
+<execution provider="gt4" jobmanager="PBS" url="tg-grid.uc.teragrid.org" />
+----
+
+The url attribute should specify the GRAM4 submission site. The
+jobmanager attribute should specify which GRAM4 jobmanager will be used.
+
+For local execution, the local provider should be used, like this:
+
+----
+<execution provider="local" url="none" />
+----
+
+For PBS execution, the pbs provider should be used:
+
+----
+<execution provider="pbs" url="none" />
+----
+
+The GLOBUS::queue profile key can be used to
+specify which PBS queue jobs will be submitted to.
+
+For execution through a local Condor installation, the condor provider
+should be used. This provider can run jobs either in the default vanilla
+universe, or can use Condor-G to run jobs on remote sites.
+
+When running locally, only the <execution> element needs to be specified:
+
+----
+<execution provider="condor" url="none" />
+----
+
+When running with Condor-G, it is necessary to specify the Condor grid
+universe and the contact string for the remote site. For example:
+
+----
+ <execution provider="condor" />
+ <profile namespace="globus" key="jobType">grid</profile>
+ <profile namespace="globus" key="gridResource">gt2 belhaven-1.renci.org/jobmanager-fork</profile>
+----
+
+For execution through SSH, the ssh provider should be used:
+
+----
+<execution url="www11.i2u2.org" provider="ssh"/>
+----
+with configuration made in ~/.ssh/auth.defaults with the string
+'www11.i2u2.org' changed to the appropriate host name:
+
+----
+www11.i2u2.org.type=key
+www11.i2u2.org.username=hategan
+www11.i2u2.org.key=/home/mike/.ssh/i2u2portal
+www11.i2u2.org.passphrase=XXXX
+----
+
+For execution using the CoG Coaster mechanism, the coaster
+provider should be used:
+
+----
+<execution provider="coaster" url="tg-grid.uc.teragrid.org"
+    jobmanager="gt2:gt2:pbs" />
+----
+
+More details about configuration of coasters can be found in the section
+on coasters.
+
+Work directory
+~~~~~~~~~~~~~~
+The workdirectory element specifies where on the site files can be
+stored.
+
+----
+<workdirectory>/home/benc</workdirectory>
+----
+
+This file must be accessible through the transfer mechanism specified in
+the <gridftp> element and also mounted on all worker nodes that will
+be used for execution. A shared cluster scratch filesystem is
+appropriate for this.
+
+Profiles
+~~~~~~~~
+Profile keys can be specified using the <profile> element.
+For example:
+
+----
+<profile namespace="globus" key="queue">fast</profile>
+----
+
+The site catalog format is an evolution of the VDS site catalog format
+which is documented here
+<http://vds.uchicago.edu/vds/doc/userguide/html/H_SiteCatalog.html>.
+

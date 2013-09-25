@@ -1,0 +1,23 @@
+  <pool handle="midway-sandyb">
+    <execution provider="coaster" jobmanager="local:slurm"/>
+    <profile namespace="globus" key="jobsPerNode">16</profile>
+    <profile namespace="globus" key="maxWalltime">_WALLTIME_</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="queue">sandyb</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <filesystem provider="local"/>
+    <workdirectory>/scratch/midway/{env.USER}</workdirectory>
+  </pool>
+
+  <pool handle="midway-westmere">
+    <execution provider="coaster" jobmanager="local:slurm"/>
+    <profile namespace="globus" key="jobsPerNode">12</profile>
+    <profile namespace="globus" key="maxWalltime">_WALLTIME_</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="queue">westmere</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <filesystem provider="local"/>
+    <workdirectory>/scratch/midway/{env.USER}</workdirectory>
+  </pool>

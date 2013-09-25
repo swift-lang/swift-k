@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# run this with vdlc on the path, with pwd set to the directory
+# in which you found this script, so that it can find the working/ etc
+# subdirectories.
+
+pushd working > /dev/null
+
+if [ "X$1" != "X-resume" ]; then
+  echo Cleaning previous test results
+  rm *.?ml
+  if [ "X$1" != "X" ] ; then
+    export LIST=$1
+  else
+    export LIST="*.swift"
+  fi
+else
+  echo Resuming previous test run
+  export LIST="*.swift"
+fi
+
+
+for a in $LIST; do 
+  b=$(basename $a .swift).xml
+  if [ ! -f $b ]; then
+    echo -n "known-good $a: "
+    vdlc $a
+  else
+    echo Skipping known-good $a
+  fi
+  VDLCRETURN=$?
+  if [ "$VDLCRETURN" -ne "0" ]; then 
+    echo "COMPILE FAILED WITH RETURN CODE $VDLCRETURN"
+    exit 1
+  fi
+  diff -q $b ../working-base/$b
+  if [ "$?" -ne "0" ]; then
+    echo "OUTPUT DIFFERS"
+    diff -u ../working-base/$b $b
+    exit 1
+# echo press enter to accept this as valid or press ctrl-c to die
+# read
+# pushd ..
+# quilt add working-base/$b
+# cp working/$b working-base/$b
+# popd
+  fi
+  echo PASS
+done
+popd > /dev/null
+
+pushd not-working > /dev/null
+rm *.?ml *.test-output
+for a in *.swift; do
+
+  echo -n "known-bad $a: "
+  vdlc $a > $a.test-output 2>&1
+  if [ "$?" -eq "0" ]; then echo "TEST FAILED - COMPILE SUCCEEDED"; exit 2; fi
+  echo PASS
+done
+echo Finished all syntax tests
+exit 0
+

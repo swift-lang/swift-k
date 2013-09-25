@@ -1,0 +1,153 @@
+<karajan>
+
+  <namespace prefix="swiftscript">
+	<!-- string functions library -->
+	<export name="extract_int"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ExtractInt"/></export>
+	<export name="read_data"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadData"/></export>
+	<export name="read_data2"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
+	<export name="read_structured"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
+	<export name="write_data"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
+	<export name="strcat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="strcut"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="strstr"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="strsplit"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+        <export name="strjoin"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="regexp"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="to_int"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="to_float"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="format"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="pad"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="sprintf"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Sprintf"/></export>
+	<export name="to_string"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="assert"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Assert"/></export>
+	<export name="trace"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="tracef"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Tracef"/></export>
+	<export name="fprintf"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Fprintf"/></export>
+	
+	<!-- included for backwards compatibility -->
+	<export name="readdata"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadData"/></export>
+	<export name="readdata2"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
+	<export name="readstructured"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"/></export>
+	<export name="writedata"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.WriteData"/></export>
+	<export name="toint"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="tofloat"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="tostring"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+
+	<export name="java"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Java"/></export>
+	<export name="filename"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileName"/></export>
+	<export name="filenames"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FileNames"/></export>
+	<export name="dirname"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="length"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="exists"><elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.Misc"/></export>
+	<export name="arg">
+		<import file="sys.xml"/>
+		<if>
+			<sys:or>
+				<equals value1="${vdl:operation}" value2="typecheck"/>
+				<equals value1="${vdl:operation}" value2="graph"/>
+			</sys:or>
+			<element arguments="name"><string></string></element>
+			<elementDef classname="org.griphyn.vdl.karajan.lib.swiftscript.FnArg"/>
+		</if>
+	</export>
+  </namespace>
+
+  <namespace prefix="vdl">
+	<export name="vdl:getdatasetprovenanceid"><elementDef classname="org.griphyn.vdl.karajan.lib.GetDatasetProvenanceID"/></export>
+	<export name="infinitecountingwhile"><elementDef classname="org.griphyn.vdl.karajan.lib.InfiniteCountingWhile"/></export>
+	<export name="sequentialwithid"><elementDef classname="org.griphyn.vdl.karajan.lib.SequentialWithID"/></export>
+	<export name="startprogressticker"><elementDef classname="org.griphyn.vdl.karajan.lib.RuntimeStats"/></export>
+	<export name="stopprogressticker"><elementDef classname="org.griphyn.vdl.karajan.lib.RuntimeStats"/></export>
+	<export name="initprogressstate"><elementDef classname="org.griphyn.vdl.karajan.lib.RuntimeStats"/></export>
+	<export name="setprogress"><elementDef classname="org.griphyn.vdl.karajan.lib.RuntimeStats"/></export>
+	<export name="new"><elementDef classname="org.griphyn.vdl.karajan.lib.New"/></export>
+	<export name="createarray"><elementDef classname="org.griphyn.vdl.karajan.lib.CreateArray"/></export>
+	<!-- used from VDL2 for arguments to apps and returns relative paths -->
+	<export name="fileName"><elementDef classname="org.griphyn.vdl.karajan.lib.FileName"/></export>
+	<!-- for internal use and does not force relative paths -->
+	<export name="absFileName"><elementDef classname="org.griphyn.vdl.karajan.lib.AbsFileName"/></export>
+
+	<export name="jobConstraints"><elementDef classname="org.griphyn.vdl.karajan.lib.JobConstraints"/></export>
+	<export name="getField"><elementDef classname="org.griphyn.vdl.karajan.lib.GetField"/></export>
+	<export name="getFieldSubscript"><elementDef classname="org.griphyn.vdl.karajan.lib.GetFieldSubscript"/></export>
+	<export name="setFieldValue"><elementDef classname="org.griphyn.vdl.karajan.lib.SetFieldValue"/></export>
+	<export name="appendArray"><elementDef classname="org.griphyn.vdl.karajan.lib.AppendArray"/></export>
+	<export name="getFieldValue"><elementDef classname="org.griphyn.vdl.karajan.lib.GetFieldValue"/></export>
+	<export name="waitFieldValue"><elementDef classname="org.griphyn.vdl.karajan.lib.WaitFieldValue"/></export>
+	<export name="getArrayIterator"><elementDef classname="org.griphyn.vdl.karajan.lib.GetArrayIterator"/></export>
+	<export name="slicearray"><elementDef classname="org.griphyn.vdl.karajan.lib.SliceArray"/></export>
+	<export name="isFileBound"><elementDef classname="org.griphyn.vdl.karajan.lib.IsFileBound"/></export>
+	<export name="isRestartable"><elementDef classname="org.griphyn.vdl.karajan.lib.IsRestartable"/></export>
+	<export name="fringePaths"><elementDef classname="org.griphyn.vdl.karajan.lib.FringePaths"/></export>
+	<export name="closeDataset"><elementDef classname="org.griphyn.vdl.karajan.lib.CloseDataset"/></export>
+	<export name="partialCloseDataset"><elementDef classname="org.griphyn.vdl.karajan.lib.PartialCloseDataset"/></export>
+	<export name="setWaitCount"><elementDef classname="org.griphyn.vdl.karajan.lib.SetWaitCount"/></export>
+	<export name="cleanDataset"><elementDef classname="org.griphyn.vdl.karajan.lib.CleanDataset"/></export>
+	<export name="range"><elementDef classname="org.griphyn.vdl.karajan.lib.Range"/></export>
+
+	<export name="isLogged"><elementDef classname="org.griphyn.vdl.karajan.lib.IsLogged"/></export>
+	<export name="logVar"><elementDef classname="org.griphyn.vdl.karajan.lib.LogVar"/></export>
+	<export name="typecheck"><elementDef classname="org.griphyn.vdl.karajan.lib.Typecheck"/></export>
+
+	<export name="threadPrefix"><elementDef classname="org.griphyn.vdl.karajan.lib.ThreadPrefix"/></export>
+
+	<export name="executable"><elementDef classname="org.griphyn.vdl.karajan.lib.Executable"/></export>
+	<export name="TCProfile"><elementDef classname="org.griphyn.vdl.karajan.lib.TCProfile"/></export>
+	<export name="SiteProfile"><elementDef classname="org.griphyn.vdl.karajan.lib.SiteProfile"/></export>
+
+	<export name="setFutureFault"><elementDef classname="org.griphyn.vdl.karajan.lib.SetFutureFault"/></export>
+
+	<export name="configProperty"><elementDef classname="org.griphyn.vdl.karajan.functions.ConfigProperty"/></export>
+	<export name="processBulkErrors"><elementDef classname="org.griphyn.vdl.karajan.functions.ProcessBulkErrors"/></export>
+
+	<export name="niceName"><elementDef classname="org.griphyn.vdl.karajan.lib.NiceName"/></export>
+
+	<export name="cacheAddAndLockFile"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheAddAndLockFile"/></export>
+	<export name="cacheAddFile"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheAddFile"/></export>
+	<export name="cacheFileRemoved"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheFileRemoved"/></export>
+	<export name="cacheUnlockFiles"><elementDef classname="org.griphyn.vdl.karajan.lib.CacheUnlockFiles"/></export>
+
+	<export name="log"><elementDef classname="org.griphyn.vdl.karajan.lib.Log"/></export>
+
+	<export name="unitStart"><elementDef classname="org.griphyn.vdl.karajan.lib.UnitStart"/></export>
+	<export name="unitEnd"><elementDef classname="org.griphyn.vdl.karajan.lib.UnitEnd"/></export>
+
+	<export name="kickstart"><elementDef classname="org.griphyn.vdl.karajan.lib.Kickstart"/></export>
+
+	<export name="dirname"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
+	<export name="reldirname"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
+	<export name="basename"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
+	<export name="provider"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
+	<export name="hostname"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
+	<export name="dircat"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
+	<export name="pathnames"><elementDef classname="org.griphyn.vdl.karajan.lib.PathUtils"/></export>
+
+	<export name="execute"><elementDef classname="org.griphyn.vdl.karajan.lib.Execute"/></export>
+	<export name="expandArguments"><elementDef classname="org.griphyn.vdl.karajan.lib.ExpandArguments"/></export>
+
+	<export name="tparallelFor"><elementDef classname="org.griphyn.vdl.karajan.lib.ThrottledParallelFor"/></export>
+	<export name="throttled"><elementDef classname="org.griphyn.vdl.karajan.lib.Throttled"/></export>
+
+	<export name="appStageins"><elementDef classname="org.griphyn.vdl.karajan.lib.AppStageins"/></export>
+	<export name="appStageouts"><elementDef classname="org.griphyn.vdl.karajan.lib.AppStageouts"/></export>
+	<export name="isDone"><elementDef classname="org.griphyn.vdl.karajan.lib.IsDone"/></export>
+	<export name="mark"><elementDef classname="org.griphyn.vdl.karajan.lib.Mark"/></export>
+	<export name="flatten"><elementDef classname="org.griphyn.vdl.karajan.lib.Flatten"/></export>
+	<export name="parameterlog"><elementDef classname="org.griphyn.vdl.karajan.lib.Parameterlog"/></export>
+	<export name="inFileDirs"><elementDef classname="org.griphyn.vdl.karajan.lib.InFileDirs"/></export>
+	<export name="outFileDirs"><elementDef classname="org.griphyn.vdl.karajan.lib.OutFileDirs"/></export>
+	<export name="outFiles"><elementDef classname="org.griphyn.vdl.karajan.lib.OutFiles"/></export>
+	<export name="doRestartLog"><elementDef classname="org.griphyn.vdl.karajan.lib.DoRestartLog"/></export>
+	<export name="unwrapClosedList"><elementDef classname="org.griphyn.vdl.karajan.lib.UnwrapClosedList"/></export>
+  </namespace>
+
+  <namespace prefix="cdm">
+  	<export name="query"><elementDef classname="org.globus.swift.data.Query"/></export>
+	<export name="get"><elementDef classname="org.globus.swift.data.Query"/></export>
+  	<export name="file"><elementDef classname="org.globus.swift.data.Query"/></export>
+  	<export name="broadcast"><elementDef classname="org.globus.swift.data.Action"/></export>
+  	<export name="external"><elementDef classname="org.globus.swift.data.Action"/></export>
+  	<export name="wait"><elementDef classname="org.globus.swift.data.Action"/></export>
+  </namespace>
+
+</karajan>

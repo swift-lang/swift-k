@@ -1,0 +1,50 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>messagefile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>   
+  </types>  
+  <procedure name="greeting" src="line 3">
+
+      <output 
+    name="t" type="messagefile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="s" type="string"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 4">
+        <executable>echo</executable>
+        <stdout><function name="filename">
+          <variableReference>t</variableReference></function></stdout><variableReference>s</variableReference>  </application>
+    </binding>
+  </procedure>
+  <variable name="outfile" type="messagefile" isGlobal="false"><file name="hello20.txt"/></variable>
+  <variable name="morning" type="boolean" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 13">
+   <variableReference>morning</variableReference>
+   <booleanConstant>true</booleanConstant>
+  </assign>
+  <if>
+    <variableReference>morning</variableReference>
+    <then>
+      <call proc="greeting" src="line 14">
+        <output><variableReference>outfile</variableReference></output>
+        <input><stringConstant>good morning</stringConstant></input>
+      </call>
+    </then>
+    <else>
+      <call proc="greeting" src="line 16">
+        <output><variableReference>outfile</variableReference></output>
+        <input><stringConstant>good afternoon</stringConstant></input>
+      </call>
+    </else></if>
+</program>

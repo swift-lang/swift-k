@@ -1,0 +1,25 @@
+#! /bin/sh
+
+rundir=$1
+cd $rundir
+
+# Usage maketcfrominst run.NN
+#
+# run this from the directory in which the foreachsite that installed the app was run and which contains the run.NN directory
+
+# echo $(more */*out | egrep '^Runn|^\*' | grep matches | wc -l) successful application installs
+
+# more $rundir/*/*out | egrep 'submit.stdout|^instal|^data|^wn|^py'
+
+# more */*out | egrep 'submit.stdout|^instal'
+
+for site in $(find * -type d); do
+  # echo site=$site
+  if grep -q matches $site/*.stdout; then
+    # echo "    OK"
+    idir=$(grep '^installing in' $site/*.stdout | awk '{print $3}')
+    echo $site modftdock $idir null null null
+  else
+    : # echo "    failed"
+  fi
+done

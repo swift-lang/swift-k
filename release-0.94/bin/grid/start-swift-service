@@ -1,0 +1,58 @@
+#!/bin/bash
+
+NSERVICES=${1:-1}
+SERVICE=coaster-service  # found via PATH
+
+echo $0: starting $NSERVICES services
+
+ontrap() 
+{
+  echo $0: Received signal, killing coaster services
+  trap - 1 2 3 15
+  echo start_service: trapping exit or signal
+  kill 0 # $(cat service-*.pid)
+}
+
+trap ontrap 1 2 3 15  # FIXME: Not needed?
+
+# Launch the requested number of services
+ rm -f service.sports service.wports
+
+for i in `seq -w 0 $((NSERVICES - 1))`; do
+  rm -f service-$i.{sport,wport,pid,out}
+  $SERVICE -nosec -passive -portfile service-$i.sport -localportfile service-$i.wport &> service-$i.out  &
+  echo $! >service-$i.pid
+done
+
+# Wait (a bit) for all services to report their port numbers
+# Record missing ones as "-"
+
+maxtries=10
+
+for (( tries=0; tries < $maxtries; tries++ )); do
+  sleep 1
+  errors=0
+  rm -f service.sports service.wports
+  for i in `seq -w 0 $((NSERVICES - 1))`; do
+    if [ -s service-$i.sport -a -s service-$i.wport ]; then
+      echo $(cat service-$i.sport) >> service.sports
+      echo $(cat service-$i.wport) >> service.wports
+    else
+      echo 0 >> service.sports
+      echo 0 >> service.wports
+      errors=$((errors+1))
+    fi
+  done
+  if [ $errors = 0 ]; then
+    break
+  fi
+done
+
+if [ $errors != 0 ]; then
+  echo $0: $errors services failed to report their port numbers
+fi
+echo $0: $((NSERVICES-errors)) services started successfully
+
+wait # Wait on all the started services; stop them all if signalled (ontrap)
+
+

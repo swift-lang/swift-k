@@ -1,0 +1,65 @@
+
+# All new intermediate files will contain ".plot."
+# Original logs are assumed to end with ".log"
+
+# Known file types:
+# NAME.log  : The original log.
+# NAME.plot.iso : A Swift log with the timestamps transformed
+#             to unix time format
+# NAME.plot.start : A simple file containing the unix start time
+# NAME.plot.norm : Swift log with the timestamps relative to the
+#                  first event time
+
+%.lastsummary: %.last
+	cat $< | sed 's/^\([^ ]*\) \([^ ]*\) \([^ ]*\)\(.*\)/\3/' | sort | uniq -c > $@
+
+%.last: %.transitions
+	cat $< | swap-and-sort |last-transition-line  > $@
+
+%.event: %.transitions t.inf
+	cat $< | swap-and-sort | transitions-to-event > $@
+
+%.sorted-start.event: %.event
+	sort -n < $< > $@
+
+%.sorted-by-duration: %.event
+	cat $< | sort -n -k 2 > $@
+
+%-total.png: %.event start-time.tmp
+	total-event-plot $< $@
+
+%.png: %.event start-time.tmp workflow.event
+	simple-event-plot $< $@
+
+%.stats: %.event %.eip
+	event-duration-stats $< > $@
+
+%-duration-histogram.png: %.sorted-by-duration
+	plot-duration-histogram $< $@
+
+%.cedps: %.transitions
+	transitions-to-cedps $< > $@
+
+%.seenstates: %.transitions
+	cat $< | sed 's/[^ ]* *[^ ]* \([^ ]*\).*/\1/' | sort | uniq > $@
+
+%-trails.png: %.seenstates %.transitions start-time.tmp workflow.event
+	trail $*
+
+%-trailsx.png: %.seenstates %.transitions
+	trail-freex $*
+
+%.global.event:  %.event
+	add-runid-as-prefix $< $@
+
+%.eip: %.event
+	events-in-progress < $< > $@
+
+%.plot.time: %.log
+	iso-to-secs < $(<) > $(@)
+
+%.plot.start: %.log
+	extract-start-time $(<) > $(@)
+
+%.plot.norm: %.plot.start %.plot.time
+	normalize-log.pl $(^) > $(@)

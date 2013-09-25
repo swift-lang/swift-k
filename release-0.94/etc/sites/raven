@@ -1,0 +1,16 @@
+
+  <pool handle="raven">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <profile namespace="globus" key="project">_PROJECT_</profile>
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="providerAttributes">pbs.aprun;pbs.mpp;depth=24</profile>
+    <profile namespace="globus" key="maxTime">13800</profile>
+    <profile namespace="globus" key="maxWallTime">03:00:00</profile>
+    <profile namespace="globus" key="slots">50</profile>
+    <profile namespace="globus" key="nodeGranularity">4</profile>
+    <profile namespace="globus" key="maxNodes">4</profile>
+    <profile namespace="karajan" key="jobThrottle">60.99</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <filesystem provider="local"/>
+    <workdirectory>/lus/scratch/{env.USER}/swiftwork</workdirectory>
+  </pool>

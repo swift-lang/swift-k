@@ -1,0 +1,16 @@
+#!/bin/bash
+
+rm -f *.tmp
+
+for a in 1 2 3 4 5 ; do
+
+  cat ${a}.in | sort-preserve > ${a}.tmp
+
+  diff -q ${a}.tmp ${a}.out
+
+  if [ "$?" -ne "0" ]; then
+    echo "OUTPUT DIFFERS for test case $a in sort-preserve"
+    exit 1
+  fi
+
+done

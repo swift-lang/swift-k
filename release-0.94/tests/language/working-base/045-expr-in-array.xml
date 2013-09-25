@@ -1,0 +1,23 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="subjectNo" type="int[]" isGlobal="false" xsi:nil="true"/>
+  <variable name="trialTypes" type="int[]" isGlobal="false" xsi:nil="true"/>
+  <variable name="outputs" type="int[]" isGlobal="false" xsi:nil="true"/>
+  <foreach var="t"  indexVar="j" src="line 8">
+  <in><variableReference>subjectNo</variableReference></in>
+  <body><foreach var="s"  indexVar="i" src="line 9">
+    <in><variableReference>trialTypes</variableReference></in>
+    <body><assign src="line 11">
+       <arraySubscript>
+        <variableReference>outputs</variableReference>
+        <arith op="*">
+          <variableReference>i</variableReference>
+          <variableReference>j</variableReference>
+        </arith>
+       </arraySubscript>
+       <integerConstant>3</integerConstant>
+      </assign></body>
+    </foreach></body>
+  </foreach>
+</program>

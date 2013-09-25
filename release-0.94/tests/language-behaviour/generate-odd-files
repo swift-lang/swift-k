@@ -1,0 +1,14 @@
+#!/bin/bash
+
+cp 142-space-and-quotes.1.out.expected "142-space-and-quotes. space .out.expected"
+cp 142-space-and-quotes.2.out.expected "142-space-and-quotes.2\" space \".out.expected"
+cp 142-space-and-quotes.3.out.expected "142-space-and-quotes.3' space '.out.expected"
+
+cp 1421-space-and-quotes.1.out.expected "1421-space-and-quotes.''' ' ''' '' '''''' ' \"\"\"\"\"\"\"\"\" '    '  ' \"\"\"' \"'\".out.expected"
+cp 1421-space-and-quotes.2.out.expected "1421-space-and-quotes.2\" space .out.expected"
+cp 1421-space-and-quotes.3.out.expected "1421-space-and-quotes.3' space .out.expected"
+cp 1421-space-and-quotes.4.out.expected "1421-space-and-quotes.2 sp\"ace .out.expected"
+cp 1421-space-and-quotes.5.out.expected "1421-space-and-quotes.3 sp'ace .out.expected"
+cp 1421-space-and-quotes.6.out.expected "1421-space-and-quotes.2' sp\"ac\"e .out.expected"
+cp 1421-space-and-quotes.7.out.expected "1421-space-and-quotes.3' sp'ac'e .out.expected"
+

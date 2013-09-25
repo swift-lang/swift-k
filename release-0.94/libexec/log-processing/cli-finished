@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# did the workflow finish and if so, did it complete successfully?
+
+# exit codes are:
+
+#   0 not finished (or at least, not reported as finished)
+#   1 finished - successfully
+#   2 finished - unsuccessfully
+#   3 finished - unable to determine completion status
+
+ID=/tmp/swift-cli-cache-$RANDOM
+
+if grep 'DEBUG Loader Swift finished - ' $1 > $ID ; then
+  if grep -q 'workflow had errors' $ID ; then
+    echo Finished - errors
+    exit 2
+  else
+    if grep -q 'workflow had no errors' $ID ; then
+      echo Finished - no errors
+      exit 1
+    else
+      echo Finished - cannot determine success
+      exit 3
+    fi
+  fi
+else
+  echo Not finished
+fi
+
+
+
+rm $ID

@@ -1,0 +1,18 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="v" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 2">
+   <variableReference>v</variableReference>
+   <arith op="+">
+     <arith op="+">
+       <integerConstant>7</integerConstant>
+       <integerConstant>3</integerConstant>
+     </arith>
+     <arith op="*">
+       <integerConstant>2</integerConstant>
+       <integerConstant>6</integerConstant>
+     </arith>
+   </arith>
+  </assign>
+</program>

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#2007-09-23 15:02:04,726+0100 INFO  vdl:execute2 Running job badmonkey-7glgsmhi badmonkey with arguments [in.txt, out.0001.txt] in badmonkey-20070923-1501-i5sjvxk1/badmonkey-7glgsmhi on UC
+
+# 1190868146.507 DEBUG vdl:execute2 Job cwtsmall-hi8npshi thread 0-0-0-1-0-3-0 site AGLT2 starting
+if grep -E "DEBUG vdl:execute2 Job $1 thread .* starting\$" log  > /dev/null; then
+  grep -E "DEBUG vdl:execute2 Job $1 thread .* starting\$" log  | sed 's/.* site \([^ ]*\) starting/\1/'
+else 
+  if grep "vdl:execute2 Running job $1 " log > /dev/null ; then 
+    grep "vdl:execute2 Running job $1 " log  | sed 's/^.* on \([^ ]*\)$/\1/'
+  else
+    echo UNKNOWNSITE
+  fi
+fi
+

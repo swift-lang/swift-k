@@ -1,0 +1,4 @@
+
+// THIS-SCRIPT-SHOULD-FAIL
+
+in a;

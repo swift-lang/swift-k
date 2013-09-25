@@ -1,0 +1,154 @@
+
+Log Processing
+--------------
+
+To properly generate log plots, you must enable VDL/Karajan logging.
+This can be done by putting the following lines in log4j.properties file found in the /etc directory of Swift installation:
+
+--------------------------------------
+log4j.logger.swift=DEBUG
+log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Cpu=DEBUG
+log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Block=DEBUG
+--------------------------------------
+
+All the executables, zsh and perl scripts mentioned in the following steps are
+available in the libexec/log-processing directory of your Swift installation.
+
+Log plotting
+~~~~~~~~~~~~
+
+Normalize event times in the log to the run start time
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Generate the normalized log, assuming the log is titled +swift-run.log+
+
+------------------------------------------
+./normalize-log.pl file.contains.start.time swift-run.log > swift-run.norm
+------------------------------------------
+TODO:In what format does the start time be in 'file.contains.start.time'
+
+
+Make a basic load plot from Coasters Cpu log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+. Normalize the log.
+. Build up a load data file:
++
+------------------------------------------
+./cpu-job-load.pl < swift-run.norm > load.data
+------------------------------------------
+. Plot with the JFreeChart-based plotter in usertools/plotter:
++
+------------------------------------------
+swift_plotter.zsh -s load.cfg load.eps load.data
+------------------------------------------
+Note: Th load.cfg is available from swift/libexec/log-processing/
+
+
+Make a basic job completion plot from Coasters Cpu log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+. Normalize the log.
+
+. Build up a completed data file:
++
+------------------------------------------
+./cpu-job-completed.pl < swift-run.norm > completed.data
+------------------------------------------
+
+. Plot with the JFreeChart-based plotter in usertools/plotter:
++
+------------------------------------------
+swift_plotter.zsh -s completed.cfg completed.eps completed.data
+------------------------------------------
+
+Make a basic Block allocation plot from Coasters Block log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+. Normalize the log.
+
+. Build up a block allocation data file:
++
+------------------------------------------
+./block-level.pl < swift-run.norm > blocks.data
+------------------------------------------
+
+. Plot with the JFreeChart-based plotter in usertools/plotter:
++
+------------------------------------------
+swift_plotter.zsh -s blocks.{cfg,eps,data}
+------------------------------------------
+
+Make a job runtime distribution plot from Coasters Cpu log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+. Normalize the log.
+
+. Build up a job runtime file:
++
+------------------------------------------
+./extract-times.pl < swift-run.norm > times.data
+------------------------------------------
+
+. Put the job runtimes into 1-second buckets:
++
+------------------------------------------
+./ buckets.pl 1 times.data > buckets.data
+------------------------------------------
+
+. Plot with the JFreeChart-based plotter in usertools/plotter:
++
+------------------------------------------
+swift_plotter.zsh -s buckets.cfg buckets.eps buckets.data
+------------------------------------------
+
+
+Meaning and interpretation of Swift log messages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A Swift log file is typically a text file with the name of the Swift run and
+its timestamp in the filename and an extension ".log". In addition, a ".rlog"
+file is Swift's resume log which is used by Swift when a run is resumed using
+the "-resume" option. The .rlog file is only for Swift's internal purpose and
+not to be interpreted by the user.
+
+Each line in the log file typically consists of three parts. The first part
+is the timestamp, the second is the type of log message and the third is the
+message itself. The types of log messages follows the java log4j standard types
+of TRACE, DEBUG, INFO, WARN, ERROR and FATAL.
+
+////
+This section lists the various Swift log messages and explains the meaning and
+likely interpretation of those messages. Note that the list is not
+comprehensive at this time. Also note that we will ignore the timestamps here.
+
+. _DEBUG Loader arguments: [-sites.file, sites.xml, -config, cf, -tc.file, tc, postproc-gridftp.swift]_
+    Swift commandline arguments
+. _DEBUG Loader Max heap: 5592449024_
+    The java runtime heap size
+. _DEBUG textfiles BEGIN_
+    A dump of config and source files associated with this run
+. _DEBUG VDL2ExecutionContext Stack dump_
+. _INFO  SetFieldValue Set_
+. _INFO  get__site STARTCOMPOUND thread=0-8 name=get__site_
+. _INFO vdl:execute START thread=0-8-0 tr=_
+. _INFO  GlobalSubmitQueue No global submit throttle set. Using default (1024)_
+. _DEBUG vdl:execute2 THREAD_ASSOCIATION jobid=getsite-ymj72ook thread=0-8-0-1 host=localhost replicationGroup=xmj72ook_
+. _DEBUG vdl:execute2 JOB_START jobid=getsite-ymj72ook tr=getsite arguments=[644] tmpdir=postproc-gridftp-20120319-0942-adf1o1u2/jobs/y/getsite-ymj72ook host=localhost_
+. _INFO  GridExec TASK_DEFINITION_
+. _WARN  RemoteConfiguration Find: http://140.221.8.62:38260_
+. _INFO  AbstractStreamKarajanChannel$Multiplexer Multiplexer 0 started_
+. _INFO  AbstractStreamKarajanChannel$Multiplexer (0) Scheduling SC-null for addition_
+. _INFO  AbstractStreamKarajanChannel Channel configured_
+. _INFO  MetaChannel MetaChannel: 651528505[1478354072: {}] -> null.bind -> SC-null_
+. _INFO  ReadBuffer Will ask for 1 buffers for a size of 6070_
+. _INFO  ThrottleManager O maxBuffers=512, crtBuffers=0, allowedTransfers=256, active=0, suspended=0_
+. _INFO  ThrottleManager mem=113.54 MB, heap=482.88 MB, maxHeap=5.21 GB_
+. _INFO  ThrottleManager I maxBuffers=512, crtBuffers=0, allowedTransfers=256, active=0, suspended=0_
+. _INFO  PerformanceDiagnosticInputStream [MEM] Heap total: 482.88 MB, Heap used: 118.58 MB_
+Heap sizes for performance
+. _INFO  vdl:execute END_SUCCESS thread=0-8-0 tr=getsite_
+The job ended successfully
+. _INFO  WeightedHostScoreScheduler CONTACT_SELECTED host=localhost, score=99.854_
+. _
+////

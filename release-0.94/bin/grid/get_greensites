@@ -1,0 +1,8 @@
+#! /bin/bash
+
+latestrun=$(ls -1td gen_gridsites.run.* | head -1)
+
+echo -e Green sites from $latestrun '\n' 1>&2 
+
+cd $latestrun
+cat cat*.out

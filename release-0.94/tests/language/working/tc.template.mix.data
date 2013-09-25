@@ -1,0 +1,5 @@
+
+localhost 	generate 		_DIR_/generate      INSTALLED	INTEL32::LINUX	null
+localhost 	process 		_DIR_/process       INSTALLED	INTEL32::LINUX	null
+localhost 	combine 		_DIR_/combine       INSTALLED	INTEL32::LINUX	null
+localhost	wc				/usr/bin/wc         INSTALLED	INTEL32::LINUX	null

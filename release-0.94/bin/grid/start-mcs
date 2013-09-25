@@ -1,0 +1,217 @@
+#! /bin/bash
+
+Usage()
+{
+  echo $0: 'Usage: start-mcs [-ls|--local-staging|-ps|--provider-staging|-sp|--service-port portnum] site1 ... siteN'
+}
+
+# Command arguments
+
+STAGINGMETHOD=local-staging
+COMPUTEHOSTS=localhost
+
+while [ $# -gt 0 -a $(expr "$1" : -) = 1 ]; do
+  case "$1" in
+    -ls|--local-staging) STAGINGMETHOD=local-staging; shift ;;
+    -ps|--provider-staging) STAGINGMETHOD=provider-staging; shift ;;
+    *) echo $0: Invalid argument "$1"; Usage; exit 1
+  esac
+done
+
+if [ $# -gt 0 ]; then
+  COMPUTEHOSTS=$*
+fi
+
+echo Staging method: $STAGINGMETHOD
+
+for h in $COMPUTEHOSTS; do
+  echo Host: $h
+  ssh $h rm -rf /tmp/$USER
+  if [ $(expr $h : -) != 0 ]; then
+    echo $0: Error: invalid argument or host name: $h
+    Usage
+    exit 1
+  fi
+done
+
+# COMPUTEHOSTS='crush thwomp stomp crank steamroller grind churn trounce thrash vanquish'
+
+SWIFTBIN=$(dirname $(which swift))
+
+function wait-and-start-workers
+{
+  # Look for:
+  # Passive queue processor initialized. Callback URI is http://140.221.8.62:55379
+
+  for try in $(seq 1 20); do
+    uriline=$(grep "Passive queue processor initialized. Callback URI is" $out 2> /dev/null)
+    if [ "_$uriline" = _ ]; then
+      sleep 1
+    else
+      break;
+    fi
+  done
+
+# FIXME: What happened to the error check here: in case server was not set to passive???
+
+  echo Coaster contact: $SERVICE_URL
+
+   LOGDIR=/tmp/$USER/Swift/workers
+#  mkdir -p $LOGDIR # moved this to the ssh command
+
+  IDLETIMEOUT=$((60*60*240)) # 10 days: FIXME: make this a command line arg
+
+  rm -rf remotepid.* # FIXME: should not be needed if we start in a new dir each time
+
+  for host in $(echo $COMPUTEHOSTS); do
+    timestamp=$(date "+%Y.%m%d.%H%M%S")
+    random=$(awk "BEGIN {printf \"%0.5d\", $RANDOM}")
+    ID=$timestamp.$random
+       # FIXME: make logging an argument; set false by default
+       # fixme:send worker.pl to remote host via stdin or scp.
+       # ssh $host '/bin/sh -c '\'"mkdir -p $LOGDIR; WORKER_LOGGING_LEVEL=DEBUG $SWIFTBIN/worker.pl $CONTACT $ID $LOGDIR $IDLETIMEOUT 2>&1 & echo PID=\$!"\'  >remotepid.$host </dev/null &
+       ssh $host /bin/sh -c \'"mkdir -p $LOGDIR"\'
+       scp $SWIFTBIN/worker.pl $host:$LOGDIR
+       #ssh $host '/bin/sh -c '\'"WORKER_LOGGING_LEVEL=DEBUG $LOGDIR/worker.pl $CONTACT $ID $LOGDIR $IDLETIMEOUT 2>&1 & echo PID=\$!"\'  >remotepid.$host </dev/null &
+       ssh $host '/bin/sh -c '\'"WORKER_LOGGING_LEVEL=DEBUG $LOGDIR/worker.pl $SERVICE_URL $ID $LOGDIR $IDLETIMEOUT 2>&1 & echo PID=\$!"\'  >remotepid.$host </dev/null &
+       sshpids="$sshpids $!"
+  done
+
+  echo Started workers from these ssh processes: $sshpids
+  echo $sshpids > $sshpidfile
+}
+
+# make swiftworkers.XXXX temp dir and link swiftworkers/ to it
+rundir=/tmp/$USER/Swift/server
+mkdir -p $(dirname $rundir)
+trundir=$(mktemp -d $rundir.XXXX)
+rm -rf $rundir
+ln -s $trundir $rundir
+
+echo "Logging to $trundir"
+
+cd $rundir
+out=swift.stdouterr
+
+$SWIFTBIN/coaster-service -nosec -passive -portfile service.sport -localportfile service.wport &> service.log &
+coasterservicepid=$!
+
+#wait until the service properly gets started
+sleep 5
+
+SPORT=$(cat service.sport)
+WPORT=$(cat service.wport)
+SERVICE_URL=http://$(hostname -f):$WPORT
+#$SWIFTBIN/coaster-service -nosec -p $SERVICEPORT >& coaster-service.log &
+echo "service host:port is, " $(hostname -f):${SPORT}
+cat >tc <<END
+localhost sh /bin/sh null null null
+END
+
+if [ $STAGINGMETHOD = local-staging ]; then
+
+cat >sites.xml <<ENDS
+<config>
+  <pool handle="localhost">
+    <execution provider="coaster-persistent" url="http://$(hostname -f):${SPORT}" jobmanager="local:local"/>
+    <profile namespace="globus" key="workerManager">passive</profile>
+    <profile namespace="globus" key="workersPerNode">4</profile>
+    <profile key="jobThrottle" namespace="karajan">.03</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <filesystem provider="local" url="none" />
+    <workdirectory>$HOME/swiftwork</workdirectory>
+  </pool>
+</config>
+ENDS
+
+cat >cf <<ENDC
+wrapperlog.always.transfer=true
+sitedir.keep=true
+execution.retries=0
+lazy.errors=false
+status.mode=provider
+use.provider.staging=false
+provider.staging.pin.swiftfiles=false
+ENDC
+
+elif [ $STAGINGMETHOD = provider-staging ]; then
+
+cat >sites.xml <<ENDS
+<config>
+  <pool handle="localhost">
+    <execution provider="coaster-persistent" url="http://$(hostname -f):${SPORT}" jobmanager="local:local"/>
+    <profile namespace="globus" key="workerManager">passive</profile>
+    <profile namespace="globus" key="workersPerNode">4</profile>
+    <profile key="jobThrottle" namespace="karajan">.03</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <profile namespace="swift" key="stagingMethod">proxy</profile>
+    <workdirectory>/tmp/$USER/SwiftR/swiftwork</workdirectory>
+  </pool>
+</config>
+ENDS
+
+cat >cf <<ENDC
+wrapperlog.always.transfer=true
+sitedir.keep=true
+execution.retries=0
+lazy.errors=false
+status.mode=provider
+use.provider.staging=true
+provider.staging.pin.swiftfiles=false
+ENDC
+
+fi
+
+cat >passivate.swift <<ENDP
+
+type file;
+
+app passivate ()
+{
+  sh "-c" "echo dummy swift job;";
+}
+
+passivate();
+ENDP
+
+touch $out
+sshpidfile=${out/stdouterr/workerpids}
+
+echo swift output is in: $out, pids in $sshpidfile
+
+TRAPS="EXIT 1 2 3 15"  # Signals and conditions to trap
+
+function onexit {
+  trap - $TRAPS
+
+  sshpids=$(cat $sshpidfile)
+
+  echo "Terminating worker processes $sshpids, starter $starterpid, and coaster-service pid $coasterservicepid"
+
+  for rpfile in $(ls -1 remotepid.*); do
+    rpid=$(grep PID= $rpfile | sed -e 's/PID=//')
+    rhost=$(echo $rpfile | sed -e 's/remotepid.//')
+    echo Based on $rpfile: terminating process group of process $rpid on $rhost
+    ssh $rhost sh -c \''PGID=$(ps -p '$rpid' -o pgid --no-headers|sed -e "s/ //g"); kill -s TERM -- -$PGID'\'
+  done
+
+  if [ "_$sshpids$starterpid$coasterservicepid" != _ ]; then
+
+    echo kill $sshpids $starterpid $coasterservicepid >& /dev/null
+
+  fi
+
+  kill 0 # Kill # FIXME: what was this for????
+}
+
+trap onexit $TRAPS
+
+wait-and-start-workers &
+starterpid=$!
+
+#$SWIFTBIN/swift -config cf -tc.file tc -sites.file sites.xml passivate.swift 2>&1 </dev/null | tee $out
+
+echo "==> Service started and set to passive mode. Use ^C to terminate all services and workers."
+
+wait
+

@@ -1,0 +1,34 @@
+#! /bin/sh
+
+
+gen_files ()
+{
+    RANGE=$1
+    rm input*txt
+    for i in `seq 0 1 $(($RANGE-1))`
+    do
+	echo $i > input_$i.txt
+    done
+    rm final_result
+}
+
+#echo "Test with 1 file"
+#gen_files 1;
+#swift -config swift.properties -sites.file sites.template.xml -tc.file tc recombiner.swift
+
+N=19
+echo "Test with $N file(s)"
+gen_files $N;
+#swift -config swift.properties -sites.file sites.template.xml -tc.file tc recombiner.swift
+swift -config swift.properties -sites.file sites.template.xml -tc.file tc kway.swift
+echo "Final result : $(cat final_result)"
+echo 
+
+exit 0
+
+N=5
+echo "Test with $N file(s)"
+gen_files $N;
+swift -config swift.properties -sites.file sites.template.xml -tc.file tc recombiner.swift
+echo "Final result : $(cat final_result)"
+echo 

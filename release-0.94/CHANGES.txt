@@ -1,0 +1,732 @@
+(07/05/11)
+
+*** Provenance tracking in the compiled file is now disabled by default.
+    Enable with swift -enable.provenance <script>
+    
+*** Variables that go out of scope are now automatically cleaned. This 
+    mostly consists of nullifying various fields, but for the concurrent
+    mapper it also means removal of files
+
+*** Fixed iterate so that iterate i {} until (i > 3); does not include
+    an iteration in which i == 3.
+
+(07/01/11)
+
+*** Uninitialized variables are detected at compile time instead of causing
+    a run to hang
+    
+*** A previous commit to deal with future faults occurring in the middle of
+    a deep copy would incorrectly handle multi-dimensional arrays. This is
+    now fixed.
+
+(02/17/10)
+
+*** Fixed deadlock when iterating on an array that is being written to
+    in a foreach loop
+
+(07/03/09)
+*** New import keyword which allows other SwiftScript source files to be
+    imported.
+
+(07/01/09)
+*** New writeData procedure which writes data structures to files in the same
+    format as used by readData.
+
+(06/30/09)
+*** New parameter -condor-g for swift-osg-ress-site-catalog which causes
+    sites files to be generate which will use a local condor-g installation
+    instead of making direct GRAM submissions.
+
+(06/25/09)
+*** 'global' keyword to allow top level declarations to be visible in all
+    scopes.
+
+(05/17/09)
+*** Allow wrapper parameters to be specific in a file rather than on the
+    commandline. This trades commandline length for an extra file to stage-in
+    per job.
+    A new parameter, wrapper.parameter.mode, is introduced to control this.
+    This was feature request bug 201.
+
+(05/07/09)
+*** swift-log-to-cedps is removed. The functionality of generating
+    .cedps format files is available by specifying the desired .cedps files
+    in an invocation of swift-plot-log. Lack of widespread use of this
+    command means a deprecation period is probably unnecessary.
+
+(05/05/09)
+*** New configuration property provenance.log which controls whether verbose
+    provenance-related log information is recorded in the run log file or
+    not. By default, this is false, which means that less information is
+    output by default now than previously.
+
+(04/27/09)
+*** Swift 0.9 built from Swift SVN r2860 and cog SVN r2388
+
+(03/30/09)
+*** Removed support for .dtm file extension which was deprecated in Swift 0.4
+
+(03/29/09)
+*** Added console text interface to provide live information about swift 
+    runs.
+
+(03/27/09)
+*** Environment variable SWIFT_EXTRA_INFO, when set in an environment profile,
+    is executed with the result being recorded in wrapper logs. This allows
+    arbitrary information about the remote environment to be gathered and
+    returned to the submit side.
+
+*** The wrapper.sh and seq.sh scripts that are deployed to remote sites to
+    help with execution have been renamed to more Swift specific names, to
+    avoid collision with user-supplied files of the same name. The new names
+    are _swiftwrap and _swiftseq
+
+(03/15/09)
+*** The log-processing code, primarily exposed as the swift-plot-log command,
+    has been merged into the main Swift release, rather than being a separate
+    download.
+
+(03/09/09)
+*** Added a throttling parallelFor and changed the swift foreach underlying
+    implementation to it. The throttling parallelFor limits the number of
+    concurrent iterations allowed, which should allow swift to scale better
+    in certain cases.
+
+(02/24/09)
+*** New configuration option wrapper.invocation.mode, specifiable either
+    globally in the configuration file or per-site as a profile key,
+    that configures whether wrapper script invocations are made with an
+    absolute path (as was the behaviour in Swift 0.8) or with a relative
+    path (as was behaviour in previous versions of Swift).
+
+(02/22/09)
+*** Recompilation will happen if a .kml file was compiled with a different
+    version of Swift to the version being invoked. This is in addition to the
+    existing behaviour where a .swift file will be recompiled if it is newer
+    than the corresponding .kml file.
+
+(02/17/09)
+*** There is a new command swift-osg-ress-site-catalog which will generate
+    a site catalog based on data gathered from OSG's ReSS information
+    system. This can be used by OSG users to easily generate a large number
+    of site catalog entries for sites that are likely to work.
+
+(02/14/09)
+*** Handling of [*] and . has changed. [*] has been broken for several
+    Swift releases, but now has some approximation of its former behaviour,
+    in a cleaner implementation.
+    [*] is now an identity operation, that is array[*] == array.
+    The structure access operator . can now take an array on the left
+    hand side. In situations where a[*].img was used, it is permissible
+    to continue to write a[*].img, or to write a.img - both of these will
+    return an array of img elements.
+
+(02/09/09)
+*** Procedure invocations can be made in any expression context now, rather
+    than only directly in an assignment.
+
+*** Mappings can now be made in any declaration, whether it has an assignment
+    or not. Previous a procedure call assignment and a mapping could not be
+    made in the same statement.
+
+(02/05/09)
+*** Tighter type checking on app blocks. Primitive types and arrays of
+    primitive types are permitted. Other types are prohibited.
+
+*** Arrays of primitive types can be passed to app blocks, and will be
+    expanded into multiple command-line parameters, one parameter per
+    array element.
+
+(01/23/09)
+*** Swift 0.8 built from Swift SVN r2448 and cog SVN r2261
+
+(01/14/09)
+*** Application success/failure status reporting can now be done using
+    CoG provider status, rather than the previous only choice of
+    using status files on the shared file system. A status.mode parameter
+    has been added to set this. It can be configured either in the
+    swift.properties file, to have effect for all sites, or can be set
+    per-site.
+
+(01/10/09)
+*** Console output for individual application invocation start and finish
+    is no longer shown. The progress ticker now appears more often.
+    This should give a better overview of run progress.
+
+*** More parallelisation of execution, so that some constructs which should
+    have always work now actually work. For example, mappers can take
+    values as parameters which are not known "early" in a run, and will
+    have their initialisation deferred until those parameters are ready.
+    SwiftScript programs which previously worked should still work; and
+    some programs which did not previously work should now work.
+
+(11/11/08)
+*** Swift 0.7 built from Swift SVN r2318 and cog SVN r2255
+
+(08/15/08)
+*** Swift 0.6 built from Swift SVN r2177 and cog SVN r2127
+
+(06/06/08)
+*** SWIFT_JOBDIR_PATH environment variable can be use in profiles (or
+    anywhere else that will get it to the worker script) to cause the
+    worker to copy input files to a possibly-worker-node-local working
+    directory.
+
+(04/24/08)
+*** PATHPREFIX environment variable is prefixed to the path before execution
+    in wrapper.sh; this variable can be set in profile entries using the usual
+    environment variables
+
+(04/14/08)
+*** Constant interning - this reduces the number of datasets for local values
+    created, especially when constants are used in loops.
+
+(04/09/08)
+*** Swift 0.5 built from Swift SVN r1783 and CoG SVN r1962
+
+(03/26/08)
+*** String literals now use \ as escape character - for example, use \"
+    to insert a quote into a string literal. Where \ was previously used
+    in a string literal, it is now necessary to escape it as \\
+
+(03/25/08)
+
+*** Logging performance improvement in wrapper.sh
+
+(03/15/08)
+*** Unused lrc field in site catalog removed.
+
+*** url field in site catalog execute element is now optional.
+
+(03/13/08)
+
+*** Swift v0.4 built from Swift SVN r1718 and cog SVN r1934.
+
+(03/03/08)
+*** Stage out wrapper log files in a similar fashion to kickstart records.
+
+(02/28/08)
+*** Progress ticker on stderr every 10..60 seconds
+
+*** Store kickstart records in a subdirectory with the same base name as
+    is used for log files.
+
+(02/27/08)
+*** SwiftScript source file line numbers are now passed deeper into the
+    compiler in order to give location information in more error messages.
+    This has resulted in a schema change for the XML intermediate form.
+
+(02/26/08)
+*** Better compile-time checking of variable usage. Use of undeclared
+    variables and multiple assignments to the same variable will now result
+    in a compile-time error (close to the start of a run), rather than an
+    error during execution (which may be many hours later).
+
+(01/25/08)
+*** @arg now takes a second optional argument which stands for a default
+    value in case the command line argument is missing.
+
+(01/14/08)
+*** Overloaded '+' operator to allow string concatenation
+
+(01/05/08)
+*** Multidimensional array handling. Can now declare arrays like this:
+       file f[][];
+    and refer to elements like this:
+       f[1][1]
+    f[1] refers to a one dimensional array, in the style of Java arrays.
+
+(12/18/07)
+*** r1214 made type specification illegal in a foreach but still recognised it
+    and threw an error.  This commit removes recognition of that from the
+    parser entirely (as was intended to eventually happen when r1214 was made)
+
+*** Complete removal of "while" statements from the language.
+    They do not seem to have a use, and haven't worked for some months
+    due to their removal from the XML intermediate form.
+
+(12/07/07)
+*** Deprecated use of .dtm extension for source files. Use .swift instead.
+    Support for .dtm will be dropped eventually.
+
+(12/03/07)
+*** Added -runid parameter that specifies the run identifier on the command
+    line, rather than having it automatically generated. This must
+    be unique for every invocation of a workflow and is used in several
+    places to keep files from different executions cleanly separated. By
+    default, a datestamp and random number are used to generate a run
+    identifier. When using this parameter, care should be taken to ensure
+    that the run ID remains unique with respect to all other run IDs that
+    might be used, irrespective of (at least) expected run location,
+    workflow or user.
+
+(11/23/07)
+*** new parameter, execution.retries to specify the number of time a job
+    will be retried if it fails (giving a maximum of 1 + execution.retries
+    attempts at execution)
+
+*** Added filesystem site catalog element. Looks like 'execution' and
+    allows, for example, SSH to be used for remote filesystem access.
+
+(11/20/07)
+
+*** Many unused fields in the sites catalog, sites.xml, are now optional.
+
+*** Nested statement blocks are no longer supported. These saw little use
+    and were buggy.
+
+(11/01/07)
+
+*** Concurrent mapper now generates filenames in a relatively deep directory
+    hierarchy in order to reduce the number of files in each directory.
+    There is a (hard-coded) parameter which determines how many files and
+    subdirectories will be permitted at each level. This parameter is set
+    to 25.
+
+*** move various job related directories into subdirs on site-side.
+    at present, the subdirs are named by a single digit directory.
+
+(10/31/07)
+
+*** Added an external mapper to allow invoking a script to do the
+    actual mapping
+
+(10/08/07)
+
+*** Added readData function
+
+(10/03/07)
+
+*** Profile names/keys in tc.data are now case insensitive
+
+(10/02/07)
+
+*** Swift 0.3 release candidate 1 built from swift svn r1312, cog r1769
+
+(09/28/07)
+
+*** Clustering is now disabled by default.
+
+*** Over the past week, a number of changes have been made to the logging
+    output of Swift to make it richer. This is likely to break existing
+    log processing code.
+
+(09/19/07)
+
+*** Subtle changes to the behaviour of AbstractFileMapper and its subclasses
+    (primarily any of the mappers that take prefix, suffix or location
+    parameters). The behaviour of prefixes and suffixes was not consistent
+    between forward and reverse mapping - this has been made more consistent.
+    Prefixes are now added when mapping directly as strings, rather than
+    passing them through the path component mapping code first. Handling of
+    separators between fields is slightly changed to accomodate this - a
+    special case for the first separator is removed. Detection of the
+    types of fields/indices in a path is now done using Path.Entry methods
+    rather than guessing based on the first character of the field name.
+
+*** Added lots of debug logging to AbstractFileMapper
+
+(09/18/07)
+
+*** Add a basic iterate {} language construct, and an @extractint function
+    that can be used with it.
+
+*** Add a @regexp language function which provides more regular expression
+    functionality than is provided by @strcut. This is intended to allow
+    the regular expression mapper to be removed (with uses of it replaced
+    with the single file mapper and the @regexp function)
+
+(09/13/07)
+
+*** Changed lazy error default from true to false. This affect how
+    Swift handles workflows when an error occurs. See the userguide
+    for further details.
+
+(09/10/07)
+
+*** Removed ability to specify type of index variable in foreach loops. This
+    type was never checked. Any programs which specify the type in a foreach
+    statement will need a code modification to remove that type specification.
+    Making such a change will not modify workflow behaviour.
+
+(09/08/07)
+
+*** Changed the way arguments are passed to the wrapper. This
+    should be more resilient to broken middleware that doesn't
+    properly quote arguments.
+
+(09/04/07)
+
+*** Updated wrapper to be more thorough at diagnosing problems.
+
+(08/29/07)
+
+*** Moved @arg to swiftscript namespace/package
+
+*** @filenames disappeared at some point in time. It is back.
+
+*** Fixed some issues with paths returned by fringePaths being
+    parsed into the wrong things. It points out that one should 
+    be careful about methods typically used to get some human 
+    readable representation of data (such as toString()) being 
+    relied on to provide any kind of functional consistency.
+
+(08/28/07)
+
+*** Added throttle.score.job.factor to swift.properties (the functionality
+    was previously available by manually hacking scheduler.xml)
+    
+*** Throttle options now accept "off" as a valid value
+
+*** Put @arg back in
+
+*** Changes the configuration to allow loading a specific file even
+    if the defaults cannot be found.
+    
+*** Added PBS and dCache providers as dependencies
+
+*** Typechecks on arrays would fail (this was introduced by the type
+    system changes). Fixed.
+    
+*** Assignments from integer[] to float[] should not fail for type
+    reasons (nor should passing an integer[] for a float[] fail the
+    typecheck).
+
+(08/23/07)
+
+*** A few changes to the way types work. Whether something is an array
+    or not is part of the type now.
+    
+*** Cleanups to the way things get stored and mappers
+
+*** It's not necessary to manually add task handlers any more. All the
+    available ones are added automatically
+
+(08/16/07)
+
+*** A different site catalog element <execution> that fills a similar role
+    to the existing <jobmanager> element with a syntax more sympathetic to
+    submitting via non-GRAM submission systems.
+
+(07/31/07)
+
+*** Prototype structured_regexp_mapper for performing a regexp transformation
+    on the filenames of one dataset to produce another dataset with the
+    same structure but different leaf filenames.
+
+(07/30/07)
+
+*** All simple types are now passed around inside of DSHandle objects,
+    instead of sometimes inside DSHandles and sometimes as rawer Java
+    objects.
+
+*** Swift operators now implemented in their own class, rather than using
+    the Karajan implementation.
+
+*** There are now two division operators, / and %/ of which the first (/)
+    returns a floating point value and %/ returns an integer value.
+    The mod operator is relabelled %% instead of %.
+    
+*** Mappers can now map files on remote sites (use protocol://host/path)
+    for file name(s), and the engine can actually stage things in and out
+    from/to arbitrary locations
+    
+*** Moved some path manipulation function to Java
+
+(07/29/07)
+
+*** Use /dev/urandom by default on UNIX platforms to avoid large
+    delays at start-up (and Yoya knows when else). It will lower the
+    security of anything that relies on java.security.SecureRandom 
+    for RNG, but there is no nice way to initialize different SecureRandom
+    instances with different seed generators.
+
+(07/28/07)
+
+*** Removed break; statement from the language. It was previously unimplemented
+    and acted as a no-op. Any code which now does not compile can be made to
+    compile by removing the break statements. No other changes should be
+    necessary, and no behavioural changes should result.
+
+(07/19/07)
+
+*** Swift 0.2 release made from Swift SVN r915 and CoG SVN r1658
+
+(05/21/07)
+
+*** Add a mapper, array_mapper, which maps from a string array of filenames.
+    This was requested in bug 27.
+
+(04/27/07)
+
+*** Fixed a deadlock in the remote caching code.
+
+(04/12/07)
+
+*** Marker types (that is, types with no content) can now be specified without
+    an empty {} block. So what was previous written as:
+
+      type imagefile {};
+
+    can now be written as
+
+      type imagefile;
+
+(04/11/07)
+
+*** CSV mapper will now take commas as a field separator (in addition to the
+    existing behaviour of space and tab)
+
+(03/23/07)
+
+*** Fixed -resume
+
+*** Fixed code dealing with command line arguments
+
+(03/16/07)
+
+*** Labels in graphs are quoted now
+
+(03/12/07)
+
+*** Cache remote directory structure creation.
+
+(03/03/07)
+
+*** Moved job directory creation to the wrapper
+
+(03/03/07)
+
+*** The default values for mapping parameters handling below
+    did not allow implementations to get the value of an 
+	optional parameter by checking if it's not null. This can
+	now be done by specifying null as a default value.
+
+(03/02/07)
+
+*** Added log message to print full stack trace of exceptions
+    that cause Swift to fail
+	
+*** Better handling of default values for mapping parameters, 
+    and better handling of mapping parameter errors.
+
+(03/01/07)
+
+*** Fixed @arg.
+
+(02/19/07)
+
+*** Fixed a race in the cache
+
+(02/16/07)
+
+*** Fixed stdin issue (bug #19)
+
+*** Fixed an issue with vdl:cacheAndLockFile considering files for 
+    which the transfers failed as being actually cached.
+
+(02/14/07)
+
+*** Print usage  and exit instead of a nasty exception if the input 
+    file does not exist (bug #15)
+
+(02/13/07)
+
+*** Ongoing parser changes
+
+*** Make sure /bin and /usr/bin are added to the path in the
+    wrapper.
+	
+*** When there's a NPE or CCE in an exception chain that causes the
+    execution to fail, the full stack trace is printed.
+
+(02/11/07)
+
+*** SwiftScript syntax change: The function invocation (i=q)=f(1) must 
+    be written with the () parentheses surrounding the return variables.
+    Previously, the parentheses were optional, and the same could be written
+    as i=q=f(1); This is no longer the case.
+
+(02/10/07)
+
+*** On-going parser changes primarily aimed at producing more user-friendly
+    syntax errors but also including these syntax changes:
+      - parser no longer recognises vestigial for(;;) construct
+      - parser allows type declarations and other top level statements
+        (aside from namespace declarations) to be mixed together. Previously,
+        all type declarations had to occur before other statements.
+
+(02/09/07)
+
+*** Reorganized logging. Log always goes to a file. Console
+    gets little stuff unless -verbose or -debug are used.
+	
+*** Use a unified run id which is used as a prefix for the
+    log, the restart log, the provenance graph, and the 
+	remote run directories
+	
+*** Hmm. Did I mess up the dates on the changelog?
+
+*** Added default properties that work in case
+    swift/etc/swift.properties is missing some.
+
+(02/08/07)
+
+*** Added option to always transfer Kickstart records
+
+*** Improved error handling for compilation of SwiftScript code
+
+(02/07/07)
+
+*** Added Kickstart support (optional)
+
+*** Added support for GLOBUS profiles in the site catalog
+
+*** Updated error translations to include a pointer to the
+    Kickstart info if available
+
+(02/05/07)
+
+*** Renamed a few things to swift, including:
+    - vdl2.properties -> swift.properties
+	- ~/.vdl2 -> ~/.swift (the old config is still read though)
+	- the log4j "class" for things in Karajan (vdl2 -> swift)
+	- vdlrun -> swift
+	
+*** swift (vdlrun) will also work with .dtm files now, and compile
+    them on the fly.
+	
+*** Most of the throttle parameters are now settable through 
+    swift.properties
+	
+*** Made some preliminary (and incomplete) changes towards integrating
+    kickstart.
+
+(02/02/07)
+
+*** Renamed a few mappers to better reflect the mapper functionalities.
+
+*** Added warnings mechanism
+
+*** No more Karajan stack traces in errors (only simple chained messages).
+    Those stack traces belong to the logging domain
+	
+*** Capture cleanup problems and print them as warnings
+
+*** Added a few more error translation
+ 
+(01/30/07)
+
+*** Fixed vdlc to return a non-zero exit code when text->xml conversion
+    fails.
+
+(01/28/07)
+
+*** Added support for non-standard attributes on the GLOBUS
+    prefix in tc.data.
+
+(01/18/07)
+
+*** Fixed an issue with dependent mappers and arrays
+
+*** Fixed the concurrent mapper
+
+(01/12/07)
+
+*** Added mapping dependencies.
+
+(01/06/07)
+
+*** Added a cache around the Pegasus TC file implementation.
+
+*** Added vdl:log as a wrapper around log4j.
+
+*** Fixed an issue in the cleanup with the same file being
+    deleted multiple times concurrently.
+
+
+(01/04/07)
+
+*** Added a simple clustering mechanism for small jobs.
+
+*** Added a "-dryrun" argument to vdlrun. If graph generation 
+    is enabled, this should produce a graph without running
+	any actual jobs.
+	
+*** Fixed an issue with caching where a file could have
+    been purged more than once
+
+(01/01/07)
+
+*** Modified AbstractFileMapper to expose local variables as protected
+
+*** Added a RegularExpressionMapper to do file name conversion based on regexp
+
+*** Added a DirectoryMapper to map a list of files from a directory as an array
+
+*** Added a CSVMapper to map a CSV (Comma-Separated Values) file into a logical structure
+
+(12/30/06)
+
+*** A new vdlrun that is specific to VDL2.
+
+*** Added an error translator (based on regular expressions)
+    that can be used to provide improved error messages
+	
+*** Added a lazy errors mode in which errors in application
+    execution are aggregated and reported only once at the
+	end
+
+*** Added provenance graph generation
+
+*** Added a control mechanism for managing remote storage
+    usage
+	
+*** Cleanups
+
+
+------------------------- 0 rc 3 ---------------------------
+
+(12/28/06)
+
+*** The heuristics (in CoG) used to detect if a task can ever
+    run (due to constraints as opposed to temporary load 
+	conditions) were broken and the issue was fixed.
+
+(12/23/06)
+------------------------- 0 rc 2 ---------------------------
+
+*** svn copy is broken so I'm noting the revision here: 115
+
+(12/14/06)
+
+*** Fixed the default mapper to be concurrent_mapper
+
+*** Added passing of tc.data profiles to the job (e.g
+    user-defined environment variables, jobtype, count, etc.)
+
+------------------------- 0 rc 1 ---------------------------
+(12/07/06)
+
+*** Added dynamic loading of the TC file
+
+*** Added cleanup which is done at the end of the
+    whole run
+
+(12/06/06)
+
+*** Moved to CI SVN
+
+*** Added tests directory
+
+(11/22/06)
+
+*** Changed to a pure Karajan adaptive scheduler instead
+    of a Pegasus site selector
+	
+*** Added "client-side-caching" of remote files
+
+*** Added a basic wrapper to capture exit codes and do other
+    work before and after executing the job
+
+

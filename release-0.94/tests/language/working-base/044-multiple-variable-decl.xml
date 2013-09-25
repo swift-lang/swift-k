@@ -1,0 +1,27 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="a" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 1">
+   <variableReference>a</variableReference>
+   <integerConstant>5</integerConstant>
+  </assign>
+  <variable name="c" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 1">
+   <variableReference>c</variableReference>
+   <integerConstant>7</integerConstant>
+  </assign>
+  <variable name="q" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 1">
+   <variableReference>q</variableReference>
+   <integerConstant>8</integerConstant>
+  </assign>
+  <variable name="r" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="s" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="t" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="p" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 3">
+   <variableReference>p</variableReference>
+   <integerConstant>99</integerConstant>
+  </assign>
+</program>

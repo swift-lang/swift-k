@@ -1,0 +1,26 @@
+#!/bin/bash
+
+while read a b; do
+c=$(extract-completed-time-for-run-id $a)
+if [ "X$c" == "X" ]; then 
+  # didn't complete
+  # look for fail instead
+  c=$(extract-failed-time-for-run-id $a)
+  if [ "X$c" == "X" ]; then
+    state=INPROGRESS
+    d=0
+  else
+    state=FAILED
+    d=$( echo $c - $b | bc )
+  fi
+else
+  state=COMPLETED
+  d=$( echo $c - $b | bc )
+fi
+
+site=$(get-site-for-run-id $a)
+thread=$(get-thread-for-run-id $a)
+
+echo $b $d $a $state $site $thread
+done < start-times.data
+

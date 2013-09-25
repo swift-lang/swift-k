@@ -1,0 +1,15 @@
+kickstart-times.data: kickstarts-to-plot start-time.tmp
+	kickstarts-to-plot > kickstart-times.data
+
+start-last-times-and-kickstart.data: start-last-times.data
+	start-last-times-and-kickstart > start-last-times-and-kickstart.data
+
+start-last-times-and-kickstart.png: start-last-times-and-kickstart.data start-last-times-and-kickstart.plot
+	gnuplot $(SWIFT_PLOT_HOME)/start-last-times-and-kickstart.plot
+
+kickstart.event: execute2.event
+	kickstarts-to-event > kickstart.event
+
+all-kickstart.event:
+	all-kickstarts-to-event > $@
+

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+while read t d id rest; do
+  echo processing job $id >&2
+  echo record=$(find ${IDIR} -name ${id}-info) >&2
+  record=$(find ${IDIR} -name ${id}-info)
+
+  if [ "X$record" != "X" ] && [ -f $record ] ; then
+# MD5SUM INPUT _concurrent/slices-693d68de-ad76-438d-9ddb-29de8566361d--array//elt-0 d41d8cd98f00b204e9800998ecf8427e  jobs/g/touch-gnak5bpi/_concurrent/slices-693d68de-ad76-438d-9ddb-29de8566361d--array//elt-0
+
+  grep '^MD5SUM ' $record | sed "s/^MD5SUM \([^ ]*\) \([^ ]*\) \([^ ]*\).*$/$id \2 \3 \1/"
+
+  else
+    echo no record for $id >&2
+  fi
+
+done < execute2.event

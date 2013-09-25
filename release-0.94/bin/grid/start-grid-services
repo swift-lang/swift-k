@@ -1,0 +1,125 @@
+#! /bin/bash
+
+# FIXME: improve arg parsing / checking / optionals
+
+function usage ()
+{
+       echo "Usage:"
+       echo " $0 --throttle 0.01 --loglevel INFO|DEBUG|TRACE --jobspernode 1"
+}
+
+if [ $# -ne 6 ]
+then
+    usage
+    exit 1
+fi
+
+LOGLEVEL=INFO # INFO, DEBUG, TRACE for increasing detail
+THROTTLE=0.09
+
+while test "$1" != "" ; do
+    case $1 in
+        --jobspernode|-j)
+                JOBSPERNODE="$2"
+                shift
+        ;;
+        --loglevel|-l)
+                LOGLEVEL="$2"
+                shift
+        ;;
+        --throttle|-t)
+                THROTTLE="$2"
+                shift
+        ;;
+        -*)
+                echo "Error: no such option $1"
+                usage
+                exit 1
+        ;;
+    esac
+    shift
+done
+
+BIN=$(cd $(dirname $0); pwd)
+
+echo THROTTLE=$THROTTLE LOGLEVEL=$LOGLEVEL
+
+### Start n services; where n is the number of sites in the greensites
+#sed '$d' < greensites > file1 ; mv file1 greensites
+n=`cat greensites|wc -l`
+
+echo "$n services will start"
+#start-swift-service 1 &
+start-swift-service $n &
+
+sleep 60
+
+#sed '$d' < greensites > file1 ; mv file1 greensites
+sed '$d' < service.sports > file2 ; mv file2 service.sports
+sed '$d' < service.wports > file3 ; mv file3 service.wports
+
+#Merge the ports and greensites
+paste -d' ' service.sports service.wports greensites > merged_ports_and_sites
+
+#remove any old sites.xml files
+rm -f sites.grid-ps.xml
+rm -f tc.factory
+
+cat >tc.factory <<EOF
+localhost getsite /scratch/local/ketan/cybershake/getsite.rb null null null
+localhost getrupture /scratch/local/ketan/cybershake/getrupture.rb null null null
+localhost variation_mapper /scratch/local/ketan/cybershake/variation_mapper.rb null null null
+localhost mkoffset /scratch/local/ketan/cybershake/offset.rb null null null
+localhost extract /scratch/local/ketan/cybershake/apps/JBSim3d/bin/jbsim3d null null null
+localhost seispeak_local /scratch/local/ketan/cybershake/seispeak.sh null null null
+EOF
+
+#for each line in the greensites
+#pool handle=site$i
+#url=localhost:currentport
+#<gridftp  url="gsiftp://<%=url%>"/>
+#sportcount=0
+#while 
+
+#for aline in `cat greensites`
+#for aline in `cat merged_ports_and_sites`
+cat merged_ports_and_sites | while read aline
+do
+     bline=`echo $aline | awk -F" " '{print $3}'`
+     cursport=`echo $aline | awk -F" " '{print $1}'`
+     curwport=`echo $aline | awk -F" " '{print $2}'`
+     curosgsite=`echo $bline|awk -F"__" '{print $2}'`
+     echo $curosgsite
+cat >>sites.grid-ps.xml <<EOF
+  <config>
+    <pool handle="$curosgsite">
+      <execution provider="coaster-persistent" url="http://localhost:$cursport" jobmanager="local:local"/>
+      <profile namespace="globus" key="workerManager">passive</profile>
+      <profile namespace="globus" key="jobsPerNode">$JOBSPERNODE</profile>
+      <profile key="jobThrottle" namespace="karajan">$THROTTLE</profile>
+      <profile namespace="karajan" key="initialScore">10000</profile>
+      <!-- <filesystem provider="local" url="none" /> -->
+      <!-- <profile namespace="swift" key="stagingMethod">proxy</profile> -->
+      <gridftp  url="gsiftp://$curosgsite"/>
+      <workdirectory>/tmp/$USER</workdirectory>
+    </pool>
+  </config>
+
+EOF
+
+cat >>tc.factory <<EOF
+
+$curosgsite seismogram       JBSim3d/bin/jbsim3d                            INSTALLED INTEL32::LINUX GLOBUS::maxwalltime="00:05:00"
+$curosgsite surfeis_rspectra SpectralAcceleration/p2utils/surfseis_rspectra INSTALLED INTEL32::LINUX GLOBUS::maxwalltime="00:05:00"
+$curosgsite seispeak         seispeak.sh                                    INSTALLED INTEL32::LINUX GLOBUS::maxwalltime="00:10:00"
+$curosgsite seispeak_agg     agg_seispeak.sh                                INSTALLED INTEL32::LINUX GLOBUS::maxwalltime="04:00:00"
+
+EOF
+done
+
+#WPORT=$(cat service.wports)
+#just temporary
+echo swift services started - SPORT=$(cat service.sports) WPORT=$(cat service.wports) 
+
+# SERVICE_URL=$SERVICE_URL WORKER_LOGLEVEL=$LOGLEVEL
+

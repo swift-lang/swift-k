@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# get execute2 events. sort them so that they're grouped by
+# job and then ordered by time
+
+make LOG=$1 clean execute2.lastsummary >&2
+
+
+echo Summary of final status of execute2s:
+echo =====================================
+cat execute2.lastsummary
+

@@ -1,0 +1,70 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>messagefile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>details</typename>
+     		<typealias></typealias>
+     		<typestructure>
+     			    <member>
+     					<membername>name</membername>
+     					<membertype>string</membertype>
+     				</member>
+     			    <member>
+     					<membername>pies</membername>
+     					<membertype>int</membertype>
+     				</member>
+     		</typestructure>
+     	</type>   
+  </types>  
+  <procedure name="greeting" src="line 8">
+
+      <output 
+    name="t" type="messagefile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="d" type="details"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 9">
+        <executable>echo</executable>
+        <stdout><function name="filename">
+          <variableReference>t</variableReference></function></stdout><stringConstant>Hello. Your names is</stringConstant><structureMember>
+          <variableReference>d</variableReference>
+          <memberName>name</memberName>
+        </structureMember><stringConstant>and you have eaten</stringConstant><structureMember>
+          <variableReference>d</variableReference>
+          <memberName>pies</memberName>
+        </structureMember><stringConstant>pies.</stringConstant>  </application>
+    </binding>
+  </procedure>
+  <variable name="person" type="details" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 17">
+   <structureMember>
+     <variableReference>person</variableReference>
+     <memberName>name</memberName>
+   </structureMember>
+   <stringConstant>John</stringConstant>
+  </assign>
+  <assign src="line 19">
+   <structureMember>
+     <variableReference>person</variableReference>
+     <memberName>pies</memberName>
+   </structureMember>
+   <integerConstant>3</integerConstant>
+  </assign>
+  <variable name="outfile" type="messagefile" isGlobal="false"><file name="q15.txt"/></variable>
+  <call proc="greeting" src="line 21">
+    <output><variableReference>outfile</variableReference></output>
+    <input><variableReference>person</variableReference></input>
+  </call>
+</program>

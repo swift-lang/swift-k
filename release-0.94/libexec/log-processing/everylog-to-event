@@ -1,0 +1,22 @@
+#!/bin/bash
+
+rm -f everylog.event
+
+
+for logfile in `find $1 -name \*.log -and -not -name cluster-\*`; do
+  VERSION=$(grep -m 1 'Swift v' $logfile | sed 's/.*Swift [^ ]* r\([0-9]*\).*/\1/')
+  START=$(head -n1 < $logfile | iso-to-secs | cut -f 1 -d ' ')
+  END=$(grep --invert-match -E '^ ' $logfile | tail -n1 | iso-to-secs | cut -f 1 -d ' ')
+  DURATION=$(echo $END - $START | bc -l)
+  if [ "X$VERSION" == "X" ]; then
+    VERSION=1262
+  fi
+#    print "$starttime $delta $prevjob $prevstate$startrest\n";
+  echo $START $DURATION $logfile $VERSION >> everylog.event
+
+  echo Processed $logfile
+
+
+
+done
+

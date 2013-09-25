@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# given a coloured event stream in $1, will plot an output file on $2
+
+echo normalising
+normalise-event-start-time < $1 > sp.plot2.tmp
+
+echo numbering
+number-events < sp.plot2.tmp > sp.plot.tmp
+
+tail -n 1 sp.plot.tmp > sp.plot3.tmp
+
+read t eventcount rest < sp.plot3.tmp
+
+
+echo splitting
+rm -f colourplot-*.tmp
+# now split this into colour channels
+while read x1 y1 x2 y2 colour rest; do
+ echo $x1 $y1 $x2 $y2 $colour $rest >> colourplot-$colour.tmp
+done < sp.plot.tmp
+
+echo generating config
+maxtime=$(max-duration)
+
+cat ${SWIFT_PLOT_HOME}/colour.plot.template | sed "s/MAXTIME/${maxtime}/g" | sed "s/EVENTCOUNT/${eventcount}/" > colour.plot
+
+plotsep=""
+
+for a in colourplot-*.tmp; do
+  channel=$(echo $a | sed 's/colourplot-\([0-9]*\)\.tmp/\1/')
+  title=$(head -n $channel < $3 | tail -n 1)
+
+  echo -n "$plotsep '$a' using 1:2:3:4 with vectors arrowstyle $channel title '$title' " >> colour.plot
+  plotsep=", "
+done
+
+echo plotting
+
+gnuplot colour.plot
+
+echo done
+cp sp-tmp.png $2
+

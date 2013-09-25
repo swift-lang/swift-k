@@ -1,0 +1,76 @@
+DESCRIPTION
+
+  XML::Simple - Easy API to read/write XML (esp config files)
+
+
+PREREQUISITES
+
+  XML::Simple requires a module capable of parsing XML - either XML::SAX or
+  XML::Parser must be installed (if you're running ActivePerl, you'll
+  already have XML::Parser installed).
+
+  If you have installed XML::SAX, it will be used by default.  You should
+  consider installing XML::SAX::Expat or XML::LibXML to replace the (slower)
+  PurePerl parser from the XML::SAX distribution.
+
+  If you install using the CPAN.pm shell and you do not have either XML::Parser
+  or XML::SAX installed, then XML::SAX will be installed by default.
+
+  To generate documents with namespaces, XML::NamespaceSupport is required.
+
+  The optional caching features of XML::Simple also require Storable.pm.
+
+
+WARNING MESSAGES FROM XML::SAX
+
+  When you use XML::Simple, you may see this warning message:
+
+    could not find ParserDetails.ini in C:/Perl/site/lib/XML/SAX
+
+  This means your XML::SAX installation is broken (perhaps you installed
+  version 0.10 from the ActiveState PPM repository).  Since it's broken 
+  anyway, the simplest way to suppress these warnings is to remove
+  C:/Perl/site/lib/XML/SAX.pm.
+
+  The procedure for correctly installing the latest version of XML::SAX
+  is documented here:
+
+    http://perl-xml.sourceforge.net/faq/#win32_cpan
+
+BUILDING/INSTALLING
+
+  Once the archive is unpacked, use these commands:
+
+      perl Makefile.PL
+      make
+      make test
+      make install
+
+  If for some reason, you can't run these commands, you can simple copy 
+  the Simple.pm file to your lib/XML directory (where Parser.pm lives).
+
+  If you want to test the module, but don't have 'make', try:
+
+      perl maketest
+
+
+STATUS
+
+  This version (2.16) is the current stable release.
+
+  Please send any feedback to the author: grantm@cpan.org
+
+  See 'Changes' for a detailed history.
+
+  See 'perldoc XML::Simple' for full documentation.
+
+  See 'perldoc XML::Simple::FAQ' for frequently asked questions.
+
+
+COPYRIGHT
+
+  Copyright 1999-2004 Grant McLean <grantm@cpan.org>
+
+  This library is free software; you can redistribute it
+  and/or modify it under the same terms as Perl itself.
+

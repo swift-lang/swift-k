@@ -1,0 +1,5 @@
+The push script will convert the asciidoc text to html and copy the html
+generated to the publish folder on CI login machine. The push script must
+be run on the ci login, or must be modified.
+
+
