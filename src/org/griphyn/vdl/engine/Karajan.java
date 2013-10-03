@@ -1437,10 +1437,14 @@ public class Karajan {
 			// and really, at this point type checking should be delegated to the type system
 			// instead of the ad-hoc string comparisons
 			if (datatype(arrayST).equals("string")) {
-                XmlString var = (XmlString) op.getAbstractExpressionArray(1);
-                if (var.getStringValue().equals("*")) {
-                    return parentST;
-                }
+			    XmlObject var = op.getAbstractExpressionArray(1);
+			    // make sure this is array["somestring"] rather than array[otherExpressionOfTypeString]
+			    if (var instanceof XmlString) {
+                    XmlString vars = (XmlString) var;
+                    if (vars.getStringValue().equals("*")) {
+                        return parentST;
+                    }
+			    }
             }
 			
 			if (!indexType.equals(declaredIndexType) 
