@@ -255,7 +255,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
         StringBuilder sb = new StringBuilder();
         while (e != null) {
             sb.append(":\n\t");
-            if (e.getMessage() != null) {
+            if (e instanceof org.globus.cog.karajan.analyzer.CompilationException) {
+                sb.append(e.getMessage() + ", " + 
+                    ((org.globus.cog.karajan.analyzer.CompilationException) e).getLocation());
+            }
+            else if (e.getMessage() != null) {
                 sb.append(e.getMessage());
             }
             else {
