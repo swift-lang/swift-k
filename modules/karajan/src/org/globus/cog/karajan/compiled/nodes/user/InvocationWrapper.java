@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import k.rt.ExecutionException;
-import k.rt.ReadOnlyChannel;
+import k.rt.MemoryChannel;
 import k.rt.Stack;
 import k.thr.LWThread;
 import k.thr.Yield;
@@ -87,6 +87,7 @@ public class InvocationWrapper extends InternalFunction {
 	protected ParamWrapperVar.IndexRange addParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
 			List<Param> optional, List<Param> positional) throws CompilationException {
 		prepareChannelParams(scope, channels);
+		
 		firstIndex = scope.addParams(channels, optional, positional);
 		argCount = channels.size() + optional.size() + positional.size();
 		return null;
@@ -217,7 +218,7 @@ public class InvocationWrapper extends InternalFunction {
 
 	@Override
 	protected ChannelRef<?> makeStaticChannel(int index, List<Object> values) {
-		return new ChannelRef.DynamicPreset<Object>(index, new ReadOnlyChannel<Object>(values));
+		return new ChannelRef.DynamicPreset<Object>(index, new MemoryChannel<Object>(values));
 	}
 
 	@Override
