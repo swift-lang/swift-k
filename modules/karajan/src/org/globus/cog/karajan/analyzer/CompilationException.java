@@ -34,4 +34,8 @@ public class CompilationException extends Exception {
 	public String toString() {
 		return loc + ": " + super.toString();
 	}
+	
+	public String getLocation() {
+		return loc;
+	}
 }
