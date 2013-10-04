@@ -34,7 +34,7 @@ namespace(swift) {
 	checkErrorFile := function(rhost, wfdir, jobid, jobdir) {
 		if (file:exists("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost)) {
 			log(LOG:INFO, "FAILURE jobid={jobid} - Failure file found")
-			task:transfer(srchost=rhost, srcdir="{wfdir}/status/{jobdir}", srcfile="{jobid}-error")
+			task:transfer("{jobid}-error", srchost=rhost, srcdir="{wfdir}/status/{jobdir}")
 			error := parallel(
 				file:remove("{wfdir}/status/{jobdir}/{jobid}-error", host=rhost)
 				sequential(
@@ -77,8 +77,8 @@ namespace(swift) {
 			sharedDir := dircat(wfdir, "shared")
 
 			dir:make(sharedDir, host = rhost)
-			transfer(srcdir="{SWIFT:HOME}/libexec/", srcfile=siteProfile(rhost, "swift:wrapperScript"), destdir=sharedDir, desthost=rhost)
-			transfer(srcdir="{SWIFT:HOME}/libexec/", srcfile="_swiftseq", destdir=sharedDir, desthost=rhost)
+			transfer(siteProfile(rhost, "swift:wrapperScript"), srcdir="{SWIFT:HOME}/libexec/", destdir=sharedDir, desthost=rhost)
+			transfer("_swiftseq", srcdir="{SWIFT:HOME}/libexec/", destdir=sharedDir, desthost=rhost)
 			dir:make(dircat(wfdir, "kickstart"), host=rhost)
 
 			statusMode := configProperty("status.mode",host=rhost)
@@ -143,26 +143,19 @@ namespace(swift) {
 		log(LOG:DEBUG, "cdmfile {cdmfile}")
 		if (cdmfile != "" & cdm:get("GATHER_DIR") != "UNSET") {
 			log(LOG:INFO, "submitting cdm_cleanup.sh to {dir}")
-			task:transfer(srcfile="cdm_cleanup.sh",
+			task:transfer("cdm_cleanup.sh",
 				srcdir="{SWIFT:HOME}/libexec",
 				desthost=host, destdir=dir)
-			task:transfer(srcfile="cdm_lib.sh",
+			task:transfer("cdm_lib.sh",
 				srcdir="{SWIFT:HOME}/libexec",
 				desthost=host, destdir=dir)
 		        log(LOG:INFO, "execute: cdm_cleanup.sh")
-			task:execute(
-				executable="/bin/bash",
-				arguments=list("{dir}/cdm_cleanup.sh",
-					cdm:get("GATHER_DIR"), cdm:get("GATHER_TARGET"), UID())
+			task:execute("/bin/bash", list("{dir}/cdm_cleanup.sh", cdm:get("GATHER_DIR"), cdm:get("GATHER_TARGET"), UID())
 				host=host, batch=true, TCProfile(host))
 		}
 		if (swift:configProperty("sitedir.keep") == "false") {
-			task:execute(
-				siteProfile(host, "swift:cleanupCommand"),
-				arguments=list(
-					siteProfile(host, "swift:cleanupCommandOptions"),
-					dir
-				)
+			task:execute(siteProfile(host, "swift:cleanupCommand"),
+				list(siteProfile(host, "swift:cleanupCommandOptions"), dir)
 				host=host, batch=true, TCProfile(host))
 		}
 		log(LOG:INFO, "END dir={dir} host={host}")
@@ -188,7 +181,7 @@ namespace(swift) {
 			dir:make(destdir, host=host, provider=provider)
 		}
 
-		task:transfer(srcprovider=provider, srchost=srchost, srcfile=filename, srcdir=srcdir, desthost=host, destdir=destdir)
+		task:transfer(filename, srcprovider=provider, srchost=srchost, srcdir=srcdir, desthost=host, destdir=destdir)
 		log(LOG:INFO, "END jobid={jobid}")
 	}
 	
@@ -202,19 +195,18 @@ namespace(swift) {
 				"policy={policy}")
 			if (policy == "DEFAULT") {
 				restartOnError(2) {
-					task:transfer(srcprovider=provider, srchost=srchost, srcfile=srcfile,
+					task:transfer(srcfile, srcprovider=provider, srchost=srchost,
 						srcdir=srcdir, desthost=desthost, destdir=destdir,
 						transferParams(srchost, desthost, provider))
 				}
 			}
 			else if (policy == "BROADCAST") {
 				log(LOG:DEBUG, "FILE_STAGE_IN_BROADCAST file={srcfile} policy={policy}")
-				cdm:broadcast(srcfile=srcfile, srcdir=srcdir)
+				cdm:broadcast(srcfile, srcdir)
 			}
 			else if (policy == "EXTERNAL") {
 				log(LOG:DEBUG, "FILE_STAGE_IN_EXTERNAL file={srcfile} policy={policy}")
-				cdm:external(srcfile=srcfile, srcdir=srcdir,
-					desthost=desthost, destdir=destdir)
+				cdm:external(srcfile, srcdir, desthost, destdir)
 			}
 			else {
 				log(LOG:DEBUG, "FILE_STAGE_IN_SKIP file={srcfile} policy={policy}")
@@ -233,15 +225,15 @@ namespace(swift) {
 		libexec := "{SWIFT:HOME}/libexec"
 
 		if (cdmfile != "") {
-			doStageinFile(provider="file", srchost="localhost", srcfile=basename(cdmfile),
-				srcdir=swift:dirname(cdmfile), desthost=host, destdir=dir,
-				size=file:size(cdmfile), policy="DEFAULT")
-			doStageinFile(provider="file", srchost="localhost", srcfile="cdm.pl",
-				srcdir=libexec, desthost=host, destdir=dir,
-				size=file:size("{libexec}/cdm.pl}"), policy="DEFAULT")
-			doStageinFile(provider="file", srchost="localhost", srcfile="cdm_lib.sh",
-				srcdir=libexec, desthost=host, destdir=dir,
-				size=file:size("{libexec}/cdm_lib.sh}"), policy="DEFAULT")
+			doStageinFile("file", "localhost", basename(cdmfile),
+				swift:dirname(cdmfile), host, dir,
+				file:size(cdmfile), "DEFAULT")
+			doStageinFile("file", "localhost", "cdm.pl",
+				libexec, host, dir,
+				file:size("{libexec}/cdm.pl}"), "DEFAULT")
+			doStageinFile("file", "localhost", "cdm_lib.sh",
+				libexec, host, dir,
+				file:size("{libexec}/cdm_lib.sh}"), "DEFAULT")
 		}
 
 		parallelFor(file, files) {
@@ -252,11 +244,11 @@ namespace(swift) {
 			filename := basename(file)
 			size := file:size("{srcdir}/{filename}", host=srchost, provider=provider)
 
-			policy := cdm:query(query=file)
+			policy := cdm:query(file)
 			log(LOG:DEBUG, "CDM: {file} : {policy}")
 
-			doStageinFile(provider=provider, srchost=srchost, srcfile=filename,
-					srcdir=srcdir, desthost=host, destdir=destdir, size=size, policy=policy)
+			doStageinFile(provider, srchost, filename,
+					srcdir, host, destdir, size, policy)
 		}
 		log(LOG:INFO, "END jobid={jobid} - Staging in finished")
 	}
@@ -267,7 +259,7 @@ namespace(swift) {
 		done := list(
 			parallelFor(pv, stageouts) {
 				(path, var) := each(pv)
-				file := absFileName(getField(var, path = path))
+				file := absFileName(getField(var, path))
 				provider := provider(file)
 				dhost := hostname(file)
 				rdir := dircat(dir, reldirname(file))
@@ -280,11 +272,11 @@ namespace(swift) {
 					"destdir={ldir} desthost={dhost} provider={provider}")
 				//make sure we do have the directory on the client side
 				dir:make(ldir, host=dhost, provider=provider)
-				policy := cdm:query(query=file)
+				policy := cdm:query(file)
 				log(LOG:DEBUG, "CDM: {file} : {policy}")
 				if ((policy == "DEFAULT") | (policy == "BROADCAST")) {
 					restartOnError(2) {
-						task:transfer(srchost=host, srcfile=bname,srcdir=rdir,
+						task:transfer(bname, srchost=host, srcdir=rdir,
 							destdir=ldir, desthost=dhost, destprovider=provider,
 							transferParams(host, dhost, provider))
 					}
@@ -317,7 +309,7 @@ namespace(swift) {
 				(name, file) := each(f)
 				destfile := concat("{jobid}-", basename(file))
 				try {
-					task:transfer(srchost=rhost, srcdir=tmpdir, srcfile=file, destfile=destfile)
+					task:transfer(file, srchost=rhost, srcdir=tmpdir, destfile=destfile)
 					"\n    {name}: "
 					strip(file:read(destfile))
 				}
@@ -334,7 +326,7 @@ namespace(swift) {
 		recfile := "{jobid}-info"
 		srcdir := dircat("{wfdir}/info/", jobdir)
 		try {
-			task:transfer(srchost=rhost, srcdir=srcdir, srcfile=recfile, destdir="{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d/")
+			task:transfer(recfile, srchost=rhost, srcdir=srcdir, destdir="{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d/")
 		}
 		else catch (exception) {
 			maybe(file:remove(recfile))
@@ -379,7 +371,7 @@ namespace(swift) {
 					}
 					
 				uid := UID()
-				jobdir := substring(uid, from=0, to=1)
+				jobdir := substring(uid, 0, to=1)
 				jobid := "{tr}-{uid}"
 
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")

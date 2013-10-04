@@ -236,7 +236,7 @@ namespace(swift) {
 								}
 							}
 							setDatasetValues(stageout)
-							mark(restartout, err=false, mapping=false)
+							mark(restartout, false, mapping=false)
 							log(LOG:INFO, "END_SUCCESS thread=", currentThread(), " tr={tr}")
 							setProgress(progress, "Finished successfully")
 						}
@@ -251,8 +251,8 @@ namespace(swift) {
 							to(errors, exception)
 							log(LOG:INFO, exception)
 							echo(exception)
-							mark(restartout, err=true, mapping=false)
-							graphStuff(tr, stagein, stageout, err=true, maybe(args=arguments))
+							mark(restartout, true, mapping=false)
+							graphStuff(tr, stagein, stageout, true, maybe(args=arguments))
 						}
 					}
 				}
@@ -272,8 +272,8 @@ namespace(swift) {
 					to(errors, exception)
 					log(LOG:INFO, exception)
 				}
-				mark(restartout, err=true, mapping=merr)
-				graphStuff(tr, stagein, stageout, err=true, maybe(args=arguments))
+				mark(restartout, true, mapping=merr)
+				graphStuff(tr, stagein, stageout, true, maybe(args=arguments))
 			}
 		}
 	)

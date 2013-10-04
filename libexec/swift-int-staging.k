@@ -66,7 +66,7 @@ namespace(swift) {
 				ddir := initDDir()
 
 				uid := UID()
-				jobdir := substring(uid, from=0, to=1)
+				jobdir := substring(uid, 0, to=1)
 				jobid := "{tr}-{uid}"
 
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
