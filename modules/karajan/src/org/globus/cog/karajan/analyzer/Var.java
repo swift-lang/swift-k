@@ -59,6 +59,10 @@ public class Var {
 		this.canBeNull = canBeNull;
 	}
 
+	public boolean isSettableByName() {
+		return true;
+	}
+
 	@Override
 	public String toString() {
 		if (getValue() == null) {

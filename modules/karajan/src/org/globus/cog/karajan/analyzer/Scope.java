@@ -536,7 +536,7 @@ public class Scope {
 			addVar(v, index++);
 		}
 		for (Param o :  optional) {
-            Var v = new ParamWrapperVar.Positional(o);
+            Var v = new ParamWrapperVar.UDFOptional(o);
             addVar(v, index++);
         }
 		return first;

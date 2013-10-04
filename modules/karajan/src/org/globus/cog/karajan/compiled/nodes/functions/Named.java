@@ -39,7 +39,9 @@ public class Named extends InternalFunction implements Pure {
 	@Override
 	public Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
 		Var vret = scope.parent.lookupParam(name, this);
-
+		if (!vret.isSettableByName()) {
+			throw new CompilationException(this, "Cannot pass positional argument '" + name + "' by name");
+		}
 		if (value.isStatic()) {
 			vret.setValue(value.getValue());
 			
@@ -63,4 +65,15 @@ public class Named extends InternalFunction implements Pure {
 			ret.setValue(stack, value.getValue(stack));
 		}
 	}
+
+	@Override
+	public String getTextualName() {
+		if (name == null) {
+			return super.getTextualName();
+		}
+		else {
+			return name + "=";
+		}
+	}
+
 }

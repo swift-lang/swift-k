@@ -106,7 +106,7 @@ public abstract class UserDefinedFunction extends CompoundNode {
 	@Override
 	public Node compileChildren(WrapperNode w, Scope scope) throws CompilationException {
 		List<Param> params = getParams(w, scope);
-		
+
 		compileOptionalParamValues(params, scope);
 		
 		sig = new Signature(params);

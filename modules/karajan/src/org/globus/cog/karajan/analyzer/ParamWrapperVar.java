@@ -44,6 +44,22 @@ public class ParamWrapperVar extends Var {
 			super.setIndex(index);
 			param.setIndex(index);
 		}
+
+		@Override
+		public boolean isSettableByName() {
+			return false;
+		}
+	}
+	
+	public static class UDFOptional extends Positional {
+		public UDFOptional(Param p) {
+		    super(p);
+		}
+		
+		@Override
+		public boolean isSettableByName() {
+			return true;
+		}
 	}
 	
 	public static class Optional extends ParamWrapperVar {
