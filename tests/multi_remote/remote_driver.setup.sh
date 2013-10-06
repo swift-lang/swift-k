@@ -3,8 +3,6 @@
 #CLEAN_CHECKOUT="yes"
 CLEAN_CHECKOUT="no"
 
-#[ ! -z $COG_URL ]         || COG_URL=https://cogkit.svn.sourceforge.net/svnroot/cogkit/branches/4.1.10/src/cog
-#[ ! -z $SWIFT_URL ]       || SWIFT_URL=https://svn.ci.uchicago.edu/svn/vdl2/branches/release-0.94
 [ ! -z $COG_URL ]         || COG_URL=https://svn.code.sf.net/p/cogkit/svn/trunk/src/cog
 [ ! -z $SWIFT_URL ]       || SWIFT_URL=https://svn.ci.uchicago.edu/svn/vdl2/trunk
 [ ! -z $SWIFT_VERSION ]   || SWIFT_VERSION=trunk
@@ -12,10 +10,14 @@ CLEAN_CHECKOUT="no"
 [ ! -z $MIDWAY_USERNAME ] || MIDWAY_USERNAME="yadunand"
 [ ! -z $UC3_USERNAME ]    || UC3_USERNAME="yadunand"
 [ ! -z $MCS_USERNAME ]    || MCS_USERNAME="yadunand"
+[ ! -z $FUSION_USERNAME ] || FUSION_USERNAME="yadunand"
+[ ! -z $BLUES_USERNAME ]  || BLUES_USERNAME="yadunand"
+[ ! -z $BRID_USERNAME ]   || BRID_USERNAME="yadunandb" # Bridled
+[ ! -z $COMM_USERNAME ]   || COMM_USERNAME="yadunandb" # Communicado
 [ ! -z $PUBLISH_FOLDER ]  || PUBLISH_FOLDER="\/home\/yadunandb\/public_html\/results"
 [ ! -z $SWIFT_SOURCE ]    || SWIFT_SOURCE="/home/yadunand/swift"
 [ ! -z $RUN_TYPE ]        || RUN_TYPE="daily"
-
+[ ! -z $SWIFT_TAR_FILE ]  || SWIFT_TAR_FILE="/scratch/midway/yadunand/swift-trunk.tar"
 SITES="sites.xml"
 cp  $SITES  $SITES.bak
 cat $SITES | sed "s/BEAGLE_USERNAME/$BEAGLE_USERNAME/g" > tmp && mv tmp $SITES
@@ -23,7 +25,10 @@ cat $SITES | sed "s/MIDWAY_USERNAME/$MIDWAY_USERNAME/g" > tmp && mv tmp $SITES
 cat $SITES | sed "s/UC3_USERNAME/$UC3_USERNAME/g"       > tmp && mv tmp $SITES
 cat $SITES | sed "s/MCS_USERNAME/$MCS_USERNAME/g"       > tmp && mv tmp $SITES
 cat $SITES | sed "s/PUBLISH_FOLDER/$PUBLISH_FOLDER/g"   > tmp && mv tmp $SITES
-
+cat $SITES | sed "s/BRID_USERNAME/$BRID_USERNAME/g"     > tmp && mv tmp $SITES
+cat $SITES | sed "s/COMM_USERNAME/$COMM_USERNAME/g"     > tmp && mv tmp $SITES
+cat $SITES | sed "s/FUSION_USERNAME/$FUSION_USERNAME/g" > tmp && mv tmp $SITES
+cat $SITES | sed "s/BLUES_USERNAME/$BLUES_USERNAME/g"   > tmp && mv tmp $SITES
 
 export GLOBUS_HOSTNAME="swift.rcc.uchicago.edu"
 
@@ -31,7 +36,7 @@ BASE=$PWD
 # Make clean checkout if no swift dir is present or
 # Clean checkout requested
 
-[ -f "/scratch/midway/yadunand/swift.tar" ] && cp /scratch/midway/yadunand/swift.tar ./
+[ -f "$SWIFT_TAR_FILE" ] && cp $SWIFT_TAR_FILE ./swift.tar
 
 if [ "$REMOTE_DRIVER_FASTSETUP" == "true" ]
 then
@@ -42,7 +47,7 @@ else
 	echo "Found swift.tar. Extracting.."
 	tar -xf swift.tar
     fi
-    
+
     if [ "CLEAN_CHECKOUT" == "yes" ] || [ ! -d "swift" ]
     then
 	echo "Cleaning and making fresh checkout"

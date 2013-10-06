@@ -1,4 +1,5 @@
-<config>
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
   <pool handle="beagle">
     <execution provider="coaster" jobmanager="ssh-cl:pbs" url="login4.beagle.ci.uchicago.edu"/>
     <profile namespace="globus" key="jobsPerNode">24</profile>
@@ -6,7 +7,8 @@
     <profile namespace="globus" key="highOverAllocation">100</profile>
     <profile namespace="globus" key="providerAttributes">pbs.aprun;pbs.mpp;depth=24</profile>
     <profile namespace="globus" key="maxtime">3700</profile>
-    <profile namespace="globus" key="maxWalltime">01:00:00</profile>
+    <profile namespace="globus" key="maxWalltime">00:25:00</profile>
+    <profile namespace="globus" key="queue">development</profile>
     <profile namespace="globus" key="userHomeOverride">/lustre/beagle/{env.USER}/swiftwork</profile>
     <profile namespace="globus" key="slots">20</profile>
     <profile namespace="globus" key="maxnodes">10</profile>

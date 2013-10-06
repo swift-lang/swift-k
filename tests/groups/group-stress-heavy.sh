@@ -1,8 +1,11 @@
 # GROUPLIST definition to run all local tests                            \
 
 GROUPLIST=(
-#             $TESTDIR/stress/IO \
-             $TESTDIR/stress/internals \
+#            $TESTDIR/stress/IO/beagle \
+#            $TESTDIR/stress/IO/bagOnodes \
+#            $TESTDIR/stress/IO/multiple \
+#            $TESTDIR/stress/IO/uc3 \
+           $TESTDIR/stress/internals \
           )
 
 checkvars WORK
