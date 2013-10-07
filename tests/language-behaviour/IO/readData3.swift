@@ -20,4 +20,4 @@ foreach i in [0:9] {
 }
 
 file result <"readData3.out">;
-result = mysim(nums[i]);
+result = mysim(nums[9]);
