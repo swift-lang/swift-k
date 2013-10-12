@@ -164,7 +164,7 @@ public class AutoCA {
                 }
             }
             
-            if (now + MIN_CA_CERT_LIFETIME_LEFT > maxExpirationTime && SHARED_PROXIES) {
+            if (now + MIN_CA_CERT_LIFETIME_LEFT > maxExpirationTime || !SHARED_PROXIES) {
                 int index;
                 boolean create;
                 if (this.localBundleIndex == -1) {
