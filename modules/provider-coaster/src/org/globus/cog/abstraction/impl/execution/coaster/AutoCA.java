@@ -136,6 +136,9 @@ public class AutoCA {
         
         try {
             File[] certs = discoverProxies();
+            if (certs == null) {
+                throw new IOException("Failed to list files in CA directory (" + CA_DIR + ")");
+            }
             long now = System.currentTimeMillis();
             long maxExpirationTime = 0;
             
@@ -217,6 +220,8 @@ public class AutoCA {
     }
 
     private Object lockDir(String caDir) {
+        File caDirFile = new File(caDir);
+        caDirFile.mkdirs();
         if (SHARED_PROXIES) {
             FileLock fl = new FileLock(CA_DIR);
             try {
