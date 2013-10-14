@@ -1,167 +1,106 @@
-Stampede 
----------
+Stampede (x86 cluster)
+----------------------
+Stampede is a cluster managed by the Texas Advanced Computing Center (TACC). It
+is a part of the XSEDE project. For more information about how to request an
+account, a project, how to log in and manage SSH keys, please see the
+More information about the system can be found in the 
+https://portal.xsede.org/web/guest/tacc-stampede[Stampede User Guide].
 
-Stampede is a 10 petaflop supercomputer available as part of  XSEDE resources.
-It employs a batch-oriented computational model where-in a SLURM schedular
-accepts user's jobs and queues them in the queueing system for execution. The
-computational model requires a user to prepare the submit files, track job
-submissions, chackpointing, managing input/output data and handling exceptional
-conditions manually.
+Downloading and building Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The most recent versions of Swift can be found at
+http://www.ci.uchicago.edu/swift/downloads/index.php[the Swift downloads page]. Follow the instructions
+provided on that site to download and build Swift.
 
-Running Swift under Stampede can accomplish the above tasks with least manual
-user intervention. In the following sections, we discuss more about specifics of
-running Swift on Stampede. A more detailed information about Swift and its
-workings can be found on Swift documentation page here:
-http://www.ci.uchicago.edu/swift/wwwdev/docs/index.php
+Overview of How to Run
+~~~~~~~~~~~~~~~~~~~~~~
+You will need to do the following steps in order to run.
 
-More information on Stampede can be found on XSEDE Stampede website here:
-https://www.xsede.org/stampede
+1. Connect to a system that has the Globus myproxy-init command. This will be
+   the system where Swift runs and from where Swift submits jobs to Stampede.
+2. Obtain a grid certificate.
+3. Run Swift with configuration files that define how to start remote jobs to
+   Stampede via gram.
 
-Requesting Access
-~~~~~~~~~~~~~~~~~
-Initial access to XSEDE resources could be obtained by submitting a startup proposal. Advanced users could submit a proposal for research allocation. An educational allocation is available for teaching and/or training purposes. More on XSEDE allocations can be found here:
-https://www.xsede.org/allocations
+Verify System Requirements and Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The system where you run Swift needs to have the myproxy-init tool installed.
+Ideally it should also have globus-job-run for testing purposes.
 
-Connecting to a login node
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-Once you have an account, you should be able to access a Stampede login
-node with the following command:
+Swift uses two environment variables in order for remote job execution to work.
+They are $GLOBUS_HOSTNAME and $GLOBUS_TCP_PORT_RANGE. 
+
+GLOBUS_HOSTNAME should contain the full hostname of the system where you are 
+running. It may also contain the IP address of the machine.
+
+GLOBUS_TCP_PORT_RANGE defines a range of ports to which a remote system may
+connect. You will likely need this defined if you are behind a firewall with
+somewhat restricted access.
+
+Obtain a Grid Certificate
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Once you have verified you have everything you need on the submit host where
+you are running, you can obtain an XSEDE grid certificate with following 
+command:
 
 -----
-ssh yourusername@stampede.tacc.utexas.edu
+$ myproxy-logon -l username -s myproxy.teragrid.org
 -----
 
-Follow the steps outlined below to get started with Swift on Stampede:
-
-*step 1.* Install Swift using one of the installation methods documented on Swift home: http://www.ci.uchicago.edu/swift/downloads/index.php,
-
-if installing from source, java can be loaded on Stampede using +module load jdk32+ and apache ant could be downloaded from here: http://ant.apache.org
-
-*step 2.* Create and change to a directory where your Swift related work will
-stay. (say,  +mkdir swift-work+, followed by, +cd swift-work+)
-
-*step 3.* To get started with a simple example running the Linux +/bin/cat+ command to read an
-input file +data.txt+ and write it to an output file, start with writing a simple Swift source script as follows:
-
------
-type file;
-
-/* App definitio */
-app (file o) cat (file i)
-{
-  cat @i stdout=@o;
-}
-
-file out[]<simple_mapper; location="outdir", prefix="f.",suffix=".out">;
-file data<"data.txt">;
-
-/* App invocation: n times */
-foreach j in [1:@toint(@arg("n","1"))] {
-  out[j] = cat(data);
-}
------
-
-Make sure a file named +data.txt+ is available in the current directory where the above Swift source file will be saved.
-
-*step 4.*  The next step is to create a sites file. An example sites file (sites.xml) is shown as follows:
-
+Create sites.xml file
+~~~~~~~~~~~~~~~~~~~~~
+You may use the following example as a guide to run on Stampede. You will
+likely need to make a few modifications, as described below.
 -----
 <config>
   <pool handle="stampede">
-    <execution provider="coaster" jobmanager="local:slurm"/>
-    
-    <!-- **replace with your project** -->
-    <profile namespace="globus" key="project">TG-EAR130015</profile>
-
-    <profile namespace="globus" key="jobsPerNode">1</profile>
-    <profile namespace="globus" key="maxWalltime">00:11:00</profile>
-    <profile namespace="globus" key="maxtime">800</profile>
-    
-    <profile namespace="globus" key="highOverAllocation">100</profile>
-    <profile namespace="globus" key="lowOverAllocation">100</profile>
-
-    <!-- queues on stampede: development, normal, large, etc. -->
-    <profile namespace="globus" key="queue">development</profile>
-
-    <!-- for mail notification -->
-    <profile namespace="globus" key="slurm.mail-user">me@dept.org</profile>
-    <profile namespace="globus" key="slurm.mail-type">ALL</profile>
-    
-    <filesystem provider="local"/>
-    <workdirectory>/path/to/workdir</workdirectory>
+    <execution provider="coaster" jobmanager="gt2:gt2:slurm" url="login5.stampede.tacc.utexas.edu:2119/jobmanager-slurm"/>
+    <filesystem provider="gsiftp" url="gsiftp://gridftp.stampede.tacc.utexas.edu:2811"/>
+    <profile namespace="globus"  key="jobsPerNode">16</profile>
+    <profile namespace="globus"  key="ppn">16</profile>
+    <profile namespace="globus"  key="maxTime">3600</profile>
+    <profile namespace="globus"  key="maxwalltime">00:05:00</profile>
+    <profile namespace="globus"  key="lowOverallocation">100</profile>
+    <profile namespace="globus"  key="highOverallocation">100</profile>
+    <profile namespace="globus"  key="queue">normal</profile>
+    <profile namespace="globus"  key="nodeGranularity">1</profile>
+    <profile namespace="globus"  key="maxNodes">1</profile>
+    <profile namespace="globus"  key="project">yourproject</profile>
+    <profile namespace="karajan" key="jobThrottle">.3199</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>/scratch/01503/yourusername</workdirectory>
   </pool>
 </config>
 -----
 
-*step 5.* In this step, we will see the config and tc files. The config file (cf) is as follows:
+You will need to modify the XSEDE project name to the match the name that has 
+been allocated to you. In most cases you'll want to set the work directory to
+your Stampede scratch directory. This is defined, on Stampede, in the
+environment variable $SCRATCH.
+
+Running Swift
+~~~~~~~~~~~~~
+You may now run your Swift script exactly as you have before.
 
 -----
-wrapperlog.always.transfer=true
-sitedir.keep=true
-execution.retries=0
-lazy.errors=false
-status.mode=provider
-use.provider.staging=false
-provider.staging.pin.swiftfiles=false
-use.wrapper.staging=false
+$ swift -sites.file sites.xml -tc.file tc -config cf myscript.swift
 -----
 
-The tc file (tc) is as follows:
+Debugging
+~~~~~~~~~
+If you are having problems getting this working correctly, there are a few 
+places where you may look to help you debug. Since this configuration is
+slightly more complicated, there are several log files produced.
 
------
-stampede cat /bin/cat null null null
------
+1. The standard swift log, created in your current working directory on the
+   machine where you are running from. This will be named something along the
+   lines of myscript-<datestring>.log.
+2. The bootstrap log. These are located on Stampede in your home directory and
+   have the name coaster-bootstrap-<datestring>.log.
+3. The coaster log. This is located on Stampede in your $HOME/.globus/coasters/coasters.log.
+4. The gram log. This is located on Stamped in $HOME/gram-<datestring>.log.
 
-More about config and tc file options can be found in the Swift userguide here:
-http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html#_swift_configuration_properties.
-
-*step 6.* Run the example using following commandline:
-
------
-swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1
------
-
-You can further change the value of +-n+ to any arbitrary number to run that
-many number of +cat+ in parallel
-
-*step 7.* Swift will show a status message as "done" after the job has completed its run in the queue. Check the output in the generated +outdir+ directory (+ls outdir+)
-
-----
-login3$ swift -sites.file sites.stampede.xml -config cf -tc.file tc catsn.swift
-Swift trunk swift-r6290 cog-r3609
-
-RunID: 20130221-1030-faapk389
-Progress:  time: Thu, 21 Feb 2013 10:30:21 -0600
-Progress:  time: Thu, 21 Feb 2013 10:30:22 -0600  Submitting:1
-Progress:  time: Thu, 21 Feb 2013 10:30:29 -0600  Submitted:1
-Progress:  time: Thu, 21 Feb 2013 10:30:51 -0600  Active:1
-Progress:  time: Thu, 21 Feb 2013 10:30:54 -0600  Finished successfully:1
-Final status: Thu, 21 Feb 2013 10:30:54 -0600  Finished successfully:1
-----
-
-Troubleshooting
-~~~~~~~~~~~~~~~
-
-In this section we will discuss some of the common issues and remedies while using Swift on Stampede. The origin of these issues can be Swift or Stampede's configuration, state and usage load among other factors. We try to identify maximum known issues and address them here:
-
-* Command not found: Make sure the +bin+ directory of Swift installation is in +PATH+. 
+For help in getting this configuration working, feel free to contact the Swift 
+support team at swift-support@ci.uchicago.edu.
 
 
-* Failed to transfer wrapperlog for job cat-nmobtbkk and/or Job failed with an exit code of 254. Check the <workdirectory> element on the sites.xml file.
-
------
-<workdirectory >/work/your/path/swift.workdir</workdirectory>
------
-
-It is likely that it is set to a path where the compute nodes can not write or no space available, e.g. your /home directory. The remedy for this error is to set your workdirectory to the path where Swift could write from compute nodes and there is enough space, e.g. /scratch directory.
-
-* If the jobs are not getting to active state for a long time, check the job status using the slurm squeue command:
-----
-$ squeue -u `whoami`
-----
-
-The output will give an indication of the status of jobs. See the slurm manual for more information on job management commands:
-
-----
-$ man slurm
-----
