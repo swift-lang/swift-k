@@ -12,6 +12,8 @@ include::prereqs[]
 
 include::beagle[]
 
+include::ec2[]
+
 include::fusion[]
 
 include::futuregrid[]
@@ -26,7 +28,11 @@ include::mcs[]
 
 include::midway[]
 
+include::persistent-coasters[]
+
 include::ssh[]
+
+include::ssh-cl[]
 
 include::stampede[]
 
@@ -34,7 +40,4 @@ include::uc3[]
 
 include::stampede[]
 
-include::ec2[]
-
 link:http://www.ci.uchicago.edu/swift/docs/index.php[home]
-
