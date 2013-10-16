@@ -131,7 +131,7 @@ public class WriteData extends VDLFunction {
 			ExecutionException {
 	    // this scheme currently only works properly if the keys are strings
 		Map<Comparable<?>, DSHandle> m = ((AbstractDataNode) src).getArrayValue();
-		Map<Comparable<?>, DSHandle> c = new TreeMap<Comparable<?>, DSHandle>(new ArrayIndexComparator());
+		Map<Comparable<?>, DSHandle> c = new TreeMap<Comparable<?>, DSHandle>();
 		c.putAll(m);
 		for (DSHandle h : c.values()) {
 			br.write(h.getValue().toString());
@@ -143,7 +143,7 @@ public class WriteData extends VDLFunction {
 			ExecutionException {
 		writeStructHeader(src.getType().itemType(), br);
 		Map<Comparable<?>, DSHandle> m = ((AbstractDataNode) src).getArrayValue();
-		Map<Comparable<?>, DSHandle> c = new TreeMap<Comparable<?>, DSHandle>(new ArrayIndexComparator());
+		Map<Comparable<?>, DSHandle> c = new TreeMap<Comparable<?>, DSHandle>();
 		c.putAll(m);
 		for (DSHandle h : c.values()) {
 			writeStruct(br, h);
@@ -170,16 +170,6 @@ public class WriteData extends VDLFunction {
 			br.newLine();
 		} catch(InvalidPathException e) {
 			throw new ExecutionException("Unexpectedly invalid path", e);
-		}
-	}
-
-	class ArrayIndexComparator implements Comparator<Comparable<?>> {
-		public int compare(Comparable<?> o1, Comparable<?> o2) {
-			int i1 = Integer.parseInt(String.valueOf(o1));
-			int i2 = Integer.parseInt(String.valueOf(o2));
-			if(i1 < i2) return -1;
-			if(i1 > i2) return 1;
-			return 0;
 		}
 	}
 }
