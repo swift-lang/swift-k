@@ -257,6 +257,7 @@ namespace(swift) {
 					}
 				}
 				else {
+					setDatasetValues(stageout)
 					setProgress(progress, "Finished in previous run")
 				}
 			}
