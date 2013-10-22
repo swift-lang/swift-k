@@ -1,0 +1,13 @@
+<config>
+  <pool handle="cloud">
+    <execution provider="coaster-persistent"
+               url="_EXECUTIONURL_"
+               jobmanager="local:local"/>
+    <profile namespace="globus" key="workerManager">passive</profile>
+    <profile namespace="globus" key="jobsPerNode">_JOBSPERNODE_</profile>
+    <profile key="jobThrottle" namespace="karajan">_JOBTHROTTLE_</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <filesystem provider="local" url="none" />
+    <workdirectory>_WORK_</workdirectory>
+  </pool>
+</config>
