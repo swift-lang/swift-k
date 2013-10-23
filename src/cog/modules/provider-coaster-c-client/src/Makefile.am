@@ -6,7 +6,23 @@ run_coaster_job_LDADD = libcoasterclient.la
 
 lib_LTLIBRARIES = libcoasterclient.la
 
-libcoasterclient_la_SOURCES = Lock.h Lock.cpp \
+
+if SWIG
+
+SWIG_SRC = CoasterSWIG_wrap.cxx CoasterSWIG.cpp
+
+CoasterSWIG_wrap.cxx: CoasterSWIG.h
+	swig -c++ -importall $<
+	sed -i s/Coaster_Init/_Coasterclient_Init/ $@
+
+clean-local: 
+	rm -f CoasterSWIG_wrap.cxx
+
+endif
+
+libcoasterclient_la_SOURCES = \
+	$(SWIG_SRC) \
+	Lock.h Lock.cpp \
 	ConditionVariable.h ConditionVariable.cpp \
 	CommandCallback.h \
 	CmdCBCV.h CmdCBCV.cpp \
@@ -32,4 +48,4 @@ libcoasterclient_la_SOURCES = Lock.h Lock.cpp \
 	StagingSetEntry.h StagingSetEntry.cpp \
 	CoasterError.h CoasterError.cpp \
 	JobStatusHandler.h JobStatusHandler.cpp \
-	HeartBeatCommand.h HeartBeatCommand.cpp
+	HeartBeatCommand.h HeartBeatCommand.cpp 

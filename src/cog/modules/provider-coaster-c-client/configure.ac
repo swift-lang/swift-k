@@ -54,6 +54,44 @@ else
     AM_CXXFLAGS="-O2"
 fi
 
+USE_TCL=0
+AC_ARG_WITH([tcl], 
+    [AS_HELP_STRING([--with-tcl],
+        [location of Tcl])], 
+    [
+        USE_TCL=$withval
+        CPPFLAGS="${CPPFLAGS} -I ${USE_TCL}/include"
+        AM_CXXFLAGS="${AM_CXXFLAGS} -I ${USE_TCL}/include"
+        AC_CHECK_HEADERS([tcl.h])
+    ])
+
+USE_TCL_VERSION=0
+AC_ARG_WITH([tcl-version], 
+    [AS_HELP_STRING([--with-tcl-version],
+        [Tcl version: 8.5 or 8.6])], 
+    [
+        [[ ${USE_TCL} == 0 ]] && \
+           AC_MSG_ERROR([Use of Tcl requires --with-tcl])
+        USE_TCL_VERSION=$withval
+        LDFLAGS="$LDFLAGS -L$USE_TCL/lib"
+        AM_LDFLAGS="${AM_LDFLAGS} -L$USE_TCL/lib -Wl,-rpath $USE_TCL/lib" 
+        # -l tcl$USE_TCL_VERSION
+        AC_CHECK_LIB([tcl$USE_TCL_VERSION],[Tcl_PkgProvide])
+        AC_CHECK_FUNC([Tcl_PkgProvide],,[AC_MSG_ERROR([Could not link to Tcl!])])
+    ])
+
+USE_SWIG=0
+AC_ARG_ENABLE([swig], 
+    [AS_HELP_STRING([--enable-swig], 
+        [enable use of SWIG and Tcl support])],
+    [
+        [[ $USE_TCL_VERSION == 0 ]] && \
+           AC_MSG_ERROR([Use of SWIG requires --with-tcl-version])
+        USE_SWIG=1
+        AC_MSG_RESULT([SWIG enabled.])
+    ])
+AM_CONDITIONAL([SWIG], [test $USE_SWIG = 1])
+
 AC_SUBST([AM_CXXFLAGS])
 
 AC_CONFIG_FILES([Makefile])

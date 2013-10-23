@@ -8,6 +8,8 @@
 #ifndef COASTER_CLIENT_H_
 #define COASTER_CLIENT_H_
 
+#ifndef SWIG
+
 #include <string>
 #include "Lock.h"
 #include "ConditionVariable.h"
@@ -21,6 +23,8 @@
 #include <map>
 
 #include <netdb.h>
+
+#endif 
 
 using namespace std;
 
