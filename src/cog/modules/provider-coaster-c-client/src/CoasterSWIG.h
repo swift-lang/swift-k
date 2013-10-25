@@ -7,6 +7,8 @@
   #include "CoasterClient.h"
   #include "CoasterSWIG.h"
 %}
-#endif 
+#endif
 
 CoasterClient* CoasterSWIGClientCreate(char* serviceURL);
+
+int CoasterSWIGClientSettings(CoasterClient *client, char *settings);
