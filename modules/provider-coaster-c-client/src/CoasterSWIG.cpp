@@ -5,9 +5,15 @@
 #include <vector>
 
 #include <CoasterSWIG.h>
-
+#include "CoasterLoop.h"
+#include "CoasterClient.h"
+#include "Settings.h"
+#include "Job.h"
 using namespace std;
 
+/** CoasterSWIGLoopCreate : create, starts and returns
+ *  a pointer to a CoasterLoop object.
+ */
 CoasterLoop* CoasterSWIGLoopCreate(void)
 {
     cout << "CoasterSWIGLoopCreate()..." << endl;
@@ -16,12 +22,23 @@ CoasterLoop* CoasterSWIGLoopCreate(void)
     return loop;
 }
 
-CoasterClient* CoasterSWIGClientCreate(char* serviceURL)
+int CoasterSWIGLoopDestroy(CoasterLoop* loop)
 {
-  cout << "CoasterSWIGClientCreate(" << serviceURL << ")..." << endl;
-  CoasterLoop loop;
-  loop.start();
-  CoasterClient* result = new CoasterClient(serviceURL, loop);
+    delete(loop);
+    return 0;
+}
+
+CoasterClient* CoasterSWIGClientCreate(CoasterLoop &loop, char* serviceURL)
+{
+    cout << "CoasterSWIGClientCreate(" << serviceURL << ")..." << endl;
+    CoasterClient* client = new CoasterClient(serviceURL, loop);
+    return client;
+}
+
+int CoasterSWIGClientDestroy(CoasterClient *client)
+{
+    delete(client);
+    return 0;
 }
 
 int CoasterSWIGClientSettings(CoasterClient *client, char *settings)
@@ -50,6 +67,6 @@ int CoasterSWIGClientSettings(CoasterClient *client, char *settings)
 
     //TODO: SegFaulting here. Why ?
     cout << "client->getURL() : " << client->getURL() << endl ;
-    //client->setOptions(s);
+    client->setOptions(s);
     return 0;
 }
