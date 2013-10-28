@@ -22,11 +22,14 @@ int CoasterSWIGClientSettings(CoasterClient *client, char *settings);
 
 Job* CoasterSWIGJobCreate(char *cmd_string);
 
+int CoasterSWIGJobSettings(Job* j, char* dir, char* args, char* attr,
+                           char* envs, char* stdoutLoc, char* stderrLoc);
 int CoasterSWIGSubmitJob(CoasterClient *client, Job* job);
 
 int CoasterSWIGWaitForJob(CoasterClient *client, Job* job);
 
 int CoasterSWIGTest(CoasterLoop *loop, char *service_URL, CoasterClient *c);
+
 //int CoasterSWIGTest(CoasterLoop *loop, char *service_URL);
 //int CoasterSWIGTest(CoasterClient *client);
 
