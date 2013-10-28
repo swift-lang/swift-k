@@ -1,3 +1,4 @@
 load ../../src/.libs/libcoasterclient.so
 
-CoasterSWIGClientCreate http://localhost
+set loop_ptr [CoasterSWIGLoopCreate]
+
