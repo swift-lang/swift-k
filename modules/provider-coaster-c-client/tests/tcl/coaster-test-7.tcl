@@ -2,14 +2,17 @@ load ../../src/.libs/libcoasterclient.so
 
 set loop_ptr [CoasterSWIGLoopCreate]
 
-set client_ptr [CoasterSWIGClientCreate $loop_ptr 140.221.8.81:40568]
+set client_ptr [CoasterSWIGClientCreate $loop_ptr 140.221.8.81:58318]
 
 set x [CoasterSWIGClientSettings $client_ptr "SLOTS=1,MAX_NODES=1,JOBS_PER_NODE=2"]
-puts "Error code from CoasterSWIGClientSettings "
-puts $x
+puts "Error code from CoasterSWIGClientSettings $x"
 
 set job1 [CoasterSWIGJobCreate "/bin/hostname"]
 puts "Job set to /bin/hostname"
+
+set rcode [CoasterSWIGJobSettings $job1 "" "-f" "" "" \
+                                  "/homes/yadunand/swift-trunk/cog/modules/provider-coaster-c-client/tests/tcl/stdout" \
+                                  "/homes/yadunand/swift-trunk/cog/modules/provider-coaster-c-client/tests/tcl/stderr" ]
 
 set rcode [CoasterSWIGSubmitJob $client_ptr $job1]
 puts "Job1 submitted"

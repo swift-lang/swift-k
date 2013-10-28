@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string>
+#include <string.h>
 #include <sstream>
 #include <vector>
 
@@ -79,6 +80,92 @@ Job* CoasterSWIGJobCreate(char *cmd_string)
     return job;
 }
 
+struct KV {
+    std::string key;
+    std::string value;
+};
+
+std::vector<struct KV> parse_kvpair (std::string str)
+{
+    std::vector<struct KV> pairs;
+    std::stringstream ss(str);
+    std::string item, key, value;
+
+    while (std::getline(ss, item, ',')) {
+        //elems.push_back(item);
+        struct KV kv_pair;
+        std::stringstream kv(item);
+        std::string kv_item;
+        std::getline(kv, kv_item, '=');
+        kv_pair.key = kv_item;
+        std::getline(kv, kv_item);
+        kv_pair.value =  kv_item;
+        pairs.push_back(kv_pair);
+        std::cout << "Key,Value : " << key <<", " << value << std::endl;
+    }
+    return pairs;
+}
+
+std::vector<string> parse_string (std::string str)
+{
+    std::vector<string> strings;
+    std::stringstream ss(str);
+    std::string item, key, value;
+
+    while (std::getline(ss, item, ',')) {
+        strings.push_back(item);
+    }
+    return strings;
+}
+
+int CoasterSWIGJobSettings(Job* j, char* dir, char* args, char* attr,
+                           char* envs, char *stdoutLoc, char *stderrLoc)
+{
+    std::vector<struct KV> pairs;
+
+    if ( strlen(dir) != 0 ){
+        string str = string(dir);
+        j->setDirectory(str);
+    }
+
+    if ( strlen(args) != 0 ){
+        std::vector<string> arg_vector = parse_string(string(args));
+        for (std::vector<string>::iterator i = arg_vector.begin(); i != arg_vector.end(); i++ ){
+            j->addArgument(*i);
+            cout << "Attr ["<< *i <<"]" <<endl;
+        }
+    }
+    // Untested code block ahead.
+    /*
+    if ( strlen(attr) != 0 ){
+        pairs = parse_kvpair (string(attr));
+        for (std::vector<struct KV>::iterator i = pairs.begin(); i != pairs.end(); i++ ){
+            j->setAttribute(i.key, i.value);
+            cout << "Attr ["<< i.key <<":" << i.value <<"]" <<endl;
+        }
+    }
+
+    if ( strlen(envs) != 0 ){
+        pairs = parse_kvpair (string(envs));
+        for (std::vector<struct KV>::iterator i = pairs.begin(); i != pairs.end(); i++ ){
+            j->setEnv(i.key, i.value);
+            cout << "Env ["<< i.key <<":" << i.value <<"]" <<endl;
+        }
+    }
+    */
+    if (strlen(stdoutLoc) != 0 ) {
+        string* str = new string(stdoutLoc);
+        j->setStdoutLocation(*str);
+    }
+
+    if (strlen(stderrLoc) != 0 ) {
+        string* str = new string(stderrLoc);
+        j->setStderrLocation(*str);
+    }
+
+    return 0;
+}
+
 int CoasterSWIGSubmitJob(CoasterClient *client, Job* job)
 {
     client->submit(*job);
@@ -93,7 +180,6 @@ int CoasterSWIGWaitForJob(CoasterClient *client, Job *job)
     client->waitForJob(*job);
     return 0;
 }
-
 
 /**
  * This is a test function.

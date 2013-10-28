@@ -1,1 +1,4 @@
 It only compiles, so don't assume that it works!
+
+To build with SWIG :
+./configure --enable-swig --with-tcl-version=<Tcl_version> --with-tcl=<Path to tcl installation>
