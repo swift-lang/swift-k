@@ -1,0 +1,91 @@
+Running /homes/yadunand/swift-trunk/cog/modules/swift/dist/swift-svn/bin/coaster-service -nosec -portfile /tmp/tmp.KmXG9rMorq -localportfile /tmp/tmp.D9N8ytVG6b -passive
+Switching log to: cps-2013-10-28_14-31-16.log
+2013-10-28 14:31:16,524-0500 WARN  CoasterPersistentService Switching log to: cps-2013-10-28_14-31-16.log
+Local contacts: [http://140.221.8.81:56573]
+2013-10-28 14:31:16,602-0500 INFO  Settings Local contacts: [http://140.221.8.81:56573]
+Starting... id=1028-3102160
+2013-10-28 14:31:16,615-0500 INFO  BlockQueueProcessor Starting... id=1028-3102160
+Started local service: http://140.221.8.81:56573
+2013-10-28 14:31:16,615-0500 INFO  CoasterService Started local service: http://140.221.8.81:56573
+Started coaster service: http://140.221.8.81:58318
+2013-10-28 14:31:16,615-0500 INFO  CoasterService Started coaster service: http://140.221.8.81:58318
+Started coaster service: http://140.221.8.81:58318
+Worker connection URL: http://140.221.8.81:56573
+Running ssh yadunand@crush.mcs.anl.gov mkdir -p /homes/yadunand
+Running scp /homes/yadunand/swift-trunk/cog/modules/swift/dist/swift-svn/bin/worker.pl yadunand@crush.mcs.anl.gov:/homes/yadunand
+Running ssh yadunand@crush.mcs.anl.gov WORKER_LOGGING_LEVEL=DEBUG /homes/yadunand/worker.pl http://140.221.8.81:56573 crush.mcs.anl.gov /homes/yadunand/logs
+Running ssh yadunand@grind.mcs.anl.gov mkdir -p /homes/yadunand
+Timeout check started for TCPChannel [type: server, contact: unknown]
+2013-10-28 14:31:18,748-0500 INFO  AbstractCoasterChannel Timeout check started for TCPChannel [type: server, contact: unknown]
+Channel started: TCPChannel [type: server, contact: 140.221.8.62:34285]
+2013-10-28 14:31:18,753-0500 INFO  AbstractTCPChannel Channel started: TCPChannel [type: server, contact: 140.221.8.62:34285]
+Received registration: blockid = crush.mcs.anl.gov, url = crush
+2013-10-28 14:31:18,758-0500 INFO  LocalTCPService Received registration: blockid = crush.mcs.anl.gov, url = crush
+MetaChannel [context: worker-1, boundTo: null] binding to TCPChannel [type: server, contact: 140.221.8.62:34285]
+2013-10-28 14:31:18,780-0500 INFO  MetaChannel MetaChannel [context: worker-1, boundTo: null] binding to TCPChannel [type: server, contact: 140.221.8.62:34285]
+Running scp /homes/yadunand/swift-trunk/cog/modules/swift/dist/swift-svn/bin/worker.pl yadunand@grind.mcs.anl.gov:/homes/yadunand
+2013-10-28 14:31:18,784-0500 DEBUG Cpu worker started: block=crush.mcs.anl.gov host=crush id=0
+2013-10-28 14:31:18,784-0500 DEBUG Cpu ready for work: block=crush.mcs.anl.gov id=0
+Started CPU 0:1382988678s
+2013-10-28 14:31:18,786-0500 INFO  Block Started CPU 0:1382988678s
+Started worker crush.mcs.anl.gov:000000
+2013-10-28 14:31:18,786-0500 INFO  Block Started worker crush.mcs.anl.gov:000000
+2013-10-28 14:31:18,786-0500 DEBUG Cpu requesting work: block=crush.mcs.anl.gov id=0 Cpus sleeping: 1
+Using NIO sender for TCPChannel [type: server, contact: crush.mcs.anl.gov-000000]
+2013-10-28 14:31:18,786-0500 INFO  AbstractStreamCoasterChannel Using NIO sender for TCPChannel [type: server, contact: crush.mcs.anl.gov-000000]
+2013-10-28 14:31:18,787-0500 DEBUG Cpu crush.mcs.anl.gov:0 sleeping
+Handler(tag: 9512, REGISTER) unregistering (send)
+2013-10-28 14:31:18,791-0500 INFO  RequestHandler Handler(tag: 9512, REGISTER) unregistering (send)
+Running ssh yadunand@grind.mcs.anl.gov WORKER_LOGGING_LEVEL=DEBUG /homes/yadunand/worker.pl http://140.221.8.81:56573 grind.mcs.anl.gov /homes/yadunand/logs
+Adjusting buffer size to 8650752 for 2 sockets
+2013-10-28 14:31:19,639-0500 INFO  TCPBufferManager Adjusting buffer size to 8650752 for 2 sockets
+Timeout check started for TCPChannel [type: server, contact: unknown]
+2013-10-28 14:31:19,639-0500 INFO  AbstractCoasterChannel Timeout check started for TCPChannel [type: server, contact: unknown]
+Channel started: TCPChannel [type: server, contact: 140.221.8.74:39025]
+2013-10-28 14:31:19,639-0500 INFO  AbstractTCPChannel Channel started: TCPChannel [type: server, contact: 140.221.8.74:39025]
+Received registration: blockid = grind.mcs.anl.gov, url = grind
+2013-10-28 14:31:19,639-0500 INFO  LocalTCPService Received registration: blockid = grind.mcs.anl.gov, url = grind
+MetaChannel [context: worker-2, boundTo: null] binding to TCPChannel [type: server, contact: 140.221.8.74:39025]
+2013-10-28 14:31:19,640-0500 INFO  MetaChannel MetaChannel [context: worker-2, boundTo: null] binding to TCPChannel [type: server, contact: 140.221.8.74:39025]
+2013-10-28 14:31:19,640-0500 DEBUG Cpu worker started: block=grind.mcs.anl.gov host=grind id=0
+2013-10-28 14:31:19,640-0500 DEBUG Cpu ready for work: block=grind.mcs.anl.gov id=0
+Started CPU 0:1382988679s
+2013-10-28 14:31:19,640-0500 INFO  Block Started CPU 0:1382988679s
+2013-10-28 14:31:19,640-0500 DEBUG Cpu requesting work: block=grind.mcs.anl.gov id=0 Cpus sleeping: 2
+Started worker grind.mcs.anl.gov:000000
+2013-10-28 14:31:19,640-0500 INFO  Block Started worker grind.mcs.anl.gov:000000
+2013-10-28 14:31:19,640-0500 DEBUG Cpu grind.mcs.anl.gov:0 sleeping
+Handler(tag: 932, REGISTER) unregistering (send)
+2013-10-28 14:31:19,640-0500 INFO  RequestHandler Handler(tag: 932, REGISTER) unregistering (send)
+TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:31:58,230-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 2ms
+2013-10-28 14:31:58,540-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 2ms
+TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:32:29,185-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:32:36,733-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:33:00,143-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:33:14,927-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:33:31,101-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:33:53,121-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:34:02,059-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:34:31,315-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:34:33,017-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:35:03,976-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:35:09,509-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:35:34,933-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:35:47,703-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: grind.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms
+2013-10-28 14:36:05,891-0500 INFO  HeartBeatCommand TCPChannel [type: server, contact: crush.mcs.anl.gov-000000] up latency: 0ms, rtt: 1ms

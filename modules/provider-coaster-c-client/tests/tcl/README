@@ -1,0 +1,5 @@
+Run start-coaster-service in the coasters folder to start a coaster service.
+The configuration for coasters is in coaster-service.conf
+
+Use the url in the sites.xml generated in the tcl examples to connect to the
+coaster service
