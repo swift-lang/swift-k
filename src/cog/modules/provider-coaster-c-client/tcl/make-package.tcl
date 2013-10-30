@@ -1,8 +1,8 @@
 
 # Run "tclsh make-package.tcl > pkgIndex.tcl" to create the package
 
-set name     "coasters"
-set version  "0.1"
+set name     "coaster"
+set version  "0.0"
 set leaf_so  "libcoasterclient.so"
 set leaf_tcl "coaster.tcl"
 
