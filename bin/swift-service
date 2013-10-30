@@ -3,10 +3,10 @@
 # Determine the location of needed files
 export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
 export WORKER="$SWIFT_BIN/worker.pl"
-export PID_FILE="$HOME/.swift/.coaster-service-pids"
 export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
 export LOG="start-coaster-service.log"
-mkdir -p "$HOME/.swift" || crash "Unable to create $HOME/.swift"
+export SERVICE_DIR="$HOME/.swift/service"
+mkdir -p "$SERVICE_DIR" || crash "Unable to create $SERVICE_DIR"
 
 # Report a problem and exit
 crash()
@@ -39,44 +39,44 @@ run_command()
    $command >> $LOG 2>&1
 }
 
-# Write command to log, run in background, record PID
+# Write command to log, run in background, return PID
 run_command_bg()
 {
    command="$@"
    echo "Running background command $command" >> $LOG
    $command >> $LOG 2>&1 &
-   echo $! >> $PID_FILE
+   echo $!
 }
 
 # Stop the coaster service
 stop_service()
 {
-   echo "Stopping Swift service..."
-   if [ -f "$PID_FILE" ]; then
-      for PID in $( cat $PID_FILE )
+   for service in $( ls -d $SERVICE_DIR/*/ 2>/dev/null )
+   do
+      echo "Stopping $(basename $service)..."
+      PID=$( cat $service/pid )
+      PID_COMM=$( ps -p $PID -o comm|sed 1D 2>/dev/null )
+
+      # Kill child processes of $PID
+      ps -u $USER -o "pid,ppid"|sed 1d | while read PROC
       do
-         PID_COMM=$( ps -p $PID -o comm|sed 1D 2>/dev/null )
-
-         # Kill child processes of $PID
-         ps -u $USER -o "pid,ppid"|sed 1d | while read PROC
-         do
-            PROC_PID=$( echo $PROC | awk '{print $1}' )
-            PROC_PPID=$( echo $PROC | awk '{print $2}' )
-            if [ $PROC_PPID == $PID ]; then
-               run_command kill $PROC_PID
-            fi
-         done
-
-         # Get process name
-         if [ -z "$PID_COMM" ]; then
-            PID_COMM="$pid"
-         fi 
-
-         echo "Killing $PID_COMM ($PID)"
-         run_command kill $pid
+         PROC_PID=$( echo $PROC | awk '{print $1}' )
+         PROC_PPID=$( echo $PROC | awk '{print $2}' )
+         if [ $PROC_PPID == $PID ]; then
+            run_command kill $PROC_PID
+         fi
       done
-   fi
-   rm $PID_FILE
+
+      # Get process name
+      if [ -z "$PID_COMM" ]; then
+         PID_COMM="$pid"
+      fi 
+
+      # echo "Killing $PID_COMM ($PID)"
+      run_command kill $pid
+      rm -rf $service
+   done
+  
 }
 
 # Start coaster service
@@ -125,16 +125,26 @@ start_service()
    fi
 
    # Check values in configuration file to determine how we should start coaster-service
-   echo Launching service
+   PID=""
    if [ -z "$SERVICE_PORT" ] && [ -z "$LOCAL_PORT" ]; then
-      run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE -localportfile $LOCAL_PORT_FILE -passive 
+      PID=$( run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE -localportfile $LOCAL_PORT_FILE -passive )
    elif [ -n "$SERVICE_PORT" ] && [ -z "$LOCAL_PORT" ]; then
-      run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localportfile $LOCAL_PORT_FILE -passive 
+      PID=$( run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localportfile $LOCAL_PORT_FILE -passive )
    elif [ -z "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
-      run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE --localport $LOCAL_PORT -passive
+      PID=$( run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE --localport $LOCAL_PORT -passive )
    elif [ -n  "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
-      run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localport $LOCAL_PORT -passive
+      PID=$( run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localport $LOCAL_PORT -passive )
    fi
+
+   if [ -z "$NAME" ]; then
+      NAME=$( ls -1d $SERVICE_DIR/*/ 2>/dev/null | wc -l )
+      NAME=$( expr $NAME + 1 )
+      NAME="service-$NAME"
+   fi
+
+   COASTER_DIR="$SERVICE_DIR/$NAME"
+   mkdir $COASTER_DIR || crash "Unable to create $COASTER_DIR"
+   echo $PID >> $COASTER_DIR/pid
 
    # If waiting on port files to be created, wait for files to be created
    if [ -z "$SERVICE_PORT" ]; then
@@ -163,6 +173,7 @@ start_service()
       rm $LOCAL_PORT_FILE
    fi
 
+   echo Name: $NAME
    echo Service port: $SERVICE_PORT
    echo Local port: $LOCAL_PORT
 
@@ -190,6 +201,15 @@ create_pool_entry()
    gensites $GENSITES_ARGS > sites.xml
 }
 
+display_status()
+{
+   for service in $( ls -d $SERVICE_DIR/*/ 2>/dev/null )
+   do
+      echo "Name: $(basename $service )"
+      echo -e " PID: $( cat $service/pid )\n"
+   done
+}
+
 # Parse command line arguments
 while [ $# -gt 0 ]; do
    case $1 in
@@ -205,6 +225,14 @@ while [ $# -gt 0 ]; do
       -stop) 
               stop_service
               exit 0
+              ;;
+      -status)
+              display_status
+              exit 0
+              ;;
+      -name)
+              NAME=$2
+              shift 2
               ;;
       *) echo "Do not recognize command line option: $1" 1>&2; exit 1;;
    esac
