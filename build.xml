@@ -75,8 +75,8 @@
 		<copy todir="${dist.dir}/libexec">
 			<fileset dir="${cog.dir}/modules/${module.name}/libexec"/>
 		</copy>
-		<copy todir="${dist.dir}/bin" flatten="true">
-			<fileset dir="${cog.dir}/modules/${module.name}/bin" excludes="grid/TODO,grid/README"/>
+		<copy todir="${dist.dir}/bin">
+			<fileset dir="${cog.dir}/modules/${module.name}/bin"/>
 		</copy>
 		<copy todir="${dist.dir}/lib/perl">
 			<fileset dir="${cog.dir}/modules/${module.name}/lib/perl"/>
@@ -85,41 +85,15 @@
 
 		<chmod perm="+x">
 			<fileset dir="${dist.dir}/bin">
-				<include name="VDL2Karajan"/>
-				<include name="vdlc"/>
-				<include name="swift-plot-log"/>
-				<include name="swiftconfig"/>
-				<include name="swiftrun"/>
-                                <include name="nswift"/>
 				<include name="gensites"/>
-				<include name="chxml"/>
+                                <include name="nswift"/>
 				<include name="start-coaster-service"/>
 				<include name="stop-coaster-service"/>
-				<include name="run-worker.sh"/>
-				<include name="start-grid-service"/>
-                                <include name="run-gwms-workers"/>
-				<include name="foreachsite"/>
-				<include name="gen_gridsites"/>
-				<include name="get_greensites"/>
-				<include name="maketcfrominst"/>
-				<include name="mk_catalog.rb"/>
-				<include name="mk_cats.rb"/>
-				<include name="mk_osg_sitetest.rm"/>
-				<include name="osgcat"/>
-				<include name="ress.rb"/>
-				<include name="ressfields"/>
-				<include name="run_workers"/>
-				<include name="sites"/>
-				<include name="start-ranger-service"/>
-				<include name="start-swift-service"/>
-				<include name="swift-workers"/>
-				<include name="worker.sh"/>
-				<include name="workers.ranger.sh"/>
-                                <include name="slurm-qsub"/>
-                                <include name="slurm-qsub-emulator"/>
-  				<include name="slurm-qdel"/>
-				<include name="slurm-qstat"/>
+				<include name="swiftrun"/>
+				<include name="swift-plot-log"/>
                                 <include name="swift-service"/>
+				<include name="VDL2Karajan"/>
+				<include name="vdlc"/>
 			</fileset>
 		</chmod>
 		<chmod perm="+x">
