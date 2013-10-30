@@ -119,6 +119,7 @@
                                 <include name="slurm-qsub-emulator"/>
   				<include name="slurm-qdel"/>
 				<include name="slurm-qstat"/>
+                                <include name="swift-service"/>
 			</fileset>
 		</chmod>
 		<chmod perm="+x">
