@@ -96,5 +96,6 @@ AC_SUBST([AM_CXXFLAGS])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([src/Makefile])
+AC_CONFIG_FILES([tcl/Makefile])
 
 AC_OUTPUT
