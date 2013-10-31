@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/bin/bash 
 
+# set -x
 # Determine the location of needed files
 export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
 export WORKER="$SWIFT_BIN/worker.pl"
@@ -48,35 +49,54 @@ run_command_bg()
    echo $!
 }
 
+# Given a name, stop a single service
+stop_single_service()
+{
+   SERVICENAME=$1
+   if [ ! -d "$SERVICE_DIR/$SERVICENAME" ]; then
+      crash "Unable to find service called $SERVICENAME"
+   fi
+
+   if [ ! -f "$SERVICE_DIR/$SERVICENAME/pid" ]; then
+      crash "Error: Unable to find pid file for service $SERVICENAME"
+   fi
+
+   echo Stopping service $SERVICENAME...
+   PID=$( cat $SERVICE_DIR/$SERVICENAME/pid )
+   PID_COMM=$( ps -p $PID -o comm|sed 1D 2>/dev/null )
+
+   # Kill child processes of $PID
+   ps -u $USER -o "pid,ppid"|sed 1d | while read PROC
+   do
+      PROC_PID=$( echo $PROC | awk '{print $1}' )
+      PROC_PPID=$( echo $PROC | awk '{print $2}' )
+      if [ $PROC_PPID == $PID ]; then
+         run_command kill $PROC_PID
+      fi
+   done
+
+   # Get process name
+   if [ -z "$PID_COMM" ]; then
+      PID_COMM="$PID"
+   fi 
+
+   # echo "Killing $PID_COMM ($PID)"
+   run_command kill $PID
+   rm -rf $SERVICE_DIR/$SERVICENAME
+}
+
 # Stop the coaster service
 stop_service()
 {
-   for service in $( ls -d $SERVICE_DIR/*/ 2>/dev/null )
-   do
-      echo "Stopping $(basename $service)..."
-      PID=$( cat $service/pid )
-      PID_COMM=$( ps -p $PID -o comm|sed 1D 2>/dev/null )
-
-      # Kill child processes of $PID
-      ps -u $USER -o "pid,ppid"|sed 1d | while read PROC
+   if [ -n "$NAME" ]; then
+      stop_single_service $NAME
+   else
+      for service in $( ls -d $SERVICE_DIR/*/ 2>/dev/null )
       do
-         PROC_PID=$( echo $PROC | awk '{print $1}' )
-         PROC_PPID=$( echo $PROC | awk '{print $2}' )
-         if [ $PROC_PPID == $PID ]; then
-            run_command kill $PROC_PID
-         fi
+         service=$( basename $service )
+         stop_single_service $service
       done
-
-      # Get process name
-      if [ -z "$PID_COMM" ]; then
-         PID_COMM="$pid"
-      fi 
-
-      # echo "Killing $PID_COMM ($PID)"
-      run_command kill $pid
-      rm -rf $service
-   done
-  
+   fi
 }
 
 # Start coaster service
@@ -177,6 +197,9 @@ start_service()
    echo Service port: $SERVICE_PORT
    echo Local port: $LOCAL_PORT
 
+   echo $SERVICE_PORT >> $COASTER_DIR/service.port
+   echo $LOCAL_PORT >> $COASTER_DIR/local.port
+
    # Generate sites.xml
    export EXECUTIONURL="http://$IPADDR:$SERVICE_PORT"
    export WORKERURL="http://$IPADDR:$LOCAL_PORT"
@@ -205,35 +228,40 @@ display_status()
 {
    for service in $( ls -d $SERVICE_DIR/*/ 2>/dev/null )
    do
-      echo "Name: $(basename $service )"
-      echo -e " PID: $( cat $service/pid )\n"
+      echo -e "\nName: $(basename $service )"
+      echo "PID: $( cat $service/pid )"
+      echo "Service port: $( cat $service/service.port )"
+      echo "Local port: $( cat $service/local.port )" 
    done
+   echo
 }
 
 # Parse command line arguments
 while [ $# -gt 0 ]; do
    case $1 in
-      -conf) 
-              CMDLN_CONF=$2
-              shift 2
-              ;;
-      -start)
-              start_service
-              create_pool_entry
-              exit 0
-              ;;
-      -stop) 
-              stop_service
-              exit 0
-              ;;
-      -status)
-              display_status
-              exit 0
-              ;;
-      -name)
-              NAME=$2
-              shift 2
-              ;;
+      -conf) CMDLN_CONF=$2; shift 2;;
+      -start) START=1; shift;;
+      -stop) STOP=1; shift;;
+      -status) STATUS=1; shift;; 
+      -name) NAME=$2; shift 2;;
       *) echo "Do not recognize command line option: $1" 1>&2; exit 1;;
    esac
 done
+
+# Wait until finished processing command line arguments before starting or stopping the service
+if [ "$START" == 1 ]; then
+   start_service
+   create_pool_entry
+   exit 0
+fi
+
+if [ "$STOP" == 1 ]; then
+   stop_service
+   exit 0
+fi
+
+if [ "$STATUS" == 1 ]; then
+   display_status
+   exit 0
+fi
+
