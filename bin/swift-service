@@ -16,6 +16,12 @@ crash()
    exit 1
 }
 
+# Print usage
+usage()
+{
+   crash "$( basename $0 ) [ -start | -stop | -status | -xml ] [ -name servicename ]"
+}
+
 # Wait for a file to be created, up to given amount of time
 wait_for_file()
 {
@@ -245,6 +251,9 @@ display_status()
 
    if [ -n "$NAME" ]; then
       services=$SERVICE_DIR/$NAME
+      if [ ! -d "$services" ]; then
+         crash "Service $NAME does not exist"
+      fi
    else
       services=$( get_services )
    fi
@@ -306,12 +315,12 @@ while [ $# -gt 0 ]; do
       -status) STATUS=1; shift;; 
       -name) NAME=$2; shift 2;;
       -xml) XML=1; shift;;
-      *) echo "Do not recognize command line option: $1" 1>&2; exit 1;;
+      *) echo "Do not recognize command line option: $1" 1>&2; usage;;
    esac
 done
 
 if [ $(($START+$STOP+$STATUS+$XML)) != 1 ]; then
-   crash "Usage fail"
+   usage
 fi
 
 # Wait until finished processing command line arguments before starting or stopping the service
