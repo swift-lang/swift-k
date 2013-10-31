@@ -1,6 +1,5 @@
 #!/bin/bash 
 
-# set -x
 # Determine the location of needed files
 export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
 export WORKER="$SWIFT_BIN/worker.pl"
@@ -85,17 +84,27 @@ stop_single_service()
    rm -rf $SERVICE_DIR/$SERVICENAME
 }
 
+get_services()
+{
+   ls -d $SERVICE_DIR/*/ 2>/dev/null
+}
+
 # Stop the coaster service
 stop_service()
 {
    if [ -n "$NAME" ]; then
       stop_single_service $NAME
    else
-      for service in $( ls -d $SERVICE_DIR/*/ 2>/dev/null )
+      count=0
+      for service in $( get_services )
       do
          service=$( basename $service )
          stop_single_service $service
+         count=$((count+1))
       done
+      if [ "$count" == 0 ]; then
+         crash "No services found to stop"
+      fi
    fi
 }
 
@@ -196,19 +205,13 @@ start_service()
    echo Name: $NAME
    echo Service port: $SERVICE_PORT
    echo Local port: $LOCAL_PORT
-
+   
    echo $SERVICE_PORT >> $COASTER_DIR/service.port
    echo $LOCAL_PORT >> $COASTER_DIR/local.port
 
    # Generate sites.xml
    export EXECUTIONURL="http://$IPADDR:$SERVICE_PORT"
    export WORKERURL="http://$IPADDR:$LOCAL_PORT"
-}
-
-# Create a pool entry for use in sites.xml
-create_pool_entry()
-{
-   echo Creating pool entry
 
    GENSITES_ARGS=""
    if [ -f "$CONFIG_FILE" ]; then
@@ -221,22 +224,80 @@ create_pool_entry()
       GENSITES_ARGS=" persistent-coasters "
    fi
 
-   gensites $GENSITES_ARGS > sites.xml
+   # Give defaults to gensites variables if needed
+   if [ -z "$JOBSPERNODE" ]; then
+      export JOBSPERNODE=1
+   fi
+   if [ -z "$JOBTHROTTLE" ]; then
+      export JOBTHROTTLE=0
+   fi
+   if [ -z "$WORK" ]; then
+      export WORK=/tmp
+   fi
+   gensites -n $NAME $GENSITES_ARGS > $COASTER_DIR/sites.xml
 }
 
+# Display status of services
 display_status()
 {
-   for service in $( ls -d $SERVICE_DIR/*/ 2>/dev/null )
+   count=0
+   services=""
+
+   if [ -n "$NAME" ]; then
+      services=$SERVICE_DIR/$NAME
+   else
+      services=$( get_services )
+   fi
+
+   for service in $services
    do
       echo -e "\nName: $(basename $service )"
-      echo "PID: $( cat $service/pid )"
+      PID=$( cat $service/pid )
+      echo "PID: $PID"
+
+      ps -p $PID > /dev/null 2>&1
+      if [ "$?" -eq 0 ]; then
+         echo Status: Running
+      else
+         echo Status: Failed
+      fi
+
       echo "Service port: $( cat $service/service.port )"
       echo "Local port: $( cat $service/local.port )" 
+    
+      count=$((count+1))
    done
-   echo
+   if [ "$count" -gt 0 ]; then
+      echo
+   else
+      echo "No services found"
+   fi
 }
 
+# Generate XML
+generate_xml()
+{
+   count=0
+   echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+   echo -e "<config xmlns=\"http://www.ci.uchicago.edu/swift/SwiftSites\">\n"
+
+   services=""
+   if [ -n "$NAME" ]; then
+      services=$SERVICE_DIR/$NAME
+   else
+      services=$( get_services )
+   fi
+
+   for service in $services
+   do
+      cat $service/sites.xml | grep -v "<?xml" | grep -v "<config" | grep -v "</config>"
+      echo
+   done
+
+   echo "</config>"
+}
 # Parse command line arguments
+START=0; STOP=0; STATUS=0; XML=0
 while [ $# -gt 0 ]; do
    case $1 in
       -conf) CMDLN_CONF=$2; shift 2;;
@@ -244,14 +305,18 @@ while [ $# -gt 0 ]; do
       -stop) STOP=1; shift;;
       -status) STATUS=1; shift;; 
       -name) NAME=$2; shift 2;;
+      -xml) XML=1; shift;;
       *) echo "Do not recognize command line option: $1" 1>&2; exit 1;;
    esac
 done
 
+if [ $(($START+$STOP+$STATUS+$XML)) != 1 ]; then
+   crash "Usage fail"
+fi
+
 # Wait until finished processing command line arguments before starting or stopping the service
 if [ "$START" == 1 ]; then
    start_service
-   create_pool_entry
    exit 0
 fi
 
@@ -264,4 +329,10 @@ if [ "$STATUS" == 1 ]; then
    display_status
    exit 0
 fi
+
+if [ "$XML" == 1 ]; then
+   generate_xml
+   exit 0
+fi
+
 
