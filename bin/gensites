@@ -75,6 +75,7 @@ do
       -L) TEMPLATE_DIRECTORY=$2; verify_not_null template_directory $TEMPLATE_DIRECTORY; shift ;;
       -l) LIST_SPECIFIC_TEMPLATE=1 ;;
       -T) LIST_TEMPLATES=1 ;;
+      -n) NEW_TEMPLATE_NAME=$2; verify_not_null new_template_name $NEW_TEMPLATE_NAME; shift ;;
       -h|-help|-?) usage ;;
        *) TEMPLATE=$1 ;;
    esac
@@ -151,14 +152,7 @@ if [ -z "$PROPERTIES_FILE" ]; then
 fi
 
 # Setup for creating a TC file
-if [ -f "$PROPERTIES_FILE" ]; then
-   if [ -n "`grep -e app $PROPERTIES_FILE`" ]; then
-      #if [ -f "tc.data" ]; then
-      #   mv tc.data tc.data.old
-      #fi
-      HOSTS=`grep -i "pool handle" $TEMPLATE_PATH|grep -v "^[[:space:]]*#"|cut -d'"' -f2`
-   fi
-fi
+HOSTS=`grep -i "pool handle" $TEMPLATE_PATH|grep -v "^[[:space:]]*#"|cut -d'"' -f2`
 
 # Parse values into variables for later sed processing
 if [ -f "$PROPERTIES_FILE" ]; then
@@ -214,10 +208,10 @@ do
    fi
    SED_COMMAND+="-e s@"\_$value\_"@${!value}@g "
 done
+SED_COMMAND+=" -e s@\"$HOSTS\"@\"$NEW_TEMPLATE_NAME\"@g "
 len=$( echo $SED_COMMAND |wc -w )
 if [ $len -gt 1 ]; then
    $SED_COMMAND $TEMPLATE_PATH
 else
    cat $TEMPLATE_PATH
 fi
-
