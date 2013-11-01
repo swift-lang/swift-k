@@ -202,7 +202,7 @@ public class ProcedureSignature {
 		add(functionsMap, "toFloat", returns(FLOAT), args(ANY));
 		add(functionsMap, "toString", returns(STRING), args(ANY));
 		
-		add(functionsMap, "format", returns(STRING), args(FLOAT, INT));
+		add(functionsMap, "format", returns(STRING), args(VARGS));
 		add(functionsMap, "pad", returns(STRING), args(INT, INT));
 		
 		add(functionsMap, "java", returns(ANY), args(VARGS));

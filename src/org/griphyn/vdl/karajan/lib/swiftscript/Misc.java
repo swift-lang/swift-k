@@ -477,29 +477,30 @@ public class Misc {
 	 * Takes in a float and formats to desired precision and returns a string
 	 */
 	public static class Format extends AbstractSingleValuedFunction {
-        private ArgRef<AbstractDataNode> format;
-        private ArgRef<AbstractDataNode> value;
+	    private ChannelRef<AbstractDataNode> c_vargs;
 
         @Override
         protected Signature getSignature() {
-            return new Signature(params("format", "value"));
+            return new Signature(params("..."));
         }
         
         @Override
         public Object function(Stack stack) {
-            AbstractDataNode hformat = this.format.getValue(stack);
-            String format = SwiftFunction.unwrap(this, hformat);
-            AbstractDataNode hvalue = this.value.getValue(stack);
-            Double value = SwiftFunction.unwrap(this, hvalue);
+            Channel<AbstractDataNode> vargs = c_vargs.get(stack);
+            Channel<Object> args = SwiftFunction.unwrapAll(this, vargs);
             
-            DSHandle handle = new RootDataNode(Types.STRING, 
-            		String.format("%." + format + "f", value));
+            if (args.size() == 0) {
+                throw new ExecutionException(this, "Missing format specification");
+            }
+            
+            String format = (String) args.get(0);
+            Object[] a = args.subChannel(1).toArray();
+            
+            DSHandle handle = new RootDataNode(Types.STRING, String.format(format, a));
 
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
                 SwiftFunction.logProvenanceResult(provid, handle, "format");
-                SwiftFunction.logProvenanceParameter(provid, hformat, "format");
-                SwiftFunction.logProvenanceParameter(provid, hvalue, "value");
             }
             return handle;
         }
