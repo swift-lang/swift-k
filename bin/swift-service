@@ -1,6 +1,8 @@
 #!/bin/bash 
+#
+# Allows a user to start, stop, name, and view the status of coaster services
+#
 
-# Determine the location of needed files
 export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
 export WORKER="$SWIFT_BIN/worker.pl"
 export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
@@ -22,7 +24,7 @@ usage()
    crash "$( basename $0 ) [ -start | -stop | -status | -xml ] [ -name servicename ]"
 }
 
-# Wait for a file to be created, up to given amount of time
+# Wait for a file ($1) to be created, up to given amount of time ($2)
 wait_for_file()
 {
    FILE=$1
@@ -80,12 +82,10 @@ stop_single_service()
       fi
    done
 
-   # Get process name
    if [ -z "$PID_COMM" ]; then
       PID_COMM="$PID"
    fi 
 
-   # echo "Killing $PID_COMM ($PID)"
    run_command kill $PID
    rm -rf $SERVICE_DIR/$SERVICENAME
 }
@@ -124,13 +124,12 @@ start_service()
       CONFIG_FILE="coaster-service.conf"
    fi
 
-   echo "Starting Swift service..."
+   echo -e "Starting Swift service..\n"
    if [ -f "$CONFIG_FILE" ]; then
       echo "Configuration: $CONFIG_FILE"
       source $CONFIG_FILE
    fi
 
-   # Determine IP address to which workers should connect, and address in sites.xml
    if [ -z "$IPADDR" ]; then
       if [ "$SSH_TUNNELING" == "yes" ]; then
          IPADDR=localhost
@@ -178,6 +177,9 @@ start_service()
    fi
 
    COASTER_DIR="$SERVICE_DIR/$NAME"
+   if [ -d "$COASTER_DIR" ]; then
+      crash "Service named $NAME already exists!"
+   fi
    mkdir $COASTER_DIR || crash "Unable to create $COASTER_DIR"
    echo $PID >> $COASTER_DIR/pid
 
@@ -212,12 +214,14 @@ start_service()
    echo Service port: $SERVICE_PORT
    echo Local port: $LOCAL_PORT
    
-   echo $SERVICE_PORT >> $COASTER_DIR/service.port
-   echo $LOCAL_PORT >> $COASTER_DIR/local.port
-
    # Generate sites.xml
    export EXECUTIONURL="http://$IPADDR:$SERVICE_PORT"
-   export WORKERURL="http://$IPADDR:$LOCAL_PORT"
+   export WORKERURL=$( java -jar $SWIFT_BIN/listcoasterurls.jar $LOCAL_PORT )
+
+   echo Execution URL: $EXECUTIONURL
+   echo Worker URL: $WORKERURL
+   echo $EXECUTIONURL >> $COASTER_DIR/execution.url
+   echo $WORKERURL >> $COASTER_DIR/worker.url
 
    GENSITES_ARGS=""
    if [ -f "$CONFIG_FILE" ]; then
@@ -241,6 +245,7 @@ start_service()
       export WORK=/tmp
    fi
    gensites -n $NAME $GENSITES_ARGS > $COASTER_DIR/sites.xml
+   echo
 }
 
 # Display status of services
@@ -271,8 +276,8 @@ display_status()
          echo Status: Failed
       fi
 
-      echo "Service port: $( cat $service/service.port )"
-      echo "Local port: $( cat $service/local.port )" 
+      echo "Service port: $( cat $service/execution.url )"
+      echo "Local port: $( cat $service/worker.url )" 
     
       count=$((count+1))
    done
@@ -304,6 +309,7 @@ generate_xml()
    done
 
    echo "</config>"
+
 }
 # Parse command line arguments
 START=0; STOP=0; STATUS=0; XML=0
@@ -323,25 +329,18 @@ if [ $(($START+$STOP+$STATUS+$XML)) != 1 ]; then
    usage
 fi
 
-# Wait until finished processing command line arguments before starting or stopping the service
 if [ "$START" == 1 ]; then
    start_service
-   exit 0
 fi
 
 if [ "$STOP" == 1 ]; then
    stop_service
-   exit 0
 fi
 
 if [ "$STATUS" == 1 ]; then
    display_status
-   exit 0
 fi
 
 if [ "$XML" == 1 ]; then
    generate_xml
-   exit 0
 fi
-
-
