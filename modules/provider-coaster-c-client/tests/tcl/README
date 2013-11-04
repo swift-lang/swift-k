@@ -1,5 +1,10 @@
-Run start-coaster-service in the coasters folder to start a coaster service.
+Here are few quick steps to do before running the Tcl tests:
+
+1. Run start-coaster-service in the coasters folder to start a coaster service.
 The configuration for coasters is in coaster-service.conf
 
-Use the url in the sites.xml generated in the tcl examples to connect to the
+2. Use the url in the sites.xml generated in the tcl examples to connect to the
 coaster service
+
+3. export the folder where the pkgIndex.tcl is present as TCLLIBPATH
+    export TCLLIBPATH="cog/modules/provider-coaster-c-client/tcl"
