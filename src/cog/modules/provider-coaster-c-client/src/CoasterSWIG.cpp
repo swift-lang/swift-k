@@ -129,12 +129,16 @@ int CoasterSWIGJobSettings(Job* j, char* dir, char* args, char* attr,
     }
 
     if ( strlen(args) != 0 ){
+        /*
         std::vector<string> arg_vector = parse_string(string(args));
         for (std::vector<string>::iterator i = arg_vector.begin(); i != arg_vector.end(); i++ ){
             j->addArgument(*i);
             cout << "Attr ["<< *i <<"]" <<endl;
         }
+        */
+        j->addArgument(args);
     }
+
     // Untested code block ahead.
     /*
     if ( strlen(attr) != 0 ){
@@ -169,16 +173,23 @@ int CoasterSWIGJobSettings(Job* j, char* dir, char* args, char* attr,
 int CoasterSWIGSubmitJob(CoasterClient *client, Job* job)
 {
     client->submit(*job);
-    client->waitForJob(*job);
-    int status = job->getStatus()->getStatusCode();
-    cout << "SubmitJob returns code :" << status << endl;
     return 0;
 }
 
 int CoasterSWIGWaitForJob(CoasterClient *client, Job *job)
 {
     client->waitForJob(*job);
-    return 0;
+    int status = job->getStatus()->getStatusCode();
+    cout << "SubmitJob returns code :" << status << endl;
+    return status;
+}
+
+int CoasterSWIGGetJobStatus(CoasterClient *client, Job *job)
+{
+    int status = job->getStatus()->getStatusCode();
+    cout << "SubmitJob returns code :" << status << endl;
+    //    cerr << "Job status message     :" << job->getStatus()->getMessage() << endl;
+    return status;
 }
 
 /**

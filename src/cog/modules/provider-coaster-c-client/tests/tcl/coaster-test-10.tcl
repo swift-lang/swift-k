@@ -1,11 +1,27 @@
-load ../../src/.libs/libcoasterclient.so
+package require coaster 0.0
 
 set loop_ptr [CoasterSWIGLoopCreate]
+set client_ptr [CoasterSWIGClientCreate $loop_ptr 140.221.8.81:45822]
+set x [CoasterSWIGClientSettings $client_ptr "SLOTS=1,MAX_NODES=1,JOBS_PER_NODE=2"]
+puts "Error code from CoasterSWIGClientSettings $x"
 
-set client_ptr [CoasterSWIGClientCreate $loop_ptr 140.221.8.81:40568]
+# Job stuff
+set job1 [CoasterSWIGJobCreate "/bin/echo"]
+puts "Job set to /bin/hostname"
 
-set result [CoasterSWIGTest $loop_ptr 140.221.8.81:40568 $client_ptr ]
+set stdout_dst "/homes/yadunand/swift-trunk/cog/modules/provider-coaster-c-client/tests/tcl/stdout"
+set stderr_dst "/homes/yadunand/swift-trunk/cog/modules/provider-coaster-c-client/tests/tcl/stderr"
 
-#set result [CoasterSWIGTest $client_ptr]
+set rcode [CoasterSWIGJobSettings $job1 "" "hello,world, how are you" "" "" \
+               $stdout_dst $stderr_dst]
 
-#set x [CoasterSWIGClientSettings $client_ptr "SLOTS=1,MAX_NODES=1"]
+set rcode [CoasterSWIGSubmitJob $client_ptr $job1]
+puts "Job1 submitted"
+
+puts "Waiting for Job1"
+set rcode [CoasterSWIGWaitForJob $client_ptr $job1]
+puts "Job1 complete"
+
+set rcode [CoasterSWIGClientDestroy $client_ptr]
+
+set rcode [CoasterSWIGLoopDestroy $loop_ptr]

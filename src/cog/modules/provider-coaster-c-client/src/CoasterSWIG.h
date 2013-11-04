@@ -28,6 +28,8 @@ int CoasterSWIGSubmitJob(CoasterClient *client, Job* job);
 
 int CoasterSWIGWaitForJob(CoasterClient *client, Job* job);
 
+int CoasterSWIGGetJobStatus(CoasterClient *client, Job* job);
+
 int CoasterSWIGTest(CoasterLoop *loop, char *service_URL, CoasterClient *c);
 
 //int CoasterSWIGTest(CoasterLoop *loop, char *service_URL);
