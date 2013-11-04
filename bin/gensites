@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 # crash: Report a problem and exit
 crash()
@@ -208,7 +208,10 @@ do
    fi
    SED_COMMAND+="-e s@"\_$value\_"@${!value}@g "
 done
-SED_COMMAND+=" -e s@\"$HOSTS\"@\"$NEW_TEMPLATE_NAME\"@g "
+if [ -n "$NEW_TEMPLATE_NAME" ]; then
+   SED_COMMAND+=" -e s@\"$HOSTS\"@\"$NEW_TEMPLATE_NAME\"@g "
+fi
+
 len=$( echo $SED_COMMAND |wc -w )
 if [ $len -gt 1 ]; then
    $SED_COMMAND $TEMPLATE_PATH
