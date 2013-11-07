@@ -1,0 +1,40 @@
+#!/bin/bash
+
+crash()
+{
+   MSG=$1
+   echo ${MSG}  >&2
+   exit 1
+}
+
+usage()
+{
+   crash "Usage: $0 </path/to/*.d>"
+}
+
+if [ -z "$1" ]; then
+   usage
+fi
+
+directory=$1
+if [ ! -d "$directory" ]; then
+   crash "Directory $directory does not exist"
+fi
+
+(
+cat <<'EOF'
+set terminal png large size 1024,768
+set output "apptimes.png"
+set ylabel "Runtime (seconds)"
+set xlabel "Task"
+set key off
+plot "apptimes.data"
+EOF
+) > apptimes.gp
+
+grep APP_ $directory/* | cut -d: -f3 | cut -d, -f1 | sort -n > apptimes.data
+
+gnuplot apptimes.gp || crash "Error running gnuplot"
+rm apptimes.gp apptimes.data
+
+echo "Output image: apptimes.png"

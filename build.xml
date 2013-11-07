@@ -85,6 +85,7 @@
 
 		<chmod perm="+x">
 			<fileset dir="${dist.dir}/bin">
+                                <include name="apptimes"/>
 				<include name="gensites"/>
                                 <include name="nswift"/>
 				<include name="start-coaster-service"/>
