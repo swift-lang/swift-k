@@ -85,7 +85,7 @@ below requests 2 nodes with 12 slots per node.
 -----
 
 Defining non-standard Slurm options
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A Slurm submit script has many settings and options. Swift knows about many of
 the basic Slurm settings, like how to define a project or a queue, but it does 
 not know about every setting. Swift provides a simple way to pass-thru your own
