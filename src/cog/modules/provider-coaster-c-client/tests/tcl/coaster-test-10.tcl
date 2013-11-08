@@ -1,8 +1,8 @@
 package require coaster 0.0
 
 set loop_ptr [CoasterSWIGLoopCreate]
-set client_ptr [CoasterSWIGClientCreate $loop_ptr 140.221.8.81:45822]
-set x [CoasterSWIGClientSettings $client_ptr "SLOTS=1,MAX_NODES=1,JOBS_PER_NODE=2"]
+set client_ptr [CoasterSWIGClientCreate $loop_ptr 127.0.0.1:53001]
+set x [CoasterSWIGClientSettings $client_ptr "SLOTS=1,MAX_NODES=1,JOBS_PER_NODE=2,WORKER_MANAGER=*:local"]
 puts "Error code from CoasterSWIGClientSettings $x"
 
 # Job stuff

@@ -75,8 +75,10 @@ int CoasterSWIGClientSettings(CoasterClient *client, char *settings)
 
 Job* CoasterSWIGJobCreate(char *cmd_string)
 {
+    string jobmanager = string("dummy");
     cout << "CoasterSWIGJobCreate("<< cmd_string <<") "<< endl;
     Job *job = new Job(cmd_string);
+    job->setJobManager(jobmanager);
     return job;
 }
 
@@ -186,7 +188,11 @@ int CoasterSWIGWaitForJob(CoasterClient *client, Job *job)
 
 int CoasterSWIGGetJobStatus(CoasterClient *client, Job *job)
 {
-    int status = job->getStatus()->getStatusCode();
+    // TODO  : Check job->getStatus() for NULL before trying for getStatusCode
+    int status = 9999;
+    if ( job->getStatus() != NULL ){
+        status = job->getStatus()->getStatusCode();
+    }
     cout << "SubmitJob returns code :" << status << endl;
     //    cerr << "Job status message     :" << job->getStatus()->getMessage() << endl;
     return status;

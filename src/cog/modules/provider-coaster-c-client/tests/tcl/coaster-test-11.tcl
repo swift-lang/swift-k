@@ -1,7 +1,7 @@
 package require coaster 0.0
 
 set loop_ptr [CoasterSWIGLoopCreate]
-set client_ptr [CoasterSWIGClientCreate $loop_ptr 140.221.8.81:45822]
+set client_ptr [CoasterSWIGClientCreate $loop_ptr 127.0.0.1:53001]
 set x [CoasterSWIGClientSettings $client_ptr "SLOTS=1,MAX_NODES=1,JOBS_PER_NODE=2"]
 puts "Error code from CoasterSWIGClientSettings $x"
 
@@ -18,8 +18,6 @@ set rcode [CoasterSWIGJobSettings $job1 "" $arg_script "" "" \
 
 set rcode [CoasterSWIGSubmitJob $client_ptr $job1]
 puts "Job1 submitted"
-
-puts "Waiting for Job1"
 
 # Anything less that 100ms seems to cause a segfault.
 # Maybe the buffers that are used aren't initialised till that wait time.?
