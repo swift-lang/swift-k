@@ -21,7 +21,7 @@ crash()
 # Print usage
 usage()
 {
-   crash "$( basename $0 ) [ -start | -stop | -status | -xml ] [ -name servicename ]"
+   crash "$( basename $0 ) [ -start | -stop | -status | -xml | -debug ] [ -name servicename ]"
 }
 
 # Wait for a file ($1) to be created, up to given amount of time ($2)
@@ -44,7 +44,7 @@ run_command()
 {
    command="$@"
    echo "Running command $command" >> $LOG
-   $command >> $LOG 2>&1
+   $command 2>&1 | tee -a $LOG
 }
 
 # Write command to log, run in background, return PID
@@ -78,7 +78,7 @@ stop_single_service()
       PROC_PID=$( echo $PROC | awk '{print $1}' )
       PROC_PPID=$( echo $PROC | awk '{print $2}' )
       if [ $PROC_PPID == $PID ]; then
-         run_command kill $PROC_PID
+         run_command kill $PROC_PID &>/dev/null
       fi
    done
 
@@ -86,10 +86,11 @@ stop_single_service()
       PID_COMM="$PID"
    fi 
 
-   run_command kill $PID
+   run_command kill $PID &>/dev/null
    rm -rf $SERVICE_DIR/$SERVICENAME
 }
 
+# Print a list of services
 get_services()
 {
    ls -d $SERVICE_DIR/*/ 2>/dev/null
@@ -116,7 +117,21 @@ stop_service()
 
 # Start coaster service
 start_service()
-{
+{ 
+   # Figure out naming, create directory for this service
+   if [ -z "$NAME" ]; then
+      NAME=$( ls -1d $SERVICE_DIR/*/ 2>/dev/null | wc -l )
+      NAME=$( expr $NAME + 1 )
+      NAME="service-$NAME"
+   fi
+
+   COASTER_DIR="$SERVICE_DIR/$NAME"
+   if [ -d "$COASTER_DIR" ]; then
+      crash "Service named $NAME already exists!"
+   fi
+   mkdir $COASTER_DIR || crash "Unable to create $COASTER_DIR"
+   LOG="$COASTER_DIR/swift-service.log"
+
    # Import settings
    if [ -f "$CMDLN_CONF" ]; then
       CONFIG_FILE=$CMDLN_CONF
@@ -127,7 +142,7 @@ start_service()
    echo -e "Starting Swift service..\n"
    if [ -f "$CONFIG_FILE" ]; then
       echo "Configuration: $CONFIG_FILE"
-      source $CONFIG_FILE
+      run_command source $CONFIG_FILE
    fi
 
    if [ -z "$IPADDR" ]; then
@@ -151,11 +166,11 @@ start_service()
 
    # Create files for storing port info, if needed
    if [ -z "$LOCAL_PORT" ]; then
-      LOCAL_PORT_FILE=$( mktemp $TMPDIR/XXXXXX )
+      LOCAL_PORT_FILE=$( run_command mktemp $TMPDIR/XXXXXX )
    fi
 
    if [ -z "$SERVICE_PORT" ]; then
-      SERVICE_PORT_FILE=$( mktemp $TMPDIR/XXXXXX )
+      SERVICE_PORT_FILE=$( run_command mktemp $TMPDIR/XXXXXX )
    fi
 
    # Check values in configuration file to determine how we should start coaster-service
@@ -169,18 +184,6 @@ start_service()
    elif [ -n  "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
       PID=$( run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localport $LOCAL_PORT -passive )
    fi
-
-   if [ -z "$NAME" ]; then
-      NAME=$( ls -1d $SERVICE_DIR/*/ 2>/dev/null | wc -l )
-      NAME=$( expr $NAME + 1 )
-      NAME="service-$NAME"
-   fi
-
-   COASTER_DIR="$SERVICE_DIR/$NAME"
-   if [ -d "$COASTER_DIR" ]; then
-      crash "Service named $NAME already exists!"
-   fi
-   mkdir $COASTER_DIR || crash "Unable to create $COASTER_DIR"
    echo $PID >> $COASTER_DIR/pid
 
    # If waiting on port files to be created, wait for files to be created
@@ -213,7 +216,8 @@ start_service()
    echo Name: $NAME
    echo Service port: $SERVICE_PORT
    echo Local port: $LOCAL_PORT
-   
+   echo Worker script: $WORKER
+ 
    # Generate sites.xml
    export EXECUTIONURL="http://$IPADDR:$SERVICE_PORT"
    export WORKERURL=$( java -jar $SWIFT_BIN/listcoasterurls.jar $LOCAL_PORT )
@@ -222,6 +226,7 @@ start_service()
    echo Worker URL: $WORKERURL
    echo $EXECUTIONURL >> $COASTER_DIR/execution.url
    echo $WORKERURL >> $COASTER_DIR/worker.url
+   echo $WORKER >> $COASTER_DIR/worker.path
 
    GENSITES_ARGS=""
    if [ -f "$CONFIG_FILE" ]; then
@@ -278,7 +283,8 @@ display_status()
 
       echo "Service port: $( cat $service/execution.url )"
       echo "Local port: $( cat $service/worker.url )" 
-    
+      echo "Worker script: $( cat $service/worker.path )"    
+
       count=$((count+1))
    done
    if [ "$count" -gt 0 ]; then
@@ -311,8 +317,20 @@ generate_xml()
    echo "</config>"
 
 }
+
+# Display debug info
+display_debug()
+{
+   SERVICES=$( get_services )
+   for service in $SERVICES
+   do
+      echo Displaying debug information for service: $( basename $service )
+      cat $service/swift-service.log
+   done
+}
+
 # Parse command line arguments
-START=0; STOP=0; STATUS=0; XML=0
+START=0; STOP=0; STATUS=0; XML=0; DEBUG=0
 while [ $# -gt 0 ]; do
    case $1 in
       -conf) CMDLN_CONF=$2; shift 2;;
@@ -321,26 +339,23 @@ while [ $# -gt 0 ]; do
       -status) STATUS=1; shift;; 
       -name) NAME=$2; shift 2;;
       -xml) XML=1; shift;;
+      -debug) DEBUG=1; shift;;
       *) echo "Do not recognize command line option: $1" 1>&2; usage;;
    esac
 done
 
-if [ $(($START+$STOP+$STATUS+$XML)) != 1 ]; then
+if [ $(($START+$STOP+$STATUS+$XML+$DEBUG)) != 1 ]; then
    usage
 fi
 
 if [ "$START" == 1 ]; then
    start_service
-fi
-
-if [ "$STOP" == 1 ]; then
+elif [ "$STOP" == 1 ]; then
    stop_service
-fi
-
-if [ "$STATUS" == 1 ]; then
+elif [ "$STATUS" == 1 ]; then
    display_status
-fi
-
-if [ "$XML" == 1 ]; then
+elif [ "$XML" == 1 ]; then
    generate_xml
+elif [ "$DEBUG" == 1 ]; then
+   display_debug
 fi
