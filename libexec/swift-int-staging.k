@@ -48,9 +48,25 @@ namespace(swift) {
 		}
 	)
 
-	readErrorFile := function(dir, jobid) {
-		str:strip(file:read("{dir}/{jobid}.error"))
-		file:remove("{dir}/{jobid}.error")
+	readErrorFiles := function(dir, jobid, stdout, stderr) {
+		concat(
+			if(file:exists("{dir}/{jobid}.error")) {
+				str:strip(file:read("{dir}/{jobid}.error"))
+				file:remove("{dir}/{jobid}.error")
+			}
+			stderr := if(stderr == null, "{jobid}.stderr", stderr)
+			stdout := if(stdout == null, "{jobid}.stdout", stdout)
+			if(file:exists("{dir}/{stderr}")) {
+				"\n\n------- Application STDERR --------\n"
+				str:strip(file:read("{dir}/{stderr}"))
+				"\n-----------------------------------\n"
+			}
+			else if(file:exists("{dir}/{stdout}")) {
+				"\n\n------- Application STDOUT --------\n"
+				str:strip(file:read("{dir}/{stdout}"))
+				"\n-----------------------------------\n"
+			}
+		)
 	}
 	
 	export(execute2,
@@ -74,9 +90,6 @@ namespace(swift) {
 				wrapper := "_swiftwrap.staging"
 				wrapfile := "{ddir}/param-{jobid}"
 				
-				stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
-				stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr))
-
 				wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 				cdmfile := cdm:file()
@@ -93,8 +106,8 @@ namespace(swift) {
 							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
 							wrapper,
 							"-e", executable(tr, rhost),
-							"-out", stdout,
-							"-err", stderr,
+							"-out", if(stdout == null, "stdout.txt", getFieldValue(stdout)),
+							"-err", if(stderr == null, "stderr.txt", getFieldValue(stderr)),
 							"-i", if (stdin != null, getFieldValue(stdin)),
 							"-d", flatten(unique(outFileDirs(stageout))),
 							"-if", flatten(inFiles(stagein)),
@@ -131,8 +144,20 @@ namespace(swift) {
 
 						stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info", 
 							mode = WRAPPER_TRANSFER_MODE)
-						if (false) {
+						
+						if (stdout == null) {
+							// if not stdout requested, only stage on error
+							stageOut("stdout.txt", "{stagingMethod}://localhost/{ddir}/{jobid}.stdout", 
+								mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
+						}
+						else {
 							stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}")
+						}
+						if (stderr == null) {
+							stageOut("stderr.txt", "{stagingMethod}://localhost/{ddir}/{jobid}.stderr",
+								mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
+						}
+						else {
 							stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
 						}
 						stageOut("wrapper.error", "{stagingMethod}://localhost/{ddir}/{jobid}.error", 
@@ -155,7 +180,7 @@ namespace(swift) {
 					}
 					else {
 						setProgress(progress, "Failed but can retry")
-						exception := try(exception(readErrorFile(ddir, jobid)), prev)
+						exception := try(exception(readErrorFiles(ddir, jobid, stdout, stderr)), prev)
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 					
 						throw(
