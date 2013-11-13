@@ -6,9 +6,10 @@
 export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
 export WORKER="$SWIFT_BIN/worker.pl"
 export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
-export LOG="start-coaster-service.log"
+export LOG="swift-service.log"
 export SERVICE_DIR="$HOME/.swift/service"
 mkdir -p "$SERVICE_DIR" || crash "Unable to create $SERVICE_DIR"
+
 
 # Report a problem and exit
 crash()
@@ -39,11 +40,17 @@ wait_for_file()
    done
 }
 
+# Return current timestamp
+get_timestamp()
+{
+   date +"%b %d %H:%M:%S "
+}
+
 # Write command to log, run command, wait for completion
 run_command()
 {
    command="$@"
-   echo "Running command $command" >> $LOG
+   echo "$( get_timestamp ) Running command $command" >> $LOG
    $command 2>&1 | tee -a $LOG
 }
 
@@ -51,49 +58,65 @@ run_command()
 run_command_bg()
 {
    command="$@"
-   echo "Running background command $command" >> $LOG
+   echo "$( get_timestamp ) Running background command $command" >> $LOG
    $command >> $LOG 2>&1 &
    echo $!
+}
+
+# Kill all children processes
+nicely_kill_all_children()
+{
+   PID=$1
+   ps -u $USER -o "pid,ppid"|sed 1d | while read PROC
+   do
+      PROC_PID=$( echo $PROC | awk '{print $1}' )
+      PROC_PPID=$( echo $PROC | awk '{print $2}' )
+      if [ $PROC_PPID == $PID ]; then
+         nice_kill $PROC_PID 5
+      fi
+   done
+   nice_kill $PID 5
+}
+
+# Try to nicely kill a process before giving it a SIGKILL
+nice_kill()
+{
+   pid=$1
+   grace=$2
+   run_command kill $pid &>/dev/null
+
+   count=0
+   while ps -p $pid &>/dev/null
+   do
+      sleep 1
+      (( count++ ))
+      if [ "$count" -ge "$grace" ]; then
+         run_command kill -9 $pid
+      fi  
+   done  
 }
 
 # Given a name, stop a single service
 stop_single_service()
 {
    SERVICENAME=$1
+   echo Stopping service $SERVICENAME
    if [ ! -d "$SERVICE_DIR/$SERVICENAME" ]; then
       crash "Unable to find service called $SERVICENAME"
    fi
 
-   if [ ! -f "$SERVICE_DIR/$SERVICENAME/pid" ]; then
-      crash "Error: Unable to find pid file for service $SERVICENAME"
+   if [ -f "$SERVICE_DIR/$SERVICENAME/pid" ]; then
+      PID=$( cat $SERVICE_DIR/$SERVICENAME/pid )
+      nicely_kill_all_children $PID
    fi
 
-   echo Stopping service $SERVICENAME...
-   PID=$( cat $SERVICE_DIR/$SERVICENAME/pid )
-   PID_COMM=$( ps -p $PID -o comm|sed 1D 2>/dev/null )
-
-   # Kill child processes of $PID
-   ps -u $USER -o "pid,ppid"|sed 1d | while read PROC
-   do
-      PROC_PID=$( echo $PROC | awk '{print $1}' )
-      PROC_PPID=$( echo $PROC | awk '{print $2}' )
-      if [ $PROC_PPID == $PID ]; then
-         run_command kill $PROC_PID &>/dev/null
-      fi
-   done
-
-   if [ -z "$PID_COMM" ]; then
-      PID_COMM="$PID"
-   fi 
-
-   run_command kill $PID &>/dev/null
    rm -rf $SERVICE_DIR/$SERVICENAME
 }
 
 # Print a list of services
 get_services()
 {
-   ls -d $SERVICE_DIR/*/ 2>/dev/null
+   find $SERVICE_DIR -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -n
 }
 
 # Stop the coaster service
@@ -324,8 +347,9 @@ display_debug()
    SERVICES=$( get_services )
    for service in $SERVICES
    do
-      echo Displaying debug information for service: $( basename $service )
+      echo -e "Displaying debug info for service $( basename $service ) ($service/swift-service.log)\n"
       cat $service/swift-service.log
+      echo
    done
 }
 
