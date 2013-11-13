@@ -44,8 +44,13 @@ info() {
 	fi
 }
 
+# lookup exact executable path for date to avoid going through the path
+# multiple times
+
+DATE_BIN=`which date`
+
 logstate() {
-	echo "Progress " `date +"%Y-%m-%d %H:%M:%S.%N%z"` " $@" >& "$INFO"
+	echo "Progress " `$DATE_BIN +"%Y-%m-%d %H:%M:%S.%N%z"` " $@" >& "$INFO"
 }
 
 log() {
