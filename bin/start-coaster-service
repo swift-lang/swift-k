@@ -82,7 +82,9 @@ done
 
 # Determine the location of needed files
 export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
-export WORKER="$SWIFT_BIN/worker.pl"
+if [ -z "$WORKER" ]; then
+   export WORKER="$SWIFT_BIN/worker.pl"
+fi
 export WORKER_LOGGING_LEVEL="NONE"
 export PID_FILE="$HOME/.swift/.coaster-service-pids"
 export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
@@ -117,9 +119,9 @@ fi
 echo Service address: $IPADDR
 
 # Verify worker script is there
-if [ ! -x "$WORKER" ]; then
-   crash "Error: Unable to find worker $WORKER!"
-fi
+#if [ ! -x "$WORKER" ]; then
+#   crash "Error: Unable to find worker $WORKER!"
+#fi
 
 # Verify we can find coaster service
 if [ ! -x "$COASTER_SERVICE" ]; then
