@@ -1,4 +1,5 @@
-<config>
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
 
 <!-- sites.xml specifies details of the sites that Swift can run on.
 
