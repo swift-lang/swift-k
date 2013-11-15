@@ -36,7 +36,7 @@
     <profile namespace="globus" key="jobsPerNode">24</profile>
     <profile namespace="globus" key="lowOverAllocation">100</profile>
     <profile namespace="globus" key="highOverAllocation">100</profile>
-    <profile namespace="globus" key="providerAttributes">pbs.aprun;pbs.mpp;depth=24;pbs.resource_list=advres=wilde.1768</profile>
+    <profile namespace="globus" key="providerAttributes">pbs.aprun;pbs.mpp;depth=24;</profile>
     <profile namespace="globus" key="maxtime">36000</profile>
     <profile namespace="globus" key="maxWalltime">01:05:00</profile>
     <profile namespace="globus" key="userHomeOverride">/lustre/beagle/BEAGLE_USERNAME/swiftwork</profile>
@@ -110,7 +110,7 @@
     <profile namespace="globus"  key="maxWalltime">01:05:00</profile>
     <profile namespace="globus"  key="highOverAllocation">100</profile>
     <profile namespace="globus"  key="lowOverAllocation">100</profile>
-    <profile namespace="globus"  key="slots">1000</profile>
+    <profile namespace="globus"  key="slots">2</profile>
     <profile namespace="globus"  key="maxNodes">1</profile>
     <profile namespace="globus"  key="nodeGranularity">1</profile>
     <!-- <profile namespace="globus"  key="condor.+AccountingGroup">"group_friends.yadunand"</profile> -->

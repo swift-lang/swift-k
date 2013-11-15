@@ -5,7 +5,7 @@ PUBLISH_SERVER=http://swift.rcc.uchicago.edu:8042
 DATE=$(date +%H%M%S)
 
 [ ! -z $FROM_MAIL ] || FROM_MAIL="test-engine@swift.rcc.uchicago"
-[ ! -z $TO_MAIL ]   || TO_MAIL="yadudoc1729@gmail.com"
+#[ ! -z $TO_MAIL ]   || TO_MAIL="yadudoc1729@gmail.com"
 
 if [ -d "swift" ]
 then
@@ -87,30 +87,19 @@ echo "Moving $RUN_DIR to $PUBLISH_LOCATION/$RUN_DIR-$DATE"
 echo "Link: $PUBLISH_SERVER/$VERSION/$RUN_DIR-$DATE/$HTML"  >> $MAIL
 echo "==========================================================================">> $MAIL
 cat $MAIL
-mailx -s "Test results from $HOSTNAME" -r $FROM_MAIL $TO_MAIL  < $MAIL
+
+echo "Mail: mailx -s \"Test results from $HOSTNAME\" -r $FROM_MAIL ${TO_MAIL[*]}  < $MAIL"
+
+mailx -s "Test results from $HOSTNAME" -r $FROM_MAIL ${TO_MAIL[*]}  < $MAIL
 
 cp -R $folder $PUBLISH_LOCATION/$VERSION/$RUN_DIR-$DATE &
+
+echo "Publishing links to CI from $MAIL"
+grep -o "http.*" $MAIL | tee result_links.txt
+
+DATE=$(date +%Y-%m-%d)
+echo "Posting result_links.txt to /ci/www/projects/swift/tests/$VERSION/run-$DATE/"
+cat result_links.txt
+scp result_links.txt ci:/ci/www/projects/swift/tests/$VERSION/run-$DATE/
+
 exit 0
-
-#########################################################################################
-############# SUBMIT Results to CI##############
-cd $HOME;
-cd ..;
-RUN_DIR=$(basename $PWD);
-cd ..;
-echo "mv $RUN_DIR \"$RUN_DIR-local\" "
-
-mv $RUN_DIR "$RUN_DIR-local"
-tar -cf Local.tar "$RUN_DIR-local"
-scp Local.tar ci:~/public_html/$VERSION/
-
-echo "Running update and maintenance script on publish server";
-#ssh ci "cd ~/public_html/$VERSION/; cp ~/bin/maint.sh .;  ./maint.sh"
-mv "$RUN_DIR-local" $RUN_DIR
-rm Local.tar
-
-echo "=====================================">> $MAIL
-cd $HOME;
-cat $MAIL
-mailx -s "Test results from $HOSTNAME" -r $FROM_MAIL $TO_MAIL  < $MAIL
-

@@ -1,8 +1,5 @@
 #!/bin/bash
 
-#CLEAN_CHECKOUT="yes"
-CLEAN_CHECKOUT="no"
-
 [ ! -z $COG_URL ]         || COG_URL=https://svn.code.sf.net/p/cogkit/svn/trunk/src/cog
 [ ! -z $SWIFT_URL ]       || SWIFT_URL=https://svn.ci.uchicago.edu/svn/vdl2/trunk
 [ ! -z $SWIFT_VERSION ]   || SWIFT_VERSION=trunk
@@ -18,6 +15,8 @@ CLEAN_CHECKOUT="no"
 [ ! -z $SWIFT_SOURCE ]    || SWIFT_SOURCE="/home/yadunand/swift"
 [ ! -z $RUN_TYPE ]        || RUN_TYPE="daily"
 [ ! -z $SWIFT_TAR_FILE ]  || SWIFT_TAR_FILE="/scratch/midway/yadunand/swift-trunk.tar"
+[ ! -z $CLEAN_CHECKOUT ]  || CLEAN_CHECKOUT="yes"
+
 SITES="sites.xml"
 cp  $SITES  $SITES.bak
 cat $SITES | sed "s/BEAGLE_USERNAME/$BEAGLE_USERNAME/g" > tmp && mv tmp $SITES
@@ -44,42 +43,42 @@ then
 else
     if [ -f "swift.tar" ]
     then
-	echo "Found swift.tar. Extracting.."
-	tar -xf swift.tar
+	    echo "Found swift.tar. Extracting.."
+	    tar -xf swift.tar
     fi
 
-    if [ "CLEAN_CHECKOUT" == "yes" ] || [ ! -d "swift" ]
+    if [ "$CLEAN_CHECKOUT" == "yes" ] || [ ! -d "swift" ]
     then
-	echo "Cleaning and making fresh checkout"
-	rm -rf swift &> /dev/null
-	mkdir swift && cd swift
-	svn co $COG_URL
-	cd cog/modules
-	svn co $SWIFT_URL swift
-	cd swift
+	    echo "Cleaning and making fresh checkout"
+	    rm -rf swift &> /dev/null
+	    mkdir swift && cd swift
+	    svn co $COG_URL
+	    cd cog/modules
+	    svn co $SWIFT_URL swift
+	    cd swift
     else
-	echo "Updating Cog sources"
-	cd swift/
-	svn up *  
-	echo "Updating Swift sources"
-	cd cog/modules/swift
+	    echo "Updating Cog sources"
+	    cd swift/
+	    svn up *
+	    echo "Updating Swift sources"
+	    cd cog/modules/swift
         svn up *
     fi
-    
+
     echo "$PWD : Starting compile"
     ant redist | tee $BASE/compile.log
     if [ "$?" != "0" ]
     then
-	echo "Swift compile failed. Cannot proceed"
-	exit 1
+	    echo "Swift compile failed. Cannot proceed"
+	    exit 1
     fi
 
     cd $BASE
     if [ -d "swift" ]
     then
-	tar -cf swift.tar.tmp ./swift && mv swift.tar.tmp swift.tar && echo "Tarred successfully"
+	    tar -cf swift.tar.tmp ./swift && mv swift.tar.tmp swift.tar && echo "Tarred successfully"
     else
-	echo "Could not find swift folder to tar"
+	    echo "Could not find swift folder to tar"
     fi;
 fi
 
