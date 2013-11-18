@@ -256,6 +256,7 @@ if(@run_directories) {
 
 $run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
 mkdir($run_directory) || die "Unable to create run directory $run_directory\n";
+@new_swift_args = ("-Duser.home=" . $run_directory);
 
 # Write swift configuration files
 &write_sites("sites.xml") if defined( $option_siteslist ) || defined($properties{site});

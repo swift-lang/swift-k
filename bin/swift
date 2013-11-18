@@ -153,6 +153,16 @@ then
    exit 0
 else
    CMDLINE="$( swiftrun $CMDLINE )"
+   for cmd in $CMDLINE
+   do
+      if [[ "$cmd" == *-Duser.home* ]];
+      then
+         if [ -z "$SWIFT_USERHOME" ]; then
+            OPTIONS="$OPTIONS $cmd"
+         fi
+         CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g )
+      fi
+   done
 fi
 
 ### EXECUTE ############
