@@ -18,13 +18,15 @@ my $option_sitesfile;		# Value of -sites.file option
 my $option_siteslist;		# Value of -sites option, comma separated
 my $option_config;		# Value of -config option
 my $option_listconfig; 		# List configuration files used, values, then exit
+my $option_help;                # Print help
+my $option_version;             # Print version number
 my @sites;			# List of sites from -sites in array
 my $run_directory;		# Run directory to be created, run.NNNN
 my @new_swift_args;		# New command line arguments
 my @original_swift_args;	# Original arguments
 
 
-# List of xml shortcuts. Keep in lower case.
+# List of xml shortcuts
 my %xml_aliases = (
                    'allocationstepsize'        => 'globus.allocationstepsize',
                    'delaybase'                 => 'karajan.delaybase',
@@ -163,11 +165,13 @@ foreach my $arg(@ARGV) {
 @original_swift_args = @ARGV;
 GetOptionsFromArray(
            \@original_swift_args, 
+           'config=s'        => \$option_config,
+           'help'            => \$option_help,
+           'listconfig'      => \$option_listconfig,
+           'site|sites=s'    => \$option_siteslist,
            'sitesfile=s'     => \$option_sitesfile,
            'tcfile=s'        => \$option_tcfile,
-           'config=s'        => \$option_config,
-           'site|sites=s'    => \$option_siteslist,
-           'listconfig'       => \$option_listconfig,
+           'version'         => \$option_version,
 );
 
 # Set @sites array from comma separated list of sites
@@ -228,6 +232,15 @@ if( $option_listconfig ) {
    while ( my ($key, $value) = each(%properties) ) {
       print "\t$key=$value\n";
    }
+   exit;
+}
+
+# If -version or -help is specified, pass and exit
+if ( $option_help ) {
+   print "-help\n";
+   exit;
+} elsif ( $option_version ) {
+   print "-version\n";
    exit;
 }
 
