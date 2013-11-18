@@ -2,7 +2,7 @@
 
 # Referenced environment variables (default values):
 # SWIFT_ASSERTS
-# SWIFT_HEAP_MAX (256M)
+# SWIFT_HEAP_MAX (1024M)
 # SWIFT_USAGE_STATS
 
 EXEC=org.griphyn.vdl.karajan.Loader
@@ -16,18 +16,6 @@ if echo `uname` | grep -i "cygwin"; then
 	CYGWIN="yes"
     CPDELIM=";"
 fi
-
-fixCommandLine() {
-
-    COMMANDLINE=
-
-    while [ "X$1" !=  "X" ] ; do
-        COMMANDLINE="${COMMANDLINE} '$1'"
-        shift
-    done
-
-    echo $COMMANDLINE
-}
 
 updateOptions() {
 
@@ -59,15 +47,7 @@ for JAR in $SWIFT_HOME/lib/*.jar; do
 done
 LOCALCLASSPATH=$LOCALCLASSPATH$CPDELIM$CLASSPATH
 
-CMDLINE=`fixCommandLine "$@"`
-
-# make sure sites.xml file is well-formed
-
-#$SWIFT_HOME/bin/chxml $CMDLINE
-#if [ "$?" != 0 ]; then
-#	echo "Could not process input files!"
-#	exit 1
-#fi
+CMDLINE="$@"
 
 ### SETUP OTHER ENV VARIABLES ####
 
@@ -166,6 +146,15 @@ if [ "$SWIFT_USAGE_STATS" = 1 ]; then
     $BASH -c "echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH -1 0 > /dev/udp/$LISTENER/$PORT" > /dev/null 2>&1 &
 fi
 
+# Swiftrun
+if [[ "$CMDLINE" == *-listconfig* ]]
+then
+   swiftrun $CMDLINE
+   exit 0
+else
+   CMDLINE="$( swiftrun $CMDLINE )"
+fi
+
 ### EXECUTE ############
 # Note: killing Swift may be briefly delayed due to Coasters shutdown
 if test -n "$CYGWIN"; then
@@ -182,6 +171,8 @@ if [ "$SWIFT_USAGE_STATS" = 1 ]; then
 	$BASH -c "echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH $return_code 1 > /dev/udp/$LISTENER/$PORT" > /dev/null 2>&1 &
 fi
 
+mv *.d/ $( ls -1rtd run*/ |tail -1 ) > /dev/null 2>&1
+rm *.swiftx *.kml > /dev/null 2>&1
 exit $return_code
 
 # Local Variables:
