@@ -229,8 +229,8 @@ if( $option_listconfig ) {
       print "Reading from: $site\n";
    }
    print "\nValues:\n";
-   while ( my ($key, $value) = each(%properties) ) {
-      print "\t$key=$value\n";
+   foreach my $key (sort keys %properties) {
+      print "\t$key=$properties{$key}\n";
    }
    exit;
 }
