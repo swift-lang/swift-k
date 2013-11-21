@@ -9,7 +9,7 @@ https://portal.xsede.org/web/guest/tacc-stampede[Stampede User Guide].
 Downloading and building Swift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The most recent versions of Swift can be found at
-http://www.ci.uchicago.edu/swift/downloads/index.php[the Swift downloads page]. Follow the instructions
+http://swiftlang.org/downloads/index.php[the Swift downloads page]. Follow the instructions
 provided on that site to download and build Swift.
 
 Overview of How to Run

@@ -37,5 +37,3 @@ include::ssh-cl[]
 include::stampede[]
 
 include::uc3[]
-
-link:http://www.ci.uchicago.edu/swift/docs/index.php[home]

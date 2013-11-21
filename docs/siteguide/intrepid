@@ -41,7 +41,7 @@ time you are logging in, you will be prompted to change your PIN.
 Downloading and building Swift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The most recent versions of Swift can be found at
-http://www.ci.uchicago.edu/swift/downloads/index.php. Follow the instructions
+http://swiftlang.org/downloads/index.php. Follow the instructions
 provided on that site to download and build Swift.
 
 Adding Swift to your PATH

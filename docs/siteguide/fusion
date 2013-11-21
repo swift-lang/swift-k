@@ -51,7 +51,7 @@ run an application. This section will provide a working configuration file which
 you can copy and paste to get running quickly. The sites.xml file
 tells Swift how to submit jobs, where working directories are
 located, and various other configuration information. More
-information on sites.xml can be found in the Swift link:http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html[user guide].
+information on sites.xml can be found in the Swift link:http://swiftlang.org/docs/index.php[documentation].
 
 The first step is to paste the text below into a file named sites.xml.
 
