@@ -264,6 +264,9 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
         String key = attr(n, "key");
         String value = text(n);
         
+        if (value == null) {
+            throw new IllegalArgumentException("No value for profile " + ns + ":" + key);
+        }
         if (ns.equals("karajan")) {
             bc.addProperty(key, value);
         }
@@ -273,7 +276,12 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
     }
 
     private String text(Node n) {
-        return n.getFirstChild().getNodeValue();
+        if (n.getFirstChild() != null) {
+            return n.getFirstChild().getNodeValue();
+        }
+        else {
+            return null;
+        }
     }
 
     private String attr(Node n, String name) {
