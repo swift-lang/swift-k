@@ -77,9 +77,7 @@ public class Sprintf extends SwiftFunction {
             logger.debug("generated: " + msg);
         }
         
-        DSHandle result = new RootDataNode(Types.STRING);
-        result.setValue(msg);
-        return result;
+        return new RootDataNode(Types.STRING, msg);
     }
 
     public static String format(String spec, Channel<AbstractDataNode> args) {
