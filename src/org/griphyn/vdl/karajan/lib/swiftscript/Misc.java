@@ -397,9 +397,7 @@ public class Misc {
             if (logger.isDebugEnabled()) {
                 logger.debug("regexp replacement produced '" + group + "'");
             }
-            DSHandle handle = new RootDataNode(Types.STRING);
-            handle.setValue(group);
-            handle.closeShallow();
+            DSHandle handle = new RootDataNode(Types.STRING, group);
 
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
