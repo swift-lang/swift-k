@@ -31,6 +31,10 @@ public class ScreenBuffer {
 	public static final int ATTR_MASK_FG_COLOR = 0x000f0000;
 	public static final int ATTR_MASK_BG_COLOR = 0x00f00000;
 	
+	// every 10 seconds send the full buffer in case the terminal
+	// garbles up parts of the screen
+	public static final int FULL_SYNC_INTERVAL = 10000;
+	
 	private int width, height;
 	private int[] actual;
 	private int[] buf, tmp;
@@ -40,6 +44,7 @@ public class ScreenBuffer {
 	private boolean lineArt;
 	private CountingWriter os;
 	private int lastattr;
+	private long lastFullSyncTime;
 
 	public ScreenBuffer(ANSIContext context, int width, int height) {
 		this.context = context;
@@ -142,10 +147,17 @@ public class ScreenBuffer {
 			lastattr = attrs();
 			setAttrs(lastattr);
 		}
+		
+		boolean fullSync = false;
+		long now = System.currentTimeMillis();
+		if (now - this.lastFullSyncTime > FULL_SYNC_INTERVAL) {
+		    this.lastFullSyncTime = now;
+		    fullSync = true;
+		}
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				int b = tmp[p];
-				if (b != actual[p]) {
+				if ((b != actual[p]) || fullSync) {
 					int attr = b & 0xffff0000;
 					updateAttr(attr, lastattr);
 					lastattr = attr;
