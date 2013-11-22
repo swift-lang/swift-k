@@ -29,7 +29,6 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
-import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -57,9 +56,7 @@ public class Java extends SwiftFunction {
         Object[] p = convertInputs(method, args);
         Type type = returnType(method);
         Object value = invoke(method, p);
-        DSHandle result = swiftResult(type, value);
-
-        return result;
+        return new RootDataNode(type, value);
     }
 
     /**
@@ -143,14 +140,6 @@ public class Java extends SwiftFunction {
                 ("Error attempting to invoke: " +
                  method.getDeclaringClass() + "." + method);
         }
-        return result;
-    }
-
-    DSHandle swiftResult(Type type, Object value)
-    {
-        DSHandle result = new RootDataNode(type);
-        result.setValue(value);
-        result.closeShallow();
         return result;
     }
 }
