@@ -83,14 +83,45 @@ public class BlockTask extends TaskImpl {
 
     private JobSpecification buildSpecification() {
         JobSpecification js = new JobSpecificationImpl();
-        String script = block.getAllocationProcessor()
-        .getScript().getAbsolutePath();
-        if (settings.getUseHashBang() != null &&
-            settings.getUseHashBang().equals("true")) {
-            js.setExecutable(script);
+        String script = block.getAllocationProcessor().getScript().getAbsolutePath();
+        
+        if ("true".equals(settings.getUseHashBang())) {
+            if (!"false".equals(settings.getPerfTraceWorker())) {
+                js.setExecutable("strace");
+                js.addArgument("-T");
+                js.addArgument("-f");
+                js.addArgument("-tt");
+                
+                js.addArgument("-o");
+                js.addArgument(settings.getWorkerLoggingDirectory() + "/block-" + block.getId() + ".perf");
+                
+                js.addArgument("-e");
+                js.addArgument("trace=" + settings.getPerfTraceWorker());
+                
+                js.addArgument(script);
+            }
+            else {
+                js.setExecutable(script);
+            }
         }
         else {
-            js.setExecutable("/usr/bin/perl");
+            if (!"false".equals(settings.getPerfTraceWorker())) {
+                js.setExecutable("strace");
+                js.addArgument("-T");
+                js.addArgument("-f");
+                js.addArgument("-tt");
+                
+                js.addArgument("-o");
+                js.addArgument(settings.getWorkerLoggingDirectory() + "/block-" + block.getId() + ".perf");
+                
+                js.addArgument("-e");
+                js.addArgument("trace=" + settings.getPerfTraceWorker());
+                
+                js.addArgument("/usr/bin/perl");
+            }
+            else {
+                js.setExecutable("/usr/bin/perl");
+            }
             js.addArgument(script);
         }
         
@@ -105,10 +136,10 @@ public class BlockTask extends TaskImpl {
         else {
             js.setDirectory(settings.getDirectory());
         }
-
+    
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
-
+    
         if (settings.getWorkerLoggingLevel().equals("NONE")) {
           js.addArgument("NOLOGGING");
         }
@@ -121,12 +152,12 @@ public class BlockTask extends TaskImpl {
         		js.addArgument(logDir);
         	}
         }
-
+    
         // logger.debug("arguments: " + js.getArguments());
-
+    
         js.setStdOutputLocation(FileLocation.MEMORY);
         js.setStdErrorLocation(FileLocation.MEMORY);
-
+    
         return js;
     }
 
