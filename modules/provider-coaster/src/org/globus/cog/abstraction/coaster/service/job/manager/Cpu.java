@@ -40,23 +40,10 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
     protected long busyTime, idleTime, lastTime;
 	private boolean shutdown;
 	private int failedJobs, completedJobs;
+	private int perfTraceInterval;
 	
 	public static volatile int totalCompletedJobs, totalFailedJobs, totalJobCount;
 	
-	private static int PERF_TRACE_INTERVAL = -1;
-	
-	static {
-	    try {
-	        String val = System.getProperty("job.perf.trace.interval");
-	        if (val != null) {
-	            PERF_TRACE_INTERVAL = Integer.parseInt(val);
-	        }
-	    }
-	    catch (Exception e) {
-	        e.printStackTrace();
-	    }
-	}
-
     public Cpu() {
         this.done = new ArrayList<Job>();
         this.timelast = Time.fromMilliseconds(0);
@@ -68,6 +55,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
         this.node = node;
         this.block = node.getBlock();
         this.bqp = block.getAllocationProcessor();
+        perfTraceInterval = bqp.getSettings().getPerfTraceInterval();
         timelast = Time.fromSeconds(0);
     }
 
@@ -196,7 +184,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
                     running = bqp.request(time, cpus);
                     if (running != null) {
                         block.jobPulled();
-                        if (PERF_TRACE_INTERVAL != -1 && (totalJobCount % PERF_TRACE_INTERVAL == 0)) {
+                        if (perfTraceInterval != -1 && (totalJobCount % perfTraceInterval == 0)) {
                             JobSpecification spec = (JobSpecification) running.getTask().getSpecification();
                             spec.setAttribute("tracePerformance", String.valueOf(totalJobCount));
                         }
