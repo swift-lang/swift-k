@@ -88,6 +88,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_RECOMPILE = "recompile";
     public static final String ARG_REDUCED_LOGGING = "reduced.logging";
     public static final String ARG_MINIMAL_LOGGING = "minimal.logging";
+    public static final String ARG_PAUSE_ON_START = "pause.on.start";
 
     public static final String CONST_VDL_OPERATION = "vdl:operation";
     public static final String VDL_OPERATION_RUN = "run";
@@ -160,6 +161,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
           
             logger.info("RUN_START");
             new HangChecker(context).start();
+            
             long start = System.currentTimeMillis();
             ec.start(context);
             ec.waitFor();
@@ -232,8 +234,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 System.out.println(loadVersion());
                 error("No Swift script specified");
             }
+            if (ap.isPresent(ARG_PAUSE_ON_START)) {
+                System.out.println("Press enter to continue...");
+                System.in.read();
+            }
         }
-        catch (ArgumentParserException e) {
+        catch (Exception e) {
             System.err.println("Error parsing arguments: " + e.getMessage()
                     + "\n");
             shortUsage();
@@ -547,6 +553,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
         		"information and low-level task messages");
         ap.addFlag(ARG_MINIMAL_LOGGING, "Makes logging much more terse: " +
                  "reports warnings only");
+        ap.addFlag(ARG_PAUSE_ON_START, "Pauses execution on start. Useful for " +
+        		"attaching a debugger or profiler to the swift process");
         
 
         Map<String, PropInfo> desc = VDL2ConfigProperties.getPropertyDescriptions();
