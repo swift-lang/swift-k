@@ -22,14 +22,7 @@ CLEANUP_ENABLED := (configProperty("sitedir.keep") != "true")
 namespace(swift) {
 
 	initDDir := function() {
-		ddir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
-		
-		once(ddir) {
-			if(!file:exists(ddir)) {
-				task:dir:make(ddir)
-			}
-		}
-		ddir
+		"{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
 	}
 	
 	inFiles := function(stageins) {
@@ -86,9 +79,6 @@ namespace(swift) {
 				jobid := "{tr}-{uid}"
 
 				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
-
-				wrapper := "_swiftwrap.staging"
-				wrapfile := "{ddir}/param-{jobid}"
 				
 				wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
@@ -104,7 +94,7 @@ namespace(swift) {
 						siteProfile(rhost, "swift:wrapperInterpreter"),
 						list(
 							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
-							wrapper,
+							"_swiftwrap.staging",
 							"-e", executable(tr, rhost),
 							"-out", if(stdout == null, "stdout.txt", getFieldValue(stdout)),
 							"-err", if(stderr == null, "stderr.txt", getFieldValue(stderr)),
@@ -128,7 +118,7 @@ namespace(swift) {
 					
 						stagingMethod := siteProfile(rhost, "swift:stagingMethod", default="proxy")
 
-						stageIn("{PIN}{stagingMethod}://localhost/{SWIFT:HOME}/libexec/{wrapper}", wrapper)
+						stageIn("{PIN}{stagingMethod}://localhost/{SWIFT:HOME}/libexec/_swiftwrap.staging", "_swiftwrap.staging")
 
 						if (cdmfile != "") {
 							d := swift:dirname(cdmfile)
@@ -151,14 +141,16 @@ namespace(swift) {
 								mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
 						}
 						else {
-							stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}")
+							stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}",
+								mode = STAGING_MODE:ALWAYS + STAGING_MODE:IF_PRESENT)
 						}
 						if (stderr == null) {
 							stageOut("stderr.txt", "{stagingMethod}://localhost/{ddir}/{jobid}.stderr",
 								mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
 						}
 						else {
-							stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}")
+							stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}",
+								mode = STAGING_MODE:ALWAYS + STAGING_MODE:IF_PRESENT)
 						}
 						stageOut("wrapper.error", "{stagingMethod}://localhost/{ddir}/{jobid}.error", 
 							mode = STAGING_MODE:IF_PRESENT)
