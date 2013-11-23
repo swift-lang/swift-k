@@ -134,6 +134,8 @@ my $JOBS_RUNNING = 0;
 my $LAST_JOB_CHECK_TIME = 0;
 my $JOB_COUNT = 0;
 
+my $SOFT_IMAGE_DST;
+
 use constant BUFSZ => 2048;
 use constant IOBUFSZ => 32768;
 use constant IOBLOCKSZ => 8;
@@ -1088,6 +1090,7 @@ sub queueJobStatusCmdExt {
 sub dieNicely {
 	my ($msg) = @_;
 	
+	cleanSoftImage();	
 	wlog ERROR, "$msg\n";
 	if ($CONNECTED) {
 		$CONNECTED = 0; # avoid recursive calls to this method
@@ -1121,6 +1124,7 @@ sub shutdownw {
 	wlog DEBUG, "Shutdown command received\n";
 	queueReply($tag, ("OK"));
 	sendQueued();
+	cleanSoftImage();
 	wlog INFO, "Acknowledged shutdown.\n";
 	wlog INFO, "Ran a total of $JOB_COUNT jobs\n";
 	if ($PROFILE) {
@@ -1790,6 +1794,119 @@ sub isabsolute {
 	return substr($fn, 0, 1) eq "/";
 }
 
+sub readUInt32 {
+	my ($fd) = @_;
+	seek($fd, 0, 0) or wlog ERROR, "Seek failed: $!\n";
+	my $n;
+	read($fd, $n, 4) or wlog ERROR, "Read failed: $!\n";
+	return unpack("V", $n);
+}
+
+sub writeUInt32 {
+	my ($fd, $n) = @_;
+	
+	seek($fd, 0, 0) or wlog ERROR, "Seek failed: $!\n";
+	if (!(print {$fd} pack("V", $n))) {
+		wlog ERROR, "Write failed: $!\n";
+	}
+	
+	return $n;
+}
+
+# Ensures that each job has the $src tar.gz file unpacked in
+# the directory pointed to by $dst. In addition, ensure that
+# the unpacking is only done if necessary so that it can be
+# shared between: 1. workers running concurrently on this node
+# (if $dst points to a local disk) and 2. subsequent jobs
+# running in this worker.
+#
+# If the image contains commonly used binaries and libraries,
+# it can be combined with a $PATH and $LD_LIBRARY_PATH settings
+# to minimize access to network file systems that would otherwise
+# be the sources for those binaries/libraries.  
+sub prepareSoftImage {
+	my ($src, $dst) = @_;
+	my $lock;
+	my $counter;
+	mkpath($dst);
+	if (!open($lock, ">>$dst/.lock")) {
+		die "Cannot open lock file: $!";
+	}
+	# start critical section
+	if (!flock($lock, 2)) { # 2 - exclusive lock
+		die "Cannot get exclusive lock on soft image directory: $!"; 
+	}
+	
+	if (! -f "$dst/.count") {
+		open($counter, "+>$dst/.count");
+	}
+	else {
+		open($counter, "+<$dst/.count");
+	}
+	
+	seek($counter, 0, 2);
+	my $pos = tell($counter);
+	wlog DEBUG, "Counter file pos: $pos\n";
+	if ($pos == 0) {
+		wlog INFO, "Lead process. Uncompressing image $src to $dst\n";
+		wlog DEBUG, "Running tar -xzf $src -C $dst\n";
+		my $out;
+		$out = qx/tar -xzf $src -C $dst 2>&1/; 
+		if ($? != 0) {
+			die "Cannot create soft image: $!\n$out";
+		}
+		$ENV{SOFTIMAGE} = $dst;
+		if (-x "$dst/start") {
+			wlog DEBUG, "Running $dst/start\n";
+			$out = qx/$dst\/start 2>&1/;
+			if ($? != 0) {
+				die "Error running soft image startup: $!\n$out";
+			}
+		}
+		
+		writeUInt32($counter, 1);
+		wlog DEBUG, "Soft image use count updated: 1\n";
+		wlog DEBUG, "Soft image initialized\n";
+	}
+	else {
+		wlog DEBUG, "Not lead process\n";
+		if (! -f "$dst/.l$BLOCKID") {
+			my $n = writeUInt32($counter, readUInt32($counter) + 1);
+			wlog DEBUG, "Soft image use count updated: $n\n";
+			my $rl;
+			open($rl, ">$dst/.l$BLOCKID");
+			close($rl);
+		}
+	}
+	close($counter);
+	close($lock);
+	# end critical section
+}
+
+sub cleanSoftImage() {
+	my $lock;
+	my $counter;
+	open($lock, ">>$SOFT_IMAGE_DST/.lock");
+	if (!flock($lock, 2)) {
+		dieNicely("Cannot get exclusive lock on soft image directory: $!"); 
+	}
+	
+	open($counter, "+<$SOFT_IMAGE_DST/.count");
+	if (writeUInt32($counter, readUInt32($counter) - 1) == 0) {
+		wlog INFO, "Tail process. Removing image from $SOFT_IMAGE_DST\n";
+		
+		if (-x "$SOFT_IMAGE_DST/stop") {
+			my $out = qx/$SOFT_IMAGE_DST\/stop 2>&1/;
+			if ($? != 0) {
+				die "Error running soft image shutdown: $!\n$out";
+			}
+		}
+		
+		rmtree($SOFT_IMAGE_DST, 0, 0);
+	}
+	close($counter);
+	close($lock);
+}
 
 sub submitjob {
 	my ($tag, $timeout, $msgs) = @_;
@@ -1799,6 +1916,7 @@ sub submitjob {
 	my $JOBID = undef;
 	my $MAXWALLTIME = 600;
 	my $PERFTRACE = 0;
+	my $SOFTIMAGE;
 	my %JOB = ();
 	my @JOBARGS = ();
 	my %JOBENV = ();
@@ -1832,6 +1950,11 @@ sub submitjob {
 				wlog INFO, "tracePerformance set (id=$PERFTRACE)\n";
 				# as long as the job is alive, enable debugging
 				$LOGLEVEL = DEBUG;
+			}
+			elsif ($ap[0] eq "softImage") {
+				$SOFTIMAGE = $ap[1];
+				my @SS = split(/ /, $SOFTIMAGE);
+				$SOFT_IMAGE_DST = $SS[1];	
 			}
 			else {
 				wlog WARN, "Ignoring attribute $ap[0] = $ap[1]\n";
@@ -1886,6 +2009,7 @@ sub submitjob {
 			cleanup => \@CLEANUP,
 			maxwalltime => $MAXWALLTIME,
 			perftrace => $PERFTRACE,
+			softimage => $SOFTIMAGE,
 		};
 
 		stagein($JOBID);
@@ -1962,10 +2086,10 @@ sub forkjob {
 		if ($pid == 0) {
 			close $PARENT_R;
 			if ($JOBDATA{$JOBID}{"perftrace"} != 0) {
-				stracerunjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID}{"perftrace"});
+				stracerunjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
 			}
 			else {
-				runjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
+				runjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
 			}
 			close $CHILD_W;
 		}
@@ -2062,7 +2186,6 @@ sub checkJobStatus {
 		return 0;
 	}
 	else {
-	
 		if ($JOBWAITDATA{$JOBID}{"walltimeexceeded"}) {
 			wlog DEBUG, "Walltime exceeded. The status is $?\n";
 			$status = ERROR_PROCESS_WALLTIME_EXCEEDED;
@@ -2107,10 +2230,15 @@ sub tmpSFile {
 }
 
 sub runjob {
-	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID) = @_;
+	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA) = @_;
 	my $executable = $$JOB{"executable"};
 	my $sout = $$JOB{"stdout"};
 	my $serr = $$JOB{"stderr"};
+	
+	my $softImage = $$JOBDATA{"softimage"};
+	if (defined $softImage) {
+		prepareSoftImage(split(/ /, $softImage));
+	}
 
 	my $cwd = getcwd();
 	# wlog DEBUG, "CWD: $cwd\n";
@@ -2149,9 +2277,10 @@ sub runjob {
 }
 
 sub stracerunjob {
-	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $LOGID) = @_;
+	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA) = @_;
 	my $executable = $$JOB{"executable"};
 
+	my $LOGID = $$JOBDATA{"perftrace"};
 	$$JOB{"executable"} = "strace";
 	unshift @$JOBARGS, $executable;
 	unshift @$JOBARGS, "$LOGDIR/$BLOCKID-$ID-$LOGID.perf";
@@ -2160,7 +2289,7 @@ sub stracerunjob {
 	unshift @$JOBARGS, "-f";
 	unshift @$JOBARGS, "-T";
 	
-	runjob($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID);
+	runjob($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA);
 }
 
 
