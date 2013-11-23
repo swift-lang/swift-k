@@ -21,11 +21,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ROIFileNameElementMapper implements FileNameElementMapper {
-	private Map basenames;
+	private Map<Integer, String> basenames;
 	int index;
 	
 	public ROIFileNameElementMapper () {
-		basenames = new HashMap();
+		basenames = new HashMap<Integer, String>();
 		index = 0;
 	}
 	
@@ -47,11 +47,11 @@ public class ROIFileNameElementMapper implements FileNameElementMapper {
 	}
 
 	public String mapIndex(int index) {
-		return (String)(basenames.get(new Integer(index)));
+		return basenames.get(index);
 	}
 
 	public int rmapIndex(String pathElement) {
-		basenames.put(new Integer(index), pathElement);
+		basenames.put(index, pathElement);
 		return index++;
 	}
 

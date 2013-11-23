@@ -69,7 +69,7 @@
 		</copy>
 	</target>
 
-	<target name="dist" depends="generateVersion, antlr, compileSchema">
+	<target name="dist" depends="generateVersion, antlr, compileSchema, compileParams">
 		<ant antfile="${main.buildfile}" target="dist"/>
 		<mkdir dir="${dist.dir}/libexec"/>
 		<copy todir="${dist.dir}/libexec">
@@ -261,6 +261,30 @@
 				<pathelement location="${cog.dir}/modules/${module.name}/lib/jsr173_1.0_api.jar"/>
 			</classpath>
 		</java>
+	</target>
+	
+	<target name="compileParams">
+		<!-- Mapper parameters are java classes that are (mostly)  -->
+		<!-- generated from parameter files. This is done to avoid -->
+		<!-- costly hashtables attached to every single piece of   -->
+		<!-- swift root data. They could be written by hand (and   -->
+		<!-- some are), but it's a tedious process                 -->
+		
+		<!-- first compile the params compiler -->
+		<mkdir dir="${build.dir}"/>
+		<echo message="[swift] Compiling mapper params compiler"/>
+		<javac  srcdir="src"
+			destdir="${build.dir}"
+			includes="**/MappingParamFileGenerator.java"
+			includeAntRuntime="false"/>
+        <!-- then compile the files themselves -->
+        <echo message="[swift] Generating mapping parameter classes"/>
+        <java classname="org.griphyn.vdl.mapping.file.MappingParamFileGenerator" fork="true" failonerror="true">
+        	<arg value="src"/>
+        	<classpath>
+        		<pathelement location="${build.dir}"/>
+        	</classpath>
+        </java>
 	</target>
 
 	<!-- ================================================ -->

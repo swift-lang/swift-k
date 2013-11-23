@@ -26,19 +26,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.util.Base64;
 import org.griphyn.vdl.mapping.AbsFile;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.AbstractMapper;
-import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootHandle;
 
 /** A base class to build mappers which map based on filename patterns.
   * It provides a large amount of default behaviour which can be
@@ -65,18 +63,11 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
   * </ul>
   */
 
-public abstract class AbstractFileMapper extends AbstractMapper {
-	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
-	public static final MappingParam PARAM_SUFFIX = new MappingParam("suffix", null);
-	public static final MappingParam PARAM_PATTERN = new MappingParam("pattern", null);
-	public static final MappingParam PARAM_LOCATION = new MappingParam("location", null);
-	
-	private String location, prefix, suffix, pattern; 
-	
+public abstract class AbstractFileMapper extends AbstractMapper {  
 	
 	@Override
     protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_PREFIX, PARAM_SUFFIX, PARAM_PATTERN, PARAM_LOCATION);
+	    s.addAll(AbstractFileMapperParams.NAMES);
         super.getValidMappingParams(s);
     }
 
@@ -91,8 +82,6 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		this.elementMapper = elementMapper;
 	}
 	
-	
-
 	/** Creates an AbstractFileMapper without specifying a
 	  * FileNameElementMapper. The elementMapper must be specified
 	  * in another way, such as through the setElementMapper method.
@@ -109,37 +98,46 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		this.elementMapper = elementMapper;
 	}
 
-	public void setParams(MappingParamSet params) throws HandleOpenException {
-		super.setParams(params);
+	@Override
+    public MappingParamSet newParams() {
+        return new AbstractFileMapperParams();
+    }
+
+    @Override
+	public void initialize(RootHandle root) {
+		super.initialize(root);
+		AbstractFileMapperParams cp = getParams(); 
 		StringBuilder pattern = new StringBuilder();
 		boolean wildcard = false; 
-		if (PARAM_PREFIX.isPresent(this)) {
-		    prefix = PARAM_PREFIX.getStringValue(this);
-		    pattern.append(prefix);
+		if (cp.getPrefix() != null) {
+		    pattern.append(cp.getPrefix());
 		    pattern.append('*');
 		    wildcard = true;
 		}
-		if (PARAM_PATTERN.isPresent(this)) {
-            pattern.append(PARAM_PATTERN.getStringValue(this));
+		if (cp.getPattern() != null) {
+            pattern.append(cp.getPattern());
             wildcard = false;
         }
-		if (PARAM_SUFFIX.isPresent(this)) {
-			suffix = PARAM_SUFFIX.getStringValue(this);
+		if (cp.getSuffix() != null) {
 			if (!wildcard) {
 			    pattern.append('*');
 			}
-			pattern.append(suffix);
+			pattern.append(cp.getSuffix());
 		}
-		location = PARAM_LOCATION.getStringValue(this);
-        prefix = PARAM_PREFIX.getStringValue(this);
-        suffix = PARAM_SUFFIX.getStringValue(this);
-        this.pattern = pattern.toString();
+		cp.setPattern(pattern.toString());
+	}
+	
+	@Override
+	public PhysicalFormat map(Path path) {
+	    AbstractFileMapperParams cp = getParams();
+	    return map(cp, path, cp.getPrefix());
 	}
 
-	public PhysicalFormat map(Path path) {
+	protected PhysicalFormat map(AbstractFileMapperParams cp, Path path, String prefix) {
 		if(logger.isDebugEnabled())
 			logger.debug("mapper id="+this.hashCode()+" starting to map "+path);
 		StringBuffer sb = new StringBuffer();
+		String location = cp.getLocation();
 		maybeAppend(sb, location);
 		if (location != null && !location.endsWith("/")) {
 			sb.append('/');
@@ -199,6 +197,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			}
 			level++;
 		}
+		String suffix = cp.getSuffix();
 		if (suffix != null) {
 			sb.append(suffix);
 		}
@@ -227,12 +226,15 @@ public abstract class AbstractFileMapper extends AbstractMapper {
         }
     }
 
+    @Override
     public Collection<Path> existing() {
 		if (logger.isDebugEnabled()) {
 			logger.debug("list existing paths for mapper id=" + this.hashCode());
 		}
 		List<Path> result = new ArrayList<Path>();
 		final AbsFile f;
+		AbstractFileMapperParams cp = getParams();
+		String location = cp.getLocation();
 		if (location == null) {
 			f = new AbsFile(".");
 		}
@@ -243,13 +245,14 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			}
 		}
 		logger.debug("Processing file list.");
+		String pattern = cp.getPattern();
 		List<AbsFile> files = glob(f, pattern);
 		if (files != null) {
 			for (AbsFile file : files) {
 				if (logger.isDebugEnabled()) {
 				    logger.debug("Processing existing file " + file.getName());
 				}
-				Path p = rmap(file.getName());
+				Path p = rmap(cp, file.getName());
 				if (p != null) {
 					if (logger.isDebugEnabled()) {
 					    logger.debug("reverse-mapped to path " + p);
@@ -342,12 +345,6 @@ public abstract class AbstractFileMapper extends AbstractMapper {
         l.addAll(files);
     }
 
-
-    private String getVarName() {
-        AbstractDataNode var = (AbstractDataNode) getParam(MappingParam.SWIFT_HANDLE);
-        return var == null ? "" : var.getDisplayableName();
-    }
-
     /** Returns the SwiftScript path for a supplied filename.
 	  *
 	  * Splits the filename into components using the separator
@@ -365,11 +362,11 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	  * @param name the filename to map to a path
 	  * @return a Path to the supplied filename, null on failure
 	  */
-
-	public Path rmap(String name) {
+	public Path rmap(AbstractFileMapperParams cp, String name) {
 		logger.debug("rmap "+name);
 
-		if(prefix != null) {
+		String prefix = cp.getPrefix();
+		if (prefix != null) {
 			if (name.startsWith(prefix)) {
 				name = name.substring(prefix.length());
 			} 
@@ -378,7 +375,8 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			}
 		}
 
-		if(suffix != null) {
+		String suffix = cp.getSuffix();
+		if (suffix != null) {
 			if (name.endsWith(suffix)) {
 				name = name.substring(0,name.length() - suffix.length());
 			}
@@ -432,15 +430,6 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			sb.append(obj.toString());
 		}
 	}
-
-	public String getLocation() {
-		return location;
-	}
-
-	public String getPrefix() {
-		return prefix;
-	}
-
 
 	/** Converts a unix-style glob pattern into a regular expression. */
 	public static String replaceWildcards(String wild) {

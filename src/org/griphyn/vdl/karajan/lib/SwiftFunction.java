@@ -47,7 +47,6 @@ import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.transformation.File;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.karajan.AssertFailedException;
-import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.AbsFile;
@@ -61,6 +60,7 @@ import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PathComparator;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.FQN;
@@ -184,12 +184,9 @@ public abstract class SwiftFunction extends AbstractFunction {
 	}
 
 	private static String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
-	    Mapper mapper;
-	    	    
-        synchronized (var.getRoot()) {
-            mapper = var.getMapper();
-        }
-        
+	    RootHandle root = var.getRoot();
+	    Mapper mapper = root.getMapper();
+	    	            
         if (mapper == null) {
             throw new ExecutionException(var.getType() + " is not a mapped type");
         }
@@ -216,19 +213,19 @@ public abstract class SwiftFunction extends AbstractFunction {
 		return l.toArray(EMPTY_STRING_ARRAY);
 	}
 	
-	private static String leafFileName(DSHandle var) throws ExecutionException {
-	    return leafFileName(var, var.getMapper());
+	private static String leafFileName(DSHandle var) {
+	    return leafFileName(var, var.getRoot().getMapper());
 	}
-
-	private static String leafFileName(DSHandle var, Mapper mapper) throws ExecutionException {
+	
+	private static String leafFileName(DSHandle var, Mapper mapper) {
 		if (Types.STRING.equals(var.getType())) {
 			return relativize(String.valueOf(var.getValue()));
 		}
 		else {
-			if (var.getMapper() == null) {
+			if (mapper == null) {
 				throw new ExecutionException("Cannot invoke filename() on data without a mapper: " + var);
 			}
-			PhysicalFormat f = var.getMapper().map(var.getPathFromRoot());
+			PhysicalFormat f = mapper.map(var.getPathFromRoot());
 			if (f instanceof GeneralizedFileFormat) {
 				String filename = ((GeneralizedFileFormat) f).getURIAsString();
 				if (filename == null) {

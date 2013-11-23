@@ -43,13 +43,8 @@ public abstract class DependentException extends RuntimeException {
 	}
 	
 	public String getVariableInfo() {
-        if (handle instanceof AbstractDataNode) {
-            AbstractDataNode n = (AbstractDataNode) handle;
-            return n.getDisplayableName() + ", line " + n.getDeclarationLine();
-        }
-        else {
-            return handle.toString();
-        }
+	    RootHandle root = handle.getRoot();
+	    return root.getName() + ", line " + root.getLine();
     }
 
 	public String toString() {

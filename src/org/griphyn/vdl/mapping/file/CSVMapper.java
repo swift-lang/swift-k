@@ -34,80 +34,48 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.GeneralizedFileFormat;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
-import org.griphyn.vdl.mapping.Mapper;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.type.Types;
 
 public class CSVMapper extends AbstractMapper {
-	public static final MappingParam PARAM_FILE = new MappingParam("file");
-
-	/** whether the file has a line describing header info. default is true. */
-	public static final MappingParam PARAM_HEADER = new MappingParam("header", "true");
-
-	/** the number of lines to skip at the start of the file. default is 0. */
-	public static final MappingParam PARAM_SKIP = new MappingParam("skip", "0");
-
-	/** delimiter between header fields. defaults to the value of the
-	"delim" field. */
-	public static final MappingParam PARAM_HDELIMITER = new MappingParam("hdelim");
-
-	/** delimiters between content fields. default is space, tab, comma */
-	public static final MappingParam PARAM_DELIMITER = new MappingParam("delim", " \t,");
-	
-	
+    
 	@Override
     protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_FILE, PARAM_HEADER, PARAM_SKIP, PARAM_HDELIMITER, PARAM_DELIMITER);
+	    s.addAll(CSVMapperParams.NAMES);
 	    super.getValidMappingParams(s);
     }
-
-	/** list of column names */
-	private List cols = new ArrayList();
-
-	/** column name to index map */
-	private Map colindex = new HashMap();
-
-	/** the content of the CSV file */
-	private List content = new ArrayList();
-
-	/** whether the CSV file has been read already. */
-	private boolean read = false;
 	
-	private String delim, hdelim;
-	private boolean header;
-	private int skip;
+	private List<String> cols = new ArrayList<String>();
+    private Map<String, Integer> colindex = new HashMap<String, Integer>();
+    private List<List<String>> content = new ArrayList<List<String>>();
+    private boolean read = false;
 
-	public void setParams(MappingParamSet params) throws HandleOpenException {
-		super.setParams(params);
-		if (!PARAM_FILE.isPresent(this)) {
+	@Override
+    public String getName() {
+        return "CSVMapper";
+    }
+
+    public void initialize(RootHandle root) {
+		super.initialize(root);
+		CSVMapperParams cp = getParams();
+		if (cp.getFile() == null) {
 			throw new InvalidMappingParameterException("CSV mapper must have a file parameter.");
 		}
-		if (!PARAM_HDELIMITER.isPresent(this)) {
-		    Object raw = PARAM_DELIMITER.getRawValue(this);
-		    if (raw != null) {
-		        params.set(PARAM_HDELIMITER, PARAM_DELIMITER.getRawValue(this));
-		    }
-		    else {
-		        params.set(PARAM_HDELIMITER, PARAM_DELIMITER.getValue(this));
-		    }
+		if (cp.getHdelim() == null) {
+		    cp.setHdelim(cp.getDelim());
 		}
-		delim = PARAM_DELIMITER.getStringValue(this);
-        hdelim = PARAM_HDELIMITER.getStringValue(this);
-        header = PARAM_HEADER.getBooleanValue(this);
-        skip = PARAM_SKIP.getIntValue(this);
 	}
 
-	private synchronized void readFile() {
+	private synchronized void readFile(CSVMapperParams cp) {
 		if (read) {
 			return;
 		}
-		
-		String file = getCSVFile(); 
+				
+		String file = getCSVFile(cp);
 		
 		try {
 			BufferedReader br = 
@@ -115,31 +83,34 @@ public class CSVMapper extends AbstractMapper {
 
 			String line;
 			StringTokenizer st;
+			boolean header = Boolean.TRUE.equals(cp.getHeader());
 
 			if (header) {
 				line = br.readLine();
 				if (line == null) {
 				    throw new RuntimeException("Invalid CSV file (" + file + "): missing header.");
 				}
-				st = new StringTokenizer(line, hdelim);
+				st = new StringTokenizer(line, cp.getHdelim());
 				int ix = 0;
+				
 				while (st.hasMoreTokens()) {
 					String column = st.nextToken();
 					column.replaceAll("\\s", "_");
+					
 					cols.add(column);
 					colindex.put(column, new Integer(ix));
 					++ix;
 				}
 			}
-			while (skip > 0) {
+			while (cp.getSkip() > 0) {
 				br.readLine();
-				--skip;
+				cp.setSkip(cp.getSkip() - 1);
 			}
 
 			int i = 0;
 			line = br.readLine();
 			if (line != null && !header) {
-				st = new StringTokenizer(line, delim);
+				st = new StringTokenizer(line, cp.getDelim());
 				int j = 0;
 				while (j < st.countTokens()) {
 					String colname = "column" + j;
@@ -150,8 +121,8 @@ public class CSVMapper extends AbstractMapper {
 			}
 
 			while (line != null) {
-				st = new StringTokenizer(line, delim);
-				List colContent = new ArrayList();
+				st = new StringTokenizer(line, cp.getDelim());
+				List<String> colContent = new ArrayList<String>();
 				while (st.hasMoreTokens()) {
 					String tok = st.nextToken();
 					colContent.add(tok);
@@ -170,37 +141,39 @@ public class CSVMapper extends AbstractMapper {
 		}
 	}
 
-	private String getCSVFile() {
+	private String getCSVFile(CSVMapperParams cp) {
 	    String result = null;
-	    Object object = PARAM_FILE.getRawValue(this);
-        DSHandle handle = (DSHandle) object;
+        DSHandle handle = cp.getFile();
         GeneralizedFileFormat fileFormat;
         if (handle.getType().equals(Types.STRING)) {
             String path = (String) handle.getValue();
             fileFormat = new AbsFile(path);
         }
         else {
-            Mapper mapper = handle.getMapper();
-            PhysicalFormat format = mapper.map(Path.EMPTY_PATH);
+            PhysicalFormat format = handle.map();
             fileFormat = (GeneralizedFileFormat) format;
         }
         result  = fileFormat.getPath();
         return result;
     }
 
-    public Collection existing() {
-		readFile();
-		List l = new ArrayList();
-		Iterator itl = content.iterator();
+	@Override
+    public Collection<Path> existing() {
+	    CSVMapperParams cp = getParams();
+		readFile(cp);
+				
+		List<Path> l = new ArrayList<Path>();
+		
+		Iterator<List<String>> itl = content.iterator();
 		int ii = 0;
 		while (itl.hasNext()) {
 			Path path = Path.EMPTY_PATH;
 			path = path.addFirst(ii, true);
-			List colContent = (List) itl.next();
-			Iterator itc = colContent.iterator();
+			List<String> colContent = itl.next();
+			Iterator<String> itc = colContent.iterator();
 			int j = 0;
 			while (itc.hasNext()) {
-				Path p = path.addLast((String)cols.get(j));
+				Path p = path.addLast(cols.get(j));
 				l.add(p);
 				itc.next();
 				j++;
@@ -210,16 +183,20 @@ public class CSVMapper extends AbstractMapper {
 		return l;
 	}
 
+	@Override
 	public boolean isStatic() {
 		return false;
 	}
 
+	@Override
 	public PhysicalFormat map(Path path) {
 		if (path == null || path == Path.EMPTY_PATH) {
 			return null;
 		}
-
-		readFile();
+		
+		CSVMapperParams cp = getParams();
+		
+		readFile(cp);
 
 		Iterator<Path.Entry> pi = path.iterator();
 		Path.Entry pe = pi.next();
@@ -236,13 +213,13 @@ public class CSVMapper extends AbstractMapper {
 		if (i > content.size()) {
 			return null;
 		}
-		List cl = (List) content.get(i);
+		List<String> cl = content.get(i);
 		if (cl == null) {
 			return null;
 		}
 
 		if (!pi.hasNext()) {
-			return new AbsFile((String) cl.get(0));
+			return new AbsFile(cl.get(0));
 		}
 
 		pe = pi.next();
@@ -250,7 +227,12 @@ public class CSVMapper extends AbstractMapper {
 		if (!colindex.containsKey(col)) {
 			return null;
 		}
-		int ci = ((Integer) colindex.get(col)).intValue();
-		return new AbsFile((String) cl.get(ci));
+		int ci = colindex.get(col).intValue();
+		return new AbsFile(cl.get(ci));
 	}
+
+    @Override
+    public MappingParamSet newParams() {
+        return new CSVMapperParams();
+    }
 }

@@ -68,7 +68,7 @@ public class WriteData extends SwiftFunction {
 			writeData((String)dest.getValue(), src);
 		}
 		else {
-			PhysicalFormat pf = dest.getMapper().map(Path.EMPTY_PATH);
+			PhysicalFormat pf = dest.map();
 			if (pf instanceof AbsFile) {
 				AbsFile af = (AbsFile) pf;
 				if (!af.getProtocol().equalsIgnoreCase("file")) {

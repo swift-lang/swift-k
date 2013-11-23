@@ -22,10 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
-import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -33,13 +30,10 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 /** Maps every Path to a single file name (specified by the "file" parameter).
   */
 public class SingleFileMapper extends AbstractMapper {
-
-	public static final MappingParam PARAM_FILE = new MappingParam("file");	
-	private AbsFile file;
 	
 	@Override
     protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_FILE);
+	    s.addAll(SingleFileMapperParams.NAMES);
         super.getValidMappingParams(s);
     }
 
@@ -47,14 +41,20 @@ public class SingleFileMapper extends AbstractMapper {
 		super();
 	}
 
-	@Override
-    public void setParams(MappingParamSet params) throws HandleOpenException {
-        super.setParams(params);
-        file = new AbsFile(PARAM_FILE.getStringValue(this));
+    @Override
+    protected MappingParamSet newParams() {
+        return new SingleFileMapperParams();
     }
 
+    @Override
+    public String getName() {
+        return "SingleFileMapper";
+    }
+
+    @Override
     public Collection<Path> existing() {
-		if (file.exists()) {
+        SingleFileMapperParams cp = getParams();
+		if (cp.getFile().exists()) {
 			return Arrays.asList(new Path[] {Path.EMPTY_PATH});
 		}
 		else {
@@ -62,8 +62,10 @@ public class SingleFileMapper extends AbstractMapper {
 		}
 	}
 
+    @Override
 	public PhysicalFormat map(Path path) {
-		return file;
+        SingleFileMapperParams cp = getParams();
+        return cp.getFile();
 	}
 
 	public boolean isStatic() {

@@ -63,4 +63,25 @@ public class FieldImpl implements Field {
 	public void setType(Type type) {
 		this.type = type;
 	}
+
+    @Override
+    public int hashCode() {
+        return (id == null ? 0 : id.hashCode()) + (type == null ? 0 : type.hashCode());  
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Field) {
+            Field f = (Field) obj;
+            return comp(f.getId(), id) && comp(f.getType(), type);
+        }
+        return super.equals(obj);
+    }
+
+    private boolean comp(Object o1, Object o2) {
+        if (o1 == null) {
+            return o2 == null;
+        }
+        return o1.equals(o2);
+    }
 }

@@ -23,48 +23,42 @@ import java.util.Set;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.Mapper;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
 
 public class TestMapper extends AbstractMapper {
-    public static final MappingParam PARAM_FILE = new MappingParam("file");
-    public static final MappingParam PARAM_TEMP = new MappingParam("temp", false);
-    public static final MappingParam PARAM_REMAPPABLE = new MappingParam("remappable", false);
-    public static final MappingParam PARAM_STATIC = new MappingParam("static", true);
     
     @Override
     protected void getValidMappingParams(Set<String> s) {
-        addParams(s, PARAM_FILE, PARAM_TEMP, PARAM_REMAPPABLE, PARAM_STATIC);
+        s.addAll(TestMapperParams.NAMES);
         super.getValidMappingParams(s);
     }
     
-    private PhysicalFormat remap, map;
+    private PhysicalFormat remap, map;    
     
-    private boolean remappable, temp, _static;
-    private String file;
+    @Override
+    protected MappingParamSet newParams() {
+        return new TestMapperParams();
+    }
 
     @Override
-    public void setParams(MappingParamSet params) throws HandleOpenException {
-        super.setParams(params);
-        remappable = PARAM_REMAPPABLE.getBooleanValue(this);
-        temp = PARAM_TEMP.getBooleanValue(this);
-        _static = PARAM_STATIC.getBooleanValue(this);
-        file = PARAM_FILE.getStringValue(this);
+    public String getName() {
+        return "TestMapper";
     }
 
     @Override
     public boolean canBeRemapped(Path path) {
-        return remappable;
+        TestMapperParams cp = getParams();
+        return cp.getRemappable();
     }
 
     @Override
     public void remap(Path path, Mapper sourceMapper, Path sourcePath) {
-        if (remappable) {
+        TestMapperParams cp = getParams();
+        if (cp.getRemappable()) {
             remap = sourceMapper.map(sourcePath);
             System.out.println("Remapping " + path + " -> " + remap);
             ensureCollectionConsistency(sourceMapper, sourcePath);
@@ -76,8 +70,9 @@ public class TestMapper extends AbstractMapper {
 
     @Override
     public void clean(Path path) {
+        TestMapperParams cp = getParams();
         PhysicalFormat pf = map(path);
-        if (temp) {
+        if (cp.getTemp()) {
             System.out.println("Cleaning file " + pf);
             FileGarbageCollector.getDefault().decreaseUsageCount(pf);
         }
@@ -88,13 +83,15 @@ public class TestMapper extends AbstractMapper {
 
     @Override
     public boolean isPersistent(Path path) {
-        return !temp;
+        TestMapperParams cp = getParams();
+        return !cp.getTemp();
     }
 
     public PhysicalFormat map(Path path) {
+        TestMapperParams cp = getParams();
         if (remap == null) {
             if (map == null) {
-                map = new AbsFile(file);
+                map = new AbsFile(cp.getFile());
             }
             return map;
         }
@@ -108,6 +105,7 @@ public class TestMapper extends AbstractMapper {
     }
 
     public boolean isStatic() {
-        return _static;
+        TestMapperParams cp = getParams();
+        return cp.getStatic_();
     }
 }

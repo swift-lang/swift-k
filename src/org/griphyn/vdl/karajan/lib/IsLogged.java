@@ -35,7 +35,6 @@ import org.globus.cog.karajan.compiled.nodes.restartLog.LogEntry;
 import org.globus.cog.karajan.compiled.nodes.restartLog.RestartLog;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class IsLogged extends SwiftFunction {
@@ -72,8 +71,11 @@ public class IsLogged extends SwiftFunction {
 	public static boolean isLogged(Context ctx, DSHandle var, Path path) throws ExecutionException {
 		@SuppressWarnings("unchecked")
         Map<LogEntry, Object> logData = (Map<LogEntry, Object>) ctx.getAttribute(RestartLog.LOG_DATA);
+		if (logData.isEmpty()) {
+		    return false;
+		}
 	    path = var.getPathFromRoot().append(path);
-        LogEntry entry = LogEntry.build(var.getRoot().getParam(MappingParam.SWIFT_RESTARTID) + "." + path.stringForm());
+        LogEntry entry = LogEntry.build(LogVar.getLogId(var, path));
         boolean found = false;
         synchronized (logData) {
             List<?> files = (List<?>) logData.get(entry);

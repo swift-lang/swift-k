@@ -20,28 +20,36 @@
  */
 package org.griphyn.vdl.mapping.file;
 
-import org.griphyn.vdl.mapping.HandleOpenException;
 import java.util.Set;
-import org.griphyn.vdl.mapping.MappingParam;
+
 import org.griphyn.vdl.mapping.MappingParamSet;
+import org.griphyn.vdl.mapping.RootHandle;
 
 public class SimpleFileMapper extends AbstractFileMapper {
-	public static final MappingParam PARAM_PADDING = new MappingParam("padding", new Integer(4));
-	
-	
-	@Override
+
+    @Override
     protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_PADDING);
-        super.getValidMappingParams(s);
+	    s.addAll(SimpleFileMapperParams.NAMES);
+	    super.getValidMappingParams(s);
     }
 
 	public SimpleFileMapper() {
 		super();
 	}
 
-	public void setParams(MappingParamSet params) throws HandleOpenException {
-		super.setParams(params);
-		int precision = PARAM_PADDING.getIntValue(this);
-		setElementMapper(new DefaultFileNameElementMapper(precision));
+	@Override
+    public MappingParamSet newParams() {
+        return new SimpleFileMapperParams();
+    }
+
+    @Override
+    public String getName() {
+        return "SimpleMapper";
+    }
+
+    public void initialize(RootHandle root) {
+		super.initialize(root);
+		SimpleFileMapperParams cp = getParams();
+		setElementMapper(new DefaultFileNameElementMapper(cp.getPadding()));
 	}
 }

@@ -19,6 +19,7 @@ package org.griphyn.vdl.mapping;
 
 import k.rt.Future;
 import k.rt.FutureListener;
+import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
@@ -26,72 +27,102 @@ import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
-public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
+public class RootArrayDataNode extends ArrayDataNode implements FutureListener, RootHandle {
 
     Logger logger = Logger.getLogger(RootArrayDataNode.class);
     
 	private boolean initialized = false;
 	private Mapper mapper;
-	private MappingParamSet params;
 	private AbstractDataNode waitingMapperParam;
 	private DuplicateMappingChecker dmc;
+	
+    // previously in mapper params
+    private int line = -1;
+    private LWThread thread;
+    private boolean input;
 
+	
+	public RootArrayDataNode(Type type) {
+	    this("?", type);
+	}
 	/**
 	 * Instantiate a root array data node with specified type.
 	 */
-	public RootArrayDataNode(Type type) {
-		super(Field.Factory.createField(null, type), null, null);
+	public RootArrayDataNode(String name, Type type) {
+		super(Field.Factory.getImmutableField(name, type), null, null);
 	}
 	
-	public RootArrayDataNode(Type type, DuplicateMappingChecker dmc) {
-	    this(type);
+	public RootArrayDataNode(String name, Type type, DuplicateMappingChecker dmc) {
+	    this(name, type);
 	    this.dmc = dmc;
 	}
+	
+    public int getLine() {
+        return line;
+    }
 
-	public void init(MappingParamSet params) throws HandleOpenException {
-		this.params = params;
-		if (this.params == null) {
+    public void setLine(int line) {
+        this.line = line;
+    }
+
+    public boolean isInput() {
+        return input;
+    }
+
+    public void setInput(boolean input) {
+        this.input = input;
+    }
+
+    public void setThread(LWThread thread) {
+        this.thread = thread;
+    }
+
+    public LWThread getThread() {
+        return thread;
+    }
+	
+	public String getName() {
+        return (String) getField().getId();
+    }
+	
+	@Override
+    public void setName(String name) {
+        getField().setId(name);
+    }
+
+	@Override
+	public void init(Mapper mapper) {
+		this.mapper = mapper;
+		if (this.mapper == null) {
 			initialized();
+			if (isInput()) {
+                // Empty array. Clearly only in test cases.
+                closeDeep();
+            }
 		}
 		else {
 			innerInit();
 		}
 	}
 
-	private synchronized void innerInit() throws HandleOpenException {
+	private synchronized void innerInit() {
 		if (logger.isDebugEnabled()) {
 		    logger.debug("innerInit: " + this);
 		}
 	    
-		waitingMapperParam = params.getFirstOpenParamValue();
+		waitingMapperParam = mapper.getFirstOpenParameter();
         if (waitingMapperParam != null) {
             waitingMapperParam.addListener(this);
             if (variableTracer.isEnabled()) {
-                variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
+                variableTracer.trace(getThread(), getLine(), getName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
             }
             return;
         }
 	    
-		String desc = (String) params.get(MappingParam.SWIFT_DESCRIPTOR);
-		if (desc == null) {
-			initialized();
-			Boolean input = (Boolean) params.get(MappingParam.SWIFT_INPUT);
-			if (input != null && input.booleanValue()) {
-			    // Empty array. Clearly only in test cases.
-			    closeDeep();
-			}
-			return;
-		}
-		try {
-			mapper = MapperFactory.getMapper(desc, params);
-			getField().setId(PARAM_PREFIX.getStringValue(mapper));
-			initialized();
-			checkInputs();
-		}
-		catch (InvalidMapperException e) {
-			throw new RuntimeException(e);
-		}
+        mapper.initialize(this);
+		initialized();
+		checkInputs();
 		if (isClosed()) {
 		    notifyListeners();
 		}
@@ -99,7 +130,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 
 	private void checkInputs() {
 		try {
-			RootDataNode.checkInputs(params, mapper, this, dmc);
+			RootDataNode.checkInputs(this, dmc);
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
@@ -110,22 +141,12 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
 	    try {
             innerInit();
         }
-        catch (OOBYield e) {
-            throw e.wrapped();
-        }
         catch (Exception e) {
             this.setValue(new MappingException(this, e));
         }
     }
-
-	public String getParam(MappingParam p) {
-		if (params == null) {
-			return null;
-		}
-		return (String) params.get(p);
-	}
-
-	public DSHandle getRoot() {
+	
+	public RootHandle getRoot() {
 		return this;
 	}
 
@@ -162,7 +183,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener {
         initialized = true;
         waitingMapperParam = null;
         if (variableTracer.isEnabled()) {
-            variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
+            variableTracer.trace(getThread(), getLine(), getName() + " INITIALIZED " + mapper);
         }
     }
 }

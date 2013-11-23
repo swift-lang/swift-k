@@ -22,39 +22,75 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import k.thr.LWThread;
+
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.type.impl.FieldImpl;
 
-public class ExternalDataNode extends AbstractDataNode {
+public class ExternalDataNode extends AbstractDataNode implements RootHandle {
 
 	static final String DATASET_URI_PREFIX = "dataset:external:";
 
 	public static final Logger logger = Logger.getLogger(ExternalDataNode.class);
 	
-	public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
-
 	private static long datasetIDCounter = 850000000000l;
 
 	private static final String datasetIDPartialID = Loader.getUUID();
 	
-	private MappingParamSet params;
+    // previously in mapper params
+    private int line = -1;
+    private LWThread thread;
+    private boolean input;
 
-	public ExternalDataNode() {
-	    super(new FieldImpl("", Types.EXTERNAL));
+	
+	public ExternalDataNode(String name) {
+	    super(new FieldImpl(name, Types.EXTERNAL));
 	}
 
+    public int getLine() {
+        return line;
+    }
+
+    public void setLine(int line) {
+        this.line = line;
+    }
+
+    public boolean isInput() {
+        return input;
+    }
+
+    public void setInput(boolean input) {
+        this.input = input;
+    }
+
+    public void setThread(LWThread thread) {
+        this.thread = thread;
+    }
+
+    public LWThread getThread() {
+        return thread;
+    }
+
+	public String getName() {
+        return (String) getField().getId();
+    }
+	
 	@Override
-    public void init(MappingParamSet params) {
-        this.params = params;
+    public void setName(String name) {
+        getField().setId(name);
+    }
+
+	@Override
+    public void init(Mapper mapper) {
     }
 
     public boolean isRestartable() {
 		return true;
 	}
 
-	public DSHandle getRoot() {
+	public RootHandle getRoot() {
 		return this;
 	}
 
@@ -116,13 +152,6 @@ public class ExternalDataNode extends AbstractDataNode {
     @Override
     protected AbstractDataNode getParentNode() {
         return null;
-    }
-
-    public String getParam(MappingParam p) {
-        if (params == null) {
-            return null;
-        }
-        return (String) params.get(p);
     }
 
     @Override

@@ -34,7 +34,7 @@ public class ArrayDataNode extends DataNode {
     
 	private List<Comparable<?>> keyList;
 	
-	protected ArrayDataNode(Field field, DSHandle root, AbstractDataNode parent) {
+	protected ArrayDataNode(Field field, RootHandle root, AbstractDataNode parent) {
 		super(field, root, parent);
 	}
 	

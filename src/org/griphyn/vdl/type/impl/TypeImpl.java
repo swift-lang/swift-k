@@ -32,6 +32,7 @@ public class TypeImpl extends UnresolvedType {
 	private boolean primitive;
 	private Map<String, Field> fields;
 	private Type baseType;
+	private Boolean hasNonPrimitiveComponents;
 	
 	public TypeImpl() {
 		this((URI) null, null, false);
@@ -127,10 +128,43 @@ public class TypeImpl extends UnresolvedType {
 		primitive = true;
 	}
 	
-
     public boolean isComposite() {
         return isArray() || !fields.isEmpty();
     }
+    
+    public synchronized boolean hasNonPrimitiveComponents() {
+        if (hasNonPrimitiveComponents == null) {
+            if (isPrimitive()) {
+                hasNonPrimitiveComponents = false;
+            }
+            else if (!isComposite()) {
+                // mapped
+                hasNonPrimitiveComponents = true;
+            }
+            else if (isArray()) {
+                if (keyType().hasNonPrimitiveComponents()) {
+                    hasNonPrimitiveComponents = true;
+                }
+                else if (itemType().hasNonPrimitiveComponents()) {
+                    hasNonPrimitiveComponents = true;
+                }
+                else {
+                    hasNonPrimitiveComponents = false;
+                }
+            }
+            else {
+                // struct
+                for (Field f : getFields()) {
+                    if (f.getType().hasNonPrimitiveComponents()) {
+                        return hasNonPrimitiveComponents = true;
+                    }
+                }
+                hasNonPrimitiveComponents = false;
+            }
+        }
+        return hasNonPrimitiveComponents;
+    }
+
 
     public static class Array extends TypeImpl {
 		private Field field;

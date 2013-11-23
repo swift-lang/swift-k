@@ -45,7 +45,6 @@ import org.griphyn.vdl.karajan.PairSet;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.type.Type;
@@ -57,7 +56,7 @@ public class SetFieldValue extends SwiftFunction {
 	protected ArgRef<Object> path;
 	protected ArgRef<AbstractDataNode> value;
 	
-	protected ArgRef<String> _traceline;
+	protected ArgRef<Integer> _traceline;
 
 	@Override
     protected Signature getSignature() {
@@ -107,7 +106,7 @@ public class SetFieldValue extends SwiftFunction {
             throws CompilationException {
         Node fn = super.compile(w, scope);
         if (_traceline.getValue() != null) {
-        	setLine(Integer.parseInt(_traceline.getValue()));
+        	setLine(_traceline.getValue());
         }
         tracer = Tracer.getTracer(this);
         return fn;
@@ -129,16 +128,15 @@ public class SetFieldValue extends SwiftFunction {
 			DSHandle leaf = var.getField(path);
 			AbstractDataNode value = this.value.getValue(stack);
 			
-			String mdst = this.dst;
-			
-			if (mdst == null) {
-			    mdst = Tracer.getVarName(var);
-			    if (var.getParent() == null) {
-			        this.dst = mdst;
-			    }
-			}
-			
 			if (tracer.isEnabled()) {
+			    String mdst = this.dst;
+            
+                if (mdst == null) {
+                    mdst = Tracer.getVarName(var);
+                    if (var.getParent() == null) {
+                        this.dst = mdst;
+                    }
+                }
 			    log(leaf, value, LWThread.currentThread(), mdst);
 			}
 			    
@@ -282,7 +280,7 @@ public class SetFieldValue extends SwiftFunction {
 
     private static void copyNonComposite(DSHandle dest, DSHandle source, State state, int level) {
         Path dpath = dest.getPathFromRoot();
-        Mapper dmapper = dest.getRoot().getMapper();
+        Mapper dmapper = dest.getMapper();
         if (dmapper.canBeRemapped(dpath)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Remapping " + dest + " to " + source);
@@ -306,7 +304,7 @@ public class SetFieldValue extends SwiftFunction {
             }
             else {
                 fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
-                    dest.getMapper().map(dpath));
+                    dmapper.map(dpath));
                 se.value(fc);
                 try {
                     fc.start();

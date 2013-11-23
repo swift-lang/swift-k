@@ -111,7 +111,7 @@ $it.name$=$if(it.default)$$it.default$$else$null$endif$
 >>
 
 swift_execute(outputs,inputs,attributes,application,name,line) ::= <<
-swift:unitStart("PROCEDURE", name="$name$", line="$line$", outputs="$outputs:list();separator=","$")
+swift:unitStart("PROCEDURE", name="$name$", line=$line$, outputs="$outputs:list();separator=","$")
 swift:execute(
 	$attributes$
 	swift:tr("$application.exec$")
@@ -120,7 +120,7 @@ swift:execute(
 	$swift_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
 )
 $outputs:swift_closedataset();separator="\n"$
-swift:unitEnd("PROCEDURE", name="$name$", line="$line$")
+swift:unitEnd("PROCEDURE", name="$name$", line=$line$)
 >>
 
 log_param(dir) ::= <<
@@ -197,7 +197,7 @@ swiftscript:$name$(
 >>
 
 iterate(declarations, statements, cond, var, refs, cleanups, trace, line) ::= <<
-swift:while($var$$if(trace)$, _traceline="$line$"$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$) {
+swift:while($var$$if(trace)$, _traceline=$line$$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$) {
 	if (!swift:getFieldValue($cond$)) {
 		$sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
 		next(swiftop:inc($var$))
@@ -206,7 +206,7 @@ swift:while($var$$if(trace)$, _traceline="$line$"$endif$$if(refs)$, refs="$refs;
 >>
 
 foreach(var, in, indexVar, indexVarType, declarations, statements, line, refs, selfClose, cleanups) ::= <<
-swift:tParallelFor(\$, _traceline="$line$"$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
+swift:tParallelFor(\$, _traceline=$line$$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
 $! The iterator !$
 	getArrayIterator($in$)) {
 	(\$\$, $var$) := each(\$)
@@ -214,14 +214,14 @@ $if(indexVar)$
 	$indexVar$ := swift:new("$indexVarType$", value=\$\$)
 $endif$
 
-	swift:unitStart("FOREACH_IT", line="$line$") 
+	swift:unitStart("FOREACH_IT", line=$line$) 
 	$declarations;separator="\n"$
 $if(statements)$
 	$parallel(statements=statements)$
 	$cleanups:swift_cleandataset();separator="\n"$
 $endif$
 
-	swift:unitEnd("FOREACH_IT", line="$line$")
+	swift:unitEnd("FOREACH_IT", line=$line$)
 }
 >>
 
@@ -288,16 +288,16 @@ $name$ := $expr$
 variable(name, type, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line) ::= <<
 $name$ := 
 	$if(mapping)$
-	swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline="$line$"$endif$$if(input)$, input=true$endif$
+	swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
 		$swift_mapping(mapping=mapping, file=file)$
 	)
 	$else$
 		$if(file)$
-			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline="$line$"$endif$$if(input)$, input=true$endif$
+			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
 				$swift_mapping(mapping=mapping, file=file)$
 			)
 		$else$
-			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline="$line$"$endif$$if(input)$, input=true$endif$)
+			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$)
 		$endif$
 	$endif$
 $variable_log()$
@@ -323,7 +323,7 @@ assign(var, value, line, partialClose) ::= <<
 $if(partialClose)$
 sequential(
 $endif$
-swift:setFieldValue($if(line)$_traceline="$line$"$endif$
+swift:setFieldValue($if(line)$_traceline=$line$$endif$
 	$var$
 	$value$
 )

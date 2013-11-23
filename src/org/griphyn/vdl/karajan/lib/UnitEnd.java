@@ -21,18 +21,18 @@ public class UnitEnd extends InternalFunction {
     
     private ArgRef<String> type;
     private ArgRef<String> name;
-    private ArgRef<String> line;
+    private ArgRef<Integer> line;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("type", optional("name", null), optional("line", null)));
+        return new Signature(params("type", optional("name", null), optional("line", -1)));
     }
     
     @Override
     public void run(LWThread thr) throws ExecutionException {
         String type = this.type.getValue();
         String name = this.name.getValue();
-        String line = this.line.getValue();
+        int line = this.line.getValue();
         
         UnitStart.log(false, type, thr, name, line);
         WaitingThreadsMonitor.removeOutput(thr);

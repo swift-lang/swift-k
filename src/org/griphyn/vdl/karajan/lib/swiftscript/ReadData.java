@@ -64,7 +64,7 @@ public class ReadData extends SwiftFunction {
 			readData(dest, (String) src.getValue());
 		}
 		else {
-			PhysicalFormat pf = src.getMapper().map(src.getPathFromRoot());
+			PhysicalFormat pf = src.map();
 			if (pf instanceof AbsFile) {
 				AbsFile af = (AbsFile) pf;
 				if (!af.getProtocol().equalsIgnoreCase("file")) {

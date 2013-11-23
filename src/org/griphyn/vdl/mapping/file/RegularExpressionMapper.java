@@ -28,38 +28,43 @@ import java.util.regex.Pattern;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
-import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.type.Types;
 
-public class RegularExpressionMapper extends AbstractMapper {
-	public static final MappingParam PARAM_SOURCE = new MappingParam("source");
-	public static final MappingParam PARAM_MATCH = new MappingParam("match");
-	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
-	
-	private String match, source, transform;
-	
-	
+public class RegularExpressionMapper extends AbstractMapper {	
 	@Override
     protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_SOURCE, PARAM_MATCH, PARAM_TRANSFORM);
+	    s.addAll(RegularExpressionMapperParams.NAMES);
         super.getValidMappingParams(s);
     }
 
 	public RegularExpressionMapper() {
-	}
+	}	
 
-	public void setParams(MappingParamSet params) throws HandleOpenException {
-		super.setParams(params);
-		if (!PARAM_MATCH.isPresent(this)) {
-			throw new RuntimeException("Missing parameter match!");
+	@Override
+    protected MappingParamSet newParams() {
+        return new RegularExpressionMapperParams();
+    }
+
+    @Override
+    public String getName() {
+        return "RegexpMapper";
+    }
+
+    @Override
+    public void initialize(RootHandle root) {
+		super.initialize(root);
+		RegularExpressionMapperParams cp = getParams();
+		if (!cp.getSource().getType().isPrimitive()) {
+            throw new IllegalArgumentException("Non-primitive value specified for 'source';" +
+            		" maybe you meant @filename(" + cp.getSource().toString() + ")?");
+        }
+		else if (!Types.STRING.equals(cp.getSource().getType())) {
+		    throw new IllegalArgumentException("'source' parameter must be a string");
 		}
-		match = PARAM_MATCH.getStringValue(this);
-        source = PARAM_SOURCE.getStringValue(this);
-        transform = PARAM_TRANSFORM.getStringValue(this);
 	}
 
 	public Collection<Path> existing() {
@@ -71,23 +76,18 @@ public class RegularExpressionMapper extends AbstractMapper {
 	}
 
 	public PhysicalFormat map(Path path) {
-	    if (PARAM_MATCH.getRawValue(this) instanceof DSHandle) {
-	        DSHandle h = (DSHandle) PARAM_MATCH.getRawValue(this);
-	        if (!h.getType().isPrimitive()) {
-	            throw new IllegalArgumentException("Non-primitive value specified for " + 
-	                PARAM_MATCH.getName() + "; maybe you meant @filename(" + h.getPathFromRoot() + ")?");
-	        }
-	    }
-		
-		Pattern p = Pattern.compile(match);
+	    RegularExpressionMapperParams cp = getParams();
+
+	    String source = (String) cp.getSource().getValue();
+	    Pattern p = Pattern.compile(cp.getMatch());
 		Matcher m = p.matcher(source);
 		if (!m.find()) {
-			throw new RuntimeException("No match found! source='" + source + "' match = '" + match
-					+ "'");
+			throw new RuntimeException("No match found! source='" + source + 
+			    "' match = '" + cp.getMatch() + "'");
 		}
 		// find group number to replace
 		Pattern p2 = Pattern.compile("(\\\\\\d)");
-		Matcher m2 = p2.matcher(transform);
+		Matcher m2 = p2.matcher(cp.getTransform());
 		StringBuffer sb = new StringBuffer();
 		while (m2.find()) {
                         String group = m2.group(1);
@@ -114,14 +114,7 @@ public class RegularExpressionMapper extends AbstractMapper {
 		params.put("source", "2mass-j1223.fits");
 		params.put("match", "(.*)\\.(.*)");
 		params.put("transform", "\\1_area.\\2");
-		MappingParamSet mps = new MappingParamSet();
-		mps.setAll(params);
-		try {
-            reMapper.setParams(mps);
-        }
-        catch (HandleOpenException e) {
-            e.printStackTrace();
-        }
+		reMapper.setParameters(params);
 		System.out.println(reMapper.map(Path.EMPTY_PATH));
 	}
 }

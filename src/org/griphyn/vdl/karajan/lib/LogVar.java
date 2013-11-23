@@ -22,6 +22,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import k.rt.Channel;
 import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
@@ -29,8 +30,9 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootHandle;
 
 public class LogVar extends SwiftFunction {
     private ArgRef<DSHandle> var;
@@ -58,14 +60,21 @@ public class LogVar extends SwiftFunction {
 	}
 	
 	public static void logVar(Channel<Object> log, DSHandle var, Path path) throws VariableNotFoundException {
-	    path = var.getPathFromRoot().append(path);
         String annotation;
-        if(var.getMapper() != null) {
-            annotation = "" + var.getMapper().map(path);
-        } else {
+        PhysicalFormat pf = var.map(path);
+        if (pf != null) {
+            annotation = "" + pf;
+        } 
+        else {
             annotation = "unmapped";
         }
-        log.add(var.getRoot().getParam(MappingParam.SWIFT_RESTARTID)
-                + "." + path.stringForm() + "!" + annotation);
+        log.add(getLogId(var, path) + "!" + annotation);
+	}
+	
+	public static String getLogId(DSHandle var, Path path) {
+		RootHandle root = var.getRoot();
+		LWThread thr = root.getThread();
+		return thr.getQualifiedName() + ":" + root.getName() + 
+		    "." + path.stringForm();
 	}
 }

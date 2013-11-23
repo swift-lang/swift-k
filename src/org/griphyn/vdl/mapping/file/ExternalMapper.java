@@ -32,63 +32,65 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
-import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootHandle;
 
 public class ExternalMapper extends AbstractMapper {
-	public static final Logger logger = Logger.getLogger(ExternalMapper.class);
-
+	public static final Logger logger = Logger.getLogger(ExternalMapper.class);	
+	
 	private Map<Path, AbsFile> map;
-	private Map<String, Path> rmap;
-
-	public static final MappingParam PARAM_EXEC = new MappingParam("exec");
-	
-	
+    private Map<String, Path> rmap;
+    
 	@Override
+    public String getName() {
+        return "Ext";
+    }
+
+    @Override
     protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_EXEC);
+	    s.addAll(ExternalMapperParams.NAMES);
 	    s.add("*");
         super.getValidMappingParams(s);
     }
 
 	private static final String[] STRING_ARRAY = new String[0];
 
-	public void setParams(MappingParamSet params) throws HandleOpenException {
-		super.setParams(params);
+	@Override
+	public void initialize(RootHandle root) {
+		super.initialize(root);
+		
+		ExternalMapperParams cp = getParams();
 		map = new HashMap<Path, AbsFile>();
 		rmap = new HashMap<String, Path>();
-		String exec = PARAM_EXEC.getStringValue(this);
-		String bdir = MappingParam.SWIFT_BASEDIR.getStringValue(this);
+		String exec = cp.getExec();
+		String bdir = getBaseDir();
 		if (bdir != null && !exec.startsWith("/")) {
 			exec = bdir + File.separator + exec;
 		}
 		List<String> cmd = new ArrayList<String>();
 		cmd.add(exec);
-		for (String name : params.names()) {
-			if (!name.contains("#") && !name.equals("exec")) {
-				MappingParam tp = new MappingParam(name);
-				cmd.add('-' + name);
-				cmd.add(tp.getStringValue(this));
-			}
+		Map<String, Object> other = cp.getOtherParams();
+		for (Map.Entry<String, Object> e : other.entrySet()) {
+		    cmd.add('-' + e.getKey());
+			cmd.add(String.valueOf(e.getValue()));
 		}
 		try {
 		    if (logger.isDebugEnabled()) {
-		        logger.debug("invoking external mapper for " + getParam(MappingParam.SWIFT_DBGNAME) + ": " + cmd);
+		        logger.debug("invoking external mapper: " + cmd);
 		    }
 			Process p = Runtime.getRuntime().exec(cmd.toArray(STRING_ARRAY));
 			List<String> lines = fetchOutput(p.getInputStream());
 			if (logger.isDebugEnabled()) {
-			    logger.debug("external mapper for " + getParam(MappingParam.SWIFT_DBGNAME) + " output: " + lines);
+			    logger.debug("external mapper output: " + lines);
 			}
 			int ec = p.waitFor();
 			if (ec != 0) {
 				throw new RuntimeException("External executable failed. Exit code: " + ec + "\n\t"
 						+ join(lines) + "\n\t" + join(fetchOutput(p.getErrorStream())));
 			}
-			processLines(lines);
+			processLines(cp, lines);
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);
@@ -119,7 +121,7 @@ public class ExternalMapper extends AbstractMapper {
 		return lines;
 	}
 
-	private void processLines(List<String> lines) {
+	private void processLines(ExternalMapperParams cp, List<String> lines) {
 		for (String line : lines) {
 			int s = line.indexOf(' ');
 			int t = line.indexOf('\t');
@@ -135,6 +137,7 @@ public class ExternalMapper extends AbstractMapper {
 		}
 	}
 
+	@Override
 	public Collection<Path> existing() {
 		return map.keySet();
 	}
@@ -146,6 +149,7 @@ public class ExternalMapper extends AbstractMapper {
 		return rmap.get(name);
 	}
 
+	@Override
 	public PhysicalFormat map(Path path) {
 		return map.get(path);
 	}
@@ -153,4 +157,9 @@ public class ExternalMapper extends AbstractMapper {
 	public boolean isStatic() {
 		return true;
 	}
+
+    @Override
+    public MappingParamSet newParams() {
+        return new ExternalMapperParams();
+    }
 }

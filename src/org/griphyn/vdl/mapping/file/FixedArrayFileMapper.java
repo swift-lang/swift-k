@@ -21,27 +21,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
-import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.InvalidMappingParameterException;
-import org.griphyn.vdl.mapping.MappingParam;
+import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.type.Types;
 
 
 /** Maps a string (separated by space, comma or semicolon) of filenames to
     an array. */
 public class FixedArrayFileMapper extends AbstractMapper {
-	public static final MappingParam PARAM_FILES = new MappingParam("files");
-	
-	
-	@Override
+
+    @Override
     protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_FILES);
+	    s.addAll(FixedArrayFileMapperParams.NAMES);
         super.getValidMappingParams(s);
     }
 	
@@ -50,34 +47,47 @@ public class FixedArrayFileMapper extends AbstractMapper {
 	public FixedArrayFileMapper() {
 		super();
 	}
+	
+    @Override
+    public String getName() {
+        return "FixedArrayMapper";
+    }
 
-	public void setParams(MappingParamSet params) throws HandleOpenException {
-		super.setParams(params);
-		String cfiles = PARAM_FILES.getStringValue(this);
-		if (cfiles == null) {
-			throw new InvalidMappingParameterException("Missing required mapper parameter: "
-					+ PARAM_FILES);
+
+    @Override
+	public void initialize(RootHandle root) {
+		super.initialize(root);
+		FixedArrayFileMapperParams cp = getParams();
+		DSHandle files = (DSHandle) cp.getFiles();
+		if (files.getType().isArray() && Types.STRING.equals(files.getType().itemType())) {
+		    int i = 0;
+		    Collection<DSHandle> a = files.getArrayValue().values();
+		    this.files = new String[a.size()];
+		    for (DSHandle n : a) {
+		        this.files[i] = (String) n.getValue();
+		        i++;
+		    }
 		}
-		StringTokenizer st = new StringTokenizer(cfiles, " ,;");
-		files = new String[st.countTokens()];
-		for (int i = 0; st.hasMoreTokens(); i++) {
-			files[i] = st.nextToken();
+		else if (Types.STRING.equals(files.getType())) {
+		    String v = (String) files.getValue();
+		    this.files = v.split("[\\s,;]");
 		}
-		params.set(PARAM_FILES, files);
 	}
 
 	protected String[] getFiles() {
 		return files;
 	}
 
+	@Override
 	public Collection<Path> existing() {
 		List<Path> l = new ArrayList<Path>();
-		for (int i = 0; i < getFiles().length; i++) {
+		for (int i = 0; i < files.length; i++) {
 			l.add(Path.EMPTY_PATH.addLast(i, true));
 		}
 		return l;
 	}
 
+	@Override
 	public PhysicalFormat map(Path path) {
 		if (!path.isArrayIndex(0)) {
 			throw new IllegalArgumentException(path.toString());
@@ -97,4 +107,9 @@ public class FixedArrayFileMapper extends AbstractMapper {
 	public boolean isStatic() {
 		return true;
 	}
+
+    @Override
+    protected MappingParamSet newParams() {
+        return new FixedArrayFileMapperParams();
+    }
 }

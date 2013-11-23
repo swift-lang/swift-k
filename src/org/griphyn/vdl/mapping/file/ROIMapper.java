@@ -23,17 +23,24 @@ import java.util.StringTokenizer;
 
 import org.griphyn.vdl.mapping.Path;
 
+//TODO Is this still being used?
 public class ROIMapper extends AbstractFileMapper {
 	private int count;
-	private Map names;
+	private Map<String, Integer> names;
 	
 	public ROIMapper() {
 		super(new ROIFileNameElementMapper());
-		names = new HashMap();
+		names = new HashMap<String, Integer>();
 		count = 0;
 	}
 
-	public Path rmap(String name) {
+	@Override
+    public String getName() {
+        return "ROIMapper";
+    }
+
+    @Override
+	public Path rmap(AbstractFileMapperParams cp, String name) {
 		if (name.indexOf(".ROI") == -1) {
 			return null;
 		}
@@ -46,7 +53,7 @@ public class ROIMapper extends AbstractFileMapper {
 		String basename = name.substring(0, ri);
 		
 		// get the right index
-		Integer idx = (Integer) names.get(basename);
+		Integer idx = names.get(basename);
 		boolean notseen = (idx == null);
 		
 		StringTokenizer st = new StringTokenizer(name.substring(ri+1), ".");
@@ -67,7 +74,7 @@ public class ROIMapper extends AbstractFileMapper {
 					if (notseen) {
 						// we have not processed the name
 						elementMapper.rmapIndex(basename);
-						names.put(basename, new Integer(count));
+						names.put(basename, count);
 						++count;
 					}
 					path = path.addLast("image");
@@ -78,7 +85,7 @@ public class ROIMapper extends AbstractFileMapper {
 				if (notseen) {
 					// we have not processed the name
 					elementMapper.rmapIndex(basename);
-					names.put(basename, new Integer(count));
+					names.put(basename, count);
 					++count;
 				}
 			} else {

@@ -30,8 +30,6 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.MappingParam;
-import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
@@ -39,35 +37,26 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 
         public static final Logger logger =
             Logger.getLogger(StructuredRegularExpressionMapper.class);
-
-        public static final MappingParam PARAM_SOURCE = new MappingParam("source");
-	public static final MappingParam PARAM_MATCH = new MappingParam("match");
-	public static final MappingParam PARAM_TRANSFORM = new MappingParam("transform");
-	
-	private String match, transform;
 		
 	@Override
     protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_SOURCE, PARAM_MATCH, PARAM_TRANSFORM);
+	    s.addAll(StructuredRegularExpressionMapperParams.NAMES);
         super.getValidMappingParams(s);
     }
 
 	public StructuredRegularExpressionMapper() {
 	}
 
-	public void setParams(MappingParamSet params) throws HandleOpenException {
-		super.setParams(params);
-		if (!PARAM_MATCH.isPresent(this)) {
-			throw new RuntimeException("Missing parameter match!");
-		}
-		
-		match = PARAM_MATCH.getStringValue(this);
-        transform = PARAM_TRANSFORM.getStringValue(this);
-	}
+	@Override
+    public String getName() {
+        return "StructuredRegexpMapper";
+    }
 
+    @Override
 	public Collection<Path> existing() {
+	    StructuredRegularExpressionMapperParams cp = getParams();
 
-		DSHandle sourceHandle = (DSHandle) PARAM_SOURCE.getRawValue(this);
+		DSHandle sourceHandle = cp.getSource();
 
 		Collection<Path> output = new ArrayList<Path>();
 		Collection<DSHandle> sourceFields;
@@ -90,11 +79,14 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 		return output;
 	}
 
+	@Override
 	public PhysicalFormat map(Path path) {
+	    if (logger.isDebugEnabled()) {
+	        logger.debug("map(): path: " + path);
+	    }
+        StructuredRegularExpressionMapperParams cp = getParams();
 
-                logger.debug("map(): path: " + path); 
-
-		DSHandle sourceHandle = (DSHandle) PARAM_SOURCE.getRawValue(this);
+		DSHandle sourceHandle = cp.getSource();
 		DSHandle hereHandle;
 		try {
 			hereHandle = sourceHandle.getField(path);
@@ -103,21 +95,21 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 			throw new RuntimeException("Cannot get requested path " + path
 					+ " from source data structure");
 		}
-
-		PhysicalFormat source = hereHandle.getRoot().getMapper().map(hereHandle.getPathFromRoot());
+		
+		PhysicalFormat source = hereHandle.getMapper().map(hereHandle.getPathFromRoot());
 		if (!source.getType().equals("file")) {
 			throw new RuntimeException(
 					"Cannot use the regular expression mapper with a source that has a mapper that is not file-based");
 		}
-		Pattern p = Pattern.compile(match);
+		Pattern p = Pattern.compile(cp.getMatch());
 		Matcher m = p.matcher(((AbsFile) source).getPath());
 		if (!m.find()) {
-			throw new RuntimeException("No match found! source='" + source + "' match = '" + match
+			throw new RuntimeException("No match found! source='" + source + "' match = '" + cp.getMatch()
 					+ "'");
 		}
 		// find group number to replace
 		Pattern p2 = Pattern.compile("(\\\\\\d)");
-		Matcher m2 = p2.matcher(transform);
+		Matcher m2 = p2.matcher(cp.getTransform());
 		StringBuffer sb = new StringBuffer();
 		while (m2.find()) {
 			String group = m2.group(1);

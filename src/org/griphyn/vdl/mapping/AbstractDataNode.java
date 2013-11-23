@@ -51,8 +51,6 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
 
     public static final Logger logger = Logger.getLogger(AbstractDataNode.class);
 
-    public static final MappingParam PARAM_PREFIX = new MappingParam("prefix", null);
-
     /**
      * Datasets are identified within a run by this sequence number and the
      * partial ID field. The initial value is chosen to aid human recognition of
@@ -79,7 +77,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         catch (IOException e) {
         }
     }
-
+    
     private Field field;
     private Map<Comparable<?>, DSHandle> handles;
     private Object value;
@@ -89,7 +87,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     
     private int writeRefCount;
     private List<FutureListener> listeners;
-    
+        
     protected static final Tracer variableTracer = Tracer.getTracer("VARIABLE");
 
     protected AbstractDataNode(Field field) {
@@ -113,15 +111,16 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             }
         }
     }
-
-    public void init(MappingParamSet params) throws HandleOpenException {
-        throw new UnsupportedOperationException();
+    
+    public String getName() {
+        return getRoot().getName();
     }
     
-    public final void init(Map<String, Object> params) {
-        throw new UnsupportedOperationException();
+    @Override
+    public void setName(String name) {
+        throw new UnsupportedOperationException("setName can only be called on a root variable");
     }
-
+    
     public Type getType() {
         return field.getType();
     }
@@ -226,14 +225,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     }
 
     public String getDisplayableName() {
-        String prefix = getRoot().getParam(MappingParam.SWIFT_DBGNAME);
-        if (prefix == null) {
-            prefix = getRoot().getParam(PARAM_PREFIX);
-        }
-        if (prefix == null) {
-            prefix = "?";
-        }
-        return prefix;
+        return getName();
     }
     
     public String getFullName() {
@@ -244,26 +236,6 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         }
         else {
             return name + "." + p;
-        }
-    }
-    
-    public String getDeclarationLine() {
-        String line = getRoot().getParam(MappingParam.SWIFT_LINE);
-        if (line == null || line.length() == 0) {
-        	return null;
-        }
-        else {
-        	return line;
-        }
-    }
-    
-    public String getThread() {
-        String restartId = getRoot().getParam(MappingParam.SWIFT_RESTARTID);
-        if (restartId != null) {
-            return restartId.substring(0, restartId.lastIndexOf(":"));
-        }
-        else {
-            return null;
         }
     }
 
@@ -388,7 +360,6 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             }
             return dn;
         }
-
     }
         
     protected Field getChildField(Comparable<?> key) throws NoSuchFieldException {
@@ -396,7 +367,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             return Field.Factory.createField(key, getType().itemType());
         }
         else {
-            return Field.Factory.createField(key, getType().getField((String) key).getType());
+            return Field.Factory.getImmutableField(key, getType().getField((String) key).getType());
         }
     }
     
@@ -566,8 +537,8 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
                 }
 
                 try {
-                    if(filemapped) {
-                        Object path = m.map(pathFromRoot);
+                    if (filemapped) {
+                        Object path = map();
                         if (logger.isInfoEnabled()) {
                             logger.info("FILENAME dataset=" + identifier + " filename=" + path);
                         }
@@ -648,6 +619,27 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     public Mapper getMapper() {
         return ((AbstractDataNode) getRoot()).getMapper();
     }
+    
+    @Override
+    public PhysicalFormat map(Path path) {
+        Mapper m = getMapper();
+        if (m == null) {
+            return null;
+        }
+        else {
+            Path p = getPathFromRoot().append(path);
+            return m.map(p);
+        }
+    }
+
+    @Override
+    public PhysicalFormat map() {
+        return map(Path.EMPTY_PATH);
+    }
+
+    public MappingParamSet getMappingParams() {
+        return getRoot().getMappingParams();
+    }
 
     protected Map<Comparable<?>, DSHandle> getHandles() {
         return handles;
@@ -719,7 +711,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
                 throw new RuntimeException(getFullName() + " has no value");
             }
             else {
-                throw new MissingDataException(this, getMapper().map(getPathFromRoot()));
+                throw new MissingDataException(this, map());
             }
         }
     }
@@ -768,7 +760,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             }
         }
         else if (!getType().isArray() && !getType().isPrimitive()) {
-            Mapper mapper = getRoot().getMapper();
+            Mapper mapper = getMapper();
             if (mapper != null) {
                 mapper.clean(getPathFromRoot());
             }
@@ -797,7 +789,8 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         }
         if (this.writeRefCount == 0) {
             if (variableTracer.isEnabled()) {
-                variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " CLOSE write ref count is zero");
+                RootHandle root = getRoot();
+                variableTracer.trace(root.getThread(), root.getLine(), getDisplayableName() + " CLOSE write ref count is zero");
             }
             closeDeep();
         }

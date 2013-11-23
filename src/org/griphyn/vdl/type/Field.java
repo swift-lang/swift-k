@@ -17,7 +17,11 @@
 
 package org.griphyn.vdl.type;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.griphyn.vdl.type.impl.FieldImpl;
+import org.griphyn.vdl.type.impl.ImmutableField;
 
 public interface Field {
 	/**
@@ -43,6 +47,8 @@ public interface Field {
 	 * @param type
 	 */
 	public void setType(Type type);
+	
+	
 
 	/**
 	 * A factory class with static methods for creating instances
@@ -51,13 +57,26 @@ public interface Field {
 
 	public static final class Factory
 	{
+	    private static final Map<Field, Field> fieldCache = new HashMap<Field, Field>(); 
 		public static Field newInstance() {
 			return new FieldImpl();
 		}
 		
 		public static Field createField(Comparable<?> id, Type type) {
 			return new FieldImpl(id, type);
-		}		
+		}
+		
+		public static synchronized Field getImmutableField(Comparable<?> id, Type type) {
+		    Field f = new ImmutableField(id, type);
+		    Field cached = fieldCache.get(f);
+		    if (cached == null) {
+		        fieldCache.put(f, f);
+		        return f;
+		    }
+		    else {
+		        return cached;
+		    }
+		}
 	}
 }
 

@@ -50,7 +50,6 @@ import org.globus.cog.karajan.compiled.nodes.grid.SchedulerNode;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class HangChecker extends TimerTask {
@@ -244,9 +243,12 @@ public class HangChecker extends TimerTask {
     }
     
     public static String varWithLine(DSHandle value) {
-        String line = value.getRoot().getParam(MappingParam.SWIFT_LINE);
+        Integer line = null;
+        String dbgname = null;
+        line = value.getRoot().getLine();
+        dbgname = value.getName();
         Path path = value.getPathFromRoot();
-        return value.getRoot().getParam(MappingParam.SWIFT_DBGNAME) + 
+        return dbgname + 
             (value == value.getRoot() ? "" : (path.isArrayIndex(0) ? path : "." + path)) + 
             (line == null ? "" : " (declared on line " + line + ")");
     }

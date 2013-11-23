@@ -84,7 +84,12 @@ public class UnresolvedType implements Type {
 		throw new UnsupportedOperationException("addField");
 	}
 	
-	public String getName() {
+	@Override
+    public boolean hasNonPrimitiveComponents() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getName() {
 		return name;
 	}
 

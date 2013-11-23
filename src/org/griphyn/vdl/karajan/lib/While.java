@@ -39,7 +39,7 @@ public class While extends InternalFunction {
     
     private VarRef<Object> var;
     
-    private ArgRef<String> _traceline;
+    private ArgRef<Integer> _traceline;
     private List<StaticRefCount> srefs;
     private Tracer tracer;
     private ArgRef<String> refs;
@@ -53,7 +53,7 @@ public class While extends InternalFunction {
             throws CompilationException {
         srefs = StaticRefCount.build(scope, this.refs.getValue());
         if (_traceline.getValue() != null) {
-            setLine(Integer.parseInt(_traceline.getValue()));
+            setLine(_traceline.getValue());
         }
         tracer = Tracer.getTracer(this);
         return super.compileBody(w, argScope, scope);

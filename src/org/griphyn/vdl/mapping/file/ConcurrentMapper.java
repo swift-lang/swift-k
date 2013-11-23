@@ -26,38 +26,36 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.griphyn.vdl.mapping.HandleOpenException;
+import k.thr.LWThread;
+
 import org.griphyn.vdl.mapping.Mapper;
-import org.griphyn.vdl.mapping.MappingParam;
-import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootHandle;
 
-public class ConcurrentMapper extends AbstractFileMapper {
-	public static final MappingParam PARAM_THREAD_PREFIX = new MappingParam("thread_prefix", "");
-	
-	
-	@Override
-    protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_THREAD_PREFIX);
-        super.getValidMappingParams(s);
-    }
-	
-	private Map<Path, PhysicalFormat> remappedPaths;
+public class ConcurrentMapper extends AbstractFileMapper {	
+    private Map<Path, PhysicalFormat> remappedPaths;
+    private LWThread thread;
 
 	public ConcurrentMapper() {
 		super(new ConcurrentElementMapper());
 	}
-
-	public void setParams(MappingParamSet params) throws HandleOpenException {
-		String prefix = PARAM_PREFIX.getStringValue(params);
-		prefix = "_concurrent/" + (prefix == null ? "" : prefix + "-") + 
-		    PARAM_THREAD_PREFIX.getValue(params);
-		PARAM_PREFIX.setValue(params, prefix);
-		super.setParams(params);
-	}
 	
+	@Override
+    public String getName() {
+        return "ConcurrentMapper";
+    }
+
+    @Override
+    public void initialize(RootHandle root) {
+        super.initialize(root);
+        this.thread = root.getThread();
+    }
+
+    @Override
     public synchronized Collection<Path> existing() {
+        AbstractFileMapperParams cp = getParams();
+        
         Collection<Path> c = super.existing();
         if (remappedPaths != null) {
             Set<Path> s = new HashSet<Path>(c);
@@ -69,24 +67,33 @@ public class ConcurrentMapper extends AbstractFileMapper {
         }
     }
 
+	@Override
     public synchronized PhysicalFormat map(Path path) {
+	    AbstractFileMapperParams cp = getParams();
+        
         if (remappedPaths != null) {
             Object o = remappedPaths.get(path);
             if (o != null) {
                 return (PhysicalFormat) o;
             }
         }
-        return super.map(path);
+        String prefix = cp.getPrefix();
+        String modifiedPrefix = "_concurrent/" + (prefix == null ? "" : prefix + "-") + 
+                thread.getQualifiedName();
+        return super.map(cp, path, modifiedPrefix);
     }
 
-    public Path rmap(String name) {
+	@Override
+    public Path rmap(AbstractFileMapperParams cp, String name) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public boolean canBeRemapped(Path path) {
         return true;
     }
 
+    @Override
     public synchronized void remap(Path path, Mapper sourceMapper, Path sourcePath) {
         // this will prevent cleaning of the old file
         // which doesn't need to be cleaned

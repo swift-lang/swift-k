@@ -38,14 +38,14 @@ public class UnitStart extends InternalFunction {
 
     private ArgRef<String> type;
     private ArgRef<String> name;
-    private ArgRef<String> line;
+    private ArgRef<Integer> line;
     private ArgRef<String> arguments;
     private ArgRef<String> outputs;
 
     @Override
     protected Signature getSignature() {
         return new Signature(params("type", optional("name", null),
-            optional("line", null),
+            optional("line", -1),
             optional("outputs", null), optional("arguments", null)));
     }
 
@@ -113,7 +113,7 @@ public class UnitStart extends InternalFunction {
     protected void runBody(LWThread thr) {
         String type = this.type.getValue();
         String name = this.name.getValue();
-        String line = this.line.getValue();
+        Integer line = this.line.getValue();
 
         if (tracer != null && tracer.isEnabled()) {
             tracer.trace(thr, name + "("
@@ -163,7 +163,7 @@ public class UnitStart extends InternalFunction {
     }
 
     protected static void log(boolean start, String type, LWThread thread,
-            String name, String line) {
+            String name, int line) {
         if (logger.isInfoEnabled()) {
             String threadName = SwiftFunction.getThreadPrefix(thread);
             if (type.equals("COMPOUND")) {

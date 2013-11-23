@@ -18,6 +18,7 @@
 package org.griphyn.vdl.mapping;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 /** This interface must be implemented by a Java class that represents
@@ -54,11 +55,7 @@ public interface Mapper {
      *   but a necessary compromise.
      */
     boolean isStatic();
-
-    void setParams(MappingParamSet params) throws HandleOpenException;
-
-    Object getParam(MappingParam name);
-
+    
     /**
      * Specifies whether paths mapped by this mapper can be re-mapped
      * if needed (such as when aliasing another variable)
@@ -77,8 +74,18 @@ public interface Mapper {
      */
     void clean(Path paths);
     
-    
     boolean isPersistent(Path path);
     
     Set<String> getSupportedParamNames();
+    
+    void setParameters(Map<String, Object> params);
+    
+    /**
+     * Called after all parameters have been closed
+     */
+    void initialize(RootHandle root);
+    
+    void setBaseDir(String baseDir);
+    
+    AbstractDataNode getFirstOpenParameter();
 }

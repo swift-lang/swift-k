@@ -27,13 +27,10 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.futures.FutureFault;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.MappingParam;
-import org.griphyn.vdl.mapping.MappingParamSet;
-import org.griphyn.vdl.mapping.OOBYield;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
-import org.griphyn.vdl.type.Field;
+import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.mapping.file.ConcurrentMapper;
 import org.griphyn.vdl.type.Type;
 
 public class CreateArray extends SetFieldValue {
@@ -56,9 +53,12 @@ public class CreateArray extends SetFieldValue {
 
 			Type type = checkTypes((List<?>) value);
 			
-			DSHandle handle = new RootArrayDataNode(type.arrayType());
-			if (hasMappableFields(type)) {
-			    setMapper(handle);
+			RootHandle handle = new RootArrayDataNode("arrayexpr", type.arrayType());
+			if (type.hasNonPrimitiveComponents()) {
+			    handle.init(new ConcurrentMapper());
+			}
+			else {
+			    handle.init(null);
 			}
 
 			if (logger.isInfoEnabled()) {
@@ -100,43 +100,6 @@ public class CreateArray extends SetFieldValue {
 			throw new ExecutionException(this, e);
 		}
 	}
-
-    private void setMapper(DSHandle handle) {
-        // slap a concurrent mapper on this
-        MappingParamSet params = new MappingParamSet();
-        params.set(MappingParam.SWIFT_DESCRIPTOR, "concurrent_mapper");
-        params.set(MappingParam.SWIFT_DBGNAME, "arrayexpr");
-        try {
-            handle.init(params);
-        }
-        catch (OOBYield y) {
-            throw y.wrapped(this);
-        }
-        catch (HandleOpenException e) {
-            throw new ExecutionException(this, "Plain HandleOpenException caught", e);
-        }
-    }
-
-    private boolean hasMappableFields(Type type) {
-        if (type.isPrimitive()) {
-            return false;
-        }
-        else if (!type.isComposite()) {
-            return true;
-        }
-        else if (type.isArray()) {
-            return hasMappableFields(type.itemType());
-        }
-        else {
-            // struct
-            for (Field f : type.getFields()) {
-                if (hasMappableFields(f.getType())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
 
     private Type checkTypes(List<?> value) {
         Type type = null;

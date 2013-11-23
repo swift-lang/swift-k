@@ -22,6 +22,7 @@ package org.griphyn.vdl.mapping;
 
 import k.rt.Future;
 import k.rt.FutureListener;
+import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
@@ -29,34 +30,76 @@ import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
-public class RootDataNode extends AbstractDataNode implements FutureListener {
+public class RootDataNode extends AbstractDataNode implements FutureListener, RootHandle {
 
     static Logger logger = Logger.getLogger(RootDataNode.class);
     
-	private boolean initialized=false;
+	private boolean initialized = false;
 	private Mapper mapper;
-	private MappingParamSet params;
 	private AbstractDataNode waitingMapperParam;
 	private DuplicateMappingChecker dmc;
 	
-	public RootDataNode(Type type, DuplicateMappingChecker dmc) {
-		super(Field.Factory.createField(null, type));
+    // previously in mapper params
+    private int line = -1;
+    private LWThread thread;
+    private boolean input;
+
+	
+	public RootDataNode(String name, Type type, DuplicateMappingChecker dmc) {
+		super(Field.Factory.getImmutableField(name, type));
 		this.dmc = dmc;
 	}
 	
-	public RootDataNode(Type type) {
-	    this(type, null);
+	public RootDataNode(Type type, Object value) {
+        this("?", type, value);
+    }
+	
+	public RootDataNode(String name, Type type) {
+	    this(name, type, null);
 	}
 	
-	public RootDataNode(Type type, Object value) {
-	    this(type);
+	public RootDataNode(String name, Type type, Object value) {
+	    this(name, type);
 	    initialized();
 	    setValue(value);
 	}
+	
+	    public int getLine() {
+        return line;
+    }
 
-	public void init(MappingParamSet params) throws HandleOpenException {
-		this.params = params;
-		if (this.params == null) { 
+    public void setLine(int line) {
+        this.line = line;
+    }
+
+    public boolean isInput() {
+        return input;
+    }
+
+    public void setInput(boolean input) {
+        this.input = input;
+    }
+
+    public void setThread(LWThread thread) {
+        this.thread = thread;
+    }
+
+    public LWThread getThread() {
+        return thread;
+    }
+	
+	public String getName() {
+	    return (String) getField().getId();
+	}
+
+	@Override
+    public void setName(String name) {
+	    getField().setId(name);
+    }
+	
+    public void init(Mapper mapper) {
+		this.mapper = mapper;
+		if (mapper == null) { 
 			initialized();
 		} 
 		else {
@@ -67,36 +110,25 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 	/** must have this.params set to the appropriate parameters before
 	    being called. 
 	 * @throws HandleOpenException */
-	private synchronized void innerInit() throws HandleOpenException {
-	    waitingMapperParam = params.getFirstOpenParamValue();
+	private synchronized void innerInit() {
+	    waitingMapperParam = mapper.getFirstOpenParameter();
 	    if (waitingMapperParam != null) {
             waitingMapperParam.addListener(this);
             if (variableTracer.isEnabled()) {
-                variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " WAIT " 
+                variableTracer.trace(getThread(), getLine(), getDisplayableName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
             }
             return;
 	    }
 	    
-		String desc = (String) params.get(MappingParam.SWIFT_DESCRIPTOR);
-		if (desc == null) {
-			initialized();
-			return;
-		}
-		try {
-			mapper = MapperFactory.getMapper(desc, params);
-			getField().setId(PARAM_PREFIX.getStringValue(mapper));
-			// initialized means that this data has its mapper initialized
-			// this should be called before checkInputs because the latter
-			// may trigger calls to things that try to access this data node's
-			// mapper
-            initialized();
-			checkInputs();
-		}
-		catch (InvalidMapperException e) {
-			throw new RuntimeException
-			("InvalidMapperException caught in mapper initialization", e);
-		}
+		// initialized means that this data has its mapper initialized
+		// this should be called before checkInputs because the latter
+		// may trigger calls to things that try to access this data node's
+		// mapper
+	    mapper.initialize(this);
+        initialized();
+		checkInputs();
+		
 		if (isClosed()) {
 		    notifyListeners();
 		}
@@ -104,7 +136,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 
 	private void checkInputs() {
 		try {
-			checkInputs(params, mapper, this, dmc);
+			checkInputs(this, dmc);
 		}
 		catch (DependentException e) {
 			setValue(new MappingDependentException(this, e));
@@ -115,21 +147,17 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		try {
             innerInit();
         }
-        catch (OOBYield e) {
-            throw e.wrapped();
-        }
         catch (Exception e) {
             this.setValue(new MappingException(this, e));
         }
 	}
 
 
-	static protected void checkInputs(MappingParamSet params, Mapper mapper, AbstractDataNode root, 
-	        DuplicateMappingChecker dmc) {
-		Boolean input = (Boolean) params.get(MappingParam.SWIFT_INPUT);
-		if (input != null && input.booleanValue()) {
+	static protected void checkInputs(RootHandle root, DuplicateMappingChecker dmc) {
+	    Mapper mapper = root.getActualMapper();
+		if (root.isInput()) {
 			addExisting(mapper, root);
-			checkConsistency(root, true, mapper, dmc);
+			checkConsistency(root, root, dmc);
 		}
 		else if (mapper.isStatic()) {
 		    if (root.isClosed()) {
@@ -148,8 +176,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 				    // path is valid - we'll get an exception if not
 					DSHandle h = root.getField(p);
 					if (variableTracer.isEnabled()) {
-					    variableTracer.trace(root.getThread(), root.getDeclarationLine(), 
-					        root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
+					    variableTracer.trace(root.getThread(), root.getLine(), 
+					        root.getName() + " MAPPING " + p + ", " + mapper.map(p));
 					}
 				}
 				catch (InvalidPathException e) {
@@ -162,19 +190,20 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 			if (root.isArray()) {
 			    root.closeArraySizes();
 			}
-			checkConsistency(root, false, mapper, dmc);
+			checkConsistency(root, root, dmc);
 		}
 	}
 
-	private static void addExisting(Mapper mapper, AbstractDataNode root) {
+	private static void addExisting(Mapper mapper, RootHandle root) {
 	    boolean any = false;
+	    MappingParamSet mps = root.getMappingParams();
 		for (Path p : mapper.existing()) {
             try {
                 DSHandle field = root.getField(p);
                 field.setValue(FILE_VALUE);
                 if (variableTracer.isEnabled()) {
-                    variableTracer.trace(root.getThread(), root.getDeclarationLine(), 
-                        root.getDisplayableName() + " MAPPING " + p + ", " + mapper.map(p));
+                    variableTracer.trace(root.getThread(), root.getLine(), 
+                        root.getName() + " MAPPING " + p + ", " + mapper.map(p));
                 }
                 any = true;
             }
@@ -190,17 +219,17 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
         }
         root.closeDeep();
         if (!any && variableTracer.isEnabled()) {
-            variableTracer.trace(root.getThread(), root.getDeclarationLine(), 
-                root.getDisplayableName() + " MAPPING no files found");
+            variableTracer.trace(root.getThread(), root.getLine(), 
+                root.getName() + " MAPPING no files found");
         }
     }
 
-    public static void checkConsistency(DSHandle handle, boolean input, Mapper mapper, DuplicateMappingChecker dmc) {
+    public static void checkConsistency(RootHandle root, DSHandle handle, DuplicateMappingChecker dmc) {
 		if (handle.getType().isArray()) {
 			// any number of indices is ok
 			try {
 			    for (DSHandle dh : handle.getFields(Path.CHILDREN)) {
-					checkConsistency(dh, input, mapper, dmc);
+					checkConsistency(root, dh, dmc);
 				}
 			}
 			catch (HandleOpenException e) {
@@ -217,8 +246,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 			Type type = handle.getType();
 			if (!type.isPrimitive() && !type.isComposite()) {
 			    // mapped. Feed the DMC.
-			    PhysicalFormat f = mapper.map(handle.getPathFromRoot());
-			    if (input) {
+			    PhysicalFormat f = root.getActualMapper().map(handle.getPathFromRoot());
+			    if (root.isInput()) {
 			        dmc.addRead(f, handle);
 			    }
 			    else {
@@ -228,7 +257,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 			for (String fieldName : type.getFieldNames()) {
 				Path fieldPath = Path.parse(fieldName);
 				try {
-					checkConsistency(handle.getField(fieldPath), input, mapper, dmc);
+					checkConsistency(root, handle.getField(fieldPath), dmc);
 				}
 				catch (InvalidPathException e) {
 					throw new RuntimeException("Data set initialization failed for " + handle
@@ -237,15 +266,8 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 			}
 		}
 	}
-
-	public String getParam(MappingParam p) {
-		if (params == null) {
-			return null;
-		}
-		return (String) params.get(p);
-	}
-
-	public DSHandle getRoot() {
+	
+	public RootHandle getRoot() {
 		return this;
 	}
 
@@ -265,7 +287,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		if (waitingMapperParam == null) {
 		    return null;
 		}
-		else {        
+		else {
 		    throw new FutureNotYetAvailable(waitingMapperParam);
 		}
 	}
@@ -287,7 +309,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener {
 		initialized = true;
 		waitingMapperParam = null;
 		if (variableTracer.isEnabled()) {
-            variableTracer.trace(getThread(), getDeclarationLine(), getDisplayableName() + " INITIALIZED " + params);
+            variableTracer.trace(getThread(), getLine(), getName() + " INITIALIZED " + mapper);
         }
 	}
 }

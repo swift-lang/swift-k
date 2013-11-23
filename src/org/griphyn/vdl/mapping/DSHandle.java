@@ -46,10 +46,12 @@ public interface DSHandle {
     /** get the type of the dataset.
      */
     public Type getType();
+    
+    public String getName();
+    
+    public void setName(String name);
 
-    public void init(MappingParamSet params) throws HandleOpenException;
-
-    public DSHandle getRoot();
+    public RootHandle getRoot();
 
     public DSHandle getParent();
 
@@ -96,14 +98,19 @@ public interface DSHandle {
 
     public void set(DSHandle svar);
 
-    public String getParam(MappingParam name);
-
     public boolean isClosed();
 
     public void addListener(DSHandleListener listener);
 
     Mapper getMapper();
-
+    
+    /**
+     * Maps the specified path relative to this node
+     */
+    PhysicalFormat map(Path path);
+    
+    PhysicalFormat map();
+    
     public String getIdentifier();
 
     public String getIdentifyingString();

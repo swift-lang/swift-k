@@ -27,7 +27,6 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.MappingParam;
 import org.griphyn.vdl.mapping.Path;
 
 public class NiceName extends SwiftFunction {
@@ -47,17 +46,18 @@ public class NiceName extends SwiftFunction {
 			Path path = parsePath(this.path.getValue(stack));
 			DSHandle field = var.getField(path);
 			Path p = field.getPathFromRoot();
+			DSHandle root = field.getRoot();
 			if (p.equals(Path.EMPTY_PATH)) {
-				Object dbgname = field.getRoot().getParam(MappingParam.SWIFT_DBGNAME);
+				Object dbgname = root.getName();
 				if (dbgname == null) {
-					return "tmp"+field.getRoot().hashCode();
+					return "tmp" + root.hashCode();
 				}
 				else {
 					return dbgname;
 				}
 			}
 			else {
-				return field.getRoot().getParam(MappingParam.SWIFT_DBGNAME) + "." + p;
+				return root.getName() + "." + p;
 			}
 		}
 		catch (InvalidPathException e) {

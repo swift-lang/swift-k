@@ -31,9 +31,10 @@ public class DuplicateMappingChecker {
     }
     
     private static class Info {
-        private final String name, line;
+        private final String name;
+        private final Integer line;
         
-        public Info(String name, String line) {
+        public Info(String name, Integer line) {
             this.name = name;
             this.line = line;
         }
@@ -81,7 +82,7 @@ public class DuplicateMappingChecker {
     private Info getInfo(DSHandle h) {
         if (h instanceof AbstractDataNode) {
             AbstractDataNode a = (AbstractDataNode) h;
-            return new Info(a.getDisplayableName(), a.getDeclarationLine());
+            return new Info(a.getDisplayableName(), a.getRoot().getLine());
         }
         else {
             return new Info(String.valueOf(h), null);

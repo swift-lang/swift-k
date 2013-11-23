@@ -18,6 +18,7 @@
 package org.griphyn.vdl.mapping;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -32,73 +33,88 @@ import org.griphyn.vdl.mapping.file.FileGarbageCollector;
 public abstract class AbstractMapper implements Mapper {
 
 	public static final Logger logger = Logger.getLogger(AbstractMapper.class);
-	public static final MappingParam PARAM_INPUT = new MappingParam("input", Boolean.FALSE);
 	
-	protected void getValidMappingParams(Set<String> s) {
-	    addParams(s, PARAM_INPUT);
-	}
+	private MappingParamSet params;
+	private String baseDir;
 	
-	protected void addParams(Set<String> s, MappingParam... params) {
-	    for (MappingParam p : params) {
-	        s.add(p.getName());
-	    }
+    public String getBaseDir() {
+        return baseDir;
     }
-	
+
+    public void setBaseDir(String baseDir) {
+        this.baseDir = baseDir;
+    }
+
     @Override
     public final Set<String> getSupportedParamNames() {
         Set<String> s = new HashSet<String>();
         getValidMappingParams(s);
         return s;
     }
+    
+    protected void getValidMappingParams(Set<String> s) {
+    }
+    
+    protected abstract MappingParamSet newParams();
+    
+    @SuppressWarnings("unchecked")
+    protected <T> T getParams() {
+        return (T) params;
+    }
+    
+    @Override
+    public void setParameters(Map<String, Object> params) {
+        this.params = newParams();
+        this.params.setAll(params);
+    }
 
-    protected MappingParamSet params;
+    @Override
+    public AbstractDataNode getFirstOpenParameter() {
+        if (params != null) {
+            return params.getFirstOpen();
+        }
+        else {
+            return null;
+        }
+    }
 
-	public synchronized void setParam(MappingParam param, Object value) {
-		if (params == null) {
-			params = new MappingParamSet();
-		}
-		params.set(param, value);
-	}
+    @Override
+    public void initialize(RootHandle root) {
+        params.unwrapPrimitives();
+    }
 
-	public synchronized Object getParam(MappingParam param) {
-		if (params != null) {
-			return params.get(param);
-		}
-		else {
-			return null;
-		}
-	}
-
-	public void setParams(MappingParamSet params) throws HandleOpenException {
-		this.params = params;
-	}
-
+    @Override
 	public boolean exists(Path path) {
-		if(logger.isDebugEnabled())
-			logger.debug("checking for existence of "+path);
+		if (logger.isDebugEnabled()) {
+			logger.debug("checking for existence of " + path);
+		}
 		boolean r = ((AbsFile) map(path)).exists();
 		if(logger.isDebugEnabled()) {
-			if(r) {
-				logger.debug(""+path+" exists");
+			if (r) {
+				logger.debug(path + " exists");
 			} else {
-				logger.debug(""+path+" does not exist");
+				logger.debug(path + " does not exist");
 			}
 		}
 		return r;
 	}
 
+    @Override
 	public boolean canBeRemapped(Path path) {
 	    return false;
 	}
 
+    @Override
     public void remap(Path path, Mapper sourceMapper, Path sourcePath) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void clean(Path path) {
         // no cleaning by default
     }
 
+    @Override
     public boolean isPersistent(Path path) {
         // persistent unless explicitly overridden
         return true;
@@ -114,5 +130,24 @@ public abstract class AbstractMapper implements Mapper {
         else {
             FileGarbageCollector.getDefault().increaseUsageCount(pf);
         }
+    }
+    
+    public abstract String getName();
+    
+    @Override
+    public String toString() {
+        Object desc = getName();
+        if (desc == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("<");
+        sb.append(desc);
+        sb.append("; ");
+        if (params != null) {
+            params.toString(sb);
+        }
+        sb.append('>');
+        return sb.toString();
     }
 }

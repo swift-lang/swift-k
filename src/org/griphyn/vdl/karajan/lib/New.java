@@ -27,6 +27,7 @@ import java.util.Map;
 import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
@@ -40,17 +41,21 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 import org.griphyn.vdl.mapping.ExternalDataNode;
-import org.griphyn.vdl.mapping.MappingParam;
-import org.griphyn.vdl.mapping.MappingParamSet;
-import org.griphyn.vdl.mapping.OOBYield;
+import org.griphyn.vdl.mapping.InvalidMapperException;
+import org.griphyn.vdl.mapping.Mapper;
+import org.griphyn.vdl.mapping.MapperFactory;
+import org.griphyn.vdl.mapping.NullMapper;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
-import org.griphyn.vdl.mapping.file.ConcurrentMapper;
+import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 public class New extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(New.class);
+	
+	private static final Mapper NULL_MAPPER = new NullMapper();
 	
 	private ArgRef<String> type;
 	private ArgRef<Map<String, Object>> mapping;
@@ -58,7 +63,7 @@ public class New extends SwiftFunction {
 	private ArgRef<String> dbgname;
 	private ArgRef<Number> waitCount;
 	private ArgRef<Boolean> input;
-	private ArgRef<String> _defline;
+	private ArgRef<Integer> _defline;
 	
 	private VarRef<Context> context;
 	private VarRef<String> cwd;
@@ -83,7 +88,7 @@ public class New extends SwiftFunction {
             throws CompilationException {
         Node fn = super.compile(w, scope);
         if (_defline.getValue() != null) {
-            setLine(Integer.parseInt(_defline.getValue()));
+            setLine(_defline.getValue());
         }
         tracer = Tracer.getTracer(this);
         return fn;
@@ -93,30 +98,36 @@ public class New extends SwiftFunction {
     public Object function(Stack stack) {
 		String typename = this.type.getValue(stack);
 		Object value = this.value.getValue(stack);
-        Map<String,Object> mapping = this.mapping.getValue(stack);
+        Map<String, Object> mapping = this.mapping.getValue(stack);
 		String dbgname = this.dbgname.getValue(stack);
 		Number waitCount = this.waitCount.getValue(stack);
 		boolean input = this.input.getValue(stack);
-		String line = this._defline.getValue(stack);
+		Integer line = this._defline.getValue(stack);
 		
-		MappingParamSet mps = new MappingParamSet();
-		mps.setAll(mapping);
-
-		if (dbgname != null) {
-			mps.set(MappingParam.SWIFT_DBGNAME, dbgname);
+		if (typename == null && value == null) {
+            throw new ExecutionException("You must specify either a type or a value");
+        }
+				
+		Mapper mapper;
+		
+		Type type = getType(typename);
+		if (type.hasNonPrimitiveComponents()) {
+		    String desc = (String) mapping.get("swift#descriptor");
+		    try {
+                mapper = MapperFactory.getMapper(desc);
+            }
+            catch (InvalidMapperException e) {
+                throw new ExecutionException(this, "Invalid mapper '" + desc + "'");
+            }
+		    mapping.remove("descriptor");
+		    mapper.setParameters(mapping);
+		    mapper.setBaseDir(cwd.getValue(stack));
+		}
+		else {
+		    mapper = NULL_MAPPER;
 		}
 		
-		if (input) {
-		    mps.set(MappingParam.SWIFT_INPUT, true);
-		}
-		
-		if (line != null) {
-		    mps.set(MappingParam.SWIFT_LINE, line);
-		}
-		
-		String threadPrefix = getThreadPrefix();
-
-		mps.set(MappingParam.SWIFT_RESTARTID, threadPrefix + ":" + dbgname);
+		LWThread thread = LWThread.currentThread();
 
 		// input means never written to, but read at least once
 		int initialWriteRefCount;
@@ -127,93 +138,59 @@ public class New extends SwiftFunction {
 		else {
 		    initialWriteRefCount = 0;
 		}
-
-		if (typename == null && value == null) {
-			throw new ExecutionException("You must specify either a type or a value");
-		}
 	
-		String mapper = (String) mps.get(MappingParam.SWIFT_DESCRIPTOR);
-		if ("concurrent_mapper".equals(mapper)) {
-		    mps.set(ConcurrentMapper.PARAM_THREAD_PREFIX, threadPrefix);
-		}
-		mps.set(MappingParam.SWIFT_BASEDIR, cwd.getValue(stack));
+		boolean initialize = true;
 		
 		try {
-			Type type;
-			if (typename == null) {
-				throw new ExecutionException("vdl:new requires a type specification for value: " + value);
-			}
-			else {
-				type = Types.getType(typename);
-			}
 			DSHandle handle;
 			if (typename.equals("external")) {
 			    if (tracer.isEnabled()) {
-			        tracer.trace(threadPrefix, dbgname + " = external");
+			        tracer.trace(thread, dbgname + " = external");
 			    }
-				handle = new ExternalDataNode();
+				handle = initHandle(new ExternalDataNode(dbgname), mapper, thread, line, input);
 			}
 			else if (type.isArray()) {
 				// dealing with array variable
-				handle = new RootArrayDataNode(type, getDMChecker(stack));
 				if (value != null) {
 					if (value instanceof RootArrayDataNode) {
 					    if (tracer.isEnabled()) {
-					        tracer.trace(threadPrefix, dbgname + " = " + Tracer.getVarName((RootDataNode) value));
+					        tracer.trace(thread, dbgname + " = " + Tracer.getVarName((RootDataNode) value));
 					    }
 						handle = (RootArrayDataNode) value;
 					}
 					else {
-						if (!(value instanceof List)) {
-							throw new ExecutionException("An array variable can only be initialized with a list of values");
-						}
-						if (tracer.isEnabled()) {
-                            tracer.trace(threadPrefix, dbgname + " = " + formatList((List<?>) value));
-                        }
-						int index = 0;
-						Iterator<?> i = ((List<?>) value).iterator();
-						while (i.hasNext()) {
-							// TODO check type consistency of elements with
-							// the type of the array
-							Object n = i.next();
-							if (n instanceof DSHandle) {
-								handle.getField(index).set((DSHandle) n);
-							}
-							else {
-								throw new RuntimeException(
-										"An array variable can only be initialized by a list of DSHandle values");
-							}
-							index++;
-						}
+					    handle = initHandle(createArrayFromList(stack, thread, dbgname, type), 
+					        mapper, thread, line, input); 		    
 					}
 					handle.closeShallow();
 				}
 				else {			    
 				    if (tracer.isEnabled()) {
-				        tracer.trace(threadPrefix, dbgname);
+				        tracer.trace(thread, dbgname);
                     }
-				}
-
-				handle.init(mps);
+				    handle = initHandle(createEmptyArray(stack, thread, dbgname, type), 
+                            mapper, thread, line, input);
+				}				
 			}
 			else if (value instanceof DSHandle) {
+			    // TODO Check this. Seems suspicious.
 			    if (tracer.isEnabled()) {
-			        tracer.trace(threadPrefix, dbgname + " = " + Tracer.getVarName((DSHandle) value));
+			        tracer.trace(thread, dbgname + " = " + Tracer.getVarName((DSHandle) value));
                 }
 				handle = (DSHandle) value;
 			}
 			else {
-				handle = new RootDataNode(type, getDMChecker(stack));
-				handle.init(mps);
+				handle = initHandle(new RootDataNode(dbgname, type, getDMChecker(stack)), 
+				    mapper, thread, line, input);
 				if (value != null) {
 				    if (tracer.isEnabled()) {
-				        tracer.trace(threadPrefix, dbgname + " = " + value);
+				        tracer.trace(thread, dbgname + " = " + value);
 				    }
 					handle.setValue(internalValue(type, value));
 				}
 				else {
 				    if (tracer.isEnabled()) {
-                        tracer.trace(threadPrefix, dbgname + " " + mps);
+                        tracer.trace(thread, dbgname + " " + mapper);
                     }
 				}
 			}
@@ -224,13 +201,66 @@ public class New extends SwiftFunction {
 			handle.setWriteRefCount(initialWriteRefCount);
 			return handle;
 		}
-		catch (OOBYield y) {
-		    throw y.wrapped(this);
-		}
 		catch (Exception e) {
 			throw new ExecutionException(this, e);
 		}
 	}
+
+    private DSHandle initHandle(RootHandle handle, Mapper mapper, LWThread thread, Integer line, boolean input) {
+        handle.setThread(thread);
+        if (line != null) {
+            handle.setLine(line);
+        }
+        handle.setInput(input);
+        handle.init(mapper);
+        return handle;
+    }
+
+    private RootHandle createArrayFromList(Stack stack, LWThread thread, String dbgname, Type type) 
+            throws NoSuchFieldException {
+        RootHandle handle = new RootArrayDataNode(dbgname, type, getDMChecker(stack));
+        if (!(value instanceof List)) {
+            throw new ExecutionException("An array variable can only be initialized with a list of values");
+        }
+        if (tracer.isEnabled()) {
+            tracer.trace(thread, dbgname + " = " + formatList((List<?>) value));
+        }
+        int index = 0;
+        Iterator<?> i = ((List<?>) value).iterator();
+        while (i.hasNext()) {
+            // TODO check type consistency of elements with
+            // the type of the array
+            Object n = i.next();
+            if (n instanceof DSHandle) {
+                handle.getField(index).set((DSHandle) n);
+            }
+            else {
+                throw new RuntimeException(
+                        "An array variable can only be initialized by a list of DSHandle values");
+            }
+            index++;
+        }
+        return handle;
+    }
+    
+    private RootHandle createEmptyArray(Stack stack, LWThread thread, String dbgname, Type type) 
+            throws NoSuchFieldException {
+        return new RootArrayDataNode(dbgname, type, getDMChecker(stack));
+    }
+
+    private Type getType(String typename) {
+        if (typename == null) {
+            throw new ExecutionException("vdl:new requires a type specification for value: " + value);
+        }
+        else {
+            try {
+                return Types.getType(typename);
+            }
+            catch (NoSuchTypeException e) {
+                throw new ExecutionException("Unknown type: " + typename, e);
+            }
+        }
+    }
 
     private DuplicateMappingChecker getDMChecker(Stack stack) {
         Context ctx = this.context.getValue(stack);

@@ -186,4 +186,6 @@ public interface Type {
 		}
 
 	}
+
+    public boolean hasNonPrimitiveComponents();
 }

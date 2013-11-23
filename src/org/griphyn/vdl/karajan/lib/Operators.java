@@ -18,7 +18,6 @@
 package org.griphyn.vdl.karajan.lib;
 
 import k.rt.ExecutionException;
-import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.compiled.nodes.Node;

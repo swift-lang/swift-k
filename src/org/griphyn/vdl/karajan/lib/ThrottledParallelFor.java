@@ -42,7 +42,6 @@ import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.UParallelFor;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.util.VDL2Config;
 
 public class ThrottledParallelFor extends UParallelFor {
@@ -55,7 +54,7 @@ public class ThrottledParallelFor extends UParallelFor {
 	private ArgRef<String> refs;
 	private ArgRef<String> _kvar;
 	private ArgRef<String> _vvar;
-	private ArgRef<String> _traceline;
+	private ArgRef<Integer> _traceline;
 	
 	private boolean sc;
 	    
@@ -80,7 +79,7 @@ public class ThrottledParallelFor extends UParallelFor {
             throws CompilationException {
         srefs = StaticRefCount.build(scope, this.refs.getValue());
         if (_traceline.getValue() != null) {
-            setLine(Integer.parseInt(_traceline.getValue()));
+            setLine(_traceline.getValue());
         }
         forTracer = Tracer.getTracer(this, "FOREACH");
         iterationTracer = Tracer.getTracer(this, "ITERATION");

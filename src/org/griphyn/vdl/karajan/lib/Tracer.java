@@ -23,6 +23,7 @@ import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
 
@@ -63,7 +64,7 @@ public class Tracer {
         }
     }
     
-    private Tracer(String line, String name) {
+    private Tracer(int line, String name) {
         source = buildSource(line, name);
         enabled = true;
     }
@@ -78,8 +79,8 @@ public class Tracer {
     }
     
     private String buildSource(Node fe, String name) {
-        String line = findLine(fe);
-        if (line == null) {
+        int line = findLine(fe);
+        if (line == -1) {
             return null;
         }
         if (name == null) {
@@ -88,7 +89,7 @@ public class Tracer {
         return buildSource(line, name);      
     }
 
-    private String buildSource(String line, String name) {
+    private String buildSource(int line, String name) {
         StringBuilder sb = new StringBuilder();
         sb.append(name);
         sb.append(", line ");
@@ -107,8 +108,8 @@ public class Tracer {
         }
     }
 
-    private String findLine(Node fe) {
-        return String.valueOf(fe.getLine());
+    private int findLine(Node fe) {
+        return fe.getLine();
     }
 
     public boolean isEnabled() {
@@ -124,16 +125,16 @@ public class Tracer {
         logger.info(str);
     }
     
-    public void trace(String thread, String name, String line, Object msg) {
-        if (line == null) {
+    public void trace(String thread, String name, int line, Object msg) {
+        if (line == -1) {
             return;
         }
         String str = name + ", line " + line + ", thread " + threadName(thread) + ", "+ msg;
         logger.info(str);
     }
     
-    public void trace(String thread, String line, Object msg) {
-        if (line == null) {
+    public void trace(LWThread thread, int line, Object msg) {
+        if (line == -1) {
             return;
         }
         String str = source + ", line " + line + ", thread " + threadName(thread) + ", " + msg;
@@ -172,7 +173,7 @@ public class Tracer {
         }
     }
     
-    public static Tracer getTracer(String line, String name) {
+    public static Tracer getTracer(Integer line, String name) {
         if (globalTracingEnabled) {
             return new Tracer(line, name);
         }
@@ -270,7 +271,8 @@ public class Tracer {
     }
 
     public static Object fileName(AbstractDataNode n) {
-        Mapper m = n.getActualMapper();
+        RootHandle root = n.getRoot();
+        Mapper m = root.getActualMapper();
         if (m == null) {
             return "?" + getVarName(n);
         }

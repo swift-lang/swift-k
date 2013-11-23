@@ -29,8 +29,13 @@ public class AirsnMapper extends AbstractFileMapper {
 		super(new AirsnFileNameElementMapper());
 	}
 
-	public Path rmap(String name) {
-		if (!name.startsWith(getPrefix() + "_") && !name.startsWith(getPrefix() + ".")) {
+    @Override
+    public String getName() {
+        return "AIRSNMapper";
+    }
+
+    public Path rmap(AbstractFileMapperParams cp, String name) {	    
+		if (!name.startsWith(cp.getPrefix() + "_") && !name.startsWith(cp.getPrefix() + ".")) {
 			return null;
 		}
 		Path path = Path.EMPTY_PATH;

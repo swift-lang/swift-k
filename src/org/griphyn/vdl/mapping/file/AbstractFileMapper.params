@@ -1,0 +1,4 @@
+String prefix = null
+String suffix = null
+String pattern = null
+String location = null
