@@ -13,7 +13,6 @@ import java.util.Stack;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.file.coaster.buffers.Buffers.Direction;
-import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.providers.WriteIOCallback;
 import org.globus.cog.coaster.channels.PerformanceDiagnosticInputStream;
 
@@ -97,13 +96,13 @@ public class ThrottleManager {
     }
     
     private void log(int allowed, int maxBuffers, int crtBuffers) {
-        if (logger.isInfoEnabled()) {
-            logger.info(dir + " maxBuffers=" + maxBuffers + ", crtBuffers=" + crtBuffers + 
+        if (logger.isDebugEnabled()) {
+            logger.debug(dir + " maxBuffers=" + maxBuffers + ", crtBuffers=" + crtBuffers + 
                 ", allowedTransfers=" + allowed + ", active=" + active.size() + 
                 ", suspended=" + suspended.size());
             Runtime r = Runtime.getRuntime();
             if (dir == Direction.OUT) {
-                logger.info("mem=" + PerformanceDiagnosticInputStream.units(r.totalMemory() - r.freeMemory()) + 
+                logger.debug("mem=" + PerformanceDiagnosticInputStream.units(r.totalMemory() - r.freeMemory()) + 
                     "B, heap=" + PerformanceDiagnosticInputStream.units(r.totalMemory()) + 
                     "B, maxHeap=" + PerformanceDiagnosticInputStream.units(r.maxMemory()) + "B");
             }
