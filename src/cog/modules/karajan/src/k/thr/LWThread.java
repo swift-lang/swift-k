@@ -42,7 +42,7 @@ public class LWThread implements Runnable {
     private LWThread parent;
     private KRunnable runnable;
     private State state;
-    private String name, qualifiedName;
+    private String name;
     private Stack stack;
     private int runCount;
     private long deadline;
@@ -390,11 +390,6 @@ public class LWThread implements Runnable {
     private static int gqnc = 0;
     
     public final String getQualifiedName() {
-    	synchronized(this) {
-    		if (qualifiedName != null) {
-    			return qualifiedName;
-    		}
-    	}
     	java.util.Stack<LWThread> s = new java.util.Stack<LWThread>();
     	LWThread t = this;
     	while (t != null) {
@@ -429,10 +424,7 @@ public class LWThread implements Runnable {
     		}
     	}
     	flushRun(prevId, sameIdCount, t.forkId, sb, first);
-    	synchronized(this) {
-    		qualifiedName = sb.toString();
-    	}
-    	return qualifiedName;
+    	return sb.toString();
     }
 
     private boolean flushRun(int prevId, int sameIdCount, int forkId, StringBuilder sb, boolean first) {
