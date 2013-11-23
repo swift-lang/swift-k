@@ -66,7 +66,7 @@ public class RuntimeStats {
 
     //formatter for timestamp against std.err lines
 	public static SimpleDateFormat formatter = 
-		new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+		new SimpleDateFormat("E, dd MMM yyyy HH:mm:ssZ");
 	public static final int MIN_PERIOD_MS = 1000;
 	public static final int MAX_PERIOD_MS = 30000;
 
@@ -351,7 +351,6 @@ public class RuntimeStats {
 			// pretty form - first the preferred order listed elements,
 			// and then anything remaining
 			System.err.print(prefix);
-			System.err.print(" ");
 			System.err.print(formatter.format(now));
 						
 			for (int pos = 0; pos < preferredOutputOrder.length; pos++) {
