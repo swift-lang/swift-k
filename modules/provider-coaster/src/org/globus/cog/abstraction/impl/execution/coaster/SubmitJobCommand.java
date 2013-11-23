@@ -116,6 +116,9 @@ public class SubmitJobCommand extends Command {
         	if (spec.getAttribute("tracePerformance") != null) {
         	    add(sb, "attr", "tracePerformance=" + spec.getAttribute("tracePerformance"));
         	}
+        	if (spec.getAttribute("softImage") != null) {
+        	    add(sb, "attr", "softImage=" + spec.getAttribute("softImage"));
+        	}
         }
         else {
             for (String name : spec.getAttributeNames())
