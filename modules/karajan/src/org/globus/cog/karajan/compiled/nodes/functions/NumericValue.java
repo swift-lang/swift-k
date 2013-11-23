@@ -21,7 +21,7 @@ import org.globus.cog.karajan.parser.WrapperNode;
 
 public class NumericValue extends Node {
 	private ChannelRef<Object> _vargs_r;
-    private Double value;
+    private Number value;
 
     @Override
     public void run(LWThread thr) {
@@ -31,7 +31,12 @@ public class NumericValue extends Node {
     @Override
     public Node compile(WrapperNode w, Scope scope) throws CompilationException {
     	super.compile(w, scope);
-        value = Double.parseDouble(w.getText());
+    	if (w.getText().indexOf(".") >= 0) {
+    		value = Double.parseDouble(w.getText());
+    	}
+    	else {
+    	    value = Integer.parseInt(w.getText());
+    	}
         
         Var.Channel cv = scope.lookupChannel(Param.VARGS);  
         
