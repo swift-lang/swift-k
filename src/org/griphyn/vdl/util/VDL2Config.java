@@ -121,7 +121,7 @@ public class VDL2Config extends Properties {
 		put("use.provider.staging", "false", ConfigPropertyType.BOOLEAN);
 		put("use.wrapper.staging", "false", ConfigPropertyType.BOOLEAN);
 		put("ticker.date.format", "", ConfigPropertyType.STRING);
-		put("ticker.prefix", "Progress:  time:", ConfigPropertyType.STRING);
+		put("ticker.prefix", "Progress: ", ConfigPropertyType.STRING);
 		
 		put(VDL2ConfigProperties.FILE_GC_ENABLED, "true", ConfigPropertyType.BOOLEAN);
 		put(VDL2ConfigProperties.DM_CHECKER, "on", ConfigPropertyType.ONOFF);
