@@ -193,8 +193,8 @@ public class Buffers extends Thread {
                         throttleManager.update(MAX_ENTRIES, crt);
                         long time = System.currentTimeMillis();
                         if (time - lastTime > PERFORMANCE_LOGGING_INTERVAL) {
-                            if (logger.isInfoEnabled()) {
-                                logger.info(dir + " allocated buffers: " + formatMM(mm) + " (" + crt + ")");
+                            if (logger.isDebugEnabled()) {
+                                logger.debug(dir + " allocated buffers: " + formatMM(mm) + " (" + crt + ")");
                             }
                             lastTime = time;
                         }

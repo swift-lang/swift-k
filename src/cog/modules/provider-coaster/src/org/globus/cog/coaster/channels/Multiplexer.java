@@ -93,17 +93,19 @@ class Multiplexer extends Thread {
 					remove.clear();
 					add.clear();
 				}
-				if (this == AbstractStreamCoasterChannel.multiplexer[0]) {
-					long now = System.currentTimeMillis();
-					if (now - last > 10000) {
-						if (AbstractStreamCoasterChannel.cnt > 0) {
-							logger.info("Avg stream buf: " + (AbstractStreamCoasterChannel.savail / AbstractStreamCoasterChannel.cnt));
-						}
-						else {
-							logger.info("No streams");
-						}
-						last = now;
-					}
+				if (logger.isDebugEnabled()) {
+    				if (this == AbstractStreamCoasterChannel.multiplexer[0]) {
+    					long now = System.currentTimeMillis();
+    					if (now - last > 10000) {
+    						if (AbstractStreamCoasterChannel.cnt > 0) {
+    							logger.debug("Avg stream buf: " + (AbstractStreamCoasterChannel.savail / AbstractStreamCoasterChannel.cnt));
+    						}
+    						else {
+    							logger.debug("No streams");
+    						}
+    						last = now;
+    					}
+    				}
 				}
 				if (!any) {
 					Thread.sleep(20);
