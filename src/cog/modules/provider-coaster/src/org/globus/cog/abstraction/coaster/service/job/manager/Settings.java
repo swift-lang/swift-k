@@ -50,7 +50,8 @@ public class Settings {
                        "ldLibraryPath", "workerCopies",
                        "directory", "useHashBang",
                        "parallelism",
-                       "coresPerNode"};
+                       "coresPerNode",
+                       "perfTraceWorker", "perfTraceInterval"};
 
     /**
      * The maximum number of blocks that can be active at one time
@@ -159,6 +160,10 @@ public class Settings {
     private String directory = null;
 
     private String useHashBang = null;
+    
+    private String perfTraceWorker = "false";
+    
+    private int perfTraceInterval = -1;
 
     private final Map<String, String> attributes;
 
@@ -312,6 +317,26 @@ public class Settings {
         return workerLoggingDirectory;
     }
 
+    public String getPerfTraceWorker() {
+        return perfTraceWorker;
+    }
+    
+
+    public void setPerfTraceWorker(String perfTraceWorker) {
+        this.perfTraceWorker = perfTraceWorker;
+    }
+    
+
+    public int getPerfTraceInterval() {
+        return perfTraceInterval;
+    }
+    
+
+    public void setPerfTraceInterval(int perfTraceInterval) {
+        this.perfTraceInterval = perfTraceInterval;
+    }
+    
+
     /**
      * The following values are considered valid:
      * <dl>
@@ -333,7 +358,7 @@ public class Settings {
     }
 
     public void setInternalHostname(String internalHostname) {
-      logger.debug("setInternalHostname: " + internalHostname);
+        logger.debug("setInternalHostname: " + internalHostname);
         if (internalHostname != null) { // override automatically determined
             try {
                 URI original = getCallbackURI();
@@ -628,6 +653,7 @@ public class Settings {
             sb.append('\n');
         }
         sb.append("\tattributes = " + attributes + "\n");
+        sb.append("\tcallbackURIs = " + getCallbackURIs() + "\n");
         sb.append("}\n");
         return sb.toString();
     }
