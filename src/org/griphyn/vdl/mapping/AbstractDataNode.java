@@ -637,10 +637,6 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         return map(Path.EMPTY_PATH);
     }
 
-    public MappingParamSet getMappingParams() {
-        return getRoot().getMappingParams();
-    }
-
     protected Map<Comparable<?>, DSHandle> getHandles() {
         return handles;
     }

@@ -196,7 +196,6 @@ public class RootDataNode extends AbstractDataNode implements FutureListener, Ro
 
 	private static void addExisting(Mapper mapper, RootHandle root) {
 	    boolean any = false;
-	    MappingParamSet mps = root.getMappingParams();
 		for (Path p : mapper.existing()) {
             try {
                 DSHandle field = root.getField(p);
