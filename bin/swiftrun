@@ -6,7 +6,6 @@ use FindBin qw($Bin);
 use lib "$FindBin::Bin/../lib/perl";
 use File::Basename;
 use Getopt::Long qw(GetOptionsFromArray);
-use Switch;
 use Cwd;
 
 Getopt::Long::Configure("pass_through");
@@ -86,12 +85,10 @@ sub property_to_xml {
    }     
    
    # Make sure to handle special cases that are not in the namespace=x, key=y, format
-   switch($namespace) {
-      case "provider"	   { return "<execution provider=\"" . $property . "\" jobmanager=\"" . $value . "\"/>\n"; }
-      case "workdirectory" { return "<workdirectory>$value</workdirectory>\n"; }
-      case "filesystem"    { return "<filesystem provider=\"" . $value . "\"/>\n"; }
-      else                 { return "<profile namespace=\"" . $namespace . "\" key=\"" . $property . "\">" . $value . "</profile>\n"; }
-   }
+   if    ( $namespace eq "provider" )      { return "<execution provider=\"" . $property . "\" jobmanager=\"" . $value . "\"/>\n"; }
+   elsif ( $namespace eq "workdirectory" ) { return "<workdirectory>$value</workdirectory>\n"; }
+   elsif ( $namespace eq "filesystem" )    { return "<filesystem provider=\"" . $value . "\"/>\n"; }
+   else                                    { return "<profile namespace=\"" . $namespace . "\" key=\"" . $property . "\">" . $value . "</profile>\n"; }
 } 
 
 # Write apps to file in tc.data format
@@ -272,11 +269,8 @@ foreach my $arg(@ARGV) {
 # Make sure -sites isn't in the arguments we send back to swift
 while( @ARGV ) {
    my $option = shift;
-   switch( $option ) {
-      case "-site" { shift; }
-      case "-sites" { shift; }
-      else { push( @new_swift_args, $option ); }
-   }
+   if ( $option eq "-site" || $option eq "-sites" ) { shift; }
+   else { push( @new_swift_args, $option ); }
 }
 
 push( @new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
