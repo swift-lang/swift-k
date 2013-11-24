@@ -488,7 +488,7 @@ public class Karajan {
 			// add temporary mapping info in not primitive or array of primitive	    
 			if (!isPrimitiveOrArrayOfPrimitive(var.getType().getLocalPart())) {
     			StringTemplate mappingST = new StringTemplate("mapping");
-    			mappingST.setAttribute("descriptor", "concurrentMapper");
+    			mappingST.setAttribute("descriptor", "ConcurrentMapper");
     			StringTemplate paramST = template("swift_parameter");
     			paramST.setAttribute("name", "prefix");
     			paramST.setAttribute("expr", "\"" + var.getName() + "-"
@@ -539,7 +539,7 @@ public class Karajan {
             StringTemplate variableDeclarationST = template("variable");
             // TODO factorise this and other code in variable()?
             StringTemplate pmappingST = new StringTemplate("mapping");
-            pmappingST.setAttribute("descriptor", "concurrentMapper");
+            pmappingST.setAttribute("descriptor", "ConcurrentMapper");
             StringTemplate pparamST = template("swift_parameter");
             pparamST.setAttribute("name", "prefix");
             pparamST.setAttribute("expr", parameterVariableName + "-" + 
