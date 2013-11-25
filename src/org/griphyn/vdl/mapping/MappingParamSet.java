@@ -54,11 +54,11 @@ public abstract class MappingParamSet {
 
     public void unwrapPrimitives() {
     }
-    
+        
     /** 
      * Unwraps objects stored in AbstractDataNodes 
      */
-    public Object unwrap(Object value) {
+    public Object unwrap(Object value, Class<?> expected) {
         if (value instanceof AbstractDataNode) {
             AbstractDataNode handle = (AbstractDataNode) value;
             /*
@@ -71,7 +71,14 @@ public abstract class MappingParamSet {
             if (!handle.isPrimitive()) {
                 throw new IllegalArgumentException("Cannot unwrap non-primitive data");
             }
-            return handle.getValue();
+            Object x = handle.getValue();
+            if (expected == Boolean.class && x instanceof String) {
+                x = Boolean.parseBoolean((String) x);
+            }
+            else if (expected == Integer.class && x instanceof String) {
+                x = Integer.parseInt((String) x);
+            }
+            return x;
         }
         else {
             return value;

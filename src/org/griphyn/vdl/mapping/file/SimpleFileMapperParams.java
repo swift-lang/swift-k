@@ -56,7 +56,7 @@ public class SimpleFileMapperParams extends AbstractFileMapperParams {
 
 	@Override
 	public void unwrapPrimitives() {
-		padding = unwrap(padding);
+		padding = unwrap(padding, Integer.class);
 		super.unwrapPrimitives();
 	}
 

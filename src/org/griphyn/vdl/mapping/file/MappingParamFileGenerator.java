@@ -245,7 +245,7 @@ public class MappingParamFileGenerator {
                     bw.write("\t\t}\n");
                 }
                 if (!p.type.equals("DSHandle")) {
-                    bw.write(String.format("\t\t%s = unwrap(%s);\n", p.name, p.name));
+                    bw.write(String.format("\t\t%s = unwrap(%s, %s.class);\n", p.name, p.name, p.type));
                 }
             }
         }

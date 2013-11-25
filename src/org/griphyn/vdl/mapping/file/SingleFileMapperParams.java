@@ -56,7 +56,7 @@ public class SingleFileMapperParams extends MappingParamSet {
 		if (file == null) {
 			throw new IllegalArgumentException("Missing required argument 'file'");
 		}
-		file = new AbsFile((String) unwrap(file));
+		file = new AbsFile((String) unwrap(file, String.class));
 		super.unwrapPrimitives();
 	}
 

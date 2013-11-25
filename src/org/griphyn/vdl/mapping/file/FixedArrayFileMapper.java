@@ -58,7 +58,7 @@ public class FixedArrayFileMapper extends AbstractMapper {
 	public void initialize(RootHandle root) {
 		super.initialize(root);
 		FixedArrayFileMapperParams cp = getParams();
-		DSHandle files = (DSHandle) cp.getFiles();
+		DSHandle files = cp.getFiles();
 		if (files.getType().isArray() && Types.STRING.equals(files.getType().itemType())) {
 		    int i = 0;
 		    Collection<DSHandle> a = files.getArrayValue().values();

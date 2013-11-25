@@ -94,8 +94,8 @@ public class RegularExpressionMapperParams extends MappingParamSet {
 		if (match == null) {
 			throw new IllegalArgumentException("Missing required argument 'match'");
 		}
-		match = unwrap(match);
-		transform = unwrap(transform);
+		match = unwrap(match, String.class);
+		transform = unwrap(transform, String.class);
 		super.unwrapPrimitives();
 	}
 

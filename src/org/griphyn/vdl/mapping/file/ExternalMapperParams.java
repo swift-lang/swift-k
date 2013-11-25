@@ -68,9 +68,9 @@ public class ExternalMapperParams extends MappingParamSet {
 	}
 	@Override
 	public void unwrapPrimitives() {
-		exec = unwrap(exec);
+		exec = unwrap(exec, String.class);
 		for (Map.Entry<String, Object> e : other.entrySet()) {
-		    e.setValue(unwrap(e.getValue()));
+		    e.setValue(unwrap(e.getValue(), String.class));
 		}
 		super.unwrapPrimitives();
 	}

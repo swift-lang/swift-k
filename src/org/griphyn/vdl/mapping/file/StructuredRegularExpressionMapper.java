@@ -30,6 +30,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
@@ -50,6 +51,11 @@ public class StructuredRegularExpressionMapper extends AbstractFileMapper {
 	@Override
     public String getName() {
         return "StructuredRegexpMapper";
+    }
+
+    @Override
+    public MappingParamSet newParams() {
+        return new StructuredRegularExpressionMapperParams();
     }
 
     @Override

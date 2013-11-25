@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.MappingParamSet;
+import org.griphyn.vdl.mapping.DSHandle;
 
 
 public class FixedArrayFileMapperParams extends MappingParamSet {
@@ -18,12 +19,12 @@ public class FixedArrayFileMapperParams extends MappingParamSet {
 		return NAMES;
 	}
 
-	public void setFiles(Object files) {
+	public void setFiles(DSHandle files) {
 		this.files = files;
 	}
 
-	public Object getFiles() {
-		return files;
+	public DSHandle getFiles() {
+		return (DSHandle) files;
 	}
 
 	@Override
@@ -58,7 +59,6 @@ public class FixedArrayFileMapperParams extends MappingParamSet {
 		if (files == null) {
 			throw new IllegalArgumentException("Missing required argument 'files'");
 		}
-		files = unwrap(files);
 		super.unwrapPrimitives();
 	}
 

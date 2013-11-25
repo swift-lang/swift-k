@@ -103,10 +103,10 @@ public class AbstractFileMapperParams extends MappingParamSet {
 
 	@Override
 	public void unwrapPrimitives() {
-		prefix = unwrap(prefix);
-		suffix = unwrap(suffix);
-		pattern = unwrap(pattern);
-		location = unwrap(location);
+		prefix = unwrap(prefix, String.class);
+		suffix = unwrap(suffix, String.class);
+		pattern = unwrap(pattern, String.class);
+		location = unwrap(location, String.class);
 		super.unwrapPrimitives();
 	}
 

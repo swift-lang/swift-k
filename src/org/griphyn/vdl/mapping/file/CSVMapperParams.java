@@ -13,7 +13,7 @@ public class CSVMapperParams extends MappingParamSet {
 	public static final List<String> NAMES = Arrays.asList("file", "header", "skip", "hdelim", "delim");
 
 	private Object file = null;
-	private Object header = false;
+	private Object header = true;
 	private Object skip = 0;
 	private Object hdelim = null;
 	private Object delim = " \t,";
@@ -120,10 +120,10 @@ public class CSVMapperParams extends MappingParamSet {
 
 	@Override
 	public void unwrapPrimitives() {
-		header = unwrap(header);
-		skip = unwrap(skip);
-		hdelim = unwrap(hdelim);
-		delim = unwrap(delim);
+		header = unwrap(header, Boolean.class);
+		skip = unwrap(skip, Integer.class);
+		hdelim = unwrap(hdelim, String.class);
+		delim = unwrap(delim, String.class);
 		super.unwrapPrimitives();
 	}
 

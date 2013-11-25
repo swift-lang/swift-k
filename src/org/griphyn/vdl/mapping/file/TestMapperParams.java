@@ -106,10 +106,10 @@ public class TestMapperParams extends MappingParamSet {
 		if (file == null) {
 			throw new IllegalArgumentException("Missing required argument 'file'");
 		}
-		file = unwrap(file);
-		temp = unwrap(temp);
-		remappable = unwrap(remappable);
-		static_ = unwrap(static_);
+		file = unwrap(file, String.class);
+		temp = unwrap(temp, Boolean.class);
+		remappable = unwrap(remappable, Boolean.class);
+		static_ = unwrap(static_, Boolean.class);
 		super.unwrapPrimitives();
 	}
 
