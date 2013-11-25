@@ -577,12 +577,14 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public void removeNode(Node node) {
+        int left;
         synchronized(cpus) {
             nodes.remove(node);
             for (Cpu cpu : node.getCpus()) {
                 scpus.remove(cpu);
                 cpus.remove(cpu);
             }
+            left = nodes.size();
         }
         bqp.nodeRemoved(node);
     }

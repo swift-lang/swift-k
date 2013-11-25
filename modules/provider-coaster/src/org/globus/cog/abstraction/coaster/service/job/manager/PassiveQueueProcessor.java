@@ -90,6 +90,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
             b = blocks.get(id);
             if (b == null) {
                 b = new Block(id, 1, TimeInterval.FOREVER, this);
+                b.setStartTime(Time.now());
                 b.setRunning(true);
                 blocks.put(id, b);
             }
@@ -104,6 +105,9 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
             currentWorkers--;
             wsc = new ResourceUpdateCommand("job-capacity", 
                 String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
+            if (node.getBlock().getNodes().isEmpty()) {
+                getBlocks().remove(node.getBlock().getId());
+            }
         }
         try {
             CoasterChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
