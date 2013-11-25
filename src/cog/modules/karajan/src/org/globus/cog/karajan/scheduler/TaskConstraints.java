@@ -12,55 +12,10 @@
 package org.globus.cog.karajan.scheduler;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-public class TaskConstraints {
-	private static final long serialVersionUID = -5513157963657615563L;
-	private Map map;
+public interface TaskConstraints {
+    
+	Object getConstraint(String name);
 
-	public TaskConstraints() {
-	}
-
-	private synchronized Map getMap() {
-		if (map == null) {
-			map = new HashMap();
-		}
-		return map;
-	}
-
-	public void addConstraint(String name, Object value) {
-		getMap().put(name, value);
-	}
-
-	public Object getConstraint(String name) {
-		return getMap().get(name);
-	}
-
-	public Collection getConstraintNames() {
-		return getMap().entrySet();
-	}
-
-	public String toString() {
-		return getMap().toString();
-	}
-
-	public boolean equals(Object obj) {
-		if (obj instanceof TaskConstraints) {
-			TaskConstraints tc = (TaskConstraints) obj;
-			if (map == null) {
-				return tc.map == null;
-			}
-			else {
-				return map.equals(tc.map);
-			}
-		}
-		else {
-			return false;
-		}
-	}
-
-	public int hashCode() {
-		return map == null ? 0 : map.hashCode();
-	}
+	Collection<String> getConstraintNames();
 }
