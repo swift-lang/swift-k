@@ -3,13 +3,16 @@
 # Allows a user to start, stop, name, and view the status of coaster services
 #
 
+# :set debug
+
 export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
 export WORKER="$SWIFT_BIN/worker.pl"
 export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
 export LOG="swift-service.log"
 export SERVICE_DIR="$HOME/.swift/service"
-mkdir -p "$SERVICE_DIR" || crash "Unable to create $SERVICE_DIR"
+export IPADDR=127.0.0.1
 
+mkdir -p "$SERVICE_DIR" || crash "Unable to create $SERVICE_DIR"
 
 # Report a problem and exit
 crash()
@@ -22,7 +25,17 @@ crash()
 # Print usage
 usage()
 {
-   crash "$( basename $0 ) [ -start | -stop | -status | -xml | -debug ] [ -name servicename ]"
+   crash "$( basename $0 ) [ -start | -stop | -status | -xml | -debug ] [ -name servicename ] [ -serviceport port ] [ -workerport port ]"
+}
+
+verify_files_exist()
+{
+   for file in "$@"
+   do
+      if [ ! -f "$file" ]; then
+         crash "File $file does not exist. Service is in a corrupt state, please stop and restart"
+      fi
+   done
 }
 
 # Wait for a file ($1) to be created, up to given amount of time ($2)
@@ -104,9 +117,15 @@ stop_single_service()
    if [ ! -d "$SERVICE_DIR/$SERVICENAME" ]; then
       crash "Unable to find service called $SERVICENAME"
    fi
+   LOG="$SERVICE_DIR/$SERVICENAME/swift-service.log"
 
    if [ -f "$SERVICE_DIR/$SERVICENAME/pid" ]; then
       PID=$( cat $SERVICE_DIR/$SERVICENAME/pid )
+      nicely_kill_all_children $PID
+   fi
+
+   if [ -f "$SERVICE_DIR/$SERVICENAME/workers.pid" ]; then
+      PID=$( $SERVICE_DIR/$SERVICENAME/workers.pid )
       nicely_kill_all_children $PID
    fi
 
@@ -122,8 +141,8 @@ get_services()
 # Stop the coaster service
 stop_service()
 {
-   if [ -n "$NAME" ]; then
-      stop_single_service $NAME
+   if [ -n "$SERVICE_NAME" ]; then
+      stop_single_service $SERVICE_NAME
    else
       count=0
       for service in $( get_services )
@@ -142,41 +161,20 @@ stop_service()
 start_service()
 { 
    # Figure out naming, create directory for this service
-   if [ -z "$NAME" ]; then
-      NAME=$( ls -1d $SERVICE_DIR/*/ 2>/dev/null | wc -l )
-      NAME=$( expr $NAME + 1 )
-      NAME="service-$NAME"
+   if [ -z "$SERVICE_NAME" ]; then
+      SERVICE_NAME=$( ls -1d $SERVICE_DIR/*/ 2>/dev/null | wc -l )
+      SERVICE_NAME=$( expr $SERVICE_NAME + 1 )
+      SERVICE_NAME="service-$SERVICE_NAME"
    fi
 
-   COASTER_DIR="$SERVICE_DIR/$NAME"
+   COASTER_DIR="$SERVICE_DIR/$SERVICE_NAME"
    if [ -d "$COASTER_DIR" ]; then
-      crash "Service named $NAME already exists!"
-   fi
-   mkdir $COASTER_DIR || crash "Unable to create $COASTER_DIR"
-   LOG="$COASTER_DIR/swift-service.log"
-
-   # Import settings
-   if [ -f "$CMDLN_CONF" ]; then
-      CONFIG_FILE=$CMDLN_CONF
-   elif [ -f "coaster-service.conf" ]; then
-      CONFIG_FILE="coaster-service.conf"
+      crash "Service named $SERVICE_NAME already exists!"
    fi
 
    echo -e "Starting Swift service..\n"
-   if [ -f "$CONFIG_FILE" ]; then
-      echo "Configuration: $CONFIG_FILE"
-      run_command source $CONFIG_FILE
-   fi
-
-   if [ -z "$IPADDR" ]; then
-      if [ "$SSH_TUNNELING" == "yes" ]; then
-         IPADDR=localhost
-      elif [ -n "$GLOBUS_HOSTNAME" ]; then
-         IPADDR=$GLOBUS_HOSTNAME
-      else
-         IPADDR="127.0.0.1"
-      fi
-   fi
+   mkdir $COASTER_DIR || crash "Unable to create $COASTER_DIR"
+   LOG="$COASTER_DIR/swift-service.log"
 
    # Verify we can find coaster service
    if [ ! -x "$COASTER_SERVICE" ]; then
@@ -203,7 +201,7 @@ start_service()
    elif [ -n "$SERVICE_PORT" ] && [ -z "$LOCAL_PORT" ]; then
       PID=$( run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localportfile $LOCAL_PORT_FILE -passive )
    elif [ -z "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
-      PID=$( run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE --localport $LOCAL_PORT -passive )
+      PID=$( run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE -localport $LOCAL_PORT -passive )
    elif [ -n  "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
       PID=$( run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localport $LOCAL_PORT -passive )
    fi
@@ -236,9 +234,9 @@ start_service()
       rm $LOCAL_PORT_FILE
    fi
 
-   echo Name: $NAME
+   echo Service name: $SERVICE_NAME
    echo Service port: $SERVICE_PORT
-   echo Local port: $LOCAL_PORT
+   echo Worker port: $LOCAL_PORT
    echo Worker script: $WORKER
  
    # Generate sites.xml
@@ -250,6 +248,8 @@ start_service()
    echo $EXECUTIONURL >> $COASTER_DIR/execution.url
    echo $WORKERURL >> $COASTER_DIR/worker.url
    echo $WORKER >> $COASTER_DIR/worker.path
+   echo $LOCAL_PORT >> $COASTER_DIR/worker.port
+   echo $SERVICE_PORT >> $COASTER_DIR/service.port
 
    GENSITES_ARGS=""
    if [ -f "$CONFIG_FILE" ]; then
@@ -272,7 +272,7 @@ start_service()
    if [ -z "$WORK" ]; then
       export WORK=/tmp
    fi
-   gensites -n $NAME $GENSITES_ARGS > $COASTER_DIR/sites.xml
+   gensites -n $SERVICE_NAME $GENSITES_ARGS > $COASTER_DIR/sites.xml
    echo
 }
 
@@ -282,10 +282,10 @@ display_status()
    count=0
    services=""
 
-   if [ -n "$NAME" ]; then
-      services=$SERVICE_DIR/$NAME
+   if [ -n "$SERVICE_NAME" ]; then
+      services=$SERVICE_DIR/$SERVICE_NAME
       if [ ! -d "$services" ]; then
-         crash "Service $NAME does not exist"
+         crash "Service $SERVICE_NAME does not exist"
       fi
    else
       services=$( get_services )
@@ -293,21 +293,33 @@ display_status()
 
    for service in $services
    do
+      verify_files_exist $service/pid $service/service.port $service/execution.url $service/worker.port $service/worker.url $service/worker.path
       echo -e "\nName: $(basename $service )"
       PID=$( cat $service/pid )
       echo "PID: $PID"
 
-      ps -p $PID > /dev/null 2>&1
-      if [ "$?" -eq 0 ]; then
+      if ps -p $PID &>/dev/null; then
          echo Status: Running
       else
          echo Status: Failed
       fi
 
-      echo "Service port: $( cat $service/execution.url )"
-      echo "Local port: $( cat $service/worker.url )" 
+      echo "Service port: $( cat $service/service.port )"
+      echo "Service URL: $( cat $service/execution.url )"
+      echo "Local port: $( cat $service/worker.port)"
+      echo "Local URL: $( cat $service/worker.url )" 
+     
       echo "Worker script: $( cat $service/worker.path )"    
-
+      echo -n "Workers started: "
+      if [ -f "$service/worker.pid" ]; then
+         if ps -p $( cat $service/worker.pid ) &>/dev/null ; then
+            echo "yes"
+         else 
+            echo "no"
+         fi
+      else
+         echo "no"
+      fi
       count=$((count+1))
    done
    if [ "$count" -gt 0 ]; then
@@ -325,14 +337,22 @@ generate_xml()
    echo -e "<config xmlns=\"http://www.ci.uchicago.edu/swift/SwiftSites\">\n"
 
    services=""
-   if [ -n "$NAME" ]; then
-      services=$SERVICE_DIR/$NAME
+   if [ -n "$SERVICE_NAME" ]; then
+      NAME=$( echo $SERVICE_NAME |  sed s/,/' '/g )
+      for n in $SERVICE_NAME
+      do
+         services="$services $SERVICE_DIR/$n "
+      done
    else
       services=$( get_services )
    fi
 
    for service in $services
    do
+      if [ ! -d "$service" ]; then
+         crash "Service $( basename $service ) does not exist"
+      fi
+      verify_files_exist $service/sites.xml
       cat $service/sites.xml | grep -v "<?xml" | grep -v "<config" | grep -v "</config>"
       echo
    done
@@ -357,13 +377,14 @@ display_debug()
 START=0; STOP=0; STATUS=0; XML=0; DEBUG=0
 while [ $# -gt 0 ]; do
    case $1 in
-      -conf) CMDLN_CONF=$2; shift 2;;
-      -start) START=1; shift;;
-      -stop) STOP=1; shift;;
-      -status) STATUS=1; shift;; 
-      -name) NAME=$2; shift 2;;
-      -xml) XML=1; shift;;
       -debug) DEBUG=1; shift;;
+      -localport|-workerport) LOCAL_PORT=$2; shift 2;;
+      -name) SERVICE_NAME=$2; shift 2;;
+      -serviceport) SERVICE_PORT=$2; shift 2;;
+      -start) START=1; shift;;
+      -status) STATUS=1; shift;; 
+      -stop) STOP=1; shift;;
+      -xml) XML=1; shift;;
       *) echo "Do not recognize command line option: $1" 1>&2; usage;;
    esac
 done
