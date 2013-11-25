@@ -31,7 +31,7 @@ public class NullMapper implements Mapper {
 
     @Override
     public Collection<Path> existing() {
-        throw new UnsupportedOperationException();
+        return Collections.emptyList();
     }
 
     @Override
