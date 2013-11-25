@@ -20,7 +20,9 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import k.rt.Stack;
 import k.thr.LWThread;
@@ -53,13 +55,73 @@ public class JobConstraints extends CacheFunction {
 		if (c != null) {
 			filenames = c.toArray(STRING_ARRAY);
 		}
-		TaskConstraints tc = new TaskConstraints();
-		tc.addConstraint("tr", tr);
-		tc.addConstraint("trfqn", new FQN(tr));
+		SwiftTaskConstraints tc = new SwiftTaskConstraints(tr, new FQN(tr));
 		if (filenames != null) {
-			tc.addConstraint("filenames", filenames);
-			tc.addConstraint("filecache", new CacheMapAdapter(getCache(stack)));
+		    tc.setFilenames(filenames);
+		    tc.setFilecache(new CacheMapAdapter(getCache(stack)));
 		}
 		cr_vargs.append(stack, tc);
+	}
+	
+	private static final List<String> NAMES1 = Arrays.asList("tr", "trfqn");
+	private static final List<String> NAMES2 = Arrays.asList("tr", "trfqn", "filenames", "filecache");
+	
+	private static class SwiftTaskConstraints implements TaskConstraints {
+	    
+	    private final String tr;
+	    private final FQN trfqn;
+	    private String[] filenames;
+	    private CacheMapAdapter filecache;
+
+	    public SwiftTaskConstraints(String tr, FQN trfqn) {
+	        this.tr = tr;
+	        this.trfqn = trfqn;
+        }
+	    
+        public String[] getFilenames() {
+            return filenames;
+        }
+
+        public void setFilenames(String[] filenames) {
+            this.filenames = filenames;
+        }
+
+        public CacheMapAdapter getFilecache() {
+            return filecache;
+        }
+
+
+        public void setFilecache(CacheMapAdapter filecache) {
+            this.filecache = filecache;
+        }
+
+        @Override
+        public Object getConstraint(String name) {
+            if ("tr".equals(name)) {
+                return tr;
+            }
+            else if ("trfqn".equals(name)) {
+                return trfqn;
+            }
+            else if ("filenames".equals(name)) {
+                return filenames;
+            }
+            else if ("filecache".equals(name)) {
+                return filecache;
+            }
+            else {
+                return null;
+            }
+        }
+        
+        @Override
+        public Collection<String> getConstraintNames() {
+            if (filenames == null) {
+                return NAMES1;
+            }
+            else {
+                return NAMES2;
+            }
+        }
 	}
 }
