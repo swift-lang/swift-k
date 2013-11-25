@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
     <pool handle="blues">
-        <execution jobmanager="local:pbs" provider="coaster" url="none"/>
+        <execution jobmanager="ssh-cl:pbs" provider="coaster" url="blues.lcrc.anl.gov"/>
         <filesystem provider="local" url="none" />
         <profile namespace="globus" key="maxtime">3600</profile>
         <profile namespace="globus" key="jobsPerNode">2</profile>
@@ -12,8 +12,6 @@
         <profile namespace="globus" key="maxNodes">2</profile>
         <profile namespace="karajan" key="jobThrottle">1.00</profile>
         <profile namespace="karajan" key="initialScore">10000</profile>
-        <profile namespace="globus" key="HighOverAllocation">1000</profile>
-        <profile namespace="globus" key="LowOverAllocation">1000</profile>
-        <workdirectory>{env.HOME}/swiftwork</workdirectory>
+        <workdirectory>/home/{env.USER}/swiftwork</workdirectory>
     </pool>
 </config>
