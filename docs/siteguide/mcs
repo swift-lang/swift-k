@@ -14,7 +14,7 @@ To begin, copy the text below and paste it into your Swift distribution's etc
 directory. Name the file coaster-service.conf.
 
 -----
-include::../../tests/providers/mcs/coaster-service.conf[]
+include::../../tests/stress/persistent-coasters/mcs/10x10/coaster-service.conf[]
 -----
 
 Starting the Coaster Service
