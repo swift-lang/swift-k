@@ -505,8 +505,14 @@ if [ "$KICKSTART" == "" ]; then
 		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 			genScripts
 		fi
-        "$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+        	
+		if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
+               		"$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+       	 	else         
+           		"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+        	fi  
 	fi
+
     TIME_EC=$?
     if [ "_$TIMECMD" != _ ]; then
 		log "$(cat swiftapp.resources)"
