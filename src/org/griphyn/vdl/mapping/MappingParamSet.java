@@ -61,6 +61,13 @@ public abstract class MappingParamSet {
     public Object unwrap(Object value) {
         if (value instanceof AbstractDataNode) {
             AbstractDataNode handle = (AbstractDataNode) value;
+            /*
+             *  TODO The semantics here (and in the mapper initialization process)
+             *  are broken. If an array is passed, the code in RootHandle.innerInit
+             *  only waits for the array, but not for each of the elements in the 
+             *  array, while at the same time mappers expect all elements of the
+             *  array to be closed (e.g. ArrayFileMapper.map(): assert(dn.isClosed()))
+             */
             if (!handle.isPrimitive()) {
                 throw new IllegalArgumentException("Cannot unwrap non-primitive data");
             }

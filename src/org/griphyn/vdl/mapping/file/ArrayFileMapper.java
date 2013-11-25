@@ -36,7 +36,7 @@ public class ArrayFileMapper extends AbstractMapper {
 	public Collection<Path> existing() {
 	    ArrayFileMapperParams cp = getParams();
 		List<Path> l = new ArrayList<Path>();
-		DSHandle dn = (DSHandle) cp.getFiles();
+		DSHandle dn = cp.getFiles();
 		Map<?, DSHandle> m = dn.getArrayValue();
 		Set<?> s = m.keySet();
 		Iterator<?> i = s.iterator();
@@ -58,7 +58,7 @@ public class ArrayFileMapper extends AbstractMapper {
 		ArrayFileMapperParams cp = getParams();
         // we could typecheck more elegantly here to make sure that
         // we really do have an array of strings as parameter.
-        DSHandle dn = (DSHandle) cp.getFiles();
+        DSHandle dn = cp.getFiles();
         assert(dn.isClosed());
         logger.debug("dn: " + dn);
         
