@@ -10,6 +10,7 @@
 package org.globus.cog.karajan.scheduler;
 
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
+import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 
@@ -19,6 +20,11 @@ public class ContactAllocationTask extends TaskImpl {
 	
 	public ContactAllocationTask() {
 		setName("Contact allocation task");
+	}
+
+	@Override
+	protected Identity newIdentity() {
+		return null;
 	}
 
 	public BoundContact getContact() {
