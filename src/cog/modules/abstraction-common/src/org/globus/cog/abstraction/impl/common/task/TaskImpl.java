@@ -57,10 +57,14 @@ public class TaskImpl implements Task {
     private boolean anythingWaiting;
 
     public TaskImpl() {
-        this.id = new IdentityImpl();
+        this.id = newIdentity();
         this.serviceList = new ArrayList<Service>(2);
         this.status = new StatusImpl();
         statusListeners = new CopyOnWriteHashSet<StatusListener>();
+    }
+
+    protected Identity newIdentity() {
+        return new IdentityImpl();
     }
 
     public TaskImpl(String name, int type) {
