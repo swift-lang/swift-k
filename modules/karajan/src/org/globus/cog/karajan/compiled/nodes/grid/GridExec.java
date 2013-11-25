@@ -38,7 +38,7 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.scheduler.Scheduler;
-import org.globus.cog.karajan.scheduler.TaskConstraints;
+import org.globus.cog.karajan.scheduler.TaskConstraintsImpl;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.TypeUtil;
@@ -222,7 +222,7 @@ public class GridExec extends AbstractGridNode {
 				if (host != null) {
 					Contact contact = getHost(host, scheduler, provider);
 					if (provider != null) {
-						TaskConstraints tc = new TaskConstraints();
+						TaskConstraintsImpl tc = new TaskConstraintsImpl();
 						tc.addConstraint("provider", provider);
 						contact.setConstraints(tc);
 					}
@@ -249,21 +249,23 @@ public class GridExec extends AbstractGridNode {
 			js.addEnvironmentVariable(e.getKey(), e.getValue());
 		}
 	}
+	
+	private static final EnumSet<Mode> DEFAULT_STAGEOUT_MODE = EnumSet.of(Mode.IF_PRESENT, Mode.ON_SUCCESS);
+	private static final EnumSet<Mode> DEFAULT_STAGEIN_MODE = EnumSet.of(Mode.ALWAYS);
 
 	protected void addStageIn(Stack stack, JobSpecificationImpl js) {
-		js.setStageIn(getStagingSet(stack, c_stagein));
+		js.setStageIn(getStagingSet(stack, c_stagein, DEFAULT_STAGEIN_MODE));
 	}
 	
 	protected void addStageOut(Stack stack, JobSpecificationImpl js) {
-        js.setStageOut(getStagingSet(stack, c_stageout));
+        js.setStageOut(getStagingSet(stack, c_stageout, DEFAULT_STAGEOUT_MODE));
     }
 
-	private StagingSet getStagingSet(Stack stack, ChannelRef<List<?>> cref)
+	private StagingSet getStagingSet(Stack stack, ChannelRef<List<?>> cref, EnumSet<Mode> mode)
 			throws ExecutionException {
 		Channel<List<?>> s = cref.get(stack);
 		StagingSet ss = new StagingSetImpl();
 		for (List<?> e : s) {
-			EnumSet<Mode> mode = EnumSet.of(Mode.IF_PRESENT, Mode.ON_SUCCESS);
 			if (e.size() > 2) {
 				mode = Mode.fromId(TypeUtil.toInt(e.get(2)));
 			}
