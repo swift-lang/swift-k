@@ -111,11 +111,6 @@ public class ExternalDataNode extends AbstractDataNode implements RootHandle {
 		throw new UnsupportedOperationException(this.getDisplayableName() + " is an external dataset and cannot be set");
 	}
 
-	public Object getValue() {
-	    logger.warn("getValue called on an external dataset");
-	    return null;
-	}
-
 	public Map<Comparable<?>, DSHandle> getArrayValue() {
 	    throw new UnsupportedOperationException("cannot get value of external dataset");
 	}
@@ -155,12 +150,14 @@ public class ExternalDataNode extends AbstractDataNode implements RootHandle {
     }
 
     @Override
-    public void closeDeep() {
-        /*
-         * Need to override this and set a value since 
-         * this is skipped by the normal stageout mechanism which
-         * does that
-         */
-        this.setValue(FILE_VALUE);
+    public synchronized void closeDeep() {
+        if (!this.isClosed()) {
+            /*
+             * Need to override this and set a value since 
+             * this is skipped by the normal stageout mechanism which
+             * does that
+             */
+            this.setValue(FILE_VALUE);
+        }
     }
 }
