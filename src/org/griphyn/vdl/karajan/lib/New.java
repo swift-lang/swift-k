@@ -112,7 +112,7 @@ public class New extends SwiftFunction {
 		
 		Type type = getType(typename);
 		if (type.hasNonPrimitiveComponents()) {
-		    String desc = (String) mapping.get("swift#descriptor");
+		    String desc = (String) mapping.remove("swift#descriptor");
 		    try {
                 mapper = MapperFactory.getMapper(desc);
             }
