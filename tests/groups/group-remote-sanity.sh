@@ -5,11 +5,11 @@ GROUPLIST=( # Site testing test-group
             $TESTDIR/sites/mcs    \
             $TESTDIR/sites/midway \
             $TESTDIR/sites/uc3    \
-	        # Frisbee will fail due to Bug 1030
             $TESTDIR/sites/mac-frisbee  \
             $TESTDIR/sites/blues  \
             $TESTDIR/sites/fusion \
-            $TESTDIR/sites/raven  \
+            # Raven will fail due to firewall restrictions, need to set up a reverse tunnel
+            # $TESTDIR/sites/raven  \
             $TESTDIR/sites/communicado \
             $TESTDIR/sites/bridled \
           )
