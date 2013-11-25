@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-public class CacheMapAdapter implements Map {
+public class CacheMapAdapter implements Map<Object, Collection<String>> {
 	private VDLFileCache cache;
 	
 	public CacheMapAdapter(VDLFileCache cache) {
@@ -43,11 +43,11 @@ public class CacheMapAdapter implements Map {
 		throw new UnsupportedOperationException();
 	}
 
-	public Set entrySet() {
+	public Set<Map.Entry<Object, Collection<String>>> entrySet() {
 		throw new UnsupportedOperationException();
 	}
 
-	public Object get(Object key) {
+	public Collection<String> get(Object key) {
 		return cache.getPaths(key);
 	}
 
@@ -55,19 +55,19 @@ public class CacheMapAdapter implements Map {
 		throw new UnsupportedOperationException();
 	}
 
-	public Set keySet() {
+	public Set<Object> keySet() {
 		throw new UnsupportedOperationException();
 	}
 
-	public Object put(Object key, Object value) {
+	public Collection<String> put(Object key, Collection<String> value) {
 		throw new UnsupportedOperationException();
 	}
 
-	public void putAll(Map t) {
+	public void putAll(Map<? extends Object, ? extends Collection<String>> t) {
 		throw new UnsupportedOperationException();
 	}
 
-	public Object remove(Object key) {
+	public Collection<String> remove(Object key) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -75,7 +75,7 @@ public class CacheMapAdapter implements Map {
 		throw new UnsupportedOperationException();
 	}
 
-	public Collection values() {
+	public Collection<Collection<String>> values() {
 		throw new UnsupportedOperationException();
 	}
 	

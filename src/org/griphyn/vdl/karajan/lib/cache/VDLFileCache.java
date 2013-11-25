@@ -123,11 +123,11 @@ public interface VDLFileCache {
 	 * Returns a collection of {@link File} objects representing the files
 	 * stored in the cache for the specified host
 	 */
-	Collection getFiles(Object host);
+	Collection<File> getFiles(Object host);
 	
 	/**
 	 * Returns a collection of {@link String} objects representing the file paths
 	 * stored in the cache for the specified host
 	 */
-	Collection getPaths(Object host);
+	Collection<String> getPaths(Object host);
 }
