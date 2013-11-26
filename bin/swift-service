@@ -8,6 +8,9 @@ export SERVICE_DIR="$HOME/.swift/service"
 export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
 export LOG="swift-service.log"
 export WORKER="$SWIFT_BIN/worker.pl"
+export WORKER_LOG="worker"
+export WORKER_LOG_DIR="."
+export IPADDR="127.0.0.1"
 
 mkdir -p "$SERVICE_DIR" || crash "Unable to create $SERVICE_DIR"
 
@@ -253,8 +256,6 @@ start_service()
    fi
 
    echo Service name: $SERVICE_NAME
-   echo Service port: $SERVICE_PORT
-   echo Worker port: $LOCAL_PORT
    echo Worker script: $WORKER
  
    # Generate sites.xml
@@ -311,32 +312,20 @@ display_status()
    for service in $services
    do
       verify_files_exist $service/pid $service/service.port $service/execution.url $service/worker.port $service/worker.url $service/worker.path
-      echo -e "\nName: $(basename $service )"
+      echo -e "\nName:\t\t$(basename $service )"
       PID=$( cat $service/pid )
-      echo "PID: $PID"
+      echo -e "PID:\t\t$PID"
 
       if ps -p $PID &>/dev/null; then
-         echo Status: Running
+         echo -e "Status:\t\tRunning"
       else
-         echo Status: Failed
+         echo -e "Status:\t\tFailed"
       fi
 
-      echo "Service port: $( cat $service/service.port )"
-      echo "Service URL: $( cat $service/execution.url )"
-      echo "Local port: $( cat $service/worker.port)"
-      echo "Local URL: $( cat $service/worker.url )" 
+      echo -e "Service URL:\t$( cat $service/execution.url )"
+      echo -e "Local URL:\t$( cat $service/worker.url )" 
      
-      echo "Worker script: $( cat $service/worker.path )"    
-      echo -n "Workers started: "
-      if [ -f "$service/worker.pid" ]; then
-         if ps -p $( cat $service/worker.pid ) &>/dev/null ; then
-            echo "yes"
-         else 
-            echo "no"
-         fi
-      else
-         echo "no"
-      fi
+      echo -e "Worker script:\t$( cat $service/worker.path )"    
       count=$((count+1))
    done
    if [ "$count" -gt 0 ]; then
@@ -359,7 +348,7 @@ display_debug()
 }
 
 # Start SSH workers
-start-workers-ssh()
+start_workers_ssh()
 {
    for MACHINE in $WORKER_HOSTS
    do
@@ -378,23 +367,20 @@ start-workers-ssh()
 }
 
 # Start local workers
-start-workers-local()
+start_workers_local()
 {
-   for service in $SERVICE
-   do
-      echo Connecting local workers to service $service
-      service="$SERVICE_DIR/$service"
-      verify_files_exist $service/worker.path $service/worker.url
-      LOG=$service/workers.log
-      WORKER=$( cat $service/worker.path )
-      WORKERURL=$( cat $service/worker.url )
-      WORKERPID=$( run_command_bg $WORKER $WORKERURL $WORKER_LOG $WORKER_LOG_DIR )
-      echo $WORKERPID >> $service/worker.pid
-   done
+   echo Connecting local workers to service $SERVICE_NAME
+   service="$SERVICE_DIR/$SERVICE_NAME"
+   verify_files_exist $service/worker.path $service/worker.url
+   LOG=$service/workers.log
+   WORKER=$( cat $service/worker.path )
+   WORKERURL=$( cat $service/worker.url )
+   WORKERPID=$( run_command_bg $WORKER $WORKERURL $WORKER_LOG $WORKER_LOG_DIR )
+   echo $WORKERPID >> $service/worker.pid
 }
 
 # Start condor workers
-start-workers-scheduler()
+start_workers_scheduler()
 {
    echo Starting workers
    run_command $SCHEDULER_COMMAND
@@ -418,6 +404,13 @@ fi
 
 if [ "$START" == 1 ]; then
    start_service
+   case $WORKER_MODE in
+      ssh) start_workers_ssh;;
+      local) start_workers_local;;
+      scheduler) start_workers_scheduler;;
+      *) crash "Unknown WORKER_MODE";;
+  esac
+
 elif [ "$STOP" == 1 ]; then
    stop_service
 elif [ "$STATUS" == 1 ]; then

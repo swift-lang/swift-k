@@ -19,6 +19,7 @@ my %conversionTable = (
                    'mode'        => 'WORKER_MODE',
                    'serviceport' => 'SERVICE_PORT',
                    'workers'     => 'WORKER_HOSTS',
+                   'work'        => 'WORK',
 );
 
 # Verify a property file exists and add it to the search path
