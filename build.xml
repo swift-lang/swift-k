@@ -87,7 +87,7 @@
 			<fileset dir="${dist.dir}/bin">
                                 <include name="apptimes"/>
 				<include name="gensites"/>
-                                <include name="nswift"/>
+                                <include name="prop2scs.pl"/>
 				<include name="start-coaster-service"/>
 				<include name="stop-coaster-service"/>
 				<include name="swiftrun"/>
