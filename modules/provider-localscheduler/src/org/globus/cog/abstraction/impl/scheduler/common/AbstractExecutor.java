@@ -64,9 +64,14 @@ public abstract class AbstractExecutor implements ProcessListener {
     public void start()
     throws AuthorizationException, IOException, ProcessException {
 
-    	File scriptdir = new File(System.getProperty("user.home")
-                + File.separatorChar + ".globus" + File.separatorChar
-                + "scripts");
+    	String scriptdirPath = System.getProperty("script.dir");
+    	if(scriptdirPath == null) {
+    		scriptdirPath = System.getProperty("user.home")
+                    + File.separatorChar + ".globus" + File.separatorChar
+                    + "scripts";
+    	}
+    	File scriptdir = new File(scriptdirPath);
+
         scriptdir.mkdirs();
         if (!scriptdir.exists()) {
             throw new IOException("Failed to create script directory ("
