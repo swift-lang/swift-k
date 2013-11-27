@@ -11,6 +11,7 @@ package org.globus.cog.abstraction.coaster.client;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Collections;
 
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.impl.execution.coaster.WorkerShellCommand;
@@ -21,11 +22,20 @@ import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
 import org.globus.cog.coaster.commands.InfoCommand;
+import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Level;
 
 public class CoasterClient implements Callback {
     private String url;
     
     public CoasterClient(String url) {
+       List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+       loggers.add(LogManager.getRootLogger());
+       for ( Logger logger : loggers ) {
+          logger.setLevel(Level.OFF);
+       }
+
         this.url = url;
     }
     
