@@ -5,6 +5,7 @@ use warnings;
 use FindBin qw($Bin);
 use lib "$FindBin::Bin/../lib/perl";
 use File::Basename;
+use File::Path;
 use Getopt::Long qw(GetOptionsFromArray);
 use Cwd;
 
@@ -132,6 +133,17 @@ sub write_properties {
    push( @new_swift_args, "-config $run_directory/$property_filename" );
 }
 
+sub site_is_defined {
+   my $site = $_[0];
+   my $isDefined=0;
+   while( my( $key, $value ) = each( %properties ) ) {
+     if( $key =~ m/^site\.$site/i ) {
+        $isDefined=1;
+      }
+   }
+   return $isDefined;
+}
+
 # Write sites.xml to disk
 sub write_sites {
    my $filename = $_[0];
@@ -144,6 +156,12 @@ sub write_sites {
    } 
 
    foreach my $site(@sites) {
+      if( ! &site_is_defined($site) ) {
+         print STDERR "Site $site is not defined\n";
+         print " --SWIFTRUNQUIT "; 
+         rmtree $run_directory || die "Failed to remove $run_directory: $!\n";
+         exit 1;
+      }
       print SITES &create_pool_entry($site);
    }
 
