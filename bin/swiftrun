@@ -307,6 +307,7 @@ if( $option_listconfig ) {
    foreach my $key (sort keys %properties) {
       print "\t$key=$properties{$key}\n";
    }
+   print "\n";
    exit;
 }
 

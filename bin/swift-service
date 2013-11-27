@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 #
 # Allows a user to start, stop, name, and view the status of coaster services
 #
@@ -7,9 +7,12 @@ export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
 export SERVICE_DIR="$HOME/.swift/service"
 export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
 export LOG="swift-service.log"
+export SPID=""
+
 export WORKER="$SWIFT_BIN/worker.pl"
 export WORKER_LOG="worker"
-export WORKER_LOG_DIR="."
+export WORKER_LOG_DIR="NOLOGGING"
+export WORKER_LOGGING_LEVEL="NONE"
 export IPADDR="127.0.0.1"
 
 mkdir -p "$SERVICE_DIR" || crash "Unable to create $SERVICE_DIR"
@@ -65,6 +68,23 @@ wait_for_file()
    done
 }
 
+# Wait for a PID to stop running, up to a given amount of time ($2)
+wait_for_pid()
+{
+   PID=$1
+   TIME=$2
+   count=0
+   while ps -p $PID &>/dev/null
+   do
+      sleep 1
+      (( count++ ))
+      if [ "$count" -ge "$TIME" ]; then
+         nicely_kill_all_children $PID
+      fi
+   done
+}
+
+
 # Return current timestamp
 get_timestamp()
 {
@@ -117,6 +137,7 @@ nice_kill()
       (( count++ ))
       if [ "$count" -ge "$grace" ]; then
          run_command kill -9 $pid
+         break
       fi  
    done  
 }
@@ -136,8 +157,8 @@ stop_single_service()
       nicely_kill_all_children $PID
    fi
 
-   if [ -f "$SERVICE_DIR/$SERVICENAME/workers.pid" ]; then
-      PID=$( $SERVICE_DIR/$SERVICENAME/workers.pid )
+   if [ -f "$SERVICE_DIR/$SERVICENAME/worker.pid" ]; then
+      PID=$( cat $SERVICE_DIR/$SERVICENAME/worker.pid )
       nicely_kill_all_children $PID
    fi
 
@@ -255,20 +276,15 @@ start_service()
       rm $LOCAL_PORT_FILE
    fi
 
-   echo Service name: $SERVICE_NAME
-   echo Worker script: $WORKER
- 
    # Generate sites.xml
-   export EXECUTIONURL="http://$IPADDR:$SERVICE_PORT"
+   export SERVICEURL="http://$IPADDR:$SERVICE_PORT"
    export WORKERURL=$( java -jar $SWIFT_BIN/listcoasterurls.jar $LOCAL_PORT )
-   echo Execution URL: $EXECUTIONURL
-   echo Worker URL: $WORKERURL
-   echo $EXECUTIONURL >> $COASTER_DIR/execution.url
+   echo $SERVICEURL >> $COASTER_DIR/service.url
    echo $WORKERURL >> $COASTER_DIR/worker.url
    echo $WORKER >> $COASTER_DIR/worker.path
    echo $LOCAL_PORT >> $COASTER_DIR/worker.port
    echo $SERVICE_PORT >> $COASTER_DIR/service.port
-
+   
    GENSITES_ARGS=""
    if [ -f "$CONFIG_FILE" ]; then
       GENSITES_ARGS=" -p $CONFIG_FILE "
@@ -281,17 +297,14 @@ start_service()
    fi
 
    # Give defaults to gensites variables if needed
-   if [ -z "$JOBSPERNODE" ]; then
-      export JOBSPERNODE=1
-   fi
-   if [ -z "$JOBTHROTTLE" ]; then
-      export JOBTHROTTLE=0
-   fi
-   if [ -z "$WORK" ]; then
-      export WORK=/tmp
-   fi
+   export JOBSPERNODE=${JOBSPERNODE:-7}
+   export JOBTHROTTLE=${JOBTHROTTLE:-1}
+   export WORK=${WORK:-/tmp}
+
    gensites -n $SERVICE_NAME $GENSITES_ARGS > $COASTER_DIR/sites.xml
-   echo
+   # Workaround for bug #467
+   SPID=$( run_command_bg swift -site $SERVICE_NAME $SWIFT_BIN/../examples/swift/misc/hello.swift )
+   sleep 3
 }
 
 # Display status of services
@@ -311,7 +324,11 @@ display_status()
 
    for service in $services
    do
-      verify_files_exist $service/pid $service/service.port $service/execution.url $service/worker.port $service/worker.url $service/worker.path
+      verify_files_exist $service/pid $service/service.port $service/service.url $service/worker.port $service/worker.url $service/worker.path
+      
+      ccoutput=$( mktemp $TMPDIR/XXXXXX )
+      $SWIFT_BIN/coaster-client $( cat $service/service.url ) list workers > $ccoutput 2>/dev/null
+
       echo -e "\nName:\t\t$(basename $service )"
       PID=$( cat $service/pid )
       echo -e "PID:\t\t$PID"
@@ -322,12 +339,23 @@ display_status()
          echo -e "Status:\t\tFailed"
       fi
 
-      echo -e "Service URL:\t$( cat $service/execution.url )"
+      echo -e "Service URL:\t$( cat $service/service.url )"
       echo -e "Local URL:\t$( cat $service/worker.url )" 
-     
       echo -e "Worker script:\t$( cat $service/worker.path )"    
+
+      nodes=0
+      cores=0
+      nodes=$( cat $ccoutput | sed '1d'|wc -l) 
+      cores=$( cat $ccoutput | sed 1d | awk '{print $2}'|paste -sd+ | bc )
+      # active=$( cat $ccoutput | sed 1d | awk '{print $3}'|paste -sd+ | bc )
+      rm $ccoutput 
+
+      echo -e "Nodes:\t\t$nodes"
+      echo -e "Cores:\t\t$cores"
+      # echo -e "Active jobs:\t$active"
       count=$((count+1))
    done
+
    if [ "$count" -gt 0 ]; then
       echo
    else
@@ -369,7 +397,6 @@ start_workers_ssh()
 # Start local workers
 start_workers_local()
 {
-   echo Connecting local workers to service $SERVICE_NAME
    service="$SERVICE_DIR/$SERVICE_NAME"
    verify_files_exist $service/worker.path $service/worker.url
    LOG=$service/workers.log
@@ -410,7 +437,13 @@ if [ "$START" == 1 ]; then
       scheduler) start_workers_scheduler;;
       *) crash "Unknown WORKER_MODE";;
   esac
-
+  wait_for_pid $SPID 5
+  latest=$( ls -l1rtd run* | tail -1 )
+  if [ -d "$latest" ]; then
+     rm -rf $latest
+  fi
+  display_status
+  
 elif [ "$STOP" == 1 ]; then
    stop_service
 elif [ "$STATUS" == 1 ]; then
