@@ -133,6 +133,7 @@ sub write_properties {
    push( @new_swift_args, "-config $run_directory/$property_filename" );
 }
 
+# Check if a site is defined
 sub site_is_defined {
    my $site = $_[0];
    my $isDefined=0;
@@ -143,6 +144,53 @@ sub site_is_defined {
    }
    return $isDefined;
 }
+
+# Check if a service is defined
+sub service_is_defined {
+   my $site = $_[0];
+   my $isDefined=0;
+   while( my( $key, $value ) = each( %properties ) ) {
+      if( $key =~ m/^service\.$site/i ) {
+         $isDefined=1;
+      }
+   }
+   return $isDefined;
+}
+
+# Verify a service is running
+sub service_is_running {
+   my $site = $_[0];
+   my $service_is_running = 0;
+   my $service_directory = "$ENV{HOME}/.swift/service/$site";
+   if( -d "$service_directory" ) {
+      if ( -f "$service_directory/pid" ) {
+         my $pid = `cat $service_directory/pid`;
+         $service_is_running = kill 0, $pid;
+      }
+   }
+   return $service_is_running;
+}
+
+# Retrieve a service sites.xml
+sub retrieve_service_xml {
+   my $site = $_[0];
+   my $sitexmlfile = "$ENV{HOME}/.swift/service/$site/sites.xml";
+   my @xml;
+   open(SXML, $sitexmlfile) || die "Unable to open $sitexmlfile: $!\n";
+   while(<SXML>) {
+      if(m/^<\?xml|^<config|config>$/i){ next; }
+         push(@xml, $_);
+   }
+   close(SXML);
+   return @xml;
+}
+
+sub swiftquit {
+   print STDERR $_[0] . "\n";
+   print " --SWIFTRUNQUIT ";
+   rmtree $run_directory || die "Failed to remove $run_directory: $!\n";
+   exit 1;
+} 
 
 # Write sites.xml to disk
 sub write_sites {
@@ -156,13 +204,23 @@ sub write_sites {
    } 
 
    foreach my $site(@sites) {
-      if( ! &site_is_defined($site) ) {
-         print STDERR "Site $site is not defined\n";
-         print " --SWIFTRUNQUIT "; 
-         rmtree $run_directory || die "Failed to remove $run_directory: $!\n";
-         exit 1;
+      # XML from site definition
+      if ( &site_is_defined($site) ) {
+         print SITES &create_pool_entry($site);
       }
-      print SITES &create_pool_entry($site);
+
+      # XML from service definition 
+      elsif ( &service_is_defined($site)) {
+         if( ! &service_is_running($site) ) {
+            &swiftquit("Service process for $site is not running");
+         }
+         print SITES &retrieve_service_xml($site);
+      }
+
+      # Can't find definition
+      else {
+         &swiftquit("Site $site is not defined");
+      }
    }
 
    print SITES "\n</config>\n";
@@ -214,7 +272,7 @@ foreach my $property_file(@property_files) {
       $_ =~ s/^\s+//;               # Remove leading whitespace
 
       # Handle brackets 
-      if( /^site\./ && /{/ ) { 
+      if( /^site\.|^service\./ && /{/ ) { 
          my $prefix = (split /\s+{/)[0];
          while( <PROPERTIES> ) {
             chomp;
@@ -231,8 +289,10 @@ foreach my $property_file(@property_files) {
       else {
          my ($key, $value) = split('=', $_, 2);
          if($key eq "sites") { $key = "site"; }
-         $value =~ s/\$(\w+)/$ENV{$1}/g; # Substitute environment variables
-         $properties{ $key } = $value;
+         if(defined($key) && defined($value) && length($key) && length($value)) {
+            $value =~ s/\$(\w+)/$ENV{$1}/g; # Substitute environment variables
+            $properties{ $key } = $value;
+         }
       }
    }
 }
