@@ -20,6 +20,8 @@ my %conversionTable = (
                    'localport'   => 'LOCAL_PORT',
                    'mode'        => 'WORKER_MODE',
                    'serviceport' => 'SERVICE_PORT',
+                   'tunnel'      => 'WORKER_TUNNEL',
+                   'username'    => 'WORKER_USERNAME',
                    'workers'     => 'WORKER_HOSTS',
                    'work'        => 'WORK',
 );
@@ -79,7 +81,7 @@ foreach my $key (sort keys %properties) {
    if($key =~ m/service\.$service/ ) { 
       my $val = (split /\./, $key)[-1];
       if ( defined( $conversionTable{ lc( $val )})) {
-         print "export $conversionTable{lc($val)}=$properties{$key}\n";
+         print "export $conversionTable{lc($val)}=\"$properties{$key}\"\n";
       }
    }
 }

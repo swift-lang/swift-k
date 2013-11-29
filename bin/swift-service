@@ -9,10 +9,15 @@ export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
 export LOG="swift-service.log"
 export SPID=""
 
+if [ -z "$TMPDIR" ]; then
+   TMPDIR=$PWD
+fi
+
 export WORKER="$SWIFT_BIN/worker.pl"
 export WORKER_LOG="worker"
-export WORKER_LOG_DIR="/tmp"
+export WORKER_LOG_DIR="NOLOGGING"
 export WORKER_LOGGING_LEVEL="NONE"
+export WORKER_USERNAME="$USER"
 export IPADDR="127.0.0.1"
 
 mkdir -p "$SERVICE_DIR" || crash "Unable to create $SERVICE_DIR"
@@ -39,7 +44,7 @@ verify_not_null()
 # Print usage
 usage()
 {
-   crash "$( basename $0 ) [ -start service | -stop service | -status | -xml | -debug ]"
+   crash "$( basename $0 ) [ -start service | -stop service | -status | -debug ]"
 }
 
 # Verify list of files exist, or crash
@@ -158,8 +163,10 @@ stop_single_service()
    fi
 
    if [ -f "$SERVICE_DIR/$SERVICENAME/worker.pid" ]; then
-      PID=$( cat $SERVICE_DIR/$SERVICENAME/worker.pid )
-      nicely_kill_all_children $PID
+      for PID in $( cat $SERVICE_DIR/$SERVICENAME/worker.pid )
+      do
+         nicely_kill_all_children $PID
+      done
    fi
 
    rm -rf $SERVICE_DIR/$SERVICENAME
@@ -223,9 +230,6 @@ start_service()
       crash "Unable to find $COASTER_SERVICE!"
    fi
 
-   if [ -z "$TMPDIR" ]; then
-      TMPDIR=$PWD
-   fi
 
    # Create files for storing port info, if needed
    if [ -z "$LOCAL_PORT" ]; then
@@ -346,7 +350,10 @@ display_status()
       nodes=0
       cores=0
       nodes=$( cat $ccoutput | sed '1d'|wc -l) 
-      cores=$( cat $ccoutput | sed 1d | awk '{print $2}'|paste -sd+ | bc )
+      corestmp=$( cat $ccoutput | sed 1d | awk '{print $2}'|paste -sd+ | bc )
+      if [ -n "$corestmp" ]; then
+         cores=$corestmp
+      fi
       # active=$( cat $ccoutput | sed 1d | awk '{print $3}'|paste -sd+ | bc )
       rm $ccoutput 
 
@@ -367,6 +374,12 @@ display_status()
 display_debug()
 {
    SERVICES=$( get_services )
+
+   numservice=$( echo $SERVICES | wc -w )  
+   if [ $numservice == 0 ]; then
+      crash "No services found"
+   fi
+
    for service in $SERVICES
    do
       echo -e "Displaying debug info for service $( basename $service ) ($service/swift-service.log)\n"
@@ -378,19 +391,20 @@ display_debug()
 # Start SSH workers
 start_workers_ssh()
 {
+   service="$SERVICE_DIR/$SERVICE_NAME"
+   LOG=$service/workers.log
    for MACHINE in $WORKER_HOSTS
    do
-      # Enable ssh tunneling if needed
-      if [ "$SSH_TUNNELING" != "no" ]; then
-         run_command_bg ssh -N -T -R *:$LOCAL_PORT:localhost:$LOCAL_PORT "$WORKER_USERNAME@$MACHINE"
-      fi
-
-      # Connect directly
-      run_command ssh $WORKER_USERNAME@$MACHINE mkdir -p $WORKER_LOCATION
-      run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION
+      #if [ "$WORKER_TUNNEL" -eq "on" ]; then
+      #   tunnelpid=$( run_command_bg ssh -N -T -R *:$LOCAL_PORT:localhost:$LOCAL_PORT "$WORKER_USERNAME@$MACHINE" )
+      #fi
+      run_command ssh $WORKER_USERNAME@$MACHINE mkdir -p $WORK
+      run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORK
       echo Starting worker on $MACHINE
-      run_command_bg ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR"
+      WORKERPID=$( run_command_bg ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORK/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR" )
+      echo $WORKERPID >> $service/worker.pid
    done
+
    return 0
 }
 
@@ -414,7 +428,7 @@ start_workers_scheduler()
 }
 
 # Parse command line arguments
-START=0; STOP=0; STATUS=0; XML=0; DEBUG=0
+START=0; STOP=0; STATUS=0; DEBUG=0
 while [ $# -gt 0 ]; do
    case $1 in
       -debug) DEBUG=1; shift;;
@@ -425,7 +439,7 @@ while [ $# -gt 0 ]; do
    esac
 done
 
-if [ $(($START+$STOP+$STATUS+$XML+$DEBUG)) != 1 ]; then
+if [ $(($START+$STOP+$STATUS+$DEBUG)) != 1 ]; then
    usage
 fi
 
@@ -437,11 +451,13 @@ if [ "$START" == 1 ]; then
       scheduler) start_workers_scheduler;;
       *) crash "Unknown WORKER_MODE";;
   esac
+
   wait_for_pid $SPID 5
-  latest=$( ls -l1rtd run* | tail -1 )
+  latest=$( ls -l1rtd run*/ | tail -1 )
   if [ -d "$latest" ]; then
      rm -rf $latest
   fi
+
   display_status
   
 elif [ "$STOP" == 1 ]; then
