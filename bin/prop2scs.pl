@@ -15,6 +15,8 @@ if (!defined($service) || $service eq "-help") {
 # How to convert SCS options to environment variables
 my %conversionTable = (
                    'ip'          => 'IPADDR',
+                   'jobspernode' => 'JOBSPERNODE',
+                   'jobthrottle' => 'JOBTHROTTLE',
                    'localport'   => 'LOCAL_PORT',
                    'mode'        => 'WORKER_MODE',
                    'serviceport' => 'SERVICE_PORT',

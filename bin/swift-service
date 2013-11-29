@@ -11,7 +11,7 @@ export SPID=""
 
 export WORKER="$SWIFT_BIN/worker.pl"
 export WORKER_LOG="worker"
-export WORKER_LOG_DIR="NOLOGGING"
+export WORKER_LOG_DIR="/tmp"
 export WORKER_LOGGING_LEVEL="NONE"
 export IPADDR="127.0.0.1"
 
@@ -215,7 +215,7 @@ start_service()
    fi
    source $COASTER_DIR/swift-service.conf 
 
-   echo -e "Starting Swift service..\n"
+   echo -e "Starting Swift service.."
    LOG="$COASTER_DIR/swift-service.log"
 
    # Verify we can find coaster service
