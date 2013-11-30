@@ -453,7 +453,7 @@ if [ "$START" == 1 ]; then
   esac
 
   wait_for_pid $SPID 5
-  latest=$( ls -l1rtd run*/ | tail -1 )
+  latest=$( ls -1rtd run*/ | tail -1 )
   if [ -d "$latest" ]; then
      rm -rf $latest
   fi
