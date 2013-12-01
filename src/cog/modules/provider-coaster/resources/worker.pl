@@ -1886,6 +1886,9 @@ sub prepareSoftImage {
 sub cleanSoftImage() {
 	my $lock;
 	my $counter;
+	if (!defined $SOFT_IMAGE_DST) {
+		return;
+	}
 	open($lock, ">>$SOFT_IMAGE_DST/.lock");
 	if (!flock($lock, 2)) {
 		dieNicely("Cannot get exclusive lock on soft image directory: $!"); 
