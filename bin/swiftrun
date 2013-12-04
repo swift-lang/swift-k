@@ -76,7 +76,6 @@ sub create_pool_entry {
 sub property_to_xml {
    my $key = $_[0];
    my $value = $_[1];
-
    my ( $site, $sitename, $namespace, $property ) = split(/\./, $key);
 
    # Allow exceptions for swift properties with dot separators (ie key=slurm.properties)
@@ -103,7 +102,7 @@ sub property_to_xml {
 # Write apps to file in tc.data format
 sub write_apps {
    my $app_filename = $_[0];
-   open( APP_FILE, ">$run_directory/$app_filename" ) || die "Unable to open $run_directory/$app_filename\n";
+   open( APP_FILE, ">$run_directory/$app_filename" ) || &swiftquit("Unable to open $run_directory/$app_filename");
    print APP_FILE "* * * INSTALLED INTEL32::LINUX null\n";
 
    # Find app definitions
@@ -131,7 +130,7 @@ sub write_apps {
 # Write properties to file
 sub write_properties {
    my $property_filename = $_[0];
-   open( PROPERTY_FILE, ">$run_directory/$property_filename" ) || die "Unable to open $run_directory/$property_filename\n";
+   open( PROPERTY_FILE, ">$run_directory/$property_filename" ) || &swiftquit("Unable to open $run_directory/$property_filename");
    while( my( $key, $value ) = each( %properties ) ) {
       # Ignore properties that start with app. or site.
       next if $key =~ /^\s*app./;
@@ -184,7 +183,7 @@ sub retrieve_service_xml {
    my $site = $_[0];
    my $sitexmlfile = "$ENV{HOME}/.swift/service/$site/sites.xml";
    my @xml;
-   open(SXML, $sitexmlfile) || die "Unable to open $sitexmlfile: $!\n";
+   open(SXML, $sitexmlfile) || &swiftquit("Unable to open $sitexmlfile: $!\n");
    while(<SXML>) {
       if(m/^<\?xml|^<config|config>$/i){ next; }
          push(@xml, $_);
@@ -203,7 +202,7 @@ sub swiftquit {
 # Write sites.xml to disk
 sub write_sites {
    my $filename = $_[0];
-   open(SITES, ">$run_directory/$filename") || die "Unable to open $run_directory/$filename\n";
+   open(SITES, ">$run_directory/$filename") || &swiftquit("Unable to open $run_directory/$filename");
    print SITES "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
    print SITES "<config xmlns=\"http://www.ci.uchicago.edu/swift/SwiftSites\">\n";
 
@@ -262,7 +261,7 @@ if(defined($option_siteslist)) {
 
 # Verify Swift is found in PATH
 my $swift_etc_directory = dirname(dirname(`which swift`)) . "/etc";
-if( ! -d $swift_etc_directory ) { die "Unable to find a valid Swift installation"; }
+if( ! -d $swift_etc_directory ) { &swiftquit("Unable to find a valid Swift installation"); }
 
 # Set the search order for properties
 &add_property_file("$swift_etc_directory/swift.properties");
@@ -272,7 +271,7 @@ if( ! -d $swift_etc_directory ) { die "Unable to find a valid Swift installation
 
 # Set property values
 foreach my $property_file(@property_files) {
-   open(PROPERTIES, $property_file) || die "Unable to open $property_file";
+   open(PROPERTIES, $property_file) || &swiftquit("Unable to open $property_file");
 
    while( <PROPERTIES> ) {
       chomp;
@@ -339,9 +338,10 @@ if(@run_directories) {
 }
 
 $run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
-mkdir($run_directory) || die "Unable to create run directory $run_directory\n";
-@new_swift_args = ("-Dscript.dir=" . $run_directory . "/scripts");
-push(@new_swift_args, "-Drestart.log.name=" . $run_directory . "/restart.log");
+mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
+@new_swift_args = ("-Dscript.dir=$run_directory/scripts");
+push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
+push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
 
 # Write swift configuration files
 &write_sites("sites.xml") if defined( $option_siteslist ) || defined($properties{site});
