@@ -11,6 +11,7 @@ OPTIONS="-XX:+HeapDumpOnOutOfMemoryError"
 CYGWIN=
 CPDELIM=":"
 HEAPMAX=1024M
+SWIFTOUTLOG=""
 
 if echo `uname` | grep -i "cygwin"; then
 	CYGWIN="yes"
@@ -160,6 +161,9 @@ else
          CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g )
       elif [[ "$cmd" == *--SWIFTRUNQUIT* ]]; then
          exit 1
+      elif [[ "$cmd" == *-swiftoutlog=* ]]; then
+         SWIFTOUTLOG=$( echo $cmd | cut -d'=' -f2 )
+         CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g ) 
       fi
    done
 fi
@@ -172,7 +176,11 @@ if test -n "$CYGWIN"; then
     eval java ${OPTIONS} ${COG_OPTS} ${EXEC} ${CMDLINE}
     export CLASSPATH=$CLASSPATHSAVE
 else
-    eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE}
+    if [ -n "$SWIFTOUTLOG" ] && [ -w "$( dirname $SWIFTOUTLOG )" ]; then
+       eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE} 2>&1 | tee $SWIFTOUTLOG
+    else
+       eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE}
+   fi
 fi
 return_code=$?
 
