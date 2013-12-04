@@ -76,7 +76,15 @@ sub create_pool_entry {
 sub property_to_xml {
    my $key = $_[0];
    my $value = $_[1];
+
    my ( $site, $sitename, $namespace, $property ) = split(/\./, $key);
+
+   # Allow exceptions for swift properties with dot separators (ie key=slurm.properties)
+   if ( defined($property) && $namespace =~ m/^slurm|^condor/ ) { 
+      ( $site, $sitename, $namespace, $property ) = split(/\./, $key);
+      $property = "$namespace.$property";
+      $namespace = "globus";
+   }
 
    # In the case of a shortened definition, check for aliases 
    if ( !defined( $property ) ) {
