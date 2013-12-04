@@ -155,7 +155,7 @@ else
    CMDLINE="$( swiftrun $CMDLINE )"
    for cmd in $CMDLINE
    do
-      if [[ "$cmd" == *-Dscript.dir* ]]; then
+      if [[ "$cmd" == *-Dscript.dir* ]] || [[ "$cmd" == *-Drestart.log.name* ]]; then
          OPTIONS="$OPTIONS $cmd"
          CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g )
       elif [[ "$cmd" == *--SWIFTRUNQUIT* ]]; then
