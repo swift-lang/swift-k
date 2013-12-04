@@ -182,8 +182,13 @@ public class RestartLog extends InternalFunction {
 			name = fileName.getValue(stack);
 		}
 		for (int i = 0; i < Integer.MAX_VALUE; i++) {
-			String index = "." + String.valueOf(i);
-			File f = new File(name + index + ".rlog");
+                        String restartLogFilename = System.getProperty("restart.log.name");
+                        if(restartLogFilename == null) {
+                                String index = "." + String.valueOf(i);
+                                restartLogFilename = name + index + ".rlog";
+                        }
+                        File f = new File(restartLogFilename);
+
 			if (f.exists()) {
 				if (i == MAX_INDEX) {
 					throw new ExecutionException(this, "Maximum restart log index reached");
