@@ -86,6 +86,7 @@
 		<chmod perm="+x">
 			<fileset dir="${dist.dir}/bin">
                                 <include name="apptimes"/>
+                                <include name="foreachworker"/>
 				<include name="gensites"/>
                                 <include name="prop2scs.pl"/>
 				<include name="start-coaster-service"/>
