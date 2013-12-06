@@ -125,9 +125,10 @@ public class VDSTaskTransformer implements TaskTransformer {
                 workdir=System.getProperty("user.dir");
             }
 
-            if (workdir!=null && !workdir.startsWith("/")){
+            if (workdir!=null && !workdir.startsWith("/") && !workdir.equals(".")){
                    workdir=System.getProperty("user.dir")+"/"+workdir;
             }
+
 			if (dir == null || !dir.startsWith("/")) {
 				if (workdir != null) {
 					if (dir == null) {
