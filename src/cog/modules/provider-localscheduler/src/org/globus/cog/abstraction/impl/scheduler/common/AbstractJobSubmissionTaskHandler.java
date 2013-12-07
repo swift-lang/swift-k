@@ -60,8 +60,7 @@ public abstract class AbstractJobSubmissionTaskHandler extends
 		}
 		catch (Exception e) {
 			if (e.getMessage() != null) {
-				throw new TaskSubmissionException("Cannot submit job: "
-						+ e.getMessage(), e);
+				throw new TaskSubmissionException(e.getMessage(), e);
 			}
 			else {
 				throw new TaskSubmissionException("Cannot submit job", e);
