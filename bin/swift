@@ -170,6 +170,7 @@ fi
 
 ### EXECUTE ############
 # Note: killing Swift may be briefly delayed due to Coasters shutdown
+return_code=0
 if test -n "$CYGWIN"; then
     set CLASSPATHSAVE=$CLASSPATH
     export CLASSPATH="$LOCALCLASSPATH"
@@ -178,11 +179,12 @@ if test -n "$CYGWIN"; then
 else
     if [ -n "$SWIFTOUTLOG" ] && [ -w "$( dirname $SWIFTOUTLOG )" ]; then
        eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE} 2>&1 | tee $SWIFTOUTLOG
+       return_code=${PIPESTATUS[0]}
     else
        eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE}
+       return_code=$?
    fi
 fi
-return_code=$?
 
 if [ "$SWIFT_USAGE_STATS" = 1 ]; then
 	$BASH -c "echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH $return_code 1 > /dev/udp/$LISTENER/$PORT" > /dev/null 2>&1 &
