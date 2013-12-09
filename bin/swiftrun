@@ -33,22 +33,37 @@ my %xml_aliases = (
                    'highoverallocation'        => 'globus.highoverallocation',
                    'initialscore'              => 'karajan.initialscore',
                    'internalhostname'          => 'globus.internalhostname',
+                   'jobgranularity'            => 'globus.nodegranularity',
+		   'jobproject'                => 'globus.project',
+                   'jobqueue'                  => 'globus.queue',
                    'jobspernode'               => 'globus.jobspernode',
                    'jobthrottle'               => 'karajan.jobthrottle',
                    'jobtype'                   => 'globus.jobtype',
+		   'jobwalltime'               => 'globus.maxtime',
+                   'jobwalltimereserve'        => 'globus.reserve',
                    'lowoverallocation'         => 'globus.lowoverallocation',
+		   'maxjobs'                   => 'globus.slots',
                    'maxnodes'                  => 'globus.maxnodes',
+                   'maxnodesperjob'            => 'globus.maxnodes',
                    'maxsubmitrate'             => 'karajan.maxsubmitrate',
                    'maxtime'                   => 'globus.maxtime',
                    'maxwalltime'               => 'globus.maxwalltime',
                    'nodegranularity'           => 'globus.nodegranularity',
                    'overallocationdecayfactor' => 'globus.overallocationdecayfactor',
+                   'project'                   => 'globus.project',
                    'provider'                  => 'provider.coaster',
                    'queue'                     => 'globus.queue',
-                   'slots'                     => 'globus.slots',
-                   'spread'                    => 'globus.spread',
                    'remotemonitorenabled'      => 'globus.remotemonitorenabled',
                    'reserve'                   => 'globus.reserve',
+                   'slots'                     => 'globus.slots',
+                   'spread'                    => 'globus.spread',
+                   'tasksperworker'            => 'globus.jobspernode',
+                   'taskthrottle'              => 'karajan.jobthrottle',
+                   'taskwalltime'              => 'globus.maxwalltime',
+		   'workerlogginglevel'        => 'globus.workerlogginglevel',
+		   'workerloglevel'            => 'globus.workerlogginglevel',
+                   'workerloggingdirectory'    => 'globus.workerloggingdirectory',
+                   'workerlogdirectory'        => 'globus.workerloggingdirectory',
 );
 
 # Verify a property file exists and add it to the search path
@@ -72,6 +87,30 @@ sub create_pool_entry {
    return $pool;
 }
 
+sub verify_in_hhmmss {
+   my $parameter_name =  $_[0];
+   my $parameter_value = $_[1];
+   my $ccount = ($parameter_value =~ s/:/:/g);
+   if ($ccount != 2) {
+      swiftquit("Error: $parameter_name value $parameter_value is not in hh:mm:ss format");
+   }
+}
+
+# Convert hh:mm:ss to seconds
+sub hhmmss_to_seconds {
+   (my $hh, my $mm, my $ss) = split(':', $_[0]);
+   return ($hh*60*60)+($mm*60)+$ss;
+}
+
+# Convert to job throttle format
+sub number_to_throttle {
+   my $input = $_[0];
+   if ( $input !~ /\d/) {  
+      swiftquit("Error: taskthrottle must be numeric");
+   }
+   return ($input - 1) / 100;
+}  
+ 
 # Given a string in format site.beagle.globus.jobsPerNode=12, convert to xml
 sub property_to_xml {
    my $key = $_[0];
@@ -88,15 +127,34 @@ sub property_to_xml {
    # In the case of a shortened definition, check for aliases 
    if ( !defined( $property ) ) {
       if ( defined( $xml_aliases{ lc( $namespace )})) { 
-         ( $namespace, $property ) = split(/\./, $xml_aliases{ lc($namespace) });
+         $namespace=lc($namespace);
+
+         # Values that need that may need modifications
+         if( $namespace eq "jobwalltime" ) {
+            verify_in_hhmmss($namespace, $value);
+            $value = hhmmss_to_seconds($value); 
+         } 
+         elsif ( $namespace eq "taskthrottle" ) {
+            $value = number_to_throttle($value);
+         }
+         elsif ( $namespace eq "taskwalltime" ) {
+            verify_in_hhmmss($namespace, $value);
+         }
+
+         ( $namespace, $property ) = split(/\./, $xml_aliases{ $namespace });
       }
    }     
    
    # Make sure to handle special cases that are not in the namespace=x, key=y, format
    if    ( $namespace eq "provider" )      { return "<execution provider=\"" . $property . "\" jobmanager=\"" . $value . "\"/>\n"; }
    elsif ( $namespace eq "workdirectory" ) { return "<workdirectory>$value</workdirectory>\n"; }
+   elsif ( $namespace eq "workdir" )       { return "<workdirectory>$value</workdirectory>\n"; }
+   elsif ( $namespace eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
    elsif ( $namespace eq "filesystem" )    { return "<filesystem provider=\"" . $value . "\"/>\n"; }
-   else                                    { return "<profile namespace=\"" . $namespace . "\" key=\"" . $property . "\">" . $value . "</profile>\n"; }
+
+   if ( defined($property) && defined($value) ) {
+      return "<profile namespace=\"" . $namespace . "\" key=\"" . $property . "\">" . $value . "</profile>\n"; 
+   }
 } 
 
 # Write apps to file in tc.data format
