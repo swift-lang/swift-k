@@ -342,6 +342,7 @@ mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directo
 @new_swift_args = ("-Dscript.dir=$run_directory/scripts");
 push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
 push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
+push(@new_swift_args, "-runid " . basename($run_directory));
 
 # Write swift configuration files
 &write_sites("sites.xml") if defined( $option_siteslist ) || defined($properties{site});
