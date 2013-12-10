@@ -146,8 +146,10 @@ sub property_to_xml {
    }     
    
    # Make sure to handle special cases that are not in the namespace=x, key=y, format
-   if ( $namespace eq "jobmanager" ) { 
+   if ( $namespace eq "jobmanager" && defined($value)) { 
       my $ccount = ($value =~ s/:/:/g);
+      my $jobmanager = "";
+      my $jobmanagerURL = "";
 
       # With no separators, assume local 
       if( $ccount == 0 ) {
