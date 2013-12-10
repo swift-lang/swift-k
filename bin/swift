@@ -29,7 +29,7 @@ updateOptions() {
 ####### MAIN BODY ##########
 
 if [ ! -d "$SWIFT_HOME" ] ; then
-    SWIFT_HOME=`dirname $0`"/.."
+    SWIFT_HOME=$(cd $(dirname $0)/..; pwd)
     if [ ! -f "$SWIFT_HOME/lib/cog-swift-svn.jar" ] && [ ! -f "$SWIFT_HOME/lib/cog.jar" ] ; then
 		MY_PATH=`which $0`
 		SWIFT_HOME=`dirname $MY_PATH`"/.."

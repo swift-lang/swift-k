@@ -348,7 +348,7 @@ if(defined($option_siteslist)) {
 }
 
 # Verify Swift is found in PATH
-my $swift_etc_directory = dirname(dirname(`which swift`)) . "/etc";
+my $swift_etc_directory = dirname(dirname($0)) . "/etc";
 if( ! -d $swift_etc_directory ) { &swiftquit("Unable to find a valid Swift installation"); }
 
 # Set the search order for properties
