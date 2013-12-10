@@ -146,7 +146,35 @@ sub property_to_xml {
    }     
    
    # Make sure to handle special cases that are not in the namespace=x, key=y, format
-   if    ( $namespace eq "provider" )      { return "<execution provider=\"" . $property . "\" jobmanager=\"" . $value . "\"/>\n"; }
+   if ( $namespace eq "jobmanager" ) { 
+      my $ccount = ($value =~ s/:/:/g);
+
+      # With no separators, assume local 
+      if( $ccount == 0 ) {
+         $jobmanager = "local:$value";
+      }
+
+      # With one separator, use ssh-cl and assume hostname:type
+      elsif ( $ccount == 1) {
+         (my $first, my $second) = split(':', $value);
+         $jobmanager = "ssh-cl:$second";
+         $jobmanagerURL = "$first";
+      }
+ 
+      # Other, in the format of proto:host:jobMgr
+      elsif ( $ccount == 2) {
+         (my $first, my $second, my $third) = split(':', $value);
+         $jobmanager="$first:$third";
+         $jobmanagerURL = "$second";
+      }
+ 
+      if ( defined($jobmanagerURL) && length($jobmanagerURL) > 0) {
+         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
+      } else {
+         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\"/>\n"; 
+      }
+   }
+     
    elsif ( $namespace eq "workdirectory" ) { return "<workdirectory>$value</workdirectory>\n"; }
    elsif ( $namespace eq "workdir" )       { return "<workdirectory>$value</workdirectory>\n"; }
    elsif ( $namespace eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
