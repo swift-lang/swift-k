@@ -345,6 +345,20 @@ GetOptionsFromArray(
            'version'               => \$option_version,
 );
 
+# Create/increment run directory
+my $run_number = 0;
+my @run_directories = <run???>;
+
+if(@run_directories) {
+   $run_number = $run_directories[-1];
+   $run_number =~ s/run//g;
+   $run_number++;
+}
+
+$run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
+$ENV{RUNDIRECTORY} = "$run_directory";
+mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
+
 # Set @sites array from comma separated list of sites
 if(defined($option_siteslist)) {
    @sites = split(',', $option_siteslist);
@@ -424,18 +438,6 @@ if ( $option_help ) {
    exit;
 }
 
-# Create/increment run directory
-my $run_number = 0;
-my @run_directories = <run???>;
-
-if(@run_directories) {
-   $run_number = $run_directories[-1];
-   $run_number =~ s/run//g;
-   $run_number++;
-}
-
-$run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
-mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
 @new_swift_args = ("-Dscript.dir=$run_directory/scripts");
 push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
 push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
