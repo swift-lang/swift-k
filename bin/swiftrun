@@ -18,13 +18,13 @@ my $option_sitesfile;		# Value of -sites.file option
 my $option_siteslist;		# Value of -sites option, comma separated
 my $option_config;		# Value of -config option
 my $option_listconfig; 		# List configuration files used, values, then exit
+my $option_properties;          # Use a swift.properties specified in the command line
 my $option_help;                # Print help
 my $option_version;             # Print version number
 my @sites;			# List of sites from -sites in array
 my $run_directory;		# Run directory to be created, run.NNNN
 my @new_swift_args;		# New command line arguments
 my @original_swift_args;	# Original arguments
-
 
 # List of xml shortcuts
 my %xml_aliases = (
@@ -146,7 +146,37 @@ sub property_to_xml {
    }     
    
    # Make sure to handle special cases that are not in the namespace=x, key=y, format
-   if    ( $namespace eq "provider" )      { return "<execution provider=\"" . $property . "\" jobmanager=\"" . $value . "\"/>\n"; }
+   if ( $namespace eq "jobmanager" && defined($value)) { 
+      my $ccount = ($value =~ s/:/:/g);
+      my $jobmanager = "";
+      my $jobmanagerURL = "";
+
+      # With no separators, assume local 
+      if( $ccount == 0 ) {
+         $jobmanager = "local:$value";
+      }
+
+      # With one separator, use ssh-cl and assume hostname:type
+      elsif ( $ccount == 1) {
+         (my $first, my $second) = split(':', $value);
+         $jobmanager = "ssh-cl:$second";
+         $jobmanagerURL = "$first";
+      }
+ 
+      # Other, in the format of proto:host:jobMgr
+      elsif ( $ccount == 2) {
+         (my $first, my $second, my $third) = split(':', $value);
+         $jobmanager="$first:$third";
+         $jobmanagerURL = "$second";
+      }
+ 
+      if ( defined($jobmanagerURL) && length($jobmanagerURL) > 0) {
+         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
+      } else {
+         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\"/>\n"; 
+      }
+   }
+     
    elsif ( $namespace eq "workdirectory" ) { return "<workdirectory>$value</workdirectory>\n"; }
    elsif ( $namespace eq "workdir" )       { return "<workdirectory>$value</workdirectory>\n"; }
    elsif ( $namespace eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
@@ -253,7 +283,9 @@ sub retrieve_service_xml {
 sub swiftquit {
    print STDERR $_[0] . "\n";
    print " --SWIFTRUNQUIT ";
-   rmtree $run_directory || die "Failed to remove $run_directory: $!\n";
+   if (defined($run_directory) && -d "$run_directory") { 
+      rmtree $run_directory || die "Failed to remove $run_directory: $!\n";
+   }
    exit 1;
 } 
 
@@ -303,13 +335,14 @@ foreach my $arg(@ARGV) {
 @original_swift_args = @ARGV;
 GetOptionsFromArray(
            \@original_swift_args, 
-           'config=s'        => \$option_config,
-           'help'            => \$option_help,
-           'listconfig'      => \$option_listconfig,
-           'site|sites=s'    => \$option_siteslist,
-           'sitesfile=s'     => \$option_sitesfile,
-           'tcfile=s'        => \$option_tcfile,
-           'version'         => \$option_version,
+           'config=s'              => \$option_config,
+           'help'                  => \$option_help,
+           'listconfig'      	   => \$option_listconfig,
+           'property|properties=s' => \$option_properties,
+           'site|sites=s'          => \$option_siteslist,
+           'sitesfile=s'           => \$option_sitesfile,
+           'tcfile=s'              => \$option_tcfile,
+           'version'               => \$option_version,
 );
 
 # Set @sites array from comma separated list of sites
@@ -318,7 +351,7 @@ if(defined($option_siteslist)) {
 }
 
 # Verify Swift is found in PATH
-my $swift_etc_directory = dirname(dirname(`which swift`)) . "/etc";
+my $swift_etc_directory = dirname(dirname($0)) . "/etc";
 if( ! -d $swift_etc_directory ) { &swiftquit("Unable to find a valid Swift installation"); }
 
 # Set the search order for properties
@@ -326,6 +359,12 @@ if( ! -d $swift_etc_directory ) { &swiftquit("Unable to find a valid Swift insta
 &add_property_file("$ENV{SWIFT_SITE_CONF}/swift.properties") if defined($ENV{SWIFT_SITE_CONF});
 &add_property_file("$ENV{HOME}/.swift/swift.properties");
 &add_property_file("swift.properties");
+if(defined($option_properties)) {
+   if(! -f $option_properties) {
+      swiftquit("Unable to find properties file $option_properties");
+   }
+   &add_property_file($option_properties);
+}
 
 # Set property values
 foreach my $property_file(@property_files) {
@@ -413,10 +452,10 @@ foreach my $arg(@ARGV) {
    $arg =~ s/tcfile/tc.file/g;
 }
 
-# Make sure -sites isn't in the arguments we send back to swift
+# Make sure swiftrun arguments aren't sent back to swift
 while( @ARGV ) {
    my $option = shift;
-   if ( $option eq "-site" || $option eq "-sites" ) { shift; }
+   if ( $option eq "-site" || $option eq "-sites" || $option eq "-properties" || $option eq "-property") { shift; }
    else { push( @new_swift_args, $option ); }
 }
 
