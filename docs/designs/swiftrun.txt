@@ -223,6 +223,17 @@ For example:
 site.westmere.queue=fast
 -----
 
+Before the site properties are listed, it's important to understand the
+terminology used.
+
+A *task*, or *app task* is an instance of a program as defined in
+a Swift app() function.
+
+A *worker* is the program that launches app tasks. 
+
+A *job* is related to schedulers. It is the mechanism by which workers
+are launched.
+
 Below is the list of valid site properties, with links to the Swift User Guide
 which explanations of what they do, and an example swift.properties entry.
 
@@ -231,89 +242,49 @@ which explanations of what they do, and an example swift.properties entry.
 |================================
 |Property|Description|Example
 
-|allocationstepsize|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.allocationstepsize=0.1
+|jobGranularity|
+Specifies the granularity of a job, in nodes
+|site.westmere.jobGranularity=2
 
-|delaybase|
-link:../userguide/userguide.html#_karajan_namespace[Swift User Guide entry]
-|site.westmere.delaybase=1
+|jobManager|
+Specifies how jobs will be launched. The supported job managers are 
+"cobalt", "slurm", "condor", "pbs", "lsf", "local", and "sge". 
+|site.westmere.jobManager=slurm
 
-|highoverallocation|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.highoverallocation=100
-
-|initialscore|
-link:../userguide/userguide.html#_karajan_namespace[Swift User Guide entry]
-|site.westmere.initialscore=10000
-
-|internalhostname|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.internalhostname=10.x.x.x
-
-|jobspernode|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.jobspernode=12
-
-|jobthrottle|
-Set the job throttle factor. The value should be (N-1)/100 to run N jobs at a
-time. To run 16 jobs at a time, set jobthrottle to .15.
-|site.westmere.jobthrottle=0.15
-
-|lowoverallocation|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.lowoverallocation=100
-
-|maxnodes|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.maxnodes=2
-
-|maxsubmitrate|
-link:../userguide/userguide.html#_karajan_namespace[Swift User Guide entry]
-|site.westmere.maxsubmitrate=5
-
-|maxtime|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.maxtime=3600
-
-|maxwalltime|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.maxwalltime=00:05:00
-
-|nodegranularity|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.nodegranularity=2
-
-|overallocationdecayfactor|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.overallocationdecayfactor=0.001
-
-|provider|
-Set which CoG provider to use. This will assume that you want to use coasters.
-|site.westmere.provider=local:slurm
-
-|queue|
+|jobQueue|
 Set the name of the scheduler queue to use.
-|site.westmere.queue=westmere
+|site.westmere.jobQueue=westmere
 
-|remotemonitorenabled|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.remotemonitorenabled=true
+|jobWalltime|
+The maximum number amount of time allocated in a scheduler job, in hh:mm:ss
+format.
+|site.westmere.jobWalltime=01:00:00
 
-|reserve|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.reserve=10
+|maxJobs|
+Maximum number of scheduler jobs to submit
+|site.westmere.maxJobs=20
 
-|site    |Name of site or sites to run on. This is the same as running with
-swift -site <sitename>|site=westmere
+|maxNodesPerJob|
+The maximum number of nodes to request per scheduler job.
+|site.westmere.maxNodesPerJob=2
 
-|slots|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.slots=20
+|tasksPerWorker|
+The number of tasks that each worker can run simultaneously.
+|site.westmere.tasksPernode=12
 
-|spread|
-link:../userguide/userguide.html#_globus_namespace[Swift User Guide entry]
-|site.westmere.spread=0.9
+|taskThrottle|
+The maximum number of active tasks across all workers.
+|site.westmere.taskThrottle=100
+
+|taskWalltime|
+The maximum amount of time a task may run, in hh:mm:ss.
+|site.westmere.taskWalltime=01:00:00
+
+|site    |
+Name of site or sites to run on. This is the same as running with
+swift -site <sitename>
+|site=westmere
+
 |================================
 
 Grouping site properties
