@@ -176,7 +176,7 @@ sub property_to_xml {
          return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\"/>\n"; 
       }
    }
-     
+   elsif ( $namespace eq "provider" )      { return "<execution provider=\"" . $property . "\" jobmanager=\"" . $value . "\"/>\n"; } 
    elsif ( $namespace eq "workdirectory" ) { return "<workdirectory>$value</workdirectory>\n"; }
    elsif ( $namespace eq "workdir" )       { return "<workdirectory>$value</workdirectory>\n"; }
    elsif ( $namespace eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
@@ -190,8 +190,8 @@ sub property_to_xml {
 # Write apps to file in tc.data format
 sub write_apps {
    my $app_filename = $_[0];
+   my $use_wildcard = 1;
    open( APP_FILE, ">$run_directory/$app_filename" ) || &swiftquit("Unable to open $run_directory/$app_filename");
-   print APP_FILE "* * * INSTALLED INTEL32::LINUX null\n";
 
    # Find app definitions
    while( my( $key, $value ) = each( %properties ) ) {
@@ -200,6 +200,7 @@ sub write_apps {
 
          # Handle wildcards for site names
          if ( $site eq "*" ) { 
+            $use_wildcard=0;
             foreach my $nsite( @sites ) {
                print APP_FILE "$nsite $command $value\n";
             }
@@ -207,11 +208,17 @@ sub write_apps {
 
          # Handle apps for defined sites
          elsif ( grep( /^$site$/, @sites ) ) {
+            $use_wildcard=0;
             print APP_FILE "$site $command $value\n";
          }
       }
    }
-   # Update command line args
+
+   if ($use_wildcard) {
+      print APP_FILE "* * * INSTALLED INTEL32::LINUX null\n";
+   }
+
+   close(APP_FILE);
    push( @new_swift_args, "-tc.file $run_directory/$app_filename" );
 }
 
