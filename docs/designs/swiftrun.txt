@@ -90,7 +90,7 @@ site.sandyb.taskWalltime=00:05:00
 site.sandyb.jobManager=slurm
 site.sandyb.jobQueue=sandyb
 site.sandyb.maxJobs=1
-site.sandyb.workdirectory=/scratch/midway/$USER/work
+site.sandyb.workdir=/scratch/midway/$USER/work
 site.sandyb.filesystem=local
 
 # Define sandyb apps
@@ -260,6 +260,10 @@ Specifies how jobs will be launched. The supported job managers are
 "cobalt", "slurm", "condor", "pbs", "lsf", "local", and "sge". 
 |site.westmere.jobManager=slurm
 
+|jobProject|
+Set the project name for the job scheduler
+|site.westmere.project=myproject
+
 |jobQueue|
 Set the name of the scheduler queue to use.
 |site.westmere.jobQueue=westmere
@@ -276,6 +280,11 @@ Maximum number of scheduler jobs to submit
 |maxNodesPerJob|
 The maximum number of nodes to request per scheduler job.
 |site.westmere.maxNodesPerJob=2
+
+|taskDir|
+Tasks will be run from this directory. In the absence of a taskDir definition, 
+Swift will run the task from workdir.
+|site.westmere.taskDir=/scratch/local/$USER/work
 
 |tasksPerWorker|
 The number of tasks that each worker can run simultaneously.
@@ -294,6 +303,13 @@ Name of site or sites to run on. This is the same as running with
 swift -site <sitename>
 |site=westmere
 
+|workdir |
+The workdirectory element specifies where on the site files can be stored.
+This directory must be available on all worker nodes that will be used for 
+execution. A shared cluster filesystem is appropriate for this. Note that 
+you need to specify absolute pathname for this field.
+|site.westmere.workdir=/scratch/midway/$USER/work
+
 |================================
 
 Grouping site properties
@@ -308,7 +324,7 @@ site.westmere.maxWalltime=00:05:00
 site.westmere.queue=westmere
 site.westmere.initialScore=10000
 site.westmere.filesystem=local
-site.westmere.workdirectory=/scratch/midway/davidkelly999
+site.westmere.workdir=/scratch/midway/davidkelly999
 -----
 
 However, it is also simplify this by grouping these properties together with
@@ -322,7 +338,7 @@ site.westmere {
    queue=westmere
    initialScore=10000
    filesystem=local
-   workdirectory=/scratch/midway/$USER/work
+   workdir=/scratch/midway/$USER/work
 }
 -----
 
@@ -361,7 +377,7 @@ Using shell variables
 Any value in swift.properties may contain environment variables. For example:
 
 -----
-workdirectory=/scratch/midway/$USER/work
+workdir=/scratch/midway/$USER/work
 ----
 
 Environment variables are expanded locally on the machine where you are running
@@ -372,6 +388,6 @@ run directory Swift creates. In a case where you'd like your work directory
 to be in the runNNN directory, you may do something like this:
 
 -----
-workdirectory=$RUNDIRECTORY
+workdir=$RUNDIRECTORY
 -----
 
