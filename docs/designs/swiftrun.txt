@@ -84,19 +84,24 @@ The new swift.properties file is responsible for:
 Here is an example of a new swift.properties file.
 
 -----
-wrapperlog.always.transfer=true
+# Define sandyb site
+site.sandyb.tasksPerWorker=16
+site.sandyb.taskWalltime=00:05:00
+site.sandyb.jobManager=slurm
+site.sandyb.jobQueue=sandyb
+site.sandyb.maxJobs=1
+site.sandyb.workdirectory=/scratch/midway/$USER/work
+site.sandyb.filesystem=local
+
+# Define sandyb apps
+app.sandyb.echo=/bin/echo
+
+# Define swift properties
 sitedir.keep=true
-file.gc.enabled=false
-status.mode=provider
-site=westmere
-site.westmere.provider=local:slurm
-site.westmere.jobsPerNode=12
-site.westmere.maxWalltime=00:05:00
-site.westmere.queue=westmere
-site.westmere.initialScore=10000
-site.westmere.filesystem=local
-site.westmere.workdirectory=/scratch/midway/davidkelly999
-app.westmere.cat=/bin/cat
+wrapperlog.always.transfer=true
+
+# Select which site to run on
+site=sandyb
 -----
 
 This single swift.properties file works identically to using the sites.xml,
@@ -220,7 +225,7 @@ The third word is the property.
 
 For example:
 -----
-site.westmere.queue=fast
+site.westmere.jobQueue=fast
 -----
 
 Before the site properties are listed, it's important to understand the
@@ -234,13 +239,17 @@ A *worker* is the program that launches app tasks.
 A *job* is related to schedulers. It is the mechanism by which workers
 are launched.
 
-Below is the list of valid site properties, with links to the Swift User Guide
-which explanations of what they do, and an example swift.properties entry.
+Below is the list of valid site properties with brief explanations of what 
+they do, and an example swift.properties entry.
 
 .swift.properties site properties
 [options="header"]
 |================================
 |Property|Description|Example
+
+|filesystem|
+Defines how files should be accessed
+|site.westmere.filesystem=local
 
 |jobGranularity|
 Specifies the granularity of a job, in nodes
