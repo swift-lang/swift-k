@@ -176,7 +176,7 @@ sub property_to_xml {
          return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\"/>\n"; 
       }
    }
-     
+   elsif ( $namespace eq "provider" )      { return "<execution provider=\"" . $property . "\" jobmanager=\"" . $value . "\"/>\n"; } 
    elsif ( $namespace eq "workdirectory" ) { return "<workdirectory>$value</workdirectory>\n"; }
    elsif ( $namespace eq "workdir" )       { return "<workdirectory>$value</workdirectory>\n"; }
    elsif ( $namespace eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
