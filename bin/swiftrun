@@ -126,8 +126,7 @@ sub property_to_xml {
 
    # In the case of a shortened definition, check for aliases 
    if ( !defined( $property ) ) {
-      if ( defined( $xml_aliases{ lc( $namespace )})) { 
-         $namespace=lc($namespace);
+      if ( defined( $xml_aliases{ $namespace })) { 
 
          # Values that need that may need modifications
          if( $namespace eq "jobwalltime" ) {
@@ -405,6 +404,7 @@ foreach my $property_file(@property_files) {
             $_ =~ s/^\s+//;               
             if( /^}/ ) { last; } 
             my ($key, $value) = split('=', ($prefix . ".$_"), 2);
+            $key = lc($key);
             if($key eq "sites") { $key = "site"; }
             $value =~ s/\$(\w+)/$ENV{$1}/g;
             $properties{ $key } = $value;
@@ -413,6 +413,7 @@ foreach my $property_file(@property_files) {
 
       else {
          my ($key, $value) = split('=', $_, 2);
+         $key = lc($key);
          if($key eq "sites") { $key = "site"; }
          if(defined($key) && defined($value) && length($key) && length($value)) {
             $value =~ s/\$(\w+)/$ENV{$1}/g; # Substitute environment variables
