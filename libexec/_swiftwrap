@@ -152,16 +152,17 @@ closeinfo() {
 }
 
 contains() {
-	ARRAY=$1
-	X=$2
+   arrayName=$1[@]
+   array=("${!arrayName}")
+   searchString=$2
 
-	for a in ${!ARRAY}
-	do
-		if [[ ${a} == ${X} ]]; then
-			return 0
-		fi
-	done
-	return 1
+   for element in "${array[@]}" ; do
+      if [ "$element" == "$searchString" ]; then
+         return 0
+      fi  
+   done
+
+   return 1
 }
 
 genScripts() {
@@ -446,7 +447,7 @@ if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
 			if [[ $CDM_POLICY != "DEFAULT" &&
 				  $CDM_POLICY != "BROADCAST"* ]]; then
 	    	    eval cdm_action $DIR "OUTPUT" $L $CDM_POLICY
-				SKIPPED_OUTPUT=( $SKIPPED_OUTPUT $L )
+				SKIPPED_OUTPUT+=( $L )
 			fi
 			if [ $CDM_POLICY == "GATHER" ]; then
 				GATHER_OUTPUT=( $GATHER_OUTPUT $L )
