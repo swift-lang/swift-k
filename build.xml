@@ -91,6 +91,7 @@
                                 <include name="prop2scs.pl"/>
 				<include name="start-coaster-service"/>
 				<include name="stop-coaster-service"/>
+                                <include name="swiftdebug"/>
 				<include name="swiftrun"/>
 				<include name="swift-plot-log"/>
                                 <include name="swift-service"/>
