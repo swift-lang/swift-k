@@ -3,6 +3,19 @@
 use strict;
 use warnings;
 use File::Basename;
+use Class::Struct;
+
+# Task structure
+struct Task          => { 
+    taskNumber       => '$',
+    thread           => '$',
+    host             => '$',
+    replicationGroup => '$',
+};
+
+# Hash for storing all tasks
+my %tasks = ();
+my $taskCounter = 0;
 
 # Print basic usage info
 sub usage() {
@@ -15,24 +28,43 @@ sub crash() {
    exit(1);
 }
 
-# Check usage
-if ( !$ARGV[0] ) {
-   &usage();
-}
-
-# Given a Swift log entry, decide if we want to it or not
+# Logic for what to do with a log entry
 sub processLogEntry() {
    (my $date, my $time, my $loglevel, my $class, my $message) = split(/\s+/, $_[0], 5);
    $time = (split(',', $time))[0];
+
    my @keywords_to_keep= ("VERSION", "ARGUMENTS", "SWIFT_CONFIGURATION", "SITES:", "TC:",
-                          "file:", "Using tc.data:");
-   foreach my $keyword(@keywords_to_keep) {
-      if( $message =~ m/$keyword/ ) {
-      # if( grep /$keyword/, @messageArray ) {
-         print "$time $message";
-         last;
-      }
+                          "SWIFTSCRIPT:" );
+   my $keyword_regexp = join('|', @keywords_to_keep);
+
+   # Define tasks
+   if ( $message =~ m/THREAD_ASSOCIATION/ ) {
+      &createTask($message);
+      return;
    }
+
+   # Reformat a message that matches a keyword we care about
+   if ( $message =~ m/$keyword_regexp/ ) {
+      print "$time $message";
+      return;
+   }
+}
+
+# Gather information about a task
+sub createTask() {
+
+   # Input: THREAD_ASSOCIATION jobid=sleep-n5t2pajl thread=R-4 host=westmere replicationGroup=null
+   $_[0] =~ s/jobid=|thread=|host=|replicationGroup=//g;
+   my ( $ignore, $taskid, $thread, $host, $replicationGroup ) = split(/\s+/, $_[0]);
+
+   my $t = Task->new();
+   $t->taskNumber($taskCounter);
+   $t->thread($thread);
+   $t->host($host);
+   $t->replicationGroup($replicationGroup);
+
+   $tasks{$taskid} = $t; 
+   $taskCounter += 1;
 }
 
 # Return true if input string starts with a date stamp
@@ -42,6 +74,11 @@ sub hasDateStamp() {
       return 1;
    } 
    return 0;
+}
+
+# Check usage
+if ( !$ARGV[0] ) {
+   &usage();
 }
 
 # Verify $run_directory
@@ -58,7 +95,7 @@ open(SWIFTLOG, $swift_log_name) || &crash("Unable to open log file $swift_log_na
 my @multiline_entry = ();
 my $previous_line = "";
 
-# Parse each log entry, figure out if they're multiline entries or not
+# Read log, and send each entry (single or multi-line) to processLogEntry()
 while(my $line = <SWIFTLOG>) {
    if ( &hasDateStamp($line) ) {
       if ( &hasDateStamp($previous_line) ) {
@@ -69,3 +106,10 @@ while(my $line = <SWIFTLOG>) {
       $previous_line .= "$line";
    }
 }
+
+# Print tasks
+while ( my ($key, $value) = each(%tasks) ) {
+   printf "Task %s => taskNumber=%d, thread=%s, host=%s, replicationGroup=%s\n",
+      $key, $value->taskNumber, $value->thread, $value->host, $value->replicationGroup;
+}
+
