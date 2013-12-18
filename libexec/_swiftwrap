@@ -404,8 +404,7 @@ log "ARGC=$#"
 IFS="|"
 
 logstate "CREATE_JOBDIR"
-# makeDirectory "$DIR" "Failed to create job directory $DIR"
-makeDirectory "/foo" "Failed to create job directory $DIR"
+makeDirectory "$DIR" "Failed to create job directory $DIR"
 log "Created job directory: $DIR"
 
 if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
