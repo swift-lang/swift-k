@@ -269,7 +269,7 @@ namespace(swift) {
 				fullRemote := dircat(rdir, bname)
 
 				log(LOG:DEBUG, "FILE_STAGE_OUT_START srcname={bname} srcdir={rdir} srchost={host} ",
-					"destdir={ldir} desthost={dhost} provider={provider}")
+					"destdir={ldir} desthost={dhost} provider={provider} jobid={jobid}")
 				//make sure we do have the directory on the client side
 				dir:make(ldir, host=dhost, provider=provider)
 				policy := cdm:query(file)

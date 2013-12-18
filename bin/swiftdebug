@@ -12,6 +12,7 @@ struct Task          => {
     host             => '$',
     replicationGroup => '$',
     stageIn          => '$',
+    stageOut         => '$',
     startTime        => '$',
     stopTime         => '$',
     taskNumber       => '$',
@@ -64,6 +65,11 @@ sub processLogEntry() {
       return;
    }
 
+   elsif ( $message =~ /FILE_STAGE_OUT_START/ ) {
+      &taskStagingOut($message);
+      return;
+   }
+
    elsif ( $message =~ m/$keyword_regexp/ ) {
       print "$message";
       return;
@@ -90,10 +96,9 @@ sub taskCreated() {
 sub taskStarted() {
    # Input: JOB_START jobid=sleep-k5t2pajl tr=sleep arguments=[1] tmpdir=sleep-run002/jobs/k/sleep-k5t2pajl host=westmere
    $_[0] =~ s/jobid=|tr=|arguments=|tmpdir=|hostdir=//g;
-   my $arguments = getBracketedText($_[0]);
-   $_[0] =~ s/$arguments/\[arguments\]/g;
-   my ( $date, $ignore, $taskid, $app, $notarguments, $workdir, $junk ) = split(/\s+/, $_[0]);
-
+   my ( $date, $ignore, $taskid, $app, $remainder ) = split(/\s+/, $_[0], 5);
+   my $arguments = &getBracketedText($remainder);
+   my $workdir = (split(/\s+/, $_[0]))[-2];
    my $t = $tasks{$taskid};
    $t->app($app);
    $t->workdir($workdir);
@@ -118,6 +123,18 @@ sub taskStagingIn() {
    $t->stageIn($files);
 }
 
+sub taskStagingOut() {
+   # Input: FILE_STAGE_OUT_START srcname=catsn.0001.out srcdir=catsn-run015/shared/output srchost=westmere destdir=output desthost=localhost provider=file jobid=cat-xpyldpjl
+   $_[0] =~ s/srcname=|srcdir=|srchost=|destdir=|desthost=|provider=|jobid=//g;
+   my ( $date, $junk, $srcname, $srcdir, $srchost, $destdir, $desthost, $provider, $taskid ) = split(/\s+/, $_[0]);
+   my $t = $tasks{$taskid};
+   if(defined($t->stageOut())) {
+      $t->stageOut($t->stageOut() . "$srcname ");
+   } else {
+      $t->stageOut("$srcname");
+   }
+}
+
 sub getBracketedText() {
    $_[0] =~ /\[([^\]]*)\]/x;
    my $result = $1;
@@ -135,7 +152,8 @@ sub printTasks() {
              "\tStart time = %s\n" .
              "\tStop time = %s\n" .
              "\tWork directory = %s\n" .
-             "\tStaged in files = %s\n",
+             "\tStaged in files = %s\n" .
+             "\tStaged out files = %s\n",
              $value->taskNumber, 
              $value->app, 
              $value->arguments,
@@ -144,6 +162,7 @@ sub printTasks() {
              $value->stopTime,
              $value->workdir,
              $value->stageIn,
+             $value->stageOut,
    }
 }
 
