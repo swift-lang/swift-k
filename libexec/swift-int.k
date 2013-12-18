@@ -219,7 +219,7 @@ namespace(swift) {
     }
 
 	doStagein := function(jobid, files, dir, host) {
-		log(LOG:INFO, "START jobid={jobid} - Staging in files")
+		log(LOG:INFO, "START jobid={jobid} - Staging in files {files}")
 
 		cdmfile := cdm:file()
 		libexec := "{SWIFT:HOME}/libexec"
