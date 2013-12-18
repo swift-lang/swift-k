@@ -7,15 +7,20 @@ use Class::Struct;
 
 # Task structure
 struct Task          => { 
-    taskNumber       => '$',
-    thread           => '$',
+    app              => '$',
+    arguments        => '$',
     host             => '$',
     replicationGroup => '$',
+    startTime        => '$',
+    stopTime         => '$',
+    taskNumber       => '$',
+    thread           => '$',
+    tmpdir           => '$',
 };
 
 # Hash for storing all tasks
 my %tasks = ();
-my $taskCounter = 0;
+my $taskCounter = 1;
 
 # Print basic usage info
 sub usage() {
@@ -32,31 +37,39 @@ sub crash() {
 sub processLogEntry() {
    (my $date, my $time, my $loglevel, my $class, my $message) = split(/\s+/, $_[0], 5);
    $time = (split(',', $time))[0];
+   $message = "$time $message";
 
-   my @keywords_to_keep= ("VERSION", "ARGUMENTS", "SWIFT_CONFIGURATION", "SITES:", "TC:",
-                          "SWIFTSCRIPT:" );
+   # my @keywords_to_keep= ("VERSION", "ARGUMENTS", "SWIFT_CONFIGURATION", "SITES:", "TC:", "SWIFTSCRIPT:" );
+   my @keywords_to_keep=("xyzzy");
    my $keyword_regexp = join('|', @keywords_to_keep);
 
-   # Define tasks
    if ( $message =~ m/THREAD_ASSOCIATION/ ) {
-      &createTask($message);
+      &taskCreated($message);
       return;
    }
 
-   # Reformat a message that matches a keyword we care about
-   if ( $message =~ m/$keyword_regexp/ ) {
-      print "$time $message";
+   elsif ( $message =~ m/JOB_START/ ) {
+      &taskStarted($message);
+      return;
+   }
+
+   elsif ( $message =~ m/JOB_END/ ) {
+      &taskEnded($message);
+      return;
+   }
+
+   elsif ( $message =~ m/$keyword_regexp/ ) {
+      print "$message";
       return;
    }
 }
 
 # Gather information about a task
-sub createTask() {
-
+sub taskCreated() {
    # Input: THREAD_ASSOCIATION jobid=sleep-n5t2pajl thread=R-4 host=westmere replicationGroup=null
    $_[0] =~ s/jobid=|thread=|host=|replicationGroup=//g;
-   my ( $ignore, $taskid, $thread, $host, $replicationGroup ) = split(/\s+/, $_[0]);
-
+   my ( $date, $ignore, $taskid, $thread, $host, $replicationGroup ) = split(/\s+/, $_[0]);
+   
    my $t = Task->new();
    $t->taskNumber($taskCounter);
    $t->thread($thread);
@@ -65,6 +78,47 @@ sub createTask() {
 
    $tasks{$taskid} = $t; 
    $taskCounter += 1;
+}
+
+# Record that a task has started
+sub taskStarted() {
+   # Input: JOB_START jobid=sleep-k5t2pajl tr=sleep arguments=[1] tmpdir=sleep-run002/jobs/k/sleep-k5t2pajl host=westmere
+   $_[0] =~ s/jobid=|tr=|arguments=|tmpdir=|hostdir=//g;
+   my ( $date, $ignore, $taskid, $app, $arguments, $tmpdir, $junk ) = split(/\s+/, $_[0]);
+
+   my $t = $tasks{$taskid};
+   $t->app($app);
+   $t->tmpdir($tmpdir);
+   $t->arguments($arguments);
+   $t->startTime($date);
+}   
+
+sub taskEnded() {
+   # Input: JOB_END jobid=sleep-k5t2pajl
+   $_[0] =~ s/jobid=//g;
+   my ( $date, $ignore, $taskid ) = split(/\s+/, $_[0]);
+   my $t = $tasks{$taskid};
+   $t->stopTime($date);
+}
+
+sub printTasks() {
+   foreach my $key (sort { $tasks{$a}->taskNumber <=> $tasks{$b}->taskNumber } keys %tasks) {
+      my $value = $tasks{$key}; 
+      printf "Task %s\n" .
+             "\tApp name=%s\n" . 
+             "\tCommand line arguments=%s\n" .
+             "\tHost=%s\n" .
+             "\tStart time=%s\n" .
+             "\tStop time=%s\n" .
+             "\tWork directory=%s\n\n",
+             $value->taskNumber, 
+             $value->app, 
+             $value->arguments,
+             $value->host, 
+             $value->startTime,
+             $value->stopTime,
+             $value->tmpdir;
+   }
 }
 
 # Return true if input string starts with a date stamp
@@ -108,8 +162,4 @@ while(my $line = <SWIFTLOG>) {
 }
 
 # Print tasks
-while ( my ($key, $value) = each(%tasks) ) {
-   printf "Task %s => taskNumber=%d, thread=%s, host=%s, replicationGroup=%s\n",
-      $key, $value->taskNumber, $value->thread, $value->host, $value->replicationGroup;
-}
-
+&printTasks();
