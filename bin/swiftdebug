@@ -11,11 +11,12 @@ struct Task          => {
     arguments        => '$',
     host             => '$',
     replicationGroup => '$',
+    stageIn          => '$',
     startTime        => '$',
     stopTime         => '$',
     taskNumber       => '$',
     thread           => '$',
-    tmpdir           => '$',
+    workdir          => '$',
 };
 
 # Hash for storing all tasks
@@ -58,6 +59,11 @@ sub processLogEntry() {
       return;
    }
 
+   elsif ( $message =~ /Staging in files/ ) {
+      &taskStagingIn($message);
+      return;
+   }
+
    elsif ( $message =~ m/$keyword_regexp/ ) {
       print "$message";
       return;
@@ -84,11 +90,13 @@ sub taskCreated() {
 sub taskStarted() {
    # Input: JOB_START jobid=sleep-k5t2pajl tr=sleep arguments=[1] tmpdir=sleep-run002/jobs/k/sleep-k5t2pajl host=westmere
    $_[0] =~ s/jobid=|tr=|arguments=|tmpdir=|hostdir=//g;
-   my ( $date, $ignore, $taskid, $app, $arguments, $tmpdir, $junk ) = split(/\s+/, $_[0]);
+   my $arguments = getBracketedText($_[0]);
+   $_[0] =~ s/$arguments/\[arguments\]/g;
+   my ( $date, $ignore, $taskid, $app, $notarguments, $workdir, $junk ) = split(/\s+/, $_[0]);
 
    my $t = $tasks{$taskid};
    $t->app($app);
-   $t->tmpdir($tmpdir);
+   $t->workdir($workdir);
    $t->arguments($arguments);
    $t->startTime($date);
 }   
@@ -101,23 +109,41 @@ sub taskEnded() {
    $t->stopTime($date);
 }
 
+sub taskStagingIn() {
+   # Input: jobid=cat-nff3bpjl - Staging in files [file://localhost/data.txt, file://localhost/data2.txt]
+   $_[0] =~ s/jobid=//g;
+   my ( $date, $start, $taskid, $leftover ) = split(/\s+/, $_[0], 4);
+   my $files = getBracketedText($leftover);
+   my $t = $tasks{$taskid};
+   $t->stageIn($files);
+}
+
+sub getBracketedText() {
+   $_[0] =~ /\[([^\]]*)\]/x;
+   my $result = $1;
+   $result =~ s/,//g;
+   return $result;
+}
+
 sub printTasks() {
    foreach my $key (sort { $tasks{$a}->taskNumber <=> $tasks{$b}->taskNumber } keys %tasks) {
       my $value = $tasks{$key}; 
       printf "Task %s\n" .
-             "\tApp name=%s\n" . 
-             "\tCommand line arguments=%s\n" .
-             "\tHost=%s\n" .
-             "\tStart time=%s\n" .
-             "\tStop time=%s\n" .
-             "\tWork directory=%s\n\n",
+             "\tApp name = %s\n" . 
+             "\tCommand line arguments = %s\n" .
+             "\tHost = %s\n" .
+             "\tStart time = %s\n" .
+             "\tStop time = %s\n" .
+             "\tWork directory = %s\n" .
+             "\tStaged in files = %s\n",
              $value->taskNumber, 
              $value->app, 
              $value->arguments,
              $value->host, 
              $value->startTime,
              $value->stopTime,
-             $value->tmpdir;
+             $value->workdir,
+             $value->stageIn,
    }
 }
 
