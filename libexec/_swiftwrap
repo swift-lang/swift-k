@@ -56,15 +56,28 @@ debug() {
 	[[ $DEBUG == 1 ]] && echo "$@" >& "$INFO"
 }
 
+makeDirectory() {
+   DIRECTORY=$1
+   ERROR=$2
+   MKDIROUT=$( mkdir -p $DIRECTORY 2>&1 )
+   if [ "$?" != "0" ]; then
+      if [ -n "$ERROR" ]; then
+         fail 254 "$ERROR: $MKDIROUT"
+      else
+         fail 254 "Unable to create directory $DIRECTORY: $MKDIROUT"
+      fi
+   fi
+}
+
 moveMiscFilesFromScratch() {
 	if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
-		mkdir -p "$WFDIR/info/$JOBDIR"
+		makeDirectory "$WFDIR/info/$JOBDIR"
 		mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
 	fi
 	
 	if [ "X$SCRATCH" != "X" ]; then
 		if [ -f "$DIR/$STDOUT" ] || [ -f "$DIR/$STDERR" ]; then
-			mkdir -p "$WFDIR/jobs/$JOBDIR/$ID"
+			makeDirectory "$WFDIR/jobs/$JOBDIR/$ID"
 		fi 
 		if [ -f "$DIR/$STDOUT" ]; then
 			mv "$DIR/$STDOUT" "$WFDIR/jobs/$JOBDIR/$ID/$STDOUT"
@@ -196,8 +209,7 @@ cdm_local_output_perform()
 	REMOTE_DIR=$3
 	FLAGS=$3
 	log "Copying $REMOTE_DIR/$FILE to $JOBDIR/$FILE"
-	mkdir -p $REMOTE_DIR
-	checkError 254 "CDM[LOCAL]: mkdir -p $REMOTE_DIR failed!"
+	makeDirectory $REMOTE_DIR "CDM[LOCAL]: mkdir -p $REMOTE_DIR failed!"
 	$TOOL $FLAGS $JOBDIR/$FILE $REMOTE_DIR/$FILE
 	checkError 254 "CDM[LOCAL]: Tool failed!"
 }
@@ -256,7 +268,7 @@ else
 	INFODIR=$WFDIR/info/$JOBDIR
 fi
 checkEmpty "$JOBDIR" "Missing job directory prefix"
-mkdir -p $INFODIR
+makeDirectory $INFODIR
 closeinfo
 
 if [ -z $MPI_RANK ]; then
@@ -336,7 +348,7 @@ else
 fi
 
 if [ "$STATUSMODE" = "files" ]; then
-	mkdir -p $WFDIR/status/$JOBDIR
+	makeDirectory $WFDIR/status/$JOBDIR
 fi
 
 if [ "X$CDM_FILE" != "X" ]; then
@@ -392,16 +404,15 @@ log "ARGC=$#"
 IFS="|"
 
 logstate "CREATE_JOBDIR"
-mkdir -p $DIR
-checkError 254 "Failed to create job directory $DIR"
+# makeDirectory "$DIR" "Failed to create job directory $DIR"
+makeDirectory "/foo" "Failed to create job directory $DIR"
 log "Created job directory: $DIR"
 
 if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
 
 	logstate "CREATE_INPUTDIR"
 	for D in $DIRS ; do
-		mkdir -p "$DIR/$D" 2>&1 >& "$INFO"
-		checkError 254 "Failed to create input directory $D"
+                makeDirectory "$DIR/$D" "Failed to create input directory $D"
 		log "Created output directory: $DIR/$D"
 	done
 	
@@ -521,7 +532,7 @@ else
 		log "Kickstart executable ($KICKSTART) is not executable"
 		fail 254 "The Kickstart executable ($KICKSTART) does not have the executable bit set"
 	else
-		mkdir -p $WFDIR/kickstart/$JOBDIR
+		makeDirectory $WFDIR/kickstart/$JOBDIR
 		log "Using Kickstart ($KICKSTART)"
 		if [ "$STDIN" == "" ]; then
 			"$KICKSTART" -H -o "$STDOUT" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>>"$STDERR"
