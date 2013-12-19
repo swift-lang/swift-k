@@ -1,0 +1,187 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+use File::Basename;
+use Class::Struct;
+
+# Task structure
+struct Task          => { 
+    app              => '$',
+    arguments        => '$',
+    host             => '$',
+    replicationGroup => '$',
+    stageIn          => '$',
+    stageOut         => '$',
+    startTime        => '$',
+    stopTime         => '$',
+    taskNumber       => '$',
+    thread           => '$',
+    workdir          => '$',
+};
+
+# Hash for storing all tasks
+my %tasks = ();
+my $taskCounter = 1;
+
+# Print basic usage info
+sub usage() {
+   &crash("Usage: $0 <logdir>");
+}
+
+# Print error message and exit
+sub crash() {
+   print STDERR "@_\n";
+   exit(1);
+}
+
+# Get an existing task of a given jobid, or create a new one and return it
+sub getTask() {
+   if(defined($tasks{$_[0]})) {
+      return $tasks{$_[0]};
+   } else {
+      my $t = Task->new();
+      $tasks{$_[0]} = $t;
+      return $t;
+   }
+}
+
+# Record that a task has started
+sub taskStarted() {
+   # 2013-12-17 16:42:13,135+0000 DEBUG swift JOB_START jobid=sleep-k5t2pajl tr=sleep arguments=[1] tmpdir=sleep-run002/jobs/k/sleep-k5t2pajl host=westmere
+   $_[0] =~ s/jobid=|tr=|arguments=|tmpdir=|host=//g;
+   my @entryArray = split(/\s+/, $_[0]);
+
+   my $date      = $entryArray[1];
+   my $taskid    = $entryArray[5]; 
+   my $app       = $entryArray[6];
+   my $workdir   = $entryArray[-2];
+   my $host      = $entryArray[-1];
+   my $arguments = &getBracketedText($_[0]);
+
+   my $t = &getTask($taskid);
+   $t->taskNumber($taskCounter);
+   $t->app($app);
+   $t->workdir($workdir);
+   $t->arguments($arguments);
+   $t->startTime($date);
+   $t->host($host);
+   $tasks{$taskid} = $t; 
+   $taskCounter += 1;
+}   
+
+sub taskEnded() {
+   # 2013-12-17 16:42:38,520+0000 DEBUG swift JOB_END jobid=bash-1vngpnjl
+   $_[0] =~ s/jobid=//g;
+   my @entryArray = split(/\s+/, $_[0]);
+
+   my $date   = $entryArray[1];
+   my $taskid = $entryArray[-1];
+ 
+   my $t = &getTask($taskid);
+   $t->stopTime($date);
+}
+
+sub taskStagingIn() {
+   # 2013-12-18 17:38:23,372+0000 INFO  swift START jobid=cat-a3mafpjl - Staging in files [file://localhost/data.txt, file://localhost/data2.txt]
+   $_[0] =~ s/jobid=//g;
+   my @entryArray = split(/\s+/, $_[0]);
+   my $date   = $entryArray[1];
+   my $taskid = $entryArray[5];
+   my $files  = &getBracketedText($_[0]);
+   my $t = &getTask($taskid);
+   $t->stageIn($files);
+}
+
+sub taskStagingOut() {
+   # 2013-12-18 17:38:23,349+0000 DEBUG swift FILE_STAGE_OUT_START srcname=catsn.0008.out srcdir=catsn-run016/shared/output srchost=westmere destdir=output desthost=localhost provider=file jobid=cat-83mafpjl
+   $_[0] =~ s/jobid=|srcname=//g;
+   my @entryArray = split(/\s+/, $_[0]);
+
+   my $taskid = $entryArray[-1];
+   my $file   = $entryArray[5];
+ 
+   my $t = &getTask($taskid);
+   if(defined($t->stageOut())) {
+      $t->stageOut($t->stageOut() . "$file ");
+   } else {
+      $t->stageOut("$file");
+   }
+}
+
+sub getBracketedText() {
+   my $result = "";
+   $_[0] =~ /\[([^\]]*)\]/x;
+   if(defined($1)) {
+      $result = $1;
+      $result =~ s/,//g;
+   }
+   return $result;
+}
+
+sub printTasks() {
+   no warnings;
+   foreach my $key (sort { $tasks{$a}->taskNumber <=> $tasks{$b}->taskNumber } keys %tasks) {
+      my $value = $tasks{$key}; 
+      printf "Task %s\n" .
+             "\tApp name = %s\n" . 
+             "\tCommand line arguments = %s\n" .
+             "\tHost = %s\n" .
+             "\tStart time = %s\n" .
+             "\tStop time = %s\n" .
+             "\tWork directory = %s\n" .
+             "\tStaged in files = %s\n" .
+             "\tStaged out files = %s\n\n",
+             $value->taskNumber, 
+             $value->app, 
+             $value->arguments,
+             $value->host, 
+             $value->startTime,
+             $value->stopTime,
+             $value->workdir,
+             $value->stageIn,
+             $value->stageOut,
+   }
+}
+
+# Check usage
+if ( !$ARGV[0] ) {
+   &usage();
+}
+
+# Verify $run_directory
+my $run_directory = $ARGV[0];
+if ( ! -d "$run_directory" ) {
+   &crash("Directory $run_directory does not exist!");
+}
+
+# Open Swift log
+my $swift_log_name = "$run_directory/" . basename($run_directory) . ".log";
+open(SWIFTLOG, $swift_log_name) || &crash("Unable to open log file $swift_log_name");
+
+# Read log, send entries we care about to the right place
+while(my $line = <SWIFTLOG>) {
+
+   if ( $line =~ m/JOB_START/o ) {
+      &taskStarted($line);
+      next;
+   }
+
+   elsif ( $line =~ m/JOB_END/o ) {
+      &taskEnded($line);
+      next;
+   }
+
+   elsif ( $line =~ m/Staging in files/o ) {
+      &taskStagingIn($line);
+      next;
+   }
+
+   elsif ( $line =~ m/FILE_STAGE_OUT_START/o ) { 
+      &taskStagingOut($line);
+      next;
+   }
+}
+
+# Print tasks
+&printTasks();
