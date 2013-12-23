@@ -27,42 +27,33 @@ my @new_swift_args;		# New command line arguments
 my @original_swift_args;	# Original arguments
 
 # List of xml shortcuts
-my %xml_aliases = (
+my %site_aliases = (
                    'allocationstepsize'        => 'globus.allocationstepsize',
                    'delaybase'                 => 'karajan.delaybase',
+                   'filesystem'                => 'filesystem',
                    'highoverallocation'        => 'globus.highoverallocation',
                    'initialscore'              => 'karajan.initialscore',
                    'internalhostname'          => 'globus.internalhostname',
                    'jobgranularity'            => 'globus.nodegranularity',
+                   'jobmanager'                => 'jobmanager',
 		   'jobproject'                => 'globus.project',
                    'jobqueue'                  => 'globus.queue',
-                   'jobspernode'               => 'globus.jobspernode',
-                   'jobthrottle'               => 'karajan.jobthrottle',
                    'jobtype'                   => 'globus.jobtype',
 		   'jobwalltime'               => 'globus.maxtime',
                    'jobwalltimereserve'        => 'globus.reserve',
                    'lowoverallocation'         => 'globus.lowoverallocation',
 		   'maxjobs'                   => 'globus.slots',
-                   'maxnodes'                  => 'globus.maxnodes',
                    'maxnodesperjob'            => 'globus.maxnodes',
                    'maxsubmitrate'             => 'karajan.maxsubmitrate',
-                   'maxtime'                   => 'globus.maxtime',
-                   'maxwalltime'               => 'globus.maxwalltime',
-                   'nodegranularity'           => 'globus.nodegranularity',
                    'overallocationdecayfactor' => 'globus.overallocationdecayfactor',
-                   'project'                   => 'globus.project',
-                   'provider'                  => 'provider.coaster',
-                   'queue'                     => 'globus.queue',
                    'remotemonitorenabled'      => 'globus.remotemonitorenabled',
-                   'reserve'                   => 'globus.reserve',
-                   'slots'                     => 'globus.slots',
-                   'spread'                    => 'globus.spread',
+                   'slurm'                     => 'globus.slurm',
+                   'taskdir'                   => 'globus.scratch',
                    'tasksperworker'            => 'globus.jobspernode',
                    'taskthrottle'              => 'karajan.jobthrottle',
                    'taskwalltime'              => 'globus.maxwalltime',
-		   'workerlogginglevel'        => 'globus.workerlogginglevel',
+                   'workdir'                   => 'workdir',
 		   'workerloglevel'            => 'globus.workerlogginglevel',
-                   'workerloggingdirectory'    => 'globus.workerloggingdirectory',
                    'workerlogdirectory'        => 'globus.workerloggingdirectory',
 );
 
@@ -80,13 +71,17 @@ sub create_pool_entry {
    my $pool = "\n<pool handle=\"" . $site . "\">\n";
    while( my( $key, $value ) = each( %properties ) ) {
       if( $key =~ /^\s*site.$site/ ) {
-         $pool .= &property_to_xml( $key, $value );
+         my $propxml = &property_to_xml( $key, $value );
+         if(defined($propxml)) {
+            $pool .= $propxml;
+         }
       }
    }
    $pool .= "</pool>\n";
    return $pool;
 }
 
+# Verify a string is in hh:mm:ss format
 sub verify_in_hhmmss {
    my $parameter_name =  $_[0];
    my $parameter_value = $_[1];
@@ -102,7 +97,7 @@ sub hhmmss_to_seconds {
    return ($hh*60*60)+($mm*60)+$ss;
 }
 
-# Convert to job throttle format
+# Convert int to job throttle format
 sub number_to_throttle {
    my $input = $_[0];
    if ( $input !~ /\d/) {  
@@ -110,42 +105,33 @@ sub number_to_throttle {
    }
    return ($input - 1) / 100;
 }  
- 
-# Given a string in format site.beagle.globus.jobsPerNode=12, convert to xml
+
+# Convert property to xml 
 sub property_to_xml {
    my $key = $_[0];
    my $value = $_[1];
-   my ( $site, $sitename, $namespace, $property ) = split(/\./, $key);
+   my ($site, $sitename, $property) = split('\.', $key, 3);
 
-   # Allow exceptions for swift properties with dot separators (ie key=slurm.properties)
-   if ( defined($property) && $namespace =~ m/^slurm|^condor/ ) { 
-      ( $site, $sitename, $namespace, $property ) = split(/\./, $key);
-      $property = "$namespace.$property";
-      $namespace = "globus";
+   # Check to make sure site definition is known, or throw an error
+   (my $propertyStart = $property) =~ s/\..*//;
+   if( !defined( $site_aliases{ $propertyStart } )) {
+      swiftquit("Error: Unknown property $key");
    }
 
-   # In the case of a shortened definition, check for aliases 
-   if ( !defined( $property ) ) {
-      if ( defined( $xml_aliases{ $namespace })) { 
+   if( $property eq "jobwalltime" ) {
+      verify_in_hhmmss($key, $value);
+      $property = hhmmss_to_seconds($value); 
+   } 
 
-         # Values that need that may need modifications
-         if( $namespace eq "jobwalltime" ) {
-            verify_in_hhmmss($namespace, $value);
-            $value = hhmmss_to_seconds($value); 
-         } 
-         elsif ( $namespace eq "taskthrottle" ) {
-            $value = number_to_throttle($value);
-         }
-         elsif ( $namespace eq "taskwalltime" ) {
-            verify_in_hhmmss($namespace, $value);
-         }
+   elsif ( $property eq "taskthrottle" ) {
+      $value = number_to_throttle($value);
+   }
 
-         ( $namespace, $property ) = split(/\./, $xml_aliases{ $namespace });
-      }
-   }     
-   
-   # Make sure to handle special cases that are not in the namespace=x, key=y, format
-   if ( $namespace eq "jobmanager" && defined($value)) { 
+   elsif ( $property eq "taskwalltime" ) {
+      verify_in_hhmmss($key, $value);
+   }
+
+   elsif ( $property eq "jobmanager" ) { 
       my $ccount = ($value =~ s/:/:/g);
       my $jobmanager = "";
       my $jobmanagerURL = "";
@@ -175,14 +161,16 @@ sub property_to_xml {
          return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\"/>\n"; 
       }
    }
-   elsif ( $namespace eq "provider" )      { return "<execution provider=\"" . $property . "\" jobmanager=\"" . $value . "\"/>\n"; } 
-   elsif ( $namespace eq "workdirectory" ) { return "<workdirectory>$value</workdirectory>\n"; }
-   elsif ( $namespace eq "workdir" )       { return "<workdirectory>$value</workdirectory>\n"; }
-   elsif ( $namespace eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
-   elsif ( $namespace eq "filesystem" )    { return "<filesystem provider=\"" . $value . "\"/>\n"; }
 
-   if ( defined($property) && defined($value) ) {
-      return "<profile namespace=\"" . $namespace . "\" key=\"" . $property . "\">" . $value . "</profile>\n"; 
+   elsif ( $property eq "workdir" )       { return "<workdirectory>$value</workdirectory>\n"; }
+   elsif ( $property eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
+   elsif ( $property eq "filesystem" )    { return "<filesystem provider=\"" . $value . "\"/>\n"; }
+   
+   else { 
+      my ( $xmlnamespace, $xmlproperty ) = split(/\./, $site_aliases{ $propertyStart });
+      if ( defined($xmlnamespace) ) {
+         return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $property . "\">" . $value . "</profile>\n"; 
+      }
    }
 } 
 
@@ -286,6 +274,7 @@ sub retrieve_service_xml {
    return @xml;
 }
 
+# Print error, and prevent Swift from running
 sub swiftquit {
    print STDERR $_[0] . "\n";
    print " --SWIFTRUNQUIT ";
@@ -329,6 +318,28 @@ sub write_sites {
    print SITES "\n</config>\n";
    close(SITES);
    push(@new_swift_args, "-sites.file $run_directory/$filename");
+}
+
+# Format property definition and store in hash
+sub record_property {
+   my $property_input = $_[0];
+   chomp $property_input;
+ 
+   # Ignore comments, remove leading whitespace, ignore empty lines
+   return if /^\s*#/ || /^(\s)*$/; 
+   $property_input =~ s/^\s+//;
+
+   my ($key, $value) = split('=', $property_input, 2);
+   if (!defined($value) || length($value) eq 0) {
+      swiftquit "Error: Missing value for property \"$property_input\"";
+   }
+
+   $key = lc($key);
+   $value =~ s/^\s+//g;
+
+   if($key eq "sites") { $key = "site"; }
+   $value =~ s/\$(\w+)/$ENV{$1}/g;
+   $properties{ $key } = $value;
 }
 
 # Getopt::Long can't accept dots in arguments, work around to make things easy
@@ -393,32 +404,21 @@ foreach my $property_file(@property_files) {
    while( <PROPERTIES> ) {
       chomp;
       next if /^\s*#/ || /^(\s)*$/; # Ignore blank lines and comments
-      $_ =~ s/^\s+//;               # Remove leading whitespace
+      s/^\s+//;                     # Remove leading whitespace
+      my @property_array=();
 
       # Handle brackets 
       if( /^site\.|^service\./ && /{/ ) { 
          my $prefix = (split /\s+{/)[0];
          while( <PROPERTIES> ) {
-            chomp;
-            next if /^\s*#/ || /^(\s)*$/; 
-            $_ =~ s/^\s+//;               
             if( /^}/ ) { last; } 
-            my ($key, $value) = split('=', ($prefix . ".$_"), 2);
-            $key = lc($key);
-            if($key eq "sites") { $key = "site"; }
-            $value =~ s/\$(\w+)/$ENV{$1}/g;
-            $properties{ $key } = $value;
+            $_ =~ s/^\s+|\s+$//g;
+            &record_property( $prefix . ".$_" );
          }
       }
 
       else {
-         my ($key, $value) = split('=', $_, 2);
-         $key = lc($key);
-         if($key eq "sites") { $key = "site"; }
-         if(defined($key) && defined($value) && length($key) && length($value)) {
-            $value =~ s/\$(\w+)/$ENV{$1}/g; # Substitute environment variables
-            $properties{ $key } = $value;
-         }
+         &record_property($_);
       }
    }
 }
