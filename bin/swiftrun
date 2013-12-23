@@ -168,8 +168,8 @@ sub property_to_xml {
    
    else { 
       my ( $xmlnamespace, $xmlproperty ) = split(/\./, $site_aliases{ $propertyStart });
-      if ( defined($xmlnamespace) ) {
-         return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $property . "\">" . $value . "</profile>\n"; 
+      if ( defined($xmlnamespace) && defined($xmlproperty)) {
+         return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $xmlproperty . "\">" . $value . "</profile>\n"; 
       }
    }
 } 
