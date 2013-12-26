@@ -364,7 +364,7 @@ GetOptionsFromArray(
 
 # Create/increment run directory
 my $run_number = 0;
-my @run_directories = <run???>;
+my @run_directories = <run[0-9][0-9][0-9]>;
 
 if(@run_directories) {
    $run_number = $run_directories[-1];
