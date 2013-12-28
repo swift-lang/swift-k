@@ -103,7 +103,16 @@ public class SubmitJobHandler extends RequestHandler {
         }
 
         while ((s = helper.read("attr")) != null) {
-            spec.setAttribute(getKey(s), getValue(s));
+            String key = getKey(s);
+            String value = getValue(s);
+            
+            if ("softimage".equals(key)) {
+                String[] sd = value.split("\\s+");
+                spec.setAttribute(key, makeAbsolute(sd[0]) + " " + sd[1]);
+            }
+            else {
+                spec.setAttribute(key, value);
+            }
         }
 
         StagingSet ss = null;

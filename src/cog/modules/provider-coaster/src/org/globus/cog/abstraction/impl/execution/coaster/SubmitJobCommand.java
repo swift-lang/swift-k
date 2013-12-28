@@ -10,7 +10,6 @@
 package org.globus.cog.abstraction.impl.execution.coaster;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -26,7 +25,6 @@ import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
-import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry.Mode;
@@ -51,7 +49,7 @@ public class SubmitJobCommand extends Command {
     }
     
     public static final Set<String> ABSOLUTIZE = new HashSet<String>() {
-        {add("sfs");}
+        {}
     };
 
     private Task t;
@@ -113,31 +111,33 @@ public class SubmitJobCommand extends Command {
     
         if (simple) {
         	add(sb, "attr", "maxwalltime=" + formatWalltime(spec.getAttribute("maxwalltime")));
-        	if (spec.getAttribute("tracePerformance") != null) {
-        	    add(sb, "attr", "tracePerformance=" + spec.getAttribute("tracePerformance"));
+        	if (spec.getAttribute("traceperformance") != null) {
+        	    add(sb, "attr", "traceperformance=" + spec.getAttribute("traceperformance"));
         	}
-        	if (spec.getAttribute("softImage") != null) {
-        	    add(sb, "attr", "softImage=" + spec.getAttribute("softImage"));
+        	if (spec.getAttribute("softimage") != null) {
+        	    String value = (String) spec.getAttribute("softimage");
+        	    String[] sd = value.split("\\s+");
+                add(sb, "attr", "softimage=" + sd[0] + " " + sd[1]);
         	}
         }
         else {
             for (String name : spec.getAttributeNames())
-                if (!IGNORED_ATTRIBUTES.contains(name) || 
-                        spec.isBatchJob())
+                if (!IGNORED_ATTRIBUTES.contains(name) || spec.isBatchJob()) {
                     add(sb, "attr", 
                         name + "=" + spec.getAttribute(name));
+                }
         }
             
         if (spec.getStageIn() != null) {
             for (StagingSetEntry e : spec.getStageIn())
-                add(sb, "stagein", absolutize(e.getSource()) + '\n' + 
+                add(sb, "stagein", e.getSource() + '\n' + 
                     e.getDestination() + '\n' + Mode.getId(e.getMode()));
         }
         
         if (spec.getStageOut() != null) {
             for (StagingSetEntry e : spec.getStageOut())
                 add(sb, "stageout", e.getSource() + '\n' + 
-                    absolutize(e.getDestination()) + '\n' + Mode.getId(e.getMode()));
+                    e.getDestination() + '\n' + Mode.getId(e.getMode()));
         }
 
         if (spec.getCleanUpSet() != null)
@@ -179,22 +179,6 @@ public class SubmitJobCommand extends Command {
         }
         else {
         	return String.valueOf(new WallTime(value.toString()).getSeconds());
-        }
-    }
-
-    private String absolutize(String file) throws IOException {
-        try {
-            RemoteFile u = new RemoteFile(file);
-            if (ABSOLUTIZE.contains(u.getProtocol())) {
-                return u.getProtocol() + "://" + u.getHost() + 
-                    (u.getPort() != -1 ? ":" + u.getPort() : "") + "/" + new File(u.getPath()).getAbsolutePath(); 
-            }
-            else {
-                return file;
-            }
-        }
-        catch (Exception e) {
-            throw new IOException("Invalid file specification: " + file);
         }
     }
 

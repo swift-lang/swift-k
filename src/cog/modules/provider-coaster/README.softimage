@@ -1,0 +1,50 @@
+This is the high-level overview/design of the locking used for
+managing soft images. Here are some of the issues:
+
+ - Waiting or time-consuming operations can only happen in runjob(), 
+   since that runs in a sub-process
+ - Clean presents a problem this way. However if another process starts 
+   unpacking a new image between the moment the decision to clean was made 
+   and when things are actually cleaned, it can lead to undesired results
+ - All things not happening inside runjob() are locally thread-safe.
+ - If anybody can do it in an easier way, please do
+   
+
+first = true
+lead = false
+
+submitjob() {
+	if (first) {
+		with lockw(main) {
+			if (trylockw(use)) {
+				unlockw(use)
+				lead = true
+				lockw(create)
+			}
+			lockr(use)
+		}
+		first = false
+	}
+}
+
+runjob() {
+	if (lead) {
+		init()
+		unlockw(create)
+	}
+
+	lockr(create)
+	runjob()
+	unlockr(create)
+}
+
+exit() {
+	with lockw(main) {
+		unlockr(use)
+		if (trylockw(use)) {
+			doClean = 1
+			clean()
+			unlockw(use)
+		}
+	}
+}
