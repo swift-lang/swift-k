@@ -1837,93 +1837,103 @@ sub acquireSoftImageLock {
 		wlog DEBUG, "Not first in process\n";
 		return 0;
 	}
+	mkpath($SOFT_IMAGE_DIR);
 	$SOFT_IMAGE_FIRST_IN_PROCESS = 0;
-	createLocks();
-	wlog DEBUG, "SOFT_IMAGE_MAIN_LOCK: $SOFT_IMAGE_MAIN_LOCK\n";
-	writeLock($SOFT_IMAGE_MAIN_LOCK);
+	my $mainLock = writeLock("$SOFT_IMAGE_DIR/.main");
 	wlog DEBUG, "First in process\n";
-	if (tryWriteLock($SOFT_IMAGE_USE_LOCK)) {
+	$SOFT_IMAGE_USE_LOCK = tryWriteLock("$SOFT_IMAGE_DIR/.use");
+	if (defined $SOFT_IMAGE_USE_LOCK) {
 		wlog DEBUG, "First process\n";
 		unlock($SOFT_IMAGE_USE_LOCK);
 		# nobody using this yet
 		$SOFT_IMAGE_LEAD_PROCESS = 1;
-		writeLock($SOFT_IMAGE_CREATE_LOCK);
-		readLock($SOFT_IMAGE_USE_LOCK);
+		$SOFT_IMAGE_CREATE_LOCK = writeLock("$SOFT_IMAGE_DIR/.create");
+		unlock($SOFT_IMAGE_USE_LOCK);
+		$SOFT_IMAGE_USE_LOCK = readLock("$SOFT_IMAGE_DIR/.use");
 		return 1;
 	}
 	else {
 		wlog DEBUG, "Not first process\n";
-		readLock($SOFT_IMAGE_USE_LOCK);
+		$SOFT_IMAGE_USE_LOCK = readLock("$SOFT_IMAGE_DIR/.use");
 		return 0;
 	}
 }
 
 sub writeLock {
-	my ($lock) = @_;
+	my ($file) = @_;
 	
-	wlog DEBUG, "writeLock($lock)\n";
-	flock($lock, LOCK_EX);
+	wlog DEBUG, "writeLock($file)\n";
+	my $desc;
+	open($desc, "+>>$file");
+	if (!flock($desc, LOCK_EX)) {
+		dieNicely("Failed to get exclusive lock");
+	}
+	return $desc;
 }
 
 sub readLock {
-	my ($lock) = @_;
+	my ($file) = @_;
 	
-	flock($lock, LOCK_SH);
+	wlog DEBUG, "readLock($file)\n";
+	my $desc;
+	open($desc, "+>>$file");
+	if (!flock($desc, LOCK_EX)) {
+		dieNicely("Failed to get shared lock");
+	}
+	return $desc;
 }
 
 sub unlock {
-	my ($lock) = @_;
+	my ($desc) = @_;
 	
-	flock($lock, LOCK_UN);
+	flock($desc, LOCK_UN);
+	close($desc);
 }
 
 sub tryWriteLock {
-	my ($lock) = @_;
+	my ($file) = @_;
 	
-	return flock($lock, LOCK_UN + LOCK_NB);
-}
-
-
-
-sub createLocks {
-	mkpath($SOFT_IMAGE_DIR);
-	if (!open($SOFT_IMAGE_MAIN_LOCK, ">>$SOFT_IMAGE_DIR/.main")) {
-		dieNicely("Cannot open lock file: $!");
+	wlog DEBUG, "writeLock($file)\n";
+	my $desc;
+	open($desc, "+>>$file");
+	if (!flock($desc, LOCK_EX + LOCK_NB)) {
+		close($desc);
+		return undef;
 	}
-	if (!open($SOFT_IMAGE_CREATE_LOCK, ">>$SOFT_IMAGE_DIR/.create")) {
-		dieNicely("Cannot open lock file: $!");
-	}
-	if (!open($SOFT_IMAGE_USE_LOCK, ">>$SOFT_IMAGE_DIR/.use")) {
-		dieNicely("Cannot open lock file: $!");
+	else {
+		return $desc;
 	}
 }
+
 
 sub cleanSoftImage {
-	my $lock;
-	my $counter;
 	if (!defined $SOFT_IMAGE_DIR) {
 		return;
 	}
+	my $softImageDir = $SOFT_IMAGE_DIR;
+	# prevent recursive calls to this sub
+	$SOFT_IMAGE_DIR = undef;
 	
-	writeLock($SOFT_IMAGE_MAIN_LOCK);
+	my $mainLock = writeLock("$softImageDir/.main");
 		
 		unlock($SOFT_IMAGE_USE_LOCK);
-		if (tryWriteLock($SOFT_IMAGE_USE_LOCK)) {
-			wlog INFO, "Tail process. Removing image from $SOFT_IMAGE_DIR\n";
+		$SOFT_IMAGE_USE_LOCK = tryWriteLock("$softImageDir/.use");
+		if (defined $SOFT_IMAGE_USE_LOCK) {
+			wlog INFO, "Tail process. Removing image from $softImageDir\n";
 		
-			if (-x "$SOFT_IMAGE_DIR/stop") {
-				my $out = qx/$SOFT_IMAGE_DIR\/stop 2>&1/;
+			if (-x "$softImageDir/stop") {
+				my $out = qx/$softImageDir\/stop 2>&1/;
 				if ($? != 0) {
 					die "Error running soft image shutdown: $!\n$out";
 				}
 			}
 			
-			rmtree($SOFT_IMAGE_DIR, 0, 0);
+			rmtree($softImageDir, 0, 0);
 			
 			unlock($SOFT_IMAGE_USE_LOCK);
 		}
 		
-	unlock($SOFT_IMAGE_MAIN_LOCK);
+	unlock($mainLock);
 }
 
 sub submitjob {
@@ -2274,13 +2284,19 @@ sub runjob {
 	my $serr = $$JOB{"stderr"};
 	
 	if ($SOFT_IMAGE_LEAD_PROCESS) {
-		unpackSoftImage($$JOBDATA{"softimage"});
-		unlock($SOFT_IMAGE_CREATE_LOCK);
+		my $SOFTIMAGE = $$JOBDATA{"softimage"};
+		if ($SOFTIMAGE ne "") {
+			unpackSoftImage($$JOBDATA{"softimage"});
+			wlog DEBUG, "Unlocking soft image\n";
+			unlock($SOFT_IMAGE_CREATE_LOCK);
+		}
 	}
 	# wait until the soft image is created
-	readLock($SOFT_IMAGE_CREATE_LOCK);
+	wlog DEBUG, "Waiting for soft image\n";
+	my $createLock = readLock("$SOFT_IMAGE_DIR/.create");
+	wlog DEBUG, "Got soft image\n";
 	# no need to hold lock after that
-	unlock($SOFT_IMAGE_CREATE_LOCK);
+	unlock($createLock);
 	
 	$ENV{SOFTIMAGE} = $SOFT_IMAGE_DIR;
 	
