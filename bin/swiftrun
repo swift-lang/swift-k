@@ -28,29 +28,29 @@ my @original_swift_args;	# Original arguments
 
 # List of xml shortcuts
 my %site_aliases = (
-                   'allocationstepsize'        => 'globus.allocationstepsize',
-                   'delaybase'                 => 'karajan.delaybase',
+                   'allocationstepsize'        => 'globus.allocationStepSize',
+                   'delaybase'                 => 'karajan.delayBase',
                    'filesystem'                => 'filesystem',
-                   'highoverallocation'        => 'globus.highoverallocation',
-                   'initialscore'              => 'karajan.initialscore',
+                   'highoverallocation'        => 'globus.highOverallocation',
+                   'initialscore'              => 'karajan.initialScore',
                    'internalhostname'          => 'globus.internalhostname',
-                   'jobgranularity'            => 'globus.nodegranularity',
+                   'jobgranularity'            => 'globus.nodeGranularity',
                    'jobmanager'                => 'jobmanager',
 		   'jobproject'                => 'globus.project',
                    'jobqueue'                  => 'globus.queue',
-                   'jobtype'                   => 'globus.jobtype',
+                   'jobtype'                   => 'globus.jobType',
 		   'jobwalltime'               => 'globus.maxtime',
                    'jobwalltimereserve'        => 'globus.reserve',
-                   'lowoverallocation'         => 'globus.lowoverallocation',
+                   'lowoverallocation'         => 'globus.lowOverallocation',
 		   'maxjobs'                   => 'globus.slots',
-                   'maxnodesperjob'            => 'globus.maxnodes',
-                   'maxsubmitrate'             => 'karajan.maxsubmitrate',
-                   'overallocationdecayfactor' => 'globus.overallocationdecayfactor',
-                   'remotemonitorenabled'      => 'globus.remotemonitorenabled',
+                   'maxnodesperjob'            => 'globus.maxNodes',
+                   'maxsubmitrate'             => 'karajan.maxSubmitRate',
+                   'overallocationdecayfactor' => 'globus.overallocationDecayFactor',
+                   'remotemonitorenabled'      => 'globus.remoteMonitorEnabled',
                    'slurm'                     => 'globus.slurm',
                    'taskdir'                   => 'globus.scratch',
-                   'tasksperworker'            => 'globus.jobspernode',
-                   'taskthrottle'              => 'karajan.jobthrottle',
+                   'tasksperworker'            => 'globus.jobsPerNode',
+                   'taskthrottle'              => 'karajan.jobThrottle',
                    'taskwalltime'              => 'globus.maxwalltime',
                    'workdir'                   => 'workdir',
 		   'workerloglevel'            => 'globus.workerlogginglevel',
@@ -450,6 +450,7 @@ if ( $option_help ) {
 push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
 push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
 push(@new_swift_args, "-runid " . basename($run_directory));
+push( @new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
 
 # Write swift configuration files
 &write_sites("sites.xml") if defined( $option_siteslist ) || defined($properties{site});
@@ -469,7 +470,6 @@ while( @ARGV ) {
    else { push( @new_swift_args, $option ); }
 }
 
-push( @new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
 
 foreach my $arg( @new_swift_args ) {
    print "$arg ";
