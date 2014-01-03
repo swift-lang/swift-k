@@ -85,7 +85,8 @@ namespace(swift) {
 				cdmfile := cdm:file()
 
 				try {
-					log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), " tmpdir={tmpdir} host={rhost}")
+					log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), 
+						" tmpdir={tmpdir} host={rhost}")
 
 					setProgress(progress, "Submitting")
 
@@ -172,7 +173,7 @@ namespace(swift) {
 					}
 					else {
 						setProgress(progress, "Failed but can retry")
-						exception := try(exception(readErrorFiles(ddir, jobid, stdout, stderr)), prev)
+						exception := try(exception(readErrorFiles(ddir, jobid, stdout, stderr), prev), prev)
 						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 					
 						throw(
