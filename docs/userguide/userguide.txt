@@ -3,41 +3,16 @@ Swift User Guide
 
 :toc:
 :icons:
-:website: http://www.ci.uchicago.edu/swift/guides/userguide.php
 :numbered:
 
 include::overview[]
 
+include::gettingStarted[]
+
 include::language[]
 
-include::mappers[]
+include::configuration[]
 
-include::commands[]
+include::debugging[]
 
-include::app_procedures[]
-
-include::configuration_properties[]
-
-include::profiles[]
-
-include::site_catalog[]
-
-include::transformation_catalog[]
-
-include::build_options[]
-
-include::kickstart[]
-
-include::reliability_mechanisms[]
-
-include::clustering[]
-
-include::coasters[]
-
-include::howto_tips[]
-
-include::cdm[]
-
-include::log-processing[]
-
-link:http://www.ci.uchicago.edu/swift/docs/index.php[home]
+link:http://swift-lang.org/docs/index.php[home]
