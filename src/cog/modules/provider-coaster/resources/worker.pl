@@ -2291,14 +2291,17 @@ sub runjob {
 			unlock($SOFT_IMAGE_CREATE_LOCK);
 		}
 	}
-	# wait until the soft image is created
-	wlog DEBUG, "Waiting for soft image\n";
-	my $createLock = readLock("$SOFT_IMAGE_DIR/.create");
-	wlog DEBUG, "Got soft image\n";
-	# no need to hold lock after that
-	unlock($createLock);
 	
-	$ENV{SOFTIMAGE} = $SOFT_IMAGE_DIR;
+	if (defined $SOFT_IMAGE_DIR) {
+		# wait until the soft image is created
+		wlog DEBUG, "Waiting for soft image\n";
+		my $createLock = readLock("$SOFT_IMAGE_DIR/.create");
+		wlog DEBUG, "Got soft image\n";
+		# no need to hold lock after that
+		unlock($createLock);
+		
+		$ENV{SOFTIMAGE} = $SOFT_IMAGE_DIR;
+	}
 	
 	my $cwd = getcwd();
 	# wlog DEBUG, "CWD: $cwd\n";
