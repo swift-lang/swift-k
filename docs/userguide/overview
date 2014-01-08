@@ -1,10 +1,5 @@
 Overview
 --------
-This manual provides reference material for Swift: the Swift
-language and the Swift runtime system. For introductory material,
-consult the 
-http://www.ci.uchicago.edu/swift/guides/trunk/tutorial/tutorial.html[Swift tutorial].
-
 Swift is a data-flow oriented coarse grained scripting language that supports
 dataset typing and mapping, dataset iteration, conditional branching,
 and procedural composition.
