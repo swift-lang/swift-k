@@ -33,10 +33,8 @@ site=sandyb
 -----
 
 The details of this file will be explained more later. Let's first look 
-at an example of running Swift with this new file.
-
-Using the swift.properties file above, the new Swift command a user would run
-is:
+at an example of running Swift. Using the swift.properties the new Swift 
+command a user would run is:
 
 -----
 $ swift script.swift
@@ -123,9 +121,8 @@ The run directories can be useful for debugging. They contain:
 
 Using site templates
 ~~~~~~~~~~~~~~~~~~~~
-This new configuration mechanism should make it easier to use site templates.
-To use this, set the environment variable $SWIFT_SITE_CONF to a directory 
-containing a swift.properties file. This swift.properties can contain multiple 
+Swift recognizes an environmnet variable called $SWIFT_SITE_CONF, which points to
+a directory containing a swift.properties file. This swift.properties can contain multiple 
 site definitions for the various queues available on the cluster you are using.
 
 Your local swift.properties then does not need to define the entire site. It 
@@ -145,8 +142,10 @@ The swift.properties file format
 Site definitions
 ^^^^^^^^^^^^^^^^
 Site definitions in the swift.properties files begin with "site".
+
 The second word is the name of the site you are defining. In these examples we
 will define a site called westmere.
+
 The third word is the property.
 
 For example:
@@ -253,7 +252,7 @@ site.westmere.filesystem=local
 site.westmere.workdir=/scratch/midway/davidkelly999
 -----
 
-However, it is also simplify this by grouping these properties together with
+However, you can also simplify this by grouping site properties together with
 curly brackets.
 
 ------
@@ -287,8 +286,7 @@ wildcards will be disabled, and all apps you want to use must be defined.
 
 General Swift properties
 ~~~~~~~~~~~~~~~~~~~~~~~~
-Various aspects of the behavior of Swift can be configured through general 
-Swift properties. Below is a list of properties:
+Swift behavior can be configured through general Swift properties. Below is a list of properties:
 
 [options="header"]
 |================
