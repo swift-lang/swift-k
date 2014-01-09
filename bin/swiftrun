@@ -166,11 +166,9 @@ sub property_to_xml {
    elsif ( $property eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
    elsif ( $property eq "filesystem" )    { return "<filesystem provider=\"" . $value . "\"/>\n"; }
    
-   else { 
-      my ( $xmlnamespace, $xmlproperty ) = split(/\./, $site_aliases{ $propertyStart });
-      if ( defined($xmlnamespace) && defined($xmlproperty)) {
-         return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $xmlproperty . "\">" . $value . "</profile>\n"; 
-      }
+   my ( $xmlnamespace, $xmlproperty ) = split(/\./, $site_aliases{ $propertyStart });
+   if ( defined($xmlnamespace) && defined($xmlproperty)) {
+      return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $xmlproperty . "\">" . $value . "</profile>\n"; 
    }
 } 
 
@@ -364,7 +362,7 @@ GetOptionsFromArray(
 
 # Create/increment run directory
 my $run_number = 0;
-my @run_directories = <run???>;
+my @run_directories = <run[0-9][0-9][0-9]>;
 
 if(@run_directories) {
    $run_number = $run_directories[-1];
