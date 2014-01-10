@@ -372,7 +372,9 @@ if(@run_directories) {
 
 $run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
 $ENV{RUNDIRECTORY} = "$run_directory";
-mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
+if(!$option_listconfig) {
+   mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
+}
 
 # Set @sites array from comma separated list of sites
 if(defined($option_siteslist)) {
