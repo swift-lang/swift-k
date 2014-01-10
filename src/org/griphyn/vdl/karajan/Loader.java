@@ -21,6 +21,8 @@
 package org.griphyn.vdl.karajan;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -53,7 +55,6 @@ import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.globus.cog.karajan.util.KarajanProperties;
 import org.globus.cog.util.ArgumentParser;
-import org.globus.cog.util.ArgumentParserException;
 import org.globus.cog.util.TextFileLoader;
 import org.globus.swift.data.Director;
 import org.griphyn.vdl.engine.Karajan;
@@ -89,6 +90,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_REDUCED_LOGGING = "reduced.logging";
     public static final String ARG_MINIMAL_LOGGING = "minimal.logging";
     public static final String ARG_PAUSE_ON_START = "pause.on.start";
+    public static final String ARG_EXECUTE = "e";
 
     public static final String CONST_VDL_OPERATION = "vdl:operation";
     public static final String VDL_OPERATION_RUN = "run";
@@ -106,9 +108,23 @@ public class Loader extends org.globus.cog.karajan.Loader {
         String runID = makeRunId(ap);
         
         try {
-            String project = ap.getStringValue(ArgumentParser.DEFAULT);
-            checkValidProject(project);
-            String projectName = projectName(project);
+            String project;
+            String source;
+            String projectName;
+            if (ap.isPresent(ARG_EXECUTE)) {
+                project = "<string>";
+                projectName = "<string>";
+                source = ap.getStringValue(ARG_EXECUTE);
+                if (ap.hasValue(ArgumentParser.DEFAULT)) {
+                    throw new IllegalArgumentException("-" + ARG_EXECUTE + " and <file> are mutually exclusive");
+                }
+            }
+            else {
+                project = ap.getStringValue(ArgumentParser.DEFAULT);
+                checkValidProject(project);
+                projectName = projectName(project);
+                source = null;
+            }
        
             setupLogging(ap, projectName, runID);
             VDL2Config config = loadConfig(ap);
@@ -123,6 +139,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 loadCDM(ap);
             }
             
+            WrapperNode tree = null;
             if (project.endsWith(".swift")) {
                 try {
                     project = compile(project, ap.isPresent(ARG_RECOMPILE), provenanceEnabled);
@@ -134,8 +151,21 @@ public class Loader extends org.globus.cog.karajan.Loader {
                     logger.debug("Exception when compiling " + project, pe);
                     System.exit(3);
                 }
+                tree = load(project);
             }
-            WrapperNode tree = load(project);
+            else if (source != null) {
+                try {
+                    String kml = compileString(source, provenanceEnabled);
+                    tree = loadFromString(kml);
+                }
+                catch (ParsingException pe) {
+                    // the compiler should have already logged useful
+                    // error messages, so this log line is just for
+                    // debugging
+                    logger.debug("Exception when compiling " + project, pe);
+                    System.exit(3);
+                }
+            }
             
             tree.setProperty("name", projectName + "-" + runID);
             tree.setProperty(WrapperNode.FILENAME, project);
@@ -230,7 +260,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 System.out.println(loadVersion());
                 System.exit(0);
             }
-            if (!ap.hasValue(ArgumentParser.DEFAULT)) {
+            if (!ap.hasValue(ArgumentParser.DEFAULT) && !ap.isPresent(ARG_EXECUTE)) {
                 System.out.println(loadVersion());
                 error("No Swift script specified");
             }
@@ -364,7 +394,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
             try {
                 FileOutputStream f = new FileOutputStream(kml);
-                Karajan.compile(xml.getAbsolutePath(), new PrintStream(f), provenanceEnabled);
+                Karajan.compile(new File(xml.getAbsolutePath()), new PrintStream(f), provenanceEnabled);
                 f.close();
             }
             catch (Error e) {
@@ -392,6 +422,33 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
         return kml.getAbsolutePath();
     }
+    
+    public static String compileString(String source, boolean provenanceEnabled) throws
+            ParsingException, IncorrectInvocationException,
+            CompilationException, IOException {
+        debugText("SWIFTSCRIPT", source);
+
+        ByteArrayOutputStream swiftx = new ByteArrayOutputStream();
+        VDLt2VDLx.compile(new ByteArrayInputStream(source.getBytes()),
+            new PrintStream(swiftx));
+
+        ByteArrayOutputStream kml = new ByteArrayOutputStream();
+        try {
+            Karajan.compile(swiftx.toString(), new PrintStream(kml), provenanceEnabled);
+        }
+        catch (Error e) {
+            throw e;
+        }
+        catch (CompilationException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new CompilationException(
+                "Failed to convert .xml to .kml for input string", e);
+        }
+        return kml.toString();
+    }
+
 
     /**
        Enter the text content of given files into the log
@@ -412,6 +469,14 @@ public class Loader extends org.globus.cog.karajan.Loader {
     		logger.warn("Could not open: " + file);
     	}
 	}
+    
+    public static void debugText(String name, String source) {
+        Logger textLogger = Logger.getLogger("swift.textfiles");
+        if (textLogger.isDebugEnabled()) {
+            textLogger.debug("BEGIN " + name + ":\n" + source + "\n");
+            textLogger.debug("END " + name + ":");
+        }
+    }
 
     static void debugSitesText(VDL2Config config) {
 		String poolFile = config.getPoolFile();
@@ -555,7 +620,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
                  "reports warnings only");
         ap.addFlag(ARG_PAUSE_ON_START, "Pauses execution on start. Useful for " +
         		"attaching a debugger or profiler to the swift process");
-        
+        ap.addOption(ARG_EXECUTE, "Runs the swift script code contained in <string>", 
+            "string", ArgumentParser.OPTIONAL);
 
         Map<String, PropInfo> desc = VDL2ConfigProperties.getPropertyDescriptions();
         for (Map.Entry<String, PropInfo> e : desc.entrySet()) {

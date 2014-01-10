@@ -107,7 +107,7 @@ public class Karajan {
 		compile(args[0], System.out, false);
 	}
 
-	public static void compile(String in, PrintStream out, boolean provenanceEnabled) throws CompilationException {
+	public static void compile(Object in, PrintStream out, boolean provenanceEnabled) throws CompilationException {
 		Karajan karajan = new Karajan();
 		StringTemplateGroup templates;
 		try {
@@ -140,7 +140,7 @@ public class Karajan {
 		out.println(code.toString());
 	}
 
-	public static ProgramDocument parseProgramXML(String defs)
+	public static ProgramDocument parseProgramXML(Object in)
 		throws XmlException, IOException {
 
 		XmlOptions options = new XmlOptions();
@@ -150,7 +150,15 @@ public class Karajan {
 		options.setLoadLineNumbers();
 
 		ProgramDocument programDoc;
-		programDoc  = ProgramDocument.Factory.parse(new File(defs), options);
+		if (in instanceof File) {
+		    programDoc  = ProgramDocument.Factory.parse((File) in, options);
+		}
+		else if (in instanceof String) {
+		    programDoc  = ProgramDocument.Factory.parse((String) in, options);
+		}
+		else {
+		    throw new IllegalArgumentException("Don't know how to parse a " + in.getClass().getName());
+		}
 
 		if(programDoc.validate(options)) {
 			logger.debug("Validation of XML intermediate file was successful");
