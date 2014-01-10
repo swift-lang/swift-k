@@ -120,11 +120,9 @@ else
 fi
 
 export STRESS="S$STRESS"
-if [ -x "$ENV_FILE" ]
+if [ -n "$ENV_FILE" ]
 then
-  source $ENV_FILE
-else
-  echo "Could not load $ENV_FILE"
+  source $ENV_FILE || echo "Could not load $ENV_FILE"
 fi
 
 # Iterations per test (may want to run each test multiple times?)
@@ -846,13 +844,7 @@ swift_test_case() {
   TEST_SHOULD_FAIL=$(( ! $?  ))
 
   OUTPUT=$NAME.stdout
-  monitored_exec $TIMEOUT swift     \
-                       -wrapperlog.always.transfer true \
-                       -sitedir.keep true               \
-                       -config swift.properties         \
-                       -sites.file sites.xml            \
-                       -tc.file tc.data                 \
-                       $CDM $SWIFTSCRIPT $ARGS
+  monitored_exec $TIMEOUT swift $CDM $SWIFTSCRIPT $ARGS
 
   TEST_SHOULD_FAIL=0
   if [ -x "$GROUP/$CHECKSCRIPT" ]; then
@@ -981,53 +973,6 @@ build_package() {
   output_report package "swift-$DATE.tar.gz"
 }
 
-# Generate sites.xml
-group_sites_xml() {
-
-  # Determine template
-  if [ -f "$GROUP/sites.template.xml" ]; then
-     TEMPLATE="$GROUP/sites.template.xml"
-  elif [ -f "$GROUP/gensites.template" ]; then
-     TEMPLATE=$( cat $GROUP/gensites.template )
-  else
-     TEMPLATE="$TESTDIR/sites/local/sites.template.xml"
-  fi
-
-  # Give default to _WORK_ if undefined in swift.properties
-  if [ -z "$WORK" ]
-  then
-     export WORK=$PWD/swiftwork
-  fi
-
-  # Call gensites
-  TEMPLATE_DIRNAME=`dirname $TEMPLATE`
-  TEMPLATE=`basename $TEMPLATE`
-  gensites -L $TEMPLATE_DIRNAME $TEMPLATE > sites.xml 2>&1
-}
-
-# Generate tc.data
-group_tc_data() {
-
-  # Gensites will create a tc.data file if it is being used
-  if [ -f "$GROUP/gensites.template" ]; then
-     return
-  fi
-
-  if [ -f $GROUP/tc.template.data ]; then
-    sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.data > tc.data
-    [ $? != 0 ] && crash "Could not create tc.data!"
-    echo "Using: $GROUP/tc.template.data"
-  else
-    cp -v $SWIFT_HOME/etc/tc.data .
-    [ $? != 0 ] && crash "Could not copy tc.data!"
-  fi
-  if [ -f $GROUP/tc.template.mix.data ]; then
-    sed "s@_DIR_@$GROUP@" < $GROUP/tc.template.mix.data >> tc.data
-    [ $? != 0 ] && crash "Could not create tc.data!"
-    echo "Mixing: $GROUP/tc.template.mix.data"
-  fi
-}
-
 # Generate the CDM file, fs.data
 group_fs_data() {
   if [ -f $GROUP/fs.template.data ]; then
@@ -1043,9 +988,6 @@ group_fs_data() {
 group_swift_properties() {
   if [ -f $GROUP/swift.properties ]; then
     cp -v $GROUP/swift.properties .
-    [ $? != 0 ] && crash "Could not copy swift.properties!"
-  else
-    cp -v $SWIFT_HOME/etc/swift.properties .
     [ $? != 0 ] && crash "Could not copy swift.properties!"
   fi
 }
@@ -1130,8 +1072,6 @@ test_group() {
       pushd $TESTNAMEDIR > /dev/null 2>&1
       cp $TEST .    
       group_swift_properties
-      group_sites_xml
-      group_tc_data
       group_fs_data      
       start_row
       swift_test_case $TESTNAME
