@@ -55,6 +55,7 @@ my %site_aliases = (
                    'workdir'                   => 'workdir',
 		   'workerloglevel'            => 'globus.workerlogginglevel',
                    'workerlogdirectory'        => 'globus.workerloggingdirectory',
+		   'workermanager'             => 'globus.workerManager',
 );
 
 # Verify a property file exists and add it to the search path
