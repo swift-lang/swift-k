@@ -135,10 +135,12 @@ sub property_to_xml {
       my $ccount = ($value =~ s/:/:/g);
       my $jobmanager = "";
       my $jobmanagerURL = "";
+      my $provider = "";
 
       # With no separators, assume local 
       if( $ccount == 0 ) {
          $jobmanager = "local:$value";
+         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\"/>\n";
       }
 
       # With one separator, use ssh-cl and assume hostname:type
@@ -146,6 +148,7 @@ sub property_to_xml {
          (my $first, my $second) = split(':', $value);
          $jobmanager = "ssh-cl:$second";
          $jobmanagerURL = "$first";
+         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
       }
  
       # Other, in the format of proto:host:jobMgr
@@ -153,12 +156,15 @@ sub property_to_xml {
          (my $first, my $second, my $third) = split(':', $value);
          $jobmanager="$first:$third";
          $jobmanagerURL = "$second";
-      }
- 
-      if ( defined($jobmanagerURL) && length($jobmanagerURL) > 0) {
          return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
-      } else {
-         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\"/>\n"; 
+      }
+
+      elsif ( $ccount == 3) {
+         (my $first, my $second, my $third, my $fourth) = split(':', $value);
+         $provider=$first;
+         $jobmanager="$second:$third";
+         $jobmanagerURL="$fourth";
+         return "<execution provider=\"$provider\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
       }
    }
 
