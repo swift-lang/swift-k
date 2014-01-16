@@ -160,8 +160,8 @@ sub property_to_xml {
          return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
       }
 
-      elsif ( $ccount == 3) {
-         (my $first, my $second, my $third, my $fourth) = split(':', $value);
+      elsif ( $ccount >= 3) {
+         (my $first, my $second, my $third, my $fourth) = split(':', $value, 4);
          $provider=$first;
          $jobmanager="$second:$third";
          $jobmanagerURL="$fourth";
