@@ -14,7 +14,7 @@ static int unique = 0;
 #define DEBUG_LOCKS 1
 #if DEBUG_LOCKS == 1
 #define debug(format, args...)           \
-  {    printf("LOCK: " format "\n", ## args); \
+  {    printf("LOCK: " format "\n", id, ## args);        \
        fflush(stdout);                   \
   }
 #else
@@ -22,8 +22,8 @@ static int unique = 0;
 #endif
 
 Lock::Lock() {
-  id = unique++;
-	debug("LOCK: %i NEW");
+	id= unique++;
+  debug("LOCK: %i NEW");
 	pthread_mutex_init(&l, NULL);
 }
 
@@ -32,12 +32,12 @@ Lock::~Lock() {
 }
 
 void Lock::lock() {
-	printf("LOCK: %i ACQUIRE", id);
+	debug("LOCK: %i ACQUIRE");
 	pthread_mutex_lock(&l);
 }
 
 void Lock::unlock() {
-	debug("LOCK: %i RELEASE", id);
+	debug("LOCK: %i RELEASE");
 	pthread_mutex_unlock(&l);
 }
 
