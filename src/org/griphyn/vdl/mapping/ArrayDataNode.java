@@ -104,12 +104,12 @@ public class ArrayDataNode extends DataNode {
     }
     
     @Override
-    public void addListener(FutureListener l) {
+    public void addListener(FutureListener l, boolean partialUpdates) {
         boolean shouldNotify;
         WaitingThreadsMonitor.addThread(l, this);
         synchronized(this) {
             shouldNotify = addListener0(l);
-            if (keyList != null) {
+            if (keyList != null && partialUpdates) {
                 shouldNotify = true;
             }
         }

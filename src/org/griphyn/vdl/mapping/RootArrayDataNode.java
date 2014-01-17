@@ -112,7 +112,7 @@ public class RootArrayDataNode extends ArrayDataNode implements FutureListener, 
 	    
 		waitingMapperParam = mapper.getFirstOpenParameter();
         if (waitingMapperParam != null) {
-            waitingMapperParam.addListener(this);
+            waitingMapperParam.addListener(this, false);
             if (variableTracer.isEnabled()) {
                 variableTracer.trace(getThread(), getLine(), getName() + " WAIT " 
                     + Tracer.getVarName(waitingMapperParam));
