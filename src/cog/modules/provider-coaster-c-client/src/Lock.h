@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 class Lock {
+	int id;
 	private:
 		pthread_mutex_t l;
 	public:
