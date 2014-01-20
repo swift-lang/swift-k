@@ -45,7 +45,7 @@ public abstract class MappingParamSet {
     
     protected boolean checkOpen(Object v) {
         if (v instanceof AbstractDataNode && !((AbstractDataNode) v).isClosed()) {
-            return true;        
+            return true;
         }
         else {
             return false;
