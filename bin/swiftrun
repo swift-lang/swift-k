@@ -46,6 +46,7 @@ my %site_aliases = (
                    'maxnodesperjob'            => 'globus.maxNodes',
                    'maxsubmitrate'             => 'karajan.maxSubmitRate',
                    'overallocationdecayfactor' => 'globus.overallocationDecayFactor',
+                   'providerattributes'        => 'globus.providerAttributes',
                    'remotemonitorenabled'      => 'globus.remoteMonitorEnabled',
                    'slurm'                     => 'globus.slurm',
                    'taskdir'                   => 'globus.scratch',
@@ -121,7 +122,7 @@ sub property_to_xml {
 
    if( $property eq "jobwalltime" ) {
       verify_in_hhmmss($key, $value);
-      $property = hhmmss_to_seconds($value); 
+      $value = hhmmss_to_seconds($value); 
    } 
 
    elsif ( $property eq "taskthrottle" ) {
@@ -172,7 +173,7 @@ sub property_to_xml {
    elsif ( $property eq "workdir" )       { return "<workdirectory>$value</workdirectory>\n"; }
    elsif ( $property eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
    elsif ( $property eq "filesystem" )    { return "<filesystem provider=\"" . $value . "\"/>\n"; }
-   
+
    my ( $xmlnamespace, $xmlproperty ) = split(/\./, $site_aliases{ $propertyStart });
    if ( defined($xmlnamespace) && defined($xmlproperty)) {
       return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $xmlproperty . "\">" . $value . "</profile>\n"; 
