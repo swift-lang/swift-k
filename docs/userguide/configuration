@@ -206,6 +206,11 @@ Maximum number of scheduler jobs to submit
 The maximum number of nodes to request per scheduler job.
 |site.westmere.maxNodesPerJob=2
 
+|providerAttributes|
+Allows user to pass attributes through directly to scheduler submit script. Currently
+only implemented for sites that use PBS.
+|site.beagle.providerAttributes=pbs.aprun;pbs.mpp;depth=24
+
 |taskDir|
 Tasks will be run from this directory. In the absence of a taskDir definition, 
 Swift will run the task from workdir.
