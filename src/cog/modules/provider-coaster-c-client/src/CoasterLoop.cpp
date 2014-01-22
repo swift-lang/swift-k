@@ -45,7 +45,9 @@ void CoasterLoop::start() { Lock::Scoped l(lock);
 	FD_SET(wakePipe[0], &rfds);
 	updateMaxFD();
 
-	thread = pthread_create(&thread, NULL, run, this);
+	if (pthread_create(&thread, NULL, run, this) != 0) {
+		throw CoasterError(string("Could not create thread: ") + strerror(errno));
+	}
 
 	started = true;
 }
@@ -64,7 +66,9 @@ void CoasterLoop::stop() {
 	 * must release lock before calling pthread_join
 	 * in case run() is waiting for the lock
 	 */
-	pthread_join(thread, NULL);
+	if (pthread_join(thread, NULL) != 0) {
+		throw CoasterError(string("Could not join thread: ") + strerror(errno));
+	}
 	LogInfo << "Coaster loop stopped" << endl;
 }
 
