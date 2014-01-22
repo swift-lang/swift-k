@@ -125,6 +125,11 @@ sub property_to_xml {
       $value = hhmmss_to_seconds($value); 
    } 
 
+   elsif ( $property =~ m/^(slurm|condor)/ ) {
+      my ( $xmlnamespace, $xmlproperty ) = split(/\./, $site_aliases{ $propertyStart });
+      return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $property . "\">" . $value . "</profile>\n";
+   }
+
    elsif ( $property eq "taskthrottle" ) {
       $value = number_to_throttle($value);
    }
@@ -132,7 +137,7 @@ sub property_to_xml {
    elsif ( $property eq "taskwalltime" ) {
       verify_in_hhmmss($key, $value);
    }
-
+   
    elsif ( $property eq "jobmanager" ) { 
       my $ccount = ($value =~ s/:/:/g);
       my $jobmanager = "";
@@ -161,6 +166,7 @@ sub property_to_xml {
          return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
       }
 
+      # Define a non-coaster protocol
       elsif ( $ccount >= 3) {
          (my $first, my $second, my $third, my $fourth) = split(':', $value, 4);
          $provider=$first;
@@ -177,8 +183,8 @@ sub property_to_xml {
    my ( $xmlnamespace, $xmlproperty ) = split(/\./, $site_aliases{ $propertyStart });
    if ( defined($xmlnamespace) && defined($xmlproperty)) {
       return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $xmlproperty . "\">" . $value . "</profile>\n"; 
-   }
-} 
+   } 
+}
 
 # Write apps to file in tc.data format
 sub write_apps {
