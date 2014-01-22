@@ -29,7 +29,7 @@ updateOptions() {
 ####### MAIN BODY ##########
 
 if [ ! -d "$SWIFT_HOME" ] ; then
-    SWIFT_HOME=`dirname $0`"/.."
+    SWIFT_HOME=$(cd $(dirname $0)/..; pwd)
     if [ ! -f "$SWIFT_HOME/lib/cog-swift-svn.jar" ] && [ ! -f "$SWIFT_HOME/lib/cog.jar" ] ; then
 		MY_PATH=`which $0`
 		SWIFT_HOME=`dirname $MY_PATH`"/.."
@@ -38,6 +38,10 @@ if [ ! -d "$SWIFT_HOME" ] ; then
 	    	exit 1
 		fi
     fi
+fi
+
+if [ -z "$SWIFT_SITE_CONF" ]; then
+   export SWIFT_SITE_CONF=$SWIFT_HOME/etc/templates
 fi
 
 OPTIONS="$OPTIONS -Djava.endorsed.dirs=$SWIFT_HOME/lib/endorsed"

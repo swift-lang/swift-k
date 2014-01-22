@@ -81,7 +81,6 @@
 		<copy todir="${dist.dir}/lib/perl">
 			<fileset dir="${cog.dir}/modules/${module.name}/lib/perl"/>
 		</copy>
-                <copy file="${cog.dir}/modules/${module.name}/lib/listcoasterurls.jar" todir="${dist.dir}/bin"></copy>
 
 		<chmod perm="+x">
 			<fileset dir="${dist.dir}/bin">
@@ -224,14 +223,8 @@
 		<copy todir="${dist.dir}/etc" 
 			file="${cog.dir}/modules/${module.name}/etc/log4j.properties" 
 			overwrite="true"/>
-		<copy todir="${dist.dir}/etc/sites">
-			<fileset dir="${cog.dir}/modules/${module.name}/etc/sites"/>
-		</copy>
-		<copy todir="${dist.dir}/etc/apps">
-			<fileset dir="${cog.dir}/modules/${module.name}/etc/apps"/>
-		</copy>
-		<copy todir="${dist.dir}/etc/certificate">
-			<fileset dir="${cog.dir}/modules/${module.name}/etc/certificate"/>
+		<copy todir="${dist.dir}/etc/templates">
+			<fileset dir="${cog.dir}/modules/${module.name}/etc/templates"/>
 		</copy>
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>

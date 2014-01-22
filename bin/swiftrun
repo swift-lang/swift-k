@@ -72,7 +72,7 @@ sub create_pool_entry {
    my $site = $_[0];
    my $pool = "\n<pool handle=\"" . $site . "\">\n";
    while( my( $key, $value ) = each( %properties ) ) {
-      if( $key =~ /^\s*site.$site/ ) {
+      if( $key =~ /^\s*site.$site\./ ) {
          my $propxml = &property_to_xml( $key, $value );
          if(defined($propxml)) {
             $pool .= $propxml;
@@ -233,7 +233,7 @@ sub site_is_defined {
    my $site = $_[0];
    my $isDefined=0;
    while( my( $key, $value ) = each( %properties ) ) {
-     if( $key =~ m/^site\.$site/i ) {
+     if( $key =~ m/^site\.$site\./i ) {
         $isDefined=1;
       }
    }
@@ -245,7 +245,7 @@ sub service_is_defined {
    my $site = $_[0];
    my $isDefined=0;
    while( my( $key, $value ) = each( %properties ) ) {
-      if( $key =~ m/^service\.$site/i ) {
+      if( $key =~ m/^service\.$site\./i ) {
          $isDefined=1;
       }
    }
