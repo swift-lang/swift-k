@@ -54,6 +54,7 @@ my %site_aliases = (
                    'tasksperworker'            => 'globus.jobsPerNode',
                    'taskthrottle'              => 'karajan.jobThrottle',
                    'taskwalltime'              => 'globus.maxwalltime',
+		   'userhomeoverride'	       => 'globus.userHomeOverride',
                    'workdir'                   => 'workdir',
 		   'workerloglevel'            => 'globus.workerlogginglevel',
                    'workerlogdirectory'        => 'globus.workerloggingdirectory',
