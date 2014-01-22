@@ -29,6 +29,7 @@ my @original_swift_args;	# Original arguments
 # List of xml shortcuts
 my %site_aliases = (
                    'allocationstepsize'        => 'globus.allocationStepSize',
+                   'condor'                    => 'globus.condor',
                    'delaybase'                 => 'karajan.delayBase',
                    'filesystem'                => 'filesystem',
                    'highoverallocation'        => 'globus.highOverallocation',
