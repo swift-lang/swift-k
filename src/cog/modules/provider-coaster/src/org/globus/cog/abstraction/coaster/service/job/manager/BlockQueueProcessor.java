@@ -148,6 +148,16 @@ implements RegistrationManager, Runnable {
                 synchronized (incoming) {
                     incoming.wait(Math.min(planTimeMillis * 20, 10000) + 1000);
                 }
+                
+                if (logger.isInfoEnabled()) {
+                    Runtime r = Runtime.getRuntime();
+                    long maxHeap = r.maxMemory();
+                    long freeMemory = r.freeMemory();
+                    long totalMemory = r.totalMemory();
+                    long usedMemory = totalMemory - freeMemory;
+                
+                    logger.info("HeapMax: " + maxHeap + ", CrtHeap: " + totalMemory + ", UsedHeap: " + usedMemory);
+                }
             }
             if (shuttingDown) {
                 logger.info("Service shutting down. Exiting planning loop.");
