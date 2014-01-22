@@ -172,6 +172,12 @@ they do, and an example swift.properties entry.
 |================================
 |Property|Description|Example
 
+|condor|
+Pass parameters directly through to the submit script generated for the condor
+scheduler. For example, the setting "site.osgconnect.condor.+projectname=Swift"
+will generate the line "+projectname = Swift".
+|site.osgconnect.condor.+projectname=Swift
+
 |filesystem|
 Defines how files should be accessed
 |site.westmere.filesystem=local
@@ -211,6 +217,11 @@ Allows user to pass attributes through directly to scheduler submit script. Curr
 only implemented for sites that use PBS.
 |site.beagle.providerAttributes=pbs.aprun;pbs.mpp;depth=24
 
+|slurm|
+Pass parameters directly through to the submit script generated for the slurm
+scheduler. For example, the setting "site.midway.slurm.mail-user=username" generates
+the line "#SBATCH --mail-user=username".
+
 |taskDir|
 Tasks will be run from this directory. In the absence of a taskDir definition, 
 Swift will run the task from workdir.
@@ -232,6 +243,12 @@ The maximum amount of time a task may run, in hh:mm:ss.
 Name of site or sites to run on. This is the same as running with
 swift -site <sitename>
 |site=westmere
+
+|userHomeOverride|
+Sets the Swift user home. This must be a shared filesystem. This defaults
+to $HOME. For clusters where $HOME is not accessible to the worker nodes,
+you may override the value to point to a shared directory that you own.
+|site.beagle.userHomeOverride=/lustre/beagle/username
 
 |workdir |
 The workdirectory element specifies where on the site files can be stored.
