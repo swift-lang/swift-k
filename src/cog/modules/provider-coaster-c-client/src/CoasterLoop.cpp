@@ -50,14 +50,20 @@ void CoasterLoop::start() { Lock::Scoped l(lock);
 	started = true;
 }
 
-void CoasterLoop::stop() { Lock::Scoped l(lock);
-	if (!started) {
-		return;
+void CoasterLoop::stop() {
+	{ Lock::Scoped l(lock);
+		if (!started) {
+			return;
+		}
+		LogInfo << "Stopping coaster loop" << endl;
+		done = true;
+		// make sure we are not stuck in select()
+		requestWrite(1);
 	}
-	LogInfo << "Stopping coaster loop" << endl;
-	done = true;
-	// make sure we are not stuck in select()
-	requestWrite(1);
+	/*
+	 * must release lock before calling pthread_join
+	 * in case run() is waiting for the lock
+	 */
 	pthread_join(thread, NULL);
 	LogInfo << "Coaster loop stopped" << endl;
 }
