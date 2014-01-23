@@ -83,6 +83,8 @@ public class ServiceManager implements StatusListener {
     public static final boolean LOCALJVM = false;
     
     public static final boolean LOCALJVM_WHEN_LOCAL = true;
+    
+    private static boolean useAutoCA;
 
     private BootstrapService bootstrapService;
     private LocalService localService;
@@ -227,8 +229,8 @@ public class ServiceManager implements StatusListener {
         }
     }
 
-    private void setupGSIProxy() throws IOException, GeneralSecurityException {
-        if (!checkStandardProxy()) {
+    private static synchronized void setupGSIProxy() throws IOException, GeneralSecurityException {
+        if (!checkStandardProxy() || useAutoCA) {
             /*
              *  only do the automatic CA if a standard proxy file does not exist
              *  to allow using things like GridFTP from the coaster service through
@@ -238,13 +240,19 @@ public class ServiceManager implements StatusListener {
             AutoCA.Info result = AutoCA.getInstance().createProxy();
             System.setProperty("X509_USER_PROXY", result.proxyPath);
             System.setProperty("X509_CERT_DIR", result.caCertPath);
+            /*
+             * Need to set this since subsequent checks for the standard
+             * proxy will find a proxy from the AutoCA effectively preventing
+             * new AutoCA proxies from being generated if needed 
+             */
+            useAutoCA = true;
         }
         else {
             logger.info("Standard proxy file found. Disabling AutoCA.");
         }
     }
 
-    private boolean checkStandardProxy() {
+    private static boolean checkStandardProxy() {
         File proxy = new File(CoGProperties.getDefault().getProxyFile());
         return proxy.exists();
     }
