@@ -250,9 +250,24 @@ public class CoasterService extends GSSService {
             while (!done) {
                 wait(10000);
                 checkIdleTime();
+                logMemoryUsage();
             }
             if (exceptionAtStop != null) {
                 throw exceptionAtStop;
+            }
+        }
+    }
+
+    private void logMemoryUsage() {
+        if (!local) {
+            if (logger.isInfoEnabled()) {
+                Runtime r = Runtime.getRuntime();
+                long maxHeap = r.maxMemory();
+                long freeMemory = r.freeMemory();
+                long totalMemory = r.totalMemory();
+                long usedMemory = totalMemory - freeMemory;
+                
+                logger.info("HeapMax: " + maxHeap + ", CrtHeap: " + totalMemory + ", UsedHeap: " + usedMemory);
             }
         }
     }
