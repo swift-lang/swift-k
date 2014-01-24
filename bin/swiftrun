@@ -376,6 +376,15 @@ GetOptionsFromArray(
            'version'               => \$option_version,
 );
 
+# If -version or -help is specified, pass and exit
+if ( $option_help ) {
+   print "-help\n";
+   exit;
+} elsif ( $option_version ) {
+   print "-version\n";
+   exit;
+}
+
 # Create/increment run directory
 my $run_number = 0;
 my @run_directories = <run[0-9][0-9][0-9]>;
@@ -450,15 +459,6 @@ if( $option_listconfig ) {
       print "\t$key=$properties{$key}\n";
    }
    print "\n";
-   exit;
-}
-
-# If -version or -help is specified, pass and exit
-if ( $option_help ) {
-   print "-help\n";
-   exit;
-} elsif ( $option_version ) {
-   print "-version\n";
    exit;
 }
 
