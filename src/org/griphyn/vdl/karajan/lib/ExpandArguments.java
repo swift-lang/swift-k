@@ -18,7 +18,6 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -92,13 +91,5 @@ public class ExpandArguments extends SwiftFunction {
         }
         return arraySeen;
     }
-
-    class StringsAsIntegersComparator implements Comparator<Object> {
-		public int compare(Object l, Object r) {
-			Integer lnum = new Integer((String)l);
-			Integer rnum = new Integer((String)r);
-			return lnum.compareTo(rnum);
-		}
-	}
 }
 
