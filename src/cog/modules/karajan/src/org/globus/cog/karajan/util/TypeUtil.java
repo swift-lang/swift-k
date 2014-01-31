@@ -232,7 +232,7 @@ public class TypeUtil {
 	}
 
 	public static Integer toInteger(final Object obj) {
-		return new Integer(toInt(obj));
+		return Integer.valueOf(toInt(obj));
 	}
 
 	public static final String[] EMPTY_STRING_ARRAY = new String[0];
