@@ -113,10 +113,10 @@ public class Range extends SwiftFunction {
 													
 													{
 														if (type == Types.INT) {
-														    value = new RootDataNode(Types.INT, new Integer((int) crt));
+														    value = new RootDataNode(Types.INT, (int) crt);
 														}
 														else {
-														    value = new RootDataNode(Types.FLOAT, new Double(crt));
+														    value = new RootDataNode(Types.FLOAT, Double.valueOf(crt));
 														}
 														key = index;
 													}

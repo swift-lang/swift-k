@@ -147,10 +147,10 @@ public abstract class SwiftFunction extends AbstractFunction {
 
     protected Object internalValue(Type type, Object value) {
 		if (Types.FLOAT.equals(type)) {
-			return new Double(TypeUtil.toDouble(value));
+			return Double.valueOf(TypeUtil.toDouble(value));
 		}
 		else if (Types.INT.equals(type)) {
-			return new Integer(TypeUtil.toInt(value));
+			return Integer.valueOf(TypeUtil.toInt(value));
 		}
 		else if (Types.BOOLEAN.equals(type)) {
 			return new Boolean(TypeUtil.toBoolean(value));

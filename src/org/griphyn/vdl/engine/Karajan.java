@@ -1397,7 +1397,7 @@ public class Karajan {
 		} else if (expressionQName.equals(INT_EXPR)) {
 			XmlInt xmlInt = (XmlInt) expression;
 			int i = xmlInt.getIntValue();
-			Integer iobj = new Integer(i);
+			Integer iobj = Integer.valueOf(i);
 			String internedID;
 			if(intInternMap.get(iobj) == null) {
 				internedID = "swift#int#" + i;
