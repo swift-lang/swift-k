@@ -288,7 +288,7 @@ public class RuntimeStats {
 				}
 			}
 		}
-				
+		
 		void shutdown() {
 		    shutdown = true;
 		}
@@ -377,6 +377,16 @@ public class RuntimeStats {
 			System.err.println(msg);
 			if (logger.isInfoEnabled()) {
 			    logger.info(msg);
+			}
+			
+			if (logger.isInfoEnabled()) {
+			    Runtime r = Runtime.getRuntime();
+			    long maxHeap = r.maxMemory();
+			    long freeMemory = r.freeMemory();
+			    long totalMemory = r.totalMemory();
+			    long usedMemory = totalMemory - freeMemory;
+    			
+			    logger.info("HeapMax: " + maxHeap + ", CrtHeap: " + totalMemory + ", UsedHeap: " + usedMemory);
 			}
 			
 			return true;
