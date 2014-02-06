@@ -227,7 +227,7 @@ if generateProvDB:
                 fileName=string.replace(canonicalFileName(f), 'file://localhost/', '')
                 insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId)
                 
-            for f in iter(t.stageOut.split(",")):
+            for f in iter(t.stageOut.split(" ")):
                 direction="OUT"
                 fileName=canonicalFileName(f)
                 insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId)
