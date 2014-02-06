@@ -195,7 +195,7 @@ if generateProvDB:
     # Initializes database if it not yet exists
     if not(os.path.exists(provDB)):
         print "Provenance import: creating database"
-        schemaFilename=swiftHomeDir + "/provenance/schema_sqlite.sql"
+        schemaFilename=swiftHomeDir + "/etc/provenance/schema_sqlite.sql"
         schema=open(schemaFilename, "r").read()
         conn = sqlite3.connect(provDB)
         c = conn.cursor()
@@ -243,7 +243,7 @@ if generateProvDB:
                 if 'APP_RESOURCES' in line:
                     for i, pair in enumerate(line.lstrip('APP_RESOURCES=').split(',')):
                         entry=pair.split(':')
-                        if i == 1:
+                        if i == 0:
                             c.execute("INSERT INTO resource_usage (app_exec_id, %s) VALUES ('%s',%s)" % (entry[0], appExecId, entry[1].rstrip('%')))
                         else:
                             c.execute("UPDATE resource_usage SET %s=%s WHERE app_exec_id='%s'" % (entry[0], entry[1].rstrip('%'), appExecId))
