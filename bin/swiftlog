@@ -238,16 +238,21 @@ if generateProvDB:
         
             # Extracts resource usage information from wrapper logs
             wrapperLogFileName=runDirName + "/" + scriptFileName.rstrip('.swift') + "-" + runDirName + ".d/" + t.workdir.split('/')[3] + "-info"
-            wrapperLogFile = open(wrapperLogFileName, "r")
-            for line in iter(wrapperLogFile):
-                if 'APP_RESOURCES' in line:
-                    for i, pair in enumerate(line.lstrip('APP_RESOURCES=').split(',')):
-                        entry=pair.split(':')
-                        if i == 0:
-                            c.execute("INSERT INTO resource_usage (app_exec_id, %s) VALUES ('%s',%s)" % (entry[0], appExecId, entry[1].rstrip('%')))
-                        else:
-                            c.execute("UPDATE resource_usage SET %s=%s WHERE app_exec_id='%s'" % (entry[0], entry[1].rstrip('%'), appExecId))
-            wrapperLogFile.close()
+            if not(os.path.exists(wrapperLogFileName)):
+                noWrapperLog=True
+            else:
+                wrapperLogFile = open(wrapperLogFileName, "r")
+                for line in iter(wrapperLogFile):
+                    if 'APP_RESOURCES' in line:
+                        for i, pair in enumerate(line.lstrip('APP_RESOURCES=').split(',')):
+                            entry=pair.split(':')
+                            if i == 0:
+                                c.execute("INSERT INTO resource_usage (app_exec_id, %s) VALUES ('%s',%s)" % (entry[0], appExecId, entry[1].rstrip('%')))
+                            else:
+                                c.execute("UPDATE resource_usage SET %s=%s WHERE app_exec_id='%s'" % (entry[0], entry[1].rstrip('%'), appExecId))
+                wrapperLogFile.close()
+        if noWrapperLog: 
+            print "Provenance import: wrapper log not found, enable wrapperlog.always.transfer in swift.properties to gather resource consumption information"
         print "Provenance import: finished importing to ~/.swift_provenance.db"
     else:
         print "Provenance import: run " + runId + " is already in the database"
