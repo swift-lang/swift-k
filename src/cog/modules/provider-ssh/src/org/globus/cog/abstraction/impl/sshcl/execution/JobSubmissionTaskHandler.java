@@ -90,6 +90,9 @@ public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.ex
          */
         cmdarray.add("-s");
         
+        if (logger.isInfoEnabled()) {
+            logger.info("SSH-CL cmd-array: " + new ArrayList<String>(cmdarray));
+        }
         return cmdarray;
     }
     
@@ -119,6 +122,17 @@ public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.ex
             ps.println(escape(spec.getEnvironmentVariable(env)));
         }
         
+        /**
+         * Fix for bug #1197 which is really just some messed up logic
+         * in a particular piece of software that does what it shouldn't do
+         * in a profile script.
+         * 
+         * This fix is in the wrong place, in the sense that, if anything,
+         * it should be in the coaster code. Unfortunately there's no
+         * nice place to fit it in the coaster code.
+         */
+        ps.println("export SHLVL=1");
+        
         ps.print(escape(spec.getExecutable()));
         for (String arg : spec.getArgumentsAsList()) {
             ps.print(" ");
@@ -129,7 +143,7 @@ public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.ex
         ps.flush();
         super.processIN(in, dir, os);
     }
-    
+        
     /*
      * Escape everything that bash cares about (I hope this is everything)
      */
