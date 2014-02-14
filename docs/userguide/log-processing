@@ -131,11 +131,15 @@ comprehensive at this time. Also note that we will ignore the timestamps here.
 . _INFO  SetFieldValue Set_
 . _INFO  get__site STARTCOMPOUND thread=0-8 name=get__site_
 . _INFO vdl:execute START thread=0-8-0 tr=_
+    Start execution of a thread associated with a job.
 . _INFO  GlobalSubmitQueue No global submit throttle set. Using default (1024)_
 . _DEBUG vdl:execute2 THREAD_ASSOCIATION jobid=getsite-ymj72ook thread=0-8-0-1 host=localhost replicationGroup=xmj72ook_
+    Thread id associated with jobid and target site.
 . _DEBUG vdl:execute2 JOB_START jobid=getsite-ymj72ook tr=getsite arguments=[644] tmpdir=postproc-gridftp-20120319-0942-adf1o1u2/jobs/y/getsite-ymj72ook host=localhost_
+    Start of a job with job id, arguments and workdir
 . _INFO  GridExec TASK_DEFINITION_
 . _WARN  RemoteConfiguration Find: http://140.221.8.62:38260_
+    Coaster service endpoint.
 . _INFO  AbstractStreamKarajanChannel$Multiplexer Multiplexer 0 started_
 . _INFO  AbstractStreamKarajanChannel$Multiplexer (0) Scheduling SC-null for addition_
 . _INFO  AbstractStreamKarajanChannel Channel configured_
@@ -143,6 +147,7 @@ comprehensive at this time. Also note that we will ignore the timestamps here.
 . _INFO  ReadBuffer Will ask for 1 buffers for a size of 6070_
 . _INFO  ThrottleManager O maxBuffers=512, crtBuffers=0, allowedTransfers=256, active=0, suspended=0_
 . _INFO  ThrottleManager mem=113.54 MB, heap=482.88 MB, maxHeap=5.21 GB_
+    A running trace of available heap memory.
 . _INFO  ThrottleManager I maxBuffers=512, crtBuffers=0, allowedTransfers=256, active=0, suspended=0_
 . _INFO  PerformanceDiagnosticInputStream [MEM] Heap total: 482.88 MB, Heap used: 118.58 MB_
 Heap sizes for performance
