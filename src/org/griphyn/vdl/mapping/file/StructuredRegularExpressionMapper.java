@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
@@ -34,7 +35,7 @@ import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 
-public class StructuredRegularExpressionMapper extends AbstractFileMapper {
+public class StructuredRegularExpressionMapper extends AbstractMapper {
 
         public static final Logger logger =
             Logger.getLogger(StructuredRegularExpressionMapper.class);
