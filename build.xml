@@ -223,6 +223,9 @@
 		<copy todir="${dist.dir}/etc" 
 			file="${cog.dir}/modules/${module.name}/etc/log4j.properties" 
 			overwrite="true"/>
+		<copy todir="${dist.dir}/etc/sites">
+			<fileset dir="${cog.dir}/modules/${module.name}/etc/sites"/>
+		</copy>
 		<copy todir="${dist.dir}/etc/templates">
 			<fileset dir="${cog.dir}/modules/${module.name}/etc/templates"/>
 		</copy>
