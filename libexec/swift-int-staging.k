@@ -8,6 +8,7 @@ import('swift-lib')
 SWIFT:SCRIPT_NAME := contextAttribute("SWIFT:SCRIPT_NAME")
 SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
 SWIFT:HOME := contextAttribute("SWIFT:HOME")
+SWIFT:DEBUG_DIR_PREFIX := contextAttribute("SWIFT:DEBUG_DIR_PREFIX")
 
 WRAPPER_TRANSFER_MODE :=
 	if (configProperty("wrapperlog.always.transfer") == "true", 
@@ -22,7 +23,7 @@ CLEANUP_ENABLED := (configProperty("sitedir.keep") != "true")
 namespace(swift) {
 
 	initDDir := function() {
-		"{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
+		"{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
 	}
 	
 	inFiles := function(stageins) {

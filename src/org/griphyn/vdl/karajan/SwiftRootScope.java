@@ -31,5 +31,6 @@ public class SwiftRootScope extends RootScope {
         addVar("SWIFT:RUN_ID", context.getAttribute("SWIFT:RUN_ID"));
         addVar("SWIFT:SCRIPT_NAME", context.getAttribute("SWIFT:SCRIPT_NAME"));
         addVar("SWIFT:PARSED_ARGS", FnArg.parseArgs(context.getArguments()));
+        addVar("SWIFT:DEBUG_DIR_PREFIX", context.getAttribute("SWIFT:DEBUG_DIR_PREFIX"));
     }
 }

@@ -8,6 +8,7 @@ import('swift-lib')
 SWIFT:SCRIPT_NAME := contextAttribute("SWIFT:SCRIPT_NAME")
 SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
 SWIFT:HOME := contextAttribute("SWIFT:HOME")
+SWIFT:DEBUG_DIR_PREFIX := contextAttribute("SWIFT:DEBUG_DIR_PREFIX")
 
 namespace(swift) {
 
@@ -100,7 +101,7 @@ namespace(swift) {
 	}
 
 	initDDir := function() {
-		ddir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
+		ddir := "{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
 		
 		once(ddir) {
 			if(!file:exists(ddir)) {
@@ -326,7 +327,7 @@ namespace(swift) {
 		recfile := "{jobid}-info"
 		srcdir := dircat("{wfdir}/info/", jobdir)
 		try {
-			task:transfer(recfile, srchost=rhost, srcdir=srcdir, destdir="{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d/")
+			task:transfer(recfile, srchost=rhost, srcdir=srcdir, destdir="{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d/")
 		}
 		else catch (exception) {
 			maybe(file:remove(recfile))
