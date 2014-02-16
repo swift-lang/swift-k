@@ -466,6 +466,7 @@ if( $option_listconfig ) {
 push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
 push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
 push(@new_swift_args, "-runid " . basename($run_directory));
+push(@new_swift_args, "-Ddebug.dir.prefix=" . basename($run_directory));  
 push( @new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
 
 # Write swift configuration files

@@ -148,7 +148,18 @@ public class Loader extends org.globus.cog.karajan.Loader {
             context.setAttribute("SWIFT:RUN_ID", runID);
             context.setAttribute("SWIFT:DRY_RUN", ap.isPresent(ARG_DRYRUN));
             context.setAttribute("SWIFT:HOME", System.getProperty("swift.home"));
-            
+
+            String debugDirPrefix = System.getProperty("debug.dir.prefix");
+            if (debugDirPrefix == null) {
+               debugDirPrefix = "";
+            } 
+
+            else if (debugDirPrefix.charAt(debugDirPrefix.length() - 1) != File.separatorChar) {
+	       debugDirPrefix += File.separatorChar;
+	    }
+
+	    context.setAttribute("SWIFT:DEBUG_DIR_PREFIX", debugDirPrefix);
+
             Main root = compileKarajan(tree, context);
             root.setFileName(projectName);
 

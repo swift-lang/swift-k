@@ -168,6 +168,9 @@ else
       elif [[ "$cmd" == *-swiftoutlog=* ]]; then
          SWIFTOUTLOG=$( echo $cmd | cut -d'=' -f2 )
          CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g ) 
+      elif [[ "$cmd" == *-Ddebug.dir.prefix=* ]]; then
+         OPTIONS="$OPTIONS $cmd"
+         CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g )
       fi
    done
 fi
@@ -194,8 +197,8 @@ if [ "$SWIFT_USAGE_STATS" = 1 ]; then
 	$BASH -c "echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH $return_code 1 > /dev/udp/$LISTENER/$PORT" > /dev/null 2>&1 &
 fi
 
-mv *.d/ $( ls -1rtd run*/ 2>/dev/null |tail -1 ) > /dev/null 2>&1
 rm *.swiftx *.kml > /dev/null 2>&1
+
 exit $return_code
 
 # Local Variables:
