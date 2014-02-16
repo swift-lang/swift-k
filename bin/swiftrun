@@ -348,12 +348,20 @@ sub record_property {
       swiftquit "Error: Missing value for property \"$property_input\"";
    }
 
-   $key = lc($key);
+   if( $key !~ m/^app\./) { $key = lc($key); }
    $value =~ s/^\s+//g;
 
    if($key eq "sites") { $key = "site"; }
-   $value =~ s/\$(\w+)/$ENV{$1}/g;
    $properties{ $key } = $value;
+}
+
+# Replace environment variables in properties
+sub env_replace {
+   foreach my $key (sort keys %properties) {
+      my $value = $properties{$key};
+      $value =~ s/\$(\w+)/$ENV{$1}/g;
+      $properties{$key} = $value;
+   }
 }
 
 # Getopt::Long can't accept dots in arguments, work around to make things easy
@@ -386,19 +394,13 @@ if ( $option_help ) {
 }
 
 # Create/increment run directory
-my $run_number = 0;
+my $run_number = 1;
 my @run_directories = <run[0-9][0-9][0-9]>;
 
 if(@run_directories) {
    $run_number = $run_directories[-1];
    $run_number =~ s/run//g;
    $run_number++;
-}
-
-$run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
-$ENV{RUNDIRECTORY} = "$run_directory";
-if(!$option_listconfig) {
-   mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
 }
 
 # Set @sites array from comma separated list of sites
@@ -441,7 +443,6 @@ foreach my $property_file(@property_files) {
             &record_property( $prefix . ".$_" );
          }
       }
-
       else {
          &record_property($_);
       }
@@ -462,14 +463,25 @@ if( $option_listconfig ) {
    exit;
 }
 
+# Determine run directory situation
 if(!defined($properties{"config.rundirs"}) || $properties{"config.rundirs"} ne "false") {
+   $run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
+   if(!$option_listconfig) {
+      mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
+   }
+
    @new_swift_args = ("-Dscript.dir=$run_directory/scripts");
    push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
    push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
    push(@new_swift_args, "-runid " . basename($run_directory));
    push(@new_swift_args, "-Ddebug.dir.prefix=" . basename($run_directory) . "/");  
    push(@new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
+} else {
+   $run_directory = getcwd();
 }
+
+$ENV{RUNDIRECTORY} = "$run_directory";
+&env_replace();
 
 # Write swift configuration files
 &write_sites("sites.xml") if defined( $option_siteslist ) || defined($properties{site});
