@@ -462,12 +462,14 @@ if( $option_listconfig ) {
    exit;
 }
 
-@new_swift_args = ("-Dscript.dir=$run_directory/scripts");
-push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
-push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
-push(@new_swift_args, "-runid " . basename($run_directory));
-push(@new_swift_args, "-Ddebug.dir.prefix=" . basename($run_directory));  
-push( @new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
+if(!defined($properties{"config.rundirs"}) || $properties{"config.rundirs"} ne "false") {
+   @new_swift_args = ("-Dscript.dir=$run_directory/scripts");
+   push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
+   push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
+   push(@new_swift_args, "-runid " . basename($run_directory));
+   push(@new_swift_args, "-Ddebug.dir.prefix=" . basename($run_directory) . "/");  
+   push(@new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
+}
 
 # Write swift configuration files
 &write_sites("sites.xml") if defined( $option_siteslist ) || defined($properties{site});
