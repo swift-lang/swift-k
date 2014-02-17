@@ -220,7 +220,7 @@ namespace(swift) {
     }
 
 	doStagein := function(jobid, files, dir, host) {
-		log(LOG:INFO, "START jobid={jobid} - Staging in files")
+                log(LOG:INFO, "START jobid={jobid} - Staging in files {files}")
 
 		cdmfile := cdm:file()
 		libexec := "{SWIFT:HOME}/libexec"
@@ -269,8 +269,8 @@ namespace(swift) {
 				fullLocal := dircat(ldir, bname)
 				fullRemote := dircat(rdir, bname)
 
-				log(LOG:DEBUG, "FILE_STAGE_OUT_START srcname={bname} srcdir={rdir} srchost={host} ",
-					"destdir={ldir} desthost={dhost} provider={provider}")
+                                log(LOG:DEBUG, "FILE_STAGE_OUT_START srcname={bname} srcdir={rdir} srchost={host} ",
+                                        "destdir={ldir} desthost={dhost} provider={provider} jobid={jobid}")
 				//make sure we do have the directory on the client side
 				dir:make(ldir, host=dhost, provider=provider)
 				policy := cdm:query(file)
