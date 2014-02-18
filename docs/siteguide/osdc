@@ -12,7 +12,7 @@ headnode. SSH to the headnode.
 The headnode should have Swift and Java available. The easiest way to do this is to have a copy 
 of those packages available in /glusterfs/users/$USER, and have those directories in your $PATH.
 
-Set the environment variable $SWIFT_USERHOME variable to /glusterfs/users/<yourusername>.
+Set the environment variable $SWIFT_USERHOME to /glusterfs/users/<yourusername>.
 
 Use the following sites.xml:
 -----
