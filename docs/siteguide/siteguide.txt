@@ -26,6 +26,8 @@ include::mcs[]
 
 include::midway[]
 
+include::osdc[]
+
 include::ssh[]
 
 include::ssh-cl[]

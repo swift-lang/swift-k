@@ -1,0 +1,43 @@
+Open Science Data Grid
+----------------------
+To run Swift on Open Science Data Grid, connect to 
+http://www.opensciencedatacloud.org, and select OSDC Console Login. Select 
+Instances->Launch Instance, select Ubuntu, and click the down arrow next to
+the launch button. Select Launch Cluster, pick your options, and launch.
+
+SSH to the sullivan login node (sullivan.opensciencedatacloud.org) and run the command "nova list".
+This will print information about your instances. You will see one instance with a name containing 
+headnode. SSH to the headnode.
+
+The headnode should have Swift and Java available. The easiest way to do this is to have a copy 
+of those packages available in /glusterfs/users/$USER, and have those directories in your $PATH.
+
+Set the environment variable $SWIFT_USERHOME variable to /glusterfs/users/<yourusername>.
+
+Use the following sites.xml:
+-----
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
+  <pool handle="osdc">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <profile namespace="globus" key="jobsPerNode">1</profile>
+    <profile namespace="globus" key="ppn">1</profile>
+    <profile namespace="globus" key="queue">batch</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <profile namespace="globus" key="slots">10</profile>
+    <profile namespace="globus" key="nodeGranularity">1</profile>
+    <profile namespace="globus" key="maxNodes">1</profile>
+    <filesystem provider="local"/>
+    <workdirectory>/glusterfs/users/dkelly/swiftwork</workdirectory>
+  </pool>
+</config>
+-----
+
+You will need to change workdirectory to reflect your username. Slots should be set
+to the maximum number of nodes you have available. jobsPerNode should be set to the number of cores
+available per node.
+
+Run Swift as normal with a command like this:
+-----
+$ swift -sites.file sites.xml -tc.file tc.data myscript.swift
+-----
