@@ -1,0 +1,1 @@
+export TCLLIBPATH="$PWD/../../tcl/"

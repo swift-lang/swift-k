@@ -6,8 +6,8 @@ set x [CoasterSWIGClientSettings $client_ptr "SLOTS=1,MAX_NODES=1,JOBS_PER_NODE=
 puts "Error code from CoasterSWIGClientSettings $x"
 
 # Job stuff
-set job1 [CoasterSWIGJobCreate "/bin/bash"]
-set job2 [CoasterSWIGJobCreate "/bin/bash"]
+set job1 [CoasterSWIGJobCreate "/bin/bash" ""]
+set job2 [CoasterSWIGJobCreate "/bin/bash" "fork"]
 puts "Job cmd set"
 set stdout_dst1 "/homes/yadunand/swift-trunk/cog/modules/provider-coaster-c-client/tests/tcl/stdout1"
 set stderr_dst1 "/homes/yadunand/swift-trunk/cog/modules/provider-coaster-c-client/tests/tcl/stderr1"

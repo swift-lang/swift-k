@@ -6,7 +6,7 @@ set x [CoasterSWIGClientSettings $client_ptr "SLOTS=1,MAX_NODES=1,JOBS_PER_NODE=
 puts "Error code from CoasterSWIGClientSettings $x"
 
 # Job stuff
-set job1 [CoasterSWIGJobCreate "/bin/echo"]
+set job1 [CoasterSWIGJobCreate "/bin/echo" ""]
 puts "Job set to /bin/hostname"
 set rcode [CoasterSWIGJobSettings $job1 "" "hello world how are you \\\$USERNAME \\\$RANDOM \\\$HOSTNAME" "" "" \
                                   "/homes/yadunand/swift-trunk/cog/modules/provider-coaster-c-client/tests/tcl/stdout" \

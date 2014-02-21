@@ -7,7 +7,7 @@ set client_ptr [CoasterSWIGClientCreate $loop_ptr 127.0.0.1:53001]
 set x [CoasterSWIGClientSettings $client_ptr "SLOTS=1,MAX_NODES=1,JOBS_PER_NODE=2"]
 puts "Error code from CoasterSWIGClientSettings $x"
 
-set job1 [CoasterSWIGJobCreate "/bin/hostname"]
+set job1 [CoasterSWIGJobCreate "/bin/hostname" ""]
 puts "Job set to /bin/hostname"
 
 set rcode [CoasterSWIGJobSettings $job1 "" "" "" "" \
