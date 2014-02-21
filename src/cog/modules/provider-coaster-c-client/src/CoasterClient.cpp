@@ -189,7 +189,7 @@ int CoasterClient::getPort() {
 	index = URL.find(':');
 	if (index == string::npos) {
 		// default port
-		return 1984;
+		return 53001;
 	}
 	else {
 		const char* sport = URL.substr(index + 1).c_str();

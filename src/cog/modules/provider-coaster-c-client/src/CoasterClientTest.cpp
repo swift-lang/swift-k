@@ -14,7 +14,7 @@ int main(void) {
 		CoasterLoop loop;
 		loop.start();
 
-		CoasterClient client("localhost:1984", loop);
+		CoasterClient client("localhost:53001", loop);
 		client.start();
 
 		Settings s;

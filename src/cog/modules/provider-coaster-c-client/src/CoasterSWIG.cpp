@@ -73,12 +73,12 @@ int CoasterSWIGClientSettings(CoasterClient *client, char *settings)
     return 0;
 }
 
-Job* CoasterSWIGJobCreate(char *cmd_string)
+Job* CoasterSWIGJobCreate(char *cmd_string, char *jobmanager)
 {
-    string jobmanager = string("dummy");
-    cout << "CoasterSWIGJobCreate("<< cmd_string <<") "<< endl;
+    string jm = string(jobmanager);
+    cout << "CoasterSWIGJobCreate("<< cmd_string <<") : jobmanager="<< jm << endl;
     Job *job = new Job(cmd_string);
-    job->setJobManager(jobmanager);
+    job->setJobManager(jm);
     return job;
 }
 

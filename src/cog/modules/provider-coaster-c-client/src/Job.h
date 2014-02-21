@@ -25,7 +25,7 @@ class Job {
 		string* stdinLocation;
 		string* stdoutLocation;
 		string* stderrLocation;
-		string* jobManager;
+        string jobManager;
 
 		map<string, string>* env;
 		map<string, string>* attributes;
@@ -60,8 +60,8 @@ class Job {
 		string* getStderrLocation();
 		void setStderrLocation(string& loc);
 
-		string* getJobManager();
-		void setJobManager(string& jm);
+        string getJobManager();
+        void setJobManager(string jm);
 
 		map<string, string>* getEnv();
 		string* getEnv(string name);

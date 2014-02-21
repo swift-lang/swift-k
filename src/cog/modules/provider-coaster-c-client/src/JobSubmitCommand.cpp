@@ -1,6 +1,7 @@
 #include "JobSubmitCommand.h"
 #include "CoasterError.h"
 #include <cstring>
+#include <string>
 
 using namespace std;
 
@@ -62,13 +63,15 @@ void JobSubmitCommand::serialize() {
 		}
 	}
 
-	if (job->getJobManager() == NULL) {
+	if (job->getJobManager().empty()) {
+        cout<< "getJobManager == NULL, setting to :  fork "<< endl;
 		add(ss, "jm", "fork");
 	}
 	else {
-		add(ss, "jm", job->getJobManager());
+        const char *jm_string = (job->getJobManager()).c_str();
+        cout<< "getJobManager != !NULL, setting to : "<< job->getJobManager() << endl;
+		add(ss, "jm", jm_string);
 	}
-
 	addOutData(Buffer::wrap(ss));
 }
 

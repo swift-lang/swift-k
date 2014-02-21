@@ -1,5 +1,6 @@
 #include "Job.h"
 #include <sstream>
+#include <cstring>
 
 using namespace std;
 
@@ -17,7 +18,7 @@ Job::Job(string pexecutable) {
 	stdinLocation = NULL;
 	stdoutLocation = NULL;
 	stderrLocation = NULL;
-	jobManager = NULL;
+	jobManager = string("");
 
 	env = NULL;
 	attributes = NULL;
@@ -86,12 +87,13 @@ void Job::setStderrLocation(string& loc) {
 	stderrLocation = &loc;
 }
 
-string* Job::getJobManager() {
+string Job::getJobManager() {
 	return jobManager;
 }
 
-void Job::setJobManager(string& jm) {
-	jobManager = &jm;
+void Job::setJobManager(string jm) {
+    // cout << "Job.cpp setJobManager ="<< jm << endl;
+    jobManager = jm;
 }
 
 map<string, string>* Job::getEnv() {

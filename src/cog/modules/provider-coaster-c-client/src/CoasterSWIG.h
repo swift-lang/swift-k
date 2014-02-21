@@ -20,7 +20,7 @@ int CoasterSWIGClientDestroy(CoasterClient *client);
 
 int CoasterSWIGClientSettings(CoasterClient *client, char *settings);
 
-Job* CoasterSWIGJobCreate(char *cmd_string);
+Job* CoasterSWIGJobCreate(char *cmd_string, char *jobmanager);
 
 int CoasterSWIGJobSettings(Job* j, char* dir, char* args, char* attr,
                            char* envs, char* stdoutLoc, char* stderrLoc);

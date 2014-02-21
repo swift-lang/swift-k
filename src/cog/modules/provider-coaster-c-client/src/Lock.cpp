@@ -11,7 +11,7 @@
 
 static int unique = 0;
 
-#define DEBUG_LOCKS 1
+#define DEBUG_LOCKS 0
 #if DEBUG_LOCKS == 1
 #define debug(format, args...)           \
   {    printf("LOCK: %i " format "\n", id, ## args);        \
