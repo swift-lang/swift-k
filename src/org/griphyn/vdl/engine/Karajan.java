@@ -203,7 +203,7 @@ public class Karajan {
 					//String xmlfilename = "./"+moduleToImport+".xml";
 				    String lib_path = System.getenv("SWIFT_LIB");
 					String swiftfilename = moduleToImport+".swift";
-					String xmlfilename = moduleToImport+".xml";
+					String xmlfilename = moduleToImport+".swiftx";
 
 					File local = new File(swiftfilename);
 					if( !( lib_path == null || local.exists() ) )
@@ -227,7 +227,7 @@ public class Karajan {
 					try {
         	    		VDLt2VDLx.compile(new FileInputStream(swiftfilename),new PrintStream(new FileOutputStream(xmlfilename)));
 						logger.debug("Compiled. Now reading in compiled XML for "+moduleToImport);
-						Program importedProgram = parseProgramXML(xmlfilename).getProgram();
+						Program importedProgram = parseProgramXML(new File(xmlfilename)).getProgram();
 						logger.debug("Read in compiled XML for "+moduleToImport);
 						importList.addFirst(importedProgram);
 						importedNames.add(moduleToImport);
