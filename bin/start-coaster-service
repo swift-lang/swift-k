@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 # Report a problem and exit
 crash()
@@ -23,6 +23,7 @@ wait_for_file()
    done
 }
 
+# Run command, log, and wait for completion
 run_command()
 {
    command="$@"
@@ -30,6 +31,7 @@ run_command()
    $command >> $LOG 2>&1
 }
 
+# Log and run command in background
 run_command_bg()
 {
    command="$@"
@@ -41,6 +43,8 @@ run_command_bg()
 # Start SSH workers
 start-workers-ssh()
 {
+   waitpids=""
+
    for MACHINE in $WORKER_HOSTS
    do
       # Enable ssh tunneling if needed
@@ -49,11 +53,15 @@ start-workers-ssh()
       fi
 
       # Connect directly
-      run_command ssh $WORKER_USERNAME@$MACHINE mkdir -p $WORKER_LOCATION
-      run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION
       echo Starting worker on $MACHINE
-      run_command_bg ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR"
+      (
+        run_command ssh $WORKER_USERNAME@$MACHINE "mkdir -p $WORKER_LOCATION && mkdir -p $WORKER_LOG_DIR" ;
+        run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION ;
+        run_command ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL nohup $WORKER_LOCATION/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR &> /dev/null &"
+      ) &
+      waitpids="$waitpids $!"
    done
+   wait $waitpids
    return 0
 }
 
@@ -176,7 +184,8 @@ echo Service port: $SERVICE_PORT
 echo Local port: $LOCAL_PORT
 
 # Generate sites.xml
-export EXECUTIONURL="http://$IPADDR:$SERVICE_PORT"
+export SERVICEURL="http://$IPADDR:$SERVICE_PORT"
+export EXECUTIONURL="$SERVICEURL"
 export WORKERURL="http://$IPADDR:$LOCAL_PORT"
 
 echo Generating sites.xml
