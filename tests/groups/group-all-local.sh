@@ -4,12 +4,13 @@
 GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/local \
             $TESTDIR/language/should-not-work \
-            # $TESTDIR/cdm \
-            # $TESTDIR/cdm/ps \
-            # $TESTDIR/cdm/star
+            $TESTDIR/cdm \
+            $TESTDIR/cdm/ps \
+            $TESTDIR/cdm/star
             $TESTDIR/language-behaviour/arrays \
             $TESTDIR/language-behaviour/broken \
-	    $TESTDIR/language-behaviour/compounds \
+	        $TESTDIR/language-behaviour/compounds \
+            $TESTDIR/language-behaviour/associative_array \
             $TESTDIR/language-behaviour/control_structures \
             $TESTDIR/language-behaviour/datatypes \
 	    $TESTDIR/language-behaviour/IO \
