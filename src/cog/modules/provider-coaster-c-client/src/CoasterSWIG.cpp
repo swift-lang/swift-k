@@ -48,6 +48,7 @@ int CoasterSWIGClientDestroy(CoasterClient *client)
 int CoasterSWIGClientSettings(CoasterClient *client, char *settings)
 {
     Settings s;
+    int kv_index = 0;
     cout << "CoasterSWIGClientSettings(" << settings << ")" <<endl;
     cout << "Client : [" << (void *) client << "]"<<endl;
 
@@ -55,21 +56,30 @@ int CoasterSWIGClientSettings(CoasterClient *client, char *settings)
     // K1=V1, K2=V2 is the format of the settings string
     std::vector<std::string> elems;
     std::stringstream ss(settings);
-    std::string item, key, value;
+    std::string item;
+    // Assumed to not have more than 50 coaster settings
+    std::string kv_pair[50][2];
 
     while (std::getline(ss, item, ',')) {
         elems.push_back(item);
         std::stringstream kv(item);
         std::string kv_item;
-        std::getline(kv, kv_item, '=');
-        key = kv_item;
-        std::getline(kv, kv_item);
-        value = kv_item;
-        s.set(key, value);
-        cout << "Key,Value : " << key <<", "<<value << endl;
+        std::getline(kv, kv_pair[kv_index][0], '=');
+        std::getline(kv, kv_pair[kv_index][1]);
+        s.set(kv_pair[kv_index][0], kv_pair[kv_index][1]);
+        cout << "Key,Value : " << kv_pair[kv_index][0] <<", "<< kv_pair[kv_index][1] << endl;
+        kv_index++;
     }
 
     client->setOptions(s);
+    /*  ONLY FOR DEBUGGING
+    map<string*, const char*>::iterator i;
+    map<string *, const char*>* m = s.getSettings();
+    for (i = m->begin(); i != m->end(); i++) {
+        string ss;
+        cout << "Key, Value SET : " << *(i->first) << " : " << i->second << endl;
+    }
+    */
     return 0;
 }
 
