@@ -41,6 +41,8 @@ run_command_bg()
 # Start SSH workers
 start-workers-ssh()
 {
+   waitpids=""
+
    for MACHINE in $WORKER_HOSTS
    do
       # Enable ssh tunneling if needed
@@ -49,11 +51,15 @@ start-workers-ssh()
       fi
 
       # Connect directly
-      run_command ssh $WORKER_USERNAME@$MACHINE mkdir -p $WORKER_LOCATION
-      run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION
       echo Starting worker on $MACHINE
-      run_command_bg ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL $WORKER_LOCATION/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR"
+      (
+        run_command ssh $WORKER_USERNAME@$MACHINE "mkdir -p $WORKER_LOCATION && mkdir -p $WORKER_LOG_DIR" ;
+        run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION ;
+        run_command ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL nohup $WORKER_LOCATION/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR &> /dev/null &"
+      ) &
+      waitpids="$waitpids $!"
    done
+   wait $waitpids
    return 0
 }
 
