@@ -86,6 +86,7 @@ while [ $# -gt 0 ]; do
    esac
 done
 
+
 # Determine the location of needed files
 export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
 if [ -z "$WORKER" ]; then
@@ -95,6 +96,7 @@ export WORKER_LOGGING_LEVEL="NONE"
 export PID_FILE="$HOME/.swift/.coaster-service-pids"
 export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
 export LOG="start-coaster-service.log"
+
 mkdir -p "$HOME/.swift" || crash "Unable to create $HOME/.swift"
 
 # Import settings
@@ -105,6 +107,12 @@ elif [ -f "coaster-service.conf" ]; then
 else
    crash "Cannot find coaster-service.conf!"
 fi
+
+#clean up coaster conf
+sed -i '/export WORKERURL=/d' $CONFIG_FILE
+sed -i '/export PID_FILE=/d' $CONFIG_FILE
+sed -i '/export LOG=/d' $CONFIG_FILE
+sed -i '/export LOCAL_PORT=/d' $CONFIG_FILE
 
 echo "Start-coaster-service..."
 echo "Configuration: $CONFIG_FILE"
@@ -188,6 +196,14 @@ echo Local port: $LOCAL_PORT
 # Generate sites.xml
 export EXECUTIONURL="http://$IPADDR:$SERVICE_PORT"
 export WORKERURL="http://$IPADDR:$LOCAL_PORT"
+
+echo "export WORKERURL=\"http://$IPADDR:$LOCAL_PORT\"" >> $CONFIG_FILE
+
+echo "export PID_FILE=\"$HOME/.swift/.coaster-service-pids\"" >> $CONFIG_FILE
+
+echo "export LOG=\"start-coaster-service.log\"" >> $CONFIG_FILE
+
+echo "export LOCAL_PORT=\"$LOCAL_PORT\"" >> $CONFIG_FILE
 
 echo Generating sites.xml
 if [ -f "gensites.template" ]; then
