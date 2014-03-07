@@ -26,25 +26,27 @@ cdm_action() {
 	local POLICY=$4  # DIRECT, BROADCAST, ...
 	shift 4
 	local ARGS=$@
+	
+	local ACTUAL_FILE=$(echo $FILE | sed -e 's:__root__/:/:' -e 's:__parent__:..:')
 
 	log "POLICY=$POLICY"
 	case $POLICY in
 		DIRECT)
 			DIRECT_DIR=${ARGS[0]}
 			[[ $DIRECT_DIR == "/" ]] && DIRECT_DIR=""
-			log "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE via $JOBDIR/$FILE"
+			log "CDM[DIRECT]: Linking to $DIRECT_DIR/$ACTUAL_FILE via $JOBDIR/$FILE"
 			if [ $MODE == "INPUT" ]; then
-				[ -f "$DIRECT_DIR/$FILE" ]
-				checkError 254 "CDM[DIRECT]: $DIRECT_DIR/$FILE does not exist!"
-				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
-				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
+				[ -f "$DIRECT_DIR/$ACTUAL_FILE" ]
+				checkError 254 "CDM[DIRECT]: $DIRECT_DIR/$ACTUAL_FILE does not exist!"
+				ln -s $DIRECT_DIR/$ACTUAL_FILE $JOBDIR/$FILE
+				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$ACTUAL_FILE failed!"
 			elif [ $MODE == "OUTPUT" ]; then
-				mkdir -p $( dirname $DIRECT_DIR/$FILE )
-				checkError 254 "CDM[DIRECT]: mkdir -p $( dirname $DIRECT_DIR/$FILE ) failed!"
-				touch $DIRECT_DIR/$FILE
-				checkError 254 "CDM[DIRECT]: Touching $DIRECT_DIR/$FILE failed!"
-				ln -s $DIRECT_DIR/$FILE $JOBDIR/$FILE
-				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$FILE failed!"
+				mkdir -p $( dirname $DIRECT_DIR/$ACTUAL_FILE )
+				checkError 254 "CDM[DIRECT]: mkdir -p $( dirname $DIRECT_DIR/$ACTUAL_FILE ) failed!"
+				touch $DIRECT_DIR/$ACTUAL_FILE
+				checkError 254 "CDM[DIRECT]: Touching $DIRECT_DIR/$ACTUAL_FILE failed!"
+				ln -s $DIRECT_DIR/$ACTUAL_FILE $JOBDIR/$FILE
+				checkError 254 "CDM[DIRECT]: Linking to $DIRECT_DIR/$ACTUAL_FILE failed!"
 			else
 				fail 254 "Unknown MODE: $MODE"
 			fi
@@ -55,15 +57,15 @@ cdm_action() {
 			REMOTE_DIR=$2
 			FLAGS=$3
 			log "CDM[LOCAL]: TOOL=$TOOL FLAGS=$FLAGS REMOTE_DIR=$REMOTE_DIR ARGS=$ARGS"
- 			log "CDM[LOCAL]: Copying $REMOTE_DIR/$FILE to $JOBDIR/$FILE"
+ 			log "CDM[LOCAL]: Copying $REMOTE_DIR/$ACTUAL_FILE to $JOBDIR/$FILE"
  			if [ $MODE == "INPUT" ]; then
- 				[ -f "$REMOTE_DIR/$FILE" ]
- 				checkError 254 "CDM[LOCAL]: $REMOTE_DIR/$FILE does not exist!"
+ 				[ -f "$REMOTE_DIR/$ACTUAL_FILE" ]
+ 				checkError 254 "CDM[LOCAL]: $REMOTE_DIR/$ACTUAL_FILE does not exist!"
 				if [ $TOOL == "cp" ]; then
- 					$TOOL $FLAGS $REMOTE_DIR/$FILE $JOBDIR/$FILE
+ 					$TOOL $FLAGS $REMOTE_DIR/$ACTUAL_FILE $JOBDIR/$FILE
 					checkError 254 "CDM[LOCAL]: cp failed!"
 				elif [ $TOOL == "dd" ]; then
-					$TOOL $FLAGS if=$REMOTE_DIR/$FILE of=$JOBDIR/$FILE
+					$TOOL $FLAGS if=$REMOTE_DIR/$ACTUAL_FILE of=$JOBDIR/$FILE
 					checkError 254 "CDM[LOCAL]: dd failed!"
 				else
 					fail 254 "CDM[LOCAL]: Unknown TOOL: $TOOL"
@@ -77,13 +79,13 @@ cdm_action() {
 		BROADCAST)
 			BROADCAST_DIR=${ARGS[0]}
 			if [ $MODE == "INPUT" ]; then
-				log "CDM[BROADCAST]: Linking $JOBDIR/$FILE to $BROADCAST_DIR/$FILE"
-				[ -f "$BROADCAST_DIR/$FILE" ]
-				checkError 254 "CDM[BROADCAST]: $BROADCAST_DIR/$FILE does not exist!"
-				ln -s $BROADCAST_DIR/$FILE $JOBDIR/$FILE
-				checkError 254 "CDM[BROADCAST]: Linking to $BROADCAST_DIR/$FILE failed!"
+				log "CDM[BROADCAST]: Linking $JOBDIR/$FILE to $BROADCAST_DIR/$ACTUAL_FILE"
+				[ -f "$BROADCAST_DIR/$ACTUAL_FILE" ]
+				checkError 254 "CDM[BROADCAST]: $BROADCAST_DIR/$ACTUAL_FILE does not exist!"
+				ln -s $BROADCAST_DIR/$FILE $JOBDIR/$ACTUAL_FILE
+				checkError 254 "CDM[BROADCAST]: Linking to $BROADCAST_DIR/$ACTUAL_FILE failed!"
 			else
-				echo "CDM[BROADCAST]: Skipping output file: ${FILE}"
+				echo "CDM[BROADCAST]: Skipping output file: ${ACTUAL_FILE}"
 			fi
 			;;
 		GATHER)
