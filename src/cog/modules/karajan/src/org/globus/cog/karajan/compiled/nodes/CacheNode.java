@@ -64,6 +64,7 @@ public class CacheNode extends BufferedInternalFunction {
 					frame = stack.frameCount();
 					i++;
 				case 1:
+					// this sets "key", which is local
 					boolean shouldContinue = checkCached(stack);
 					if (!shouldContinue) {
 						break;
@@ -74,6 +75,7 @@ public class CacheNode extends BufferedInternalFunction {
 						startCount++;
 					}
 					body.run(thr);
+					// this uses "key", set above
 					setValue(stack);
 			}
 		}
@@ -106,7 +108,7 @@ public class CacheNode extends BufferedInternalFunction {
 			fv = (FutureObject) cache.getCachedValue(key);
 			if (fv == null) {
 				fv = new FutureObject();
-				cache.addValue(key, fv);
+				cache.addAndLock(key, fv);
 				initial = true;
 			}
 		}
@@ -129,6 +131,7 @@ public class CacheNode extends BufferedInternalFunction {
 		synchronized (cache) {
 			FutureObject f = (FutureObject) cache.getCachedValue(key);
 			f.setValue(ret);
+			cache.unlock(key);
 		}
 	}
 
