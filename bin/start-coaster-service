@@ -126,7 +126,11 @@ if [ -z "$IPADDR" ]; then
    if [ -n "$GLOBUS_HOSTNAME" ]; then
       IPADDR=$GLOBUS_HOSTNAME
    else
-      crash "Unable to determine IP address"
+      if hash curl 2>/dev/null ; then
+            IPADDR=$(curl ifconfig.me 2>/dev/null)
+      else 
+            crash "Unable to determine IP address"
+      fi
    fi
 fi
 
