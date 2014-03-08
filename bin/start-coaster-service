@@ -43,23 +43,26 @@ start-workers-ssh()
 {
    waitpids=""
 
-   for MACHINE in $WORKER_HOSTS
-   do
-      # Enable ssh tunneling if needed
-      if [ "$SSH_TUNNELING" == "yes" ]; then
-         run_command_bg ssh -N -T -R *:$LOCAL_PORT:localhost:$LOCAL_PORT "$WORKER_USERNAME@$MACHINE"
-      fi
 
-      # Connect directly
-      echo Starting worker on $MACHINE
-      (
-        run_command ssh $WORKER_USERNAME@$MACHINE "mkdir -p $WORKER_LOCATION && mkdir -p $WORKER_LOG_DIR" ;
-        run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION ;
-        run_command ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL nohup $WORKER_LOCATION/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR &> /dev/null &"
-      ) &
-      waitpids="$waitpids $!"
-   done
-   wait $waitpids
+   if [ -n "$WORKER_HOSTS" ] ; then
+       for MACHINE in $WORKER_HOSTS
+       do
+          # Enable ssh tunneling if needed
+          if [ "$SSH_TUNNELING" == "yes" ]; then
+             run_command_bg ssh -N -T -R *:$LOCAL_PORT:localhost:$LOCAL_PORT "$WORKER_USERNAME@$MACHINE"
+          fi
+
+          # Connect directly
+          echo Starting worker on $MACHINE
+          (
+            run_command ssh $WORKER_USERNAME@$MACHINE "mkdir -p $WORKER_LOCATION && mkdir -p $WORKER_LOG_DIR" ;
+            run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION ;
+            run_command ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL nohup $WORKER_LOCATION/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR &> /dev/null &"
+          ) &
+          waitpids="$waitpids $!"
+       done
+       wait $waitpids
+   fi
    return 0
 }
 
