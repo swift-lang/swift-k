@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # crash: Report a problem and exit
 crash()
 {
@@ -180,9 +179,13 @@ if [ -f "$PROPERTIES_FILE" ]; then
                   COMMAND_DIRNAME=$(dirname $COMMAND)
                   if [ -d "$COMMAND_DIRNAME" ]; then
                      COMMAND_PATH=$(cd $COMMAND_DIRNAME; pwd)/$(basename $COMMAND)
-                     echo $HOST $NAME $COMMAND_PATH null null null >> tc.data
+                     if ! grep -xq "$HOST $NAME $COMMAND_PATH " ; then
+                         echo "$HOST $NAME $COMMAND_PATH " >> tc.data
+                     fi
                   else
-                     echo $HOST $NAME $COMMAND null null null >> tc.data
+                     if ! grep -xq "$HOST $NAME $COMMAND_PATH " ; then
+                         echo "$HOST $NAME $COMMAND_PATH " >> tc.data
+                     fi
                   fi
               done
            fi
@@ -195,7 +198,9 @@ if [ -f "$PROPERTIES_FILE" ]; then
                     COMMAND=`echo $line|awk '{print $3}'|cut -d'=' -f2`
                     COMMAND=`eval echo $COMMAND`
                     COMMAND_PATH=$(cd $(dirname $COMMAND); pwd)/$(basename $COMMAND)
-                    eval echo $HOST $NAME $COMMAND_PATH  null null null >> tc.data
+                    if ! grep -xq "$HOST $NAME $COMMAND_PATH " ; then
+                        eval echo "$HOST $NAME $COMMAND_PATH " >> tc.data
+                     fi
                  fi
                done
             fi
