@@ -160,6 +160,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
 fi
 
 # Parse values into variables for later sed processing
+touch apps
 if [ -f "$PROPERTIES_FILE" ]; then
    while read line
    do
@@ -179,12 +180,12 @@ if [ -f "$PROPERTIES_FILE" ]; then
                   COMMAND_DIRNAME=$(dirname $COMMAND)
                   if [ -d "$COMMAND_DIRNAME" ]; then
                      COMMAND_PATH=$(cd $COMMAND_DIRNAME; pwd)/$(basename $COMMAND)
-                     if ! grep -xq "$HOST $NAME $COMMAND_PATH " ; then
-                         echo "$HOST $NAME $COMMAND_PATH " >> tc.data
+                     if ! grep -xq "$HOST $NAME $COMMAND_PATH " apps ; then
+                         echo "$HOST $NAME $COMMAND_PATH " >> apps
                      fi
                   else
-                     if ! grep -xq "$HOST $NAME $COMMAND_PATH " ; then
-                         echo "$HOST $NAME $COMMAND_PATH " >> tc.data
+                     if ! grep -xq "$HOST $NAME $COMMAND_PATH " apps ; then
+                         echo "$HOST $NAME $COMMAND_PATH " >> apps
                      fi
                   fi
               done
@@ -198,8 +199,8 @@ if [ -f "$PROPERTIES_FILE" ]; then
                     COMMAND=`echo $line|awk '{print $3}'|cut -d'=' -f2`
                     COMMAND=`eval echo $COMMAND`
                     COMMAND_PATH=$(cd $(dirname $COMMAND); pwd)/$(basename $COMMAND)
-                    if ! grep -xq "$HOST $NAME $COMMAND_PATH " ; then
-                        eval echo "$HOST $NAME $COMMAND_PATH " >> tc.data
+                    if ! grep -xq "$HOST $NAME $COMMAND_PATH " apps ; then
+                        eval echo "$HOST $NAME $COMMAND_PATH " >> apps
                      fi
                  fi
                done
