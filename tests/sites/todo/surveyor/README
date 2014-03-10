@@ -1,0 +1,3 @@
+Be sure to set PROJECT and QUEUE. These settings worked for me, but unsure if they are universal
+export PROJECT=HTCScienceApps
+export QUEUE=default
