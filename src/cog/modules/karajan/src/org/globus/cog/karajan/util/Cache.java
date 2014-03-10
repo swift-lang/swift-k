@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * This is a simple/generic cache used by:
@@ -27,16 +28,17 @@ public class Cache implements Serializable {
 	private final static int ENTRY_POOL_MAX_SIZE = 25;
 	private final static int MAX_CACHE_SIZE = 1000;
 	private final static int CACHE_PURGE_SIZE = 100;
-	private HashMap primitives;
+	
+	private HashMap<Object, Value> store;
 	
 	private int maxCacheSize = MAX_CACHE_SIZE;
 	
 	public Cache() {
-		primitives = new HashMap();
+		store = new HashMap<Object, Value>();
 	}
 
 	public Object getCachedValue(Object key) {
-		Value value = (Value) primitives.get(key);
+		Value value = store.get(key);
 		if (value != null) {
 			value.hits++;
 			value.lastHit = System.currentTimeMillis();
@@ -46,31 +48,43 @@ public class Cache implements Serializable {
 	}
 
 	public boolean isCached(Object key) {
-		return primitives.containsKey(key);
+		return store.containsKey(key);
 	}
 
 	public void addValue(Object key, Object value) {
-		primitives.put(key, new Value(value));
+		store.put(key, new Value(value));
 		checkSize();
+	}
+	
+	public void addAndLock(Object key, Object value) {
+		Value v = new Value(value);
+		v.locked = true;
+		store.put(key, v);
+		checkSize();
+	}
+	
+	public void unlock(Object key) {
+		Value v = store.get(key);
+		v.locked = false;
 	}
 
 	private void checkSize() {
-		if (maxCacheSize > 0 && primitives.size() > maxCacheSize) {
-			long[] scores = new long[primitives.size()];
+		if (maxCacheSize > 0 && store.size() > maxCacheSize) {
+			long[] scores = new long[store.size()];
 			int index = 0;
-			Iterator i = primitives.values().iterator();
-			while (i.hasNext()) {
-				Value v = (Value) i.next();
-				scores[index++] = score(v.hits, v.lastHit);
+			for (Value v : store.values()) {
+				if (!v.locked) {
+					scores[index++] = score(v.hits, v.lastHit);
+				}
 			}
 			Arrays.sort(scores);
 			long threshold = scores[CACHE_PURGE_SIZE];
-			i = primitives.keySet().iterator();
-			while (i.hasNext()) {
-				Object key = i.next();
-				Value v = (Value) primitives.get(key);
-				if (score(v.hits, v.lastHit) < threshold) {
-					i.remove();
+			Iterator<Map.Entry<Object, Value>> j = store.entrySet().iterator();
+			while (j.hasNext()) {
+				Map.Entry<Object, Value> e = j.next();
+				Value v = e.getValue();
+				if (!v.locked && score(v.hits, v.lastHit) < threshold) {
+					j.remove();
 				}
 			}
 		}
@@ -92,6 +106,7 @@ public class Cache implements Serializable {
 
 		public int hits;
 		public long lastHit;
+		public boolean locked;
 		public Object object;
 
 		public Value(Object object) {
