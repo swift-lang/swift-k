@@ -209,7 +209,7 @@ declare an array for which an additional *append* operation is available:
 int[auto] array;
 
 foreach i in [1:100] {
-  append(array, i * 2);
+   array << (i*2)
 }
 
 foreach v in array {
