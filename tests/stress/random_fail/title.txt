@@ -1,2 +1,0 @@
-Regression tests for Bug 1067
-| Link -> http://bugzilla.mcs.anl.gov/swift/show_bug.cgi?id=1067

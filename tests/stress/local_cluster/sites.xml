@@ -9,7 +9,7 @@
     <profile namespace="globus"  key="maxWalltime">00:15:00</profile>
     <profile namespace="globus"  key="highOverAllocation">100</profile>
     <profile namespace="globus"  key="lowOverAllocation">100</profile>
-    <profile namespace="globus"  key="slots">1000</profile>
+    <profile namespace="globus"  key="slots">4</profile>
     <profile namespace="globus"  key="maxNodes">1</profile>
     <profile namespace="globus"  key="nodeGranularity">1</profile>
     <profile namespace="globus"  key="condor.+AccountingGroup">"group_friends.yadunand"</profile>
@@ -22,14 +22,14 @@
     <profile namespace="globus" key="jobsPerNode">24</profile>
     <profile namespace="globus" key="lowOverAllocation">100</profile>
     <profile namespace="globus" key="highOverAllocation">100</profile>
-    <profile namespace="globus" key="providerAttributes">pbs.aprun;pbs.mpp;depth=24;pbs.resource_list=advres=wilde.1768</profile>
+    <profile namespace="globus" key="providerAttributes"></profile>
     <profile namespace="globus" key="maxtime">3600</profile>
     <profile namespace="globus" key="maxWalltime">00:15:00</profile>
     <profile namespace="globus" key="userHomeOverride">/lustre/beagle/yadunandb/swiftwork</profile>
-    <profile namespace="globus" key="slots">5</profile>
+    <profile namespace="globus" key="slots">4</profile>
     <profile namespace="globus" key="maxnodes">1</profile>
     <profile namespace="globus" key="nodeGranularity">1</profile>
-    <profile namespace="karajan" key="jobThrottle">4.80</profile>
+    <profile namespace="karajan" key="jobThrottle">1.00</profile>
     <profile namespace="karajan" key="initialScore">10000</profile>
     <workdirectory>/tmp/yadunandb/swiftwork</workdirectory>
   </pool>
