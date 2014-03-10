@@ -229,8 +229,8 @@ However, it is possible to use *auto* key values from one array to access anothe
 int[auto] a;
 int[auto] b;
 
-append(a, 1);
-append(a, 2);
+a << 1;
+a << 2;
 
 foreach v, k in a {
   b[k] = a[k] * 2;
