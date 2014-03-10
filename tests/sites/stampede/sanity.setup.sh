@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USERNAME=$STAMPEDE_USERNAME
+USERNAME=$BLUES_USERNAME
 
 if [[ -z $USERNAME ]] 
 then

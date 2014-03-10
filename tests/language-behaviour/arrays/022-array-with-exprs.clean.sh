@@ -1,4 +1,4 @@
 #!/bin/bash
 set -x
-rm -r 022-array-with-exprs-* 022-array-with-exprs.kml 022-array-with-exprs.swiftx 022-array-with-exprs.out || exit 1
+rm -r 022-array-with-exprs.out || exit 1
 exit 0

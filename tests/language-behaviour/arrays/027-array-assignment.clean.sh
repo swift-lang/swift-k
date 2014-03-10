@@ -1,4 +1,4 @@
 #!/bin/bash
 set -x
-rm -r 027-array-assignment.out  027-array-assignment-* 027-array-assignment.kml 027-array-assignment.swiftx || exit 1
+rm -r 027-array-assignment.out || exit 1
 exit 0

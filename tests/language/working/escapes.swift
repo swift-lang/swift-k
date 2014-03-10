@@ -11,6 +11,9 @@ string w = "\f";
 
 string x = "\"";
 
-string y = "\'";
+// Why are we escaping single-quotes?
+// string y = "\'";
+
+string y = "'";
 
 string z = "\\";

@@ -4,4 +4,3 @@ type matrix {
 
 matrix m;
 m = readStructured("readStructured01.in");
-

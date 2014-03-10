@@ -1,4 +1,6 @@
-<config>
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
+
   <pool handle="frisbee">
     <execution provider="coaster" jobmanager="ssh-cl:local" url="frisbee.mcs.anl.gov"/>
     <profile namespace="globus" key="jobsPerNode">8</profile>
@@ -8,6 +10,6 @@
     <profile namespace="globus" key="maxWalltime">00:05:00</profile>
     <profile namespace="karajan" key="jobThrottle">0.0799</profile>
     <profile namespace="karajan" key="initialScore">10000</profile>
-    <workdirectory>/scratch/{env.USER}/swiftwork</workdirectory> -->    
+    <workdirectory>/homes/{env.USER}/swiftwork</workdirectory>
   </pool>
 </config>

@@ -36,7 +36,7 @@ Assuming your code is in *_/tmp/cog_*, where you
 have the conventional *_cog/modules/swift_* configuration,
 and you have done an *ant dist*, you can run
 *********************************************************
- suite.sh -t -o /tmp $PWD/tests/groups/group-all-local.sh
+ suite.sh -t -o /tmp $PWD/groups/group-all-local.sh
 *********************************************************
 or *cd* into */tmp* and run
 **************************************************************
@@ -252,3 +252,12 @@ If you have a problem:
 - *run-suite.sh*:
  a. Wrapper for *suite.sh*.
  b. Env variables set may be customized by user.
+
+- *meta.sh*:
+ a. Wrapper for *run-suite.sh*.
+ b. used to execute _run-suite/suite.sh_ from a remote site using *ssh*.
+
+.Example usage:
+*********************************************************************************************
+ meta.sh login.pads.ci.uchicago.edu /home/skenny/swift_runs/tests sites/pads-pbs-coasters.sh
+*********************************************************************************************

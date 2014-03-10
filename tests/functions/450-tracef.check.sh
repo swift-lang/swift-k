@@ -10,6 +10,6 @@ grep "array:\[9,91,19\]"       450-tracef.stdout || exit 1
 grep "pointer:.*Closed"        450-tracef.stdout || exit 1
 
 [[ $( grep -c "WORD" 450-tracef.stdout ) == 2 ]] || exit 1
-[[ $( grep -o '\<WORD\>' 450-tracef.stdout | wc -l ) == 4 ]] || exit 1
+[[ $( grep -o '\<WORD\>' 450-tracef.stdout | wc -l | sed 's/^[ \t]*//' ) == 4 ]] || exit 1
 
 exit 0

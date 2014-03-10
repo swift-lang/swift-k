@@ -1,4 +1,6 @@
-<config>
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
+
    <pool handle="fusion">
       <execution jobmanager="ssh-cl:pbs" provider="coaster" url="fusion.lcrc.anl.gov"/>
       <filesystem provider="local" url="none" />
@@ -8,7 +10,7 @@
       <profile namespace="globus" key="nodeGranularity">2</profile>
       <profile namespace="globus" key="maxNodes">2</profile>
       <profile namespace="globus" key="queue">shared</profile>
-      <profile namespace="karajan" key="jobThrottle">5.99</profile>
+      <profile namespace="karajan" key="jobThrottle">1.00</profile>
       <profile namespace="karajan" key="initialScore">10000</profile>
       <workdirectory>/homes/{env.USER}/swiftwork</workdirectory>
    </pool>
