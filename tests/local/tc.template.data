@@ -1,2 +1,3 @@
-* * * INSTALLED INTEL32::LINUX null
 localhost       append	_DIR_/append.sh INSTALLED	INTEL32::LINUX	null
+localhost echo /bin/echo null null null
+localhost cat /bin/cat null null null
