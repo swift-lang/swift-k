@@ -1,5 +1,11 @@
 type file;
 
+
+/*
+ * The status of the test is determined by the check script.
+ * The swift run itself will fail
+ */
+//THIS-SCRIPT-SHOULD-FAIL
 file script<"randfail.sh">;
 
 app (file ofile1, file ofile2) quicklyFailingApp(file script, int failchance,

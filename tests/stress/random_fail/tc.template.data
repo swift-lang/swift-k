@@ -1,2 +1,3 @@
-local perl /usr/bin/perl null null null
-local sh   /bin/bash
+local   perl    /usr/bin/perl null null null
+local   sh   /bin/bash
+midway  sh  /bin/bash
