@@ -3,10 +3,10 @@
 
 GROUPLIST=( 
             $TESTDIR/sites/beagle \
-            $TESTDIR/sites/mcs    \
+            $TESTDIR/sites/mcs \
             $TESTDIR/sites/midway \
-	    $TESTDIR/sites/uc3    \
-            $TESTDIR/sites/mac-frisbee  \
+	    $TESTDIR/sites/osgconnect \
+            $TESTDIR/sites/mac-frisbee \
           )
 
 checkvars WORK
