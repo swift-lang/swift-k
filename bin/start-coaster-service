@@ -112,10 +112,10 @@ else
 fi
 
 #clean up coaster conf
-sed -i '/export WORKERURL=/d' $CONFIG_FILE
-sed -i '/export PID_FILE=/d' $CONFIG_FILE
-sed -i '/export LOG=/d' $CONFIG_FILE
-sed -i '/export LOCAL_PORT=/d' $CONFIG_FILE
+sed -i '' '/export WORKERURL=/d' $CONFIG_FILE
+sed -i '' '/export PID_FILE=/d' $CONFIG_FILE
+sed -i '' '/export LOG=/d' $CONFIG_FILE
+sed -i '' '/export LOCAL_PORT=/d' $CONFIG_FILE
 
 echo "Start-coaster-service..."
 echo "Configuration: $CONFIG_FILE"
@@ -151,11 +151,11 @@ fi
 
 # Create files for storing port info, if needed
 if [ -z "$LOCAL_PORT" ]; then
-   LOCAL_PORT_FILE=$( mktemp )
+   LOCAL_PORT_FILE=$( mktemp XXXXXXX )
 fi
 
 if [ -z "$SERVICE_PORT" ]; then
-   SERVICE_PORT_FILE=$( mktemp )
+   SERVICE_PORT_FILE=$( mktemp XXXXXXX )
 fi
 
 # Check values in configuration file to determine how we should start coaster-service
