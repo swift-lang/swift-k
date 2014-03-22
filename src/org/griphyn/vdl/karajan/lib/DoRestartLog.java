@@ -33,30 +33,29 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.Path;
 
 public class DoRestartLog extends InternalFunction {
     
-    private ArgRef<List<List<Object>>> restartouts;
+    private ArgRef<List<DSHandle>> stageouts;
     private ChannelRef<Object> cr_vargs;
     private ChannelRef<Object> cr_restartLog;
    
     @Override
     protected Signature getSignature() {
-        return new Signature(params("restartouts"), returns(channel("...", DYNAMIC), channel("restartLog", DYNAMIC)));
+        return new Signature(params("stageouts"), returns(channel("...", DYNAMIC), channel("restartLog", DYNAMIC)));
     }
 
     @Override
     protected void runBody(LWThread thr) {
         Stack stack = thr.getStack();
-        Collection<List<Object>> files = restartouts.getValue(stack);
+        Collection<DSHandle> files = stageouts.getValue(stack);
         Channel<Object> ret = cr_vargs.get(stack);
         Channel<Object> log = cr_restartLog.get(stack);
         try {
-            for (List<Object> pv : files) {
-                Path p = (Path) pv.get(0);
-                DSHandle handle = (DSHandle) pv.get(1);
-                LogVar.logVar(log, handle, p);
+            for (DSHandle file : files) {
+                for (DSHandle leaf : file.getLeaves()) {
+                    LogVar.logVar(log, leaf);
+                }
             }
         }
         catch (Exception e) {

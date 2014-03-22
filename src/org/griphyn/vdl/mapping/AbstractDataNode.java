@@ -459,6 +459,46 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             }
         }
     }
+    
+    public Collection<DSHandle> getLeaves() throws HandleOpenException {
+        Type t = getType();
+        if (t.isPrimitive()) {
+            return Collections.emptyList();
+        }
+        if (!t.isComposite()) {
+            return Collections.singletonList((DSHandle) this);
+        }
+        List<DSHandle> list = new ArrayList<DSHandle>();
+        getLeaves(list);
+        return list;
+    }
+    
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
+        checkMappingException();
+        if (getType().getBaseType() != null) {
+            list.add(this);
+        }
+        else {
+            for (Field field : getType().getFields()) {
+                AbstractDataNode child;
+                String name = (String) field.getId();
+                try {
+                    child = (AbstractDataNode) this.getField(name);
+                }
+                catch (NoSuchFieldException e) {
+                    throw new RuntimeException("Inconsistency between type declaration and " + 
+                        "handle for field '" + name + "'");
+                }
+                Type type = child.getType(); 
+                if (!type.isPrimitive() && !child.isArray() && type.getFields().size() == 0) {
+                    list.add(child);
+                }
+                else {
+                    child.getLeaves(list);
+                }
+            }
+        }
+    }
         
     public void closeShallow() {
         synchronized(this) {

@@ -111,19 +111,6 @@ namespace(swift) {
 		ddir
 	}
 
-	inFiles := function(stageins) {
-		pathnames(stageins)
-	}
-
-	fileDirs := function(stageins, stageouts) {
-		list(
-			unique(
-				inFileDirs(stageins)
-				outFileDirs(stageouts)
-			)
-		)
-	}
-
 	createDirSet := function(jobid, destdir, host, dirs) {
 		/*
 		 * Ideally this would be done by creating a tree of the directories
@@ -219,7 +206,7 @@ namespace(swift) {
 		cdm:wait()
     }
 
-	doStagein := function(jobid, files, dir, host) {
+	doStagein := function(jobid, dir, host, files) {
 		log(LOG:INFO, "START jobid={jobid} - Staging in files {files}")
 
 		cdmfile := cdm:file()
@@ -238,11 +225,7 @@ namespace(swift) {
 		}
 
 		parallelFor(file, files) {
-			provider := provider(file)
-			srchost := hostname(file)
-			srcdir := swift:dirname(file)
-			destdir := dircat(dir, reldirname(file))
-			filename := basename(file)
+			(provider, srchost, destdir, filename, srcdir) := splitFileURL(file, dir)
 			size := file:size("{srcdir}/{filename}", host=srchost, provider=provider)
 
 			policy := cdm:query(file)
@@ -254,18 +237,12 @@ namespace(swift) {
 		log(LOG:INFO, "END jobid={jobid} - Staging in finished")
 	}
 	
-	doStageout := function(jobid, stageouts, dir, host) {
+	doStageout := function(jobid, dir, host, files) {
 		log(LOG:INFO, "START jobid={jobid} - Staging out files")
-		log(LOG:DEBUG, "stageouts: {stageouts}")
+		log(LOG:DEBUG, "stageouts: {files}")
 		done := list(
-			parallelFor(pv, stageouts) {
-				(path, var) := each(pv)
-				file := absFileName(getField(var, path))
-				provider := provider(file)
-				dhost := hostname(file)
-				rdir := dircat(dir, reldirname(file))
-				bname := basename(file)
-				ldir := swift:dirname(file)
+			parallelFor(file, files) {
+				(provider, dhost, rdir, bname, ldir) := splitFileURL(file, dir)
 				fullLocal := dircat(ldir, bname)
 				fullRemote := dircat(rdir, bname)
 
@@ -354,13 +331,10 @@ namespace(swift) {
 	)
 
 	export(execute2,
-		function(progress, tr, stagein, stageout,  restartout
-			replicationGroup, replicationChannel
+		function(progress, tr, stagein, stageout,
+			replicationGroup, replicationChannel,
 			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
 			
-			stagein := list(unique(each(stagein)))
-			stageout := list(unique(each(stageout)))
-
 			allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
 				ddir := initDDir(),
 				(wfdir, sharedDir) := 
@@ -383,9 +357,10 @@ namespace(swift) {
 				wrapfile := "{ddir}/param-{jobid}"
 
 				stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
-				stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr))
+				stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr)),
+				
+				(localFileDirs, remoteFileDirs, inFiles, outFiles) := getStagingInfo(stagein, stageout)
 
-				fileDirs := fileDirs(stagein, stageout)
 				os := siteProfile(rhost, "SYSINFO:OS")
 				
 				if(wrapperMode == "files") {
@@ -395,9 +370,9 @@ namespace(swift) {
 						"\n-out ", stdout,
 						"\n-err ", stderr,
 						"\n-i ", if (stdin != null, getFieldValue(stdin)),
-						"\n-d ", flatten(each(fileDirs)),
-						"\n-if ", flatten(inFiles(stagein)),
-						"\n-of ", flatten(outFiles(stageout)),
+						"\n-d ", str:join(remoteFileDirs, "|"),
+						"\n-if ", str:join(remoteFileNames(inFiles), "|"),
+						"\n-of ", str:join(remoteFileNames(outFiles), "|"),
 						"\n-cdmfile ", cdm:file(),
 						"\n-status ", statusMode,
 						for(a, arguments) {
@@ -410,8 +385,8 @@ namespace(swift) {
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 
 				try {
-					createDirSet(jobid, sharedDir, rhost, fileDirs)
-					doStagein(jobid, stagein, sharedDir, rhost)
+					createDirSet(jobid, sharedDir, rhost, localFileDirs)
+					doStagein(jobid, sharedDir, rhost, inFiles)
 					if(wrapperMode == "files") {
 						stageWrapperParams(jobid, jobdir, wrapfile, wfdir, rhost)
 					}
@@ -452,9 +427,9 @@ namespace(swift) {
 								"-out", stdout,
 								"-err", stderr,
 								"-i", if (stdin != null, getFieldValue(stdin)),
-								"-d", flatten(each(fileDirs)),
-								"-if", flatten(inFiles(stagein)),
-								"-of", flatten(outFiles(stageout)),
+								"-d", str:join(remoteFileDirs, "|"),
+								"-if", str:join(remoteFileNames(inFiles), "|"),
+								"-of", str:join(remoteFileNames(outFiles), "|"),
 								"-cdmfile", cdm:file(),
 								"-status", statusMode,
 								"-a", if (arguments != null, each(arguments))
@@ -486,14 +461,14 @@ namespace(swift) {
 
 
 					setProgress(progress, "Stage out")
-					doStageout(jobid, stageout, sharedDir, rhost)
-					doRestartLog(restartout)
+					doStageout(jobid, sharedDir, rhost, outFiles)
+					doRestartLog(stageout)
 					
 					if (configProperty("wrapperlog.always.transfer") == "true") {
 						discard(transferWrapperLog(rhost, wfdir, jobid, jobdir))
 					}
 					
-					cacheUnlockFiles(stagein, sharedDir, rhost) {
+					cacheUnlockFiles(inFiles, sharedDir, rhost) {
 						cleanupFiles(cacheFilesToRemove, rhost)
 					}
 						
@@ -502,7 +477,7 @@ namespace(swift) {
 				else catch(prev) {
 					if (matches(prev, "^Abort$")) {
 						log(LOG:DEBUG, "JOB_CANCELED jobid={jobid}")
-						cacheUnlockFiles(stagein, sharedDir, rhost, force=false) {
+						cacheUnlockFiles(inFiles, sharedDir, rhost, force=false) {
 							cleanupFiles(cacheFilesToRemove, rhost)
 						}
 						throw(prev)
@@ -517,7 +492,7 @@ namespace(swift) {
 							throw(exception)
 						}
 
-						cacheUnlockFiles(stagein, sharedDir, rhost, force=false) {
+						cacheUnlockFiles(inFiles, sharedDir, rhost, force=false) {
 							cleanupFiles(cacheFilesToRemove, rhost)
 						}
 

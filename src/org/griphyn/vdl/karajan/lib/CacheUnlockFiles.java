@@ -21,6 +21,7 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import k.rt.Stack;
@@ -39,7 +40,7 @@ import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
 import org.griphyn.vdl.mapping.AbsFile;
 
 public class CacheUnlockFiles extends CacheFunction {
-    private ArgRef<List<?>> file;
+    private ArgRef<Collection<AbsFile>> files;
     private ArgRef<String> dir;
     private ArgRef<BoundContact> host;
     private ArgRef<Boolean> force;
@@ -49,7 +50,7 @@ public class CacheUnlockFiles extends CacheFunction {
 
     @Override
     protected Signature getSignature() {
-        return new Signature(params("file", "dir", "host", optional("force", Boolean.TRUE), block("body")));
+        return new Signature(params("files", "dir", "host", optional("force", Boolean.TRUE), block("body")));
     }
     
 	@Override
@@ -77,7 +78,7 @@ public class CacheUnlockFiles extends CacheFunction {
     }
 
     public void remove(Stack stack) {
-        List<?> pairs = this.file.getValue(stack);
+        Collection<AbsFile> files = this.files.getValue(stack);
         String dir = this.dir.getValue(stack);
         Object host = this.host.getValue(stack);
         VDLFileCache cache = getCache(stack);
@@ -85,10 +86,9 @@ public class CacheUnlockFiles extends CacheFunction {
         
         boolean force = this.force.getValue(stack);
         
-        for (Object o : pairs) {
-            String file = (String) o;
-            File f = new File(PathUtils.remotePathName(new AbsFile(file).getPath()), dir, host, 0);
-            CacheReturn cr = cache.unlockEntry(f, force);
+        for (AbsFile f : files) {
+            File cf = new File(PathUtils.remotePathName(f.getPath()), dir, host, 0);
+            CacheReturn cr = cache.unlockEntry(cf, force);
             rem.addAll(cr.remove);
         }
         

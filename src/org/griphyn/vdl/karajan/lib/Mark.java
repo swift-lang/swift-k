@@ -20,7 +20,7 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.List;
+import java.util.Collection;
 
 import k.rt.Channel;
 import k.rt.ExecutionException;
@@ -28,13 +28,13 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DataDependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
-import org.griphyn.vdl.mapping.Path;
 
 public class Mark extends SwiftFunction {
-    private ArgRef<Channel<List<Object>>> restarts;
+    private ArgRef<Channel<AbstractDataNode>> restarts;
     private ArgRef<Boolean> err;
     private ArgRef<Boolean> mapping;
     
@@ -48,19 +48,19 @@ public class Mark extends SwiftFunction {
         try {
             if (err.getValue(stack)) {
                 boolean mapping = this.mapping.getValue(stack);
-                Channel<List<Object>> files = this.restarts.getValue(stack);
-                for (List<Object> pv : files) {
-                    Path p = parsePath(pv.get(0));
-                    DSHandle handle = (DSHandle) pv.get(1);
-                    DSHandle leaf = handle.getField(p);
-                    synchronized (leaf) {
-                        if (mapping) {
-                            leaf.setValue(new MappingDependentException(leaf, null));
+                Channel<AbstractDataNode> files = this.restarts.getValue(stack);
+                for (AbstractDataNode dn : files) {
+                    Collection<DSHandle> leaves = dn.getLeaves();
+                    for (DSHandle leaf : leaves) {
+                        synchronized (leaf) {
+                            if (mapping) {
+                                leaf.setValue(new MappingDependentException(leaf, null));
+                            }
+                            else {
+                                leaf.setValue(new DataDependentException(leaf, null));
+                            }
+                            leaf.closeShallow();
                         }
-                        else {
-                            leaf.setValue(new DataDependentException(leaf, null));
-                        }
-                        leaf.closeShallow();
                     }
                 }
             }

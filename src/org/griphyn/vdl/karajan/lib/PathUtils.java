@@ -20,10 +20,14 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.ArrayList;
 import java.util.List;
 
+import k.rt.Channel;
 import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Param;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
 import org.globus.swift.catalog.types.Os;
 import org.griphyn.vdl.mapping.AbsFile;
@@ -61,6 +65,10 @@ public class PathUtils {
         @Override
         public Object function(Stack stack) {
             String dir = new AbsFile(path.getValue(stack)).getDirectory();
+            return function(dir);
+        }
+        
+        public static String function(String dir) {
             if (dir != null) {
                 return remotePathName(dir);
             }
@@ -73,7 +81,8 @@ public class PathUtils {
     private static final char EOL = '\0';
     /**
      * Replace leading slash if present with "__root__" and replace
-     * parent dir references with "__parent__"
+     * parent dir references with "__parent__".
+     * 
      */
 
     public static String remotePathName(String dir) {
@@ -272,6 +281,10 @@ public class PathUtils {
             String dir = this.dir.getValue(stack);
             String path = this.path.getValue(stack);
             boolean windows = this.os.getValue(stack).equals(Os.WINDOWS);
+            return function(dir, path, windows);
+        }
+        
+        public static String function(String dir, String path, boolean windows) {
             if (dir.equals("")) {
                 return windowsify(path, windows);
             }
@@ -310,4 +323,51 @@ public class PathUtils {
             return l.toArray(new String[0]);
         }
     }
+    
+    /**
+     * (provider, dhost, rdir, bname, ldir) = splitFileURL(file, dir)
+     * 
+     * Implements this functionality that used to be in swift-int.k:
+     * 
+     * provider := provider(file)
+     * dhost := hostname(file)
+     * rdir := dircat(dir, reldirname(file))
+     * bname := basename(file)
+     * ldir := swift:dirname(file)
+     *
+     */
+    public static class SplitFileURL extends SwiftFunction {
+       private ArgRef<AbsFile> file;
+       private ArgRef<String> dir;
+       private ChannelRef<Object> cr_vargs;
+    
+        @Override
+        protected Signature getSignature() {
+            return new Signature(params("file", "dir"), returns(channel("...", DYNAMIC)));
+        }
+        
+        
+
+        @Override
+        public void runBody(LWThread thr) {
+            super.runBody(thr);
+        }
+
+        @Override
+        public Object function(Stack stack) {
+            AbsFile f = this.file.getValue(stack);
+            String dir = this.dir.getValue(stack);
+            Channel<Object> ret = cr_vargs.get(stack);
+            
+            ret.add(f.getProtocol());
+            ret.add(f.getHost());
+            String fdir = f.getDirectory();
+            ret.add(DirCat.function(dir, RelDirName.function(fdir), false));
+            ret.add(f.getName());
+            ret.add(fdir == null ? "" : fdir);
+            
+            return null;
+        }
+    }
+
 }

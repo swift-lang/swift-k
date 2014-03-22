@@ -25,6 +25,7 @@ import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
 import org.globus.cog.karajan.compiled.nodes.functions.NullaryOp;
 import org.globus.swift.data.policy.Policy;
+import org.griphyn.vdl.mapping.AbsFile;
 
 /**
    Karajan-accessible read-queries to CDM functionality.
@@ -36,7 +37,7 @@ public class Query {
        Do CDM policy lookup based on the CDM file.
     */
     public static class Q extends AbstractSingleValuedFunction {
-    	private ArgRef<String> query;
+    	private ArgRef<AbsFile> query;
 
         @Override
         protected Param[] getParams() {
@@ -45,8 +46,8 @@ public class Query {
 
         @Override
         public Object function(Stack stack) {
-            String file = query.getValue(stack);
-            Policy policy = Director.lookup(file);
+            AbsFile file = query.getValue(stack);
+            Policy policy = Director.lookup(file.getPath());
             if (logger.isDebugEnabled()) {
                 logger.debug("Director.lookup(): " + file + " -> " + policy);
             }

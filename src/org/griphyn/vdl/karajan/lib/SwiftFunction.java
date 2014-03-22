@@ -277,7 +277,7 @@ public abstract class SwiftFunction extends AbstractFunction {
 	 * true, then each input string will be passed through the relativize
 	 * function.
 	 */
-	public String argList(String[] s, boolean relative) {
+	public static String argList(String[] s, boolean relative) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < s.length; i++) {
 			if (relative) {

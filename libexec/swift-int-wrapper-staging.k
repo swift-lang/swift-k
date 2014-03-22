@@ -64,20 +64,6 @@ namespace(swift) {
 		ddir
 	}
 
-
-	inFiles := function(stageins) {
-		pathnames(stageins)
-	}
-
-	fileDirs := function(stageins, stageouts) {
-		list(
-			unique(
-				inFileDirs(stageins)
-				outFileDirs(stageouts)
-			)
-		)
-	}
-
 	cleanup := function(dir, host) {
 		log(LOG:INFO, "START dir={dir} host={host}")
 		if(vdl:configProperty("sitedir.keep") == "false") {
@@ -143,12 +129,9 @@ namespace(swift) {
 		
 
 	export(execute2,
-		function(progress, tr, stagein, stageout,  restartout
-			replicationGroup, replicationChannel
+		function(progress, tr, stagein, stageout,
+			replicationGroup, replicationChannel,
 			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
-
-			stagein := list(unique(each(stagein)))
-			stageout := list(unique(each(stageout)))
 
 			allocateHost(rhost, constraints=jobConstraints(tr, stagein = stagein)) {
 
@@ -173,9 +156,10 @@ namespace(swift) {
 				wrapfile := "{jobdir}/_paramfile"
 
 				stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
-				stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr))
+				stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr)),
+				
+				(localFileDirs, remoteFileDirs, inFiles, outFiles) := getStagingInfo(stagein, stageout)
 
-				fileDirs := fileDirs(stagein, stageout)
 				os := siteProfile(rhost, "SYSINFO:OS")
 				
 				scratch := siteProfile(rhost, "scratch")
@@ -186,9 +170,9 @@ namespace(swift) {
 						"\n-out ", stdout,
 						"\n-err ", stderr,
 						"\n-i ", if (stdin != null, getFieldValue(stdin)),
-						"\n-d ", flatten(each(fileDirs)),
-						"\n-if ", flatten(inFiles(stagein)),
-						"\n-of ", flatten(outFiles(stageout)),
+						"\n-d ", str:join(remoteFileDirs, "|"),
+						"\n-if ", str:join(remoteFileNames(inFiles), "|"),
+						"\n-of ", str:join(remoteFileNames(outFiles), "|"),
 						"\n-wt", WRAPPERLOG_ALWAYS_TRANSFER,
 						"\n-sk", SITEDIR_KEEP,
 						"\n-cdmfile ", cdm:file(),
@@ -247,9 +231,9 @@ namespace(swift) {
 								"-out", stdout,
 								"-err", stderr,
 								"-i", if (stdin != null, getFieldValue(stdin)),
-								"-d", flatten(each(fileDirs)),
-								"-if", flatten(inFiles(stagein)),
-								"-of", flatten(outFiles(stageout)),
+								"-d", str:join(remoteFileDirs, "|"),
+								"-if", str:join(remoteFileNames(inFiles), "|"),
+								"-of", str:join(remoteFileNames(outFiles), "|"),
 								"-wt", WRAPPERLOG_ALWAYS_TRANSFER,
 								"-sk", SITEDIR_KEEP,
 								"-cdmfile", cdm:file(),
@@ -283,7 +267,7 @@ namespace(swift) {
 
 
 					setProgress(progress, "Stage out")
-					doRestartlog(restartout)
+					doRestartlog(stageout)
 					
 					log(LOG:DEBUG, "JOB_END jobid={jobid}")
 				}

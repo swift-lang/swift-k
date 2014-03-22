@@ -25,11 +25,7 @@ namespace(swift) {
 	initDDir := function() {
 		"{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
 	}
-	
-	inFiles := function(stageins) {
-		pathnames(stageins)
-	}
-	
+		
 	fileSizes := function(files) {
 		math:sum(
 			for(f, files, file:size(f))
@@ -64,13 +60,10 @@ namespace(swift) {
 	}
 	
 	export(execute2,
-		function(progress, tr, stagein, stageout,  restartout
-			replicationGroup, replicationChannel
+		function(progress, tr, stagein, stageout,
+			replicationGroup, replicationChannel,
 			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
 	
-			stagein := list(unique(each(stagein)))
-			stageout := list(unique(each(stageout)))
-
 			allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
 
 				ddir := initDDir()
@@ -83,7 +76,9 @@ namespace(swift) {
 				
 				wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
-				cdmfile := cdm:file()
+				cdmfile := cdm:file(),
+				
+				(localFileDirs, remoteFileDirs, inFiles, outFiles) := getStagingInfo(stagein, stageout)
 
 				try {
 					log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), 
@@ -101,9 +96,9 @@ namespace(swift) {
 							"-out", if(stdout == null, "stdout.txt", getFieldValue(stdout)),
 							"-err", if(stderr == null, "stderr.txt", getFieldValue(stderr)),
 							"-i", if (stdin != null, getFieldValue(stdin)),
-							"-d", flatten(unique(outFileDirs(stageout))),
-							"-if", flatten(inFiles(stagein)),
-							"-of", flatten(outFiles(stageout)),
+							"-d", str:join(remoteFileDirs, "|"),
+							"-if", str:join(remoteFileNames(inFiles), "|"),
+							"-of", str:join(remoteFileNames(outFiles), "|"),
 							"-k",
 							"-cdmfile", cdmfile,
 							"-status", "provider"
@@ -132,7 +127,7 @@ namespace(swift) {
 							stageIn("{loc}{SWIFT:HOME}/libexec/cdm_lib.sh", "cdm_lib.sh")
 						}
 
-						appStageins(jobid, stagein, stagingMethod)
+						appStageins(jobid, inFiles, stagingMethod)
 
 						stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info", 
 							mode = WRAPPER_TRANSFER_MODE)
@@ -156,7 +151,7 @@ namespace(swift) {
 						}
 						stageOut("wrapper.error", "{stagingMethod}://localhost/{ddir}/{jobid}.error", 
 							mode = STAGING_MODE:IF_PRESENT)
-						appStageouts(jobid, stageout, stagingMethod)
+						appStageouts(jobid, outFiles, stagingMethod)
 						
 						if (CLEANUP_ENABLED) {
 							task:cleanUp(".")
@@ -164,7 +159,7 @@ namespace(swift) {
 					)
 					
 					
-					doRestartLog(restartout)
+					doRestartLog(stageout)
 					log(LOG:DEBUG, "JOB_END jobid={jobid}")
 				}
 				else catch(prev) {

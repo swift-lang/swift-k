@@ -34,12 +34,10 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.mapping.AbsFile;
-import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.Path;
 
 public class AppStageouts extends InternalFunction {
     private ArgRef<String> jobid;
-    private ArgRef<List<List<Object>>> files;
+    private ArgRef<List<AbsFile>> files;
     private ArgRef<String> stagingMethod;
     
     private ChannelRef<List<String>> cr_stageout;
@@ -61,14 +59,11 @@ public class AppStageouts extends InternalFunction {
     protected void runBody(LWThread thr) {
         try {
             Stack stack = thr.getStack();
-            List<List<Object>> files = this.files.getValue(stack);
+            List<AbsFile> files = this.files.getValue(stack);
             String stagingMethod = this.stagingMethod.getValue(stack);
             String cwd = this.cwd.getValue(stack);
 
-            for (List<Object> pv : files) { 
-                Path p = (Path) pv.get(0);
-                DSHandle handle = (DSHandle) pv.get(1);
-                AbsFile file = new AbsFile(SwiftFunction.filename(handle.getField(p))[0]);
+            for (AbsFile file : files) { 
                 String protocol = file.getProtocol();
                 if (protocol.equals("file")) {
                     protocol = stagingMethod;

@@ -115,6 +115,7 @@ namespace(swift) {
 	export(hostname, def("org.griphyn.vdl.karajan.lib.PathUtils$HostName"))
 	export(dircat, def("org.griphyn.vdl.karajan.lib.PathUtils$DirCat"))
 	export(pathnames, def("org.griphyn.vdl.karajan.lib.PathUtils$PathNames"))
+	export(splitFileURL, def("org.griphyn.vdl.karajan.lib.PathUtils$SplitFileURL"))
 
 	export(execute, def("org.griphyn.vdl.karajan.lib.Execute"))
 	export(expandArguments, def("org.griphyn.vdl.karajan.lib.ExpandArguments"))
@@ -125,13 +126,11 @@ namespace(swift) {
 
 	export(appStageins, def("org.griphyn.vdl.karajan.lib.AppStageins"))
 	export(appStageouts, def("org.griphyn.vdl.karajan.lib.AppStageouts"))
+	export(remoteFileNames, def("org.griphyn.vdl.karajan.lib.RemoteFileNames"))
 	export(isDone, def("org.griphyn.vdl.karajan.lib.IsDone"))
 	export(mark, def("org.griphyn.vdl.karajan.lib.Mark"))
-	export(flatten, def("org.griphyn.vdl.karajan.lib.Flatten"))
 	export(parameterlog, def("org.griphyn.vdl.karajan.lib.Parameterlog"))
-	export(inFileDirs, def("org.griphyn.vdl.karajan.lib.InFileDirs"))
-	export(outFileDirs, def("org.griphyn.vdl.karajan.lib.OutFileDirs"))
-	export(outFiles, def("org.griphyn.vdl.karajan.lib.OutFiles"))
+	export(getStagingInfo, def("org.griphyn.vdl.karajan.lib.GetStagingInfo"))
 	export(doRestartLog, def("org.griphyn.vdl.karajan.lib.DoRestartLog"))
 	export(unwrapClosedList, def("org.griphyn.vdl.karajan.lib.UnwrapClosedList"))
 	

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import k.rt.Context;
-import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
@@ -33,19 +32,18 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.restartLog.LogEntry;
 import org.globus.cog.karajan.compiled.nodes.restartLog.RestartLog;
-import org.globus.cog.karajan.util.TypeUtil;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.type.Types;
 
 public class IsLogged extends SwiftFunction {
 	private ArgRef<DSHandle> var;
-	private ArgRef<Object> path;
 	
 	private VarRef<Context> context;
 	
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("var", "path"));
+        return new Signature(params("var"));
     }
 	
 	@Override
@@ -57,25 +55,32 @@ public class IsLogged extends SwiftFunction {
 	@Override
     public Object function(Stack stack) {	
 		DSHandle var = this.var.getValue(stack);
-		Path path;
-		Object p = this.path.getValue(stack);
-		if (p instanceof Path) {
-			path = (Path) p;
-		}
-		else {
-			path = Path.parse(TypeUtil.toString(p));
-		}
-		return Boolean.valueOf(isLogged(context.getValue(stack), var, path));
+		return Boolean.valueOf(isLogged(context.getValue(stack), var));
 	}
 	
-	public static boolean isLogged(Context ctx, DSHandle var, Path path) throws ExecutionException {
+	public static boolean isLogged(Context ctx, DSHandle var) {
 		@SuppressWarnings("unchecked")
         Map<LogEntry, Object> logData = (Map<LogEntry, Object>) ctx.getAttribute(RestartLog.LOG_DATA);
 		if (logData.isEmpty()) {
 		    return false;
 		}
-	    path = var.getPathFromRoot().append(path);
-        LogEntry entry = LogEntry.build(LogVar.getLogId(var, path));
+		
+		if (var.getType().equals(Types.EXTERNAL)) {
+		    return isLogged(logData, LogVar.getLogId(var));
+        }
+        else {
+            PhysicalFormat pf = var.map();
+            if (pf == null) {
+                throw new IllegalArgumentException(var + " could not be mapped");
+            } 
+            else {
+                return isLogged(logData, pf.toString());
+            }
+        }
+	}
+
+    private static boolean isLogged(Map<LogEntry, Object> logData, String str) {
+        LogEntry entry = LogEntry.build(str);
         boolean found = false;
         synchronized (logData) {
             List<?> files = (List<?>) logData.get(entry);
@@ -84,5 +89,5 @@ public class IsLogged extends SwiftFunction {
             }
         }
         return found;
-	}
+    }
 }

@@ -30,10 +30,9 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.Path;
 
 public class SetDatasetValues extends SwiftFunction {
-    private ArgRef<List<List<Object>>> stageouts;
+    private ArgRef<List<DSHandle>> stageouts;
     
     @Override
     protected Signature getSignature() {
@@ -42,13 +41,12 @@ public class SetDatasetValues extends SwiftFunction {
 
     @Override
     public Object function(Stack stack) {
-        Collection<List<Object>> files = this.stageouts.getValue(stack);
+        Collection<DSHandle> files = this.stageouts.getValue(stack);
         try {
-            for (List<Object> pv : files) {
-                Path p = parsePath(pv.get(0));
-                DSHandle handle = (DSHandle) pv.get(1);
-                DSHandle leaf = handle.getField(p);
-                leaf.setValue(AbstractDataNode.FILE_VALUE);
+            for (DSHandle file : files) {
+                for (DSHandle leaf : file.getLeaves()) {
+                    leaf.setValue(AbstractDataNode.FILE_VALUE);
+                }
             }
         }
         catch (Exception e) {

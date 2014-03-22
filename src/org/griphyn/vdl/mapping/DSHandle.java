@@ -91,6 +91,8 @@ public interface DSHandle {
     public void closeDeep();
 
     public Collection<Path> getFringePaths() throws HandleOpenException;
+    
+    public Collection<DSHandle> getLeaves() throws HandleOpenException;
 
     public Map<Comparable<?>, DSHandle> getArrayValue();
 

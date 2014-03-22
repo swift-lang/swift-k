@@ -172,7 +172,13 @@ public class Misc {
         @Override
         public Object function(Stack stack) {
         	AbstractDataNode dn = file.getValue(stack);
-            String filename = SwiftFunction.unwrap(this, dn);
+        	String filename;
+        	if (dn.getType().equals(Types.STRING)) {
+        	    filename = SwiftFunction.unwrap(this, dn);
+        	}
+        	else {
+        	    filename = SwiftFunction.filename(dn)[0];
+        	}
 
             AbsFile file = new AbsFile(filename);
             if (logger.isDebugEnabled()) {

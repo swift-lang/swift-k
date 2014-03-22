@@ -28,53 +28,46 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VariableNotFoundException;
-import org.globus.cog.karajan.util.TypeUtil;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.type.Types;
 
 public class LogVar extends SwiftFunction {
     private ArgRef<DSHandle> var;
-    private ArgRef<Object> path;
     private ChannelRef<Object> cr_restartlog;
     
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("var", "path"), returns(channel("restartlog", 1)));
+        return new Signature(params("var"), returns(channel("restartlog", 1)));
     }
 
     @Override
 	public Object function(Stack stack) {
 		DSHandle var = this.var.getValue(stack);
-		Path path;
-        Object p = this.path.getValue(stack);
-        if (p instanceof Path) {
-            path = (Path) p;
-        }
-        else {
-            path = Path.parse(TypeUtil.toString(p));
-        }
-        logVar(cr_restartlog.get(stack), var, path);
+        logVar(cr_restartlog.get(stack), var);
 		return null;
 	}
-	
-	public static void logVar(Channel<Object> log, DSHandle var, Path path) throws VariableNotFoundException {
-        String annotation;
-        PhysicalFormat pf = var.map(path);
-        if (pf != null) {
-            annotation = "" + pf;
-        } 
-        else {
-            annotation = "unmapped";
-        }
-        log.add(getLogId(var, path) + "!" + annotation);
-	}
-	
-	public static String getLogId(DSHandle var, Path path) {
-		RootHandle root = var.getRoot();
-		LWThread thr = root.getThread();
-		return thr.getQualifiedName() + ":" + root.getName() + 
-		    "." + path.stringForm();
-	}
+		
+	public static void logVar(Channel<Object> log, DSHandle var) throws VariableNotFoundException {
+	    if (var.getType().equals(Types.EXTERNAL)) {
+	        log.add(getLogId(var));
+	    }
+	    else {
+	        PhysicalFormat pf = var.map();
+            if (pf == null) {
+                throw new IllegalArgumentException(var + " could not be mapped");
+            } 
+            else {
+                log.add(pf.toString());
+            }
+	    }
+    }
+		
+	public static String getLogId(DSHandle var) {
+        RootHandle root = var.getRoot();
+        LWThread thr = root.getThread();
+        return thr.getQualifiedName() + ":" + root.getName() + 
+            "." + var.getPathFromRoot().stringForm();
+    }
 }

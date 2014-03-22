@@ -85,10 +85,7 @@ public class Stagein extends SwiftFunction {
                     deperr = true;
                 }
                 
-                k.rt.Channel<Object> stagein = cr_stagein.get(stack);
-                for (Path p : fp) {
-                    stagein.add(filename(var.getField(p))[0]);
-                }
+                cr_stagein.append(stack, var);
             }
             catch (ConditionalYield f) {
                 if (tracer.isEnabled()) {

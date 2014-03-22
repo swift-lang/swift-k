@@ -33,14 +33,13 @@ import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
-import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.swift.data.Director;
 import org.globus.swift.data.policy.Policy;
 import org.griphyn.vdl.mapping.AbsFile;
 
 public class AppStageins extends InternalFunction {
 	private ArgRef<String> jobid;
-	private ArgRef<List<String>> files;
+	private ArgRef<List<AbsFile>> files;
 	private ArgRef<String> stagingMethod;
 	
 	private ChannelRef<List<String>> cr_stagein;
@@ -64,11 +63,10 @@ public class AppStageins extends InternalFunction {
     
     protected void runBody(LWThread thr) {
     	Stack stack = thr.getStack();
-    	List<String> files = this.files.getValue(stack);
+    	List<AbsFile> files = this.files.getValue(stack);
     	String stagingMethod = this.stagingMethod.getValue(stack);
         String cwd = this.cwd.getValue(stack);
-        for (Object f : files) {
-            AbsFile file = new AbsFile(TypeUtil.toString(f));
+        for (AbsFile file : files) {
             Policy policy = Director.lookup(file.toString());
             if (policy != Policy.DEFAULT) {
                 logger.debug("will not stage in (CDM): " + file);

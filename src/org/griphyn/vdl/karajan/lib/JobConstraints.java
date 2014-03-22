@@ -32,11 +32,12 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 import org.griphyn.vdl.karajan.lib.cache.CacheMapAdapter;
+import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.util.FQN;
 
 public class JobConstraints extends CacheFunction {
     private ArgRef<String> tr;
-    private ArgRef<Collection<String>> stagein;
+    private ArgRef<Collection<DSHandle>> stagein;
     private ChannelRef<Object> cr_vargs;
     
 	@Override
@@ -51,39 +52,36 @@ public class JobConstraints extends CacheFunction {
 		Stack stack = thr.getStack();
 		String tr = this.tr.getValue(stack);
 		String[] filenames = null;
-		Collection<String> c = this.stagein.getValue(stack);
-		if (c != null) {
-			filenames = c.toArray(STRING_ARRAY);
-		}
+		Collection<DSHandle> stageins = this.stagein.getValue(stack);
 		SwiftTaskConstraints tc = new SwiftTaskConstraints(tr, new FQN(tr));
-		if (filenames != null) {
-		    tc.setFilenames(filenames);
+		if (stageins != null) {
+		    tc.setStageins(stageins);
 		    tc.setFilecache(new CacheMapAdapter(getCache(stack)));
 		}
 		cr_vargs.append(stack, tc);
 	}
 	
 	private static final List<String> NAMES1 = Arrays.asList("tr", "trfqn");
-	private static final List<String> NAMES2 = Arrays.asList("tr", "trfqn", "filenames", "filecache");
+	private static final List<String> NAMES2 = Arrays.asList("tr", "trfqn", "stageins", "filecache");
 	
 	private static class SwiftTaskConstraints implements TaskConstraints {
 	    
 	    private final String tr;
 	    private final FQN trfqn;
-	    private String[] filenames;
+	    private Collection<DSHandle> stageins;
 	    private CacheMapAdapter filecache;
 
 	    public SwiftTaskConstraints(String tr, FQN trfqn) {
 	        this.tr = tr;
 	        this.trfqn = trfqn;
         }
-	    
-        public String[] getFilenames() {
-            return filenames;
+
+        public Collection<DSHandle> getStageins() {
+            return stageins;
         }
 
-        public void setFilenames(String[] filenames) {
-            this.filenames = filenames;
+        public void setStageins(Collection<DSHandle> stageins) {
+            this.stageins = stageins;
         }
 
         public CacheMapAdapter getFilecache() {
@@ -103,8 +101,8 @@ public class JobConstraints extends CacheFunction {
             else if ("trfqn".equals(name)) {
                 return trfqn;
             }
-            else if ("filenames".equals(name)) {
-                return filenames;
+            else if ("stageins".equals(name)) {
+                return stageins;
             }
             else if ("filecache".equals(name)) {
                 return filecache;
@@ -116,7 +114,7 @@ public class JobConstraints extends CacheFunction {
         
         @Override
         public Collection<String> getConstraintNames() {
-            if (filenames == null) {
+            if (stageins == null) {
                 return NAMES1;
             }
             else {

@@ -16,50 +16,40 @@
 
 
 /*
- * Created on Jul 18, 2010
+ * Created on Jan 5, 2007
  */
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import k.rt.Channel;
 import k.rt.Stack;
 
-import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.util.TypeUtil;
+import org.griphyn.vdl.mapping.AbsFile;
 
-public class Flatten extends SwiftFunction {
-	private ChannelRef<?> c_vargs;
-    
+public class RemoteFileNames extends SwiftFunction {
+    private ArgRef<List<AbsFile>> files;
+        
     @Override
     protected Signature getSignature() {
-        return new Signature(params("..."));
+        return new Signature(params("files"));
     }
 
     @Override
     public Object function(Stack stack) {
-        Channel<?> v = c_vargs.get(stack);
-        if (v.isEmpty()) {
-            return "";
-        }
-        else {
-            StringBuilder sb = new StringBuilder();
-            flatten(sb, v.getAll());
-            sb.deleteCharAt(sb.length() - 1);
-            return sb.toString();
-        }
-    }
-
-    private void flatten(StringBuilder sb, List<?> l) {
-        for (Object o : l) {
-            if (o instanceof List) {
-                flatten(sb, (List<?>) o);
+        List<AbsFile> files = this.files.getValue(stack);
+        List<String> ret = new ArrayList<String>();
+        for (AbsFile f : files) {
+            String path = null;
+            if ("file".equals(f.getProtocol())) {
+                ret.add(PathUtils.remotePathName(f.getPath()));
             }
             else {
-                sb.append(TypeUtil.toString(o));
-                sb.append('|');
+                ret.add(PathUtils.remotePathName(f.getHost() + "/" + f.getPath()));
             }
         }
+        return ret;
     }
 }

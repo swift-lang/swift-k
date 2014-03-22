@@ -20,8 +20,6 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.List;
-
 import k.rt.Context;
 import k.rt.Stack;
 
@@ -30,10 +28,10 @@ import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.HandleOpenException;
 
 public class IsDone extends SwiftFunction {
-    private ArgRef<Iterable<List<Object>>> stageout;
+    private ArgRef<Iterable<DSHandle>> stageout;
     
     private VarRef<Context> context;
 
@@ -50,12 +48,22 @@ public class IsDone extends SwiftFunction {
     
     @Override
     public Object function(Stack stack) {
-        Iterable<List<Object>> files = stageout.getValue(stack);
-        for (List<Object> pv : files) {
-            Path p = (Path) pv.get(0);
-            DSHandle handle = (DSHandle) pv.get(1);
-            if (!IsLogged.isLogged(context.getValue(stack), handle, p)) {
-                return Boolean.FALSE;
+        Iterable<DSHandle> files = stageout.getValue(stack);
+        for (DSHandle file : files) {
+            if (file.isRestartable()) {
+                try {
+                    for (DSHandle leaf : file.getLeaves()) {
+                        if (!IsLogged.isLogged(context.getValue(stack), leaf)) {
+                            return Boolean.FALSE;
+                        }
+                    }
+                }
+                catch (HandleOpenException e) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Handle open caught in isDone for " + file + ". Assuming false.");
+                    }
+                    return Boolean.FALSE;
+                }
             }
         }
         if (!files.iterator().hasNext()) {

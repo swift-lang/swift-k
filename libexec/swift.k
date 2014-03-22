@@ -178,11 +178,11 @@ namespace(swift) {
 			stdin = null, stdout = null, stderr = null, 
 			attributes = null, 
 			deperror = false, mdeperror = false, 
-			channel(stagein), channel(stageout), channel(restartout)) {
+			channel(stagein), channel(stageout)) {
 	
 			progress := initProgressState()
 		
-			done := isDone(restartout)
+			done := isDone(stageout)
 			derr := try(deperror, false)
 			merr := try(mdeperror, false)
 		
@@ -203,7 +203,7 @@ namespace(swift) {
 												progress, 
 												tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
 												stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
-												stagein, stageout, restartout, replicationGroup, replicationChannel
+												stagein, stageout, replicationGroup, replicationChannel
 											)
 										}
 										else catch(exception) {
@@ -222,7 +222,7 @@ namespace(swift) {
 											progress, 
 											tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
 											stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
-											stagein, stageout, restartout, null, null
+											stagein, stageout, null, null
 										)
 									}
 									else catch(exception) {
@@ -236,7 +236,7 @@ namespace(swift) {
 								}
 							}
 							setDatasetValues(stageout)
-							mark(restartout, false, mapping=false)
+							mark(stageout, false, mapping=false)
 							log(LOG:INFO, "END_SUCCESS thread=", currentThread(), " tr={tr}")
 							setProgress(progress, "Finished successfully")
 						}
@@ -251,7 +251,7 @@ namespace(swift) {
 							to(errors, exception)
 							log(LOG:INFO, exception)
 							echo(exception)
-							mark(restartout, true, mapping=false)
+							mark(stageout, true, mapping=false)
 							graphStuff(tr, stagein, stageout, true, maybe(args=arguments))
 						}
 					}
@@ -273,7 +273,7 @@ namespace(swift) {
 					to(errors, exception)
 					log(LOG:INFO, exception)
 				}
-				mark(restartout, true, mapping=merr)
+				mark(stageout, true, mapping=merr)
 				graphStuff(tr, stagein, stageout, true, maybe(args=arguments))
 			}
 		}
