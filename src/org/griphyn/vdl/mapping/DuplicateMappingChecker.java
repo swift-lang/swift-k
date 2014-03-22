@@ -69,7 +69,7 @@ public class DuplicateMappingChecker {
         }
         Entry e = getEntry(f);
         if (e.write != null) {
-            warn("Duplicate mapping found:\n\t" + 
+            warn("WARNING: duplicate mapping found:\n\t" + 
                 formatInfo(getInfo(h)) + " is used to read from " + f + "\n\t" + 
                 formatInfo(e.write) + " is used to write to " + f);
         }
@@ -93,13 +93,23 @@ public class DuplicateMappingChecker {
         if (!enabled) {
             return;
         }
+        if (f == null) {
+            /*
+             *  sometimes only a sub-set of a complex structure is mapped and used
+             *  such as, for example, in 0755-ext-mapper.swift
+             *  
+             *  In such cases, don't complain about multiple things being mapped
+             *  to null
+             */
+            return;
+        }
         Entry e = getEntry(f);
         if (e.write != null) {
-            warn("Duplicate mapping found:\n\t" + 
+            warn("WARNING: duplicate mapping found:\n\t" + 
                 formatInfo(getInfo(h)) + " and " + formatInfo(e.write) + " are both used to write to " + f);
         }
         if (e.read != null) {
-            warn("Duplicate mapping found:\n\t" + 
+            warn("WARNING: duplicate mapping found:\n\t" + 
                 formatInfo(e.write) + " is used to write to " + f + "\n\t" + 
                 "The following variables(s) are also used to read from " + f + ":" + formatInfos(e.read));
         }
