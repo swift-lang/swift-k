@@ -23,9 +23,9 @@ import org.globus.cog.karajan.compiled.nodes.Sequential;
 import org.globus.cog.karajan.compiled.nodes.SetVarK;
 import org.globus.cog.karajan.compiled.nodes.functions.ChannelArg;
 import org.globus.cog.karajan.compiled.nodes.functions.List;
-import org.globus.cog.karajan.compiled.nodes.functions.Misc;
 import org.globus.cog.karajan.compiled.nodes.functions.Named;
 import org.globus.cog.karajan.compiled.nodes.functions.NumericValue;
+import org.globus.cog.karajan.compiled.nodes.functions.Str;
 import org.globus.cog.karajan.compiled.nodes.functions.Variable;
 import org.globus.cog.karajan.compiled.nodes.user.Function;
 import org.globus.cog.karajan.compiled.nodes.user.Lambda;
@@ -52,7 +52,7 @@ public class RootScope extends ContainerScope {
 		addDef("k", "function", new JavaDef(Function.class));
 		addDef("k", "lambda", new JavaDef(Lambda.class));
 		addDef("k", "channel", new JavaDef(ChannelArg.class));
-		addDef("k", "concat", new JavaDef(Misc.Concat.class));
+		addDef("k", "concat", new JavaDef(Str.Concat.class));
 		
 		addVar("#context", context);
 		addVar("#properties", props);

@@ -430,136 +430,6 @@ public class Misc {
 			}
 		}
 	}
-
-	public static class Concat extends AbstractSingleValuedFunction {
-		private ChannelRef<Object> c_vargs;
-		
-		@Override
-		protected Param[] getParams() {
-			return params("...");
-		}
-
-		@Override
-		public Object function(Stack stack) {
-			StringBuilder sb = new StringBuilder();
-			for (Object o : c_vargs.get(stack)) {
-				sb.append(TypeUtil.toString(o));
-			}
-			return sb.toString();
-		}
-	}
-	
-	public static class SubString extends AbstractSingleValuedFunction {
-		private ArgRef<String> string;
-		private ArgRef<Number> from;
-		private ArgRef<Number> to;
-		
-		@Override
-		protected Param[] getParams() {
-			return params("string", "from", optional("to", Integer.MAX_VALUE));
-		}
-
-		@Override
-		public Object function(Stack stack) {
-			int to = this.to.getValue(stack).intValue();
-			String str = string.getValue(stack);
-			if (to == Integer.MAX_VALUE) {
-				return str.substring(from.getValue(stack).intValue());
-			}
-			else if (to < 0) {
-				to += str.length() - 1;
-			}
-			return str.substring(from.getValue(stack).intValue(), to);
-		}
-	}
-	
-	public static class Matches extends AbstractSingleValuedFunction {
-		private ArgRef<Object> string;
-		private ArgRef<String> pattern;
-		
-		@Override
-		protected Param[] getParams() {
-			return params("string", "pattern");
-		}
-
-		@Override
-		public Object function(Stack stack) {
-			Object o = string.getValue(stack);
-			String str;
-			if (o instanceof Exception) {
-				str = ((Exception) o).getMessage();
-			}
-			else {
-				str = String.valueOf(o);
-			}
-			if (str == null) {
-				return false;
-			}
-			else {
-				String pat = pattern.getValue(stack);
-				Pattern p = Pattern.compile(pat, Pattern.DOTALL);
-				return p.matcher(str).matches();
-			}
-		}
-	}
-	
-	public static class Split extends AbstractSingleValuedFunction {
-		private ArgRef<String> string;
-		private ArgRef<String> separator;
-		
-		@Override
-		protected Param[] getParams() {
-			return params("string", "separator");
-		}
-
-		@Override
-		public Object function(Stack stack) {
-			String str = string.getValue(stack);
-			String sep = separator.getValue(stack);
-
-			List<String> list = new ArrayList<String>();
-			int index = -1;
-			int last = 0;
-			do {
-				index = str.indexOf(sep, index + sep.length());
-				if (index > -1) {
-					if (last < index) {
-						list.add(str.substring(last, index));
-					}
-					last = index + sep.length();
-				}
-			} while (index != -1);
-			list.add(str.substring(last, str.length()));
-			return list;
-		}
-	}
-	
-	public static class ParseNumber extends AbstractSingleValuedFunction {
-        private ArgRef<String> str;
-        
-        @Override
-        protected Param[] getParams() {
-            return params("str");
-        }
-        
-        @Override
-		protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
-				throws CompilationException {
-        	if (str.getValue() != null && staticReturn(scope, Double.parseDouble(str.getValue()))) {
-        		return null;
-        	}
-        	else {
-        		return super.compileBody(w, argScope, scope);
-        	}
-		}
-
-		@Override
-        public Object function(Stack stack) {
-            String str = this.str.getValue(stack);
-            return Double.parseDouble(str);
-        }
-    }
-
 	
 	public static class Discard extends InternalFunction {
 		private ChannelRef<Object> c_vargs;
@@ -690,21 +560,7 @@ public class Misc {
 			return c1.compareTo(o2);
 		}
 	};
-	
-	public static class Strip extends AbstractSingleValuedFunction {
-		private ArgRef<String> string;
 		
-		@Override
-		protected Param[] getParams() {
-			return params("string");
-		}
-
-		@Override
-		public Object function(Stack stack) {
-			return string.getValue(stack).trim();
-		}
-	}
-	
 	public static class DotIterator implements Iterator<Object> {
 		private final Iterator<Object>[] its;
 		private boolean next, nextValid;
@@ -853,33 +709,6 @@ public class Misc {
 		}
 	}
 	
-	public static class Chr extends AbstractSingleValuedFunction {
-		private ArgRef<Number> code;
-	
-		@Override
-		protected Param[] getParams() {
-			return params("code");
-		}
-		
-		@Override
-		public Object function(Stack stack) {
-			return (char) code.getValue(stack).intValue();
-		}
-	}
-	
-	public static class Quote extends AbstractSingleValuedFunction {
-        private ArgRef<String> str;
-    
-        @Override
-        protected Param[] getParams() {
-            return params("str");
-        }
-        
-        @Override
-        public Object function(Stack stack) {
-            return '"' + str.getValue(stack) + '"';
-        }
-    }
 	
 	public static class Stats extends AbstractSingleValuedFunction {
 		private ArgRef<Boolean> asMap;

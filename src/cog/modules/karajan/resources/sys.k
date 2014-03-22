@@ -55,13 +55,14 @@ namespace(sys) {
 	export(unique, def("org.globus.cog.karajan.compiled.nodes.functions.Unique"))
 	
 	namespace(str) {
-		export(strip, def("org.globus.cog.karajan.compiled.nodes.functions.Misc$Strip"))
-		export(split, def("org.globus.cog.karajan.compiled.nodes.functions.Misc$Split"))
-		export(matches, def("org.globus.cog.karajan.compiled.nodes.functions.Misc$Matches"))
-		export(chr, def("org.globus.cog.karajan.compiled.nodes.functions.Misc$Chr"))
-		export(substring, def("org.globus.cog.karajan.compiled.nodes.functions.Misc$SubString"))
-		export(quote, def("org.globus.cog.karajan.compiled.nodes.functions.Misc$Quote"))
-		export(number, def("org.globus.cog.karajan.compiled.nodes.functions.Misc$ParseNumber"))
+		export(strip, def("org.globus.cog.karajan.compiled.nodes.functions.Str$Strip"))
+		export(split, def("org.globus.cog.karajan.compiled.nodes.functions.Str$Split"))
+		export(matches, def("org.globus.cog.karajan.compiled.nodes.functions.Str$Matches"))
+		export(chr, def("org.globus.cog.karajan.compiled.nodes.functions.Str$Chr"))
+		export(substring, def("org.globus.cog.karajan.compiled.nodes.functions.Str$SubString"))
+		export(quote, def("org.globus.cog.karajan.compiled.nodes.functions.Str$Quote"))
+		export(number, def("org.globus.cog.karajan.compiled.nodes.functions.Str$ParseNumber"))
+		export(join, def("org.globus.cog.karajan.compiled.nodes.functions.Str$Join"))
 	}
 	
 	export(time, def("org.globus.cog.karajan.compiled.nodes.functions.Time"))
