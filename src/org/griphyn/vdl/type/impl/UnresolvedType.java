@@ -88,6 +88,11 @@ public class UnresolvedType implements Type {
     public boolean hasNonPrimitiveComponents() {
         throw new UnsupportedOperationException();
     }
+	
+	@Override
+    public boolean hasArrayComponents() {
+        throw new UnsupportedOperationException();
+    }
 
     public String getName() {
 		return name;

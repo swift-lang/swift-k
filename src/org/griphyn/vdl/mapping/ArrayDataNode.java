@@ -21,6 +21,7 @@
 package org.griphyn.vdl.mapping;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +58,21 @@ public class ArrayDataNode extends DataNode {
 			}
 		}
 	}
+	
+	/**
+	 * Get leaves and make sure they are sorted based on the indices
+	 */
+	public void getLeaves(List<DSHandle> list) throws HandleOpenException {
+        checkMappingException();
+        if (!isClosed()) {
+            throw new HandleOpenException(this);
+        }
+        Map<Comparable<?>, DSHandle> handles = getHandles();
+        Collection<DSHandle> values = handles.values();
+        for (DSHandle child : values) {
+            ((AbstractDataNode) child).getLeaves(list);
+        }
+    }
 	
 	/** Recursively closes arrays through a tree of arrays and complex
         types. */

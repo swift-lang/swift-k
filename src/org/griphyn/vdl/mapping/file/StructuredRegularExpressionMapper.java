@@ -29,6 +29,7 @@ import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParamSet;
@@ -85,6 +86,11 @@ public class StructuredRegularExpressionMapper extends AbstractMapper {
 
 		return output;
 	}
+    
+    @Override
+    public Collection<Path> existing(FileSystemLister l) {
+        throw new UnsupportedOperationException();
+    }
 
 	@Override
 	public PhysicalFormat map(Path path) {

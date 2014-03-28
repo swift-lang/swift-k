@@ -339,11 +339,12 @@ public class PathUtils {
     public static class SplitFileURL extends SwiftFunction {
        private ArgRef<AbsFile> file;
        private ArgRef<String> dir;
+       private ArgRef<String> destdir;
        private ChannelRef<Object> cr_vargs;
     
         @Override
         protected Signature getSignature() {
-            return new Signature(params("file", "dir"), returns(channel("...", DYNAMIC)));
+            return new Signature(params("file", "dir", optional("destdir", null)), returns(channel("...", DYNAMIC)));
         }
         
         
@@ -357,12 +358,18 @@ public class PathUtils {
         public Object function(Stack stack) {
             AbsFile f = this.file.getValue(stack);
             String dir = this.dir.getValue(stack);
+            String destdir = this.destdir.getValue(stack);
             Channel<Object> ret = cr_vargs.get(stack);
             
             ret.add(f.getProtocol());
             ret.add(f.getHost());
             String fdir = f.getDirectory();
-            ret.add(DirCat.function(dir, RelDirName.function(fdir), false));
+            if (destdir == null) {
+                ret.add(DirCat.function(dir, RelDirName.function(fdir), false));
+            }
+            else {
+                ret.add(DirCat.function(dir, destdir, false));
+            }
             ret.add(f.getName());
             ret.add(fdir == null ? "" : fdir);
             

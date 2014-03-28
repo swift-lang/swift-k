@@ -21,7 +21,7 @@
 package org.griphyn.vdl.mapping.file;
 
 
-public class AirsnFileNameElementMapper implements FileNameElementMapper {
+public class AirsnFileNameElementMapper extends AbstractFileNameElementMapper {
 	public static final int INDEX_WIDTH = 4;
 
 	public String mapField(String fieldName) {
@@ -35,7 +35,7 @@ public class AirsnFileNameElementMapper implements FileNameElementMapper {
 		return pathElement;
 	}
 
-	public String mapIndex(int index) {
+	public String mapIndex(int index, int pos) {
 		StringBuffer sb = new StringBuffer();
         sb.append('i');
 		String num = String.valueOf(index);
@@ -56,5 +56,4 @@ public class AirsnFileNameElementMapper implements FileNameElementMapper {
         }
 		return "_";
 	}
-
 }

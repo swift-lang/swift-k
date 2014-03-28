@@ -38,6 +38,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 public class AppStageouts extends InternalFunction {
     private ArgRef<String> jobid;
     private ArgRef<List<AbsFile>> files;
+    private ArgRef<List<AbsFile>> outCollect;
     private ArgRef<String> stagingMethod;
     
     private ChannelRef<List<String>> cr_stageout;
@@ -47,7 +48,8 @@ public class AppStageouts extends InternalFunction {
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("jobid", "files", "stagingMethod"), returns(channel("stageout")));
+        return new Signature(params("jobid", "files", "outCollect", "stagingMethod"), 
+            returns(channel("stageout")));
     }
     
     @Override
@@ -60,27 +62,33 @@ public class AppStageouts extends InternalFunction {
         try {
             Stack stack = thr.getStack();
             List<AbsFile> files = this.files.getValue(stack);
+            List<AbsFile> outCollect = this.outCollect.getValue(stack);
             String stagingMethod = this.stagingMethod.getValue(stack);
             String cwd = this.cwd.getValue(stack);
 
-            for (AbsFile file : files) { 
-                String protocol = file.getProtocol();
-                if (protocol.equals("file")) {
-                    protocol = stagingMethod;
-                }
-                String path = file.getDirectory() == null ? file.getName() : file.getDirectory()
-                        + "/" + file.getName();
-                String relpath = PathUtils.remotePathName(path);
-                cr_stageout.append(stack, 
-                    makeList(relpath,
-                        AppStageins.localPath(cwd, protocol, path, file)));
-            }
+            process(stack, files, stagingMethod, cwd);
+            process(stack, outCollect, stagingMethod, cwd);
         }
         catch (Exception e) {
             throw new ExecutionException(this, e);
         }
     }
     
+    private void process(Stack stack, List<AbsFile> files, String stagingMethod, String cwd) {
+        for (AbsFile file : files) {
+            String protocol = file.getProtocol();
+            if (protocol.equals("file")) {
+                protocol = stagingMethod;
+            }
+            String path = file.getDirectory() == null ? file.getName() : file.getDirectory()
+                    + "/" + file.getName();
+            String relpath = PathUtils.remotePathName(path);
+            cr_stageout.append(stack, 
+                makeList(relpath,
+                    AppStageins.localPath(cwd, protocol, path, file)));
+        }
+    }
+
     private List<String> makeList(String s1, String s2) {
         return new Pair<String>(s1, s2);
     }

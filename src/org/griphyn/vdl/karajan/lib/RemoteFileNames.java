@@ -21,6 +21,7 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import k.rt.Stack;
@@ -30,7 +31,7 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbsFile;
 
 public class RemoteFileNames extends SwiftFunction {
-    private ArgRef<List<AbsFile>> files;
+    private ArgRef<Collection<AbsFile>> files;
         
     @Override
     protected Signature getSignature() {
@@ -39,7 +40,7 @@ public class RemoteFileNames extends SwiftFunction {
 
     @Override
     public Object function(Stack stack) {
-        List<AbsFile> files = this.files.getValue(stack);
+        Collection<AbsFile> files = this.files.getValue(stack);
         List<String> ret = new ArrayList<String>();
         for (AbsFile f : files) {
             String path = null;

@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.griphyn.vdl.type.Type;
+
 /** This interface must be implemented by a Java class that represents
     a Swift mapper between SwiftScript variables and external data
     sources. */
@@ -39,6 +41,8 @@ public interface Mapper {
         do not necessarily have to exist.
      */
     Collection<Path> existing();
+    
+    Collection<Path> existing(FileSystemLister l);
 
     /**
      * Returns true if data mapped by this mapper cannot
@@ -88,4 +92,18 @@ public interface Mapper {
     void setBaseDir(String baseDir);
     
     AbstractDataNode getFirstOpenParameter();
+
+    /**
+     * For dynamic mappers, this returns a glob pattern that can
+     * be used to filter data that this mapper maps from a set of
+     * files.
+     * 
+     * The type parameter specifies the swift type of the data
+     * with the specified path. This is necessary in order to build
+     * a sufficiently restrictive pattern in the case when multiple
+     * levels of dynamic mappings exist (e.g. file[][]). 
+     * 
+     * Static mappers should return null.
+     */
+    Collection<AbsFile> getPattern(Path path, Type type);
 }

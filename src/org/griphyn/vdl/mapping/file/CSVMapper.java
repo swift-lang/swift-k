@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.GeneralizedFileFormat;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
 import org.griphyn.vdl.mapping.MappingParamSet;
@@ -184,8 +185,13 @@ public class CSVMapper extends AbstractMapper {
 	}
 
 	@Override
+    public Collection<Path> existing(FileSystemLister l) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
 	public boolean isStatic() {
-		return false;
+		return true;
 	}
 
 	@Override

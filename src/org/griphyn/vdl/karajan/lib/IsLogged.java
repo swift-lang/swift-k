@@ -29,6 +29,7 @@ import k.rt.Stack;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.restartLog.LogEntry;
 import org.globus.cog.karajan.compiled.nodes.restartLog.RestartLog;
@@ -65,6 +66,11 @@ public class IsLogged extends SwiftFunction {
 		    return false;
 		}
 		
+		/*
+		 * One cannot use the file name to check if external data is logged
+		 * since there is no explicit file name known to swift for external
+		 * data.
+		 */
 		if (var.getType().equals(Types.EXTERNAL)) {
 		    return isLogged(logData, LogVar.getLogId(var));
         }

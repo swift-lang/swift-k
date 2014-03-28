@@ -19,8 +19,6 @@ package org.griphyn.vdl.mapping.file;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,13 +28,16 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.util.Base64;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.type.Field;
+import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 
 /** A base class to build mappers which map based on filename patterns.
   * It provides a large amount of default behaviour which can be
@@ -132,71 +133,51 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	    AbstractFileMapperParams cp = getParams();
 	    return map(cp, path, cp.getPrefix());
 	}
-
+	
 	protected PhysicalFormat map(AbstractFileMapperParams cp, Path path, String prefix) {
-		if(logger.isDebugEnabled())
-			logger.debug("mapper id="+this.hashCode()+" starting to map "+path);
-		StringBuffer sb = new StringBuffer();
+	    return map(cp, path, prefix, getElementMapper());
+	}
+
+	protected PhysicalFormat map(AbstractFileMapperParams cp, Path path, String prefix, FileNameElementMapper em) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("mapper id=" + this.hashCode() + " starting to map " + path);
+		}
+		StringBuilder sb = new StringBuilder();
+		
 		String location = cp.getLocation();
-		maybeAppend(sb, location);
-		if (location != null && !location.endsWith("/")) {
-			sb.append('/');
-		}
-		if (prefix != null) {
-			sb.append(prefix);
-		}
+        maybeAppend(sb, location);
+        if (location != null && !location.endsWith("/")) {
+            sb.append('/');
+        }
+        if (prefix != null) {
+            sb.append(prefix);
+        }
 
-		Iterator<Path.Entry> pi = path.iterator();
-		int level = 0, tokenCount = path.size();
-		while (pi.hasNext()) {
-			Path.Entry nextPathElement = pi.next();
-			if (nextPathElement.isIndex()) {
-			    Comparable<?> key = nextPathElement.getKey();
-			    String f, token;
-			    if (key instanceof Integer) {
-			        token = key.toString();
-			        f = getElementMapper().mapIndex(((Integer) key).intValue());
-			    }
-			    else if (key instanceof Double) {
-			        token = Double.toHexString(((Double) key).doubleValue());
-			        f = getElementMapper().mapField(token);
-			    }
-			    else {
-			        MessageDigest md = getDigest();
-			        byte[] buf = md.digest(key.toString().getBytes());
-			        token = encode(buf);
-			        f = getElementMapper().mapField(token);
-			    }
-    			if (logger.isDebugEnabled()) {
-    			    logger.debug("Mapping path component to " + token);
-    			}
-    			sb.append(f);
-			}
-			else {
-			    String token = (String) nextPathElement.getKey();
-				if (logger.isDebugEnabled()) {
-					logger.debug("Mapping path component field " + token);
-				}
-				String f = getElementMapper().mapField(token);
-				if (logger.isDebugEnabled()) {
-					logger.debug("field is mapped to: " + f);
-				}
-				sb.append(f);
-			}
+        Iterator<Path.Entry> pi = path.iterator();
+        int level = 0, tokenCount = path.size();
+        while (pi.hasNext()) {
+            Path.Entry nextPathElement = pi.next();
+            if (nextPathElement.isIndex()) {
+                Comparable<?> key = nextPathElement.getKey();
+                String f = em.mapIndex(key, level);
+                sb.append(f);
+            }
+            else {
+                String token = (String) nextPathElement.getKey();
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Mapping path component field " + token);
+                }
+                String f = em.mapField(token);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("field is mapped to: " + f);
+                }
+                sb.append(f);
+            }
 
-			if (!pi.hasNext()) {
-				logger.debug("last element in name - not using a separator");
-			}
-			else if (level < tokenCount - 2) {
-				logger.debug("Adding mapper-specified separator");
-				sb.append(getElementMapper().getSeparator(level));
-			}
-			else {
-				logger.debug("Adding '.' instead of mapper-specified separator");
-				sb.append('.');
-			}
-			level++;
-		}
+            appendSeparator(sb, level, tokenCount, em);
+            level++;
+        }
+		
 		String suffix = cp.getSuffix();
 		if (suffix != null) {
 			sb.append(suffix);
@@ -208,26 +189,33 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		return new AbsFile(sb.toString());
 	}
 
-	private String encode(byte[] buf) {
-        buf = Base64.encode(buf);
-        char[] c = new char[buf.length];
-        for (int i = 0; i < buf.length; i++) {
-            c[i] = (char) buf[i];
+    protected void appendSeparator(StringBuilder sb, int level, int totalTokenCount, FileNameElementMapper em) {
+        if (level == totalTokenCount - 1) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("last element in name - not using a separator");
+            }
         }
-        return String.copyValueOf(c);
-    }
-
-    private MessageDigest getDigest() {
-        try {
-            return MessageDigest.getInstance("SHA-1");
+        else if (level == totalTokenCount - 2) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Adding mapper-specified separator");
+            }
+            sb.append(em.getSeparator(level));
         }
-        catch (NoSuchAlgorithmException e) {
-            throw new Error("JVM error: SHA-1 not available");
+        else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Adding '.' instead of mapper-specified separator");
+            }
+            sb.append('.');
         }
     }
 
     @Override
     public Collection<Path> existing() {
+        return existing(FileSystemLister.DEFAULT);
+    }
+
+    @Override
+    public Collection<Path> existing(FileSystemLister fsl) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("list existing paths for mapper id=" + this.hashCode());
 		}
@@ -246,7 +234,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		}
 		logger.debug("Processing file list.");
 		String pattern = cp.getPattern();
-		List<AbsFile> files = glob(f, pattern);
+		List<AbsFile> files = glob(f, fsl, pattern);
 		if (files != null) {
 			for (AbsFile file : files) {
 				if (logger.isDebugEnabled()) {
@@ -273,7 +261,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		return result;
 	}
     
-    protected List<AbsFile> glob(AbsFile f, String pattern) {
+    protected List<AbsFile> glob(AbsFile f, FileSystemLister fsl, String pattern) {
         if (pattern.length() == 0) {
             pattern = "*";
         }
@@ -298,25 +286,25 @@ public abstract class AbstractFileMapper extends AbstractMapper {
         else {
             tokens = Collections.singletonList(firstToken);
         }
-        globRecursive(f, l, tokens, 0);
+        globRecursive(f, fsl, l, tokens, 0);
         return l;
     }
 	
-    private void globRecursive(AbsFile f, List<AbsFile> l, List<String> tokens, int pos) {
+    private void globRecursive(AbsFile f, FileSystemLister fsl, List<AbsFile> l, List<String> tokens, int pos) {
         String token = tokens.get(pos);
         if (pos == tokens.size() - 1) {
             if (token.equals("**")) {
                 throw new IllegalArgumentException("** cannot be the last path element in a path pattern");
             }
             // at the file level
-            globFiles(f, l, token);
+            globFiles(f, fsl, l, token);
         }
         else if (token.equals("**")) {
             // recursively go through all sub-directories and match the remaining pattern tokens
             DirectoryScanner ds = new DirectoryScanner(f);
             while (ds.hasNext()) {
                 AbsFile dir = ds.next();
-                globRecursive(dir, l, tokens, pos + 1);
+                globRecursive(dir, fsl, l, tokens, pos + 1);
             }
         }
         else {
@@ -329,14 +317,14 @@ public abstract class AbstractFileMapper extends AbstractMapper {
                 }
             });
             for (AbsFile dir : dirs) {
-                globRecursive(dir, l, tokens, pos + 1);
+                globRecursive(dir, fsl, l, tokens, pos + 1);
             }
         }
     }
 
-    private void globFiles(AbsFile f, List<AbsFile> l, String token) {
+    private void globFiles(AbsFile f, FileSystemLister fsl, List<AbsFile> l, String token) {
         final String regex = replaceWildcards(token);
-        List<AbsFile> files = f.listFiles(new FilenameFilter() {
+        List<AbsFile> files = fsl.listFiles(f, new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
                 return name.matches(regex);
@@ -345,6 +333,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
         l.addAll(files);
     }
 
+    
     /** Returns the SwiftScript path for a supplied filename.
 	  *
 	  * Splits the filename into components using the separator
@@ -425,7 +414,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 
 	/** Appends the string representation of obj to the string buffer
 	    if obj is not null. */
-	private void maybeAppend(StringBuffer sb, Object obj) {
+	private void maybeAppend(StringBuilder sb, Object obj) {
 		if (obj != null) {
 			sb.append(obj.toString());
 		}
@@ -455,5 +444,129 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	public boolean isStatic() {
 		return false;
 	}
+
+    @Override
+    public Collection<AbsFile> getPattern(Path path, Type type) {
+        // it makes no sense to call this method without an array
+        if (!type.isArray()) {
+            throw new IllegalArgumentException("getPattern() must be called on an array");
+        }
+        AbstractFileMapperParams cp = getParams();
+
+        /*
+         * figure out all possible paths to leaves, then map them but 
+         * replace all array indices by wildcards
+         */
+        FileNameElementMapper m = new WildcardElementMapper(getElementMapper(), path.size());
+        Path cpath = path.addLast(getTemplateIndex(type.keyType()), true);
+        
+        if (!type.itemType().isComposite()) {
+            AbsFile f = (AbsFile) this.map(cp, cpath, cp.getPrefix(), m);
+            return Collections.singletonList(f);
+        }
+        else {
+            // build all possible paths to leaves
+            List<Path> l = new ArrayList<Path>();
+            traverseTypes(l, cpath, type.itemType());
+            
+            List<AbsFile> rl = new ArrayList<AbsFile>();
+            
+            for (Path p : l) {
+                AbsFile f = (AbsFile) this.map(cp, cpath, cp.getPrefix(), m);
+            }
+            
+            return rl;
+        }        
+    }
+    
+    private static class WildcardElementMapper implements FileNameElementMapper {
+        private FileNameElementMapper delegate;
+        private int fixed;
+        
+        public WildcardElementMapper(FileNameElementMapper delegate, int fixed) {
+            this.delegate = delegate;
+            this.fixed = fixed;
+        }
+
+        @Override
+        public String mapField(String fieldName) {
+            return delegate.mapField(fieldName);
+        }
+
+        @Override
+        public String rmapField(String pathElement) {
+            return delegate.rmapField(pathElement);
+        }
+
+        @Override
+        public String mapIndex(int index, int pos) {
+            String s = delegate.mapIndex(index, pos);
+            if (pos > fixed) {
+                return nChars(s.length());
+            }
+            else {
+                return s;
+            }
+        }
+
+        @Override
+        public String mapIndex(Object index, int pos) {
+            String s = delegate.mapIndex(index, pos);
+            if (pos >= fixed) {
+                return nChars(s.length());
+            }
+            else {
+                return s;
+            }
+        }
+
+        @Override
+        public int rmapIndex(String pathElement) {
+            return delegate.rmapIndex(pathElement);
+        }
+
+        @Override
+        public String getSeparator(int depth) {
+            return delegate.getSeparator(depth);
+        }
+        
+        private String nChars(int length) {
+            char[] c = new char[length];
+            for (int i = 0; i < length; i++) {
+                c[i] = '?';
+            }
+            return new String(c);
+        }
+    }
+
+    private void traverseTypes(List<Path> l, Path path, Type t) {
+        if (!t.isComposite()) {
+            // done
+            l.add(path);
+        }
+        else if (t.isArray()) {
+            Path cpath = path.addLast(getTemplateIndex(t.keyType()), true);
+            traverseTypes(l, cpath, t.itemType());
+        }
+        else {
+            // struct
+            for (Field f : t.getFields()) {
+                Path cpath = path.addLast(f.getId());
+                traverseTypes(l, cpath, f.getType());
+            }
+        }
+    }
+
+    private Comparable<?> getTemplateIndex(Type keyType) {
+        if (keyType.equals(Types.INT)) {
+            return 1;
+        }
+        else if (keyType.equals(Types.FLOAT)) {
+            return 1.1;
+        }
+        else {
+            return "index";
+        }
+    }
 }
 

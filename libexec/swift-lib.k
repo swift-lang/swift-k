@@ -131,6 +131,8 @@ namespace(swift) {
 	export(mark, def("org.griphyn.vdl.karajan.lib.Mark"))
 	export(parameterlog, def("org.griphyn.vdl.karajan.lib.Parameterlog"))
 	export(getStagingInfo, def("org.griphyn.vdl.karajan.lib.GetStagingInfo"))
+	export(readCollectList, def("org.griphyn.vdl.karajan.lib.ReadCollectList"))
+	export(processStageouts, def("org.griphyn.vdl.karajan.lib.ProcessStageouts"))
 	export(doRestartLog, def("org.griphyn.vdl.karajan.lib.DoRestartLog"))
 	export(unwrapClosedList, def("org.griphyn.vdl.karajan.lib.UnwrapClosedList"))
 	

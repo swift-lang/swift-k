@@ -36,6 +36,10 @@ import org.globus.cog.abstraction.interfaces.Service;
 
 public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
 	
+    public AbsFile(AbsFile dir, String name) {
+        super(dir, name);
+    }
+    
 	public AbsFile(String url) {
 	    super(url);
 	}

@@ -185,8 +185,8 @@ getarg "-of" "$@"
 OUTF=$VALUE
 shift $SHIFTCOUNT
 
-getarg "-k" "$@"
-KICKSTART=$VALUE
+getarg "-cf" "$@"
+COLLECT=$VALUE
 shift $SHIFTCOUNT
 
 getarg "-cdmfile" "$@"
@@ -248,7 +248,7 @@ log "STDERR=$STDERR"
 log "DIRS=$DIRS"
 log "INF=$INF"
 log "OUTF=$OUTF"
-log "KICKSTART=$KICKSTART"
+log "COLLECT=$COLLECT"
 log "ARGS=$@"
 log "ARGC=$#"
 
@@ -301,6 +301,18 @@ else
 	"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
 fi
 checkError $? "Application $EXEC failed with an exit code of $?" <$STDERR
+
+if [ "$COLLECT" != "" ]; then
+	logstate "COLLECT"
+	log "Collect list is $COLLECT"
+	exec 4<> "_collect"
+	for O in "$COLLECT" ; do
+		log "Collecting $O"
+		ls -1 $O >&4
+	done
+	exec 4>&-
+fi
+
 
 logstate "EXECUTE_DONE"
 log "Job ran successfully"

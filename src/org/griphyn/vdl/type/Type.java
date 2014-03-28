@@ -188,4 +188,6 @@ public interface Type {
 	}
 
     public boolean hasNonPrimitiveComponents();
+    
+    public boolean hasArrayComponents();
 }

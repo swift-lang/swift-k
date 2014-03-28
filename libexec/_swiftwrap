@@ -305,6 +305,10 @@ getarg "-of" "$@"
 OUTF=$VALUE
 shift $SHIFTCOUNT
 
+getarg "-cf" "$@"
+COLLECT=$VALUE
+shift $SHIFTCOUNT
+
 getarg "-cdmfile" "$@"
 CDM_FILE=
 if [ "X$VALUE" != "X" ]; then
@@ -384,7 +388,7 @@ log "STDERR=$STDERR"
 log "DIRS=$DIRS"
 log "INF=$INF"
 log "OUTF=$OUTF"
-log "KICKSTART=$KICKSTART"
+log "COLLECT=$COLLECT"
 log "CDM_FILE=$CDM_FILE"
 log "ARGS=$@"
 log "ARGC=$#"
@@ -541,6 +545,21 @@ else
 			fail $APPEXIT "Application $EXEC failed with an exit code of $APPEXIT"
 		fi
 	fi
+fi
+
+if [ "$COLLECT" != "" ]; then
+	logstate "COLLECT"
+	log "Collect list is $COLLECT"
+	exec 4<> "$WFDIR/shared/${ID}-collect"
+	for O in "$COLLECT" ; do
+		log "Collecting $O"
+		ls -1 $O >&4
+		for OO in $O ; do
+			DIR=`dirname "$OO"`
+			mv $OO "$WFDIR/shared/$DIR" 2>&1 >& "$INFO"
+		done
+	done
+	exec 4>&-
 fi
 
 log "Moving back to workflow directory $WFDIR"

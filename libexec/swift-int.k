@@ -117,9 +117,12 @@ namespace(swift) {
 		 * to be created and (eventually) exploiting the concurrency in that.
 		 */
 		log(LOG:INFO, "START jobid={jobid} host={host} - Initializing directory structure")
-		for(u, dirs) {
-			cache(list(u, destdir, host)) {
-				createdirs(u, destdir, host)
+		for(path, dirs) {
+			cache(list(path, destdir, host)) {
+				dc := dircat(destdir, path)
+				log(LOG:INFO, "START path={path} dir={destdir} - Creating directory structure")
+
+				dir:make(dc, host=host)
 			}
 		}
 		log(LOG:INFO, "END jobid={jobid} - Done initializing directory structure")
@@ -158,12 +161,8 @@ namespace(swift) {
 	}
 
 	stageWrapperParams := function(jobid, jobdir, wrapfile, dir, host) {
-		log(LOG:INFO, "START jobid={jobid} - staging in wrapper params")
-		provider := provider(wrapfile)
-		srchost := hostname(wrapfile)
-		srcdir := swift:dirname(wrapfile)
-		destdir := dircat(dir, "/parameters/{jobdir}/")
-		filename := basename(wrapfile)
+		log(LOG:INFO, "START jobid={jobid} - staging in wrapper params"),		
+		(provider, srchost, destdir, filename, srcdir) := splitFileURL(wrapfile, dir, destdir="parameters/{jobdir}")
 
 		cache(list(destdir, host)) {
 			dir:make(destdir, host=host, provider=provider)
@@ -274,6 +273,15 @@ namespace(swift) {
 		}
 		log(LOG:INFO, "END jobid={jobid} - Staging out finished")
 	}
+	
+	doStageoutCollect := function(jobid, dir, host, outFiles) {
+		fileList := "{jobid}-collect"
+		task:transfer(fileList, srchost=host, srcdir=dir)
+		collectList := readCollectList(fileList)
+		doStageout(jobid, dir, host, 
+			list:join(outFiles, collectList))
+		collectList
+	}
 
 	fileSizes := function(files) {
 		math:sum(
@@ -359,7 +367,7 @@ namespace(swift) {
 				stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
 				stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr)),
 				
-				(localFileDirs, remoteFileDirs, inFiles, outFiles) := getStagingInfo(stagein, stageout)
+				(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout)
 
 				os := siteProfile(rhost, "SYSINFO:OS")
 				
@@ -370,9 +378,10 @@ namespace(swift) {
 						"\n-out ", stdout,
 						"\n-err ", stderr,
 						"\n-i ", if (stdin != null, getFieldValue(stdin)),
-						"\n-d ", str:join(remoteFileDirs, "|"),
+						"\n-d ", str:join(fileDirs, "|"),
 						"\n-if ", str:join(remoteFileNames(inFiles), "|"),
 						"\n-of ", str:join(remoteFileNames(outFiles), "|"),
+						"\n-cf ", str:join(remoteFileNames(outCollect), "|"),
 						"\n-cdmfile ", cdm:file(),
 						"\n-status ", statusMode,
 						for(a, arguments) {
@@ -385,7 +394,7 @@ namespace(swift) {
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 
 				try {
-					createDirSet(jobid, sharedDir, rhost, localFileDirs)
+					createDirSet(jobid, sharedDir, rhost, fileDirs)
 					doStagein(jobid, sharedDir, rhost, inFiles)
 					if(wrapperMode == "files") {
 						stageWrapperParams(jobid, jobdir, wrapfile, wfdir, rhost)
@@ -427,9 +436,10 @@ namespace(swift) {
 								"-out", stdout,
 								"-err", stderr,
 								"-i", if (stdin != null, getFieldValue(stdin)),
-								"-d", str:join(remoteFileDirs, "|"),
+								"-d", str:join(fileDirs, "|"),
 								"-if", str:join(remoteFileNames(inFiles), "|"),
 								"-of", str:join(remoteFileNames(outFiles), "|"),
+								"-cf", str:join(remoteFileNames(outCollect), "|"),
 								"-cdmfile", cdm:file(),
 								"-status", statusMode,
 								"-a", if (arguments != null, each(arguments))
@@ -461,8 +471,13 @@ namespace(swift) {
 
 
 					setProgress(progress, "Stage out")
-					doStageout(jobid, sharedDir, rhost, outFiles)
-					doRestartLog(stageout)
+					if (isEmpty(outCollect)) {
+						doStageout(jobid, sharedDir, rhost, outFiles)
+						[] // empty collect list
+					}
+					else {
+						doStageoutCollect(jobid, sharedDir, rhost, outFiles)
+					}
 					
 					if (configProperty("wrapperlog.always.transfer") == "true") {
 						discard(transferWrapperLog(rhost, wfdir, jobid, jobdir))

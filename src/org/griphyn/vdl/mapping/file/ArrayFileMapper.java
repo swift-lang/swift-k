@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
@@ -48,6 +49,11 @@ public class ArrayFileMapper extends AbstractMapper {
 	}
 
 	@Override
+    public Collection<Path> existing(FileSystemLister l) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
 	public PhysicalFormat map(Path path) {
 		if (path.isEmpty()) {
 			throw new IllegalArgumentException("Path cannot be empty");

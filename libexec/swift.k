@@ -191,7 +191,7 @@ namespace(swift) {
 					try {
 						throttled {
 							setProgress(progress, "Selecting site")
-							restartOnError(number(swift:configProperty("execution.retries"))) {
+							collectList := restartOnError(number(swift:configProperty("execution.retries"))) {
 								if (swift:configProperty("replication.enabled") == "true") {
 									replicationChannel := channel:new()
 									//trigger the first job
@@ -235,8 +235,7 @@ namespace(swift) {
 									}
 								}
 							}
-							setDatasetValues(stageout)
-							mark(stageout, false, mapping=false)
+							processStageouts(stageout, collectList)
 							log(LOG:INFO, "END_SUCCESS thread=", currentThread(), " tr={tr}")
 							setProgress(progress, "Finished successfully")
 						}

@@ -117,4 +117,18 @@ public class MapperFactory {
     public static Set<String> getValidParams(String type) {
         return validParams.get(type);
     }
+    
+    public static void main(String[] args) {
+        for (String name : mappers.keySet()) {
+            try {
+                Mapper m = getMapper(name);
+                if (!m.isStatic()) {
+                    System.out.println(name);
+                }
+            }
+            catch (InvalidMapperException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

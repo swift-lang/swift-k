@@ -27,7 +27,9 @@ public interface FileNameElementMapper {
 	String mapField(String fieldName);
 	String rmapField(String pathElement);
 	
-	String mapIndex(int index);
+	String mapIndex(int index, int pos);
+	String mapIndex(Object index, int pos);
+	
 	int rmapIndex(String pathElement);
 
 	/** Returns a string which will be used as a separator string between

@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
@@ -103,9 +104,19 @@ public class TestMapper extends AbstractMapper {
     public Collection<Path> existing() {
         return Collections.singletonList(Path.EMPTY_PATH);
     }
+    
+    @Override
+    public Collection<Path> existing(FileSystemLister l) {
+        return Collections.singletonList(Path.EMPTY_PATH);
+    }
 
     public boolean isStatic() {
         TestMapperParams cp = getParams();
-        return cp.getStatic_();
+        if (cp != null) {
+            return cp.getStatic_();
+        }
+        else {
+            return false;
+        }
     }
 }

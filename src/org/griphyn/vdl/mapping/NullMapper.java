@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.griphyn.vdl.type.Type;
+
 
 public class NullMapper implements Mapper {
     public NullMapper() {
@@ -32,6 +34,12 @@ public class NullMapper implements Mapper {
     @Override
     public Collection<Path> existing() {
         return Collections.emptyList();
+    }
+
+    
+    @Override
+    public Collection<Path> existing(FileSystemLister l) {
+        return null;
     }
 
     @Override
@@ -78,6 +86,11 @@ public class NullMapper implements Mapper {
 
     @Override
     public AbstractDataNode getFirstOpenParameter() {
+        return null;
+    }
+
+    @Override
+    public Collection<AbsFile> getPattern(Path path, Type type) {
         return null;
     }
 }

@@ -17,12 +17,15 @@
 
 package org.griphyn.vdl.mapping.file;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.type.Type;
 
 public class FileSystemArrayMapper extends AbstractFileMapper {    
     private Map<Object, String> filenames = new HashMap<Object, String>();
@@ -47,7 +50,7 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 	
     @Override
 	public PhysicalFormat map(Path path) {
-		if (path.size()!=1) {
+		if (path.size() != 1) {
 			return null;
 		}
 		if (!path.isArrayIndex(0)) {
@@ -69,4 +72,26 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 		}
 		return new AbsFile(filename);
 	}
+
+    @Override
+    public Collection<AbsFile> getPattern(Path path, Type type) {
+        if (!type.isArray()) {
+            throw new IllegalArgumentException("Cannot use a non-array type with the FilesysMapper");
+        }
+        AbstractFileMapperParams cp = getParams();
+        String location = defaultValue(cp.getLocation(), "./");
+        String prefix = defaultValue(cp.getPrefix(), "");
+        String suffix = defaultValue(cp.getSuffix(), "");
+        String pattern = defaultValue(cp.getPattern(), null);
+        if (pattern != null) {
+            return Collections.singletonList(new AbsFile(location + "/" + pattern));
+        }
+        else {
+            return Collections.singletonList(new AbsFile(location + "/" + prefix + "*" + suffix));
+        }
+    }
+
+    private String defaultValue(String s, String d) {
+        return s == null ? d : s;
+    }
 }

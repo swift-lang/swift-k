@@ -30,7 +30,7 @@ package org.griphyn.vdl.mapping.file;
   * </ul>
   */
 
-public class DefaultFileNameElementMapper implements FileNameElementMapper {
+public class DefaultFileNameElementMapper extends AbstractFileNameElementMapper {
 
 	public static final int DEFAULT_INDEX_WIDTH = 4;
 
@@ -52,7 +52,7 @@ public class DefaultFileNameElementMapper implements FileNameElementMapper {
 		return pathElement;
 	}
 
-	public String mapIndex(int index) {
+	public String mapIndex(int index, int pos) {
 		StringBuilder sb = new StringBuilder(indexWidth);
 		String num = String.valueOf(index);
 		for (int i = 0; i < indexWidth - num.length(); i++) {

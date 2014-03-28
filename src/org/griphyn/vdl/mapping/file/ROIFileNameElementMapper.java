@@ -20,7 +20,7 @@ package org.griphyn.vdl.mapping.file;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ROIFileNameElementMapper implements FileNameElementMapper {
+public class ROIFileNameElementMapper extends AbstractFileNameElementMapper {
 	private Map<Integer, String> basenames;
 	int index;
 	
@@ -46,7 +46,7 @@ public class ROIFileNameElementMapper implements FileNameElementMapper {
 		return pathElement;
 	}
 
-	public String mapIndex(int index) {
+	public String mapIndex(int index, int pos) {
 		return basenames.get(index);
 	}
 

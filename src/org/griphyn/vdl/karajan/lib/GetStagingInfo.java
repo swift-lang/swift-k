@@ -22,6 +22,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,9 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
+import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 
 public class GetStagingInfo extends SwiftFunction {
 	
@@ -46,48 +49,94 @@ public class GetStagingInfo extends SwiftFunction {
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("stageins", "stageouts"), returns(channel("...", 4)));
+        return new Signature(params("stageins", "stageouts"), returns(channel("...", 5)));
     }
-
+    
+    private static class Info {
+        Set<String> remoteDirNames = Collections.emptySet();
+        List<AbsFile> inFiles = Collections.emptyList();
+        List<AbsFile> outFiles = Collections.emptyList();
+        List<AbsFile> collectPatterns = Collections.emptyList();
+    }
 
     @Override
     public Object function(Stack stack) {
         Collection<DSHandle> fi = stageins.getValue(stack);
         Collection<DSHandle> fo = stageouts.getValue(stack);
         Channel<Object> ret = cr_vargs.get(stack);
-        Set<String> localDirNames = new HashSet<String>();
-        Set<String> remoteDirNames = new HashSet<String>();
-        List<AbsFile> inFiles = new ArrayList<AbsFile>();
-        List<AbsFile> outFiles = new ArrayList<AbsFile>();
+        
+        Info info = new Info();
         
         try {
-            addPaths(localDirNames, remoteDirNames, inFiles, fi);
-            addPaths(localDirNames, remoteDirNames, outFiles, fo);
+            addPaths(info, fi, false);
+            addPaths(info, fo, true);
         }
         catch (HandleOpenException e) {
         	throw new ExecutionException(e.getMessage(), e);
         }
-        ret.add(localDirNames);
-        ret.add(remoteDirNames);
-        ret.add(inFiles);
-        ret.add(outFiles);
+        ret.add(info.remoteDirNames);
+        ret.add(info.inFiles);
+        ret.add(info.outFiles);
+        ret.add(info.collectPatterns);
         return null;
     }
 
-    private void addPaths(Set<String> ldirs, Set<String> rdirs, List<AbsFile> files, Collection<DSHandle> vars) throws HandleOpenException {
-    	for (DSHandle file : vars) {
-            for (DSHandle leaf : file.getLeaves()) {
-            	Type t = leaf.getType();
-                String fname = SwiftFunction.argList(SwiftFunction.filename(leaf), true);
-                AbsFile f = new AbsFile(fname);
-                String dir = f.getDirectory();
-                if (dir != null) {
-                    ldirs.add(dir);
-                    rdirs.add(remoteDir(f, dir));
-                }
-                files.add(f);
+
+
+    private void addPaths(Info info, Collection<DSHandle> vars, boolean out) throws HandleOpenException {
+    	for (DSHandle var : vars) {
+    	    Mapper m = getMapper(var);
+    	    if (out && !m.isStatic() && var.getType().hasArrayComponents()) {
+    	        Collection<AbsFile> patterns = m.getPattern(var.getPathFromRoot(), var.getType());
+    	        for (AbsFile f : patterns) {
+    	            info.collectPatterns = addOne(f, info, info.collectPatterns);
+    	        }
+    	    }
+    	    else {
+    	        addAllStatic(var, m, info, out);
+    	    }    
+        }
+    }
+
+
+    private void addAllStatic(DSHandle var, Mapper m, Info info, boolean out) throws HandleOpenException {
+        for (DSHandle leaf : var.getLeaves()) {
+            Type t = leaf.getType();
+            if (t.equals(Types.EXTERNAL)) {
+                continue;
+            }
+            if (out) {
+                info.outFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, info.outFiles);
+            }
+            else {
+                info.inFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, info.inFiles);
             }
         }
+    }
+
+
+    private List<AbsFile> addOne(AbsFile f, Info info, List<AbsFile> files) {
+        String dir = f.getDirectory();
+        if (dir != null) {
+            if (info.remoteDirNames.isEmpty()) {
+                info.remoteDirNames = new HashSet<String>();
+            }
+            info.remoteDirNames.add(remoteDir(f, dir));
+        }
+        if (files.isEmpty()) {
+            files = new ArrayList<AbsFile>();
+        }
+        files.add(f);
+        return files;
+    }
+
+
+    private Mapper getMapper(DSHandle var) {
+        Mapper m = var.getMapper();
+        if (m == null) {
+            throw new ExecutionException("No mapper found for  " + var);
+        }
+        return m;
     }
 
 

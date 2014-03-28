@@ -45,7 +45,11 @@ import org.griphyn.vdl.util.VDL2Config;
 
 
 public abstract class AbstractDataNode implements DSHandle, FutureValue {
-    public static final Object FILE_VALUE = new Object();
+    public static final Object FILE_VALUE = new Object() {
+        public String toString() {
+            return "<FILE>";
+        }
+    };
 
     static final String DATASET_URI_PREFIX = "dataset:";
 

@@ -17,12 +17,14 @@
 
 package org.griphyn.vdl.mapping;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.file.FileGarbageCollector;
+import org.griphyn.vdl.type.Type;
 
 /** AbstractMapper provides an implementation of the Mapper interface to be
     used as a base class for writing other mappers. It provides handling
@@ -149,5 +151,15 @@ public abstract class AbstractMapper implements Mapper {
         }
         sb.append('>');
         return sb.toString();
+    }
+
+    @Override
+    public Collection<AbsFile> getPattern(Path path, Type type) {
+        if (isStatic()) {
+            return null;
+        }
+        else {
+            throw new UnsupportedOperationException(this.getClass().getName() + ".getPattern()");
+        }
     }
 }

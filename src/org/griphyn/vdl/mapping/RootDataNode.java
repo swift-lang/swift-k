@@ -20,6 +20,8 @@
  */
 package org.griphyn.vdl.mapping;
 
+import java.util.Collection;
+
 import k.rt.Future;
 import k.rt.FutureListener;
 import k.thr.LWThread;
@@ -156,7 +158,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener, Ro
 	static protected void checkInputs(RootHandle root, DuplicateMappingChecker dmc) {
 	    Mapper mapper = root.getActualMapper();
 		if (root.isInput()) {
-			addExisting(mapper, root);
+			addExisting(mapper.existing(), mapper, root, root);
 			checkConsistency(root, root, dmc);
 		}
 		else if (mapper.isStatic()) {
@@ -194,11 +196,11 @@ public class RootDataNode extends AbstractDataNode implements FutureListener, Ro
 		}
 	}
 
-	private static void addExisting(Mapper mapper, RootHandle root) {
+	public static void addExisting(Collection<Path> existing, Mapper mapper, RootHandle root, DSHandle var) {
 	    boolean any = false;
-		for (Path p : mapper.existing()) {
+		for (Path p : existing) {
             try {
-                DSHandle field = root.getField(p);
+                DSHandle field = var.getField(p);
                 field.setValue(FILE_VALUE);
                 if (variableTracer.isEnabled()) {
                     variableTracer.trace(root.getThread(), root.getLine(), 
@@ -216,7 +218,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener, Ro
                     e.getDataNode().getType() + "'");
             }
         }
-        root.closeDeep();
+        var.closeDeep();
         if (!any && variableTracer.isEnabled()) {
             variableTracer.trace(root.getThread(), root.getLine(), 
                 root.getName() + " MAPPING no files found");

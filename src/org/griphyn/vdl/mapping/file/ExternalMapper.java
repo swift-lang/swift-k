@@ -32,6 +32,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -141,6 +142,11 @@ public class ExternalMapper extends AbstractMapper {
 	public Collection<Path> existing() {
 		return map.keySet();
 	}
+	
+	@Override
+    public Collection<Path> existing(FileSystemLister l) {
+        throw new UnsupportedOperationException();
+    }
 
 	public Path rmap(String name) {
 		if (name == null || name.equals("")) {

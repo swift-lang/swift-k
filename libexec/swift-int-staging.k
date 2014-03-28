@@ -78,7 +78,7 @@ namespace(swift) {
 				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 				cdmfile := cdm:file(),
 				
-				(localFileDirs, remoteFileDirs, inFiles, outFiles) := getStagingInfo(stagein, stageout)
+				(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout)
 
 				try {
 					log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), 
@@ -96,10 +96,10 @@ namespace(swift) {
 							"-out", if(stdout == null, "stdout.txt", getFieldValue(stdout)),
 							"-err", if(stderr == null, "stderr.txt", getFieldValue(stderr)),
 							"-i", if (stdin != null, getFieldValue(stdin)),
-							"-d", str:join(remoteFileDirs, "|"),
+							"-d", str:join(fileDirs, "|"),
 							"-if", str:join(remoteFileNames(inFiles), "|"),
 							"-of", str:join(remoteFileNames(outFiles), "|"),
-							"-k",
+							"-cf", str:join(remoteFileNames(outCollect), "|"),
 							"-cdmfile", cdmfile,
 							"-status", "provider"
 							"-a", if (arguments != null, each(arguments))
@@ -139,7 +139,7 @@ namespace(swift) {
 						}
 						else {
 							stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}",
-								mode = STAGING_MODE:ALWAYS + STAGING_MODE:IF_PRESENT)
+								mode = STAGING_MODE:IF_PRESENT)
 						}
 						if (stderr == null) {
 							stageOut("stderr.txt", "{stagingMethod}://localhost/{ddir}/{jobid}.stderr",
@@ -147,11 +147,15 @@ namespace(swift) {
 						}
 						else {
 							stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}",
-								mode = STAGING_MODE:ALWAYS + STAGING_MODE:IF_PRESENT)
+								mode = STAGING_MODE:IF_PRESENT)
 						}
 						stageOut("wrapper.error", "{stagingMethod}://localhost/{ddir}/{jobid}.error", 
 							mode = STAGING_MODE:IF_PRESENT)
-						appStageouts(jobid, outFiles, stagingMethod)
+						appStageouts(jobid, outFiles, outCollect, stagingMethod)
+						if (!isEmpty(outCollect)) {
+							stageOut("_collect", "{stagingMethod}://localhost/{ddir}/{jobid}.collect", 
+								mode = STAGING_MODE:ALWAYS)
+						}
 						
 						if (CLEANUP_ENABLED) {
 							task:cleanUp(".")
@@ -159,7 +163,13 @@ namespace(swift) {
 					)
 					
 					
-					doRestartLog(stageout)
+					if (!isEmpty(outCollect)) {
+						readCollectList("{ddir}/{jobid}.collect")
+					}
+					else {
+						[]
+					}
+					
 					log(LOG:DEBUG, "JOB_END jobid={jobid}")
 				}
 				else catch(prev) {

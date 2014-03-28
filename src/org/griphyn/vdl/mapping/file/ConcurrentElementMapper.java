@@ -26,7 +26,7 @@ package org.griphyn.vdl.mapping.file;
     the same from version to version.
   */
 
-public class ConcurrentElementMapper implements FileNameElementMapper {
+public class ConcurrentElementMapper extends AbstractFileNameElementMapper {
 
 	/** determines how many directories and element files are permitted
 	    in each directory. There will be no more than
@@ -43,23 +43,24 @@ public class ConcurrentElementMapper implements FileNameElementMapper {
 		return pathElement;
 	}
 
-	public String mapIndex(int index) {
+	public String mapIndex(int index, int pos) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("-array/");
 		sb.append(splitIndexByLoadFactor(index));
 		sb.append("/");
-		sb.append("elt-"+String.valueOf(index));
+		sb.append("elt-");
+		sb.append(String.valueOf(index));
 		return sb.toString();
 	}
 
 
-	String splitIndexByLoadFactor(int index)
-	{
-		if(index<=DIRECTORY_LOAD_FACTOR) {
+	String splitIndexByLoadFactor(int index) {
+		if (index <= DIRECTORY_LOAD_FACTOR) {
 			return "";
-		} else {
-			String prefix = "h"+String.valueOf(index % DIRECTORY_LOAD_FACTOR) +"/";
-			String suffix = splitIndexByLoadFactor(index/DIRECTORY_LOAD_FACTOR);
+		} 
+		else {
+			String prefix = "h" + String.valueOf(index % DIRECTORY_LOAD_FACTOR) + "/";
+			String suffix = splitIndexByLoadFactor(index / DIRECTORY_LOAD_FACTOR);
 			return prefix + suffix;
 		}
 	}

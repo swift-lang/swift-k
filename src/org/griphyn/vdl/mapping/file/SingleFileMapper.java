@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.griphyn.vdl.mapping.AbstractMapper;
+import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -61,6 +62,11 @@ public class SingleFileMapper extends AbstractMapper {
 			return Collections.emptyList();
 		}
 	}
+    
+    @Override
+    public Collection<Path> existing(FileSystemLister l) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
 	public PhysicalFormat map(Path path) {
