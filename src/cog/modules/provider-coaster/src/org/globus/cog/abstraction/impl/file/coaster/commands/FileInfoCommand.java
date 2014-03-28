@@ -31,9 +31,9 @@ public class FileInfoCommand extends Command {
         f.setLastModified(getInDataAsString(2));
         f.setName(new File(f.getAbsolutePathName()).getName());
         f.setSize(getInDataAsLong(3));
-        f.setUserPermissions(new PermissionsImpl(getInDataAsInt(4)));
-        f.setGroupPermissions(new PermissionsImpl(getInDataAsInt(5)));
-        f.setWorldPermissions(new PermissionsImpl(getInDataAsInt(6)));
+        f.setUserPermissions(PermissionsImpl.instance(getInDataAsInt(4)));
+        f.setGroupPermissions(PermissionsImpl.instance(getInDataAsInt(5)));
+        f.setWorldPermissions(PermissionsImpl.instance(getInDataAsInt(6)));
         return f;
     }
 }

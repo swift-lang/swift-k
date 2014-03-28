@@ -27,9 +27,7 @@ public class FileInfoHandler extends CoasterFileRequestHandler {
         addOutData(new Date(f.lastModified()).toString());
         addOutData(f.length());
         
-        Permissions p = new PermissionsImpl();
-        p.setRead(f.canRead());
-        p.setWrite(f.canWrite());
+        Permissions p = new PermissionsImpl(f.canRead(), f.canWrite(), false);
         addOutData(p.toDigit());
         addOutData(p.toDigit());
         addOutData(p.toDigit());
