@@ -32,6 +32,22 @@ public class RemoteFile {
         this.name = name;
     }
     
+    public RemoteFile(RemoteFile dir, String name) {
+        this.protocol = dir.protocol;
+        this.host = dir.host;
+        this.port = dir.port;
+        this.dir = dir.getPath();
+        this.name = name;
+    }
+    
+    public RemoteFile(RemoteFile copy) {
+        this.protocol = copy.protocol;
+        this.host = copy.host;
+        this.port = copy.port;
+        this.dir = copy.dir;
+        this.name = copy.name;
+    }
+    
     public RemoteFile(String protocol, String host, int port, String path) {
         this.protocol = protocol;
         this.host = host;
@@ -50,7 +66,7 @@ public class RemoteFile {
         port = -1;
         parse(s);
     }
-    
+
     protected void parse(String str) {
         int pp = 0, sp = 0, state = 0;
         /*
@@ -183,6 +199,10 @@ public class RemoteFile {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getDirectory() {
         return dir;
     }
@@ -226,14 +246,18 @@ public class RemoteFile {
         
     public String getURIAsString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(protocol);
-        sb.append("://");
-        sb.append(host);
-        if (port != -1) {
-            sb.append(':');
-            sb.append(port);
+        if (protocol != null) {
+            sb.append(protocol);
+            sb.append("://");
         }
-        sb.append('/');
+        if (host != null) {
+            sb.append(host);
+            if (port != -1) {
+                sb.append(':');
+                sb.append(port);
+            }
+            sb.append('/');
+        }
         if (dir != null) {
             // special case when the dir is just a slash
             // (indicating a file in the root dir): there
