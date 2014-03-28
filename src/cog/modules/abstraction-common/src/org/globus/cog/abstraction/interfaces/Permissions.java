@@ -13,20 +13,11 @@ package org.globus.cog.abstraction.interfaces;
 
 public interface Permissions {
 
-    /** set/unset read permissions */
-    public void setRead(boolean canRead);
-
     /** get read permissions */
     public boolean getRead();
 
-    /** set/unset write permissions */
-    public void setWrite(boolean canWrite);
-
     /** get write permissions */
     public boolean getWrite();
-
-    /** set/unset execute permissions */
-    public void setExecute(boolean canExecute);
 
     /** get execute permissions */
     public boolean getExecute();

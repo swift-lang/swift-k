@@ -27,9 +27,9 @@ public class GridFileImpl implements GridFile {
     private Permissions worldPermissions = null;
 
     public GridFileImpl() {
-        userPermissions = new PermissionsImpl();
-        groupPermissions = new PermissionsImpl();
-        worldPermissions = new PermissionsImpl();
+        userPermissions = PermissionsImpl.NONE;
+        groupPermissions = PermissionsImpl.NONE;
+        worldPermissions = PermissionsImpl.NONE;
     }
 
     /** set name for the file */
