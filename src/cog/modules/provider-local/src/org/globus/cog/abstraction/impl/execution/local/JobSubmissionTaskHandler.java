@@ -36,6 +36,7 @@ import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.common.util.NullOutputStream;
 import org.globus.cog.abstraction.impl.common.util.OutputStreamMultiplexer;
 import org.globus.cog.abstraction.impl.file.FileResourceCache;
+import org.globus.cog.abstraction.impl.file.SimplePathExpansion;
 import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.FileResource;
@@ -318,13 +319,46 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
 
         getTask().setStatus(Status.STAGE_OUT);
-        stage(s, dir, jobSucceeded);
+        stage(s, dir, jobSucceeded, true);
     }
 
-    private void stage(StagingSet s, File dir, boolean jobSucceeded) throws Exception {
+    private void stage(StagingSet s, File dir, boolean jobSucceeded, boolean pathNameExpansion) throws Exception {
         for (StagingSetEntry e : s) {
-            copy(e.getSource(), e.getDestination(), dir, e.getMode(), jobSucceeded);
+            String src = e.getSource();
+            if (pathNameExpansion && isPattern(src)) {
+                if (e.getMode().contains(Mode.ON_SUCCESS) && !jobSucceeded) {
+                    continue;
+                }
+                if (e.getMode().contains(Mode.ON_ERROR) && jobSucceeded) {
+                    continue;
+                }
+                String dst = e.getDestination();
+                RemoteFile srf = new RemoteFile(src);
+                String srcScheme = defaultToLocal(srf.getProtocol());
+                Service ss = new ServiceImpl(srcScheme, getServiceContact(srf), null);
+                FileResource sres = FileResourceCache.getDefault().getResource(ss);
+                RemoteFile drf = new RemoteFile(dst);
+                Collection<String[]> paths = SimplePathExpansion.expand(srf, drf, sres);
+                for (String[] pair : paths) {
+                    copy(pair[0], pair[1], dir, e.getMode(), jobSucceeded);
+                }
+            }
+            else {
+                copy(e.getSource(), e.getDestination(), dir, e.getMode(), jobSucceeded);
+            }
         }
+    }
+
+    private boolean isPattern(String path) {
+        for (int i = 0; i < path.length(); i++) {
+            char c = path.charAt(i);
+            switch (c) {
+                case '?':
+                case '*':
+                    return true;
+            }
+        }
+        return false;
     }
 
     protected void stageIn(JobSpecification spec, File dir) throws Exception {
@@ -336,7 +370,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         getTask().setStatus(Status.STAGE_IN);
         // job is considered successful before it runs as far as
         // staging modes are concerned
-        stage(s, dir, true);
+        stage(s, dir, true, false);
     }
 
     private void copy(String src, String dest, File dir, EnumSet<Mode> mode, boolean jobSucceeded) throws Exception {
