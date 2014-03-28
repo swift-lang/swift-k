@@ -13,9 +13,11 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.PasswordAuthentication;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -435,5 +437,25 @@ public abstract class AbstractFileResource implements FileResource {
         if (f1.isFragment() || f2.isFragment()) {
             throw new UnsupportedOperationException("The " + name + " provider does not support partial transfers");
         }
+    }
+
+    /**
+     * Convenience method to implement filtering. Providers should implement their
+     * own, more efficient, filtering
+     * @throws FileResourceException 
+     * @throws DirectoryNotFoundException 
+     */
+    @Override
+    public Collection<GridFile> list(String dir, FileResourceFileFilter filter) 
+            throws DirectoryNotFoundException, FileResourceException {
+        
+        List<GridFile> nl = new ArrayList<GridFile>();
+        Collection<GridFile> ol = list(dir);
+        for (GridFile f : ol) {
+            if (filter.accept(f)) {
+                nl.add(f);
+            }
+        }
+        return nl;
     }
 }

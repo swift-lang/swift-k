@@ -10,12 +10,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.List;
 
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
+import org.globus.cog.abstraction.impl.file.FileResourceFileFilter;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
 
 /**
@@ -131,6 +133,9 @@ public interface FileResource extends GridResource {
      * @throws FileResourceException
      */
     public Collection<GridFile> list(String directoryName)
+            throws DirectoryNotFoundException, FileResourceException;
+    
+    public Collection<GridFile> list(String dir, FileResourceFileFilter filter) 
             throws DirectoryNotFoundException, FileResourceException;
 
     /**
@@ -371,4 +376,5 @@ public interface FileResource extends GridResource {
     
     void thirdPartyTransfer(FileResource sourceResource, FileFragment source, FileFragment destination) 
             throws FileResourceException;
+
 }
