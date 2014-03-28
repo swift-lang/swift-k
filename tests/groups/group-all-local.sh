@@ -13,6 +13,9 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/language-behaviour/associative_array \
             $TESTDIR/language-behaviour/control_structures \
             $TESTDIR/language-behaviour/datatypes \
+            $TESTDIR/language-behaviour/procedures/dynamic-output/swift-staging \
+            $TESTDIR/language-behaviour/procedures/dynamic-output/provider-staging-local \
+            $TESTDIR/language-behaviour/procedures/dynamic-output/provider-staging-coasters \
 	    $TESTDIR/language-behaviour/IO \
 	    $TESTDIR/language-behaviour/logic \
 	    $TESTDIR/language-behaviour/mappers \
