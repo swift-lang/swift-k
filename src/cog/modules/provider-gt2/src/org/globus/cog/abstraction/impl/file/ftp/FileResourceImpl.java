@@ -26,11 +26,11 @@ import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
 import org.globus.cog.abstraction.impl.file.FileResourceException;
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.IllegalHostException;
+import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
-import org.globus.cog.abstraction.interfaces.Permissions;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
@@ -485,26 +485,13 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         gridFile.setName(fileInfo.getName());
         gridFile.setSize(fileInfo.getSize());
 
-        Permissions userPermissions = gridFile.getUserPermissions();
-        Permissions groupPermissions = gridFile.getGroupPermissions();
-        Permissions allPermissions = gridFile.getWorldPermissions();
-
-        userPermissions.setRead(fileInfo.userCanRead());
-        userPermissions.setWrite(fileInfo.userCanWrite());
-        userPermissions.setExecute(fileInfo.userCanExecute());
-
-        groupPermissions.setRead(fileInfo.groupCanRead());
-        groupPermissions.setWrite(fileInfo.groupCanWrite());
-        groupPermissions.setExecute(fileInfo.groupCanExecute());
-
-        allPermissions.setRead(fileInfo.allCanRead());
-        allPermissions.setWrite(fileInfo.allCanWrite());
-        allPermissions.setExecute(fileInfo.allCanExecute());
-
-        gridFile.setUserPermissions(userPermissions);
-        gridFile.setGroupPermissions(groupPermissions);
-        gridFile.setWorldPermissions(allPermissions);
-
+        gridFile.setUserPermissions(PermissionsImpl.instance(fileInfo.userCanRead(), 
+            fileInfo.userCanWrite(), fileInfo.userCanExecute()));
+        gridFile.setGroupPermissions(PermissionsImpl.instance(fileInfo.groupCanRead(), 
+            fileInfo.groupCanWrite(), fileInfo.groupCanExecute()));
+        gridFile.setWorldPermissions(PermissionsImpl.instance(fileInfo.allCanRead(), 
+            fileInfo.allCanWrite(), fileInfo.allCanExecute()));
+        
         return gridFile;
     }
 

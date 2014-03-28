@@ -36,7 +36,6 @@ import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
-import org.globus.cog.abstraction.interfaces.Permissions;
 import org.globus.cog.abstraction.interfaces.ProgressMonitor;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
@@ -631,11 +630,11 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
         gridFile.setName(fi.getName());
         gridFile.setSize(fi.getSize());
 
-        gridFile.setUserPermissions(getPermissions(fi.userCanRead(), fi
+        gridFile.setUserPermissions(PermissionsImpl.instance(fi.userCanRead(), fi
             .userCanWrite(), fi.userCanExecute()));
-        gridFile.setGroupPermissions(getPermissions(fi.groupCanRead(), fi
+        gridFile.setGroupPermissions(PermissionsImpl.instance(fi.groupCanRead(), fi
             .groupCanWrite(), fi.groupCanExecute()));
-        gridFile.setWorldPermissions(getPermissions(fi.allCanRead(), fi
+        gridFile.setWorldPermissions(PermissionsImpl.instance(fi.allCanRead(), fi
             .allCanWrite(), fi.allCanExecute()));
 
         return gridFile;
@@ -668,14 +667,6 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
         gridFile.setSize(Long.parseLong(e.get(MlsxEntry.SIZE)));
 
         return gridFile;
-    }
-
-    protected Permissions getPermissions(boolean r, boolean w, boolean x) {
-        Permissions perm = new PermissionsImpl();
-        perm.setRead(r);
-        perm.setWrite(w);
-        perm.setExecute(x);
-        return perm;
     }
 
     private void removeLocalDirectory(String tempDirName) {
