@@ -1525,6 +1525,9 @@ sub stageout {
 		cleanup($jobid);
 	}
 	else {
+		if ($STAGEINDEX == 0) {
+			pathExpandStageouts($jobid);
+		}
 		my $lfile = $$STAGE[$STAGEINDEX];
 		my $mode = $$STAGEM[$STAGEINDEX];
 		my $skip = 0;
@@ -1589,6 +1592,142 @@ sub stageout {
 			stageout($jobid);
 		}
 	}
+}
+
+sub pathExpandStageouts {
+	my ($jobid) = @_;
+	
+	wlog DEBUG, "$jobid: Processing glob stageouts\n";
+	
+	my $STAGE = $JOBDATA{$jobid}{"stageout"};
+	my $STAGED = $JOBDATA{$jobid}{"stageoutd"};
+	my $STAGEM = $JOBDATA{$jobid}{"stageoutm"};
+	
+	my $i = 0;
+	while ($i < scalar @$STAGE) {
+		my $lfile = $$STAGE[$i];
+		wlog DEBUG, "$jobid: $i - lfile = $lfile\n";
+		my ($name, $dir, $suffix) = fileparse($lfile); 
+		
+		if ($name =~ /\?/ || $name =~ /\*/) {
+			my $dest = $$STAGED[$i];
+			my $mode = $$STAGEM[$i];
+			
+			my $resrc = toRegexp($name);
+			my @lst = list($dir, $resrc);
+			
+			my $redst = toSubstg($dest);
+			
+			wlog DEBUG, "$jobid: resrc: $resrc, redst: $redst\n";
+			splice(@$STAGE, $i, 1);
+			splice(@$STAGED, $i, 1);
+			splice(@$STAGEM, $i, 1);
+			$i--;
+			
+			for my $f (@lst) {
+				push @$STAGE, "$dir$f";
+				$f =~ m/$resrc/;
+				my $dt;
+				eval "\$dt = qq/$redst/";
+				wlog DEBUG, "$jobid: $dir$f -> $dt\n";
+				push @$STAGED, $dt;
+				push @$STAGEM, $mode;
+			}
+		}
+		
+		$i++;
+	}
+}
+
+sub list {
+	my ($dir, $re) = @_;
+	
+	my @lst;
+	my $dirh;
+	opendir($dirh, $dir);
+	
+	while (my $f = readdir($dirh)) {
+		if ($f =~ /$re/) {
+			push @lst, $f;
+		}
+	}
+	
+	return @lst;
+}
+
+
+sub toRegexp {
+	my ($s) = @_;
+	my $r = "";
+	
+	my $lastWasWildcard = 0;
+	for my $c (split(//, $s)) {
+		if ($c =~ /[\.\\\[\]\(\)\^\$|\+\{\}\/]/) {
+			if ($lastWasWildcard) {
+				$r = "$r)";
+				$lastWasWildcard = 0;
+			}
+			$r = "$r\\$c";
+		}
+		elsif ($c eq "?") {
+			if (!$lastWasWildcard) {
+				$r = "$r(";
+				$lastWasWildcard = 1;
+			}
+			$r = "$r.";
+		}
+		elsif ($c eq "*") {
+			if (!$lastWasWildcard) {
+				$r = "$r(";
+				$lastWasWildcard = 1;
+			}
+			$r = "$r.*";
+		}
+		else {
+			if ($lastWasWildcard) {
+				$r = "$r)";
+				$lastWasWildcard = 0;
+			}
+			$r = "$r$c";
+		}
+	}
+	if ($lastWasWildcard) {
+		$r = "$r)";
+	}
+	return $r;
+}
+
+sub toSubstg {
+	my ($s) = @_;
+	my $r = "";
+	
+	my $ix = 1;
+	
+	my $lastWasWildcard = 0;
+	for my $c (split(//, $s)) {
+		if ($c =~ /[\\\{\}\/]/) {
+			if ($lastWasWildcard) {
+				$r = "$r)";
+				$lastWasWildcard = 0;
+			}
+			$r = "$r\\$c";
+		}
+		elsif ($c eq "?" || $c eq "*") {
+			if (!$lastWasWildcard) {
+				$r = "$r\$$ix";
+				$lastWasWildcard = 1;
+				$ix++;
+			}
+		}
+		else {
+			if ($lastWasWildcard) {
+				$r = "$r";
+				$lastWasWildcard = 0;
+			}
+			$r = "$r$c";
+		}
+	}
+	return $r;
 }
 
 sub readFile {
