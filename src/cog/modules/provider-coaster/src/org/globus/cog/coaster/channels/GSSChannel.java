@@ -10,7 +10,11 @@
 package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.coaster.FallbackAuthorization;
@@ -155,7 +159,17 @@ public class GSSChannel extends AbstractTCPChannel {
 		}
 	}
 
-	protected void register() {
+	@Override
+    protected void setInputStream(InputStream inputStream) {
+        super.setInputStream(new InflaterInputStream(inputStream));
+    }
+
+    @Override
+    protected void setOutputStream(OutputStream outputStream) {
+        super.setOutputStream(new DeflaterOutputStream(outputStream, true));
+    }
+
+    protected void register() {
 		getMultiplexer(SLOW).register(this);
 	}
 
