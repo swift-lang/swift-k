@@ -167,6 +167,9 @@ public class RootDataNode extends AbstractDataNode implements FutureListener, Ro
 		        // which can happen in cases such as if(false) {a = ...}
 		        return;
 		    }
+		    if (!root.getType().isComposite()) {
+		        return;
+		    }
 			// Static mappers are (array) mappers which know the size of
 			// an array statically. A good example is the fixed array mapper
 		    if (logger.isDebugEnabled()) {
