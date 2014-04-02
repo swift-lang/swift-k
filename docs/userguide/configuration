@@ -318,9 +318,9 @@ Swift behavior can be configured through general Swift properties. Below is a li
 |true, false
 |true
 |By default, Swift will generate a run directory that contains logs, scheduler submit scripts,
-|debug directories, and other files associated with a particular Swift run. Setting this value
-|to false disables the creation of run directories and causes all logs and directories to be
-|created in the current working directory.
+debug directories, and other files associated with a particular Swift run. Setting this value
+to false disables the creation of run directories and causes all logs and directories to be
+created in the current working directory.
 
 |execution.retries
 |Positive integer
