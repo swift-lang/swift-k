@@ -18,6 +18,9 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -276,6 +279,51 @@ public class Misc {
             return result;
         }
     }
+	
+    public static class ExecSystem extends AbstractSingleValuedFunction {
+        private ArgRef<AbstractDataNode> input;
+        //private ArgRef<AbstractDataNode> pattern;
+	
+        @Override
+	    protected Signature getSignature() {
+            return new Signature(params("input"));
+				 }
+		
+        @Override
+	    public Object function(Stack stack) {
+		AbstractDataNode hinput = this.input.getValue(stack);
+		String input     = SwiftFunction.unwrap(this, hinput);
+
+		DSHandle handle  = new RootArrayDataNode(Types.STRING.arrayType());
+		StringBuffer out = new StringBuffer();
+		Process p;
+		int i = 0;
+		
+		try {
+		    p = Runtime.getRuntime().exec(input);
+		    p.waitFor();
+		    BufferedReader reader = new BufferedReader( new InputStreamReader(p.getInputStream()));
+		    String line = "";
+		while ( (line = reader.readLine()) != null ) {
+		    DSHandle el;
+		    el = handle.getField(i++);
+		    el.setValue(line);		    
+		    //out.append(line + "\n");
+		}
+		
+		} catch (Exception e) {
+		    e.printStackTrace();
+		}
+		handle.closeDeep();
+		
+		if (PROVENANCE_ENABLED) {
+		    int provid = SwiftFunction.nextProvenanceID();
+		    SwiftFunction.logProvenanceResult(provid, handle, "system");
+		    SwiftFunction.logProvenanceParameter(provid, hinput, "input");
+		}
+		return handle;
+	    }
+	}
 	
 	public static class StrSplit extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> input;
@@ -601,7 +649,7 @@ public class Misc {
             return handle;
         }
     }
-		
+
 	public static class Length extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> array;
 

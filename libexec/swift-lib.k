@@ -9,6 +9,7 @@ namespace(swiftscript) {
 	export(strcut, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$StrCut"))
 	export(strstr, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$StrStr"))
 	export(strsplit, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$StrSplit"))
+	export(system, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$ExecSystem"))
     export(strjoin, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$StrJoin"))
 	export(regexp, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Regexp"))
 	export(toInt, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$ToInt"))
@@ -21,7 +22,7 @@ namespace(swiftscript) {
 	export(trace, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Trace"))
 	export(tracef, def("org.griphyn.vdl.karajan.lib.swiftscript.Tracef"))
 	export(fprintf, def("org.griphyn.vdl.karajan.lib.swiftscript.Fprintf"))
-	
+
 	/* included for backwards compatibility */
 	export(readdata, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadData"))
 	export(readdata2, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"))
