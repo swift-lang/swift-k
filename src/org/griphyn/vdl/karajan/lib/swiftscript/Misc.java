@@ -279,16 +279,16 @@ public class Misc {
             return result;
         }
     }
-	
+
     public static class ExecSystem extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> input;
         //private ArgRef<AbstractDataNode> pattern;
-	
+
         @Override
 	    protected Signature getSignature() {
             return new Signature(params("input"));
 				 }
-		
+
         @Override
 	    public Object function(Stack stack) {
 		AbstractDataNode hinput = this.input.getValue(stack);
@@ -296,26 +296,36 @@ public class Misc {
 
 		DSHandle handle  = new RootArrayDataNode(Types.STRING.arrayType());
 		StringBuffer out = new StringBuffer();
-		Process p;
+		Process proc;
 		int i = 0;
-		
+
 		try {
-		    p = Runtime.getRuntime().exec(input);
-		    p.waitFor();
-		    BufferedReader reader = new BufferedReader( new InputStreamReader(p.getInputStream()));
+		    proc = Runtime.getRuntime().exec(input);
+		    proc.waitFor();
+            int exitcode = proc.exitValue();
+            // If the shell returned a non-zero exit code, attempt to print stderr
+            if ( exitcode != 0 ) {
+                BufferedReader reader = new BufferedReader( new InputStreamReader(proc.getErrorStream()) );
+                String line = "";
+                StringBuffer stderr = new StringBuffer();
+                while ( (line = reader.readLine()) != null ) {
+                    stderr.append(line);
+                }
+                logger.warn("swift:system returned exitcode :" + exitcode);
+                logger.warn("swift:system stderr:\n " + stderr );
+            }
+		    BufferedReader reader = new BufferedReader( new InputStreamReader(proc.getInputStream()) );
 		    String line = "";
-		while ( (line = reader.readLine()) != null ) {
-		    DSHandle el;
-		    el = handle.getField(i++);
-		    el.setValue(line);		    
-		    //out.append(line + "\n");
-		}
-		
+            while ( (line = reader.readLine()) != null ) {
+                DSHandle el;
+                el = handle.getField(i++);
+                el.setValue(line);
+            }
 		} catch (Exception e) {
 		    e.printStackTrace();
 		}
 		handle.closeDeep();
-		
+
 		if (PROVENANCE_ENABLED) {
 		    int provid = SwiftFunction.nextProvenanceID();
 		    SwiftFunction.logProvenanceResult(provid, handle, "system");
@@ -324,8 +334,8 @@ public class Misc {
 		return handle;
 	    }
 	}
-	
-	public static class StrSplit extends AbstractSingleValuedFunction {
+
+		public static class StrSplit extends AbstractSingleValuedFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
