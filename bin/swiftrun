@@ -47,6 +47,7 @@ my %site_aliases = (
                    'maxnodesperjob'            => 'globus.maxNodes',
                    'maxsubmitrate'             => 'karajan.maxSubmitRate',
                    'overallocationdecayfactor' => 'globus.overallocationDecayFactor',
+		   'pe'                        => 'globus.pe',
                    'providerattributes'        => 'globus.providerAttributes',
                    'remotemonitorenabled'      => 'globus.remoteMonitorEnabled',
                    'slurm'                     => 'globus.slurm',
