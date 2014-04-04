@@ -212,15 +212,20 @@ Maximum number of scheduler jobs to submit
 The maximum number of nodes to request per scheduler job.
 |site.westmere.maxNodesPerJob=2
 
+|pe
+|The parallel environment to use for SGE schedulers
+|site.sunhpc.pe=mpi
+
 |providerAttributes|
 Allows user to pass attributes through directly to scheduler submit script. Currently
 only implemented for sites that use PBS.
 |site.beagle.providerAttributes=pbs.aprun;pbs.mpp;depth=24
 
-|slurm|
-Pass parameters directly through to the submit script generated for the slurm
+|slurm
+|Pass parameters directly through to the submit script generated for the slurm
 scheduler. For example, the setting "site.midway.slurm.mail-user=username" generates
 the line "#SBATCH --mail-user=username".
+|site.midway.slurm.mail-user=username
 
 |taskDir|
 Tasks will be run from this directory. In the absence of a taskDir definition, 
