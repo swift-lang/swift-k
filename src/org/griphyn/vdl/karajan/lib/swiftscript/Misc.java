@@ -300,7 +300,7 @@ public class Misc {
 		int i = 0;
 
 		try {
-		    proc = Runtime.getRuntime().exec(input);
+		    proc = Runtime.getRuntime().exec(new String[] {"bash", "-c", input});
 		    proc.waitFor();
             int exitcode = proc.exitValue();
             // If the shell returned a non-zero exit code, attempt to print stderr
