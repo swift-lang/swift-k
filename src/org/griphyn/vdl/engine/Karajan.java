@@ -1987,7 +1987,9 @@ public class Karajan {
 	            case '"':
 	                sb.append("\\\"");
 	                break;
-	            
+	            case '{':
+	            	sb.append("\\{");
+	            	break;
 	            default:
 	                sb.append(c);
 	        }
