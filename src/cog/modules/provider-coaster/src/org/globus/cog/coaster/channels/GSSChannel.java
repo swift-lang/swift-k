@@ -37,6 +37,12 @@ import org.ietf.jgss.GSSManager;
 public class GSSChannel extends AbstractTCPChannel {
 	private static final Logger logger = Logger.getLogger(GSSChannel.class);
 
+	private static final boolean streamCompression;
+	
+	static {
+	    streamCompression = "true".equals(System.getProperty("gss.channel.compression.enabled"));
+	}
+
 	private GssSocket socket;
 	private String peerId;
 	private boolean shuttingDown;
@@ -161,12 +167,22 @@ public class GSSChannel extends AbstractTCPChannel {
 
 	@Override
     protected void setInputStream(InputStream inputStream) {
-        super.setInputStream(new InflaterInputStream(inputStream));
+	    if (streamCompression) {
+	        super.setInputStream(new InflaterInputStream(inputStream));
+	    }
+	    else {
+	        super.setInputStream(inputStream);
+	    }
     }
 
     @Override
     protected void setOutputStream(OutputStream outputStream) {
-        super.setOutputStream(new DeflaterOutputStream(outputStream, true));
+        if (streamCompression) {
+            super.setOutputStream(new DeflaterOutputStream(outputStream, true));
+        }
+        else {
+            super.setOutputStream(outputStream);
+        }
     }
 
     protected void register() {
