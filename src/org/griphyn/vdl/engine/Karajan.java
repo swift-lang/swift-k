@@ -597,46 +597,66 @@ public class Karajan {
 
 	public void assign(Assign assign, VariableScope scope) throws CompilationException {
 		try {
-			StringTemplate assignST = template("assign");
-			StringTemplate varST = expressionToKarajan(assign.getAbstractExpressionArray(0), scope, true);
-			String lValueType = datatype(varST);
-			
-			StringTemplate valueST = expressionToKarajan(assign.getAbstractExpressionArray(1), scope, false, lValueType);
-			
-			String rValueType = datatype(valueST);
-			
-			if (isAnyType(lValueType)) {
-			    if (isAnyType(rValueType)) {
-			        // any <- any
-			    }
-			    else {
-			        // any <- someType, so infer lValueType as rValueType
-			        setDatatype(varST, rValueType);
-			    }
-			}
-			else {
-			    if (isAnyType(rValueType)) {
-			        // someType <- any
-			        // only expressions that are allowed to return 'any' are procedures
-			        // for example readData(ret, file). These are special procedures that
-			        // need to look at the return type at run-time.
-			    }
-			    else if (!lValueType.equals(rValueType)){
-			        throw new CompilationException("You cannot assign value of type " + rValueType +
-                        " to a variable of type " + lValueType);
-			    }
-			}
-				
-			assignST.setAttribute("var", varST);
-			assignST.setAttribute("value", valueST);
-			assignST.setAttribute("line", getLine(assign));
-			String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
-			scope.addWriter(rootvar, getRootVariableWriteType(assign.getAbstractExpressionArray(0)), assign, assignST);
-			scope.appendStatement(assignST);
+		    XmlObject value = assign.getAbstractExpressionArray(1);
+            if (isCall(value)) {
+                Call call = (Call) value;
+                ActualParameter out = call.addNewOutput();
+                XmlObject src = assign.getAbstractExpressionArray(0);
+                out.getDomNode().appendChild(src.getDomNode());
+                call(call, scope, false);
+            }
+            else {
+    			StringTemplate assignST = template("assign");
+    			StringTemplate varST = expressionToKarajan(assign.getAbstractExpressionArray(0), scope, true);
+    			String lValueType = datatype(varST);
+    			
+    			
+    			StringTemplate valueST = expressionToKarajan(assign.getAbstractExpressionArray(1), scope, false, lValueType);
+    			
+    			String rValueType = datatype(valueST);
+    			
+    			if (isAnyType(lValueType)) {
+    			    if (isAnyType(rValueType)) {
+    			        // any <- any
+    			    }
+    			    else {
+    			        // any <- someType, so infer lValueType as rValueType
+    			        setDatatype(varST, rValueType);
+    			    }
+    			}
+    			else {
+    			    if (isAnyType(rValueType)) {
+    			        // someType <- any
+    			        // only expressions that are allowed to return 'any' are procedures
+    			        // for example readData(ret, file). These are special procedures that
+    			        // need to look at the return type at run-time.
+    			    }
+    			    else if (!lValueType.equals(rValueType)){
+    			        throw new CompilationException("You cannot assign value of type " + rValueType +
+                            " to a variable of type " + lValueType);
+    			    }
+    			}
+    			
+    			assignST.setAttribute("var", varST);
+    			assignST.setAttribute("value", valueST);
+    			assignST.setAttribute("line", getLine(assign));
+    			String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
+    			scope.addWriter(rootvar, getRootVariableWriteType(assign.getAbstractExpressionArray(0)), assign, assignST);
+    			scope.appendStatement(assignST);
+            }
 		} catch(CompilationException re) {
 			throw new CompilationException("Compile error in assignment at "+assign.getSrc()+": "+re.getMessage(),re);
 		}
 	}
+	
+    private boolean isCall(XmlObject value) {
+        Node expressionDOM = value.getDomNode();
+        String namespaceURI = expressionDOM.getNamespaceURI();
+        String localName = expressionDOM.getLocalName();
+        QName expressionQName = new QName(namespaceURI, localName);
+        return expressionQName.equals(CALL_EXPR);
+    }
+
 	
     private boolean isAnyType(String type) {
         return ProcedureSignature.ANY.equals(type);

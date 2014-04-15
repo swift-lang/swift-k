@@ -653,36 +653,19 @@ assignStat returns [StringTemplate code=null]
     :
     id=identifier
     ASSIGN
-    (
-      (predictProcedurecallAssign) => code=procedurecallCode
-        { StringTemplate o = template("returnParam");
-          o.setAttribute("name",id);
-          code.setAttribute("outputs",o);
-        }
-    |
-      code=variableAssign
-      {
-          code.setAttribute("lhs",id);
-      }
-    )
-    ;
+    code=variableAssign {
+		code.setAttribute("lhs",id);
+    }
+;
 
 appendStat returns [ StringTemplate code = null ]
 	{ StringTemplate id=null; }
 :
     id=identifier
     APPEND
-    (
-    	(predictProcedurecallAssign) => code=procedurecallCode {
-    		StringTemplate o = template("returnParam");
-			o.setAttribute("name",id);
-			code.setAttribute("outputs",o);
-        }
-    	|
-      	code=arrayAppend {
-			code.setAttribute("array", id);
-		}
-    )
+	code=arrayAppend {
+		code.setAttribute("array", id);
+	}
 ;
 
 arrayAppend returns [ StringTemplate code = null ]
@@ -704,9 +687,6 @@ variableAssign returns [StringTemplate code=null]
             code.setAttribute("rhs", e);
         }
     ;
-
-predictProcedurecallAssign
-    : ID LPAREN ;
 
 procedurecallCode returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
