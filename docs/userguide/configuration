@@ -479,11 +479,24 @@ profile key in a site catalog entry.
  concurrent transfers can cause the network to be overloaded
  preventing various other signaling traffic from flowing properly.
 
+|ticker.date.format
+|String
+|
+|Describes how to format the ticker date output. The format of this string
+ is documented in the Java SimpleDateFormat class, at 
+ http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html
+
 |ticker.disable
 |true, false
 |false
 |When set to true, suppresses the output progress ticker that Swift
  sends to the console every few seconds during a run
+
+|ticker.prefix
+|String
+|Progress:
+|String to prepend to ticker output
+
 
 |use.wrapper.staging
 |true, false
@@ -543,4 +556,3 @@ to be in the runNNN directory, you may do something like this:
 -----
 workdir=$RUNDIRECTORY
 -----
-
