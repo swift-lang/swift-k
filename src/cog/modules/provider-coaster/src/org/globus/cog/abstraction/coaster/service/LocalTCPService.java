@@ -133,6 +133,9 @@ public class LocalTCPService implements Registering, Service, Runnable {
                     port = channel.socket().getLocalPort();
                 }
             }
+            else {
+                bindPort();
+            }
             
             if (serverThread == null) {
                 serverThread = new Thread(this);
