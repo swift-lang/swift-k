@@ -11,11 +11,8 @@ package org.globus.cog.karajan.workflow.nodes.functions;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.arguments.Arg;
@@ -33,10 +30,10 @@ public abstract class FunctionsCollection extends AbstractFunction {
 
 	public static final Arg[] ARGS_2VALUES = new Arg[] { PA_VALUE1, PA_VALUE2 };
 
-	private static final Class[] sig = new Class[] { VariableStack.class };
+	private static final Class<?>[] sig = new Class[] { VariableStack.class };
 	private Method method;
 	
-	private static Set inlineText = new HashSet();
+	private static Set<String> inlineText = new HashSet<String>();
 
 	protected static void setAcceptsInlineText(String fname, boolean text) {
 		if (!text) {
@@ -94,6 +91,10 @@ public abstract class FunctionsCollection extends AbstractFunction {
 			throw new ExecutionException(e);
 		}
 	}
+	
+	protected final Method getMethod() {
+	    return method;
+	}
 
 	public long currenttime(VariableStack stack) throws ExecutionException {
 		return System.currentTimeMillis();
@@ -114,7 +115,7 @@ public abstract class FunctionsCollection extends AbstractFunction {
 		return method.getName();
 	}
 
-	private static Set quotedArgs = new HashSet();
+	private static Set<String> quotedArgs = new HashSet<String>();
 
 	protected static void setQuotedArgs(String fn) {
 		quotedArgs.add(fn);
