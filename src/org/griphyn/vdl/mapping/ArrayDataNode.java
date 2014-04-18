@@ -38,7 +38,7 @@ public class ArrayDataNode extends DataNode {
 	public void getFringePaths(List<Path> list, Path parentPath) throws HandleOpenException {
 		checkMappingException();
 		if (!isClosed()) {
-		    throw new FutureNotYetAvailable(getFutureWrapper());
+		    throw new FutureArrayOpen((ArrayIndexFutureList) getFutureWrapper());
 		}
 		Map<Comparable<?>, DSHandle> handles = getHandles();
 		synchronized (this) {
@@ -55,7 +55,7 @@ public class ArrayDataNode extends DataNode {
 		}
 	}
 	
-	/** Recursively closes arrays through a tree of arrays and complex
+    /** Recursively closes arrays through a tree of arrays and complex
         types. */
     public void closeDeep() {
         assert(this.getType().isArray());
@@ -121,6 +121,22 @@ public class ArrayDataNode extends DataNode {
         return (FutureList) getFutureWrapper();
     }
     
+    @Override
+    public synchronized void waitFor() {
+        if (!isClosed()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Waiting for " + this);
+            }
+            throw new FutureArrayOpen((ArrayIndexFutureList) getFutureWrapper());
+        }
+        else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Do not need to wait for " + this);
+            }
+            checkDataException();
+        }
+    }
+
     protected void getFields(List<DSHandle> fields, Path path) throws InvalidPathException {
         if (path.isEmpty()) {
             fields.add(this);

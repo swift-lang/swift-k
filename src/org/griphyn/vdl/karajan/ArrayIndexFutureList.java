@@ -121,15 +121,19 @@ public class ArrayIndexFutureList implements FutureList, FutureWrapper {
     public DSHandle getHandle() {
         return node;
     }
-
+    
     public void addModificationAction(FutureListener target, VariableStack stack) {
+        addModificationAction(target, stack, true);
+    }
+
+    public void addModificationAction(FutureListener target, VariableStack stack, boolean partialUpdates) {
         synchronized(node) {
             if (listeners == null) {
                 listeners = new LinkedList<ListenerStackPair>();
             }
             listeners.add(new ListenerStackPair(target, stack));
             WaitingThreadsMonitor.addThread(stack, node);
-            if (!node.isClosed() && keys.isEmpty()) {
+            if (!node.isClosed() && (keys.isEmpty() || !partialUpdates)) {
                 return;
             }
         }
