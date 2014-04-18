@@ -28,6 +28,7 @@ import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.type.Types;
 
 /**
@@ -52,20 +53,25 @@ public class Fprintf extends VDLFunction {
     @Override
     protected Object function(VariableStack stack) 
     throws ExecutionException {
-        AbstractDataNode[] args = waitForAllVargs(stack);
-        
-        check(args);
-        
-        String filename = (String) args[0].getValue();
-        String spec = (String) args[1].getValue(); 
-        DSHandle[] vars = Sprintf.copyArray(args, 2, args.length-2);
-        
-        StringBuilder output = new StringBuilder();
-        Sprintf.format(spec, vars, output);
-        String msg = output.toString();
- 
-        logger.debug("file: " + filename + " msg: " + msg);        
-        write(filename, msg);
+        try {
+            AbstractDataNode[] args = waitForAllVargs(stack);
+            
+            check(args);
+            
+            String filename = (String) args[0].getValue();
+            String spec = (String) args[1].getValue(); 
+            DSHandle[] vars = Sprintf.copyArray(args, 2, args.length-2);
+            
+            StringBuilder output = new StringBuilder();
+            Sprintf.format(spec, vars, output);
+            String msg = output.toString();
+     
+            logger.debug("file: " + filename + " msg: " + msg);        
+            write(filename, msg);
+        }
+        catch (DependentException e) {
+            logger.debug("<exception>");
+        }
         return null;
     }
     

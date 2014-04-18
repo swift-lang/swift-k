@@ -23,6 +23,7 @@ import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
+import org.griphyn.vdl.mapping.DependentException;
 
 /**
     Formatted trace output. <br>
@@ -46,11 +47,16 @@ public class Tracef extends VDLFunction {
     @Override
     protected Object function(VariableStack stack) 
     throws ExecutionException {
-        AbstractDataNode[] args = waitForAllVargs(stack);
-
-        String msg = Sprintf.format(args);
-        logger.info(msg);
-        System.out.print(msg);
+        try {
+            AbstractDataNode[] args = waitForAllVargs(stack);
+    
+            String msg = Sprintf.format(args);
+            logger.info(msg);
+            System.out.print(msg);
+        }
+        catch (DependentException e) {
+            logger.info("tracef(): <exception>");
+        }
         return null;
     }
 }

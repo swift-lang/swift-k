@@ -27,14 +27,19 @@ import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
+import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 public class FileNames extends VDLFunction {
 	static {
 		setArguments(FileNames.class, new Arg[] { PA_VAR });
 	}
+	
+	@Override
+    protected Type getReturnType() {
+        return Types.STRING.arrayType();
+    }
 
 	public Object function(VariableStack stack) throws ExecutionException {
 		String[] f = filename(stack);

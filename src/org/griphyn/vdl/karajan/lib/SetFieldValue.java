@@ -36,6 +36,8 @@ import org.griphyn.vdl.karajan.PairIterator;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DataDependentException;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
@@ -126,7 +128,13 @@ public class SetFieldValue extends VDLFunction {
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
 	public static void deepCopy(DSHandle dest, DSHandle source, VariableStack stack, int level) throws ExecutionException {
-	    ((AbstractDataNode) source).waitFor();
+	    try {
+	        ((AbstractDataNode) source).waitFor();
+	    }
+	    catch (DependentException e) {
+	        dest.setValue(new DataDependentException(dest, e));
+	        return;
+	    }
 		if (source.getType().isPrimitive()) {
 			dest.setValue(source.getValue());
 		}

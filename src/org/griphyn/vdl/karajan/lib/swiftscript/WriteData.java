@@ -33,6 +33,8 @@ import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DataDependentException;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
@@ -59,7 +61,13 @@ public class WriteData extends VDLFunction {
 		// src can be any of several forms of value
 		AbstractDataNode src = (AbstractDataNode) SRC.getValue(stack);
 
-		src.waitFor();
+		try {
+            src.waitFor();
+        }
+        catch (DependentException e) {
+            dest.setValue(new DataDependentException(dest, e));
+            return null;
+        }
 
 		if (dest.getType().equals(Types.STRING)) {
 			writeData((String)dest.getValue(), src);

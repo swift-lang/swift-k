@@ -37,6 +37,8 @@ import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DataDependentException;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -68,7 +70,13 @@ public class ReadData extends VDLFunction {
 		if (tracer.isEnabled()) {
 		    tracer.trace(stack, "readData(" + Tracer.unwrapHandle(src) + ")");
 		}
-		src.waitFor();
+		try {
+		    src.waitFor();
+		}
+		catch (DependentException e) {
+		    dest.setValue(new DataDependentException(dest, e));
+		    return null;
+		}
 		if (src.getType().equals(Types.STRING)) {
 			readData(dest, (String) src.getValue());
 		}

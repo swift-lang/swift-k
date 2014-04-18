@@ -24,6 +24,7 @@ import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.type.Types;
@@ -261,19 +262,24 @@ public class Tracer {
         if (o instanceof AbstractDataNode) {
             AbstractDataNode h = (AbstractDataNode) o;
             if (h.isClosed()) {
-                if (h.getType().isPrimitive()) {
-                    if (Types.STRING.equals(h.getType())) {
-                        return "\"" + h.getValue() + '"';
+                try {
+                    if (h.getType().isPrimitive()) {
+                        if (Types.STRING.equals(h.getType())) {
+                            return "\"" + h.getValue() + '"';
+                        }
+                        else {
+                            return h.getValue();
+                        }
+                    }
+                    else if (h.getType().isComposite()){
+                        return getVarName(h);
                     }
                     else {
-                        return h.getValue();
+                        return fileName(h);
                     }
                 }
-                else if (h.getType().isComposite()){
-                    return getVarName(h);
-                }
-                else {
-                    return fileName(h);
+                catch (DependentException e) {
+                    return "<exception>";
                 }
             }
             else {

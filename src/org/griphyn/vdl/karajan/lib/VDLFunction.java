@@ -39,20 +39,19 @@ import org.globus.cog.karajan.util.ThreadingContext;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
 import org.globus.cog.karajan.workflow.KarajanRuntimeException;
-import org.globus.cog.karajan.workflow.futures.Future;
 import org.globus.cog.karajan.workflow.nodes.SequentialWithArguments;
 import org.globus.cog.karajan.workflow.nodes.restartLog.RestartLog;
 import org.globus.swift.catalog.TCEntry;
 import org.globus.swift.catalog.transformation.File;
 import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.karajan.AssertFailedException;
-import org.griphyn.vdl.karajan.FutureWrapper;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DataDependentException;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.GeneralizedFileFormat;
 import org.griphyn.vdl.mapping.HandleOpenException;
@@ -61,6 +60,7 @@ import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PathComparator;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.FQN;
@@ -95,10 +95,15 @@ public abstract class VDLFunction extends SequentialWithArguments {
             throw e;
         }
 		catch (DependentException e) {
-			// This would not be the primal fault so in non-lazy errors mode it
-			// should not matter
-			throw new ExecutionException(stack, e);
+		    RootDataNode r = new RootDataNode(getReturnType());
+		    r.setValue(new DataDependentException(r, e));
+			ret(stack, r);
+			super.post(stack);
 		}
+	}
+	
+	protected Type getReturnType() {
+	    return Types.ANY;
 	}
 
 	protected void ret(VariableStack stack, final Object value) throws ExecutionException {

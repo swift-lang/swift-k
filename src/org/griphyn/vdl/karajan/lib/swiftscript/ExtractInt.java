@@ -29,6 +29,7 @@ import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 
@@ -37,7 +38,12 @@ public class ExtractInt extends VDLFunction {
 		setArguments(ExtractInt.class, new Arg[] { PA_VAR });
 	}
 
-	public Object function(VariableStack stack) throws ExecutionException {
+	@Override
+    protected Type getReturnType() {
+        return Types.INT;
+    }
+
+    public Object function(VariableStack stack) throws ExecutionException {
 		AbstractDataNode handle = null;
 		try {
 			handle = (AbstractDataNode) PA_VAR.getValue(stack);

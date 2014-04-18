@@ -27,7 +27,6 @@ import org.globus.cog.karajan.arguments.Arg;
 import org.globus.cog.karajan.stack.VariableStack;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.karajan.workflow.ExecutionException;
-import org.globus.cog.karajan.workflow.nodes.functions.FunctionsCollection;
 import org.griphyn.vdl.karajan.lib.SwiftArg;
 import org.griphyn.vdl.karajan.lib.VDLFunction;
 import org.griphyn.vdl.mapping.AbsFile;
@@ -40,7 +39,7 @@ import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
 
-public class Misc extends FunctionsCollection {
+public class Misc extends SwiftFunctionsCollection {
 
 	private static final Logger logger = Logger.getLogger(Misc.class);
 
@@ -52,24 +51,60 @@ public class Misc extends FunctionsCollection {
 
 	static {
         setArguments("swiftscript_dirname", new Arg[] { PA_FILE });
+        setReturnType("swiftscript_dirname", Types.STRING);
+        
 	    setArguments("swiftscript_exists", new Arg[] { Arg.VARGS });
+	    setReturnType("swiftscript_exists", Types.BOOLEAN);
+	    
         setArguments("swiftscript_existsfile", new Arg[] { PA_FILE });
+        setReturnType("swiftscript_existsfile", Types.BOOLEAN);
+        
         setArguments("swiftscript_format", new Arg[] { PA_INPUT, PA_TRANSFORM });
+        setReturnType("swiftscript_format", Types.STRING);
+        
         setArguments("swiftscript_length", new Arg[] { PA_ARRAY });
+        setReturnType("swiftscript_length", Types.INT);
+        
         setArguments("swiftscript_pad", new Arg[] { PA_INPUT, PA_TRANSFORM });
+        setReturnType("swiftscript_pad", Types.STRING);
+        
         setArguments("swiftscript_regexp", new Arg[] { PA_INPUT, PA_PATTERN, PA_TRANSFORM });
+        setReturnType("swiftscript_regext", Types.STRING);
+        
         setArguments("swiftscript_strcat",  new Arg[] { Arg.VARGS });
+        setReturnType("swiftscript_strcat", Types.STRING);
+        
         setArguments("swiftscript_strcut", new Arg[] { PA_INPUT, PA_PATTERN });
+        setReturnType("swiftscript_strcut", Types.STRING);
+        
         setArguments("swiftscript_strsplit", new Arg[] { PA_INPUT, PA_PATTERN });
+        setReturnType("swiftscript_strsplit", Types.STRING.arrayType());
+        
         setArguments("swiftscript_strjoin", new Arg[] { PA_ARRAY, PA_INPUT });
+        setReturnType("swiftscript_strjoin", Types.STRING);
+        
         setArguments("swiftscript_strstr", new Arg[] { PA_INPUT, PA_PATTERN });
+        setReturnType("swiftscript_strstr", Types.STRING);
+        
 		setArguments("swiftscript_trace", new Arg[] { Arg.VARGS });
+		
         setArguments("swiftscript_to_int", new Arg[] { PA_INPUT });
+        setReturnType("swiftscript_to_int", Types.INT);
+        
 		setArguments("swiftscript_toint", new Arg[] { PA_INPUT });
+		setReturnType("swiftscript_toint", Types.INT);
+		
         setArguments("swiftscript_to_float", new Arg[] { PA_INPUT });
+        setReturnType("swiftscript_to_float", Types.FLOAT);
+        
 		setArguments("swiftscript_tofloat", new Arg[] { PA_INPUT });
+		setReturnType("swiftscript_tofloat", Types.FLOAT);
+		
         setArguments("swiftscript_to_string", new Arg[] { PA_INPUT });
+        setReturnType("swiftscript_to_string", Types.STRING);
+        
         setArguments("swiftscript_tostring", new Arg[] { PA_INPUT });
+        setReturnType("swiftscript_tostring", Types.STRING);
 	}
 
 	private static final Logger traceLogger =
