@@ -89,7 +89,7 @@ Execution of a Swift workflow is done using the swift command, which
 takes the Swift workflow file name as an argument:
 
 -----
-cd examples/tutorial
+cd swift-0.94.1/examples/swift/tutorial
 swift hello.swift
 -----
 
