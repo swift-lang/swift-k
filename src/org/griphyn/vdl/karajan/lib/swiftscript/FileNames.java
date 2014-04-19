@@ -31,6 +31,7 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
+import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 public class FileNames extends SwiftFunction {
@@ -39,6 +40,11 @@ public class FileNames extends SwiftFunction {
     @Override
     protected Signature getSignature() {
         return new Signature(params("var"));
+    }
+    
+    @Override
+    protected Type getReturnType() {
+        return Types.STRING.arrayType();
     }
 
     @Override

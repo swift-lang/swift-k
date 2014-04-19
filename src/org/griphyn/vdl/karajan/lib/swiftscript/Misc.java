@@ -32,14 +32,15 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
-import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
 
@@ -73,22 +74,26 @@ public class Misc {
         @Override
         protected void runBody(LWThread thr) {
         	Channel<AbstractDataNode> vargs = c_vargs.get(thr.getStack());
-            SwiftFunction.waitForAll(this, vargs);
-
-            StringBuilder buf = new StringBuilder();
-            buf.append("SwiftScript trace: ");
-            boolean first = true;
-            for (AbstractDataNode n : vargs) {
-                if (!first) {
-                    buf.append(", ");
+        	try {
+        	    SwiftFunction.waitForAll(this, vargs);
+        	    StringBuilder buf = new StringBuilder();
+                buf.append("SwiftScript trace: ");
+                boolean first = true;
+                for (AbstractDataNode n : vargs) {
+                    if (!first) {
+                        buf.append(", ");
+                    }
+                    else {
+                        first = false;
+                    }
+                    //buf.append(v == null ? args[i] : v);
+                    prettyPrint(buf, n);
                 }
-                else {
-                	first = false;
-                }
-                //buf.append(v == null ? args[i] : v);
-                prettyPrint(buf, n);
-            }
-            traceLogger.warn(buf);
+                traceLogger.warn(buf);
+        	}
+        	catch (DependentException e) {
+        	    traceLogger.warn("<exception>");
+        	}
         }
 	}
 	
@@ -128,7 +133,7 @@ public class Misc {
         }
     }
 	
-	public static class StrCat extends AbstractSingleValuedFunction {
+	public static class StrCat extends AbstractSingleValuedSwiftFunction {
         private ChannelRef<AbstractDataNode> c_vargs;
 
         @Override
@@ -136,6 +141,13 @@ public class Misc {
             return new Signature(params("..."));
         }
         
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING;
+        }
+
+
+
         @Override
         public Object function(Stack stack) {
             Channel<AbstractDataNode> vargs = c_vargs.get(stack);
@@ -161,12 +173,17 @@ public class Misc {
         }
 	}
 	
-	public static class Exists extends AbstractSingleValuedFunction {
+	public static class Exists extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> file;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("file"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.BOOLEAN;
         }
         
         @Override
@@ -190,13 +207,18 @@ public class Misc {
         }
     }
 	
-	public static class StrCut extends AbstractSingleValuedFunction {
+	public static class StrCut extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("input", "pattern"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING;
         }
         
         @Override
@@ -238,13 +260,18 @@ public class Misc {
         }
 	}
 	
-	public static class StrStr extends AbstractSingleValuedFunction {
+	public static class StrStr extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("input", "pattern"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING;
         }
         
         @Override
@@ -271,13 +298,18 @@ public class Misc {
         }
     }
 	
-	public static class StrSplit extends AbstractSingleValuedFunction {
+	public static class StrSplit extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("input", "pattern"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING.arrayType();
         }
         
         @Override
@@ -318,13 +350,18 @@ public class Misc {
 	 * @return DSHandle representing the resulting string
 	 * @throws ExecutionException
 	 */
-	public static class StrJoin extends AbstractSingleValuedFunction {
+	public static class StrJoin extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> array;
         private ArgRef<AbstractDataNode> delim;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("array", "delim"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING;
         }
         
         @Override
@@ -359,7 +396,7 @@ public class Misc {
         }
     }
     
-	public static class Regexp extends AbstractSingleValuedFunction {
+	public static class Regexp extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
         private ArgRef<AbstractDataNode> transform;
@@ -367,6 +404,11 @@ public class Misc {
         @Override
         protected Signature getSignature() {
             return new Signature(params("input", "pattern", "transform"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING;
         }
         
         @Override
@@ -410,12 +452,17 @@ public class Misc {
         }
     }
 	
-	public static class ToInt extends AbstractSingleValuedFunction {
+	public static class ToInt extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> str;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("str"), returns(channel("...", 1)));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.INT;
         }
         
         @Override
@@ -435,12 +482,17 @@ public class Misc {
         }
     }
 	
-	public static class ToFloat extends AbstractSingleValuedFunction {
+	public static class ToFloat extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> str;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("str"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.FLOAT;
         }
         
         @Override
@@ -474,12 +526,17 @@ public class Misc {
 	/*
 	 * Takes in a float and formats to desired precision and returns a string
 	 */
-	public static class Format extends AbstractSingleValuedFunction {
+	public static class Format extends AbstractSingleValuedSwiftFunction {
 	    private ChannelRef<AbstractDataNode> c_vargs;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("..."));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING;
         }
         
         @Override
@@ -507,13 +564,18 @@ public class Misc {
 	/*
 	 * Takes in an int and pads zeros to the left and returns a string
 	 */
-	public static class Pad extends AbstractSingleValuedFunction {
+	public static class Pad extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> size;
         private ArgRef<AbstractDataNode> value;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("size", "value"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING;
         }
         
         @Override
@@ -536,12 +598,17 @@ public class Misc {
         }
     }
 	
-	public static class ToString extends AbstractSingleValuedFunction {
+	public static class ToString extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> value;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("value"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING;
         }
         
         @Override
@@ -570,12 +637,17 @@ public class Misc {
      * Good for debugging because array needs to be closed
      *   before the length is determined
      */
-	public static class Dirname extends AbstractSingleValuedFunction {
+	public static class Dirname extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> file;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("file"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.STRING;
         }
         
         @Override
@@ -596,12 +668,17 @@ public class Misc {
         }
     }
 		
-	public static class Length extends AbstractSingleValuedFunction {
+	public static class Length extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> array;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("array"));
+        }
+        
+        @Override
+        protected Type getReturnType() {
+            return Types.INT;
         }
         
         @Override

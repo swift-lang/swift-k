@@ -45,6 +45,8 @@ import org.griphyn.vdl.karajan.PairSet;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DataDependentException;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.type.Type;
@@ -188,7 +190,13 @@ public class SetFieldValue extends SwiftFunction {
 	
 	protected void deepCopy(DSHandle dest, DSHandle source, Stack stack) {
 	    // don't create a state if only a non-composite is copied
-	    ((AbstractDataNode) source).waitFor(this);
+	    try {
+	        ((AbstractDataNode) source).waitFor(this);
+	    }
+	    catch (DependentException e) {
+	        dest.setValue(new DataDependentException(dest, e));
+	        return;
+	    }
         if (source.getType().isPrimitive()) {
             dest.setValue(source.getValue());
         }
@@ -208,7 +216,13 @@ public class SetFieldValue extends SwiftFunction {
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
 	public void deepCopy(DSHandle dest, DSHandle source, State state, int level) {
-	    ((AbstractDataNode) source).waitFor(this);
+	    try {
+            ((AbstractDataNode) source).waitFor(this);
+        }
+        catch (DependentException e) {
+            dest.setValue(new DataDependentException(dest, e));
+            return;
+        }
         if (source.getType().isPrimitive()) {
             dest.setValue(source.getValue());
         }

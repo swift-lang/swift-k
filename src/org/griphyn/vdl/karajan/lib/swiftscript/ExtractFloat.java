@@ -31,6 +31,7 @@ import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 
@@ -40,6 +41,11 @@ public class ExtractFloat extends SwiftFunction {
     @Override
     protected Signature getSignature() {
         return new Signature(params("var"));
+    }
+    
+    @Override
+    protected Type getReturnType() {
+        return Types.FLOAT;
     }
 
     @Override

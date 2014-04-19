@@ -35,6 +35,8 @@ import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DataDependentException;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Types;
@@ -57,7 +59,13 @@ public class ReadStructured extends SwiftFunction {
     public Object function(Stack stack) {
         AbstractDataNode dest = this.dest.getValue(stack);
         AbstractDataNode src = this.src.getValue(stack);
-        src.waitFor(this);
+        try {
+            src.waitFor(this);
+        }
+        catch (DependentException e) {
+            dest.setValue(new DataDependentException(dest, e));
+            return null;
+        }
 		if (src.getType().equals(Types.STRING)) {
 			readData(dest, (String) src.getValue());
 			dest.closeDeep();

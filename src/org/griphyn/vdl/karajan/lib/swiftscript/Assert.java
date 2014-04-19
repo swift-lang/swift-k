@@ -28,6 +28,7 @@ import org.griphyn.vdl.karajan.AssertFailedException;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.type.Types;
 
 /**
@@ -59,17 +60,22 @@ public class Assert extends SwiftFunction {
         }
         
         String message;
-        if (hmessage != null) {
-            hmessage.waitFor(this);
-            message = (String) hmessage.getValue();
+        try {
+            if (hmessage != null) {
+                hmessage.waitFor(this);
+                message = (String) hmessage.getValue();
+            }
+            else {
+                message = "Assertion failed";
+            }
+            AbstractDataNode hvalue = fargs.get(0);
+            hvalue.waitFor(this);
+                     
+            checkAssert(hvalue, message);
         }
-        else {
-            message = "Assertion failed";
+        catch (DependentException e) {
+            // cannot make assertion so ignore
         }
-        AbstractDataNode hvalue = fargs.get(0);
-        hvalue.waitFor(this);
-                 
-        checkAssert(hvalue, message);
         
         return null;
     }

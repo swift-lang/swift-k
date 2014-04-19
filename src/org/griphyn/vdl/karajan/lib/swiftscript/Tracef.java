@@ -26,6 +26,7 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbstractDataNode;
+import org.griphyn.vdl.mapping.DependentException;
 
 /**
     Formatted trace output. <br>
@@ -52,12 +53,18 @@ public class Tracef extends SwiftFunction {
     @Override
     public Object function(Stack stack) {
         AbstractDataNode hspec = this.spec.getValue(stack);
-        hspec.waitFor(this);
-        Channel<AbstractDataNode> args = c_vargs.get(stack);
-        waitForAll(this, args);
-        String spec = (String) hspec.getValue();
-     
-        String msg = Sprintf.format(spec, args);
+        String msg;
+        try {
+            hspec.waitFor(this);
+            Channel<AbstractDataNode> args = c_vargs.get(stack);
+            waitForAll(this, args);
+            String spec = (String) hspec.getValue();
+         
+            msg = Sprintf.format(spec, args);
+        }
+        catch (DependentException e) {
+            msg = "<exception>";
+        }
         logger.info(msg);
         System.out.print(msg);
         return null;

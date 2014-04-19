@@ -54,6 +54,10 @@ public class RootDataNode extends AbstractDataNode implements FutureListener, Ro
         this("?", type, value);
     }
 	
+	public RootDataNode(Type type) {
+        this("?", type, null);
+    }
+	
 	public RootDataNode(String name, Type type) {
 	    this(name, type, null);
 	}
@@ -64,7 +68,7 @@ public class RootDataNode extends AbstractDataNode implements FutureListener, Ro
 	    setValue(value);
 	}
 	
-	    public int getLine() {
+	public int getLine() {
         return line;
     }
 
