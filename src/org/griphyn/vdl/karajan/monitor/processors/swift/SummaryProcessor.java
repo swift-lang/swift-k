@@ -40,6 +40,9 @@ public class SummaryProcessor extends AbstractMessageProcessor {
 
 	public void processMessage(SystemState state, Object message, Object details) {
 		String msg = String.valueOf(message);
+		if(msg.contains("CrtHeap")) {
+		   return;
+		}
 		SummaryItem s = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
 		String[] pairs = msg.split("  ");
 		for (ApplicationState key : SummaryItem.STATES) {
