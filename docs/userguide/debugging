@@ -71,29 +71,52 @@ $ swift -resume runNNN/restart.log example.swift.
 Monitoring Swift
 ~~~~~~~~~~~~~~~
 
-A Swift run can be monitored for progress and resource usage. To monitor the resource usage, use the +-monitor+ option with the Swift commandline. For example:
+Swift runs can be monitored for progress and resource usage. There are three basic monitors available: Swing, TUI, and http.
+
+HTTP Monitor
+^^^^^^^^^^^^
+The HTTP monitor will allow for the monitoring of Swift via a web browser. To start the HTTP monitor, run Swift with the +-ui http:<port>+
+command line option. For example:
+
+-----
+swift -ui http:8000 modis.swift
+-----
+image:HTTP-monitor.jpg[]
+
+This will create a server running on port 8000 on the machine where Swift is running. Point your web browser to http://<ip_address>:8000 to view
+progress.
+
+
+Swing Monitor
+^^^^^^^^^^^^^
+
+The Swing monitor displays information via a Java gui/X window. To start the Swing monitor, run Swift with the
++-ui Swing+ command line option. For example:
+
+-----
+swift -ui Swing modis.swift
+-----
+image:Swing-monitor.jpg[]
+
+This will produce a gui/X window consisting of the following tabs:
+
+* Summary
+* Graphs
+* Applications
+* Tasks
+* Gantt Chart
+
+TUI Monitor
+^^^^^^^^^^^
+The TUI (textual user interface) monitor is one option for monitoring Swift on the console using a curses-like
+library.
+
+The progress of a Swift run can be monitored using the +-ui TUI+ option. For example:
 
 ----
-swift -tc.file tc -sites.file sites.xml -config cf modis04.swift -monitor
+swift -ui TUI modis.swift
 ----
-
-This will produce a gui/X window consisting of the following quantities:
-
-* Allocated memory
-* Heap Size
-* Total Threads
-* Total Workers
-
-.Figure 4. Resource Monitor
-image:swift_monitor.png[]
-
-Figure 4 shows a snapshot of a Swift resource monitor.
-
-The progress of a Swift run can be monitored using the +-tui+ option. For example:
-
-----
-swift -tc.file tc -sites.file sites.xml -config cf modis04.swift -tui
-----
+image:TUI-monitor.jpg[]
 
 This will produce a textual user interface with multiple tabs, each showing the following features of the current Swift run:
 
@@ -102,7 +125,7 @@ This will produce a textual user interface with multiple tabs, each showing the 
 * A jobs tab 
 * A transfer tab 
 * A scheduler tab 
-* A Tast statistics tab 
+* A Task statistics tab 
 * A customized tab called 'Ben's View'
 
 Navigation between these tabs can be done using the function keys f2 through f8. 

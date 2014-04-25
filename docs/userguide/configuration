@@ -397,6 +397,13 @@ $ dot -ograph.png -Tpng graph1.dot
  information enabling this will increase the size of log files,
  sometimes significantly.
 
+|provider.staging.pin.swiftfiles
+|true, false
+|false
+|When provider staging is enabled and provider.staging.pin.swiftfiles
+|is set, cache some small files needed by Swift to avoid the cost
+|of staging more than once.
+
 |sitedir.keep
 |true, false
 |false
@@ -496,6 +503,15 @@ profile key in a site catalog entry.
 |String
 |Progress:
 |String to prepend to ticker output
+
+|tracing.enabled
+|true, false
+|true
+|Enables tracing of procedure invocations, assignments,
+ iteration constructs, as well as certain dataflow events
+ such as data intialization and waiting. This is done at 
+ a slight decrease in performance. Traces will be available
+ in the log file.
 
 |use.wrapper.staging
 |true, false
