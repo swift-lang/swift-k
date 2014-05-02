@@ -44,9 +44,11 @@ public class ServiceImpl implements Service {
         this();
         this.provider = provider;
         if (serviceContact == null) {
-            throw new NullPointerException("serviceContact");
+            this.serviceContact = DEFAULT_CONTACT;
         }
-        this.serviceContact = serviceContact;
+        else {
+            this.serviceContact = serviceContact;
+        }
         this.securityContext = securityContext;
     }
 
