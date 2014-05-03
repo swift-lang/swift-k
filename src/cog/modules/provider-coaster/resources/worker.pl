@@ -85,7 +85,8 @@ use constant {
 	ERROR_STAGEOUT_SEND => 515,
 	ERROR_STAGEOUT_TIMEOUT => 516,
 	ERROR_PROCESS_FORK => 512,
-	ERROR_PROCESS_WALLTIME_EXCEEDED => 513
+	ERROR_PROCESS_WALLTIME_EXCEEDED => 513,
+	ERROR_JOB_RUN_GENERIC_ERROR => 252,
 };
 
 my $LOGLEVEL = NONE;
@@ -1825,18 +1826,22 @@ sub writeUInt32 {
 # to minimize access to network file systems that would otherwise
 # be the sources for those binaries/libraries.  
 sub prepareSoftImage {
-	my ($src, $dst) = @_;
+	my ($WR, $src, $dst) = @_;
 	my $lock;
 	my $counter;
-	mkpath($dst);
+	wlog DEBUG, "Preparing soft image...\n";
+	if (!mkpath($dst)) {
+		if (! -d $dst) {
+			jobDie($WR, "Failed to create softimage directory: $!\n");
+		}
+	}
 	if (!open($lock, ">>$dst/.lock")) {
-		die "Cannot open lock file: $!";
+		jobDie($WR, "Cannot open lock file: $!");
 	}
 	# start critical section
 	if (!flock($lock, 2)) { # 2 - exclusive lock
-		die "Cannot get exclusive lock on soft image directory: $!"; 
+		jobDie($WR, "Cannot get exclusive lock on soft image directory: $!"); 
 	}
-	
 	if (! -f "$dst/.count") {
 		open($counter, "+>$dst/.count");
 	}
@@ -1851,9 +1856,10 @@ sub prepareSoftImage {
 		wlog INFO, "Lead process. Uncompressing image $src to $dst\n";
 		wlog DEBUG, "Running tar -xzf $src -C $dst\n";
 		my $out;
-		$out = qx/tar -xzf $src -C $dst 2>&1/; 
+		$out = qx/tar -xzf $src -C $dst 2>&1/;
+		wlog DEBUG, "EC: $?, out: $out\n"; 
 		if ($? != 0) {
-			die "Cannot create soft image: $!\n$out";
+			jobDie($WR, "Cannot create soft image: $!\n$out");
 		}
 		$ENV{SOFTIMAGE} = $dst;
 		if (-x "$dst/start") {
@@ -2095,6 +2101,7 @@ sub forkjob {
 				runjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
 			}
 			close $CHILD_W;
+			exit 0;
 		}
 		else {
 			wlog INFO, "$JOBID Forked process $pid. Waiting for its completion\n";
@@ -2172,6 +2179,7 @@ sub checkJobStatus {
 	wlog DEBUG, "$JOBID Checking pid $pid\n";
 
 	$tid = waitpid($pid, &WNOHANG);
+	wlog DEBUG, "tid: $tid\n";
 	if ($tid != $pid) {
 		# not done
 		my $mwt = $JOBDATA{$JOBID}{"maxwalltime"};
@@ -2203,10 +2211,13 @@ sub checkJobStatus {
 
 	wlog INFO, "$JOBID Child process $pid terminated. Status is $status.\n";
 	my $s;
-	if (!eof($RD)) {
-		$s = <$RD>;
+	while (<$RD>) {
+		$s = "$s$_";
 	}
-	wlog DEBUG, "$JOBID Got output from child. Closing pipe.\n";
+	if (defined $s) {
+		$JOBDATA{$JOBID}{"exitmessage"} = $s;
+	}
+	wlog DEBUG, "$JOBID Got output from child ($s). Closing pipe.\n";
 	close $RD;
 	$JOBDATA{$JOBID}{"exitcode"} = $status;
 
@@ -2232,6 +2243,14 @@ sub tmpSFile {
 	return "/tmp/$pid.$suffix";
 }
 
+sub jobDie {
+	my ($WR, $msg) = @_;
+	
+	print $WR $msg;
+	wlog DEBUG, "Job die: $msg\n";
+	exit ERROR_JOB_RUN_GENERIC_ERROR;
+}
+
 sub runjob {
 	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA) = @_;
 	my $executable = $$JOB{"executable"};
@@ -2240,7 +2259,7 @@ sub runjob {
 	
 	my $softImage = $$JOBDATA{"softimage"};
 	if (defined $softImage) {
-		prepareSoftImage(split(/ /, $softImage));
+		prepareSoftImage($WR, split(/ /, $softImage));
 	}
 
 	my $cwd = getcwd();
@@ -2266,12 +2285,12 @@ sub runjob {
 	if (defined $sout) {
 		wlog DEBUG, "STDOUT: $sout\n";
 		close STDOUT;
-		open STDOUT, ">$sout" or dieNicely("Cannot redirect STDOUT");
+		open STDOUT, ">$sout" or jobDie($WR, "Cannot redirect STDOUT");
 	}
 	if (defined $serr) {
 		wlog DEBUG, "STDERR: $serr\n";
 		close STDERR;
-		open STDERR, ">$serr" or dieNicely("Cannot redirect STDERR");
+		open STDERR, ">$serr" or jobDie($WR, "Cannot redirect STDERR");
 	}
 	close STDIN;
 
