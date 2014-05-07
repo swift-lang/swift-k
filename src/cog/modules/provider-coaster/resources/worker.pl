@@ -145,8 +145,14 @@ my $SOFT_IMAGE_MAIN_LOCK;
 my $SOFT_IMAGE_CREATE_LOCK;
 my $SOFT_IMAGE_USE_LOCK;
 my $SOFT_IMAGE_DIR;
+# true if this is the first worker on a node
 my $SOFT_IMAGE_LEAD_PROCESS = 0;
+# true if this is the first job in this worker
 my $SOFT_IMAGE_FIRST_IN_PROCESS = 1;
+# keep track of the job that stages in the soft image
+# any errors that occur with this job should cause the worker
+# to signal all other workers on this node to fail and then quit 
+my $SOFT_IMAGE_JOB_ID;
 
 use constant BUFSZ => 2048;
 use constant IOBUFSZ => 32768;
@@ -1088,6 +1094,9 @@ sub heartbeatCBDataIn {
 sub queueJobStatusCmd {
 	my ($jobid, $statusCode, $errorCode, $msg) = @_;
 	
+	if ($statusCode == FAILED) {
+		checkSoftimageJobFailure($jobid, $msg);
+	} 
 	queueCmd((nullCB(), "JOBSTATUS", $jobid, 
 			encodeInt($statusCode), encodeInt($errorCode), $msg, NULL_TIMESTAMP));
 }
@@ -1095,6 +1104,9 @@ sub queueJobStatusCmd {
 sub queueJobStatusCmdExt {
 	my ($jobid, $statusCode, $errorCode, $msg, $out, $err) = @_;
 	
+	if ($statusCode == FAILED) {
+		checkSoftimageJobFailure($jobid, $msg);
+	}
 	queueCmd((nullCB(), "JOBSTATUS", $jobid, 
 			encodeInt($statusCode), encodeInt($errorCode), $msg, NULL_TIMESTAMP, $out, $err));
 }
@@ -1989,6 +2001,12 @@ sub acquireSoftImageLock {
 		$SOFT_IMAGE_CREATE_LOCK = writeLock("$SOFT_IMAGE_DIR/.create");
 		unlock($SOFT_IMAGE_USE_LOCK);
 		$SOFT_IMAGE_USE_LOCK = readLock("$SOFT_IMAGE_DIR/.use");
+		
+		# make sure no errors from previous runs are there
+		if (-f "$SOFT_IMAGE_DIR/.error") {
+			unlink("$SOFT_IMAGE_DIR/.error");
+		}
+		
 		return 1;
 	}
 	else {
@@ -2044,6 +2062,17 @@ sub tryWriteLock {
 	}
 }
 
+sub checkSoftimageJobFailure {
+	my ($JOBID, $err) = @_;
+	
+	if ($JOBID == $SOFT_IMAGE_JOB_ID) {
+		$SOFT_IMAGE_JOB_ID = -1;
+		open(my $ERRF, ">$SOFT_IMAGE_DIR/.error");
+		print $ERRF $err;
+		close($ERRF);
+		unlock($SOFT_IMAGE_CREATE_LOCK);
+	}
+}
 
 sub cleanSoftImage {
 	if (!defined $SOFT_IMAGE_DIR) {
@@ -2137,6 +2166,7 @@ sub submitjob {
 						push @STAGEIND, $dest;
 						$SOFTIMAGE = $dest;
 					}
+					$SOFT_IMAGE_JOB_ID = $JOBID;
 				}
 				else {
 					# prevent job from trying to unpack the image
@@ -2182,7 +2212,8 @@ sub submitjob {
 			$JOB{$pair[0]} = $pair[1];
 		}
 	}
-	if (checkJob($tag, $JOBID, \%JOB)) {
+	my $err = checkJob($tag, $JOBID, \%JOB);
+	if ($err eq "") {
 		$JOBDATA{$JOBID} = {
 			stagein => \@STAGEIN,
 			stageind => \@STAGEIND,
@@ -2201,6 +2232,10 @@ sub submitjob {
 
 		stagein($JOBID);
 	}
+	else {
+		queueError($tag, ($err));
+		checkSoftimageJobFailure($JOBID, $err);
+	}
 }
 
 sub checkJob() {
@@ -2214,12 +2249,10 @@ sub checkJob() {
 
 		wlog DEBUG, "$JOBID Job details $ds\n";
 
-		queueError($tag, ("Missing job identity"));
-		return 0;
+		return "Missing job identity";
 	}
 	elsif (!(defined $executable)) {
-		queueError($tag, ("Missing executable"));
-		return 0;
+		return "Missing executable";
 	}
 	else {
 		my $dir = $$JOB{directory};
@@ -2231,8 +2264,7 @@ sub checkJob() {
 		my $c;
 		foreach $c (@$cleanup) {
 			if (substr($c, 0, $dirlen) ne $dir) {
-				queueError($tag, ("Cannot clean up outside of the job directory (cleanup: $c, jobdir: $dir)"));
-				return 0;
+				return "Cannot clean up outside of the job directory (cleanup: $c, jobdir: $dir)";
 			}
 		}
 		chdir $dir;
@@ -2240,7 +2272,7 @@ sub checkJob() {
 		wlog DEBUG, "$JOBID Sending submit reply (tag=$tag)\n";
 		queueReply($tag, ("OK"));
 		wlog DEBUG, "$JOBID Submit reply sent (tag=$tag)\n";
-		return 1;
+		return "";
 	}
 }
 
@@ -2438,13 +2470,20 @@ sub runjob {
 		wlog DEBUG, "Got soft image\n";
 		# no need to hold lock after that
 		unlock($createLock);
+		if (-f "$SOFT_IMAGE_DIR/.error") {
+			open(my $ERRF, "<$SOFT_IMAGE_DIR/.error");
+			my $err = "";
+			while (<$ERRF>) {
+				$err .= $_;
+			}
+			dieNicely("Soft image deployment failed: $err");
+		}
 		
 		$ENV{SOFTIMAGE} = $SOFT_IMAGE_DIR;
 	}
 	
 	my $cwd = getcwd();
-	# wlog DEBUG, "CWD: $cwd\n";
-	# wlog DEBUG, "Running $executable\n";
+	
 	my $ename;
 	foreach $ename (keys %$JOBENV) {
 		$ENV{$ename} = $$JOBENV{$ename};
@@ -2473,7 +2512,10 @@ sub runjob {
 		open STDERR, ">$serr" or dieNicely("Cannot redirect STDERR");
 	}
 	close STDIN;
-
+	
+	#wlog DEBUG, "CWD: $cwd\n";
+	#wlog DEBUG, "Running $executable\n";
+	
 	exec { $executable } @$JOBARGS or print $WR "Could not execute $executable: $!\n";
 	die "Could not execute $executable: $!";
 }
