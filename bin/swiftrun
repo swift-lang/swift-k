@@ -51,6 +51,7 @@ my %site_aliases = (
    'providerattributes'        => 'globus.providerAttributes',
    'remotemonitorenabled'      => 'globus.remoteMonitorEnabled',
    'slurm'                     => 'globus.slurm',
+   'stagingmethod'             => 'swift.stagingMethod',
    'taskdir'                   => 'globus.scratch',
    'tasksperworker'            => 'globus.jobsPerNode',
    'taskthrottle'              => 'karajan.jobThrottle',
