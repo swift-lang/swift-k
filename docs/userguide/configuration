@@ -227,6 +227,16 @@ scheduler. For example, the setting "site.midway.slurm.mail-user=username" gener
 the line "#SBATCH --mail-user=username".
 |site.midway.slurm.mail-user=username
 
+|stagingMethod
+|When provider staging is enabled, this option will specify the staging mechanism for
+use for each site. If set to 'file', staging is done from a filesystem accessible to 
+the coaster service (typically running on the head node). If set to 'proxy', staging 
+is done from a filesystem accessible to the client machine that swift is running on, 
+and is proxied through the coaster service. If set to 'sfs' (short for "shared filesystem"),
+staging is done by copying files to and from a filesystem accessible by the compute node 
+(such as an NFS or GPFS mount)
+|site.osg.stagingMethod=file
+
 |taskDir
 |Tasks will be run from this directory. In the absence of a taskDir definition, 
 Swift will run the task from workdir.
