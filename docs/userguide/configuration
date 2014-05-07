@@ -401,8 +401,8 @@ $ dot -ograph.png -Tpng graph1.dot
 |true, false
 |false
 |When provider staging is enabled and provider.staging.pin.swiftfiles
-|is set, cache some small files needed by Swift to avoid the cost
-|of staging more than once.
+ is set, cache some small files needed by Swift to avoid the cost
+ of staging more than once.
 
 |sitedir.keep
 |true, false
