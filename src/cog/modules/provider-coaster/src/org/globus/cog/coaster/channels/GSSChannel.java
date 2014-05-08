@@ -12,6 +12,7 @@ package org.globus.cog.coaster.channels;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -36,11 +37,21 @@ import org.ietf.jgss.GSSManager;
 
 public class GSSChannel extends AbstractTCPChannel {
 	private static final Logger logger = Logger.getLogger(GSSChannel.class);
-
+	
 	private static final boolean streamCompression;
 	
 	static {
-	    streamCompression = "true".equals(System.getProperty("gss.channel.compression.enabled"));
+	    boolean st;
+	    try {
+	        DeflaterOutputStream.class.getConstructor(OutputStream.class, boolean.class);
+	        st = true;
+	    }
+	    catch (Exception e) {
+	        logger.info("Exception caught trying to find DeflaterOutputStream(OutputStream, boolean) " +
+	        		"constructor. Disabling stream compression.");
+	        st = false;
+	    }
+	    streamCompression = st;
 	}
 
 	private GssSocket socket;
@@ -178,7 +189,21 @@ public class GSSChannel extends AbstractTCPChannel {
     @Override
     protected void setOutputStream(OutputStream outputStream) {
         if (streamCompression) {
-            super.setOutputStream(new DeflaterOutputStream(outputStream, true));
+            try {
+                /*
+                 * Instantiate DeflaterOutputStream(out, syncFlush) using reflection
+                 * since it is only available in 1.7, but we still want this
+                 * to compile on 1.6. 
+                 */
+                Constructor<DeflaterOutputStream> cons = 
+                    DeflaterOutputStream.class.getConstructor(OutputStream.class, boolean.class);
+                DeflaterOutputStream dos = cons.newInstance(outputStream, true);
+                super.setOutputStream(dos);
+            }
+            catch (Exception e) {
+                logger.warn("Failed to instantiate DeflaterOutputStream", e);
+                throw new RuntimeException(e);
+            }
         }
         else {
             super.setOutputStream(outputStream);
