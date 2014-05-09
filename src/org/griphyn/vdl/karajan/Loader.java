@@ -62,7 +62,7 @@ import org.griphyn.vdl.karajan.lib.Execute;
 import org.griphyn.vdl.karajan.lib.Log;
 import org.griphyn.vdl.karajan.lib.New;
 import org.griphyn.vdl.karajan.monitor.MonitorAppender;
-import org.griphyn.vdl.mapping.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.IncorrectInvocationException;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
