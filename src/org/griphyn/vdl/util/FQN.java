@@ -39,6 +39,10 @@ public class FQN {
 		this.version = version;
 		this.hashCode = _hashCode();
 	}
+	
+	public FQN(String namespace, String name) {
+	    this(namespace, name, null);
+	}
 
 	public FQN(String fqn) {
 		/*
