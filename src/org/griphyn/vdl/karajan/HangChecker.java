@@ -39,7 +39,6 @@ import java.util.TimerTask;
 
 import k.rt.Context;
 import k.rt.ExecutionException;
-import k.rt.Stack;
 import k.thr.LWThread;
 import k.thr.Scheduler;
 
@@ -415,7 +414,7 @@ public class HangChecker extends TimerTask {
             }
             Object prev = c.getLast();
             for (Object o : c) {
-                if (o instanceof Stack) {
+                if (o instanceof LWThread) {
                     if (prev != null) {
                         ps.println("\t" + varWithLine((DSHandle) prev) + " is needed by: ");
                     }
