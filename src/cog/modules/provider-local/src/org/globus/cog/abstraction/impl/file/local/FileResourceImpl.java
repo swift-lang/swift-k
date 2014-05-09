@@ -55,7 +55,7 @@ public class FileResourceImpl extends AbstractFileResource {
     }
 
     public FileResourceImpl(String name) {
-        super(name, "local", new ServiceContactImpl("localhost"), null);
+        super(name, "local", null, null);
     }
     
     protected FileResourceImpl(String name, String protocol) {
