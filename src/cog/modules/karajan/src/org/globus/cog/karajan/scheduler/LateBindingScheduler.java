@@ -59,6 +59,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	public static final int DEFAULT_JOBS_PER_CPU = 128;
 	public static final int DEFAULT_MAX_TRANSFERS = 32;
 	public static final int DEFAULT_MAX_FILE_OPERATIONS = 64;
+	
+	public static final Status STATUS_COMPLETED = new StatusImpl.Unmodifiable(Status.COMPLETED);
 
 	private static final Logger logger = Logger.getLogger(LateBindingScheduler.class);
 	
@@ -185,8 +187,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 
 	public void enqueue(Task task, Object constraints, StatusListener l) {
 		Entry e = new Entry(task, constraints, l);
+		getJobQueue().enqueue(e);
 		synchronized (this) {
-			getJobQueue().enqueue(e);
 			if (sleeping) {
 				notify();
 			}
@@ -474,10 +476,8 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			ContactAllocationTask ct = (ContactAllocationTask) t;
 			ct.setContact((BoundContact) contacts[0]);
 			virtualContacts.remove(ct.getVirtualContact());
-			Status status = t.getStatus();
-			status.setPrevStatusCode(status.getStatusCode());
-			status.setStatusCode(Status.COMPLETED);
-			StatusEvent se = new StatusEvent(t, status);
+			t.setStatus(STATUS_COMPLETED);
+			StatusEvent se = new StatusEvent(t, STATUS_COMPLETED);
 			fireJobStatusChangeEvent(se, e);
 			return;
 		}
