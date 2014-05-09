@@ -16,8 +16,8 @@ types(
     	$types;separator="\n"$
     )
 )
-
 $endif$
+$typeConstants;separator="\n"$
 $constants;separator="\n"$
 $declarations;separator="\n"$
 $procedures;separator="\n"$
@@ -58,13 +58,13 @@ memberdefinition(type,name,sourcelocation) ::= <<
 	xs:element("$name$", "$type$")
 >>
 
-procedure(name, outputs, inputs, arguments, optargs, binding, declarations, statements, config, line, initWaitCounts, cleanups, closes) ::= <<
+procedure(name, outputs, inputs, stageins, stageouts, arguments, optargs, binding, declarations, statements, config, line, initWaitCounts, cleanups, closes) ::= <<
 
 $name$ := function($if(optargs)$$proc_oargs(args=optargs)$$if(arguments)$, $endif$$endif$$if(arguments)$$proc_args(args=arguments)$$endif$) {
 	$swift_log_inputs(inputs)$
 	$swift_log_outputs(outputs)$
 $if(binding)$
-	$swift_execute(outputs=outputs,inputs=inputs,application=binding.application, name=name,line=line)$
+	$swift_execute(outputs=outputs,inputs=inputs,stageins=stageins,stageouts=stageouts,application=binding.application, name=name,line=line)$
 $else$
 	$compound(outputs=outputs, inputs=inputs, declarations=declarations, statements=statements, name=name, initWaitCounts=initWaitCounts, cleanups=cleanups)$
 $endif$
@@ -110,13 +110,13 @@ proc_optarg() ::= <<
 $it.name$=$if(it.default)$$it.default$$else$null$endif$
 >>
 
-swift_execute(outputs,inputs,attributes,application,name,line) ::= <<
+swift_execute(outputs,inputs,stageins,stageouts,attributes,application,name,line) ::= <<
 swift:unitStart("PROCEDURE", name="$name$", line=$line$, outputs="$outputs:list();separator=","$")
 swift:execute(
 	$attributes$
 	swift:tr("$application.exec$")
-	$inputs:swift_stagein();separator="\n"$
-	$outputs:swift_stageout();separator="\n"$
+	$stageins:swift_stagein();separator="\n"$
+	$stageouts:swift_stageout();separator="\n"$
 	$swift_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
 )
 $outputs:swift_closedataset();separator="\n"$
@@ -205,13 +205,13 @@ swift:while($var$$if(trace)$, _traceline=$line$$endif$$if(refs)$, refs="$refs;se
 }
 >>
 
-foreach(var, in, indexVar, indexVarType, declarations, statements, line, refs, selfClose, cleanups) ::= <<
+foreach(var, in, indexVar, indexVarField, declarations, statements, line, refs, selfClose, cleanups) ::= <<
 swift:tParallelFor(\$, _traceline=$line$$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
 $! The iterator !$
 	getArrayIterator($in$)) {
 	(\$\$, $var$) := each(\$)
 $if(indexVar)$
-	$indexVar$ := swift:new("$indexVarType$", value=\$\$)
+	$indexVar$ := swift:new($indexVarField$, value=\$\$)
 $endif$
 
 	swift:unitStart("FOREACH_IT", line=$line$) 
@@ -285,19 +285,19 @@ globalConstant(name, expr, datatype) ::= <<
 $name$ := $expr$
 >>
 
-variable(name, type, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line) ::= <<
+variable(name, type, field, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line) ::= <<
 $name$ := 
 	$if(mapping)$
-	swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+	swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
 		$swift_mapping(mapping=mapping, file=file)$
 	)
 	$else$
 		$if(file)$
-			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
 				$swift_mapping(mapping=mapping, file=file)$
 			)
 		$else$
-			swift:new("$type$", dbgname="$name$"$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$)
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$)
 		$endif$
 	$endif$
 $variable_log()$
@@ -345,15 +345,15 @@ $partialClose$)
 $endif$
 >>
 
-callexpr(call, datatype, prefix) ::= <<
+callexpr(call, datatype, field, prefix, mapping) ::= <<
 sequential(
-	swift#callintermediate := swift:new("$datatype$", dbgname="swift#callintermediate",
+	swift.callintermediate := swift:new($field$$if(mapping)$,
 		swift:mapping("concurrent_mapper",
 			swift:parameter("prefix", "_callintermediate-$prefix$")
 		)
-	)
+	$endif$)
 	$call$
-	swift#callintermediate
+	swift.callintermediate
 )
 >>
 
@@ -473,7 +473,7 @@ operator ::= [
 ]
 
 unaryNegation(exp, datatype) ::= <<
-swiftop:product(swift:new("int", value = -1), $exp$)
+swiftop:product(swift:new(swift.field.temp.int, value = -1), $exp$)
 >>
 
 binaryop(op,left,right,datatype) ::= <<
@@ -511,19 +511,22 @@ logSliceArray(memberchild, array, slice) ::= <<
 
 
 iConst(value, datatype) ::= <<
-swift:new("int", value=$value$)
+swift:new(swift.field.const.int, value=$value$)
 >>
 
 fConst(value, datatype) ::= <<
-swift:new("float", value=$value$)
+swift:new(swift.field.const.float, value=$value$)
 >>
 
 bConst(value, datatype) ::= <<
-swift:new("boolean", value=$value$)
+swift:new(swift.field.const.boolean, value=$value$)
 >>
 
-// Why is there a value attribute?
-sConst(value,innervalue,datatype) ::= <<
-swift:new("string", value="$innervalue$")
+sConst(value, datatype) ::= <<
+swift:new(swift.field.const.string, value="$value$")
+>>
+
+fieldConst(name, id, type) ::= <<
+$name$ := swift:field("$id$", "$type$")
 >>
 
