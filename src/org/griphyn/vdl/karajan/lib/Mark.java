@@ -28,10 +28,10 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DataDependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class Mark extends SwiftFunction {
     private ArgRef<Channel<AbstractDataNode>> restarts;

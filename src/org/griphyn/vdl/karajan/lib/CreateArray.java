@@ -27,10 +27,10 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.futures.FutureFault;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.RootArrayDataNode;
 import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
+import org.griphyn.vdl.mapping.nodes.RootClosedArrayDataNode;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
 public class CreateArray extends SetFieldValue {
@@ -53,43 +53,18 @@ public class CreateArray extends SetFieldValue {
 
 			Type type = checkTypes((List<?>) value);
 			
-			RootHandle handle = new RootArrayDataNode("arrayexpr", type.arrayType());
-			if (type.hasNonPrimitiveComponents()) {
+			RootHandle handle = new RootClosedArrayDataNode(Field.Factory.getImmutableField("arrayexpr", type.arrayType()), 
+			    (List<?>) value, null);
+			if (type.hasMappedComponents()) {
 			    handle.init(new ConcurrentMapper());
 			}
 			else {
 			    handle.init(null);
 			}
-
-			if (logger.isInfoEnabled()) {
-			    logger.info("CREATEARRAY START array=" + handle.getIdentifier());
-			}
-
-			int index = 0;
-			for (Object o : (List<?>) value) {
-				// TODO check type consistency of elements with
-				// the type of the array
-				DSHandle n = (DSHandle) o;
-				// we know this DSHandle cast will work because we checked
-				// it in the previous scan of the array contents
-				Path p = Path.EMPTY_PATH.addLast(index, true);
-				
-				DSHandle dst = handle.getField(p);
-
-				deepCopy(dst, n, stack);
-				
-				if (logger.isInfoEnabled()) {
-				    logger.info("CREATEARRAY MEMBER array=" + handle.getIdentifier() 
-				        + " index=" + index + " member=" + n.getIdentifier());
-				}
-				index++;
-			}
-			
-			handle.closeShallow();
 			
 			if (logger.isInfoEnabled()) {
-			    logger.info("CREATEARRAY COMPLETED array=" + handle.getIdentifier());
-			}
+                logger.info("CREATEARRAY array=" + handle.getIdentifier());
+            }
 
 			return handle;
 		}

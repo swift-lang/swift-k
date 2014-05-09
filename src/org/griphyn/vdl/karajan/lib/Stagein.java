@@ -37,10 +37,10 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.futures.FutureFault;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class Stagein extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(Stagein.class);

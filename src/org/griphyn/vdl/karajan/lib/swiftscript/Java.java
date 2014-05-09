@@ -28,8 +28,8 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
-import org.griphyn.vdl.mapping.AbstractDataNode;
-import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
@@ -48,6 +48,7 @@ public class Java extends SwiftFunction {
     	AbstractDataNode hlib = this.lib.getValue(stack);
     	AbstractDataNode hname = this.name.getValue(stack);
         Channel<AbstractDataNode> args = this.c_vargs.get(stack);
+
         hlib.waitFor(this);
         hname.waitFor(this);
         waitForAll(this, args);
@@ -56,7 +57,7 @@ public class Java extends SwiftFunction {
         Object[] p = convertInputs(method, args);
         Type type = returnType(method);
         Object value = invoke(method, p);
-        return new RootDataNode(type, value);
+        return NodeFactory.newRoot(type, value);
     }
 
     /**

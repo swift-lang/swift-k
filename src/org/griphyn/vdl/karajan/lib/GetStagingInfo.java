@@ -85,6 +85,9 @@ public class GetStagingInfo extends SwiftFunction {
 
     private void addPaths(Info info, Collection<DSHandle> vars, boolean out) throws HandleOpenException {
     	for (DSHandle var : vars) {
+    	    if (!var.getType().hasMappedComponents()) {
+    	        continue;
+    	    }
     	    Mapper m = getMapper(var);
     	    if (out && !m.isStatic() && var.getType().hasArrayComponents()) {
     	        Collection<AbsFile> patterns = m.getPattern(var.getPathFromRoot(), var.getType());

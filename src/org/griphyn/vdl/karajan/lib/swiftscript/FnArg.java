@@ -33,10 +33,10 @@ import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.RootDataNode;
-import org.griphyn.vdl.type.Types;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Field;
 
 
 public class FnArg extends SwiftFunction {
@@ -47,6 +47,11 @@ public class FnArg extends SwiftFunction {
 	@Override
     protected Signature getSignature() {
         return new Signature(params("..."));
+    }
+	
+	@Override
+    protected Field getReturnType() {
+        return Field.GENERIC_STRING;
     }
 
     @Override
@@ -87,7 +92,7 @@ public class FnArg extends SwiftFunction {
 			throw new ExecutionException("Missing command line argument: " + name);
 		}
 		else {
-			DSHandle result = new RootDataNode(Types.STRING, value);
+			DSHandle result = NodeFactory.newRoot(Field.GENERIC_STRING, value);
 			if (PROVENANCE_ENABLED) {
 			    int provid = nextProvenanceID();
 			    logProvenanceResult(provid, result, "arg");

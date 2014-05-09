@@ -43,7 +43,6 @@ public class RemoteFileNames extends SwiftFunction {
         Collection<AbsFile> files = this.files.getValue(stack);
         List<String> ret = new ArrayList<String>();
         for (AbsFile f : files) {
-            String path = null;
             if ("file".equals(f.getProtocol())) {
                 ret.add(PathUtils.remotePathName(f.getPath()));
             }

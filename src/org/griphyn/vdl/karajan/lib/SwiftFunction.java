@@ -50,7 +50,6 @@ import org.griphyn.vdl.karajan.AssertFailedException;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.AbsFile;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.GeneralizedFileFormat;
@@ -61,6 +60,9 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PathComparator;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.FQN;
@@ -103,8 +105,8 @@ public abstract class SwiftFunction extends AbstractFunction {
 
     @Override
     public void runBody(LWThread thr) {
+        Stack stack = thr.getStack();
 		try {
-		    Stack stack = thr.getStack();
 		    ret(stack, function(stack));
 		}
 		catch (AssertFailedException e) { 
@@ -112,10 +114,12 @@ public abstract class SwiftFunction extends AbstractFunction {
             throw e;
         }
         catch (DependentException e) {
-            // This would not be the primal fault so in non-lazy errors mode it
-            // should not matter
-            throw new ExecutionException("Wrapping a dependent exception in VDLFunction.post() - errors in data dependencies",e);
+            ret(stack, NodeFactory.newRoot(getReturnType(), e));
         }
+    }
+    
+    protected Field getReturnType() {
+        return Field.GENERIC_ANY;
     }
 	
 	/*
@@ -330,9 +334,14 @@ public abstract class SwiftFunction extends AbstractFunction {
 		// Close the future
 		handle.closeShallow();
 		// Mark all leaves
-		for (DSHandle child : handle.getFields(Path.CHILDREN)) {
-			child.closeShallow();
-		}
+		try {
+            for (DSHandle child : handle.getAllFields()) {
+            	child.closeShallow();
+            }
+        }
+        catch (HandleOpenException e) {
+            throw new RuntimeException("Handle not closed after closeShallow()");
+        }
 	}
 		
 	public static void waitForAll(Node who, Channel<AbstractDataNode> vargs) throws ExecutionException {

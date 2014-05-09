@@ -28,8 +28,8 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class SetDatasetValues extends SwiftFunction {
     private ArgRef<List<DSHandle>> stageouts;

@@ -20,18 +20,17 @@
  */
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
-import k.rt.ExecutionException;
+import java.util.Arrays;
+
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.RootArrayDataNode;
-import org.griphyn.vdl.type.Types;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Field;
 
 public class FileNames extends SwiftFunction {
 	private ArgRef<AbstractDataNode> var;
@@ -45,16 +44,10 @@ public class FileNames extends SwiftFunction {
 	public Object function(Stack stack) {
         AbstractDataNode var = this.var.getValue(stack);
 		String[] f = filename(var);
-		DSHandle returnArray = new RootArrayDataNode(Types.STRING.arrayType());
-		try {
-			for (int i = 0; i < f.length; i++) {
-				Path p = parsePath("["+i+"]");
-				DSHandle h = returnArray.getField(p);
-				h.setValue(relativize(f[i]));
-			}
-		} catch (InvalidPathException e) {
-			throw new ExecutionException("Unexpected invalid path exception",e);
+		for (int i = 0; i < f.length; i++) {
+		    f[i] = relativize(f[i]);
 		}
+		DSHandle returnArray = NodeFactory.newRoot(Field.GENERIC_STRING_ARRAY, Arrays.asList(f));
 		returnArray.closeShallow();
 		
 		if (PROVENANCE_ENABLED) {

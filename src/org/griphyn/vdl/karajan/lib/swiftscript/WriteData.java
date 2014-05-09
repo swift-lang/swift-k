@@ -32,11 +32,13 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DataDependentException;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
@@ -62,7 +64,16 @@ public class WriteData extends SwiftFunction {
 		// src can be any of several forms of value
 		AbstractDataNode src = this.src.getValue(stack);
 
-		src.waitFor(this);
+		try {
+            src.waitFor(this);
+        }
+        catch (DependentException e) {
+        	if (logger.isInfoEnabled()) {
+        	    logger.info(this + " caught dependent exception");
+        	}
+        	dest.setValue(new DataDependentException(dest, e));
+            return null;
+        }
 
 		if (dest.getType().equals(Types.STRING)) {
 			writeData((String)dest.getValue(), src);

@@ -21,9 +21,11 @@ import k.rt.ExecutionException;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.compiled.nodes.Node;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
@@ -101,17 +103,22 @@ public class Operators {
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             Type t = type(v1, v2);
             DSHandle r;
-            if (t == Types.STRING) {
-            	r = new RootDataNode(Types.STRING, (String.valueOf(v1.getValue()) + String.valueOf(v2.getValue())));
+            try {
+                if (t == Types.STRING) {
+                	r = NodeFactory.newRoot(Field.GENERIC_STRING, StringCache.get((String.valueOf(v1.getValue()) + String.valueOf(v2.getValue()))));
+                }
+                else if (t == Types.INT) {
+                	r = NodeFactory.newRoot(Field.GENERIC_INT, getInt(this, v1) + getInt(this, v2));
+                }
+                else {
+                	r = NodeFactory.newRoot(Field.GENERIC_FLOAT, getFloat(this, v1) + getFloat(this, v2));
+                }
+                logBinaryProvenance("sum", v1, v2, r);
+                return r;
             }
-            else if (t == Types.INT) {
-            	r = new RootDataNode(Types.INT, getInt(this, v1) + getInt(this, v2));
+            catch (DependentException e) {
+                return NodeFactory.newRoot(Field.Factory.getImmutableField("?", t), e);
             }
-            else {
-            	r = new RootDataNode(Types.FLOAT, getFloat(this, v1) + getFloat(this, v2));
-            }
-            logBinaryProvenance("sum", v1, v2, r);
-            return r;
         }
 	}
 	
@@ -120,14 +127,19 @@ public class Operators {
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             Type t = type(v1, v2);
             DSHandle r;
-            if (t == Types.INT) {
-                r = new RootDataNode(Types.INT, getInt(this, v1) - getInt(this, v2));
+            try {
+                if (t == Types.INT) {
+                    r = NodeFactory.newRoot(Field.GENERIC_INT, getInt(this, v1) - getInt(this, v2));
+                }
+                else {
+                    r = NodeFactory.newRoot(Field.GENERIC_FLOAT, getFloat(this, v1) - getFloat(this, v2));
+                }
+                logBinaryProvenance("difference", v1, v2, r);
+                return r;
             }
-            else {
-                r = new RootDataNode(Types.FLOAT, getFloat(this, v1) - getFloat(this, v2));
+            catch (DependentException e) {
+                return NodeFactory.newRoot(Field.Factory.getImmutableField("?", t), e);
             }
-            logBinaryProvenance("difference", v1, v2, r);
-            return r;
         }
     }
 	
@@ -136,21 +148,26 @@ public class Operators {
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             Type t = type(v1, v2);
             DSHandle r;
-            if (t == Types.INT) {
-                r = new RootDataNode(Types.INT, getInt(this, v1) * getInt(this, v2));
+            try {
+                if (t == Types.INT) {
+                    r = NodeFactory.newRoot(Field.GENERIC_INT, getInt(this, v1) * getInt(this, v2));
+                }
+                else {
+                    r = NodeFactory.newRoot(Field.GENERIC_FLOAT, getFloat(this, v1) * getFloat(this, v2));
+                }
+                logBinaryProvenance("product", v1, v2, r);
+                return r;
             }
-            else {
-                r = new RootDataNode(Types.FLOAT, getFloat(this, v1) * getFloat(this, v2));
+            catch (DependentException e) {
+                return NodeFactory.newRoot(Field.Factory.getImmutableField("?", t), e);
             }
-            logBinaryProvenance("product", v1, v2, r);
-            return r;
         }
     }
 	
 	public static class FQuotient extends SwiftBinaryOp {
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.FLOAT, getFloat(this, v1) / getFloat(this, v2));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_FLOAT, getFloat(this, v1) / getFloat(this, v2));
             logBinaryProvenance("fquotient", v1, v2, r);
             return r;
         }
@@ -162,7 +179,7 @@ public class Operators {
 	public static class IQuotient extends SwiftBinaryOp {
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.INT, getInt(this, v1) / getInt(this, v2));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_INT, getInt(this, v1) / getInt(this, v2));
             logBinaryProvenance("iquotient", v1, v2, r);
             return r;
         }
@@ -173,102 +190,157 @@ public class Operators {
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
             Type t = type(v1, v2);
             DSHandle r;
-            if (t == Types.INT) {
-                r = new RootDataNode(Types.INT, getInt(this, v1) % getInt(this, v2));
+            try {
+                if (t == Types.INT) {
+                    r = NodeFactory.newRoot(Field.GENERIC_INT, getInt(this, v1) % getInt(this, v2));
+                }
+                else {
+                    r = NodeFactory.newRoot(Field.GENERIC_FLOAT, getFloat(this, v1) % getFloat(this, v2));
+                }
+                logBinaryProvenance("remainder", v1, v2, r);
+                return r;
             }
-            else {
-                r = new RootDataNode(Types.FLOAT, getFloat(this, v1) % getFloat(this, v2));
+            catch (DependentException e) {
+                return NodeFactory.newRoot(Field.Factory.getImmutableField("?", t), e);
             }
-            logBinaryProvenance("remainder", v1, v2, r);
-            return r;
         }
     }
 	
 	public static class LE extends SwiftBinaryOp {
         @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_BOOLEAN;
+        }
+
+        @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) <= getFloat(this, v2));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, getFloat(this, v1) <= getFloat(this, v2));
             logBinaryProvenance("le", v1, v2, r);
             return r;
         }
     }
 	
 	public static class GE extends SwiftBinaryOp {
+	    @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_BOOLEAN;
+        }
+
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) >= getFloat(this, v2));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, getFloat(this, v1) >= getFloat(this, v2));
             logBinaryProvenance("ge", v1, v2, r);
             return r;
         }
     }
 	
 	public static class LT extends SwiftBinaryOp {
+	    @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_BOOLEAN;
+        }
+	    
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) < getFloat(this, v2));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, getFloat(this, v1) < getFloat(this, v2));
             logBinaryProvenance("lt", v1, v2, r);
             return r;
         }
     }
 	
 	public static class GT extends SwiftBinaryOp {
+	    @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_BOOLEAN;
+        }
+        
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.BOOLEAN, getFloat(this, v1) > getFloat(this, v2));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, getFloat(this, v1) > getFloat(this, v2));
             logBinaryProvenance("gt", v1, v2, r);
             return r;
         }
     }
 	
 	public static class EQ extends SwiftBinaryOp {
+	    @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_BOOLEAN;
+        }
+        
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.BOOLEAN, v1.getValue().equals(v2.getValue()));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, v1.getValue().equals(v2.getValue()));
             logBinaryProvenance("eq", v1, v2, r);
             return r;
         }
     }
 	
 	public static class NE extends SwiftBinaryOp {
+	    @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_BOOLEAN;
+        }
+        
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.BOOLEAN, !v1.getValue().equals(v2.getValue()));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, !v1.getValue().equals(v2.getValue()));
             logBinaryProvenance("ne", v1, v2, r);
             return r;
         }
     }
 	
 	public static class And extends SwiftBinaryOp {
+	    @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_BOOLEAN;
+        }
+        
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.BOOLEAN, getBool(this, v1) && getBool(this, v2));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, getBool(this, v1) && getBool(this, v2));
             logBinaryProvenance("and", v1, v2, r);
             return r;
         }
     }
 
 	public static class Or extends SwiftBinaryOp {
+	    @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_BOOLEAN;
+        }
+        
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = new RootDataNode(Types.BOOLEAN, getBool(this, v1) || getBool(this, v2));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, getBool(this, v1) || getBool(this, v2));
             logBinaryProvenance("or", v1, v2, r);
             return r;
         }
     }
 	
 	public static class Not extends SwiftUnaryOp {
+	    @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_BOOLEAN;
+        }
+        
         @Override
         protected DSHandle value(AbstractDataNode v) {
-            DSHandle r = new RootDataNode(Types.BOOLEAN, !getBool(this, v));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, !getBool(this, v));
             logUnaryProvenance("not", v, r);
             return r;
         }
     }
 	
 	public static class Inc extends SwiftUnaryOp {
+	    @Override
+        protected Field getReturnType() {
+            return Field.GENERIC_INT;
+        }
+        
         @Override
         protected DSHandle value(AbstractDataNode v) {
-            DSHandle r = new RootDataNode(Types.INT, getInt(this, v) + 1);
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_INT, getInt(this, v) + 1);
             return r;
         }
     }

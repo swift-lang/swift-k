@@ -22,12 +22,12 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.OOBYield;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class GetFieldSubscript extends SwiftFunction {
     private ArgRef<DSHandle> var;
@@ -48,7 +48,7 @@ public class GetFieldSubscript extends SwiftFunction {
 		    indexh.waitFor();
 		    Object index = indexh.getValue();
 			if ("*".equals(index)) {
-			    return var.getFields(Path.CHILDREN);
+			    return var.getAllFields();
 			}
 			else {
 			    return var.getField(Path.EMPTY_PATH.addFirst((Comparable<?>) index, true));

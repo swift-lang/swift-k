@@ -21,8 +21,8 @@ import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class AppendArray extends SetFieldValue {
     

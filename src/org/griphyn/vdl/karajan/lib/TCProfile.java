@@ -37,8 +37,8 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.functions.Map.Entry;
-import org.globus.cog.karajan.util.BoundContact;
 import org.globus.swift.catalog.TCEntry;
+import org.globus.swift.catalog.site.SwiftContact;
 import org.globus.swift.catalog.util.Profile;
 import org.griphyn.vdl.karajan.TCCache;
 import org.griphyn.vdl.util.FQN;
@@ -46,7 +46,7 @@ import org.griphyn.vdl.util.FQN;
 public class TCProfile extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(TCProfile.class);
     
-    private ArgRef<BoundContact> host;
+    private ArgRef<SwiftContact> host;
     /**
        Allows for dynamic attributes from the SwiftScript 
        profile statements. 
@@ -87,9 +87,9 @@ public class TCProfile extends SwiftFunction {
 		
 		Map<String, Object> dynamicAttributes = readDynamicAttributes(stack);
 		
-		BoundContact bc = this.host.getValue(stack);
+		SwiftContact bc = this.host.getValue(stack);
 		
-		Map<String,Object> attrs = null;	
+		Map<String, Object> attrs = null;	
 		attrs = attributesFromHost(bc, attrs, stack);
 
 		TCEntry tce = null;
@@ -176,12 +176,11 @@ public class TCProfile extends SwiftFunction {
 
 	public static final String PROFILE_GLOBUS_PREFIX = (Profile.GLOBUS + "::").toLowerCase();
 
-	private void addEnvironment(Stack stack, BoundContact bc) {
-		Map<String,Object> props = bc.getProperties();
-		if (props != null) {
-    		for (Map.Entry<String,Object> e : props.entrySet()) {
-    			String name = e.getKey();
-    			FQN fqn = new FQN(name); 
+	private void addEnvironment(Stack stack, SwiftContact bc) {
+		Map<FQN, Object> profiles = bc.getProfiles();
+		if (profiles != null) {
+    		for (Map.Entry<FQN, Object> e : profiles.entrySet()) {
+    			FQN fqn = e.getKey();
     			String value = (String) e.getValue();
     			if (Profile.ENV.equalsIgnoreCase(fqn.getNamespace())) {
     			    cr_environment.append(stack, new Entry(fqn.getName(), value));
@@ -235,11 +234,11 @@ public class TCProfile extends SwiftFunction {
 	   Inserts namespace=globus attributes from BoundContact bc 
 	   into given attrs
 	 */
-	private Map<String,Object> attributesFromHost(BoundContact bc, Map<String, Object> attrs, Stack stack) {
-		Map<String,Object> props = bc.getProperties();
-		if (props != null) {
-		    for (Map.Entry<String,Object> e : props.entrySet()) {
-		        FQN fqn = new FQN(e.getKey());
+	private Map<String,Object> attributesFromHost(SwiftContact bc, Map<String, Object> attrs, Stack stack) {
+		Map<FQN, Object> profiles = bc.getProfiles();
+		if (profiles != null) {
+		    for (Map.Entry<FQN, Object> e : profiles.entrySet()) {
+		        FQN fqn = e.getKey();
 		        if (Profile.GLOBUS.equalsIgnoreCase(fqn.getNamespace())) {
 		            Attr a = ATTR_TYPES.get(fqn.getName());
 		            if (a == null) {

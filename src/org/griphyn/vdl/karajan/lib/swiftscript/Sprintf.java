@@ -26,11 +26,12 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
-import org.griphyn.vdl.mapping.AbstractDataNode;
-import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.ArrayHandle;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Types;
 
 /**
@@ -63,7 +64,11 @@ public class Sprintf extends SwiftFunction {
         return new Signature(params("spec", "..."));
     }
 
-    
+    @Override
+    protected Field getReturnType() {
+        return Field.GENERIC_STRING;
+    }
+
     @Override
     public Object function(Stack stack) {
     	AbstractDataNode hspec = this.spec.getValue(stack);
@@ -77,9 +82,9 @@ public class Sprintf extends SwiftFunction {
             logger.debug("generated: " + msg);
         }
         
-        return new RootDataNode(Types.STRING, msg);
+        return NodeFactory.newRoot(Field.GENERIC_STRING, msg);
     }
-
+    
     public static String format(String spec, Channel<AbstractDataNode> args) {
         logger.debug("spec: " + spec);
         StringBuilder output = new StringBuilder();
@@ -197,11 +202,11 @@ public class Sprintf extends SwiftFunction {
     }
     
     private static void append_q(DSHandle arg, StringBuilder output) {
-        if (arg instanceof ArrayDataNode) {
-            ArrayDataNode node = (ArrayDataNode) arg;
+        if (arg instanceof ArrayHandle) {
+            ArrayHandle node = (ArrayHandle) arg;
             output.append("[");
             try {
-                int size = node.size();
+                int size = node.arraySize();
                 for (int i = 0; i < size; i++) {
                     String entry = "["+i+"]"; 
                     DSHandle handle = 

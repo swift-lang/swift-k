@@ -20,7 +20,7 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -37,17 +37,23 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DuplicateMappingChecker;
-import org.griphyn.vdl.mapping.ExternalDataNode;
 import org.griphyn.vdl.mapping.InvalidMapperException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MapperFactory;
 import org.griphyn.vdl.mapping.NullMapper;
-import org.griphyn.vdl.mapping.RootArrayDataNode;
-import org.griphyn.vdl.mapping.RootDataNode;
 import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.ExternalDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.mapping.nodes.RootClosedArrayDataNode;
+import org.griphyn.vdl.mapping.nodes.RootClosedPrimitiveDataNode;
+import org.griphyn.vdl.mapping.nodes.RootFutureArrayDataNode;
+import org.griphyn.vdl.mapping.nodes.RootFutureMappedSingleDataNode;
+import org.griphyn.vdl.mapping.nodes.RootFuturePrimitiveDataNode;
+import org.griphyn.vdl.mapping.nodes.RootFutureStructDataNode;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -57,10 +63,9 @@ public class New extends SwiftFunction {
 	
 	private static final Mapper NULL_MAPPER = new NullMapper();
 	
-	private ArgRef<String> type;
+	private ArgRef<Field> field;
 	private ArgRef<Map<String, Object>> mapping;
 	private ArgRef<Object> value;
-	private ArgRef<String> dbgname;
 	private ArgRef<Number> waitCount;
 	private ArgRef<Boolean> input;
 	private ArgRef<Integer> _defline;
@@ -70,8 +75,8 @@ public class New extends SwiftFunction {
 	
 	@Override
 	protected Signature getSignature() {
-	    return new Signature(params("type", optional("mapping", null), optional("value", null), 
-	        optional("dbgname", null), optional("waitCount", null), optional("input", Boolean.FALSE), optional("_defline", null)));
+	    return new Signature(params("field", optional("mapping", null), optional("value", null), 
+	        optional("waitCount", null), optional("input", Boolean.FALSE), optional("_defline", null)));
 	}
 	
 	private Tracer tracer;
@@ -96,22 +101,22 @@ public class New extends SwiftFunction {
 
     @Override
     public Object function(Stack stack) {
-		String typename = this.type.getValue(stack);
+		Field field = this.field.getValue(stack);
 		Object value = this.value.getValue(stack);
         Map<String, Object> mapping = this.mapping.getValue(stack);
-		String dbgname = this.dbgname.getValue(stack);
 		Number waitCount = this.waitCount.getValue(stack);
 		boolean input = this.input.getValue(stack);
 		Integer line = this._defline.getValue(stack);
 		
-		if (typename == null && value == null) {
-            throw new ExecutionException("You must specify either a type or a value");
+		if (field == null && value == null) {
+            throw new ExecutionException("You must specify either a field or a value");
         }
 				
 		Mapper mapper;
+		Type type = field.getType();
+		String dbgname = (String) field.getId();
 		
-		Type type = getType(typename);
-		if (type.hasNonPrimitiveComponents()) {
+		if (type.hasMappedComponents()) {
 		    String desc = (String) mapping.remove("swift#descriptor");
 		    try {
                 mapper = MapperFactory.getMapper(desc);
@@ -143,32 +148,36 @@ public class New extends SwiftFunction {
 		
 		try {
 			DSHandle handle;
-			if (typename.equals("external")) {
+			if (Types.EXTERNAL.equals(type)) {
 			    if (tracer.isEnabled()) {
 			        tracer.trace(thread, dbgname + " = external");
 			    }
-				handle = initHandle(new ExternalDataNode(dbgname), mapper, thread, line, input);
+				handle = initHandle(new ExternalDataNode(field), mapper, thread, line, input);
 			}
 			else if (type.isArray()) {
 				// dealing with array variable
 				if (value != null) {
-					if (value instanceof RootArrayDataNode) {
+					if (value instanceof RootHandle) {
+					    handle = (RootHandle) value;
 					    if (tracer.isEnabled()) {
-					        tracer.trace(thread, dbgname + " = " + Tracer.getVarName((RootDataNode) value));
+					        tracer.trace(thread, dbgname + " = " + Tracer.getVarName(handle));
 					    }
-						handle = (RootArrayDataNode) value;
+						handle.closeShallow();
 					}
 					else {
-					    handle = initHandle(createArrayFromList(stack, thread, dbgname, type), 
+					    handle = initHandle(createArrayFromList(stack, thread, field, value), 
 					        mapper, thread, line, input); 		    
 					}
-					handle.closeShallow();
+				}
+				else if (input && !type.hasMappedComponents()) {
+				    handle = initHandle(createArrayFromList(stack, thread, field, Collections.emptyList()), 
+                            mapper, thread, line, input);
 				}
 				else {			    
 				    if (tracer.isEnabled()) {
 				        tracer.trace(thread, dbgname);
                     }
-				    handle = initHandle(createEmptyArray(stack, thread, dbgname, type), 
+				    handle = initHandle(createEmptyArray(stack, thread, field), 
                             mapper, thread, line, input);
 				}				
 			}
@@ -180,19 +189,25 @@ public class New extends SwiftFunction {
 				handle = (DSHandle) value;
 			}
 			else {
-				handle = initHandle(new RootDataNode(dbgname, type, getDMChecker(stack)), 
-				    mapper, thread, line, input);
-				if (value != null) {
-				    if (tracer.isEnabled()) {
-				        tracer.trace(thread, dbgname + " = " + value);
-				    }
-					handle.setValue(internalValue(type, value));
-				}
-				else {
-				    if (tracer.isEnabled()) {
+			    if (value == null) {
+			        handle = initHandle(NodeFactory.newOpenRoot(field, getDMChecker(stack)), 
+			            mapper, thread, line, input);
+			        if (tracer.isEnabled()) {
                         tracer.trace(thread, dbgname + " " + mapper);
                     }
-				}
+			    }
+			    else {
+			        if (type.isPrimitive()) {
+                        handle = initHandle(new RootClosedPrimitiveDataNode(field, internalValue(type, value)), 
+                            mapper, thread, line, input);
+                    }
+                    else {
+                        throw new ExecutionException("Cannot create non-primitive data node with value '" + value + "'");
+                    }
+			        if (tracer.isEnabled()) {
+                        tracer.trace(thread, dbgname + " = " + value);
+                    }
+			    }
 			}
 			
 			if (AbstractDataNode.provenance && logger.isDebugEnabled()) {
@@ -211,41 +226,27 @@ public class New extends SwiftFunction {
         if (line != null) {
             handle.setLine(line);
         }
-        handle.setInput(input);
+        if (mapper != NULL_MAPPER) {
+            handle.setInput(input);
+        }
         handle.init(mapper);
         return handle;
     }
 
-    private RootHandle createArrayFromList(Stack stack, LWThread thread, String dbgname, Type type) 
+    private RootHandle createArrayFromList(Stack stack, LWThread thread, Field field, Object value) 
             throws NoSuchFieldException {
-        RootHandle handle = new RootArrayDataNode(dbgname, type, getDMChecker(stack));
         if (!(value instanceof List)) {
             throw new ExecutionException("An array variable can only be initialized with a list of values");
         }
         if (tracer.isEnabled()) {
-            tracer.trace(thread, dbgname + " = " + formatList((List<?>) value));
+            tracer.trace(thread, field.getId() + " = " + formatList((List<?>) value));
         }
-        int index = 0;
-        Iterator<?> i = ((List<?>) value).iterator();
-        while (i.hasNext()) {
-            // TODO check type consistency of elements with
-            // the type of the array
-            Object n = i.next();
-            if (n instanceof DSHandle) {
-                handle.getField(index).set((DSHandle) n);
-            }
-            else {
-                throw new RuntimeException(
-                        "An array variable can only be initialized by a list of DSHandle values");
-            }
-            index++;
-        }
-        return handle;
+        return new RootClosedArrayDataNode(field, (List<?>) value, getDMChecker(stack));
     }
     
-    private RootHandle createEmptyArray(Stack stack, LWThread thread, String dbgname, Type type) 
+    private RootHandle createEmptyArray(Stack stack, LWThread thread, Field field) 
             throws NoSuchFieldException {
-        return new RootArrayDataNode(dbgname, type, getDMChecker(stack));
+        return new RootFutureArrayDataNode(field, getDMChecker(stack));
     }
 
     private Type getType(String typename) {

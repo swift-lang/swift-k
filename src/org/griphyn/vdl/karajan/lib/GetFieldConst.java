@@ -20,25 +20,36 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.ChannelRef;
-import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.DSHandle;
+import org.globus.cog.karajan.analyzer.Param;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
+import org.griphyn.vdl.type.Field;
+import org.griphyn.vdl.type.NoSuchTypeException;
+import org.griphyn.vdl.type.Types;
 
-public class FileName extends SwiftFunction {
-    private ArgRef<DSHandle> var;
-    private ChannelRef<String> cr_vargs;
+public class GetFieldConst extends AbstractSingleValuedFunction {
+    private ArgRef<String> name;
+    private ArgRef<String> type;
+
     
     @Override
-    protected Signature getSignature() {
-        return new Signature(params("var"));
+    protected Param[] getParams() {
+        return params("name", "type");
     }
+
 
     @Override
 	public Object function(Stack stack) {
-		DSHandle var = this.var.getValue(stack);
-		return var.map(var.getPathFromRoot());
+        String name = this.name.getValue(stack);
+        String type = this.type.getValue(stack);
+		try {
+            return Field.Factory.getImmutableField(name, Types.getType(type));
+        }
+        catch (NoSuchTypeException e) {
+            throw new ExecutionException("No such type: " + name, e);
+        }
 	}
 }

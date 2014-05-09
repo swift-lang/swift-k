@@ -30,7 +30,8 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
-import org.griphyn.vdl.mapping.AbstractDataNode;
+import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 /**
     Formatted file output. <br>
@@ -55,26 +56,43 @@ public class Fprintf extends SwiftFunction {
     
     @Override
     public Object function(Stack stack) {
-        AbstractDataNode hfilename = this.filename.getValue(stack);
-        AbstractDataNode hspec = this.spec.getValue(stack);
-        hfilename.waitFor(this);
-        hspec.waitFor(this);
-        Channel<AbstractDataNode> args = c_vargs.get(stack);
-        waitForAll(this, args);
-        String filename = (String) hfilename.getValue();
-        String spec = (String) hspec.getValue(); 
-        
-        StringBuilder output = new StringBuilder();
         try {
-            Sprintf.format(spec, args, output);
+            AbstractDataNode hfilename = this.filename.getValue(stack);
+            AbstractDataNode hspec = this.spec.getValue(stack);
+            hfilename.waitFor(this);
+            String filename = (String) hfilename.getValue();
+            try {
+                hspec.waitFor(this);
+                Channel<AbstractDataNode> args = c_vargs.get(stack);
+                waitForAll(this, args);
+                String spec = (String) hspec.getValue(); 
+                
+                StringBuilder output = new StringBuilder();
+                try {
+                    Sprintf.format(spec, args, output);
+                }
+                catch (RuntimeException e) {
+                    throw new ExecutionException(this, e.getMessage());
+                }
+                String msg = output.toString();
+         
+                if (logger.isDebugEnabled()) {
+                    logger.debug("file: " + filename + " msg: " + msg);
+                }
+                write(filename, msg);
+            }
+            catch (DependentException e) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("file: " + filename + " msg: <exception>");
+                }
+                write(filename, "<exception>");
+            }
         }
-        catch (RuntimeException e) {
-            throw new ExecutionException(this, e.getMessage());
+        catch (DependentException e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("<exception>");
+            }
         }
-        String msg = output.toString();
- 
-        logger.debug("file: " + filename + " msg: " + msg);        
-        write(filename, msg);
         return null;
     }
     

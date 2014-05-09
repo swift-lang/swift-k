@@ -5,34 +5,33 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Feb 4, 2013
+ * Created on Apr 17, 2014
  */
-package org.griphyn.vdl.karajan.lib;
+package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import k.rt.Stack;
+import k.thr.LWThread;
 
-import org.globus.cog.karajan.compiled.nodes.functions.UnaryOp;
-import org.griphyn.vdl.mapping.DSHandle;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
 import org.griphyn.vdl.mapping.DependentException;
-import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Field;
 
-public abstract class SwiftUnaryOp extends UnaryOp<AbstractDataNode, DSHandle> {
+public abstract class AbstractSingleValuedSwiftFunction extends AbstractSingleValuedFunction {
 
+    
     @Override
-    public DSHandle function(Stack stack) {
+    public void runBody(LWThread thr) {
+        Stack stack = thr.getStack();
         try {
-        	AbstractDataNode v1 = this.v1.getValue(stack);
-        	v1.waitFor(this);
-            return value(v1);
+            ret(stack, function(stack));
         }
         catch (DependentException e) {
-            return NodeFactory.newRoot(getReturnType(), e);
+            ret(stack, NodeFactory.newRoot(getFieldType(), e));
         }
     }
     
-    protected Field getReturnType() {
-        return Field.GENERIC_ANY; 
+    protected Field getFieldType() {
+        return Field.GENERIC_ANY;
     }
 }

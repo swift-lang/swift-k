@@ -29,9 +29,10 @@ import k.rt.Stack;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.PathElementComparator;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.ArrayHandle;
 
 public class ExpandArguments extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(ExpandArguments.class);
@@ -58,15 +59,17 @@ public class ExpandArguments extends SwiftFunction {
 	private Object expandArrays(Channel<Object> items) {
         ArrayList<DSHandle> l = new ArrayList<DSHandle>();
         for (Object item : items) {
-            if (item instanceof ArrayDataNode) {
-                ArrayDataNode array = (ArrayDataNode) item;
+            AbstractDataNode h = (AbstractDataNode) item;
+            h.waitFor(this);
+            if (item instanceof ArrayHandle) {
+                ArrayHandle array = (ArrayHandle) item;
                 Map<Comparable<?>, DSHandle> m = array.getArrayValue();
                 SortedMap<Comparable<?>, DSHandle> sorted = new TreeMap<Comparable<?>, DSHandle>(new PathElementComparator());
                 sorted.putAll(m);
                 l.addAll(m.values());
             } 
             else {
-                l.add((DSHandle) item);
+                l.add(h);
             }
             // TODO this does not correctly handle structs or
             // externals - at the moment, probably neither of
@@ -85,7 +88,7 @@ public class ExpandArguments extends SwiftFunction {
                 throw new ExecutionException(this, "Cannot handle argument implemented by " + item.getClass());
             }
 
-            if (item instanceof ArrayDataNode) {
+            if (item instanceof ArrayHandle) {
                 arraySeen = true;
             } 
         }

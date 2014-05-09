@@ -26,10 +26,10 @@ import k.rt.Stack;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class CloseDataset extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(CloseDataset.class);

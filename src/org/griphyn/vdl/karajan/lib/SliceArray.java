@@ -28,11 +28,11 @@ import k.rt.Stack;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.PairSet;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.RootArrayDataNode;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.RootFutureArrayDataNode;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -77,7 +77,7 @@ public class SliceArray extends SwiftFunction {
     
     		String destinationTypeName = this.type.getValue(stack);
     		Type destinationType = Types.getType(destinationTypeName);
-    		RootArrayDataNode destinationArray = new RootArrayDataNode(destinationType);
+    		RootFutureArrayDataNode destinationArray = new RootFutureArrayDataNode(sourceArray.getField(), null);
     
     
     		Path cutPath = Path.EMPTY_PATH.addLast(this.path.getValue(stack), false);
@@ -89,8 +89,8 @@ public class SliceArray extends SwiftFunction {
     			DSHandle sourceElement = (DSHandle) pair.get(1);
         
     			DSHandle n = sourceElement.getField(cutPath);
-    
-    			destinationArray.getField((Comparable<?>) index).set(n);
+    			
+    			destinationArray.addField((Comparable<?>) index, n);
     		}
     
     		// all of the inputs should be closed, so
@@ -121,9 +121,6 @@ public class SliceArray extends SwiftFunction {
 		}
 		catch(NoSuchTypeException nste) {
 			throw new ExecutionException("No such type",nste);
-		}
-		catch (NoSuchFieldException e) {
-			throw new ExecutionException(this, e);
 		}
 		catch (InvalidPathException e) {
             throw new ExecutionException(this, e);

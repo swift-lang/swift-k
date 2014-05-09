@@ -27,8 +27,8 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.futures.FutureFault;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class GetFieldValue extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(GetFieldValue.class);
@@ -52,7 +52,8 @@ public class GetFieldValue extends SwiftFunction {
 		try {
 			Path path = parsePath(this.path.getValue(stack));
 			if (path.hasWildcards()) {
-			    return var.getFields(path).toArray();
+			    // TODO we should clarify whether we allow generic selectors
+			    return var.getField(path.butLast()).getAllFields().toArray();
 			}
 			else {
 				var = (AbstractDataNode) var.getField(path);

@@ -27,9 +27,9 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingDependentException;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class Stageout extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(Stageout.class);

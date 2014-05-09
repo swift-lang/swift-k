@@ -20,6 +20,12 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import k.rt.Abort;
 import k.rt.Channel;
 import k.rt.ConditionalYield;
@@ -32,6 +38,7 @@ import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
@@ -59,14 +66,35 @@ public class Execute extends GridExec {
 	@Override
     protected Signature getSignature() {
 	    Signature sig = super.getSignature();
-	    sig.getParams().add(0, new Param("progress", Param.Type.POSITIONAL));
-	    sig.getParams().add(optional("replicationGroup", null));
-	    sig.getParams().add(optional("replicationChannel", null));
-	    sig.getParams().add(optional("jobid", null));
+	    List<Param> params = sig.getParams();
+	    params.add(0, new Param("progress", Param.Type.POSITIONAL));
+	    params.add(optional("replicationGroup", null));
+	    params.add(optional("replicationChannel", null));
+	    params.add(optional("jobid", null));
+	    removeParams(params, "stdout", "stderr", "stdoutLocation", "stderrLocation", 
+	        "stdin", "provider", "securityContext", "nativespec", 
+	        "delegation", "batch");
 	    return sig;
     }
 	
-	@Override
+	private void removeParams(List<Param> params, String... names) {
+	    Set<String> snames = new HashSet<String>(Arrays.asList(names));
+	    Iterator<Param> i = params.iterator();
+	    while (i.hasNext()) {
+	        Param p = i.next();
+	        if (snames.contains(p.name)) {
+	            try {
+                    setArg(null, p, new ArgRef.Static<Object>(p.value));
+                }
+                catch (CompilationException e) {
+                    throw new RuntimeException("Failed to remove parameter " + p.name, e);
+                }
+	            i.remove();
+	        }
+	    }
+    }
+
+    @Override
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
         context = scope.getVarRef("#context");

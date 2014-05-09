@@ -28,8 +28,8 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.mapping.RootDataNode;
-import org.griphyn.vdl.type.Types;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Field;
 
 public class While extends InternalFunction {
 
@@ -85,7 +85,7 @@ public class While extends InternalFunction {
             switch(i) {
                 case 0:
                     drefs = RefCount.build(stack, srefs);
-                    var.setValue(stack, new RootDataNode(Types.INT, 0));
+                    var.setValue(stack, NodeFactory.newRoot(Field.GENERIC_INT, 0));
                     c_next.create(stack);
                     RefCount.incRefs(drefs);
                     next = (SingleValueChannel<Object>) c_next.get(stack);

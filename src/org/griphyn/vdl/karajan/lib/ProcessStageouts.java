@@ -31,12 +31,12 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbsFile;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.InitMapper;
 
 public class ProcessStageouts extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(ProcessStageouts.class);
@@ -78,7 +78,7 @@ public class ProcessStageouts extends SwiftFunction {
             Mapper m = var.getMapper();
             if (!m.isStatic() && var.getType().hasArrayComponents()) {
                 Collection<Path> found = m.existing(new FileSystemLister.FileList(collectList));
-                RootDataNode.addExisting(found, m, var.getRoot(), var);
+                InitMapper.addExisting(found, m, var.getRoot(), var);
                 logOnly(var, log);
             }
             else {

@@ -24,10 +24,10 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.PairSet;
-import org.griphyn.vdl.mapping.ArrayDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.nodes.ArrayHandle;
 
 public class GetArrayIterator extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(GetArrayIterator.class);
@@ -67,7 +67,7 @@ public class GetArrayIterator extends SwiftFunction {
 					    if (logger.isDebugEnabled()) {
                             logger.debug("Using future iterator for " + var);
                         }
-						return ((ArrayDataNode) var).entryList();
+						return ((ArrayHandle) var).entryList();
 					}
 				}
 			}

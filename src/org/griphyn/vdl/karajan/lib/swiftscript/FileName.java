@@ -22,10 +22,10 @@ import k.rt.Stack;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.RootDataNode;
-import org.griphyn.vdl.type.Types;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Field;
 
 public class FileName extends SwiftFunction {
 	private ArgRef<AbstractDataNode> var;
@@ -39,7 +39,7 @@ public class FileName extends SwiftFunction {
 	public Object function(Stack stack) {
         AbstractDataNode var = this.var.getValue(stack); 
 		String s = argList(filename(var), true);
-		DSHandle result = new RootDataNode(Types.STRING, s);
+		DSHandle result = NodeFactory.newRoot(Field.GENERIC_STRING, s);
 		if (PROVENANCE_ENABLED) {
 		    int provid = SwiftFunction.nextProvenanceID();
 		    SwiftFunction.logProvenanceParameter(provid, var, "input");

@@ -27,6 +27,8 @@ import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunct
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.ContactSet;
 import org.globus.swift.catalog.site.SiteCatalogParser;
+import org.globus.swift.catalog.site.SwiftContact;
+import org.griphyn.vdl.util.FQN;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -120,7 +122,7 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
             return null;
         }
         String name = poolName(n, v);
-        BoundContact bc = new BoundContact(name);
+        SwiftContact bc = new SwiftContact(name);
         
         String sysinfo = attr(n, "sysinfo", null);
         if (sysinfo != null) {
@@ -252,14 +254,14 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
         return s;
     }
 
-    private void env(BoundContact bc, Node n) {
+    private void env(SwiftContact bc, Node n) {
         String key = attr(n, "key");
         String value = text(n);
         
-        bc.addProperty("env:" + key, value);
+        bc.addProfile(new FQN("env", key), value);
     }
 
-    private void profile(BoundContact bc, Node n) {
+    private void profile(SwiftContact bc, Node n) {
         String ns = attr(n, "namespace");
         String key = attr(n, "key");
         String value = text(n);
@@ -271,7 +273,7 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
             bc.addProperty(key, value);
         }
         else {
-            bc.addProperty(ns + ":" + key, value);
+        	bc.addProfile(new FQN(ns, key), value);
         }
     }
 

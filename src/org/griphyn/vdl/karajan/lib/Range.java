@@ -33,12 +33,13 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.RootArrayDataNode;
-import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.mapping.nodes.RootFutureArrayDataNode;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
@@ -49,7 +50,7 @@ public class Range extends SwiftFunction {
     
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("from", "to", optional("step", new RootDataNode(Types.FLOAT, 1))));
+        return new Signature(params("from", "to", optional("step", NodeFactory.newRoot(Field.GENERIC_FLOAT, 1))));
     }
 
 	@Override
@@ -70,8 +71,9 @@ public class Range extends SwiftFunction {
 		// only deal with int and float
 		try {
 			final AbstractDataNode handle;
+			final Field valueField = Field.Factory.getImmutableField("rangeItem", type);
 
-			handle = new RootArrayDataNode(type.arrayType()) {
+			handle = new RootFutureArrayDataNode(Field.Factory.getImmutableField("range", type.arrayType()), null) {
 				final DSHandle h = this;				
 				{
 				    closeShallow();
@@ -87,7 +89,7 @@ public class Range extends SwiftFunction {
 					}
 					else {
 						int index = (Integer) path.getFirst();
-						DSHandle value = new RootDataNode(type, new Double(start + incr * index));
+						DSHandle value = NodeFactory.newRoot(valueField, new Double(start + incr * index));
 						return Collections.singletonList(value);
 					}
 				}
@@ -113,10 +115,10 @@ public class Range extends SwiftFunction {
 													
 													{
 														if (type == Types.INT) {
-														    value = new RootDataNode(Types.INT, (int) crt);
+														    value = NodeFactory.newRoot(Field.GENERIC_INT, (int) crt);
 														}
 														else {
-														    value = new RootDataNode(Types.FLOAT, Double.valueOf(crt));
+														    value = NodeFactory.newRoot(Field.GENERIC_FLOAT, Double.valueOf(crt));
 														}
 														key = index;
 													}

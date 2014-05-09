@@ -17,10 +17,10 @@
 
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.BufferedReader;
-
+import java.util.Arrays;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,14 +35,15 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
-import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
 import org.globus.cog.karajan.util.TypeUtil;
+import org.griphyn.vdl.karajan.lib.StringCache;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.RootArrayDataNode;
-import org.griphyn.vdl.mapping.RootDataNode;
+import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.VDL2Config;
 
@@ -76,27 +77,39 @@ public class Misc {
         @Override
         protected void runBody(LWThread thr) {
         	Channel<AbstractDataNode> vargs = c_vargs.get(thr.getStack());
-            SwiftFunction.waitForAll(this, vargs);
+        	StringBuilder buf = new StringBuilder();
+        	try {
+        	    Tracef.waitForAll(this, vargs);
+        	    buf.append("SwiftScript trace: ");
+                boolean first = true;
+                for (AbstractDataNode n : vargs) {
+                    if (!first) {
+                        buf.append(", ");
+                    }
+                    else {
+                        first = false;
+                    }
+                    //buf.append(v == null ? args[i] : v);
+                    prettyPrint(buf, n);
+                }
+        	}
+        	catch (DependentException e) {
+        	    buf.append("SwiftScript trace: <exception>");
+        	}
 
-            StringBuilder buf = new StringBuilder();
-            buf.append("SwiftScript trace: ");
-            boolean first = true;
-            for (AbstractDataNode n : vargs) {
-                if (!first) {
-                    buf.append(", ");
-                }
-                else {
-                	first = false;
-                }
-                //buf.append(v == null ? args[i] : v);
-                prettyPrint(buf, n);
-            }
             traceLogger.warn(buf);
         }
 	}
 	
 	private static void prettyPrint(StringBuilder buf, DSHandle h) {
-        Object o = h.getValue();
+	    Object o;
+	    try {
+	        o = h.getValue();
+	    }
+	    catch (DependentException e) {
+	        buf.append("<exception>");
+	        return;
+	    }
         if (o == null) {
             buf.append(h);
         }
@@ -131,7 +144,7 @@ public class Misc {
         }
     }
 	
-	public static class StrCat extends AbstractSingleValuedFunction {
+	public static class StrCat extends AbstractSingleValuedSwiftFunction {
         private ChannelRef<AbstractDataNode> c_vargs;
 
         @Override
@@ -139,6 +152,11 @@ public class Misc {
             return new Signature(params("..."));
         }
         
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING;
+        }
+
         @Override
         public Object function(Stack stack) {
             Channel<AbstractDataNode> vargs = c_vargs.get(stack);
@@ -150,7 +168,7 @@ public class Misc {
                 buf.append(TypeUtil.toString(o));
             }
             
-            DSHandle handle = new RootDataNode(Types.STRING, buf.toString());
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, buf.toString());
     
             if (PROVENANCE_ENABLED) {
             	int provid = SwiftFunction.nextProvenanceID();
@@ -164,12 +182,17 @@ public class Misc {
         }
 	}
 	
-	public static class Exists extends AbstractSingleValuedFunction {
+	public static class Exists extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> file;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("file"));
+        }
+        
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_BOOLEAN;
         }
         
         @Override
@@ -187,7 +210,7 @@ public class Misc {
             if (logger.isDebugEnabled()) {
                 logger.debug("exists: " + file);
             }
-            DSHandle handle = new RootDataNode(Types.BOOLEAN, file.exists());
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, file.exists());
     
             if (PROVENANCE_ENABLED) {
             	int provid = SwiftFunction.nextProvenanceID();
@@ -199,13 +222,18 @@ public class Misc {
         }
     }
 	
-	public static class StrCut extends AbstractSingleValuedFunction {
+	public static class StrCut extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("input", "pattern"));
+        }
+        
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING;
         }
         
         @Override
@@ -235,7 +263,7 @@ public class Misc {
             if (logger.isDebugEnabled()) {
                 logger.debug("strcut matched '" + group + "'");
             }
-            DSHandle handle = new RootDataNode(Types.STRING, group);
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, group);
     
             if (PROVENANCE_ENABLED) {
             	int provid = SwiftFunction.nextProvenanceID();
@@ -247,13 +275,18 @@ public class Misc {
         }
 	}
 	
-	public static class StrStr extends AbstractSingleValuedFunction {
+	public static class StrStr extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("input", "pattern"));
+        }
+        
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING;
         }
         
         @Override
@@ -267,7 +300,7 @@ public class Misc {
                 logger.debug("strstr will search '" + input + "' for pattern '" + pattern + "'");
             }
             
-            DSHandle result = new RootDataNode(Types.INT, input.indexOf(pattern));
+            DSHandle result = NodeFactory.newRoot(Field.GENERIC_INT, input.indexOf(pattern));
 
             
             if (PROVENANCE_ENABLED) {
@@ -280,68 +313,74 @@ public class Misc {
         }
     }
 
-    public static class ExecSystem extends AbstractSingleValuedFunction {
+    public static class ExecSystem extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> input;
-        //private ArgRef<AbstractDataNode> pattern;
-
+ 
         @Override
 	    protected Signature getSignature() {
             return new Signature(params("input"));
-				 }
+	    }
 
         @Override
-	    public Object function(Stack stack) {
-		AbstractDataNode hinput = this.input.getValue(stack);
-		String input     = SwiftFunction.unwrap(this, hinput);
-
-		DSHandle handle  = new RootArrayDataNode(Types.STRING.arrayType());
-		StringBuffer out = new StringBuffer();
-		Process proc;
-		int i = 0;
-
-		try {
-		    proc = Runtime.getRuntime().exec(new String[] {"bash", "-c", input});
-		    proc.waitFor();
-            int exitcode = proc.exitValue();
-            // If the shell returned a non-zero exit code, attempt to print stderr
-            if ( exitcode != 0 ) {
-                BufferedReader reader = new BufferedReader( new InputStreamReader(proc.getErrorStream()) );
-                String line = "";
-                StringBuffer stderr = new StringBuffer();
-                while ( (line = reader.readLine()) != null ) {
-                    stderr.append(line);
+   	    public Object function(Stack stack) {
+    		AbstractDataNode hinput = this.input.getValue(stack);
+    		String input     = SwiftFunction.unwrap(this, hinput);
+    		
+    		DSHandle handle = NodeFactory.newOpenRoot(Field.GENERIC_STRING_ARRAY, null);
+    
+    		StringBuffer out = new StringBuffer();
+    		Process proc;
+    		int i = 0;
+    
+    		try {
+    		    proc = Runtime.getRuntime().exec(new String[] {"bash", "-c", input});
+    		    proc.waitFor();
+                int exitcode = proc.exitValue();
+                // If the shell returned a non-zero exit code, attempt to print stderr
+                if ( exitcode != 0 ) {
+                    BufferedReader reader = new BufferedReader( new InputStreamReader(proc.getErrorStream()) );
+                    String line = "";
+                    StringBuffer stderr = new StringBuffer();
+                    while ( (line = reader.readLine()) != null ) {
+                        stderr.append(line);
+                    }
+                    logger.warn("swift:system returned exitcode :" + exitcode);
+                    logger.warn("swift:system stderr:\n " + stderr );
                 }
-                logger.warn("swift:system returned exitcode :" + exitcode);
-                logger.warn("swift:system stderr:\n " + stderr );
-            }
-		    BufferedReader reader = new BufferedReader( new InputStreamReader(proc.getInputStream()) );
-		    String line = "";
-            while ( (line = reader.readLine()) != null ) {
-                DSHandle el;
-                el = handle.getField(i++);
-                el.setValue(line);
-            }
-		} catch (Exception e) {
-		    e.printStackTrace();
-		}
-		handle.closeDeep();
-
-		if (PROVENANCE_ENABLED) {
-		    int provid = SwiftFunction.nextProvenanceID();
-		    SwiftFunction.logProvenanceResult(provid, handle, "system");
-		    SwiftFunction.logProvenanceParameter(provid, hinput, "input");
-		}
-		return handle;
+    		    BufferedReader reader = new BufferedReader( new InputStreamReader(proc.getInputStream()) );
+    		    String line = "";
+                while ( (line = reader.readLine()) != null ) {
+                    DSHandle el;
+                    el = handle.getField(i++);
+                    el.setValue(line);
+                }
+    		} catch (Exception e) {
+    		    e.printStackTrace();
+    		}
+    		handle.closeDeep();
+    
+    		if (PROVENANCE_ENABLED) {
+    		    int provid = SwiftFunction.nextProvenanceID();
+    		    SwiftFunction.logProvenanceResult(provid, handle, "system");
+    		    SwiftFunction.logProvenanceParameter(provid, hinput, "input");
+    		}
+    		return handle;
 	    }
 	}
 
-		public static class StrSplit extends AbstractSingleValuedFunction {
+    public static class StrSplit extends AbstractSingleValuedSwiftFunction {
+
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("input", "pattern"));
+        }
+        
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING_ARRAY;
         }
         
         @Override
@@ -353,17 +392,7 @@ public class Misc {
 
             String[] split = input.split(pattern);
 
-            DSHandle handle = new RootArrayDataNode(Types.STRING.arrayType());
-            for (int i = 0; i < split.length; i++) {
-                DSHandle el;
-                try {
-                    el = handle.getField(i);
-                    el.setValue(split[i]);
-                }
-                catch (NoSuchFieldException e) {
-                    throw new ExecutionException(this, e);
-                }
-            }
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING_ARRAY, Arrays.asList(split));
             handle.closeDeep();
                        
             if (PROVENANCE_ENABLED) {
@@ -382,13 +411,18 @@ public class Misc {
 	 * @return DSHandle representing the resulting string
 	 * @throws ExecutionException
 	 */
-	public static class StrJoin extends AbstractSingleValuedFunction {
+	public static class StrJoin extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> array;
         private ArgRef<AbstractDataNode> delim;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("array", "delim"));
+        }
+        
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING;
         }
         
         @Override
@@ -411,7 +445,7 @@ public class Misc {
             	result.append(h.getValue());
             }
 
-            DSHandle handle = new RootDataNode(Types.STRING, result.toString());
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, result.toString());
                        
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
@@ -423,7 +457,7 @@ public class Misc {
         }
     }
     
-	public static class Regexp extends AbstractSingleValuedFunction {
+	public static class Regexp extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> input;
         private ArgRef<AbstractDataNode> pattern;
         private ArgRef<AbstractDataNode> transform;
@@ -431,6 +465,11 @@ public class Misc {
         @Override
         protected Signature getSignature() {
             return new Signature(params("input", "pattern", "transform"));
+        }
+        
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING;
         }
         
         @Override
@@ -461,7 +500,7 @@ public class Misc {
             if (logger.isDebugEnabled()) {
                 logger.debug("regexp replacement produced '" + group + "'");
             }
-            DSHandle handle = new RootDataNode(Types.STRING, group);
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, group);
 
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
@@ -474,7 +513,7 @@ public class Misc {
         }
     }
 	
-	public static class ToInt extends AbstractSingleValuedFunction {
+	public static class ToInt extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> str;
 
         @Override
@@ -483,11 +522,16 @@ public class Misc {
         }
         
         @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_INT;
+        }
+        
+        @Override
         public Object function(Stack stack) {
             AbstractDataNode hstr = str.getValue(stack);
             String str = SwiftFunction.unwrap(this, hstr);
             
-            DSHandle handle = new RootDataNode(Types.INT, Integer.valueOf(str));
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_INT, Integer.valueOf(str));
 
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
@@ -499,12 +543,17 @@ public class Misc {
         }
     }
 	
-	public static class ToFloat extends AbstractSingleValuedFunction {
+	public static class ToFloat extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> str;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("str"));
+        }
+        
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_FLOAT;
         }
         
         @Override
@@ -515,10 +564,10 @@ public class Misc {
             DSHandle handle;
             
             if (obj instanceof String) {
-                handle = new RootDataNode(Types.FLOAT, Double.valueOf((String) obj));
+                handle = NodeFactory.newRoot(Field.GENERIC_FLOAT, Double.valueOf((String) obj));
             }
             else if (obj instanceof Number) {
-                handle = new RootDataNode(Types.FLOAT, ((Number) obj).doubleValue());
+                handle = NodeFactory.newRoot(Field.GENERIC_FLOAT, ((Number) obj).doubleValue());
             }
             else {
                 throw new ExecutionException("Expected a string or int. Got " + obj);
@@ -538,12 +587,17 @@ public class Misc {
 	/*
 	 * Takes in a float and formats to desired precision and returns a string
 	 */
-	public static class Format extends AbstractSingleValuedFunction {
+	public static class Format extends AbstractSingleValuedSwiftFunction {
 	    private ChannelRef<AbstractDataNode> c_vargs;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("..."));
+        }
+        
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING;
         }
         
         @Override
@@ -558,7 +612,7 @@ public class Misc {
             String format = (String) args.get(0);
             Object[] a = args.subChannel(1).toArray();
             
-            DSHandle handle = new RootDataNode(Types.STRING, String.format(format, a));
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, String.format(format, a));
 
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
@@ -571,7 +625,7 @@ public class Misc {
 	/*
 	 * Takes in an int and pads zeros to the left and returns a string
 	 */
-	public static class Pad extends AbstractSingleValuedFunction {
+	public static class Pad extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> size;
         private ArgRef<AbstractDataNode> value;
 
@@ -581,13 +635,18 @@ public class Misc {
         }
         
         @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING;
+        }
+        
+        @Override
         public Object function(Stack stack) {
             AbstractDataNode hsize = this.size.getValue(stack);
             Integer size = SwiftFunction.unwrap(this, hsize);
             AbstractDataNode hvalue = this.value.getValue(stack);
             Integer value = SwiftFunction.unwrap(this, hvalue);
             
-            DSHandle handle = new RootDataNode(Types.STRING, 
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, 
                     String.format("%0" + size + "d", value));
 
             if (PROVENANCE_ENABLED) {
@@ -600,12 +659,17 @@ public class Misc {
         }
     }
 	
-	public static class ToString extends AbstractSingleValuedFunction {
+	public static class ToString extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> value;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("value"));
+        }
+        
+        @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING;
         }
         
         @Override
@@ -615,7 +679,7 @@ public class Misc {
             
             StringBuilder sb = new StringBuilder();
             prettyPrint(sb, hvalue);
-            DSHandle handle = new RootDataNode(Types.STRING, sb.toString());
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, StringCache.get(sb.toString()));
 
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
@@ -634,7 +698,7 @@ public class Misc {
      * Good for debugging because array needs to be closed
      *   before the length is determined
      */
-	public static class Dirname extends AbstractSingleValuedFunction {
+	public static class Dirname extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> file;
 
         @Override
@@ -643,12 +707,17 @@ public class Misc {
         }
         
         @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_STRING;
+        }
+        
+        @Override
         public Object function(Stack stack) {
             AbstractDataNode dn = file.getValue(stack);
             String name = SwiftFunction.filename(dn)[0];
 
             String result = new AbsFile(name).getDirectory();
-            DSHandle handle = new RootDataNode(Types.STRING, result);
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, result);
     
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
@@ -660,7 +729,7 @@ public class Misc {
         }
     }
 
-	public static class Length extends AbstractSingleValuedFunction {
+	public static class Length extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> array;
 
         @Override
@@ -669,11 +738,16 @@ public class Misc {
         }
         
         @Override
+        protected Field getFieldType() {
+            return Field.GENERIC_INT;
+        }
+        
+        @Override
         public Object function(Stack stack) {
             AbstractDataNode harray = this.array.getValue(stack);
             harray.waitFor(this);
             
-            DSHandle handle = new RootDataNode(Types.INT, Integer.valueOf(harray.getArrayValue().size()));
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_INT, Integer.valueOf(harray.getArrayValue().size()));
                        
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();

@@ -43,10 +43,11 @@ import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.PairSet;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DataDependentException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
 
 public class SetFieldValue extends SwiftFunction {
@@ -111,8 +112,6 @@ public class SetFieldValue extends SwiftFunction {
         tracer = Tracer.getTracer(this);
         return fn;
     }
-    
-    
 
     @Override
     protected void initializeArgs(Stack stack) {
@@ -186,9 +185,15 @@ public class SetFieldValue extends SwiftFunction {
 	    return sb.toString();
 	}
 	
-	protected void deepCopy(DSHandle dest, DSHandle source, Stack stack) {
+    protected void deepCopy(DSHandle dest, DSHandle source, Stack stack) {
 	    // don't create a state if only a non-composite is copied
-	    ((AbstractDataNode) source).waitFor(this);
+        try {
+            ((AbstractDataNode) source).waitFor(this);
+        }
+        catch (DataDependentException e) {
+            dest.setValue(new DataDependentException(dest, e));
+            return;
+        }
         if (source.getType().isPrimitive()) {
             dest.setValue(source.getValue());
         }
@@ -208,7 +213,13 @@ public class SetFieldValue extends SwiftFunction {
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy */
 	public void deepCopy(DSHandle dest, DSHandle source, State state, int level) {
-	    ((AbstractDataNode) source).waitFor(this);
+	    try {
+            ((AbstractDataNode) source).waitFor(this);
+        }
+        catch (DataDependentException e) {
+            dest.setValue(new DataDependentException(dest, e));
+            return;
+        }
         if (source.getType().isPrimitive()) {
             dest.setValue(source.getValue());
         }

@@ -28,10 +28,11 @@ import k.rt.Stack;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.RootDataNode;
-import org.griphyn.vdl.type.Types;
+import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Field;
 
 
 public class ExtractInt extends SwiftFunction {
@@ -53,11 +54,14 @@ public class ExtractInt extends SwiftFunction {
 			BufferedReader breader = new BufferedReader(freader);
 			String str = breader.readLine();
 			freader.close();
-			DSHandle result = new RootDataNode(Types.INT, Integer.parseInt(str));
+			DSHandle result = NodeFactory.newRoot(Field.GENERIC_INT, Integer.parseInt(str));
 			int provid = SwiftFunction.nextProvenanceID();
 			SwiftFunction.logProvenanceResult(provid, result, "extractint");
 			SwiftFunction.logProvenanceParameter(provid, handle, "filename");
 			return result;
+		}
+		catch (DependentException e) {
+		    return NodeFactory.newRoot(Field.GENERIC_INT, e);
 		}
 		catch (IOException ioe) {
 			throw new ExecutionException("Reading integer content of file", ioe);
