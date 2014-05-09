@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
-import org.globus.cog.karajan.compiled.nodes.functions.NullaryOp;
+import org.globus.cog.karajan.compiled.nodes.functions.ConstantOp;
 import org.globus.swift.data.policy.Policy;
 import org.griphyn.vdl.mapping.AbsFile;
 
@@ -79,7 +79,7 @@ public class Query {
        Obtain the CDM policy file given on the command-line,
        conventionally "fs.data".  If not set, returns an empty String.
     */
-    public static class File extends NullaryOp<String> {
+    public static class File extends ConstantOp<String> {
         @Override
         protected String value() {
             String file = "";
