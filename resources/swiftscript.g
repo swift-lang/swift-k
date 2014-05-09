@@ -273,6 +273,12 @@ declarator returns [StringTemplate code=null]
     :   id:ID {code=text(id.getText());}
     ;
 
+appDeclarator returns [StringTemplate code=null]
+    :   id:ID {code=text(id.getText());}
+    |	s:STRING_LITERAL {code=text(s.getText());}
+    ;
+
+
 varInitializer returns [StringTemplate code=null]
     :   ASSIGN code=expression
     ;
@@ -432,8 +438,10 @@ appproceduredecl returns [StringTemplate code=template("function")]
         RPAREN
         LCURLY
         ( appProfile[app] )*
-        exec=declarator
-        {app.setAttribute("exec",exec);}
+        (exec=appDeclarator)
+        {
+       		app.setAttribute("exec", exec);
+        }
         ( appArg[app] )* SEMI
         {code.setAttribute("config",app);}
         RCURLY
