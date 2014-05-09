@@ -9,29 +9,22 @@
  */
 package k.rt;
 
-import org.globus.cog.karajan.analyzer.CompilerSettings;
 
 
 public class Frame {
 	private static final Object[] EMPTY_FRAME = new Object[0];
 	
-	private final Object owner;
-	private final Object[] a;
-	private String[] names;
+	protected final Object[] a;
 	protected final Frame prev;
 	
-	public Frame(Object owner, int count, Frame prev) {
+	public Frame(int count, Frame prev) {
 		if (count > 0) {
 			a = new Object[count];
-			if (CompilerSettings.DEBUG) {
-				names = new String[count];
-			}
 		}
 		else {
 			a = EMPTY_FRAME;
 		}
 		this.prev = prev;
-		this.owner = owner;
 	}
 
 	public void set(int i, Object value) {
@@ -52,18 +45,10 @@ public class Frame {
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(owner);
-		sb.append(":");
 		for (int i = 0; i < a.length; i++) {
 			sb.append("\n\t");
 			sb.append(i);
 			sb.append(" - ");
-			if (CompilerSettings.DEBUG) {
-				if (names[i] != null) {
-					sb.append(names[i]);
-					sb.append(" = ");
-				}
-			}
 			String s = str(a[i]);
 			if (s.length() > 32) {
 				sb.append(s.subSequence(0, 24));
@@ -77,7 +62,7 @@ public class Frame {
 		return sb.toString();
 	}
 
-	private String str(Object object) {
+	protected String str(Object object) {
 		if (object instanceof String) {
 			return "\"" + object + '"';
 		}
@@ -90,7 +75,6 @@ public class Frame {
 	}
 
 	public void setName(int index, String name) {
-		names[index] = name;
 	}
 	
 	public Frame prev() {

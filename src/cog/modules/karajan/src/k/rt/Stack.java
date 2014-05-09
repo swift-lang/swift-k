@@ -9,6 +9,8 @@
  */
 package k.rt;
 
+import org.globus.cog.karajan.analyzer.CompilerSettings;
+
 
 public class Stack {
 	private Frame top;
@@ -25,7 +27,13 @@ public class Stack {
 	}
 
 	public void enter(Object owner, int count) {
-		top = new Frame(owner, count, top);
+		if (CompilerSettings.DEBUG) {
+			top = new DebugFrame(owner, count, top);
+		}
+		else {
+			top = new Frame(count, top);
+		}
+		this.count++;
 		//System.out.println(getCallerClass() + " - enter " + getDepth());
 	}
 
@@ -46,6 +54,7 @@ public class Stack {
 
 	public void leave() {
 		top = top.prev;
+		count--;
 		//System.out.println(getCallerClass() + " - leave " + getDepth());
 	}
 

@@ -12,13 +12,10 @@ package k.rt;
 import java.util.Collection;
 import java.util.List;
 
-import org.globus.cog.karajan.analyzer.CompilerSettings;
-
 public class FixedArgChannel<T> extends Sink<T> {
 	private final Frame f;
 	private int index;
 	private final int bounds;
-	private List<String> names;
 	
 	public FixedArgChannel(Frame f, int startIndex, int endIndex) {
 		this.f = f;
@@ -27,7 +24,6 @@ public class FixedArgChannel<T> extends Sink<T> {
 	}
 	
 	public void setNames(List<String> names) {
-		this.names = names;
 	}
 	
 	public boolean isEmpty() {
@@ -36,6 +32,18 @@ public class FixedArgChannel<T> extends Sink<T> {
 
 	private int getStartIndex() {
 		return bounds >> 16;
+	}
+	
+	protected int getIndex() {
+		return index;
+	}
+	
+	protected int getBounds() {
+		return bounds;
+	}
+	
+	protected Frame getFrame() {
+		return f;
 	}
 
 	@Override
@@ -48,9 +56,6 @@ public class FixedArgChannel<T> extends Sink<T> {
 		if (index > (bounds & 0x0000ffff)) {
 			throw new IllegalExtraArgumentException(value);
 		}
-		if (CompilerSettings.DEBUG) {
-			f.setName(index, names.get(index - (bounds >> 16)));
-		}
 		f.set(index++, value);
 		return true;
 	}
@@ -61,9 +66,6 @@ public class FixedArgChannel<T> extends Sink<T> {
 			throw new IndexOutOfBoundsException();
 		}
 		for (Object o : values) {
-			if (CompilerSettings.DEBUG) {
-				f.setName(index, names.get(index - (bounds >> 16)));
-			}
 			f.set(index++, o);
 		}
 		return true;
@@ -75,9 +77,6 @@ public class FixedArgChannel<T> extends Sink<T> {
 			throw new IndexOutOfBoundsException();
 		}
 		for (Object o : c) {
-			if (CompilerSettings.DEBUG) {
-				f.setName(index, names.get(index - (bounds >> 16)));
-			}
             f.set(index++, o);
         }
 	}
