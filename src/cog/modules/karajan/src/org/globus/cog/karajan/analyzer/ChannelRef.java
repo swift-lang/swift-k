@@ -15,6 +15,7 @@ import java.util.List;
 import k.rt.Channel;
 import k.rt.EmptyChannel;
 import k.rt.FixedArgChannel;
+import k.rt.FixedArgChannelDebug;
 import k.rt.FixedFutureArgChannel;
 import k.rt.FutureMemoryChannel;
 import k.rt.MemoryChannel;
@@ -489,11 +490,15 @@ public abstract class ChannelRef<T> {
 
 		@Override
 		public void create(Stack stack) {
-			FixedArgChannel<T> c = new FixedArgChannel<T>(stack.top(), first, last);
+		    FixedArgChannel<T> c;
+		    if (CompilerSettings.DEBUG) {
+		        c = new FixedArgChannelDebug<T>(stack.top(), first, last);
+		        c.setNames(names);
+		    }
+		    else {
+		        c = new FixedArgChannel<T>(stack.top(), first, last);
+		    }
 			stack.top().set(index, c);
-			if (CompilerSettings.DEBUG) {
-				c.setNames(names);
-			}
 		}
 		
 		@Override

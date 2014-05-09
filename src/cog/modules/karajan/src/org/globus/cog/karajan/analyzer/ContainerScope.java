@@ -33,6 +33,24 @@ public class ContainerScope extends Scope {
 		return this;
 	}
 
+	@Override
+	public Checkpoint checkpoint() {
+	    if (CompilerSettings.DEBUG_STACK_ALLOCATION) {
+	        List<Integer> l = Collections.emptyList();
+            dump("checkpoint", l);
+        }
+		return new Checkpoint(map);
+	}
+
+	@Override
+	public void restore(Checkpoint c) {
+		this.map = c.map;
+		if (CompilerSettings.DEBUG_STACK_ALLOCATION) {
+            List<Integer> l = Collections.emptyList();
+            dump("restore", l);
+        }
+	}
+
 	public int allocate(Var ref) {
 		int index = findUnused();
 		if (index == -1) {
@@ -159,32 +177,36 @@ public class ContainerScope extends Scope {
 	}
 
 	public int allocateContiguous(int size) {
-		int pos = findHole(size);
-		if (pos != -1) {
-			if (CompilerSettings.DEBUG_STACK_ALLOCATION) {
-				dump("allocateContiguous", range(pos, pos + size - 1));
-			}
-			return pos;
-		}
-		else {
-			int tailFree = map.size();
-			for (int i = map.size() - 1; i >= 0; i--) {
-				if (map.get(i)) {
-					break;
-				}
-				else {
-					tailFree = i;
-				}
-			}
-			for (int i = 0; i < size; i++) {
-				set(i + tailFree);
-			}
-			if (CompilerSettings.DEBUG_STACK_ALLOCATION) {
-				dump("allocateContiguous", range(tailFree, tailFree + size - 1));
-			}
-			return tailFree;
-		}
+		return allocateContiguous(size, null);
 	}
+	
+	public int allocateContiguous(int size, Object who) {
+        int pos = findHole(size);
+        if (pos != -1) {
+            if (CompilerSettings.DEBUG_STACK_ALLOCATION) {
+                dump("allocateContiguous(" + size + ") - " + who, range(pos, pos + size - 1));
+            }
+            return pos;
+        }
+        else {
+            int tailFree = map.size();
+            for (int i = map.size() - 1; i >= 0; i--) {
+                if (map.get(i)) {
+                    break;
+                }
+                else {
+                    tailFree = i;
+                }
+            }
+            for (int i = 0; i < size; i++) {
+                set(i + tailFree);
+            }
+            if (CompilerSettings.DEBUG_STACK_ALLOCATION) {
+                dump("allocateContiguous(" + size + ") - " + who, range(tailFree, tailFree + size - 1));
+            }
+            return tailFree;
+        }
+    }
 	
 	private int findHole(int size) {
 		int index = 0;

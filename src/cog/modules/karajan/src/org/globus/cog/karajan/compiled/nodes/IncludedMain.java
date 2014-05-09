@@ -23,7 +23,6 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.NamedValue;
 import org.globus.cog.karajan.analyzer.Param;
-import org.globus.cog.karajan.analyzer.ParamWrapperVar;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.Var;
@@ -63,20 +62,19 @@ public class IncludedMain extends FramedInternalFunction {
 		scope.addVar(Namespace.VAR_NAME, "");
 		super.addLocals(scope);
 	}
+	
+	
 
 	@Override
-	protected ParamWrapperVar.IndexRange addParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
+	protected void addParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
 			List<Param> optional, List<Param> positional) throws CompilationException {
-	    ParamWrapperVar.IndexRange ir = super.addParams(w, sig, scope, channels, optional, positional);
-	    
+		super.addParams(w, sig, scope, channels, optional, positional);
 		Scope prev = scope.getRoot().getImportScope();
-		
-		cr_export = bind(prev, scope, "export");
-		cr_stdout = bind(prev, scope, "stdout");
-		cr_stderr = bind(prev, scope, "stderr");
-		cr_vargs = bind(prev, scope, "...");
-		
-		return ir;
+        
+        cr_export = bind(prev, scope, "export");
+        cr_stdout = bind(prev, scope, "stdout");
+        cr_stderr = bind(prev, scope, "stderr");
+        cr_vargs = bind(prev, scope, "...");
 	}
 
 	private <T> ChannelRef<T> bind(Scope scope, Scope prev, String name) {

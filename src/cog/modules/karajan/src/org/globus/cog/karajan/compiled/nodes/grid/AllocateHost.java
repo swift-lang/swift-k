@@ -8,10 +8,7 @@ package org.globus.cog.karajan.compiled.nodes.grid;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 
 import k.rt.ConditionalYield;
 import k.rt.Context;
@@ -27,6 +24,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.ContainerScope;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
@@ -46,6 +44,7 @@ public class AllocateHost extends InternalFunction {
 	
 	private VarRef<Context> context;
 	private VarRef<Contact> var;
+	private int frameSize;
 
 	@Override
 	protected Signature getSignature() {
@@ -72,10 +71,14 @@ public class AllocateHost extends InternalFunction {
 				    allocateHost(thr);
 				    i++;
 				case 2:
+					stack.enter(this, frameSize);
+					i++;
+				case 3:
 					if (CompilerSettings.PERFORMANCE_COUNTERS) {
 						startCount++;
 					}
 					body.run(thr);
+					stack.leave();
 					_finally(thr.getStack());
 			}
 		}
@@ -94,8 +97,10 @@ public class AllocateHost extends InternalFunction {
 	@Override
 	protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
 			Scope scope) throws CompilationException {
-	    var = scope.getVarRef(scope.addVar(name));
-		super.compileBlocks(w, sig, blocks, scope);
+		var = scope.getVarRef(scope.addVar(name));
+		ContainerScope cs = new ContainerScope(w, scope);
+		super.compileBlocks(w, sig, blocks, cs);
+		frameSize = cs.size();
 	}
 
 	protected void allocateHost(LWThread thr) {

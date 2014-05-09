@@ -38,6 +38,7 @@ import org.globus.cog.karajan.parser.NativeParser;
 import org.globus.cog.karajan.parser.ParsingException;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.util.KarajanProperties;
+import org.globus.cog.karajan.util.Pair;
 
 public class Import extends InternalFunction {
 	public static final Logger logger = Logger.getLogger(Import.class);
@@ -137,13 +138,26 @@ public class Import extends InternalFunction {
 			}
 		}
 	}
+	
+	@Override
+	protected void scanNamed(WrapperNode w, Scope scope, List<Param> params, List<Pair<Param, String>> dynamicOptimized)
+			throws CompilationException {
+		// override to allow imports of non-identifier but static names
+	}
+
+	@Override
+	protected void optimizePositional(WrapperNode w, Scope scope, List<Param> params, List<Pair<Param, String>> dynamicOptimized)
+			throws CompilationException {
+		// see above
+	}
+
+	@Override
+	protected void scanNotSet(WrapperNode w, Scope scope, List<Param> optional)
+			throws CompilationException {
+	}
 
 	@Override
 	public Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
-		if ("import @ swift.k, line: 137".equals(this.toString())) {
-			System.out.print("");
-		}
-		
 		if (name == null && file.getValue() == null) {
 			throw new CompilationException(w, "Could not statically determine file name");
 		}
@@ -158,7 +172,7 @@ public class Import extends InternalFunction {
 		context = scope.getVarRef("#context");
 		
 		Resolved r;
-		try{
+		try {
 			r = resolve(name, props.getValue(), fileDir.getValue());
 		}
 		catch (IOException ee) {

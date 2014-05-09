@@ -32,6 +32,7 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
+import org.globus.cog.karajan.util.Pair;
 
 public class InvocationWrapper extends InternalFunction {
 	
@@ -84,13 +85,33 @@ public class InvocationWrapper extends InternalFunction {
     }
 
 	@Override
-	protected ParamWrapperVar.IndexRange addParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
+	protected void addParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
+			List<Param> optional, List<Param> positional) throws CompilationException {
+	}
+
+	@Override
+	protected ParamWrapperVar.IndexRange allocateParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
 			List<Param> optional, List<Param> positional) throws CompilationException {
 		prepareChannelParams(scope, channels);
 		
-		firstIndex = scope.addParams(channels, optional, positional);
+		firstIndex = scope.addParams(channels, optional, positional, this);
 		argCount = channels.size() + optional.size() + positional.size();
 		return null;
+	}
+	
+	@Override
+	protected void scanNotSet(WrapperNode w, Scope scope, List<Param> optional)
+			throws CompilationException {
+	}
+
+	@Override
+	protected void scanNamed(WrapperNode w, Scope scope, List<Param> params,
+			List<Pair<Param, String>> dynamicOptimized) throws CompilationException {
+	}
+
+	@Override
+	protected void optimizePositional(WrapperNode w, Scope scope, List<Param> params,
+			List<Pair<Param, String>> dynamicOptimized) throws CompilationException {
 	}
 
 	@SuppressWarnings("unchecked")

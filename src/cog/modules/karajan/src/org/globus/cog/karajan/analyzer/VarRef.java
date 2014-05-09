@@ -53,7 +53,7 @@ public abstract class VarRef<T> extends Ref<T> {
 	}
 	
 	public static class DynamicLocal<T> extends VarRef<T> {
-        protected final int index;
+        public final int index;
         public final String name;
         
         public DynamicLocal(String name, int index) {

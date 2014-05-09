@@ -19,7 +19,6 @@ import k.rt.Stack;
 import k.thr.LWThread;
 import k.thr.Yield;
 
-import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.CompilerSettings;
@@ -123,6 +122,7 @@ public class Function extends UserDefinedFunction {
 
 	protected void bindArgs(Frame src, Frame dst, int firstIndex, int argCount) {
 		System.arraycopy(src.getAll(), firstIndex, dst.getAll(), 0, argCount);
+		//Arrays.fill(src.getAll(), firstIndex, firstIndex + argCount, null);
 	}
 
 	public void bindChannels(Stack parent, Stack def, List<ChannelRef<Object>> wrapperChannels) {

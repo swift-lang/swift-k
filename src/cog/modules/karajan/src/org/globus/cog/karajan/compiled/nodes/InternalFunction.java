@@ -36,7 +36,9 @@ import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.StaticChannel;
 import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.parser.WrapperNode;
+import org.globus.cog.karajan.util.Pair;
 
 public abstract class InternalFunction extends Sequential {
 	protected static final int DYNAMIC = -1;
@@ -149,6 +151,8 @@ public abstract class InternalFunction extends Sequential {
 	        			catch (IllegalArgumentException e) {
 	        				throw new ExecutionException(this, e.getMessage());
 	        			}
+	        			i = Integer.MAX_VALUE;
+	        	case Integer.MAX_VALUE:
 			            try {
 			            	runBody(thr);
 			            }
@@ -186,7 +190,7 @@ public abstract class InternalFunction extends Sequential {
 	
 	protected void initializeOptional(Stack stack) {
 	    if (firstOptionalIndex != -1) {
-            Arrays.fill(stack.top().getAll(), firstOptionalIndex, lastOptionalIndex, null);
+            Arrays.fill(stack.top().getAll(), firstOptionalIndex, lastOptionalIndex + 1, null);
         }
 	}
 
@@ -197,39 +201,55 @@ public abstract class InternalFunction extends Sequential {
 		public final List<Param> optional;
 		public final List<Param> positional;
 		public final List<Param> channelParams;
+		public final List<Pair<Param, String>> dynamicOptimized;
 		public final ParamWrapperVar.IndexRange ir;
 		
 		public ArgInfo(LinkedList<WrapperNode> blocks, Var.Channel vargs, StaticChannel vargValues, 
-				List<Param> optional, List<Param> positional, List<Param> channelParams, ParamWrapperVar.IndexRange ir) {
+				List<Param> optional, List<Param> positional, List<Param> channelParams, 
+				List<Pair<Param, String>> dynamicOptimized, 
+				ParamWrapperVar.IndexRange ir) {
 			this.blocks = blocks;
 			this.vargs = vargs;
 			this.vargValues = vargValues;
 			this.optional = optional;
 			this.positional = positional;
 			this.channelParams = channelParams;
+			this.dynamicOptimized = dynamicOptimized;
 			this.ir = ir;
 		}
 	}
 	
 	protected ArgInfo compileArgs(WrapperNode w, Signature sig, Scope scope) throws CompilationException {
+		if (w.toString().contains("stageIn @ swift-int-staging.k, line: 121")) {
+			System.out.print("");
+		}
 		resolveChannelReturns(w, sig, scope);
 		resolveParamReturns(w, sig, scope);
 		
 		List<Param> channels = getChannelParams(sig);
 		List<Param> optional = getOptionalParams(sig);
 		List<Param> positional = getPositionalParams(sig);
+		
 		// optionals first
 		if (optional != null || positional != null) {
 			scope.setParams(true);
 		}
 		
-		ParamWrapperVar.IndexRange ir = addParams(w, sig, scope, channels, optional, positional);
+		List<Pair<Param, String>> dynamicOptimized = new LinkedList<Pair<Param, String>>();
+		
+		addParams(w, sig, scope, channels, optional, positional);
+		scanNamed(w, scope, optional, dynamicOptimized);
+		optimizePositional(w, scope, positional, dynamicOptimized);
+		scanNamed(w, scope, positional, dynamicOptimized);
+		scanNotSet(w, scope, optional);
+		
+		ParamWrapperVar.IndexRange ir = allocateParams(w, sig, scope, channels, optional, positional);
 					
 		LinkedList<WrapperNode> blocks = checkBlockArgs(w, sig);
 		
 		Var.Channel vargs = null;
 		ArgMappingChannel amc = null;
-		if (!sig.getParams().isEmpty() || hasVargs) {
+		if (!positional.isEmpty() || !optional.isEmpty() || hasVargs) {
 			if (hasVargs) {
 				vargs = scope.lookupChannel("...");
 				vargs.setValue(amc = new ArgMappingChannel(w, positional, true));
@@ -239,28 +259,148 @@ public abstract class InternalFunction extends Sequential {
 			}
 		}
 
-		return new ArgInfo(blocks, vargs, amc, optional, positional, channels, ir);
+		return new ArgInfo(blocks, vargs, amc, optional, positional, channels, dynamicOptimized, ir);
 	}
 
-	protected ParamWrapperVar.IndexRange addParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
+	protected void scanNotSet(WrapperNode w, Scope scope, List<Param> optional) throws CompilationException {
+		if (w.nodeCount() == 0) {
+			for (Param p : optional) {
+				setArg(w, p, new ArgRef.Static<Object>(p.value));
+			}
+			optional.clear();
+		}
+	}
+
+	protected void scanNamed(WrapperNode w, Scope scope, List<Param> params, 
+			List<Pair<Param, String>> dynamicOptimized) throws CompilationException {
+		Iterator<WrapperNode> i = w.nodes().iterator();
+		while (i.hasNext()) {
+			WrapperNode c = i.next();
+			if (c.getNodeType().equals("k:named")) {
+				if (optimizeNamed(w, c, scope, params, dynamicOptimized)) {
+					i.remove();
+				}
+			}
+		}
+	}
+
+	private boolean optimizeNamed(WrapperNode w, WrapperNode c, Scope scope, List<Param> params, 
+			List<Pair<Param, String>> dynamicOptimized) throws CompilationException {
+		if (c.nodeCount() == 2) {
+			WrapperNode nameNode = c.getNode(0);
+			if (nameNode.getNodeType().equals("k:var")) {
+				String name = nameNode.getText();
+				Param p = getParam(params, name);
+				if (p != null) {
+					WrapperNode valueNode = c.getNode(1);
+					if (setValue(w, scope, p, valueNode, dynamicOptimized)) {
+						params.remove(p);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	protected void optimizePositional(WrapperNode w, Scope scope, List<Param> params, 
+			List<Pair<Param, String>> dynamicOptimized) throws CompilationException {
+		int index = 0;
+		Iterator<WrapperNode> i = w.nodes().iterator();
+		while (i.hasNext() && index < params.size()) {
+			WrapperNode c = i.next();
+			Param p = params.get(index);
+			if (p.type == Param.Type.IDENTIFIER) {
+				return;
+			}
+			if (setValue(w, scope, p, c, dynamicOptimized)) {
+				params.remove(p);
+				i.remove();
+				index--;
+			}
+			index++;
+		}
+	}
+
+	private boolean setValue(WrapperNode w, Scope scope, Param p, WrapperNode c, 
+			List<Pair<Param, String>> dynamicOptimized) throws CompilationException {
+		if (c.getNodeType().equals("k:var")) {
+			VarRef<Object> ref = scope.getVarRef(c.getText());
+			if (ref.isStatic()) {
+				p.setValue(ref.getValue());
+				setArg(w, p, new ArgRef.Static<Object>(ref.getValue()));
+				return true;
+			}
+			else if (ref instanceof VarRef.DynamicLocal) {
+				VarRef.DynamicLocal<Object> ref2 = (VarRef.DynamicLocal<Object>) ref;
+				setArg(w, p, new ArgRef.Dynamic<Object>(ref2.index));
+				dynamicOptimized.add(new Pair<Param, String>(p, c.getText()));
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else if (c.getNodeType().equals("k:num")) {
+			// there is probably a better way to handle these cases
+			// perhaps by compiling children and then allocating entries on the frame
+			Object value;
+			if (c.getText().indexOf(".") >= 0) {
+				value = Double.parseDouble(c.getText());
+			}	
+			else {
+				value = Integer.parseInt(c.getText());
+			}
+			p.setValue(value);
+			setArg(w, p, new ArgRef.Static<Object>(value));
+			return true;
+		}
+		else if (c.getNodeType().equals("k:str")) {
+			p.setValue(c.getText());
+			setArg(w, p, new ArgRef.Static<Object>(c.getText()));
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	private Param getParam(List<Param> params, String name) {
+		for (Param p : params) {
+			if (p.name.equals(name)) {
+				return p;
+			}
+		}
+		return null;
+	}
+	
+	protected void addParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
 			List<Param> optional, List<Param> positional) throws CompilationException {
 		processIdentifierArgs(w, sig);
 		prepareChannelParams(scope, channels);
 		scope.addChannelParams(channels);
 		scope.addPositionalParams(positional);
-		return scope.addOptionalParams(optional);
+		scope.addOptionalParams(optional);
+	}
+
+	protected ParamWrapperVar.IndexRange allocateParams(WrapperNode w, Signature sig, Scope scope, List<Param> channels,
+			List<Param> optional, List<Param> positional) throws CompilationException {
+		scope.allocatePositionalParams(positional);
+		return scope.allocateOptionalParams(optional);
 	}
 
 	@Override
-	protected final Node compileChildren(WrapperNode w, Scope scope) throws CompilationException {
-				
+	protected final Node compileChildren(WrapperNode w, Scope scope) throws CompilationException {				
 		Signature sig = getSignature();
 		
 		Scope argScope = new Scope(w, scope);
-	
+		Scope.Checkpoint chk = argScope.checkpoint();
+		
 		ArgInfo ai = compileArgs(w, sig, argScope);
 		
 		Node n = super.compileChildren(w, argScope);
+		
+		checkStaticOptimizedParams(w, scope, ai.dynamicOptimized);
 		
 		if (ai.ir != null) {
 		    // unused optional parameters
@@ -273,7 +413,9 @@ public abstract class InternalFunction extends Sequential {
 		
 		compileBlocks(w, sig, ai.blocks, scope);
 		
-		if (compileBody(w, argScope, scope) == null && n == null && ai.blocks == null) {
+		Node self = compileBody(w, argScope, scope);
+		
+		if (self == null && n == null && ai.blocks == null) {
 			argScope.close();
 			return null;
 		}
@@ -281,10 +423,19 @@ public abstract class InternalFunction extends Sequential {
 		argScope.close();
 		
 		if (this instanceof Pure && ai.blocks == null) {
-			return n;
+			return self;
 		}
 		else {
 			return this;
+		}
+	}
+
+	private void checkStaticOptimizedParams(WrapperNode w, Scope scope, List<Pair<Param, String>> dynamicOptimized) throws CompilationException {
+		for (Pair<Param, String> p : dynamicOptimized) {
+			VarRef<?> ref = scope.getVarRef(p.t);
+			if (ref.isStatic()) {
+				setArg(w, p.s, new ArgRef.Static<Object>(ref.getValue()));
+			}
 		}
 	}
 

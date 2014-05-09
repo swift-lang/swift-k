@@ -9,15 +9,19 @@
  */
 package org.globus.cog.karajan.compiled.nodes;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Scope.JavaDef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.parser.WrapperNode;
+import org.globus.cog.karajan.util.Pair;
 
 public class DefNode extends InternalFunction  {
 	private static final Logger logger = Logger.getLogger(DefNode.class);
@@ -64,5 +68,10 @@ public class DefNode extends InternalFunction  {
 			throw new CompilationException(w, "Could not statically determine class name");
 		}
 		return null;
+	}
+
+	@Override
+	protected void optimizePositional(WrapperNode w, Scope scope, List<Param> params, List<Pair<Param, String>> dynamicOptimized)
+			throws CompilationException {
 	}
 }

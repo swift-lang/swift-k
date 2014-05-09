@@ -47,9 +47,13 @@ public class CompoundNode extends Node {
 
 	protected Node compileChildren(WrapperNode w, Scope scope) throws CompilationException {
 		for (WrapperNode c : w.nodes()) {
+			Scope.Checkpoint sc = scope.checkpoint();
 			Node n = compileChild(c, scope);
 			if (n != null) {
 				addChild(n);
+			}
+			else {
+				scope.restore(sc);
 			}
 		}
 		if (childCount() == 0) {

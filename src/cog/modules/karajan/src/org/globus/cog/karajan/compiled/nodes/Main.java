@@ -73,11 +73,6 @@ public class Main extends FramedInternalFunction {
 		setVarCount(cs.parent.size());
 		return fn;
 	}
-	
-	@Override
-	public void run(LWThread thr) {
-		super.run(thr);
-	}
 
 	@Override
 	protected void initializeArgs(Stack stack) {

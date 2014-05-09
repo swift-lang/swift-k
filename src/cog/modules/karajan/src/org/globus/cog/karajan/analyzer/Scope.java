@@ -9,6 +9,7 @@
  */
 package org.globus.cog.karajan.analyzer;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +27,14 @@ import org.globus.cog.karajan.compiled.nodes.user.InvocationWrapper;
 import org.globus.cog.karajan.parser.WrapperNode;
 
 public class Scope {
+    public static class Checkpoint {
+        protected final ArrayList<Boolean> map;
+
+		public Checkpoint(ArrayList<Boolean> map) {
+		    this.map = new ArrayList<Boolean>(map);
+		}
+    }
+    
 	public abstract static class Def {
 		public abstract Node newInstance();
 	}
@@ -116,6 +125,14 @@ public class Scope {
 	
 	protected ContainerScope getContainerScope() {
 		return parent.getContainerScope();
+	}
+	
+	public Checkpoint checkpoint() {
+	    return getContainerScope().checkpoint();
+	}
+	
+	public void restore(Checkpoint c) {
+	    getContainerScope().restore(c);
 	}
 	
 	public boolean hasParams() {
@@ -494,19 +511,40 @@ public class Scope {
 		if (args == null || args.isEmpty()) {
 			return;
 		}
-		int index = getContainerScope().allocateContiguous(args.size());
+		for (Param p : args) {
+			Var v = new ParamWrapperVar.Positional(p);
+			addVarNoIndex(v);
+		}
+	}
+	
+	public void allocatePositionalParams(List<Param> args) {
+		if (args == null || args.isEmpty()) {
+			return;
+		}
+		int index = getContainerScope().allocateContiguous(args.size(), owner);
 		for (Param p : args) {
 			Var v = new ParamWrapperVar.Positional(p);
 			addVar(v, index++);
 		}
 	}
 	
-	public ParamWrapperVar.IndexRange addOptionalParams(List<Param> args) {
+	public void addOptionalParams(List<Param> args) {
+		if (args == null || args.isEmpty()) {
+			return;
+		}
+		
+		for (Param p : args) {
+			Var v = new ParamWrapperVar.Optional(p, null);
+			addVarNoIndex(v);
+		}
+	}
+	
+	public ParamWrapperVar.IndexRange allocateOptionalParams(List<Param> args) {
 		if (args == null || args.isEmpty()) {
 			return null;
 		}
 		
-		int index = getContainerScope().allocateContiguous(args.size());
+		int index = getContainerScope().allocateContiguous(args.size(), owner);
 		ParamWrapperVar.IndexRange ir = new ParamWrapperVar.IndexRange(index, args.size());
 		for (Param p : args) {
 			Var v = new ParamWrapperVar.Optional(p, ir);
@@ -524,7 +562,11 @@ public class Scope {
 	}
 	
 	public int addParams(List<Param> channels, List<Param> optional, List<Param> positional) {
-		int index = getContainerScope().allocateContiguous(channels.size() + optional.size() + positional.size());
+		return addParams(channels, optional, positional, null);
+	}
+	
+	public int addParams(List<Param> channels, List<Param> optional, List<Param> positional, Object owner) {
+		int index = getContainerScope().allocateContiguous(channels.size() + optional.size() + positional.size(), owner);
 		int first = index;
 		for (Param c : channels) {
 			Var.Channel v = new Var.Channel(c.name);

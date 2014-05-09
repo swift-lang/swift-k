@@ -10,20 +10,28 @@ import k.rt.ExecutionException;
 import k.rt.KRunnable;
 import k.rt.Stack;
 import k.thr.LWThread;
-import k.thr.ThreadSet;
+import k.thr.ThreadSetFixed;
 import k.thr.Yield;
 
 import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.ContainerScope;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.TrackingScope;
 import org.globus.cog.karajan.parser.WrapperNode;
 
 public class UParallel extends CompoundNode {
+    private int[] frameSizes;
 	
 	@Override
     protected Node compileChildren(WrapperNode w, Scope scope) throws CompilationException {
+	    frameSizes = new int[w.nodes().size()];
+	    // TODO Allocate separate frames for each sub-thread. It's likely that most sub-threads
+	    // will finish long before a straggling one. This unnecessarily eats all of the space 
+	    // that was allocated on the frame for the finished threads
+	    int index = 0;
         for (WrapperNode c : w.nodes()) {
-            TrackingScope ts = new TrackingScope(scope);
+            ContainerScope cs = new ContainerScope(c, scope);
+            TrackingScope ts = new TrackingScope(cs);
             ts.setTrackChannels(false);
             ts.setAllowChannelReturns(true);
             ts.setTrackNamed(false);
@@ -32,6 +40,7 @@ public class UParallel extends CompoundNode {
             Node n = compileChild(c, ts);
             if (n != null) {
                 addChild(n);
+                frameSizes[index++] = cs.size();
             }
         }
         if (childCount() == 0) {
@@ -47,7 +56,7 @@ public class UParallel extends CompoundNode {
 	public void run(LWThread thr) throws ExecutionException {
 		int state = thr.checkSliceAndPopState();
 		Stack stack = thr.getStack();
-		ThreadSet ts = (ThreadSet) thr.popState();
+		ThreadSetFixed ts = (ThreadSetFixed) thr.popState();
 		int fc = thr.popIntState();
 		try {
 			switch (state) {
@@ -55,13 +64,13 @@ public class UParallel extends CompoundNode {
 					fc = stack.frameCount();
 					state++;
 				case 1:
-					final ThreadSet tsf = new ThreadSet();
+				    int ec = childCount();
+					final ThreadSetFixed tsf = new ThreadSetFixed(ec);
 					ts = tsf;
 					final int fcf = fc;
-					int ec = childCount();
 					for (int i = 0; i < ec; i++) {
 						final int fi = i;
-						LWThread ct = thr.fork(new KRunnable() {
+						LWThread ct = thr.fork(i, new KRunnable() {
 							@Override
 							public void run(LWThread thr) {
 								try {
@@ -83,6 +92,8 @@ public class UParallel extends CompoundNode {
 							}
 						});
 						tsf.add(ct);
+						Stack cs = ct.getStack();
+                        cs.enter(this, frameSizes[i]);
 					}
 					ts.startAll();
 					state++;
