@@ -35,7 +35,7 @@ import org.globus.cog.util.CopyOnWriteHashSet;
 public class TaskImpl implements Task {
     public static final Logger logger = Logger.getLogger(TaskImpl.class);
 
-    public static final Status STATUS_NONE = new StatusImpl();
+    public static final Status STATUS_NONE = new StatusImpl.Unmodifiable();
 
     private Identity id = null;
     private String name = null;
@@ -59,7 +59,6 @@ public class TaskImpl implements Task {
     public TaskImpl() {
         this.id = newIdentity();
         this.serviceList = new ArrayList<Service>(2);
-        this.status = new StatusImpl();
         statusListeners = new CopyOnWriteHashSet<StatusListener>();
     }
 

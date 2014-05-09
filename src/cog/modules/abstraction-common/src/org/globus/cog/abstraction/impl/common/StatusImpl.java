@@ -147,4 +147,48 @@ public class StatusImpl implements Status {
         }
         return code2String(curStatus);
     }
+    
+    public static final class Unmodifiable extends StatusImpl {
+
+        public Unmodifiable() {
+            super();
+        }
+
+        public Unmodifiable(int status, String message, Exception exception, int prev) {
+            super(status, message, exception, prev);
+        }
+
+        public Unmodifiable(int status, String message, Exception exception) {
+            super(status, message, exception);
+        }
+
+        public Unmodifiable(int curStatus) {
+            super(curStatus);
+        }
+
+        @Override
+        public void setStatusCode(int status) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setPrevStatusCode(int status) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setException(Exception exception) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setMessage(String message) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setTime(Date time) {
+            throw new UnsupportedOperationException();
+        }
+    }
 }

@@ -96,19 +96,19 @@ public class RemoteFile {
                 case ':':
                     if (match(str, "//", sp + 1)) {
                         state = 1000;
-                        protocol = str.substring(pp, sp);
+                        protocol = str.substring(pp, sp).intern();
                         pp = sp + 3;
                         sp = pp;
                     }
                     break;
                 case 1000 + ':':
-                    host = str.substring(pp, sp);
+                    host = str.substring(pp, sp).intern();
                     pp = sp + 1;
                     state = 2000;
                     break;
                 case 1000 + '/':
                     port = -1;
-                    host = str.substring(pp, sp);
+                    host = str.substring(pp, sp).intern();
                     parseDirAndName(str, sp + 1);
                     state = 3000;
                     break outer;
@@ -154,7 +154,7 @@ public class RemoteFile {
             name = str.substring(pos + 1);
         }
         else {
-            dir = normalize(str, pos, lastSep);
+            dir = normalize(str, pos, lastSep).intern();
             name = str.substring(lastSep + 1);
         }
     }
