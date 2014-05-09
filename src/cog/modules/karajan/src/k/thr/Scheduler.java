@@ -47,8 +47,12 @@ public final class Scheduler {
 		Clock.init();
 	}
 
-	public synchronized void awake(final LWThread thread) {
-		if (sleeping.remove(thread)) {
+	public void awake(final LWThread thread) {
+		boolean wasSleeping;
+		synchronized(sleeping) {
+			wasSleeping = sleeping.remove(thread);
+		}
+		if (wasSleeping) {
 			//System.err.println("awake(" + thread + ")");
 			schedule(thread);
 		}
@@ -85,10 +89,12 @@ public final class Scheduler {
 		return workers.getActiveCount() > 0 || !queue.isEmpty();
 	}
 	
-	public synchronized void putToSleep(final LWThread thread) {
+	public void putToSleep(final LWThread thread) {
 		if (thread.isSleeping()) {
 			//System.err.println("putToSleep(" + thread + ")");
-			sleeping.add(thread);
+			synchronized(sleeping) {
+				sleeping.add(thread);
+			}
 		}
 	}
 	
@@ -147,6 +153,8 @@ public final class Scheduler {
 	}
 
 	public List<LWThread> getSleepingThreads() {
-		return new ArrayList<LWThread>(sleeping);
+		synchronized(sleeping) {
+			return new ArrayList<LWThread>(sleeping);
+		}
 	}
 }

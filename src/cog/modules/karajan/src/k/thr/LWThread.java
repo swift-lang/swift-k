@@ -462,6 +462,10 @@ public class LWThread implements Runnable {
     	}
     	return cid;
     }
+    
+    public int getForkID() {
+        return forkId;
+    }
 
     public final synchronized void sleep(long delay) {
         sleep(delay, 0);
@@ -551,7 +555,20 @@ public class LWThread implements Runnable {
         
         return child;
     }
+    
+    public final synchronized LWThread fork(int id, KRunnable r) {
+        if (DEBUG)
+            System.out.println(this + " fork(" + state + ")");
+        LWThread child = new LWThread(id, r, stack.copy());
+                
+        if (DEBUG) {
+            Exception e = new Exception();
+            System.out.println(child + " forked by " + e.getStackTrace()[1].getClassName());
+        }
         
+        return child;
+    }
+    
     public final void die() {
         if (DEBUG)
             System.out.println(this + " die()");
