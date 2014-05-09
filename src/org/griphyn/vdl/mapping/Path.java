@@ -178,6 +178,10 @@ public class Path {
 	public Comparable<?> getKey(int index) {
         return entries.get(index).key;
     }
+	
+	public Entry getEntry(int index) {
+	    return entries.get(index);
+	}
 
 	public int size() {
 		return entries == null ? 0 : entries.size();
@@ -197,6 +201,10 @@ public class Path {
 
 	public Path butFirst() {
 		return subPath(1);
+	}
+	
+	public Path butLast() {
+	    return subPath(0, entries.size() - 1);
 	}
 
 	public Path subPath(int fromIndex) {

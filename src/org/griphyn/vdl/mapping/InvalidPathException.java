@@ -20,6 +20,8 @@
  */
 package org.griphyn.vdl.mapping;
 
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+
 
 public class InvalidPathException extends Exception {
 	public InvalidPathException(String path, DSHandle source) {

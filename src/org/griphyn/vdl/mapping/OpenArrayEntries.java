@@ -17,13 +17,14 @@ import java.util.NoSuchElementException;
 import k.rt.ConditionalYield;
 
 import org.griphyn.vdl.karajan.Pair;
+import org.griphyn.vdl.mapping.nodes.ArrayHandle;
 
 public class OpenArrayEntries implements Iterable<List<?>> {
     private List<Comparable<?>> keyList;
     private Map<Comparable<?>, DSHandle> array;
-    private ArrayDataNode source;
+    private ArrayHandle source;
 
-    public OpenArrayEntries(List<Comparable<?>> keyList, Map<Comparable<?>, DSHandle> array, ArrayDataNode source) {
+    public OpenArrayEntries(List<Comparable<?>> keyList, Map<Comparable<?>, DSHandle> array, ArrayHandle source) {
         this.keyList = keyList;
         this.array = array;
         this.source = source;

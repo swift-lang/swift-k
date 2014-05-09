@@ -69,7 +69,7 @@ public class StructuredRegularExpressionMapper extends AbstractMapper {
 		Collection<Path> output = new ArrayList<Path>();
 		Collection<DSHandle> sourceFields;
 		try {
-			sourceFields = sourceHandle.getFields(Path.CHILDREN);
+			sourceFields = sourceHandle.getAllFields();
 		}
 		catch (InvalidPathException ipe) {
 			return Collections.emptyList();

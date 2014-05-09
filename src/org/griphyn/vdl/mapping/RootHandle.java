@@ -26,4 +26,6 @@ public interface RootHandle extends DSHandle {
     Mapper getActualMapper();
     boolean isArray();
     void closeArraySizes();
+    
+    void mapperInitialized(Mapper mapper);
 }

@@ -3,7 +3,7 @@ package org.griphyn.vdl.mapping.file;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.griphyn.vdl.mapping.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.DSHandle;
 

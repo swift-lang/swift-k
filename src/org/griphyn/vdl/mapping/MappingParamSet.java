@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.griphyn.vdl.karajan.lib.Tracer;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 
 public abstract class MappingParamSet {

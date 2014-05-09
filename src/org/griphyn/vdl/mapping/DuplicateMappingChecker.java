@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.util.VDL2Config;
 import org.griphyn.vdl.util.VDL2ConfigProperties;
 

@@ -25,10 +25,13 @@ package org.griphyn.vdl.mapping;
  */
 public abstract class DependentException extends RuntimeException {
 	private DSHandle handle;
+	private String name;
 
 	public DependentException(DSHandle handle, Exception prev) {
 		super(prev);
 		this.handle = handle;
+		// store the name here since it might get set to null during handle.cleanup()
+		this.name = handle.getRoot().getName();
 	}
 
 	public DependentException(DSHandle handle) {
@@ -44,7 +47,7 @@ public abstract class DependentException extends RuntimeException {
 	
 	public String getVariableInfo() {
 	    RootHandle root = handle.getRoot();
-	    return root.getName() + ", line " + root.getLine();
+	    return name + ", line " + root.getLine();
     }
 
 	public String toString() {

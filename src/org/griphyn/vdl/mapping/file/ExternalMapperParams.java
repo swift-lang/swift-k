@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.MappingParamSet;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 
 public class ExternalMapperParams extends MappingParamSet {

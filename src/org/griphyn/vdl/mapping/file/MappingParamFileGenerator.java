@@ -132,7 +132,7 @@ public class MappingParamFileGenerator {
     }
 
     private static final List<String> IMPORTS = Arrays.asList("java.util.Arrays", "java.util.Collection", 
-        "java.util.List", "org.griphyn.vdl.mapping.AbstractDataNode", "org.griphyn.vdl.mapping.MappingParamSet");
+        "java.util.List", "org.griphyn.vdl.mapping.nodes.AbstractDataNode", "org.griphyn.vdl.mapping.MappingParamSet");
 
     private static void writeFile(File nf, String pkg, List<Param> params, Map<String, Object> opts) throws IOException {
         String name = nf.getName().substring(0, nf.getName().lastIndexOf('.'));

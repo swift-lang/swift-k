@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
 
 /** This interface must be implemented by a Java class that represents

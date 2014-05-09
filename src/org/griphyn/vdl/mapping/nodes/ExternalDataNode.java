@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.vdl.mapping;
+package org.griphyn.vdl.mapping.nodes;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -26,10 +26,17 @@ import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.Loader;
+import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.HandleOpenException;
+import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.Mapper;
+import org.griphyn.vdl.mapping.Path;
+import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.type.impl.FieldImpl;
 
-public class ExternalDataNode extends AbstractDataNode implements RootHandle {
+public class ExternalDataNode extends AbstractFutureNonCompositeDataNode implements RootHandle {
 
 	static final String DATASET_URI_PREFIX = "dataset:external:";
 
@@ -48,6 +55,10 @@ public class ExternalDataNode extends AbstractDataNode implements RootHandle {
 	public ExternalDataNode(String name) {
 	    super(new FieldImpl(name, Types.EXTERNAL));
 	}
+	
+	public ExternalDataNode(Field field) {
+        super(field);
+    }
 
     public int getLine() {
         return line;
@@ -84,6 +95,10 @@ public class ExternalDataNode extends AbstractDataNode implements RootHandle {
 
 	@Override
     public void init(Mapper mapper) {
+    }
+
+    @Override
+    public void mapperInitialized(Mapper mapper) {
     }
 
     public boolean isRestartable() {
@@ -159,5 +174,22 @@ public class ExternalDataNode extends AbstractDataNode implements RootHandle {
              */
             this.setValue(FILE_VALUE);
         }
+    }
+
+    @Override
+    public Mapper getActualMapper() {
+        return null;
+    }
+
+    @Override
+    public void closeArraySizes() {
+    }
+
+    @Override
+    protected void getFringePaths(List<Path> list, Path myPath) throws HandleOpenException {
+    }
+
+    @Override
+    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
     }
 }

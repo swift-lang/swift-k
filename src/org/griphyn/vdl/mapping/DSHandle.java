@@ -71,16 +71,11 @@ public interface DSHandle {
      *
      *  @return a Collection of DSHandle objects
      */
-    public Collection<DSHandle> getFields(Path path) throws InvalidPathException, HandleOpenException;
+    public Collection<DSHandle> getAllFields() throws InvalidPathException, HandleOpenException;
 
     public Object getValue();
 
     public void setValue(Object value);
-
-    /** create a new logical component */
-    public DSHandle createField(Comparable<?> key) throws NoSuchFieldException;
- 
-    public DSHandle createField(Path path) throws InvalidPathException;
  
     // special file oriented methods, not sure if these apply to 
     // all datasets
@@ -97,8 +92,6 @@ public interface DSHandle {
     public Map<Comparable<?>, DSHandle> getArrayValue();
 
     public Path getPathFromRoot();
-
-    public void set(DSHandle svar);
 
     public boolean isClosed();
 

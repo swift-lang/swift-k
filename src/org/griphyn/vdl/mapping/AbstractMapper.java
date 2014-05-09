@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.file.FileGarbageCollector;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
 
 /** AbstractMapper provides an implementation of the Mapper interface to be

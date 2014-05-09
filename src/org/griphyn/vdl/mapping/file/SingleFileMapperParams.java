@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.griphyn.vdl.mapping.AbsFile;
-import org.griphyn.vdl.mapping.AbstractDataNode;
 import org.griphyn.vdl.mapping.MappingParamSet;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 
 public class SingleFileMapperParams extends MappingParamSet {

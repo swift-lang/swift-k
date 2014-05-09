@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
 
 

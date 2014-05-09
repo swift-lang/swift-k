@@ -9,6 +9,8 @@
  */
 package org.griphyn.vdl.mapping;
 
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+
 public class NotCompositeException extends RuntimeException {
     private AbstractDataNode node;
 

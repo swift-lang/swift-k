@@ -5,14 +5,18 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Apr 16, 2013
+ * Created on Mar 30, 2014
  */
-package org.griphyn.vdl.mapping;
+package org.griphyn.vdl.mapping.nodes;
 
-import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import java.util.List;
 
-public class MissingDataException extends RuntimeException {
-    public MissingDataException(AbstractDataNode n, PhysicalFormat pf) {
-        super("File not found for variable '" + n.getFullName() + "': " + pf);
-    }
+import k.rt.Future;
+
+import org.griphyn.vdl.mapping.DSHandle;
+
+public interface ArrayHandle extends DSHandle, Future {
+    Iterable<List<?>> entryList();
+    
+    public int arraySize();
 }
