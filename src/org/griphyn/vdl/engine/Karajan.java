@@ -81,7 +81,35 @@ public class Karajan {
 	    new HashMap<String,ProcedureSignature>();
 	Map<String,ProcedureSignature> functionsMap = 
 	    new HashMap<String,ProcedureSignature>();
-	Map<String,Type> typesMap = new HashMap<String,Type>();
+	Map<String, Type> typesMap = new HashMap<String, Type>();
+	Set<String> nonMappedTypes = new HashSet<String>();
+	
+	private class InternedField {
+	    public final String name, type;
+	    
+	    public InternedField(String name, String type) {
+	        this.name = name;
+	        this.type = type;
+	    }
+
+        @Override
+        public int hashCode() {
+            return name.hashCode() + type.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof InternedField) {
+                InternedField o = (InternedField) obj;
+                return name.equals(o.name) && type.equals(o.type);
+            }
+            else {
+                return false;
+            }
+        }
+	}
+	
+	Map<InternedField, String> usedFields = new HashMap<InternedField, String>();
 	
 	List<StringTemplate> variables = new ArrayList<StringTemplate>();
 
@@ -177,6 +205,13 @@ public class Karajan {
 		proceduresMap = ProcedureSignature.makeProcedureSignatures();
 		// Built-in functions
 		functionsMap = ProcedureSignature.makeFunctionSignatures();
+		
+		// used by some templates
+		addInternedField("temp", "int");
+		addInternedField("const", "int");
+		addInternedField("const", "float");
+		addInternedField("const", "string");
+		addInternedField("const", "boolean");
 	}
 
 	void setTemplateGroup(StringTemplateGroup tempGroup) {
@@ -263,14 +298,21 @@ public class Karajan {
 				}
 
 				TypeStructure ts = theType.getTypestructure();
+				boolean allPrimitive = ts.sizeOfMemberArray() > 0;
 				for (int j = 0; j < ts.sizeOfMemberArray(); j++) {
 					TypeRow tr = ts.getMemberArray(j);
 
 					StringTemplate stMember = template("memberdefinition");
 					stMember.setAttribute("name", tr.getMembername());
 					stMember.setAttribute("type", tr.getMembertype());
+					if (!isPrimitiveOrArrayOfPrimitive(tr.getMembertype())) {
+						allPrimitive = false;
+					}
 
 					st.setAttribute("members", stMember);
+				}
+				if (allPrimitive) {
+					nonMappedTypes.add(typeName);
 				}
 				scope.bodyTemplate.setAttribute("types", st);
 			}
@@ -374,6 +416,7 @@ public class Karajan {
         for (Program program : importList)
             statements(program, scope);
 		
+        generateInternedFields(scope.bodyTemplate);
 		generateInternedConstants(scope.bodyTemplate);
 		scope.analyzeWriters();
 		
@@ -393,12 +436,18 @@ public class Karajan {
 			FormalParameter param = proc.getOutputArray(i);
 			StringTemplate paramST = parameter(param, innerScope);
 			procST.setAttribute("outputs", paramST);
+			if (!this.isPrimitiveOrArrayOfPrimitive(param.getType().getLocalPart())) {
+                procST.setAttribute("stageouts", paramST);
+            }
 			addArg(procST, param, paramST, true, innerScope);		
 		}
 		for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 			FormalParameter param = proc.getInputArray(i);
 			StringTemplate paramST = parameter(param, outerScope);
 			procST.setAttribute("inputs", paramST);
+			if (!this.isPrimitiveOrArrayOfPrimitive(param.getType().getLocalPart())) {
+			    procST.setAttribute("stageins", paramST);
+			}
 			addArg(procST, param, paramST, false, outerScope);
 			outerScope.addWriter(param.getName(), WriteType.FULL, proc, procST);
 		}
@@ -458,6 +507,7 @@ public class Karajan {
 		StringTemplate variableST = template("variable");
 		variableST.setAttribute("name", var.getName());
 		variableST.setAttribute("type", var.getType().getLocalPart());
+		variableST.setAttribute("field", addInternedField(var.getName(), var.getType().getLocalPart()));
 		variableST.setAttribute("isGlobal", Boolean.valueOf(var.getIsGlobal()));
 		variableST.setAttribute("line", getLine(var));
 		variables.add(variableST);
@@ -542,7 +592,7 @@ public class Karajan {
             paramST.setAttribute("expr", expressionToKarajan(param.getAbstractExpression(), scope));
         } 
         else {
-            String parameterVariableName="swift#mapper#"+(internedIDCounter++);
+            String parameterVariableName="swift.mapper." + (internedIDCounter++);
             // make template for variable declaration (need to compute type of this variable too?)
             StringTemplate variableDeclarationST = template("variable");
             // TODO factorise this and other code in variable()?
@@ -560,6 +610,8 @@ public class Karajan {
             String paramValueType = datatype(paramValueST);
             scope.addVariable(parameterVariableName, paramValueType, "Variable", param);
             variableDeclarationST.setAttribute("type", paramValueType);
+            variableDeclarationST.setAttribute("field", addInternedField(parameterVariableName, paramValueType));
+            
             StringTemplate variableReferenceST = template("id");
             variableReferenceST.setAttribute("var",parameterVariableName);
             StringTemplate variableAssignmentST = template("assign");
@@ -568,7 +620,7 @@ public class Karajan {
             scope.appendStatement(variableAssignmentST);
             if (param.getAbstractExpression().getDomNode().getNodeName().equals("stringConstant")) {
                 StringTemplate valueST = template("sConst");
-                valueST.setAttribute("innervalue", param.getAbstractExpression().getDomNode().getFirstChild().getNodeValue());
+                valueST.setAttribute("value", param.getAbstractExpression().getDomNode().getFirstChild().getNodeValue());
                 paramST.setAttribute("expr", valueST);
             }
             else {
@@ -591,10 +643,15 @@ public class Karajan {
             return t.isPrimitive() || (t.isArray() && t.itemType().isPrimitive());
         }
         catch (NoSuchTypeException e) {
-            return false;
+            if (nonMappedTypes.contains(type)) {
+            	return true;
+            }
+            else {
+            	return false;
+            }
         }
     }
-
+    
 	public void assign(Assign assign, VariableScope scope) throws CompilationException {
 		try {
 		    XmlObject value = assign.getAbstractExpressionArray(1);
@@ -653,7 +710,6 @@ public class Karajan {
         }
     }
 
-
     private boolean isProcedureCall(XmlObject value) {
         if (value instanceof Call) {
             Call call = (Call) value;
@@ -663,7 +719,6 @@ public class Karajan {
             return false;
         }
     }
-
 
     private boolean isAnyType(String type) {
         return ProcedureSignature.ANY.equals(type);
@@ -1106,8 +1161,8 @@ public class Karajan {
 			innerScope.addVariable(foreach.getVar(), itemType, "Iteration variable", foreach);
 			innerScope.addWriter(foreach.getVar(), WriteType.FULL, foreach, foreachST);
 			foreachST.setAttribute("indexVar", foreach.getIndexVar());
-			foreachST.setAttribute("indexVarType", keyType);
 			if (foreach.getIndexVar() != null) {
+			    foreachST.setAttribute("indexVarField", addInternedField(foreach.getIndexVar(), keyType));
 				innerScope.addVariable(foreach.getIndexVar(), keyType, "Iteration variable", foreach);
 				innerScope.addWriter(foreach.getIndexVar(), WriteType.FULL, foreach, foreachST);
 			}
@@ -1427,7 +1482,7 @@ public class Karajan {
 			Integer iobj = Integer.valueOf(i);
 			String internedID;
 			if(intInternMap.get(iobj) == null) {
-				internedID = "swift#int#" + i;
+				internedID = "swift.int." + i;
 				intInternMap.put(iobj, internedID);
 			} else {
 				internedID = intInternMap.get(iobj);
@@ -1442,7 +1497,7 @@ public class Karajan {
 			Float fobj = new Float(f);
 			String internedID;
 			if(floatInternMap.get(fobj) == null) {
-				internedID = "swift#float#" + (internedIDCounter++);
+				internedID = "swift.float." + (internedIDCounter++);
 				floatInternMap.put(fobj, internedID);
 			} else {
 				internedID = floatInternMap.get(fobj);
@@ -1455,14 +1510,14 @@ public class Karajan {
 			XmlString xmlString = (XmlString) expression;
 			String s = xmlString.getStringValue();
 			String internedID;
-			if(stringInternMap.get(s) == null) {
-				internedID = "swift#string#" + (internedIDCounter++);
-				stringInternMap.put(s,internedID);
+			if (stringInternMap.get(s) == null) {
+				internedID = "swift.string." + (internedIDCounter++);
+				stringInternMap.put(s, internedID);
 			} else {
 				internedID = stringInternMap.get(s);
 			}
 			StringTemplate st = template("id");
-			st.setAttribute("var",internedID);
+			st.setAttribute("var", internedID);
 			st.setAttribute("datatype", "string");
 			return st;
 		} else if (expressionQName.equals(COND_EXPR)) {
@@ -1702,7 +1757,7 @@ public class Karajan {
         c.addNewOutput();
         VariableScope subscope = new VariableScope(this, scope, c);
         VariableReferenceDocument ref = VariableReferenceDocument.Factory.newInstance();
-        ref.setVariableReference("swift#callintermediate");
+        ref.setVariableReference("swift.callintermediate");
         c.getOutputArray(0).set(ref);
         String name = c.getProc().getLocalPart();
         ProcedureSignature funcSignature = proceduresMap.get(name);
@@ -1725,9 +1780,14 @@ public class Karajan {
             }
         }
         
-        subscope.addInternalVariable("swift#callintermediate", type, null);
+        if (!isPrimitiveOrArrayOfPrimitive(type)) {
+        	call.setAttribute("mapping", true);
+        }
+        
+        subscope.addInternalVariable("swift.callintermediate", type, null);
 
         call.setAttribute("datatype", type);
+        call.setAttribute("field", addInternedField("swift.callintermediate", type));
         call.setAttribute("call", call(c, subscope, true));
         if (!isPrimitiveOrArrayOfPrimitive(type)) {
             call.setAttribute("prefix", UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
@@ -1971,42 +2031,62 @@ public class Karajan {
 			throw new RuntimeException("Could not find root for abstract expression.");
 		}
 	}
+	
+	public void generateInternedFields(StringTemplate programTemplate) {
+	    for (Map.Entry<InternedField, String> e : usedFields.entrySet()) {
+            StringTemplate st = template("fieldConst");
+            st.setAttribute("name", e.getValue());
+            st.setAttribute("id", e.getKey().name);
+            st.setAttribute("type", e.getKey().type);
+            programTemplate.setAttribute("constants", st);
+        }
+	}
 
-	public void generateInternedConstants(StringTemplate programTemplate) {
+	private String internedFieldName(InternedField f) {
+	    String v = usedFields.get(f);
+	    if (v == null) {
+	        throw new IllegalArgumentException("No such interned field: " + f);
+	    }
+	    return v;
+    }
+	
+	private int fieldCounter = 1;
+	private String addInternedField(String name, String type) {
+	    String v = "swift.field." + name + "." + type.replace("[", ".array.").replace("]", "");
+	    usedFields.put(new InternedField(name, type), v);
+	    return v;
+    }
 
-		for (String key : stringInternMap.keySet()) {
-			String variableName = stringInternMap.get(key);
-			StringTemplate st = template("sConst");
-			st.setAttribute("innervalue",escape(key));
-			StringTemplate vt = template("globalConstant");
-			vt.setAttribute("name",variableName);
-			vt.setAttribute("expr",st);
-			programTemplate.setAttribute("constants",vt);
-		}
-	    
-	    for (Integer key : intInternMap.keySet()) {
-			String variableName = intInternMap.get(key);
-			StringTemplate st = template("iConst");
-			st.setAttribute("value",key);
-			StringTemplate vt = template("globalConstant");
-			vt.setAttribute("name",variableName);
-			vt.setAttribute("expr",st);
-			programTemplate.setAttribute("constants",vt);
-		}
-
-	    for (Float key : floatInternMap.keySet()) {
-			String variableName = floatInternMap.get(key);
-			StringTemplate st = template("fConst");
-			st.setAttribute("value",key);
-			StringTemplate vt = template("globalConstant");
-			vt.setAttribute("name",variableName);
-			vt.setAttribute("expr",st);
-			programTemplate.setAttribute("constants",vt);
-		}
+    public void generateInternedConstants(StringTemplate programTemplate) {
+	    generateInternedConstants(programTemplate, stringInternMap, "sConst");
+	    generateInternedConstants(programTemplate, intInternMap, "iConst");
+	    generateInternedConstants(programTemplate, floatInternMap, "fConst");
 	}
 
 	
-	String escape(String in) {
+	private void generateInternedConstants(StringTemplate programTemplate, Map<?, String> map,
+            String cTemplate) {
+	    for (Object key : map.keySet()) {
+            String variableName = map.get(key);
+            StringTemplate st = template(cTemplate);
+            st.setAttribute("value", toKarajanValue(key));
+            StringTemplate vt = template("globalConstant");
+            vt.setAttribute("name", variableName);
+            vt.setAttribute("expr", st);
+            programTemplate.setAttribute("constants", vt);
+        }
+    }
+	
+	private String toKarajanValue(Object o) {
+	    if (o instanceof String) {
+	        return escape((String) o);
+	    }
+	    else {
+	        return String.valueOf(o);
+	    }
+	}
+
+    private String escape(String in) {
 	    StringBuilder sb = new StringBuilder();
 	    for (int i = 0; i < in.length(); i++) {
 	        char c = in.charAt(i);
