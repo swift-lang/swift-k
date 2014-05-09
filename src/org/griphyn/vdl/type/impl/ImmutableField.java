@@ -23,11 +23,6 @@ public class ImmutableField extends FieldImpl {
     }
 
     @Override
-    public void setArray() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void setType(Type type) {
         throw new UnsupportedOperationException();
     }

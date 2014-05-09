@@ -55,8 +55,7 @@ public interface Field {
 	 * of Field.
 	 */
 
-	public static final class Factory
-	{
+	public static final class Factory {
 	    private static final Map<Field, Field> fieldCache = new HashMap<Field, Field>(); 
 		public static Field newInstance() {
 			return new FieldImpl();
@@ -78,5 +77,13 @@ public interface Field {
 		    }
 		}
 	}
+	
+	public static final Field GENERIC_STRING = new FieldImpl("?", Types.STRING);
+	public static final Field GENERIC_ANY = new FieldImpl("?", Types.ANY);
+	public static final Field GENERIC_BOOLEAN = new FieldImpl("?", Types.BOOLEAN);
+	public static final Field GENERIC_INT = new FieldImpl("?", Types.INT);
+	public static final Field GENERIC_FLOAT = new FieldImpl("?", Types.FLOAT);
+	
+	public static final Field GENERIC_STRING_ARRAY = new FieldImpl("?", Types.STRING.arrayType());
 }
 

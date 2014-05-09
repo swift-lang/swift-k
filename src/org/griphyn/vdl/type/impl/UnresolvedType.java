@@ -85,7 +85,12 @@ public class UnresolvedType implements Type {
 	}
 	
 	@Override
-    public boolean hasNonPrimitiveComponents() {
+    public int getFieldIndex(String name) throws NoSuchFieldException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasMappedComponents() {
         throw new UnsupportedOperationException();
     }
 	

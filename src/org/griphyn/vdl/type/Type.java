@@ -112,6 +112,8 @@ public interface Type {
 	 * @throws NoSuchFieldException
 	 */
 	public Field getField(String name) throws NoSuchFieldException;
+	
+	public int getFieldIndex(String name) throws NoSuchFieldException;
 
 	/**
 	 * get a list of field names
@@ -187,7 +189,7 @@ public interface Type {
 
 	}
 
-    public boolean hasNonPrimitiveComponents();
+    public boolean hasMappedComponents();
     
     public boolean hasArrayComponents();
 }

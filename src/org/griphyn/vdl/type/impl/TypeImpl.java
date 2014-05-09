@@ -31,8 +31,9 @@ import org.griphyn.vdl.type.Types;
 public class TypeImpl extends UnresolvedType {
 	private boolean primitive;
 	private Map<String, Field> fields;
+	private Map<String, Integer> fieldIndices;
 	private Type baseType;
-	private Boolean hasNonPrimitiveComponents, hasArrayComponents;
+	private Boolean hasMappedComponents, hasArrayComponents;
 	
 	public TypeImpl() {
 		this((URI) null, null, false);
@@ -72,6 +73,10 @@ public class TypeImpl extends UnresolvedType {
 		}
 		else {
 			fields.put(name, field);
+			if (fieldIndices == null) {
+			    fieldIndices = new HashMap<String, Integer>();
+			}
+			fieldIndices.put(name, fieldIndices.size());
 		}
 	}
 
@@ -92,6 +97,17 @@ public class TypeImpl extends UnresolvedType {
 		else {
 			throw new NoSuchFieldException(name);
 		}
+	}
+	
+	public int getFieldIndex(String name) throws NoSuchFieldException {
+	    if (fieldIndices == null) {
+	        throw new NoSuchFieldException("The type " + this + " has no fields");
+	    }
+	    Integer i = fieldIndices.get(name);
+	    if (i == null) {
+	        throw new NoSuchFieldException("The type " + this + " has no field named '" + name + "'");
+	    }
+	    return i;
 	}
 
 	public List<String> getFieldNames() {
@@ -132,37 +148,37 @@ public class TypeImpl extends UnresolvedType {
         return isArray() || !fields.isEmpty();
     }
     
-    public synchronized boolean hasNonPrimitiveComponents() {
-        if (hasNonPrimitiveComponents == null) {
+    public synchronized boolean hasMappedComponents() {
+        if (hasMappedComponents == null) {
             if (isPrimitive()) {
-                hasNonPrimitiveComponents = false;
+                hasMappedComponents = false;
             }
             else if (!isComposite()) {
                 // mapped
-                hasNonPrimitiveComponents = true;
+                hasMappedComponents = true;
             }
             else if (isArray()) {
-                if (keyType().hasNonPrimitiveComponents()) {
-                    hasNonPrimitiveComponents = true;
+                if (keyType().hasMappedComponents()) {
+                    hasMappedComponents = true;
                 }
-                else if (itemType().hasNonPrimitiveComponents()) {
-                    hasNonPrimitiveComponents = true;
+                else if (itemType().hasMappedComponents()) {
+                    hasMappedComponents = true;
                 }
                 else {
-                    hasNonPrimitiveComponents = false;
+                    hasMappedComponents = false;
                 }
             }
             else {
                 // struct
                 for (Field f : getFields()) {
-                    if (f.getType().hasNonPrimitiveComponents()) {
-                        return hasNonPrimitiveComponents = true;
+                    if (f.getType().hasMappedComponents()) {
+                        return hasMappedComponents = true;
                     }
                 }
-                hasNonPrimitiveComponents = false;
+                hasMappedComponents = false;
             }
         }
-        return hasNonPrimitiveComponents;
+        return hasMappedComponents;
     }
     
     public synchronized boolean hasArrayComponents() {
