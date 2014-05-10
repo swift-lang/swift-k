@@ -129,178 +129,175 @@ namespace(swift) {
 		
 
 	export(execute2,
-		function(progress, tr, stagein, stageout,
+		function(rhost, progress, tr, stagein, stageout,
 			replicationGroup, replicationChannel,
 			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
 
-			allocateHost(rhost, constraints=jobConstraints(tr, stagein = stagein)) {
+			ddir := initDDir()
+			wfdir := try {
+				initSharedDir(rhost)
+			}
+			else catch(exception) {
+				throw(exception("Could not initialize shared directory on {rhost}", exception))
+			}
 
-				ddir := initDDir()
-				wfdir := try {
-					initSharedDir(rhost)
+			uid := UID()
+			jobid := "{tr}-{uid}"
+			
+			jobdir := concat(ddir, "/jobs/", substring(uid, from=0, to=1), "/{jobid}/")
+
+			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
+
+			statusMode := configProperty("status.mode", host = rhost)
+			wrapperMode := configProperty("wrapper.parameter.mode", host = rhost)
+
+			wrapfile := "{jobdir}/_paramfile"
+
+			stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
+			stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr)),
+			
+			(localFileDirs, remoteFileDirs, inFiles, outFiles) := getStagingInfo(stagein, stageout)
+
+			os := siteProfile(rhost, "SYSINFO:OS")
+			
+			scratch := siteProfile(rhost, "scratch")
+
+			if(wrapperMode == "files") {
+				file:write(wrapfile,
+					"-e ",vdl:executable(tr, rhost),
+					"\n-out ", stdout,
+					"\n-err ", stderr,
+					"\n-i ", if (stdin != null, getFieldValue(stdin)),
+					"\n-d ", str:join(remoteFileDirs, "|"),
+					"\n-if ", str:join(remoteFileNames(inFiles), "|"),
+					"\n-of ", str:join(remoteFileNames(outFiles), "|"),
+					"\n-wt", WRAPPERLOG_ALWAYS_TRANSFER,
+					"\n-sk", SITEDIR_KEEP,
+					"\n-cdmfile ", cdm:file(),
+					"\n-status ", statusMode,
+					for(a, arguments) {
+						"\n-a ", a
+					}
+				)
+			}
+			
+
+			setProgress(progress, "Stage in")
+
+			try {
+				if (wrapperMode == "files") {
+					stageWrapperParams(jobid, wrapfile, wfdir, rhost)
 				}
-				else catch(exception) {
-					throw(exception("Could not initialize shared directory on {rhost}", exception))
+
+				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), " host={rhost}")
+
+				setProgress(progress, "Submitting")
+
+				if (wrapperMode == "files") {
+					swift:execute(
+						progress, 
+						siteProfile(rhost, "swift:wrapperInterpreter"),
+						list(
+							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
+							"_swiftwrap.wrapperstaging",
+							jobid,
+							"-urlprefix", URL_PREFIX,
+							"-jobdir", jobdir,
+							"-scratch", scratch, 
+							"-p", wrapfile
+						)
+						directory=wfdir
+						redirect=false
+						host=rhost
+						TCProfile(rhost, if (attributes != null, attributes = attributes), tr=tr)
+						replicationGroup=replicationGroup
+						replicationChannel=replicationChannel
+						jobid=jobid
+					)
 				}
-
-				uid := UID()
-				jobid := "{tr}-{uid}"
-				
-				jobdir := concat(ddir, "/jobs/", substring(uid, from=0, to=1), "/{jobid}/")
-
-				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
-
-				statusMode := configProperty("status.mode", host = rhost)
-				wrapperMode := configProperty("wrapper.parameter.mode", host = rhost)
-
-				wrapfile := "{jobdir}/_paramfile"
-
-				stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
-				stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr)),
-				
-				(localFileDirs, remoteFileDirs, inFiles, outFiles) := getStagingInfo(stagein, stageout)
-
-				os := siteProfile(rhost, "SYSINFO:OS")
-				
-				scratch := siteProfile(rhost, "scratch")
-
-				if(wrapperMode == "files") {
-					file:write(wrapfile,
-						"-e ",vdl:executable(tr, rhost),
-						"\n-out ", stdout,
-						"\n-err ", stderr,
-						"\n-i ", if (stdin != null, getFieldValue(stdin)),
-						"\n-d ", str:join(remoteFileDirs, "|"),
-						"\n-if ", str:join(remoteFileNames(inFiles), "|"),
-						"\n-of ", str:join(remoteFileNames(outFiles), "|"),
-						"\n-wt", WRAPPERLOG_ALWAYS_TRANSFER,
-						"\n-sk", SITEDIR_KEEP,
-						"\n-cdmfile ", cdm:file(),
-						"\n-status ", statusMode,
-						for(a, arguments) {
-							"\n-a ", a
-						}
+				if (wrapperMode == "args") {
+					swift:execute(
+						siteProfile(rhost, "swift:wrapperInterpreter"),
+						list(
+							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
+							"_swiftwrap.wrapperstaging",
+							jobid,
+							"-urlprefix", URL_PREFIX,
+							"-jobdir", jobdir,
+							"-scratch", scratch,
+							"-e", vdl:executable(tr, rhost),
+							"-out", stdout,
+							"-err", stderr,
+							"-i", if (stdin != null, getFieldValue(stdin)),
+							"-d", str:join(remoteFileDirs, "|"),
+							"-if", str:join(remoteFileNames(inFiles), "|"),
+							"-of", str:join(remoteFileNames(outFiles), "|"),
+							"-wt", WRAPPERLOG_ALWAYS_TRANSFER,
+							"-sk", SITEDIR_KEEP,
+							"-cdmfile", cdm:file(),
+							"-status", statusMode,
+							"-a", if (arguments != null, each(arguments))
+						)
+						directory=wfdir
+						redirect=false
+						host=rhost
+						TCProfile(rhost, if(attributes != null, attributes = attributes), tr=tr)
+						replicationGroup=replicationGroup
+						replicationChannel=replicationChannel
+						jobid=jobid
 					)
 				}
 				
-
-				setProgress(progress, "Stage in")
-
-				try {
-					if (wrapperMode == "files") {
-						stageWrapperParams(jobid, wrapfile, wfdir, rhost)
-					}
-
-					log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), " host={rhost}")
-
-					setProgress(progress, "Submitting")
-
-					if (wrapperMode == "files") {
-						swift:execute(
-							progress, 
-							siteProfile(rhost, "swift:wrapperInterpreter"),
-							list(
-								siteProfile(rhost, "swift:wrapperInterpreterOptions"),
-								"_swiftwrap.wrapperstaging",
-								jobid,
-								"-urlprefix", URL_PREFIX,
-								"-jobdir", jobdir,
-								"-scratch", scratch, 
-								"-p", wrapfile
-							)
-							directory=wfdir
-							redirect=false
-							host=rhost
-							TCProfile(rhost, if (attributes != null, attributes = attributes), tr=tr)
-							replicationGroup=replicationGroup
-							replicationChannel=replicationChannel
-							jobid=jobid
-						)
-					}
-					if (wrapperMode == "args") {
-						swift:execute(
-							siteProfile(rhost, "swift:wrapperInterpreter"),
-							list(
-								siteProfile(rhost, "swift:wrapperInterpreterOptions"),
-								"_swiftwrap.wrapperstaging",
-								jobid,
-								"-urlprefix", URL_PREFIX,
-								"-jobdir", jobdir,
-								"-scratch", scratch,
-								"-e", vdl:executable(tr, rhost),
-								"-out", stdout,
-								"-err", stderr,
-								"-i", if (stdin != null, getFieldValue(stdin)),
-								"-d", str:join(remoteFileDirs, "|"),
-								"-if", str:join(remoteFileNames(inFiles), "|"),
-								"-of", str:join(remoteFileNames(outFiles), "|"),
-								"-wt", WRAPPERLOG_ALWAYS_TRANSFER,
-								"-sk", SITEDIR_KEEP,
-								"-cdmfile", cdm:file(),
-								"-status", statusMode,
-								"-a", if (arguments != null, each(arguments))
-							)
-							directory=wfdir
-							redirect=false
-							host=rhost
-							TCProfile(rhost, if(attributes != null, attributes = attributes), tr=tr)
-							replicationGroup=replicationGroup
-							replicationChannel=replicationChannel
-							jobid=jobid
-						)
-					}
-					
-					setProgress(progress, "Checking status")
-					if (statusMode == "files") {
-						checkJobStatus(jobdir, jobid, tr)
-					}
-
-					if (wrapperMode == "files") {
-						file:remove(wrapfile)
-					}
-
-					log(LOG:DEBUG, "STAGING_OUT jobid={jobid}")
-
-
-					/* need to stage the files to upper scratch area in case they are not transfered to another site
-					   before all the files get cleaned out */
-
-
-					setProgress(progress, "Stage out")
-					doRestartlog(stageout)
-					
-					log(LOG:DEBUG, "JOB_END jobid={jobid}")
+				setProgress(progress, "Checking status")
+				if (statusMode == "files") {
+					checkJobStatus(jobdir, jobid, tr)
 				}
-				else catch(prev) {
-					if (matches(prev, "^Abort$")) {
-						log(LOG:DEBUG, "JOB_CANCELED jobid={jobid}")
-						throw(prev)
-					}
-					else {
-						setProgress(progress, "Failed but can retry")
-						exception := try(exception(checkErrorFile(jobdir, jobid)), prev)
-					
-						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 
-						if (matches(exception,".*executable bit.*")) {
-							throw(exception)
-						}
-						
-						outs := readStandardFiles(jobdir, stdout, stderr)
-						
-						throw(
-							exception(
-								concat(
-									"Exception in {tr}:",
-									if (arguments != null, "\n    Arguments: {arguments}")
-									"\n    Host: {rhost}",
-									"\n    Directory: {tmpdir}",
-									"{outs}",
-								)
-								exception
-							)
-						)
+				if (wrapperMode == "files") {
+					file:remove(wrapfile)
+				}
+
+				log(LOG:DEBUG, "STAGING_OUT jobid={jobid}")
+
+
+				/* need to stage the files to upper scratch area in case they are not transfered to another site
+				   before all the files get cleaned out */
+
+
+				setProgress(progress, "Stage out")
+				doRestartlog(stageout)
+				
+				log(LOG:DEBUG, "JOB_END jobid={jobid}")
+			}
+			else catch(prev) {
+				if (matches(prev, "^Abort$")) {
+					log(LOG:DEBUG, "JOB_CANCELED jobid={jobid}")
+					throw(prev)
+				}
+				else {
+					setProgress(progress, "Failed but can retry")
+					exception := try(exception(checkErrorFile(jobdir, jobid)), prev)
+				
+					log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
+
+					if (matches(exception,".*executable bit.*")) {
+						throw(exception)
 					}
+					
+					outs := readStandardFiles(jobdir, stdout, stderr)
+					
+					throw(
+						exception(
+							concat(
+								"Exception in {tr}:",
+								if (arguments != null, "\n    Arguments: {arguments}")
+								"\n    Host: {rhost}",
+								"\n    Directory: {tmpdir}",
+								"{outs}",
+							)
+							exception
+						)
+					)
 				}
 			}
 		}

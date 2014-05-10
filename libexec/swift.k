@@ -179,7 +179,7 @@ namespace(swift) {
 			attributes = null, 
 			deperror = false, mdeperror = false, 
 			channel(stagein), channel(stageout)) {
-	
+		
 			progress := initProgressState()
 		
 			done := isDone(stageout)
@@ -199,12 +199,14 @@ namespace(swift) {
 									replicationGroup := UID()
 									parallelFor(i, replicationChannel) {
 										try {
-											execute2(
-												progress, 
-												tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
-												stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
-												stagein, stageout, replicationGroup, replicationChannel
-											)
+											allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
+												execute2(
+													rhost, progress, 
+													tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
+													stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
+													stagein, stageout, replicationGroup, replicationChannel
+												)
+											}
 										}
 										else catch(exception) {
 											if (matches(exception, "^Abort$")) {
@@ -218,12 +220,14 @@ namespace(swift) {
 								}
 								else {
 									try {
-										execute2(
-											progress, 
-											tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
-											stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
-											stagein, stageout, null, null
-										)
+										allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
+											execute2(
+												rhost, progress, 
+												tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
+												stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
+												stagein, stageout, null, null
+											)
+										}
 									}
 									else catch(exception) {
 										if (matches(exception, "^Abort$")) {

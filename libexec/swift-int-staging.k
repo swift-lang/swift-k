@@ -20,11 +20,10 @@ PIN := if(pinOption == "true", "pinned:", "")
 PROVENANCE_GRAPH_ENABLED := (configProperty("pgraph") != "false")
 CLEANUP_ENABLED := (configProperty("sitedir.keep") != "true")
 
-namespace(swift) {
+DEBUG_DIR := "{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
+CDM_FILE := cdm:file()
 
-	initDDir := function() {
-		"{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
-	}
+namespace(swift) {
 		
 	fileSizes := function(files) {
 		math:sum(
@@ -60,140 +59,136 @@ namespace(swift) {
 	}
 	
 	export(execute2,
-		function(progress, tr, stagein, stageout,
+		function(rhost, progress, tr, stagein, stageout,
 			replicationGroup, replicationChannel,
 			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
-	
-			allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
 
-				ddir := initDDir()
+			uid := UID()
+			jobdir := substring(uid, 0, to=1)
+			jobid := "{tr}-{uid}"
 
-				uid := UID()
-				jobdir := substring(uid, 0, to=1)
-				jobid := "{tr}-{uid}"
+			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
+			
+			wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
+			tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid),				
+			
+			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout)
 
-				log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
-				
-				wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
-				tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
-				cdmfile := cdm:file(),
-				
-				(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout)
+			try {
+				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), 
+					" tmpdir={tmpdir} host={rhost}")
 
-				try {
-					log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), 
-						" tmpdir={tmpdir} host={rhost}")
+				setProgress(progress, "Submitting")
 
-					setProgress(progress, "Submitting")
-
-					swift:execute(
-						progress,
-						siteProfile(rhost, "swift:wrapperInterpreter"),
-						list(
-							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
-							"_swiftwrap.staging",
-							"-e", executable(tr, rhost),
-							"-out", if(stdout == null, "stdout.txt", getFieldValue(stdout)),
-							"-err", if(stderr == null, "stderr.txt", getFieldValue(stderr)),
-							"-i", if (stdin != null, getFieldValue(stdin)),
-							"-d", str:join(fileDirs, "|"),
-							"-if", str:join(remoteFileNames(inFiles), "|"),
-							"-of", str:join(remoteFileNames(outFiles), "|"),
-							"-cf", str:join(remoteFileNames(outCollect), "|"),
-							"-cdmfile", cdmfile,
-							"-status", "provider"
-							"-a", if (arguments != null, each(arguments))
-						)
-						directory = tmpdir
-						redirect = false
-						host = rhost
-
-						TCProfile(rhost, if (attributes != null, attributes = attributes), tr = tr)
-						replicationGroup = replicationGroup
-						replicationChannel = replicationChannel
-						jobid = jobid
-					
-						stagingMethod := siteProfile(rhost, "swift:stagingMethod", default="proxy")
-
-						stageIn("{PIN}{stagingMethod}://localhost/{SWIFT:HOME}/libexec/_swiftwrap.staging", "_swiftwrap.staging")
-
-						if (cdmfile != "") {
-							d := swift:dirname(cdmfile)
-							file := basename(cdmfile)
-							dir := if (d == "", "./", "{d}/")
-							loc := "{PIN}{stagingMethod}://localhost/"
-							stageIn("{loc}{dir}{file}", cdmfile)
-							stageIn("{loc}{SWIFT:HOME}/libexec/cdm.pl", "cdm.pl")
-							stageIn("{loc}{SWIFT:HOME}/libexec/cdm_lib.sh", "cdm_lib.sh")
-						}
-
-						appStageins(jobid, inFiles, stagingMethod)
-
-						stageOut("wrapper.log", "{stagingMethod}://localhost/{ddir}/{jobid}.info", 
-							mode = WRAPPER_TRANSFER_MODE)
-						
-						if (stdout == null) {
-							// if not stdout requested, only stage on error
-							stageOut("stdout.txt", "{stagingMethod}://localhost/{ddir}/{jobid}.stdout", 
-								mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
-						}
-						else {
-							stageOut("{stdout}", "{stagingMethod}://localhost/{ddir}/{stdout}",
-								mode = STAGING_MODE:IF_PRESENT)
-						}
-						if (stderr == null) {
-							stageOut("stderr.txt", "{stagingMethod}://localhost/{ddir}/{jobid}.stderr",
-								mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
-						}
-						else {
-							stageOut("{stderr}", "{stagingMethod}://localhost/{ddir}/{stderr}",
-								mode = STAGING_MODE:IF_PRESENT)
-						}
-						stageOut("wrapper.error", "{stagingMethod}://localhost/{ddir}/{jobid}.error", 
-							mode = STAGING_MODE:IF_PRESENT)
-						appStageouts(jobid, outFiles, outCollect, stagingMethod)
-						if (!isEmpty(outCollect)) {
-							stageOut("_collect", "{stagingMethod}://localhost/{ddir}/{jobid}.collect", 
-								mode = STAGING_MODE:ALWAYS)
-						}
-						
-						if (CLEANUP_ENABLED) {
-							task:cleanUp(".")
-						}
+				swift:execute(
+					progress,
+					siteProfile(rhost, "swift:wrapperInterpreter"),
+					list(
+						siteProfile(rhost, "swift:wrapperInterpreterOptions"),
+						"_swiftwrap.staging",
+						"-e", executable(tr, rhost),
+						"-out", if(stdout == null, "stdout.txt", getFieldValue(stdout)),
+						"-err", if(stderr == null, "stderr.txt", getFieldValue(stderr)),
+						"-i", if (stdin != null, getFieldValue(stdin)),
+						"-d", str:join(fileDirs, "|"),
+						"-if", str:join(remoteFileNames(inFiles), "|"),
+						"-of", str:join(remoteFileNames(outFiles), "|"),
+						"-cf", str:join(remoteFileNames(outCollect), "|"),
+						"-cdmfile", CDM_FILE,
+						"-status", "provider"
+						"-a", if (arguments != null, each(arguments))
 					)
+					directory = tmpdir
+					redirect = false
+					host = rhost
+
+					TCProfile(rhost, if (attributes != null, attributes = attributes), tr = tr)
+					replicationGroup = replicationGroup
+					replicationChannel = replicationChannel
+					jobid = jobid
+				
+					stagingMethod := siteProfile(rhost, "swift:stagingMethod", default="proxy")
+
+					stageIn("{PIN}{stagingMethod}://localhost/{SWIFT:HOME}/libexec/_swiftwrap.staging", "_swiftwrap.staging")
+
+					if (CDM_FILE != "") {
+						d := swift:dirname(CDM_FILE)
+						file := basename(CDM_FILE)
+						dir := if (d == "", "./", "{d}/")
+						loc := "{PIN}{stagingMethod}://localhost/"
+						stageIn("{loc}{dir}{file}", CDM_FILE)
+						stageIn("{loc}{SWIFT:HOME}/libexec/cdm.pl", "cdm.pl")
+						stageIn("{loc}{SWIFT:HOME}/libexec/cdm_lib.sh", "cdm_lib.sh")
+					}
+
+					appStageins(jobid, inFiles, stagingMethod)
+
+					stageOut("wrapper.log", "{stagingMethod}://localhost/{DEBUG_DIR}/{jobid}.info", 
+						mode = WRAPPER_TRANSFER_MODE)
 					
-					
+					if (stdout == null) {
+						// if not stdout requested, only stage on error
+						stageOut("stdout.txt", "{stagingMethod}://localhost/{DEBUG_DIR}/{jobid}.stdout", 
+							mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
+					}
+					else {
+						stdoutf := getFieldValue(stdout)
+						stageOut(stdoutf, "{stagingMethod}://localhost/{DEBUG_DIR}/{stdoutf}",
+							mode = STAGING_MODE:IF_PRESENT)
+					}
+					if (stderr == null) {
+						stageOut("stderr.txt", "{stagingMethod}://localhost/{DEBUG_DIR}/{jobid}.stderr",
+							mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
+					}
+					else {
+						stderrf := getFieldValue(stderr)
+						stageOut(stderrf, "{stagingMethod}://localhost/{DEBUG_DIR}/{stderrf}",
+							mode = STAGING_MODE:IF_PRESENT)
+					}
+					stageOut("wrapper.error", "{stagingMethod}://localhost/{DEBUG_DIR}/{jobid}.error", 
+						mode = STAGING_MODE:IF_PRESENT)
+					appStageouts(jobid, outFiles, outCollect, stagingMethod)
 					if (!isEmpty(outCollect)) {
-						readCollectList("{ddir}/{jobid}.collect")
-					}
-					else {
-						[]
+						stageOut("_collect", "{stagingMethod}://localhost/{DEBUG_DIR}/{jobid}.collect", 
+							mode = STAGING_MODE:ALWAYS)
 					}
 					
-					log(LOG:DEBUG, "JOB_END jobid={jobid}")
+					if (CLEANUP_ENABLED) {
+						task:cleanUp(".")
+					}
+				)
+				
+				
+				if (!isEmpty(outCollect)) {
+					readCollectList("{DEBUG_DIR}/{jobid}.collect")
 				}
-				else catch(prev) {
-					if (matches(prev, "^Abort$")) {
-						log(LOG:DEBUG, "JOB_CANCELED jobid={jobid}")
-						throw(prev)
-					}
-					else {
-						setProgress(progress, "Failed but can retry")
-						exception := try(exception(readErrorFiles(ddir, jobid, stdout, stderr), prev), prev)
-						log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
-					
-						throw(
-							exception(
-								concat(
-									"Exception in {tr}:",
-									if (arguments != null, "\n    Arguments: {arguments}")
-									"\n    Host: {rhost}",
-									"\n    Directory: {tmpdir}"
-								)
-								exception
+				else {
+					[]
+				}
+				
+				log(LOG:DEBUG, "JOB_END jobid={jobid}")
+			}
+			else catch(prev) {
+				if (matches(prev, "^Abort$")) {
+					log(LOG:DEBUG, "JOB_CANCELED jobid={jobid}")
+					throw(prev)
+				}
+				else {
+					setProgress(progress, "Failed but can retry")
+					exception := try(exception(readErrorFiles(DEBUG_DIR, jobid, stdout, stderr), prev), prev)
+					log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
+				
+					throw(
+						exception(
+							concat(
+								"Exception in {tr}:",
+								if (arguments != null, "\n    Arguments: {arguments}")
+								"\n    Host: {rhost}",
+								"\n    Directory: {tmpdir}"
 							)
+							exception
 						)
-					}
+					)
 				}
 			}
 		}

@@ -52,6 +52,7 @@ namespace(swift) {
 	export(initProgressState, def("org.griphyn.vdl.karajan.lib.RuntimeStats$InitProgressState"))
 	export(setProgress, def("org.griphyn.vdl.karajan.lib.RuntimeStats$SetProgress"))
 	export(new, def("org.griphyn.vdl.karajan.lib.New"))
+	export(field, def("org.griphyn.vdl.karajan.lib.GetFieldConst"))
 	export(createArray, def("org.griphyn.vdl.karajan.lib.CreateArray"))
 	/* used from VDL2 for arguments to apps and returns relative paths */
 	export(fileName, def("org.griphyn.vdl.karajan.lib.FileName"))
