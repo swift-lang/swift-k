@@ -1,13 +1,9 @@
 Blues (x86 cluster)
 -------------------
 
-Fusion is a 310-node computing cluster for the Argonne
-National Laboratory community. The primary goal of the LCRC is to
-facilitate mid-range computing in all of the scientific programs of
-Argonne and the University of Chicago.
-
-This section will walk you through running a simple Swift script
-on Fusion.
+Blues is a 310-node computing cluster for the Argonne
+National Laboratory community. This section will walk 
+you through running a simple Swift script on Blues.
 
 Requesting Access
 ~~~~~~~~~~~~~~~~~
@@ -30,13 +26,13 @@ http://www.lcrc.anl.gov/info/Projects.
 SSH Keys
 ~~~~~~~~
 Before accessing Blues, be sure to have your SSH keys configured correctly.
-SSH keys are required to access fusion. You should see information about
+SSH keys are required to access Blues. You should see information about
 this when you request your account. Email support@lcrc.anl.gov for
 additional help.
 
 Connecting to a login node
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-Once your keys are configured, you should be able to access a Fusion login
+Once your keys are configured, you should be able to access a Blues login
 node with the following command:
 
 -----
