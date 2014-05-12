@@ -12,6 +12,8 @@ include::prereqs[]
 
 include::beagle[]
 
+include::blues[]
+
 include::fusion[]
 
 include::futuregrid[]

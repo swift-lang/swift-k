@@ -1,6 +1,7 @@
-Fusion (x86 cluster)
+Blues (x86 cluster)
 -------------------
-Fusion is a 320-node computing cluster for the Argonne
+
+Fusion is a 310-node computing cluster for the Argonne
 National Laboratory community. The primary goal of the LCRC is to
 facilitate mid-range computing in all of the scientific programs of
 Argonne and the University of Chicago.
@@ -10,13 +11,13 @@ on Fusion.
 
 Requesting Access
 ~~~~~~~~~~~~~~~~~
-If you do not already have a Fusion account, you can request one at
+If you do not already have a Blues account, you can request one at
 https://accounts.lcrc.anl.gov/request.php. Email support@lcrc.anl.gov
 for additional help.
 
 Projects
 ~~~~~~~~
-In order to run a job on a Fusion compute node, you must first be associated
+In order to run a job on a Blues compute node, you must first be associated
 with a project.
 
 Each project has one or more Primary Investigators, or PIs. These PIs are
@@ -28,7 +29,7 @@ http://www.lcrc.anl.gov/info/Projects.
 
 SSH Keys
 ~~~~~~~~
-Before accessing Fusion, be sure to have your SSH keys configured correctly.
+Before accessing Blues, be sure to have your SSH keys configured correctly.
 SSH keys are required to access fusion. You should see information about
 this when you request your account. Email support@lcrc.anl.gov for
 additional help.
@@ -39,13 +40,12 @@ Once your keys are configured, you should be able to access a Fusion login
 node with the following command:
 
 -----
-ssh yourusername@fusion.lcrc.anl.gov
+ssh yourusername@blues.lcrc.anl.gov
 -----
 
 Creating sites.xml
 ~~~~~~~~~~~~~~~~~~
-Swift relies on various configuration files to determine how to
-run. This section will provide a working configuration file which
+This section will provide a working configuration file which
 you can copy and paste to get running quickly. The sites.xml file
 tells Swift how to submit jobs, where working directories are
 located, and various other configuration information. More
@@ -54,22 +54,22 @@ information on sites.xml can be found in the Swift User's Guide.
 The first step is to paste the text below into a file named sites.xml.
 
 -----
-<config>
-   <pool handle="fusion">
-      <execution jobmanager="local:pbs" provider="coaster"/>
-      <filesystem provider="local" url="none" />
-      <profile namespace="globus" key="maxtime">3600</profile>
-      <profile namespace="globus" key="jobsPerNode">8</profile>
-      <profile namespace="globus" key="slots">1</profile>
-      <profile namespace="globus" key="nodeGranularity">2</profile>
-      <profile namespace="globus" key="maxNodes">2</profile>
-      <profile namespace="globus" key="queue">shared</profile>
-      <profile namespace="karajan" key="jobThrottle">5.99</profile>
-      <profile namespace="karajan" key="initialScore">10000</profile>
-      <profile namespace="globus" key="HighOverAllocation">1000</profile>
-      <profile namespace="globus" key="LowOverAllocation">1000</profile>
-      <workdirectory>/homes/{env.USER}/swiftwork</workdirectory>
-   </pool>
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
+    <pool handle="blues">
+        <execution jobmanager="local:pbs" provider="coaster"/>
+        <filesystem provider="local" url="none" />
+        <profile namespace="globus" key="maxtime">3600</profile>
+        <profile namespace="globus" key="jobsPerNode">16</profile>
+        <profile namespace="globus" key="ppn">16</profile>
+        <profile namespace="globus" key="queue">shared</profile>
+        <profile namespace="globus" key="slots">1</profile>
+        <profile namespace="globus" key="nodeGranularity">1</profile>
+        <profile namespace="globus" key="maxNodes">1</profile>
+        <profile namespace="karajan" key="jobThrottle">1.00</profile>
+        <profile namespace="karajan" key="initialScore">10000</profile>
+        <workdirectory>/home/{env.USER}/swiftwork</workdirectory>
+    </pool>
 </config>
 -----
 
@@ -82,7 +82,7 @@ of tc.data can be found in the Swift User's guide.
 Paste the following example into a file named tc.data
 
 -----
-fusion hostname /bin/hostname
+blues hostname /bin/hostname
 -----
 
 Create a Swift Script
@@ -112,20 +112,15 @@ $ swift -sites.file sites.xml -tc.file tc.data hostname.swift
 -----
 
 When this runs, you should see 100 new text files get created, named *.hostname.log. If
-you see these files, then you have succesfully run Swift on Fusion!
+you see these files, then you have succesfully run Swift on Blues!
 
 Queues
 ~~~~~~
-Fusion has two queues: shared and batch. The shared queue has a maximum 1
-hour walltime and limited to 4 nodes. The batch queue is for all other
-jobs.
+Blues has multiple queues available. The command "qstat -q" will print a list.
 
-Edit your sites.xml file and edit the queue option to modify Swift's
-behavior. For example:
+To edit the queue, modify the following line in sites.xml
 
 -----
 <profile namespace="globus" key="queue">batch</profile>
 -----
 
-More information on Fusion queues can be found at
-http://www.lcrc.anl.gov/info/BatchJobs.
