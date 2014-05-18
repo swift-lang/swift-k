@@ -82,6 +82,7 @@ public class ExternalMapper extends AbstractMapper {
 		        logger.debug("invoking external mapper: " + cmd);
 		    }
 			Process p = Runtime.getRuntime().exec(cmd.toArray(STRING_ARRAY));
+			process(p.getInputStream());
 			List<String> lines = fetchOutput(p.getInputStream());
 			if (logger.isDebugEnabled()) {
 			    logger.debug("external mapper output: " + lines);
@@ -91,7 +92,6 @@ public class ExternalMapper extends AbstractMapper {
 				throw new RuntimeException("External executable failed. Exit code: " + ec + "\n\t"
 						+ join(lines) + "\n\t" + join(fetchOutput(p.getErrorStream())));
 			}
-			processLines(cp, lines);
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);
@@ -110,6 +110,15 @@ public class ExternalMapper extends AbstractMapper {
 		}
 		return sb.toString();
 	}
+	
+	private void process(InputStream is) throws IOException {
+		BufferedReader br = new BufferedReader(new InputStreamReader(is));
+		String line = br.readLine();
+        while (line != null) {
+            processLine(line);
+            line = br.readLine();
+        }
+	}
 
 	private List<String> fetchOutput(InputStream is) throws IOException {
 		ArrayList<String> lines = new ArrayList<String>();
@@ -122,20 +131,18 @@ public class ExternalMapper extends AbstractMapper {
 		return lines;
 	}
 
-	private void processLines(ExternalMapperParams cp, List<String> lines) {
-		for (String line : lines) {
-			int s = line.indexOf(' ');
-			int t = line.indexOf('\t');
-			int m = Math.min(s == -1 ? t : s, t == -1 ? s : t);
-			if (m == -1) {
-				throw new RuntimeException("Invalid line in mapper script output: " + line);
-			}
-			String spath = line.substring(0, m);
-			Path p = Path.parse(spath);
-			AbsFile f = new AbsFile(line.substring(m + 1).trim());
-			map.put(p, f);
-			rmap.put(spath, p);
+	private void processLine(String line) {
+		int s = line.indexOf(' ');
+		int t = line.indexOf('\t');
+		int m = Math.min(s == -1 ? t : s, t == -1 ? s : t);
+		if (m == -1) {
+			throw new RuntimeException("Invalid line in mapper script output: " + line);
 		}
+		String spath = line.substring(0, m);
+		Path p = Path.parse(spath);
+		AbsFile f = new AbsFile(line.substring(m + 1).trim());
+		map.put(p, f);
+		rmap.put(spath, p);
 	}
 
 	@Override
