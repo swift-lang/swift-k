@@ -34,6 +34,8 @@ import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 
 public class StructuredRegularExpressionMapper extends AbstractMapper {
 
@@ -68,14 +70,15 @@ public class StructuredRegularExpressionMapper extends AbstractMapper {
 		Collection<Path> output = new ArrayList<Path>();
 		Collection<DSHandle> sourceFields;
 		try {
-			sourceFields = sourceHandle.getFields(Path.CHILDREN);
+			sourceFields = sourceHandle.getAllFields();
 		}
 		catch (InvalidPathException ipe) {
 			return Collections.emptyList();
 		}
 		catch (HandleOpenException hoe) {
-			throw new RuntimeException(
-					"Handle open. Throwing this exception may not be the right thing to do. TODO");
+		    // should not be happening since the mapper is only initialized after
+		    // all parameters have been closed
+			throw new RuntimeException("Handle open in mapper: " + sourceHandle);
 		}
 		Iterator<DSHandle> i = sourceFields.iterator();
 		while (i.hasNext()) {
@@ -103,15 +106,26 @@ public class StructuredRegularExpressionMapper extends AbstractMapper {
 					+ " from source data structure");
 		}
 		
-		PhysicalFormat source = hereHandle.getMapper().map(hereHandle.getPathFromRoot());
-		if (!source.getType().equals("file")) {
-			throw new RuntimeException(
-					"Cannot use the regular expression mapper with a source that has a mapper that is not file-based");
+		String sourceStr;
+		Type sourceType = hereHandle.getType();
+		if (sourceType.equals(Types.STRING)) {
+		    sourceStr = (String) hereHandle.getValue();
+		}
+		else if (!sourceType.isComposite() && !sourceType.isPrimitive()) {
+    		PhysicalFormat source = hereHandle.getMapper().map(hereHandle.getPathFromRoot());
+    		if (!source.getType().equals("file")) {
+    			throw new RuntimeException(
+    					"Cannot use the regular expression mapper with a source that has a mapper that is not file-based");
+    		}
+    		sourceStr = ((AbsFile) source).getPath();
+		}
+		else {
+		    throw new RuntimeException("Source must be an array of mapped objects or strings. Found " + sourceType);
 		}
 		Pattern p = Pattern.compile(cp.getMatch());
-		Matcher m = p.matcher(((AbsFile) source).getPath());
+		Matcher m = p.matcher(sourceStr);
 		if (!m.find()) {
-			throw new RuntimeException("No match found! source='" + source + "' match = '" + cp.getMatch()
+			throw new RuntimeException("No match found! source='" + sourceStr + "' match = '" + cp.getMatch()
 					+ "'");
 		}
 		// find group number to replace
