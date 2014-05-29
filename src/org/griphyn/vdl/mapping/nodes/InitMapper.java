@@ -186,6 +186,7 @@ public class InitMapper implements Mapper, FutureListener {
                 return;
             }
             if (!root.getType().isComposite()) {
+                checkConsistency(root, root, dmc);
                 return;
             }
             // Static mappers are (array) mappers which know the size of
