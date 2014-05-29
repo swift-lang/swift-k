@@ -547,19 +547,21 @@ else
 	fi
 fi
 
-if [ "$COLLECT" != "" ]; then
-	logstate "COLLECT"
-	log "Collect list is $COLLECT"
-	exec 4<> "$WFDIR/shared/${ID}-collect"
-	for O in "$COLLECT" ; do
-		log "Collecting $O"
-		ls -1 $O >&4
-		for OO in $O ; do
-			DIR=`dirname "$OO"`
-			mv $OO "$WFDIR/shared/$DIR" 2>&1 >& "$INFO"
+if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
+	if [ "$COLLECT" != "" ]; then
+		logstate "COLLECT"
+		log "Collect list is $COLLECT"
+		exec 4<> "$WFDIR/shared/${ID}-collect"
+		for O in "$COLLECT" ; do
+			log "Collecting $O"
+			ls -1 $O >&4
+			for OO in $O ; do
+				OODIR=`dirname "$OO"`
+				mv $OO "$WFDIR/shared/$OODIR" 2>&1 >& "$INFO"
+			done
 		done
-	done
-	exec 4>&-
+		exec 4>&-
+	fi
 fi
 
 log "Moving back to workflow directory $WFDIR"
