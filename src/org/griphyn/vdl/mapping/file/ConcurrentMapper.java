@@ -28,6 +28,7 @@ import java.util.Set;
 
 import k.thr.LWThread;
 
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -84,7 +85,7 @@ public class ConcurrentMapper extends AbstractFileMapper {
     }
 
 	@Override
-    public Path rmap(AbstractFileMapperParams cp, String name) {
+    protected Path rmap(AbstractFileMapperParams cp, AbsFile file) {
         throw new UnsupportedOperationException();
     }
 

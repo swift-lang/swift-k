@@ -28,7 +28,7 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Type;
 
 public class FileSystemArrayMapper extends AbstractFileMapper {    
-    private Map<Object, String> filenames = new HashMap<Object, String>();
+    private Map<Comparable<?>, String> filenames = new HashMap<Comparable<?>, String>();
     private int count = 0;
 
     @Override
@@ -37,14 +37,14 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
     }
 
     @Override
-	public Path rmap(AbstractFileMapperParams cp, String name) {
-		if (name == null || name.equals("")) {
+	protected Path rmap(AbstractFileMapperParams cp, AbsFile file) {
+		if (file == null) {
+		    // This test is fishy
 			return null;
 		}
-		filenames.put(count, name);
 		Path p = Path.EMPTY_PATH;
-		p = p.addFirst(count, true);
-		++count;
+		p = p.addFirst(count++, true);
+		filenames.put(p.getFirst(), file.getPath());
 		return p;
 	}
 	
@@ -62,13 +62,6 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 		String filename = filenames.get(index);
 		if (filename == null) {
 			return null;
-		}
-		if (location != null) {
-			if (!location.endsWith("/")) {
-				filename = location + '/' + filename;
-			} else {
-				filename = location + filename;
-			}
 		}
 		return new AbsFile(filename);
 	}

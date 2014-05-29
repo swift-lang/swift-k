@@ -21,10 +21,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.apache.log4j.Logger;
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.Path;
 
 //TODO Is this still being used?
 public class ROIMapper extends AbstractFileMapper {
+    public static final Logger logger = Logger.getLogger(ROIMapper.class);
+    
 	private int count;
 	private Map<String, Integer> names;
 	
@@ -40,7 +44,8 @@ public class ROIMapper extends AbstractFileMapper {
     }
 
     @Override
-	public Path rmap(AbstractFileMapperParams cp, String name) {
+	protected Path rmap(AbstractFileMapperParams cp, AbsFile file) {
+        String name = file.getName();
 		if (name.indexOf(".ROI") == -1) {
 			return null;
 		}
@@ -92,7 +97,9 @@ public class ROIMapper extends AbstractFileMapper {
 				return null;
 			}
 		}
-		System.out.println(name + " parsed into " + path);
+		if (logger.isInfoEnabled()) {
+		    logger.info(name + " parsed into " + path);
+		}
 		return path;
 	}
 }

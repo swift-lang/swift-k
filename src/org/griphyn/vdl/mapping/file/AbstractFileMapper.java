@@ -240,7 +240,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 				if (logger.isDebugEnabled()) {
 				    logger.debug("Processing existing file " + file.getName());
 				}
-				Path p = rmap(cp, file.getName());
+				Path p = rmap(cp, file);
 				if (p != null) {
 					if (logger.isDebugEnabled()) {
 					    logger.debug("reverse-mapped to path " + p);
@@ -351,7 +351,8 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 	  * @param name the filename to map to a path
 	  * @return a Path to the supplied filename, null on failure
 	  */
-	public Path rmap(AbstractFileMapperParams cp, String name) {
+	protected Path rmap(AbstractFileMapperParams cp, AbsFile file) {
+	    String name = file.getName();
 		logger.debug("rmap "+name);
 
 		String prefix = cp.getPrefix();
