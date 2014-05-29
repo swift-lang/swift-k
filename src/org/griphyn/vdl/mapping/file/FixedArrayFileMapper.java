@@ -71,7 +71,7 @@ public class FixedArrayFileMapper extends AbstractMapper {
 		}
 		else if (Types.STRING.equals(files.getType())) {
 		    String v = (String) files.getValue();
-		    this.files = v.split("[\\s,;]");
+		    this.files = v.split("[\\s,;]+");
 		}
 	}
 
