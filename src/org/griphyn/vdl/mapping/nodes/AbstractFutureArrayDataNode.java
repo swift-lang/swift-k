@@ -229,4 +229,9 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
     public int arraySize() {
         return handles.size();
     }
+    
+    public synchronized void setException(RuntimeException e) {
+        this.exception = e;
+        closeShallow();
+    }
 }

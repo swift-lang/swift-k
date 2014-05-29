@@ -32,6 +32,7 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DataDependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.AbstractFutureArrayDataNode;
 
 public class Mark extends SwiftFunction {
     private ArgRef<Channel<AbstractDataNode>> restarts;
@@ -48,18 +49,31 @@ public class Mark extends SwiftFunction {
         try {
             if (err.getValue(stack)) {
                 boolean mapping = this.mapping.getValue(stack);
+                
                 Channel<AbstractDataNode> files = this.restarts.getValue(stack);
                 for (AbstractDataNode dn : files) {
-                    Collection<DSHandle> leaves = dn.getLeaves();
-                    for (DSHandle leaf : leaves) {
-                        synchronized (leaf) {
-                            if (mapping) {
-                                leaf.setValue(new MappingDependentException(leaf, null));
+                    if (dn.getType().isArray() && !dn.isClosed()) {
+                        // a dynamic array
+                        AbstractFutureArrayDataNode fdn = (AbstractFutureArrayDataNode) dn;
+                        if (mapping) {
+                            fdn.setException(new MappingDependentException(dn, null));
+                        }
+                        else {
+                            fdn.setException(new DataDependentException(dn, null));
+                        }
+                    }
+                    else {
+                        Collection<DSHandle> leaves = dn.getLeaves();
+                        for (DSHandle leaf : leaves) {
+                            synchronized (leaf) {
+                                if (mapping) {
+                                    leaf.setValue(new MappingDependentException(leaf, null));
+                                }
+                                else {
+                                    leaf.setValue(new DataDependentException(leaf, null));
+                                }
+                                leaf.closeShallow();
                             }
-                            else {
-                                leaf.setValue(new DataDependentException(leaf, null));
-                            }
-                            leaf.closeShallow();
                         }
                     }
                 }
