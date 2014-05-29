@@ -343,6 +343,14 @@ created in the current working directory.
 |The number of time a job will be retried if it fails (giving a
  maximum of 1 + execution.retries attempts at execution)
 
+|file.gc.enabled
+|true, false
+|true
+|Files mapped by the concurrent mapper (i.e. when you don't
+ explicitly specify a mapper) are deleted when they are not
+ in use any more. This property can be used to prevent
+ files mapped by the concurrent mapper from being deleted.
+
 |foreach.max.threads
 |Positive integer
 |1024

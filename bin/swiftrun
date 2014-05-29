@@ -71,6 +71,7 @@ my %property_aliases = (
    'clustering.queue.delay'          => 'clustering.queue.delay',
    'config.rundirs'                  => 'config.rundirs',
    'execution.retries'               => 'execution.retries',
+   'file.gc.enabled'                 => 'file.gc.enabled',
    'foreach.max.threads'             => 'foreach.max.threads',
    'kickstart.enabled'               => 'kickstart.enabled',
    'kickstart.always.transfer'       => 'kickstart.always.transfer',
