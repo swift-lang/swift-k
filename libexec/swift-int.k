@@ -357,7 +357,7 @@ namespace(swift) {
 
 			stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
 			stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr)),
-			
+						
 			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout)
 
 			os := siteProfile(rhost, "SYSINFO:OS")
@@ -471,7 +471,7 @@ namespace(swift) {
 				}
 				
 				if (configProperty("wrapperlog.always.transfer") == "true") {
-					discard(transferWrapperLog(rhost, RUN_DIR, jobid, jobdir))
+					discard(transferWrapperLog(rhost, jobid, jobdir))
 				}
 				
 				cacheUnlockFiles(inFiles, SHARED_DIR, rhost) {
