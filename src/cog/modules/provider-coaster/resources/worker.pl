@@ -81,7 +81,7 @@ use constant {
 	ERROR_STAGEIN_FILE_WRITE => 522,
 	ERROR_STAGEIN_COPY => 524,
 	ERROR_STAGEIN_REQUEST => 525,
-	ERROR_STAGEOUT_COPY => 528,
+	ERROR_STAGEOUT_IO => 528,
 	ERROR_STAGEOUT_SEND => 515,
 	ERROR_STAGEOUT_TIMEOUT => 516,
 	ERROR_PROCESS_FORK => 512,
@@ -667,12 +667,20 @@ sub nextFileData {
 		my $buffer;
 		my $sz = read($handle, $buffer, IOBUFSZ);
 		if (!defined $sz) {
-			wlog INFO, "$tag Failed to read data from file: $!\n";
-			return (FINAL_FLAG + ERROR_FLAG, "$!", CONTINUE);
+			my $err = "Failed to read data from file: $!";
+			my $jobid = $$state{"jobid"};
+			wlog INFO, "$tag $err\n";
+			abortStageouts($jobid);
+			queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_IO, $err);
+			return (FINAL_FLAG + ERROR_FLAG, "$err", CONTINUE);
 		}
 		elsif ($sz == 0 && $$state{"sent"} < $$state{"size"}) {
-			wlog INFO, "$tag File size mismatch. $$state{'size'} vs. $$state{'sent'}\n";
-			return (FINAL_FLAG + ERROR_FLAG, "File size mismatch. Expected $$state{'size'}, got $$state{'sent'}", CONTINUE);
+			my $err = "File size mismatch. Expected $$state{'size'}, got $$state{'sent'}";
+			my $jobid = $$state{"jobid"};
+			wlog INFO, "$tag $err\n";
+			abortStageouts($jobid);
+			queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_IO, $err);
+			return (FINAL_FLAG + ERROR_FLAG, $err, CONTINUE);
 		}
 		$$state{"sent"} += $sz;
 		wlog DEBUG, "$tag size: $$state{'size'}, sent: $$state{'sent'}\n";
@@ -691,7 +699,7 @@ sub nextFileData {
 }
 
 sub fileData {
-	my ($cmd, $lname, $rname) = @_;
+	my ($cmd, $jobid, $lname, $rname) = @_;
 
 	my $desc;
 	if (!open($desc, "<", "$lname")) {
@@ -700,6 +708,7 @@ sub fileData {
 	}
 	return {
 		"cmd" => $cmd,
+		"jobid" => $jobid,
 		"state" => 0,
 		"handle" => $desc,
 		"nextData" => \&nextFileData,
@@ -1519,6 +1528,13 @@ sub waitForPinnedFile {
 	push(@$waiting, $jobid);
 }
 
+sub abortStageouts {
+	my ($jobid) = @_;
+	
+	# something larger than the number of actual stageouts
+	$JOBDATA{$jobid}{"stageindex"} = 1000000;
+}
+
 sub stageout {
 	my ($jobid) = @_;
 
@@ -1558,7 +1574,7 @@ sub stageout {
 			if (!defined($JOBDATA{$jobid}{"stagoutStatusSent"})) {
 				wlog DEBUG, "$jobid Sending STAGEOUT status\n";
 				queueJobStatusCmd($jobid, STAGEOUT, 0, "workerid=$ID");
-				$JOBDATA{$jobid}{"jobStatusSent"} = 1;
+				$JOBDATA{$jobid}{"stageoutStatusSent"} = 1;
 			}
 			my $rfile = $$STAGED[$STAGEINDEX];
 			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
@@ -1572,13 +1588,13 @@ sub stageout {
 				$JOBDATA{$jobid}{"stageoutCount"} += 1;
 				wlog DEBUG, "$jobid Stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
 
-				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $lfile, $rfile));
+				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $jobid, $lfile, $rfile));
 			}
 			elsif ($protocol eq "sfs") {
 				mkfdir($jobid, $path);
 				if (!copy($lfile, $path)) {
 					wlog DEBUG, "$jobid Error staging out $lfile to $path: $!\n";
-					queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_COPY, "$!");
+					queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_IO, "$!");
 					return;
 				}
 				else {
