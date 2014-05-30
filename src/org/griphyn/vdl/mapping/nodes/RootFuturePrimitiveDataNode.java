@@ -94,6 +94,11 @@ public class RootFuturePrimitiveDataNode extends AbstractFuturePrimitiveDataNode
     }
     
     @Override
+    public Mapper getMapper() {
+        throw new UnsupportedOperationException("Primitive types do not have a mapper");
+    }
+    
+    @Override
     public void closeArraySizes() {
         // does not apply
     }
