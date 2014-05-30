@@ -17,6 +17,7 @@
 
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
+import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
@@ -37,7 +38,10 @@ public class FileName extends SwiftFunction {
 
     @Override
 	public Object function(Stack stack) {
-        AbstractDataNode var = this.var.getValue(stack); 
+        AbstractDataNode var = this.var.getValue(stack);
+        if (var.getType().isPrimitive()) {
+            throw new ExecutionException(this, "Cannot invoke filename() on a primitive value (" + var + ")");
+        }
 		String s = argList(filename(var), true);
 		DSHandle result = NodeFactory.newRoot(Field.GENERIC_STRING, s);
 		if (PROVENANCE_ENABLED) {
