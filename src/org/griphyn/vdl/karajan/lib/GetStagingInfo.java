@@ -54,9 +54,9 @@ public class GetStagingInfo extends SwiftFunction {
     
     private static class Info {
         Set<String> remoteDirNames = Collections.emptySet();
-        List<AbsFile> inFiles = Collections.emptyList();
-        List<AbsFile> outFiles = Collections.emptyList();
-        List<AbsFile> collectPatterns = Collections.emptyList();
+        Set<AbsFile> inFiles = Collections.emptySet();
+        Set<AbsFile> outFiles = Collections.emptySet();
+        Set<AbsFile> collectPatterns = Collections.emptySet();
     }
 
     @Override
@@ -74,14 +74,12 @@ public class GetStagingInfo extends SwiftFunction {
         catch (HandleOpenException e) {
         	throw new ExecutionException(e.getMessage(), e);
         }
-        ret.add(info.remoteDirNames);
-        ret.add(info.inFiles);
-        ret.add(info.outFiles);
-        ret.add(info.collectPatterns);
+        ret.add(new ArrayList<String>(info.remoteDirNames));
+        ret.add(new ArrayList<AbsFile>(info.inFiles));
+        ret.add(new ArrayList<AbsFile>(info.outFiles));
+        ret.add(new ArrayList<AbsFile>(info.collectPatterns));
         return null;
     }
-
-
 
     private void addPaths(Info info, Collection<DSHandle> vars, boolean out) throws HandleOpenException {
     	for (DSHandle var : vars) {
@@ -118,7 +116,7 @@ public class GetStagingInfo extends SwiftFunction {
     }
 
 
-    private List<AbsFile> addOne(AbsFile f, Info info, List<AbsFile> files) {
+    private Set<AbsFile> addOne(AbsFile f, Info info, Set<AbsFile> files) {
         String dir = f.getDirectory();
         if (dir != null) {
             if (info.remoteDirNames.isEmpty()) {
@@ -127,12 +125,11 @@ public class GetStagingInfo extends SwiftFunction {
             info.remoteDirNames.add(remoteDir(f, dir));
         }
         if (files.isEmpty()) {
-            files = new ArrayList<AbsFile>();
+            files = new HashSet<AbsFile>();
         }
         files.add(f);
         return files;
     }
-
 
     private Mapper getMapper(DSHandle var) {
         Mapper m = var.getMapper();
@@ -141,7 +138,6 @@ public class GetStagingInfo extends SwiftFunction {
         }
         return m;
     }
-
 
     private String remoteDir(AbsFile f, String dir) {
         if ("file".equals(f.getProtocol())) {
