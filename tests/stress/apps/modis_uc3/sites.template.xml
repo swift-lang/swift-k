@@ -14,6 +14,7 @@
     <profile namespace="globus"  key="maxNodes">1</profile>
     <profile namespace="globus"  key="nodeGranularity">1</profile>
     <profile namespace="globus"  key="condor.+AccountingGroup">"group_friends.{env.USER}"</profile>
+    <profile namespace="globus"  key="condor.+ProjectName">"Swift"</profile>
     <profile namespace="globus"  key="jobType">nonshared</profile>
     <workdirectory>.</workdirectory>
   </pool>

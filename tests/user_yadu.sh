@@ -7,11 +7,20 @@ export FUSION_USERNAME="yadunand"
 export COMM_USERNAME="yadunandb"
 export BRID_USERNAME="yadunandb"
 export FROM_MAIL="Test-Engine@midway001"
-export TO_MAIL="yadudoc1729@gmail.com"
+export TO_MAIL="yadudoc1729@gmail.com davidkelly999@uchicago.edu wilde@mcs.anl.gov"
+#export TO_MAIL="yadudoc1729@gmail.com"
 
-#export REMOTE_DRIVER_FASTSETUP="false"
-export REMOTE_DRIVER_FASTSETUP="true"
-export SWIFT_TAR_FILE="/scratch/midway/yadunand/swift-trunk.tar"
+################# MUST UPDATE FOR EACH REVISION #########################
+COG_URL=https://svn.code.sf.net/p/cogkit/svn/branches/4.1.11/src/cog
+SWIFT_URLk=https://svn.ci.uchicago.edu/svn/vdl2/branches/release-0.95
+export SWIFT_TAR_FILE=""
+export SWIFT_VERSION_OVERRIDE="swift-0.95"
+export SWIFT_VERSION="swift-0.95"
+################# MUST UPDATE FOR EACH REVISION #########################
+
+export REMOTE_DRIVER_FASTSETUP="false"
+#export REMOTE_DRIVER_FASTSETUP="true"
+export CLEAN_CHECKOUT="yes"
 
 export KILL_JAVA="false"
 

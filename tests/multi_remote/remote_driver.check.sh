@@ -15,8 +15,8 @@ fi
 SITES_PASSED=`ls out/*out | wc -l`
 HOME=$PWD
 MAIL="$HOME/Mail.content"
-#VERSION=`grep "^Swift.*swift-.*cog.*" remote_driver.stdout  | cut -d " " -f -2 | sed 's/\ /-/g' | tr '[A-Z]' '[a-z]'`
-VERSION="swift-trunk"
+VERSION=`grep "^Swift.*swift-.*cog.*" remote_driver.stdout  | cut -d " " -f -2 | sed 's/\ /-/g' | tr '[A-Z]' '[a-z]'`
+#VERSION="swift-trunk"
 
 cd out;
 echo "Test-Results"                         >  $MAIL

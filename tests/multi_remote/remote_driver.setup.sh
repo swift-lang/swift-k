@@ -1,8 +1,8 @@
 #!/bin/bash
 
-[ ! -z $COG_URL ]         || COG_URL=https://svn.code.sf.net/p/cogkit/svn/trunk/src/cog
-[ ! -z $SWIFT_URL ]       || SWIFT_URL=https://svn.ci.uchicago.edu/svn/vdl2/trunk
-[ ! -z $SWIFT_VERSION ]   || SWIFT_VERSION=trunk
+[ ! -z $COG_URL ]         || COG_URL=https://svn.code.sf.net/p/cogkit/svn/branches/4.1.11/src/cog
+[ ! -z $SWIFT_URL ]       || SWIFT_URL=https://svn.ci.uchicago.edu/svn/vdl2/branches/release-0.95
+[ ! -z $SWIFT_VERSION ]   || SWIFT_VERSION=0.95
 [ ! -z $BEAGLE_USERNAME ] || BEAGLE_USERNAME="yadunandb"
 [ ! -z $MIDWAY_USERNAME ] || MIDWAY_USERNAME="yadunand"
 [ ! -z $UC3_USERNAME ]    || UC3_USERNAME="yadunand"

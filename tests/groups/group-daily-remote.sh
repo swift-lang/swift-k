@@ -33,7 +33,7 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/sites/mac-frisbee  \
             $TESTDIR/sites/blues  \
             $TESTDIR/sites/fusion \
-            $TESTDIR/sites/raven  \
+            #$TESTDIR/sites/raven  \
 
  	        # Remote-cluster IO tests
 	        $TESTDIR/stress/IO/beagle \
@@ -51,8 +51,6 @@ GROUPLIST=( $TESTDIR/language/working \
 	        $TESTDIR/stress/apps/modis_uc3     \
             # $TESTDIR/stress/apps/modis_multiple\
 
-            # Local stress tests
-            $TESTDIR/stress/internals \
             # Local cluster tests.
             $TESTDIR/stress/local_cluster \
             $TESTDIR/stress/random_fail \

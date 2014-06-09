@@ -8,10 +8,10 @@
     <profile namespace="globus" key="providerAttributes">pbs.aprun;pbs.mpp;depth=24</profile>
     <profile namespace="globus" key="maxtime">3700</profile>
     <profile namespace="globus" key="maxWalltime">00:25:00</profile>
-    <profile namespace="globus" key="queue">development</profile>
+    <!-- <profile namespace="globus" key="queue">development</profile> -->
     <profile namespace="globus" key="userHomeOverride">/lustre/beagle/{env.USER}/swiftwork</profile>
-    <profile namespace="globus" key="slots">20</profile>
-    <profile namespace="globus" key="maxnodes">10</profile>
+    <profile namespace="globus" key="slots">2</profile>
+    <profile namespace="globus" key="maxnodes">4</profile>
     <profile namespace="globus" key="nodeGranularity">1</profile>
     <profile namespace="karajan" key="jobThrottle">4.80</profile>
     <profile namespace="karajan" key="initialScore">10000</profile>
