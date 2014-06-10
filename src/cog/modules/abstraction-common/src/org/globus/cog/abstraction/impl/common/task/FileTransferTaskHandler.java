@@ -17,7 +17,7 @@ public class FileTransferTaskHandler extends AbstractTaskHandler {
         setType(TaskHandler.FILE_TRANSFER);
     }
     
-    protected String getName() {
+    public String getName() {
         return "FileTransferTaskHandler";
     }
 

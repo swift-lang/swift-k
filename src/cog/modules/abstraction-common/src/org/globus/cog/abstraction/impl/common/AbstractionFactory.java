@@ -74,7 +74,9 @@ public class AbstractionFactory {
             throws InvalidProviderException, ProviderMethodException {
         AbstractionProperties providerProps = AbstractionProperties
                 .getProperties(provider);
-        return (TaskHandler) newObject(provider, type);
+        TaskHandler th = (TaskHandler) newObject(provider, type);
+        th.setName(provider);
+        return th;
     }
 
     /**

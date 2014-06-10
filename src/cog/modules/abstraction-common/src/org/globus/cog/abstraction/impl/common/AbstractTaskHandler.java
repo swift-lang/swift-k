@@ -47,7 +47,11 @@ public abstract class AbstractTaskHandler extends TaskHandlerSkeleton {
 
 	protected abstract DelegatedTaskHandler newDelegatedTaskHandler(int type) throws TaskSubmissionException;
 
-	protected abstract String getName();
+	public abstract String getName();
+	
+	public void setName(String name) {
+	    // ignored for most handlers
+	}
 
 	public void suspend(Task task) throws InvalidSecurityContextException, TaskSubmissionException {
 		DelegatedTaskHandler dth = this.handleMap.get(task);

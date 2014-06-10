@@ -122,4 +122,8 @@ public class GenericTaskHandler extends MultiplexingTaskHandler {
         list.addAll(collector.collect(fileHandler));
         return list;
     }
+    
+    public String getName() {
+        return "GenericTaskHandler";
+    }
 }

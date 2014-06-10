@@ -9,7 +9,6 @@ package org.globus.cog.abstraction.impl.common.task;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
@@ -21,10 +20,10 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 public class FileOperationTaskHandler extends MultiplexingTaskHandler {
-    private Map mapping;
+    private Map<String, TaskHandler> mapping;
 
     public FileOperationTaskHandler() {
-        this.mapping = new HashMap();
+        this.mapping = new HashMap<String, TaskHandler>();
         setType(TaskHandler.FILE_OPERATION);
     }
 
@@ -36,7 +35,7 @@ public class FileOperationTaskHandler extends MultiplexingTaskHandler {
         String provider = task.getService(0).getProvider().toLowerCase();
         TaskHandler th = null;
         synchronized (this.mapping) {
-            th = (TaskHandler) this.mapping.get(provider);
+            th = this.mapping.get(provider);
         }
         if (th == null) {
             throw new TaskSubmissionException("Provider " + provider
@@ -55,7 +54,7 @@ public class FileOperationTaskHandler extends MultiplexingTaskHandler {
         }
         String provider = task.getService(0).getProvider().toLowerCase();
         synchronized (this.mapping) {
-            TaskHandler th = (TaskHandler) this.mapping.get(provider);
+            TaskHandler th = this.mapping.get(provider);
             if (th == null) {
                 th = createTaskHandler(task);
             }
@@ -99,18 +98,16 @@ public class FileOperationTaskHandler extends MultiplexingTaskHandler {
 
     public void remove(Task task) throws ActiveTaskException {
         String provider = task.getService(0).getProvider().toLowerCase();
-        TaskHandler taskHandler = (TaskHandler) this.mapping.get(provider);
+        TaskHandler taskHandler = this.mapping.get(provider);
         if (taskHandler != null) {
             taskHandler.remove(task);
         }
     }
     
-    protected Collection getTasks(final TaskCollector collector) {
+    protected Collection<Task> getTasks(final TaskCollector collector) {
         // extract tasks from various TaskHandlers
-        ArrayList list = new ArrayList();
-        Iterator i = this.mapping.values().iterator();
-        while (i.hasNext()) {
-            TaskHandler handler = (TaskHandler) i.next();
+        ArrayList<Task> list = new ArrayList<Task>();
+        for (TaskHandler handler : mapping.values()) {
             list.addAll(collector.collect(handler));
         }
         return list;
@@ -131,5 +128,10 @@ public class FileOperationTaskHandler extends MultiplexingTaskHandler {
         }
         this.mapping.put(provider.toLowerCase(), taskHandler);
         return taskHandler;
+    }
+
+    @Override
+    public String getName() {
+        return "FileOperationTaskHandler";
     }
 }

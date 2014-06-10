@@ -17,7 +17,7 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 public abstract class TaskHandlerSkeleton implements TaskHandler {
 
     private int type;
-
+    
     public void cancel(Task task) throws InvalidSecurityContextException,
             TaskSubmissionException {
         cancel(task, null);
@@ -29,5 +29,13 @@ public abstract class TaskHandlerSkeleton implements TaskHandler {
 
     public int getType() {
     	return type;
+    }
+    
+    public String toString() {
+        return "TaskHandler(type = " + getType() + ", provider = " + getName() + ")";
+    }
+    
+    public void setName(String name) {
+        // ignored
     }
 }

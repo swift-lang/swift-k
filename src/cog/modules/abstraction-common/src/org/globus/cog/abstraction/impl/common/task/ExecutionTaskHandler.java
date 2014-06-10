@@ -185,7 +185,7 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
         return getTasksWithStatus(Status.CANCELED);
     }
     
-    public String toString() {
+    public String getName() {
         return "ExecutionTaskHandler"; 
     }
 }

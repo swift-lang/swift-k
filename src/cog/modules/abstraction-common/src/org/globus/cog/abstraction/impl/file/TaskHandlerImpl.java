@@ -526,4 +526,8 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
     protected FileResource getResource() {
         return this.fileResource;
     }
+    
+    public String getName() {
+        return "FileOperationTaskHandler";
+    }
 }

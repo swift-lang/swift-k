@@ -26,4 +26,8 @@ public abstract class TaskHandlerImpl extends AbstractTaskHandler {
 	}
 
 	protected abstract DelegatedTaskHandler newDelegatedTaskHandler();
+	
+	public String toString() {
+        return "ExecutionTaskHandler(provider = " + getName() + ")";
+    }
 }

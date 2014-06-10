@@ -65,6 +65,10 @@ public interface TaskHandler {
      * Returns the type of tasks handled by this <code>TaskHandler</code>
      */
     public int getType();
+    
+    public String getName();
+    
+    public void setName(String provider);
 
     /**
      * Submits the given {@link Task}for execuiton. The <code>Task</code> is
