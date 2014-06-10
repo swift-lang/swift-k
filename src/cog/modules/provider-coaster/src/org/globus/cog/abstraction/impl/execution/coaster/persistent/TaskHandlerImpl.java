@@ -23,7 +23,7 @@ public class TaskHandlerImpl extends
 		return new JobSubmissionTaskHandler(false);
 	}
 
-	protected String getName() {
+	public String getName() {
 		return "Coaster";
 	}
 }
