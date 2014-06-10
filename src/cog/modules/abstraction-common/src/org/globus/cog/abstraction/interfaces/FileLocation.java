@@ -44,6 +44,12 @@ public interface FileLocation extends Serializable {
      * for output streams, that both (or all) redirections should be used.
      */
     FileLocation and(FileLocation other);
+    
+    /**
+     * Returns a location that contains all the locations in this object
+     * that are not contained in the parameter.
+     */
+    FileLocation remove(FileLocation other);
 
     /**
      * Returns <code>true</code> if this StreamType is the same as the
@@ -73,6 +79,10 @@ public interface FileLocation extends Serializable {
 
         public FileLocation and(FileLocation other) {
             return new Impl(code | other.getCode());
+        }
+        
+        public FileLocation remove(FileLocation other) {
+            return new Impl(code & (~other.getCode()));
         }
 
         public boolean includes(FileLocation other) {
@@ -108,8 +118,8 @@ public interface FileLocation extends Serializable {
                 return "none";
             }
             StringBuffer sb = new StringBuffer();
-            for (int i = 1; i < 3; i++) {
-                if ((code & (1 >> i)) != 0) {
+            for (int i = 0; i < 3; i++) {
+                if ((code & (1 << i)) != 0) {
                     append(sb, LOCS[i]);
                 }
             }
