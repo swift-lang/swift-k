@@ -20,7 +20,7 @@ public class TaskHandlerImpl
         return new JobSubmissionTaskHandler();
     }
 
-    protected String getName() {
+    public String getName() {
         return "Condor";
     }
 }
