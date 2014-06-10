@@ -22,7 +22,7 @@ public class TaskHandlerImpl extends
 		return DelegatedTaskHandlerFactory.newTaskHandler(type);
 	}
 
-	protected String getName() {
+	public String getName() {
 		return "SSH";
 	}
 }
