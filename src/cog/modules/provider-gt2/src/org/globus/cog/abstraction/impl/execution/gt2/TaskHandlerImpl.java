@@ -20,7 +20,7 @@ public class TaskHandlerImpl extends
 		return DelegatedTaskHandlerFactory.newTaskHandler(Task.JOB_SUBMISSION);
 	}
 
-	protected String getName() {
+	public String getName() {
 		return "GT2";
 	}
 }
