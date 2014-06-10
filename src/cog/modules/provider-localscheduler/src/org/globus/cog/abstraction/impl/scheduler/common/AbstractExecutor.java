@@ -61,11 +61,10 @@ public abstract class AbstractExecutor implements ProcessListener {
         validate(task);
     }
 
-    public void start()
-    throws AuthorizationException, IOException, ProcessException {
+    public void start() throws AuthorizationException, IOException, ProcessException {
 
     	String scriptdirPath = System.getProperty("script.dir");
-    	if(scriptdirPath == null) {
+    	if (scriptdirPath == null) {
     		scriptdirPath = System.getProperty("user.home")
                     + File.separatorChar + ".globus" + File.separatorChar
                     + "scripts";
@@ -107,6 +106,10 @@ public abstract class AbstractExecutor implements ProcessListener {
 
         try {
             int code = process.waitFor();
+            if (logger.isDebugEnabled()) {
+                logger.debug(getProperties().getSubmitCommandName()
+                        + " done (exit code " + code + ")");
+            }
             if (code != 0) {
                 String errorText = getOutput(process.getInputStream())
                         + getOutput(process.getErrorStream());
@@ -115,10 +118,6 @@ public abstract class AbstractExecutor implements ProcessListener {
                         + " reported an exit code of " + code + "). "
                         + errorText);
             }
-            if (logger.isDebugEnabled()) {
-                logger.debug(getProperties().getSubmitCommandName()
-                        + " done (exit code " + code + ")");
-            }
         }
         catch (InterruptedException e) {
             if (logger.isDebugEnabled()) {
@@ -126,8 +125,7 @@ public abstract class AbstractExecutor implements ProcessListener {
                         + getProperties().getSubmitCommandName(), e);
             }
             if (listener != null) {
-                listener
-                    .processFailed("The submission process was interrupted");
+                listener.processFailed("The submission process was interrupted");
             }
         }
 
@@ -268,8 +266,7 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     protected abstract void writeScript(Writer wr, String exitcode,
-                                        String stdout, String stderr)
-    throws IOException;
+            String stdout, String stderr) throws IOException;
 
     protected JobSpecification getSpec() {
         return spec;
@@ -403,8 +400,7 @@ public abstract class AbstractExecutor implements ProcessListener {
        @param list May be null or empty
        @throws IOException
     */
-    protected void writeQuotedList(Writer writer, List<String> list)
-    throws IOException
+    protected void writeQuotedList(Writer writer, List<String> list) throws IOException
     {
         if (list != null && list.size() > 0) {
             writer.write(' ');

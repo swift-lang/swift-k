@@ -1,0 +1,26 @@
+//----------------------------------------------------------------------
+//This code is developed as part of the Java CoG Kit project
+//The terms of the license can be found at http://www.cogkit.org/license
+//This message may not be removed or altered.
+//----------------------------------------------------------------------
+
+package org.globus.cog.abstraction.impl.scheduler.shell.execution;
+
+import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
+import org.globus.cog.abstraction.impl.scheduler.common.AbstractJobSubmissionTaskHandler;
+import org.globus.cog.abstraction.impl.scheduler.shell.Properties;
+import org.globus.cog.abstraction.impl.scheduler.shell.ShellExecutor;
+import org.globus.cog.abstraction.interfaces.Task;
+
+public class JobSubmissionTaskHandler extends AbstractJobSubmissionTaskHandler {
+    private Properties props;
+    
+    public JobSubmissionTaskHandler(Properties props) {
+        this.props = props;
+    }
+    
+	protected AbstractExecutor newExecutor(Task task,
+			AbstractJobSubmissionTaskHandler th) {
+		return new ShellExecutor(props, task, th);
+	}
+}

@@ -15,7 +15,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -28,7 +27,8 @@ public abstract class AbstractQueuePoller implements Runnable {
     public static final int MAX_CONSECUTIVE_FAILURES = 3;
 
     private String name;
-    private LinkedList newjobs, donejobs;
+    private LinkedList<Job> newjobs;
+    private LinkedList<String> donejobs;
     private Map<String, Job> jobs;
     boolean any = false;
     private int sleepTime;
@@ -45,8 +45,8 @@ public abstract class AbstractQueuePoller implements Runnable {
         this.properties = properties;
         this.sleepTime = properties.getPollInterval() * 1000;
         jobs = new HashMap<String, Job>();
-        newjobs = new LinkedList();
-        donejobs = new LinkedList();
+        newjobs = new LinkedList<Job>();
+        donejobs = new LinkedList<String>();
     }
 
     public void start() {
@@ -102,7 +102,7 @@ public abstract class AbstractQueuePoller implements Runnable {
         else {
             synchronized (newjobs) {
                 while (!newjobs.isEmpty()) {
-                    Job job = (Job) newjobs.removeFirst();
+                    Job job = newjobs.removeFirst();
                     jobs.put(job.getJobID(), job);
                 }
             }
@@ -115,7 +115,7 @@ public abstract class AbstractQueuePoller implements Runnable {
         }
         else {
             while (!donejobs.isEmpty()) {
-                String jobid = (String) donejobs.removeFirst();
+                String jobid = donejobs.removeFirst();
                 removeDoneJob(jobid);
             }
         }
@@ -137,9 +137,7 @@ public abstract class AbstractQueuePoller implements Runnable {
         if (logger.isDebugEnabled()) {
             logger.debug("Fail all: " + message);
         }
-        Iterator i = jobs.values().iterator();
-        while (i.hasNext()) {
-            Job job = (Job) i.next();
+        for (Job job : jobs.values()) {
             try {
                 job.fail(message);
             }

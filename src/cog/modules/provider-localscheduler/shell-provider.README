@@ -1,0 +1,276 @@
+===================
+= I. Introduction =
+===================
+
+This file contains information about the shell provider. The shell
+provider is a CoG provider that allows interfacing with cutsom queuing
+systems for which a provider is not otherwise available.
+
+Names contained within angle brackets are meant to be replaced with
+specific strings or values. For example, if you want to name your
+provider "PBS" then replace all occurrences of <providerName> with
+"PBS".
+
+There are five basic ingredients to a shell provider: 
+
+	1. A file that informs the job abstraction code about the existence
+	of the new provider (cog-provider.properties)
+	
+	2. A file that contains settings for the new provider
+	(provider-<providerName>.properties)
+	
+	3. A submit script that receives job information and is responsible
+	for starting the job.
+	
+	4. A cancel script that can be used to cancel a submitted job
+	
+	5. A status script that provides information about the status of
+	jobs
+
+For a sample implementation, see the 'examples' directory.
+
+=============
+= II. Setup =
+=============
+
+1. cog-provider.properties
+--------------------------
+
+The first step is creating the cog-provider.properties file. For each
+provider that you want to add, make sure that the file contains the
+following lines:
+
+	provider=<providerName>
+	sandbox=false
+	executionTaskHandler=org.globus.cog.abstraction.impl.scheduler.shell.execution.TaskHandlerImpl
+	securityContext=org.globus.cog.abstraction.impl.common.task.SecurityContextImpl
+
+You can add multiple sets of these, one for each provider you want to
+implement. The cog-provider.properties file must be put in a directory
+(or .jar file) that is included in Java's class path at run-time. If
+using any of the CoG modules in a normal deployment or Swift, the
+dist/<moduleName>/etc directory is automatically included in the class
+path.
+
+If you wanted this provider to be available on a remote site accessed by
+coasters, you could put this file in a directory that would be added to
+the CLASSPATH environment variable in the shell profile (although at the
+time of this writing the author is not entirely sure that CLASSPATH is
+used by the coaster bootstrap process).
+
+
+2. provider-<providerName>.properties
+-------------------------------------
+
+This file must contain the following entries:
+
+	submit.command=<path to submit command>
+	cancel.command=<path to cancel command>
+	poll.command=<path to status command>
+
+Optionally, it could contain the following property:
+
+	poll.interval=<seconds>
+
+The poll interval indicates the interval at which the status of jobs is
+checked. The check is done regularly at this interval for all jobs
+sumbitted through this provider. The default is 5 seconds.
+
+
+3. The submit script
+--------------------
+
+This script is responsible for submitting the actual job. It receives
+input on STDIN. It must produce its normal output on STDOUT and if an
+error occurs, it should go on STDERR.
+
+Following are the syntactic rules for the input:
+	- empty lines must be ignored
+	- lines starting with the '#' character must also be ignored
+	- each other line is a "key=value" pair
+	- values can contain unescaped '=' symbols, so when parsing lines,
+	the first equal sign signifies the end of the key
+	- new lines are escaped using '\n' and backslashes are escaped
+	as '\\'; there are no other escape codes
+	- for certain keys, multiple lines with the same key can appear 
+	in the input; this is the way to encode a list
+	- keys appear in the input in a well defined order; however, some
+	keys can be missing, indicating that the corresponding value is
+	not set
+
+The following keys (in the specified order) can appear in the input. 
+Optional keys are marked with '?' (although no '?' will appear in the
+actual input to the submit script). Similarly, lists (i.e. cases when 
+the key can appear zero or more times) are marked with '*'. Literals
+are single-quoted. The pipe ('|') represents mutually exclusive choices.
+
+?directory=<dir> 
+	if specified, run the job in <dir>
+	
+executable=<path>
+	this is the path to the executable
+
+*arg=<string>
+	one of the arguments to the executable
+
+?stdin.location='local'|'remote'
+	indicates that the executable should be fed a file to its STDIN and
+	whether this file is on the submit side ('local') or on the node 
+	where the job will run ('remote'). If this key is present, then
+	the following key is mandatory. 
+	
+	Practically, if the file is located on a shared file system 
+	accessible (and mounted in the same place) by both the submit
+	host and the compute node, then treating 'remote' as 'local'
+	and the other way around should produce no visible difference.
+	
+	For the purpose of implementing a provider that can be used to
+	control coaster blocks, assuming a shared file system and 
+	implementing this in the easiest way is a reasonable way to go.
+
+?stdin.path=<path>
+	The path to the file to be fed to the STDIN of the job.
+
+?stdout.location='local'|'remote'|'tmp'
+	specifies where the process STDOUT should be redirected. With
+	the exception of 'tmp', the same considerations as in the case
+	of stdin.location above apply.
+	
+	'tmp' is a special case. It says that the submit script must
+	re-direct the job stdout to some temporary file AND return
+	(on STDOUT) the path to this file in the following form:
+	
+	stdout.path=<path>
+	
+	if 'tmp' is specified, the following key (stdout.path) will
+	not be present
+
+?stdout.path=<path>
+	where to re-direct the job stdout if stdout.location is 'local'
+	or 'remote'
+
+?stderr.location='local'|'remote'|'tmp'
+	see stdout.location
+
+?stderr.path=<path>
+	see stdout.path
+
+*env.<name>=<value>
+	Specifies an environment variable that muts be available in the
+	job environment
+
+*attr.<name>=<value>
+	These are miscellaneous job attributes. Their interpretation
+	is up to the provider. Some example of attributes include
+	'maxwalltime', 'queue', 'project', etc. Unknown attributes 
+	should be ignored.
+	
+	Coasters will set the following attributes:
+	maxwalltime=<minutes> - obvious
+	count=<number> - the number of process copies to start
+
+-----
+Small aside: file staging/cleanup is optional. If not implemented,
+an error should be produced.
+-----
+
+*stagein.source=<path>
+	Specifies a stage-in request. If present, it will be followed
+	by stagein.destination.
+	<path> represents the local file that must be copied to the 
+	compute node.
+	
+*stagein.destination=<path>
+	Specifies where (on the compute node) the most recent 
+	stagein.source should be copied
+
+*stageout.source=<path>
+	Specifies a stage-out request. If present, it will be followed
+	by stageout.destination and stageout.mode.
+	<path> represents the remote file that must be copied from the
+	compute node to the submit node.
+	
+*stageout.destination=<path>
+	Specifies where (on the submit node) the most recent 
+	stageout.source should be copied
+
+*stagout.mode=<mode>
+	Specifies under what circumstances the most recent stagout 
+	request should be fulfilled. The <mode> is a bit-wise OR
+	of the following possible values:
+	
+	1 - always: stage out the file whether the job succeeds or 
+	not. If the file cannot be staged out, produce an error
+	2 - if present: stage out the file only if it can be found
+	3 - on error: only attempt to stage out the file if the job
+	fails; produce an error if the job failed and the file cannot
+	be staged-out
+	4 - on success: like "on error" except if the job succeeds.
+
+*cleanup=<path>
+	A list of files and or directories to be deleted after the
+	job is done and the stage out process is completed. Reasonable
+	implementations could ensure that the cleanup paths are
+	limited to the job directory
+
+The submit script, after starting or queuing the job, must reply,
+on STDOUT, with "jobid=<jobid>", where <jobid> is a handle that
+can be used to subsequently identify the job for purposes of 
+cancelling or querying its status. If the submission is successful,
+the implementation should return an exit code of 0.
+
+If the implementation finds that the specification is erroneous, or
+if any errors occur submitting the job, an error message should be
+printed on STDERR and an exit code != 0 should be produced.
+
+Here is an example:
+	STDIN:
+		directory=/tmp
+		executable=/bin/ls
+		arg=-al
+		arg=*.txt
+		stdout.location=tmp
+	
+	A local execution submit script could perform the following:
+		cd /tmp
+		/bin/ls -al *.txt 1>/tmp/tempx0001 &
+		PID=$!
+		echo "stdout.path=/tmp/tempx0001"
+		echo "jobid=$PID"
+
+
+4. The cancel script
+--------------------
+
+The cancel script must cancel the job with the <jobid> passed to 
+it as the firs command-line argument.
+
+
+5. The status script
+--------------------
+
+The status script implements a mechanism for querying the status
+of jobs. It receives a list of <jobid>s on the command line, one
+in each argument, and returns, if successful, on STDOUT, a list
+of lines, one for each job, of the following format:
+
+<jobid> 'Q'|'R'|'C'|'F' [<exitCode> [<errorMessage>]]
+
+The meaning of the second column is as follows:
+	'Q': the job is queued
+	'R': the job is running
+	'C': the job is completed
+		optionally, an <exitCode> could be present
+	'F': the job is failed
+		optionally, an <exitCoud> should be present, along possibly
+		with an <errorMessage>
+
+There is some level of ambiguity about the interpretation of non-zero
+exit codes. An implementation can chose to consider all jobs that 
+do not run any more as completed, and use the exit code as an 
+indication of whether the completion was successful or not. Such
+an implementation might reserve the failed state for cases in
+which the job has failed to run due to queuing system conditions,
+and provider, in <errorMessage> an appropriate explanation of the
+failure condition. Other implementations may chose to mark all jobs
+completed with non-zero exit codes as failed.

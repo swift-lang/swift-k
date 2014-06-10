@@ -1,0 +1,12 @@
+#!/bin/bash
+
+while [ "$1" != "" ]; do
+	if [ $(pidof $1) ]; then
+		echo $1 R
+	else
+		# Assume succes if the process is not running
+		# This is just a simple example
+		echo $1 C 0
+	fi
+	shift 1
+done

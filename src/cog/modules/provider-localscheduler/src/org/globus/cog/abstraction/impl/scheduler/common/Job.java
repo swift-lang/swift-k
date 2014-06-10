@@ -24,11 +24,12 @@ public class Job {
 	public static final int STATE_QUEUED = 1;
 	public static final int STATE_RUNNING = 2;
 	public static final int STATE_DONE = 3;
+	public static final int STATE_FAILED = 5;
 	public static final int STATE_UNKNOWN = 4;
 
 	private static final int NO_EXITCODE = -1;
 
-	private String jobID, location;
+	private String jobID, location, message;
 	private String exitcodeFileName;
 	private String stdout, stderr;
 	private FileLocation outLoc, errLoc;
@@ -50,8 +51,12 @@ public class Job {
 		this.ticks = 0;
 		this.exitcode = NO_EXITCODE;
 	}
+	
+	public void setMessage(String message) {
+	    this.message = message;
+	}
 
-	public boolean close() {
+	public boolean close(int tentativeState) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Closing " + jobID);
 		}
@@ -63,9 +68,8 @@ public class Job {
 			f = new File(exitcodeFileName);	
 			if (f != null && !f.exists()) {
 				if (ticks == 5) {
-					listener
-							.processFailed(new ProcessException(
-									"Exitcode file (" + exitcodeFileName + ") not found 5 queue polls after the job was reported done"));
+					listener.processFailed(new ProcessException(
+					        "Exitcode file (" + exitcodeFileName + ") not found 5 queue polls after the job was reported done"));
 					return true;
 				}
 				else {
@@ -78,11 +82,11 @@ public class Job {
 			}
 		}
 
-		processExitCode();
+		processExitCode(tentativeState);
 		return true;
 	}
 
-	protected boolean processExitCode() {
+	protected boolean processExitCode(int tentativeState) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Processing exit code for job " + jobID);
 		}
@@ -101,7 +105,17 @@ public class Job {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Exit code: " + exitcode);
 			}
-			listener.processCompleted(exitcode);
+			if (tentativeState == STATE_FAILED) {
+			    if (message == null) {
+			        listener.processFailed("Job failed (exit code: " + exitcode + ")"); 
+			    }
+			    else {
+			        listener.processFailed(message);
+			    }
+			}
+			else {
+			    listener.processCompleted(exitcode);
+			}
 			return true;
 		}
 		catch (Exception e) {
@@ -155,7 +169,7 @@ public class Job {
 	}
 
 	public synchronized void await() {
-		while (state != STATE_DONE) {
+		while (state != STATE_DONE && state != STATE_FAILED) {
 			try {
 				wait();
 			}
@@ -173,9 +187,8 @@ public class Job {
 			return;
 		}
 		else {
-			if (state == STATE_DONE) {
-				if (close()) {
-					this.state = STATE_DONE;
+			if (state == STATE_DONE || state == STATE_FAILED) {
+				if (close(state)) {
 					synchronized (this) {
 						notify();
 					}

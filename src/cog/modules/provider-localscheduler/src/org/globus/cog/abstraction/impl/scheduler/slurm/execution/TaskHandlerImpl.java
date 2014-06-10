@@ -15,7 +15,7 @@ public class TaskHandlerImpl extends
 		return new JobSubmissionTaskHandler();
 	}
 
-	protected String getName() {
+	public String getName() {
 		return "Slurm";
 	}
 }

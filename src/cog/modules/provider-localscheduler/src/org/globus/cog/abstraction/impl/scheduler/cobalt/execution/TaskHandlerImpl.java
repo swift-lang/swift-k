@@ -22,12 +22,7 @@ public class TaskHandlerImpl extends
 		return new JobSubmissionTaskHandler();
 	}
 
-	protected String getName() {
+	public String getName() {
 		return "Cobalt";
 	}
-
-    public String toString()
-    {
-        return "TaskHandlerImpl(execution cobalt)";
-    }
 }
