@@ -80,16 +80,18 @@ public class VDL2Config extends Properties {
 		c.load(file);
 		config = c;
 		config.check();
-		config.validateProperties();
 		return config;
 	}
 
 	private List<String> files, tried;
 	private Map<Object, ConfigPropertyType> types;
+	private Map<Object, String> propertySource;
+	private String currentFile;
 
 	private VDL2Config() {
 		files = new LinkedList<String>();
 		tried = new LinkedList<String>();
+		propertySource = new HashMap<Object, String>();
 		types = new HashMap<Object, ConfigPropertyType>();
 		put(VDL2ConfigProperties.POOL_FILE, "${swift.home}/etc/sites.xml", ConfigPropertyType.FILE);
 		put(VDL2ConfigProperties.TC_FILE, "${swift.home}/etc/tc.data", ConfigPropertyType.FILE);
@@ -132,9 +134,11 @@ public class VDL2Config extends Properties {
 	private VDL2Config(VDL2Config other) {
 		this.putAll(other);
 		this.files.addAll(other.files);
+		this.propertySource.putAll(other.propertySource);
 	}
 
 	protected void load(String file) throws IOException {
+	    this.currentFile = file;
 		tried.add(file);
 		File f = new File(file);
 		if (f.exists()) {
@@ -155,7 +159,7 @@ public class VDL2Config extends Properties {
 		}
 	}
 
-	private void validateProperties() {
+	public void validateProperties() {
 	    for (Map.Entry<Object, Object> e : this.entrySet()) {
 	        checkType(e.getKey(), e.getValue());
 	    }
@@ -181,6 +185,7 @@ public class VDL2Config extends Properties {
 	 * occur.
 	 */
 	public synchronized Object put(Object key, Object value) {
+	    propertySource.put(key, currentFile);
 		String svalue = (String) value;
 		if (svalue.indexOf("${") == -1) {
 			return super.put(key, value);
@@ -223,7 +228,7 @@ public class VDL2Config extends Properties {
 	private void checkType(Object key, Object value) {
 	    ConfigPropertyType type = types.get(key);
 	    if (type != null) {
-	        type.checkValue((String) key, (String) value);
+	        type.checkValue((String) key, (String) value, propertySource.get(key));
 	    }
     }
 
@@ -287,6 +292,8 @@ public class VDL2Config extends Properties {
 	public Object clone() {
 		VDL2Config conf = new VDL2Config();
 		conf.putAll(this);
+		conf.files.addAll(files);
+        conf.propertySource.putAll(propertySource);
 		return conf;
 	}
 
@@ -305,4 +312,8 @@ public class VDL2Config extends Properties {
 		}
 		return getProperty(name);
 	}
+
+    public void setCurrentFile(String f) {
+        this.currentFile = f;
+    }
 }
