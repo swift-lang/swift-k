@@ -110,9 +110,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
             checkValidProject(project);
             String projectName = projectName(project);
        
-            setupLogging(ap, projectName, runID);
             VDL2Config config = loadConfig(ap);
             addCommandLineProperties(config, ap);
+            config.validateProperties();
+            setupLogging(ap, projectName, runID);
             logBasicInfo(argv, runID, config);
             debugSitesText(config);
             debugTCText(config);
@@ -472,14 +473,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     private static void addCommandLineProperties(VDL2Config config,
             ArgumentParser ap) {
+        config.setCurrentFile("<command line>");
         Map<String, PropInfo> desc = VDL2ConfigProperties.getPropertyDescriptions();
         for (Map.Entry<String, PropInfo> e : desc.entrySet()) {
             String name = e.getKey();
             if (ap.isPresent(name)) {
             	String value = ap.getStringValue(name);
-            	if (logger.isDebugEnabled()) {
-            	    logger.debug("setting: " + name + " to: " + value);
-            	}
             	config.setProperty(name, value);
             }
         }

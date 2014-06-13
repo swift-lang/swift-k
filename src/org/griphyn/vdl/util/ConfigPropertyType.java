@@ -27,7 +27,7 @@ public abstract class ConfigPropertyType {
         return new Choices(values);
     }
     
-    public abstract void checkValue(String propName, String value);
+    public abstract void checkValue(String propName, String value, String source);
     
     private static String pp(Collection<String> c) {
         StringBuilder sb = new StringBuilder();
@@ -54,9 +54,9 @@ public abstract class ConfigPropertyType {
         }
 
         @Override
-        public void checkValue(String propName, String value) {
+        public void checkValue(String propName, String value, String source) {
             if (!choices.contains(value)) {
-                throw new IllegalArgumentException("Invalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Valid values are: " + pp(choices));
             }
         }
@@ -64,19 +64,19 @@ public abstract class ConfigPropertyType {
     
     private static class CPTString extends ConfigPropertyType {
         @Override
-        public void checkValue(String propName, String value) {
+        public void checkValue(String propName, String value, String source) {
             // all values accepted
         }
     }
     
     private static class Int extends ConfigPropertyType {
         @Override
-        public void checkValue(String propName, String value) {
+        public void checkValue(String propName, String value, String source) {
             try {
                 Integer.parseInt(value);
             }
             catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Must be an integer");
             }
         }
@@ -84,12 +84,12 @@ public abstract class ConfigPropertyType {
     
     private static class CPTFloat extends ConfigPropertyType {
         @Override
-        public void checkValue(String propName, String value) {
+        public void checkValue(String propName, String value, String source) {
             try {
                 Double.parseDouble(value);
             }
             catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Must be a floating point number.");
             }
         }
@@ -97,10 +97,10 @@ public abstract class ConfigPropertyType {
     
     private static class CPTFile extends ConfigPropertyType {
         @Override
-        public void checkValue(String propName, String value) {
+        public void checkValue(String propName, String value, String source) {
             File f = new File(value);
             if (!f.exists()) {
-                throw new IllegalArgumentException("Invalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. File does not exist.");
             }
         }
