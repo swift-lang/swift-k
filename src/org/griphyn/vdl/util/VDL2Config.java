@@ -79,7 +79,9 @@ public class VDL2Config extends Properties {
 		}
 		c.load(file);
 		config = c;
-		return config.check();
+		config.check();
+		config.validateProperties();
+		return config;
 	}
 
 	private List<String> files, tried;
@@ -153,7 +155,13 @@ public class VDL2Config extends Properties {
 		}
 	}
 
-	protected VDL2Config check() throws IOException {
+	private void validateProperties() {
+	    for (Map.Entry<Object, Object> e : this.entrySet()) {
+	        checkType(e.getKey(), e.getValue());
+	    }
+    }
+
+    protected VDL2Config check() throws IOException {
 		if (files.size() == 0) {
 			throw new FileNotFoundException("No Swift configuration file found. Tried " + tried);
 		}
@@ -175,7 +183,6 @@ public class VDL2Config extends Properties {
 	public synchronized Object put(Object key, Object value) {
 		String svalue = (String) value;
 		if (svalue.indexOf("${") == -1) {
-		    checkType(key, value);
 			return super.put(key, value);
 		}
 		else {
@@ -209,7 +216,6 @@ public class VDL2Config extends Properties {
 			}
 			sb.append(svalue.substring(last));
 			value = sb.toString();
-			checkType(key, value);
 			return super.put(key, value);
 		}
 	}
