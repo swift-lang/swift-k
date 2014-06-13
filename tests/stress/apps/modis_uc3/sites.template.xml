@@ -2,7 +2,7 @@
 <config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
 
   <pool handle="uc3">
-    <execution provider="coaster" url="uc3-sub.uchicago.edu" jobmanager="ssh-cl:condor"/>
+    <execution provider="coaster" url="login.osgconnect.net" jobmanager="ssh-cl:condor"/>
     <profile namespace="karajan" key="jobThrottle">10.00</profile>
     <profile namespace="karajan" key="initialScore">10000</profile>
     <profile namespace="globus"  key="jobsPerNode">1</profile>
@@ -16,7 +16,7 @@
     <profile namespace="globus"  key="condor.+AccountingGroup">"group_friends.{env.USER}"</profile>
     <profile namespace="globus"  key="condor.+ProjectName">"Swift"</profile>
     <profile namespace="globus"  key="jobType">nonshared</profile>
-    <workdirectory>.</workdirectory>
+    <workdirectory>/home/{env.USER}/swiftwork</workdirectory>
   </pool>
 
 </config>
