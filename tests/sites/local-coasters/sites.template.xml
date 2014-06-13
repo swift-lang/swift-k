@@ -1,16 +1,9 @@
-<config>
-
-  <pool handle="localhost" sysinfo="INTEL32::LINUX">
-    <gridftp url="local://localhost" />
-    <execution provider="local" url="none" />
-    <workdirectory>_WORK_</workdirectory>
-    <profile namespace="swift" key="stagingMethod">file</profile>
-  </pool>
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
 
   <pool handle="coasterslocal">
     <filesystem provider="local" />
-    <execution provider="coaster" jobmanager="local:local"/>
-    <profile namespace="globus"   key="internalHostname">_HOST_</profile>
+    <execution provider="coaster" jobmanager="local:local" url="localhost:0"/>
     <profile namespace="karajan"  key="jobthrottle">2.55</profile>
     <profile namespace="karajan"  key="initialScore">10000</profile>
     <profile namespace="globus"   key="jobsPerNode">4</profile>
