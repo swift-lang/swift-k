@@ -187,7 +187,7 @@ rm -rf $BASENAME* "$RUNDIR-$HOSTNAME"     &> /dev/null
 echo "Folder cleaned"
 
 PID=$$
-CPIDS=$(pgrep -P $PID); (sleep 20 && kill -KILL $CPIDS &); kill -TERM $CPIDS;
+CPIDS=$(pgrep -P $PID); (sleep 20 && kill -SIGKILL $CPIDS &); kill -TERM $CPIDS;
 exit 0
 
 EOF

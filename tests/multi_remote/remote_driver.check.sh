@@ -1,7 +1,9 @@
 #!/bin/bash
 
 PUBLISH_LOCATION=/scratch/midway/yadunand/publish
-PUBLISH_SERVER=http://swift.rcc.uchicago.edu:8042
+#PUBLISH_SERVER=http://swift.rcc.uchicago.edu:8042
+PUBLISH_SERVER=http://users.rcc.uchicago.edu/~yadunand
+
 DATE=$(date +%H%M%S)
 
 [ ! -z $FROM_MAIL ] || FROM_MAIL="test-engine@swift.rcc.uchicago"
