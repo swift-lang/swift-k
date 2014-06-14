@@ -41,6 +41,7 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.scheduler.AbstractScheduler;
+import org.globus.cog.karajan.scheduler.ContactAllocationTask;
 import org.globus.cog.karajan.scheduler.ResourceConstraintChecker;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
@@ -396,8 +397,10 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 		}
 		Task t = e.task;
 		List<Entry> cluster = null;
-		synchronized (tasks) {
-			cluster = tasks.get(t);
+		if (!(t instanceof ContactAllocationTask)) {
+    		synchronized (tasks) {
+    			cluster = tasks.get(t);
+    		}
 		}
 		if (cluster != null) {
 		    for (Entry e1 : cluster) {
