@@ -1,0 +1,65 @@
+<config>
+
+  <pool handle="uc3">
+    <execution provider="coaster" url="uc3-sub.uchicago.edu" jobmanager="ssh-cl:condor"/>
+    <profile namespace="karajan" key="jobThrottle">10.00</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <profile namespace="globus"  key="jobsPerNode">1</profile>
+    <profile namespace="globus"  key="maxtime">3600</profile>
+    <profile namespace="globus"  key="maxWalltime">00:15:00</profile>
+    <profile namespace="globus"  key="highOverAllocation">100</profile>
+    <profile namespace="globus"  key="lowOverAllocation">100</profile>
+    <profile namespace="globus"  key="slots">4</profile>
+    <profile namespace="globus"  key="maxNodes">1</profile>
+    <profile namespace="globus"  key="nodeGranularity">1</profile>
+    <profile namespace="globus"  key="condor.+AccountingGroup">"group_friends.yadunand"</profile>
+    <profile namespace="globus"  key="jobType">nonshared</profile>
+    <workdirectory>.</workdirectory>
+  </pool>
+
+  <pool handle="beagle">
+    <execution provider="coaster" jobmanager="ssh-cl:pbs" url="login4.beagle.ci.uchicago.edu"/>
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="providerAttributes"></profile>
+    <profile namespace="globus" key="maxtime">3600</profile>
+    <profile namespace="globus" key="maxWalltime">00:15:00</profile>
+    <profile namespace="globus" key="userHomeOverride">/lustre/beagle/yadunandb/swiftwork</profile>
+    <profile namespace="globus" key="slots">4</profile>
+    <profile namespace="globus" key="maxnodes">1</profile>
+    <profile namespace="globus" key="nodeGranularity">1</profile>
+    <profile namespace="karajan" key="jobThrottle">1.00</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>/tmp/yadunandb/swiftwork</workdirectory>
+  </pool>
+
+  <pool handle="midway">
+    <execution provider="coaster" jobmanager="local:slurm"/>
+    <profile namespace="globus" key="queue">sandyb</profile>
+    <profile namespace="globus" key="jobsPerNode">16</profile>
+    <profile namespace="globus" key="maxWalltime">00:15:00</profile>
+    <profile namespace="globus" key="maxTime">3600</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="slots">4</profile>
+    <profile namespace="globus" key="maxNodes">1</profile>
+    <profile namespace="globus" key="nodeGranularity">1</profile>
+    <profile namespace="karajan" key="jobThrottle">.64</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>/tmp/yadunand</workdirectory>
+  </pool>
+
+  <pool handle="mcs">
+    <execution provider="coaster" jobmanager="ssh-cl:local" url="thwomp.mcs.anl.gov"/>
+    <profile namespace="globus" key="jobsPerNode">8</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="maxtime">3600</profile>
+    <profile namespace="globus" key="maxWalltime">00:15:00</profile>
+    <profile namespace="karajan" key="jobThrottle">0.0799</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>/sandbox/yadunand/swiftwork</workdirectory>
+  </pool>
+
+</config>

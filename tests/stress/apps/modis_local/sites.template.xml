@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
+
+<pool handle="local">
+  <execution provider="local"/>
+  <filesystem provider="local"/>
+  <profile key="initialScore" namespace="karajan">10000</profile>
+  <profile key="jobThrottle" namespace="karajan">.31</profile>
+  <workdirectory>_WORK_</workdirectory>
+</pool>
+
+
+<!-- 
   <pool handle="local">
     <execution provider="coaster" jobmanager="local:local"/>
     <profile namespace="globus" key="jobsPerNode">4</profile>
@@ -14,4 +25,5 @@
     <filesystem provider="local"/>
     <workdirectory>/scratch/midway/{env.USER}</workdirectory>
   </pool>
+-->
 </config>
