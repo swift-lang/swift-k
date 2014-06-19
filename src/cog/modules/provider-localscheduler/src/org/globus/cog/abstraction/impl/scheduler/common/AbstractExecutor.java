@@ -465,7 +465,7 @@ public abstract class AbstractExecutor implements ProcessListener {
         wr.write("; echo \\\\\\$? > $ECF.$INDEX \" \\\" ");
         wr.write("1>>");
         wr.write(quote(stdout));
-        wr.write("2>>");
+        wr.write(" 2>>");
         wr.write(quote(stderr));
         wr.write(" &\n");
         wr.write("  INDEX=$((INDEX + 1))\n");
