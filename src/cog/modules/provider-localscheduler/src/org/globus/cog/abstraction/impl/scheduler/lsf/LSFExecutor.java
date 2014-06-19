@@ -208,7 +208,7 @@ public class LSFExecutor extends AbstractExecutor {
         }
 		
 		if (multiple) {
-		    writeMultiJobPostamble(wr);
+		    writeMultiJobPostamble(wr, stdout, stderr);
 		} else {
 		    wr.write('\n');
 		    wr.write("/bin/echo $? >" + exitcodefile + '\n');

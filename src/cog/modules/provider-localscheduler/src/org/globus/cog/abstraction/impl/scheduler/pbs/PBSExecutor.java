@@ -310,7 +310,7 @@ public class PBSExecutor extends AbstractExecutor {
             wr.write(" < " + quote(spec.getStdInput()));
         }
 		if (multiple) {
-		    writeMultiJobPostamble(wr);
+		    writeMultiJobPostamble(wr, stdout, stderr);
 		}
 		else {
 		    wr.write('\n');

@@ -461,8 +461,13 @@ public abstract class AbstractExecutor implements ProcessListener {
         return sb.toString();
     }
 
-    protected void writeMultiJobPostamble(Writer wr) throws IOException {
-        wr.write("; echo \\\\\\$? > $ECF.$INDEX \" \\\" &\n");
+    protected void writeMultiJobPostamble(Writer wr, String stdout, String stderr) throws IOException {
+        wr.write("; echo \\\\\\$? > $ECF.$INDEX \" \\\" ");
+        wr.write("1>>");
+        wr.write(quote(stdout));
+        wr.write("2>>");
+        wr.write(quote(stderr));
+        wr.write(" &\n");
         wr.write("  INDEX=$((INDEX + 1))\n");
         wr.write("done\n");
         wr.write("wait\n");
