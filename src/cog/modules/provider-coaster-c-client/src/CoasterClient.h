@@ -57,7 +57,7 @@ class CoasterClient: public CommandCallback {
 
 		list<Job*> doneJobs;
 	public:
-		CoasterClient(string URL, CoasterLoop& loop);
+		CoasterClient(const string &URL, CoasterLoop& loop);
 		virtual ~CoasterClient();
 		void start();
 		void stop();

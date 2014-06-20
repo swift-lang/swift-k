@@ -21,6 +21,7 @@
 
 #include "coasters.h"
 
+#include <cassert>
 #include <cstdlib>
 
 #include "CoasterClient.h"
@@ -180,6 +181,7 @@ coaster_rc coaster_settings_keys(coaster_settings *settings,
 void coaster_settings_free(coaster_settings *settings)
                                 COASTERS_THROWS_NOTHING {
   // Call destructor directly
+  // Destructor shouldn't throw anything
   delete settings;
 }
 
@@ -200,16 +202,52 @@ coaster_rc coaster_apply_settings(coaster_client *client,
 }
 
 coaster_rc
-coaster_job_create(const char *executable, int argc, const char *argv,
+coaster_job_create(const char *executable, int argc, const char **argv,
                   const char *job_manager, coaster_job **job)
                       COASTERS_THROWS_NOTHING
 {
-  coaster_job *j = new coaster_job(executable);
-  
+  try {
+    assert(executable != NULL);
+    coaster_job *j = new coaster_job(executable);
+   
+    for (int i = 0; i < argc; i++)
+    {
+      assert(argv[i] != NULL);
+      j->job.addArgument(argv[i]);
+    }
 
-  *job = j;
-  return COASTER_SUCCESS;
+    if (job_manager != NULL)
+    {
+      j->job.setJobManager(job_manager);
+    }
+
+    *job = j;
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
 }
+
+coaster_rc
+coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING {
+  // Destructor shouldn't throw anything
+  delete job;
+}
+
+coaster_rc
+coaster_submit(coaster_client *client, coaster_job *job)
+                COASTERS_THROWS_NOTHING {
+  try {
+    client->client.submit(job->job);
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
 
 const char *coaster_rc_string(coaster_rc code)
 {

@@ -96,6 +96,10 @@ void Job::setJobManager(string jm) {
     jobManager = jm;
 }
 
+void Job::setJobManager(const char *jm) {
+    jobManager = jm;
+}
+
 map<string, string>* Job::getEnv() {
 	return env;
 }

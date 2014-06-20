@@ -16,6 +16,9 @@
 
 using namespace std;
 
+/*
+  TODO: document whether a Job can be submitted more than once
+ */
 class Job {
 	private:
 		string identity;
@@ -66,8 +69,9 @@ class Job {
 		string* getStderrLocation();
 		void setStderrLocation(string& loc);
 
-        string getJobManager();
-        void setJobManager(string jm);
+		string getJobManager();
+		void setJobManager(string jm);
+		void setJobManager(const char *jm);
 
 		map<string, string>* getEnv();
 		string* getEnv(string name);

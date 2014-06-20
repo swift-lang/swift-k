@@ -23,7 +23,7 @@
 
 #include "Logger.h"
 
-CoasterClient::CoasterClient(string URL, CoasterLoop& ploop) {
+CoasterClient::CoasterClient(const string &URL, CoasterLoop& ploop) {
 	this->URL = URL;
 	hostName = NULL;
 	sockFD = 0;

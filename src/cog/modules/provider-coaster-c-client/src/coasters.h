@@ -130,7 +130,6 @@ coaster_rc coaster_apply_settings(coaster_client *client,
  * Create a new coasters job for later submission.
  * Some standard arguments can be specified now, or left as NULL to be
  * initialized later.
- * TODO: how is this freed?
  * TODO: functions to set other job properties
  *
  * executable: must be provided, name of executable
@@ -139,10 +138,22 @@ coaster_rc coaster_apply_settings(coaster_client *client,
  * job: output, filled with pointer to new job
  */
 coaster_rc
-coaster_job_create(const char *executable, int argc, const char *argv,
+coaster_job_create(const char *executable, int argc, const char **argv,
                   const char *job_manager, coaster_job **job)
                       COASTERS_THROWS_NOTHING;
 
+/*
+ * Free a coasters job
+ */
+coaster_rc
+coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING;
+
+/*
+ * Submit a coasters job
+ */
+coaster_rc
+coaster_submit(coaster_client *client, coaster_job *job)
+                COASTERS_THROWS_NOTHING;
 
 /*
  * Get name of return code.  Returns NULL if invalid code.
