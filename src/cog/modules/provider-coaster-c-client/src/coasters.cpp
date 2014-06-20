@@ -17,7 +17,6 @@
 /*
  * Implementation of pure C functions.
  *
- * TODO: exception handling?
  */
 
 #include <cstdlib>
@@ -27,6 +26,7 @@ extern "C" {
 }
 
 #include "CoasterClient.h"
+#include "CoasterError.h"
 #include "CoasterLoop.h"
 
 using std::malloc;
@@ -40,28 +40,65 @@ struct coaster_client {
   CoasterClient client;
 };
 
-coaster_client *coaster_client_start(const char *serviceURL) {
-  coaster_client *client = (coaster_client*)malloc(sizeof(coaster_client));
-  if (client == NULL) {
-    return NULL;
+static coaster_rc coaster_error_rc(const CoasterError &err);
+static coaster_rc exception_rc(const std::exception &ex);
+
+coaster_rc coaster_client_start(const char *serviceURL,
+                                coaster_client **client)
+                                COASTERS_THROWS_NOTHING {
+  try {
+    *client = (coaster_client*)malloc(sizeof(coaster_client));
+    if (!(*client)) {
+      return COASTER_ERROR_OOM;
+    }
+
+    // Use placement new to store directly in struct
+    new (&(*client)->loop) CoasterLoop();
+    new (&(*client)->client) CoasterClient(serviceURL, (*client)->loop);
+
+   (*client)->client.start();
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
   }
-
-  // Use placement new to store directly in struct
-  new (&client->loop) CoasterLoop();
-  new (&client->client) CoasterClient(serviceURL, client->loop);
-
-  client->client.start();
-  return client;
+ 
+ return COASTER_SUCCESS;
 }
 
-void coaster_client_stop(coaster_client *client) {
-  // TODO: stop things
-  
-  client->client.stop();
-  client->loop.stop();
+coaster_rc coaster_client_stop(coaster_client *client)
+                               COASTERS_THROWS_NOTHING {
+  try {
+    // TODO: stop things
+    
+    client->client.stop();
+    client->loop.stop();
 
-  // Call destructors manually before freeing memory
-  client->client.~CoasterClient();
-  client->loop.~CoasterLoop();
-  free(client);
+    // Call destructors manually before freeing memory
+    client->client.~CoasterClient();
+    client->loop.~CoasterLoop();
+    free(client);
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+
+  return COASTER_SUCCESS;
+}
+
+/*
+ * Set error information and return appropriate code
+ */
+static coaster_rc coaster_error_rc(const CoasterError &err)
+{
+  // TODO: store detailed error info
+  // TODO: distinguish different cases?
+  return COASTER_ERROR_UNKNOWN;
+}
+
+static coaster_rc exception_rc(const std::exception &ex)
+{
+  // TODO: store error info?
+  return COASTER_ERROR_UNKNOWN;
 }

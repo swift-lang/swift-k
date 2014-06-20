@@ -26,19 +26,41 @@
 #ifndef COASTERS_H_
 #define COASTERS_H_
 
-// Opaque pointer type
+// Opaque pointer types
 typedef struct coaster_client coaster_client;
+typedef struct coaster_settings coaster_settings;
+
+/*
+ * Return codes for coaster errors
+ * TODO: way to pass back error messages?
+ */
+typedef enum {
+  COASTER_SUCCESS,
+  COASTER_ERROR_OOM,
+  COASTER_ERROR_NETWORK,
+  COASTER_ERROR_UNKNOWN,
+} coaster_rc;
+
+// Set appropriate macro to specify that we shouldn't throw exceptions
+// Only used in this header: undefine later
+#ifdef __cplusplus
+#define COASTERS_THROWS_NOTHING throw()
+#else
+#define COASTERS_THROWS_NOTHING
+#endif
 
 /*
  * Start a new coasters client.
  * NOTE: don't support multiple loops per channel with this interface
  */
-coaster_client *coaster_client_start(const char *serviceURL);
+coaster_rc coaster_client_start(const char *serviceURL,
+                                coaster_client **client)
+                                COASTERS_THROWS_NOTHING;
 
 /*
  * Stop coasters client and free memory
  */
-void coaster_client_stop(coaster_client *client);
-
+coaster_rc coaster_client_stop(coaster_client *client)
+                                COASTERS_THROWS_NOTHING;
 
 #endif // COASTERS_H_
