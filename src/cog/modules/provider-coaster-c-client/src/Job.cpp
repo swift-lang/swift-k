@@ -6,7 +6,7 @@ using namespace std;
 
 static int seq = 0;
 
-Job::Job(string pexecutable) {
+Job::Job(const string &pexecutable) {
 	executable = pexecutable;
 	stringstream ss;
 	ss << "job-";

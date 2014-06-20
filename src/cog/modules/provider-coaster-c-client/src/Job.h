@@ -20,6 +20,12 @@ class Job {
 	private:
 		string identity;
 		string executable;
+                /* 
+                 * TODO: document expectations about lifetime of strings.
+                 * It seems very easy for client code to accidentally
+                 * pass in a pointer to a stack-allocated string or a
+                 * string with a shorter lifetime than the job.
+                 */
 		vector<string*>* arguments;
 		string* directory;
 		string* stdinLocation;
@@ -37,7 +43,7 @@ class Job {
 		string* stderr;
 		JobStatus* status;
 	public:
-		Job(string executable);
+		Job(const string &executable);
 		virtual ~Job();
 
 		string& getExecutable();
