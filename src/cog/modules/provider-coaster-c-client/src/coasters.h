@@ -29,6 +29,7 @@
 // Opaque pointer types
 typedef struct coaster_client coaster_client;
 typedef struct coaster_settings coaster_settings;
+typedef struct coaster_job coaster_job;
 
 /*
  * Return codes for coaster errors
@@ -65,6 +66,7 @@ coaster_rc coaster_client_start(const char *serviceURL,
  */
 coaster_rc coaster_client_stop(coaster_client *client)
                                 COASTERS_THROWS_NOTHING;
+
 /*
  * Create empty settings object
  * settings: coaster settings object, should be freed with
