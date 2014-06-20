@@ -212,6 +212,15 @@ Job::~Job() {
 	if (status != NULL) {
 		delete status;
 	}
+	if (stdinLocation != NULL) {
+		delete stdinLocation;
+	}
+	if (stdoutLocation != NULL) {
+		delete stdoutLocation;
+	}
+	if (stderrLocation != NULL) {
+		delete stderrLocation;
+	}
 	if (arguments != NULL) {
 		for (int i = 0; i < arguments->size(); i++) {
 			delete arguments->at(i);
