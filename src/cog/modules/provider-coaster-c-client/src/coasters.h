@@ -26,6 +26,10 @@
 #ifndef COASTERS_H_
 #define COASTERS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Opaque pointer types
 typedef struct coaster_client coaster_client;
 typedef struct coaster_settings coaster_settings;
@@ -121,4 +125,7 @@ void coaster_settings_free(coaster_settings *settings)
 coaster_rc coaster_apply_settings(coaster_client *client,
                                   coaster_settings *settings)
                                   COASTERS_THROWS_NOTHING;
+#ifdef __cplusplus
+} // extern "C"
+#endif
 #endif // COASTERS_H_

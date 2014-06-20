@@ -19,11 +19,9 @@
  *
  */
 
-#include <cstdlib>
-
-extern "C" {
 #include "coasters.h"
-}
+
+#include <cstdlib>
 
 #include "CoasterClient.h"
 #include "CoasterError.h"
@@ -38,10 +36,20 @@ using std::free;
 struct coaster_client {
   CoasterLoop loop;
   CoasterClient client;
+
+  /*
+    Constructor: initialize loop then client
+   */
+  coaster_client(const char *serviceURL) :
+        loop(), client(serviceURL, loop) {
+
+  };
 };
 
 struct coaster_settings {
   Settings settings;
+
+  coaster_settings() : settings() {};
 };
 
 static coaster_rc coaster_error_rc(const CoasterError &err);
@@ -51,14 +59,10 @@ coaster_rc coaster_client_start(const char *serviceURL,
                                 coaster_client **client)
                                 COASTERS_THROWS_NOTHING {
   try {
-    *client = (coaster_client*)malloc(sizeof(coaster_client));
+    *client = new coaster_client(serviceURL);
     if (!(*client)) {
       return COASTER_ERROR_OOM;
     }
-
-    // Use placement new to store directly in struct
-    new (&(*client)->loop) CoasterLoop();
-    new (&(*client)->client) CoasterClient(serviceURL, (*client)->loop);
 
     (*client)->client.start();
     return COASTER_SUCCESS;
@@ -76,11 +80,8 @@ coaster_rc coaster_client_stop(coaster_client *client)
     
     client->client.stop();
     client->loop.stop();
-
-    // Call destructors manually before freeing memory
-    client->client.~CoasterClient();
-    client->loop.~CoasterLoop();
-    free(client);
+    
+    delete client;
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
@@ -92,13 +93,10 @@ coaster_rc coaster_client_stop(coaster_client *client)
 coaster_rc coaster_settings_create(coaster_settings **settings)
                                 COASTERS_THROWS_NOTHING {
   try {
-    *settings = (coaster_settings*)malloc(sizeof(coaster_settings));
+    *settings = new coaster_settings();
     if (!(*settings)) {
       return COASTER_ERROR_OOM;
     }
-
-    // Use placement new to store directly in struct
-    new (&(*settings)->settings) Settings();
  
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
@@ -152,6 +150,8 @@ coaster_rc coaster_settings_keys(coaster_settings *settings,
     std::map<string*, const char*> *map;
     map = settings->settings.getSettings();
     *count = map->size();
+
+    // Use malloc so C client code can free
     *keys = (const char**)malloc(sizeof((*keys)[0]));
     if (!(*keys)) {
       return COASTER_ERROR_OOM;
@@ -174,8 +174,7 @@ coaster_rc coaster_settings_keys(coaster_settings *settings,
 void coaster_settings_free(coaster_settings *settings)
                                 COASTERS_THROWS_NOTHING {
   // Call destructor directly
-  settings->settings.~Settings();
-  free(settings);
+  delete settings;
 }
 
 /*
