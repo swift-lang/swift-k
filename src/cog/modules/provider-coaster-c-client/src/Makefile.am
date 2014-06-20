@@ -22,6 +22,7 @@ endif
 
 libcoasterclient_la_SOURCES = \
 	$(SWIG_SRC) \
+        coasters.cpp \
 	Lock.h Lock.cpp \
 	ConditionVariable.h ConditionVariable.cpp \
 	CommandCallback.h \
