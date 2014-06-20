@@ -51,6 +51,7 @@ class CoasterClient: public CommandCallback {
 		CoasterLoop* loop;
 		HandlerFactory* handlerFactory;
 
+                // TODO: won't pointer here use pointer comparison?
 		map<const string*, Job*> jobs;
 		map<string, const string*> remoteJobIdMapping;
 

@@ -23,6 +23,8 @@ class Settings {
 		void set(string& key, string& value);
 		void set(string& key, const char* value);
 		void remove(string& key);
+
+                // TODO: will string* here force pointer comparison
 		map<string*, const char*>* getSettings();
 
 		template<typename cls> friend cls& operator<< (cls& os, Settings& s);

@@ -139,6 +139,7 @@ void CoasterClient::errorReceived(Command* cmd, string* message, RemoteCoasterEx
 	if (*(cmd->getName()) == JobSubmitCommand::NAME) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
 		LogInfo << "Job " << jsc->getJob()->getIdentity() << " failed: " << message << "\n" << details->str() << endl;
+                // TODO: this is using the wrong identity
 		updateJobStatus(jsc->getJob()->getIdentity(), new JobStatus(FAILED, message, details));
 	}
 	else {
