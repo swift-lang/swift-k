@@ -50,7 +50,12 @@ class Job {
 		virtual ~Job();
 
 		string& getExecutable();
-
+                
+                /*
+                  Get the job identity.  The identity is a unique string
+                  that is assigned to the job object upon construction
+                  and does not change over it's lifetime.
+                 */
 		string& getIdentity();
 
 		vector<string*>* getArguments();

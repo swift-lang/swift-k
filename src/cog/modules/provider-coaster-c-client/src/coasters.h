@@ -148,6 +148,14 @@ coaster_job_create(const char *executable, int argc, const char **argv,
 coaster_rc
 coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING;
 
+
+/*
+ * Get local job ID string.
+ * Return value points to job state: will be invalid if job is freed.
+ */
+const char *
+coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING;
+
 /*
  * Submit a coasters job
  */

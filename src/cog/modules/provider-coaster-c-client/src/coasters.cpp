@@ -236,6 +236,13 @@ coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING {
   delete job;
 }
 
+const char *
+coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING {
+  // Shouldn't throw anything from accessor method
+  const string &id = job->job.getIdentity();
+  return id.c_str();
+}
+
 coaster_rc
 coaster_submit(coaster_client *client, coaster_job *job)
                 COASTERS_THROWS_NOTHING {
