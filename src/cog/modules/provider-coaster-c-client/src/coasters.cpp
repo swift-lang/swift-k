@@ -236,6 +236,30 @@ coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING {
   delete job;
 }
 
+coaster_rc
+coaster_job_set_redirects(coaster_job *job, const char *stdin_loc,
+                  const char *stdout_loc, const char *stderr_loc)
+                  COASTERS_THROWS_NOTHING {
+  if (job == NULL) {
+    return COASTER_ERROR_INVALID;
+  }
+  
+  // Accessor methods shouldn't throw exceptions
+  std::string *stdin_str = (stdin_loc == NULL) ?
+                            NULL : new string(stdin_loc);
+  job->job.setStdinLocation(*stdin_str);
+  
+  std::string *stdout_str = (stdout_loc == NULL) ?
+                            NULL : new string(stdout_loc);
+  job->job.setStdinLocation(*stdout_str);
+  
+  std::string *stderr_str = (stderr_loc == NULL) ?
+                            NULL : new string(stderr_loc);
+  job->job.setStdinLocation(*stderr_str);
+
+  return COASTER_SUCCESS;
+}
+
 const char *
 coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING {
   // Shouldn't throw anything from accessor method

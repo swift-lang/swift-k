@@ -41,6 +41,7 @@ typedef struct coaster_job coaster_job;
  */
 typedef enum {
   COASTER_SUCCESS,
+  COASTER_ERROR_INVALID,
   COASTER_ERROR_OOM,
   COASTER_ERROR_NETWORK,
   COASTER_ERROR_UNKNOWN,
@@ -130,7 +131,6 @@ coaster_rc coaster_apply_settings(coaster_client *client,
  * Create a new coasters job for later submission.
  * Some standard arguments can be specified now, or left as NULL to be
  * initialized later.
- * TODO: functions to set other job properties
  *
  * executable: must be provided, name of executable
  * argc/argv: command line arguments
@@ -148,6 +148,17 @@ coaster_job_create(const char *executable, int argc, const char **argv,
 coaster_rc
 coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING;
 
+/*
+ * Set input and output streams redirections.
+ * All can be NULL to use default.
+ */
+coaster_rc
+coaster_job_set_redirects(coaster_job *job, const char *stdin_loc,
+                  const char *stdout_loc, const char *stderr_loc)
+                  COASTERS_THROWS_NOTHING;
+
+// TODO: functions for setting directory, env vars, attributes,
+//       stageins, stageouts, cleanups
 
 /*
  * Get local job ID string.
@@ -167,6 +178,7 @@ coaster_submit(coaster_client *client, coaster_job *job)
  * Get name of return code.  Returns NULL if invalid code.
  */
 const char *coaster_rc_string(coaster_rc code);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
