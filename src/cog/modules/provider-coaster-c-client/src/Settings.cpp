@@ -36,6 +36,8 @@ Settings::Settings() {
 Settings::~Settings() {
 }
 
+// TODO: need to check memory ownership conventions here
+// TODO: is this going to use pointer comparison?
 void Settings::set(string& key, string& value) {
 	settings[&key] = value.c_str();
 }

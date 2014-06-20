@@ -103,6 +103,7 @@ std::vector<struct KV> parse_kvpair (std::string str)
     std::stringstream ss(str);
     std::string item, key, value;
 
+    // TODO: should this handle quotes or escape sequences?
     while (std::getline(ss, item, ',')) {
         //elems.push_back(item);
         struct KV kv_pair;

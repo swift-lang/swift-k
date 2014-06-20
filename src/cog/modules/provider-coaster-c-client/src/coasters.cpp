@@ -40,6 +40,10 @@ struct coaster_client {
   CoasterClient client;
 };
 
+struct coaster_settings {
+  Settings settings;
+};
+
 static coaster_rc coaster_error_rc(const CoasterError &err);
 static coaster_rc exception_rc(const std::exception &ex);
 
@@ -56,14 +60,13 @@ coaster_rc coaster_client_start(const char *serviceURL,
     new (&(*client)->loop) CoasterLoop();
     new (&(*client)->client) CoasterClient(serviceURL, (*client)->loop);
 
-   (*client)->client.start();
+    (*client)->client.start();
+    return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
   } catch (const std::exception& ex) {
     return exception_rc(ex);
   }
- 
- return COASTER_SUCCESS;
 }
 
 coaster_rc coaster_client_stop(coaster_client *client)
@@ -78,27 +81,129 @@ coaster_rc coaster_client_stop(coaster_client *client)
     client->client.~CoasterClient();
     client->loop.~CoasterLoop();
     free(client);
+    return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
   } catch (const std::exception& ex) {
     return exception_rc(ex);
   }
+}
 
-  return COASTER_SUCCESS;
+coaster_rc coaster_settings_create(coaster_settings **settings)
+                                COASTERS_THROWS_NOTHING {
+  try {
+    *settings = (coaster_settings*)malloc(sizeof(coaster_settings));
+    if (!(*settings)) {
+      return COASTER_ERROR_OOM;
+    }
+
+    // Use placement new to store directly in struct
+    new (&(*settings)->settings) Settings();
+ 
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
+coaster_rc coaster_settings_parse(coaster_settings *settings,
+                                  const char *str)
+                                COASTERS_THROWS_NOTHING {
+
+  // TODO: parsing using code currently in CoasterSwig
+  return COASTER_ERROR_UNKNOWN;
+}
+
+coaster_rc coaster_settings_set(coaster_settings *settings,
+                      const char *key, const char *value)
+                                COASTERS_THROWS_NOTHING {
+  try {
+    std::string str_key(key);
+    settings->settings.set(str_key, value); 
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
+coaster_rc coaster_settings_get(coaster_settings *settings,
+                      const char *key, const char **value)
+                                COASTERS_THROWS_NOTHING {
+  try {
+    std::string str_key(key);
+    std::map<string*, const char*> *map;
+    map = settings->settings.getSettings();
+    *value = (*map)[&str_key]; 
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+coaster_rc coaster_settings_keys(coaster_settings *settings,
+                      const char ***keys, int *count)
+                                COASTERS_THROWS_NOTHING {
+  try {
+    std::map<string*, const char*> *map;
+    map = settings->settings.getSettings();
+    *count = map->size();
+    *keys = (const char**)malloc(sizeof((*keys)[0]));
+    if (!(*keys)) {
+      return COASTER_ERROR_OOM;
+    }
+    
+    int pos = 0;
+    for(std::map<string*, const char*>::iterator iter = map->begin();
+        iter != map->end(); ++iter) {
+      (*keys)[pos++] = iter->first->c_str();
+    }
+
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
+void coaster_settings_free(coaster_settings *settings)
+                                COASTERS_THROWS_NOTHING {
+  // Call destructor directly
+  settings->settings.~Settings();
+  free(settings);
+}
+
+/*
+ * Apply settings to started coasters client.
+ */
+coaster_rc coaster_apply_settings(coaster_client *client,
+                                  coaster_settings *settings)
+                                  COASTERS_THROWS_NOTHING {
+  try {
+    client->client.setOptions(settings->settings);
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
 }
 
 /*
  * Set error information and return appropriate code
  */
-static coaster_rc coaster_error_rc(const CoasterError &err)
-{
+static coaster_rc coaster_error_rc(const CoasterError &err) {
   // TODO: store detailed error info
   // TODO: distinguish different cases?
   return COASTER_ERROR_UNKNOWN;
 }
 
-static coaster_rc exception_rc(const std::exception &ex)
-{
+static coaster_rc exception_rc(const std::exception &ex) {
   // TODO: store error info?
   return COASTER_ERROR_UNKNOWN;
 }
