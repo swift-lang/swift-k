@@ -95,6 +95,7 @@ void add(string& ss, const char* key, const char* value, int n) {
 		ss.append(1, '=');
 		while (*value) {
 			char c = *value;
+                        // TODO: are fallthroughs deliberate?
 			switch (c) {
 				case '\n':
 					c = 'n';
