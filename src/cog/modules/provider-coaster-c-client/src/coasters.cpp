@@ -62,6 +62,11 @@ struct coaster_job {
 static coaster_rc coaster_error_rc(const CoasterError &err);
 static coaster_rc exception_rc(const std::exception &ex);
 
+// Check for error
+// TODO: store error message somewhere instead of printing?
+#define COASTER_CONDITION(cond, err_rc, err_msg) { \
+  if (!(cond)) { fprintf(stderr, (err_msg)); return (err_rc); }}
+
 coaster_rc coaster_client_start(const char *serviceURL,
                                 coaster_client **client)
                                 COASTERS_THROWS_NOTHING {
@@ -244,20 +249,99 @@ coaster_job_set_redirects(coaster_job *job, const char *stdin_loc,
     return COASTER_ERROR_INVALID;
   }
   
-  // Accessor methods shouldn't throw exceptions
-  std::string *stdin_str = (stdin_loc == NULL) ?
-                            NULL : new string(stdin_loc);
-  job->job.setStdinLocation(*stdin_str);
-  
-  std::string *stdout_str = (stdout_loc == NULL) ?
-                            NULL : new string(stdout_loc);
-  job->job.setStdinLocation(*stdout_str);
-  
-  std::string *stderr_str = (stderr_loc == NULL) ?
-                            NULL : new string(stderr_loc);
-  job->job.setStdinLocation(*stderr_str);
+  try {
+    std::string *stdin_str = (stdin_loc == NULL) ?
+                              NULL : new string(stdin_loc);
+    job->job.setStdinLocation(*stdin_str);
+    
+    std::string *stdout_str = (stdout_loc == NULL) ?
+                              NULL : new string(stdout_loc);
+    job->job.setStdinLocation(*stdout_str);
+    
+    std::string *stderr_str = (stderr_loc == NULL) ?
+                              NULL : new string(stderr_loc);
+    job->job.setStdinLocation(*stderr_str);
 
-  return COASTER_SUCCESS;
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
+coaster_rc
+coaster_job_set_directory(coaster_job *job, const char *dir)
+                  COASTERS_THROWS_NOTHING {
+  if (job == NULL) {
+    return COASTER_ERROR_INVALID;
+  }
+  
+  try {
+    std::string *dir_str = (dir == NULL) ?
+                              NULL : new string(dir);
+    job->job.setDirectory(*dir_str);
+
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
+coaster_rc
+coaster_job_set_envs(coaster_job *job, int nvars, const char **names,
+                    const char **values) COASTERS_THROWS_NOTHING {
+  if (job == NULL) {
+    return COASTER_ERROR_INVALID;
+  }
+  
+  try {
+    for (int i = 0; i < nvars; i++)
+    {
+      const char *name = names[i];
+      const char *value = values[i];
+      COASTER_CONDITION(name != NULL && value != NULL,
+            COASTER_ERROR_INVALID, "Env var name or value was NULL");
+      job->job.setEnv(name, value);
+    }
+
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
+/*
+ * Add attributes for the job.  Will overwrite any previous atrributes
+ * if names match.
+ */
+coaster_rc
+coaster_job_set_attrs(coaster_job *job, int nattrs, const char **names,
+                    const char **values) COASTERS_THROWS_NOTHING {
+  if (job == NULL) {
+    return COASTER_ERROR_INVALID;
+  }
+  
+  try {
+    for (int i = 0; i < nattrs; i++)
+    {
+      const char *name = names[i];
+      const char *value = values[i];
+      COASTER_CONDITION(name != NULL && value != NULL,
+            COASTER_ERROR_INVALID, "Attribute name or value was NULL");
+      job->job.setAttribute(name, value);
+    }
+
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
 }
 
 const char *
@@ -308,5 +392,6 @@ static coaster_rc coaster_error_rc(const CoasterError &err) {
 
 static coaster_rc exception_rc(const std::exception &ex) {
   // TODO: store error info?
+  // TODO: handle specific types, e.g. bad_alloc
   return COASTER_ERROR_UNKNOWN;
 }

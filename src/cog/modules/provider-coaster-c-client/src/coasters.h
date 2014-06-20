@@ -157,8 +157,32 @@ coaster_job_set_redirects(coaster_job *job, const char *stdin_loc,
                   const char *stdout_loc, const char *stderr_loc)
                   COASTERS_THROWS_NOTHING;
 
-// TODO: functions for setting directory, env vars, attributes,
-//       stageins, stageouts, cleanups
+/*
+ * Set job directory.
+ */
+coaster_rc
+coaster_job_set_directory(coaster_job *job, const char *dir)
+                  COASTERS_THROWS_NOTHING;
+
+/*
+ * Add environment variables for the job.  Will overwrite any
+ * previous values if names match.
+ * name and value strings should not be NULL.
+ */
+coaster_rc
+coaster_job_set_envs(coaster_job *job, int nvars, const char **names,
+                    const char **values) COASTERS_THROWS_NOTHING;
+
+/*
+ * Add attributes for the job.  Will overwrite any previous atrributes
+ * if names match.
+ * name and value strings should not be NULL.
+ */
+coaster_rc
+coaster_job_set_attrs(coaster_job *job, int nattrs, const char **names,
+                    const char **values) COASTERS_THROWS_NOTHING;
+
+// TODO: functions for setting  stageins, stageouts, cleanups
 
 /*
  * Get local job ID string.
