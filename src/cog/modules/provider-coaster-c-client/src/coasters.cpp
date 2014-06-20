@@ -52,6 +52,12 @@ struct coaster_settings {
   coaster_settings() : settings() {};
 };
 
+struct coaster_job {
+  Job job;
+
+  coaster_job(const string &executable) : job(executable) {};
+};
+
 static coaster_rc coaster_error_rc(const CoasterError &err);
 static coaster_rc exception_rc(const std::exception &ex);
 
@@ -190,6 +196,35 @@ coaster_rc coaster_apply_settings(coaster_client *client,
     return coaster_error_rc(err);
   } catch (const std::exception& ex) {
     return exception_rc(ex);
+  }
+}
+
+coaster_rc
+coaster_job_create(const char *executable, int argc, const char *argv,
+                  const char *job_manager, coaster_job **job)
+                      COASTERS_THROWS_NOTHING
+{
+  coaster_job *j = new coaster_job(executable);
+  
+
+  *job = j;
+  return COASTER_SUCCESS;
+}
+
+const char *coaster_rc_string(coaster_rc code)
+{
+  switch (code)
+  {
+    case COASTER_SUCCESS:
+      return "COASTER_SUCCESS";
+    case COASTER_ERROR_OOM:
+      return "COASTER_ERROR_OOM";
+    case COASTER_ERROR_NETWORK:
+      return "COASTER_ERROR_NETWORK";
+    case COASTER_ERROR_UNKNOWN:
+      return "COASTER_ERROR_UNKNOWN";
+    default:
+      return (const char*)0;
   }
 }
 
