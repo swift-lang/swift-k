@@ -5,8 +5,8 @@
 
 using namespace std;
 
-void add(string& ss, const char* key, string* value);
-void add(string& ss, const char* key, string& value);
+void add(string& ss, const char* key, const string* value);
+void add(string& ss, const char* key, const string& value);
 void add(string& ss, const char* key, const char* value);
 void add(string& ss, const char* key, const char* value, int n);
 
@@ -75,13 +75,13 @@ void JobSubmitCommand::serialize() {
 	addOutData(Buffer::wrap(ss));
 }
 
-void add(string& ss, const char* key, string* value) {
+void add(string& ss, const char* key, const string* value) {
 	if (value != NULL) {
 		add(ss, key, value->data(), value->length());
 	}
 }
 
-void add(string& ss, const char* key, string& value) {
+void add(string& ss, const char* key, const string& value) {
 	add(ss, key, value.data(), value.length());
 }
 

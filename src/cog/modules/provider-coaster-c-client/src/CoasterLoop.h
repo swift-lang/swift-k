@@ -51,7 +51,12 @@ class CoasterLoop {
 		virtual ~CoasterLoop();
 		void start();
 		void stop();
-
+		
+		/*
+		 * Add a channel for the loop to monitor.
+		 * Ownership of the channel is retained by the caller.
+		 * Must be removed later by a call to removeChannel().
+		 */
 		void addChannel(CoasterChannel* channel);
 		void removeChannel(CoasterChannel* channel);
 		void addSockets();

@@ -63,15 +63,31 @@ class CoasterClient: public CommandCallback {
 		void stop();
 
 		void setOptions(Settings& settings);
-		void submit(Job& job);
-		void waitForJob(Job& job);
 
+                /*
+                 * Submit a job.  The job should have been filled in with
+                 * all properties.  The ownership of the job object stays
+                 * with the caller, but this client will retain a reference
+                 * to the job until done jobs are purged.
+                 */
+		void submit(Job& job);
+
+                /*
+                 * Wait for job to be done.  Upon completion no actions
+                 * are taken: job must be purged from client explicitly.
+                 */
+		void waitForJob(const Job& job);
+
+                /*
+                 * Return a list of done jobs and remove references from this
+                 * client.
+                 */
 		list<Job*>* getAndPurgeDoneJobs();
 		void waitForJobs();
 
-		void updateJobStatus(string& jobId, JobStatus* status);
+		void updateJobStatus(const string &jobId, JobStatus* status);
 
-		string& getURL();
+		const string& getURL();
 
 		void errorReceived(Command* cmd, string* message, RemoteCoasterException* details);
 		void replyReceived(Command* cmd);

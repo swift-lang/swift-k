@@ -326,8 +326,8 @@ void CoasterChannel::replyReceived(Command* cmd) {
 	delete cmd;
 }
 
-string& CoasterChannel::getURL() {
-	return getClient()->getURL();
+const string& CoasterChannel::getURL() const {
+	return client->getURL();
 }
 
 /*

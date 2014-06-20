@@ -167,7 +167,7 @@ void CoasterClient::replyReceived(Command* cmd) {
 	delete cmd;
 }
 
-void CoasterClient::updateJobStatus(string& remoteJobId, JobStatus* status) { Lock::Scoped l(lock);
+void CoasterClient::updateJobStatus(const string& remoteJobId, JobStatus* status) { Lock::Scoped l(lock);
 	if (remoteJobIdMapping.count(remoteJobId) == 0) {
 		LogWarn << "Received job status notification for unknown job (" << remoteJobId << "): " << status << endl;
 	}
@@ -259,12 +259,12 @@ void CoasterClient::waitForJobs() { Lock::Scoped l(lock);
 	}
 }
 
-void CoasterClient::waitForJob(Job& job) { Lock::Scoped l(lock);
+void CoasterClient::waitForJob(const Job& job) { Lock::Scoped l(lock);
 	while (jobs.count(&(job.getIdentity())) != 0) {
 		cv.wait(lock);
 	}
 }
 
-string& CoasterClient::getURL() {
+const string& CoasterClient::getURL() {
 	return URL;
 }

@@ -47,9 +47,9 @@ class JobStatus {
 		JobStatus(JobStatusCode statusCode);
 		JobStatus();
 		virtual ~JobStatus();
-		JobStatusCode getStatusCode();
+		JobStatusCode getStatusCode() const;
 		time_t getTime();
-		string* getMessage();
+		const string* getMessage() const;
 		RemoteCoasterException* getException();
 		const JobStatus* getPreviousStatus();
 		void setPreviousStatus(JobStatus* prev);

@@ -32,7 +32,7 @@ Job::Job(const string &pexecutable) {
 	status = NULL;
 }
 
-string& Job::getIdentity() {
+const string& Job::getIdentity() const {
 	return identity;
 }
 
@@ -47,7 +47,7 @@ void Job::addArgument(string& arg) {
 	arguments->push_back(new string(arg));
 }
 
-string& Job::getExecutable() {
+const string& Job::getExecutable() const {
 	return executable;
 }
 
@@ -55,7 +55,7 @@ void Job::addArgument(const char* arg) {
 	addArgument(*(new string(arg)));
 }
 
-string* Job::getDirectory() {
+const string* Job::getDirectory() const {
 	return directory;
 }
 
@@ -63,7 +63,7 @@ void Job::setDirectory(string& pdirectory) {
 	directory = &pdirectory;
 }
 
-string* Job::getStdinLocation() {
+const string* Job::getStdinLocation() const {
 	return stdinLocation;
 }
 
@@ -71,7 +71,7 @@ void Job::setStdinLocation(string& loc) {
 	stdinLocation = &loc;
 }
 
-string* Job::getStdoutLocation() {
+const string* Job::getStdoutLocation() const {
 	return stdoutLocation;
 }
 
@@ -79,7 +79,7 @@ void Job::setStdoutLocation(string& loc) {
 	stdoutLocation = &loc;
 }
 
-string* Job::getStderrLocation() {
+const string* Job::getStderrLocation() const {
 	return stderrLocation;
 }
 
@@ -87,7 +87,7 @@ void Job::setStderrLocation(string& loc) {
 	stderrLocation = &loc;
 }
 
-string Job::getJobManager() {
+const string& Job::getJobManager() const {
 	return jobManager;
 }
 
@@ -104,7 +104,7 @@ map<string, string>* Job::getEnv() {
 	return env;
 }
 
-string* Job::getEnv(string name) {
+const string* Job::getEnv(string name) const {
 	if (env == NULL) {
 		return NULL;
 	}
@@ -131,7 +131,7 @@ map<string, string>* Job::getAttributes() {
 	return attributes;
 }
 
-string* Job::getAttribute(string name) {
+const string* Job::getAttribute(string name) {
 	if (attributes == NULL) {
 		return NULL;
 	}
@@ -187,15 +187,7 @@ void Job::addCleanup(string cleanup) {
 	cleanups->push_back(cleanup);
 }
 
-string* Job::getStderr() {
-	return stderr;
-}
-
-string* Job::getStdout() {
-	return stdout;
-}
-
-JobStatus* Job::getStatus() {
+const JobStatus* Job::getStatus() const {
 	return status;
 }
 

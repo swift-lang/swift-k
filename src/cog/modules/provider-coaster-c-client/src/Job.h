@@ -27,14 +27,16 @@ class Job {
                  * TODO: document expectations about lifetime of strings.
                  * It seems very easy for client code to accidentally
                  * pass in a pointer to a stack-allocated string or a
-                 * string with a shorter lifetime than the job.
+                 * string with a shorter lifetime than the job.  Would
+                 * it work to just store them by value and have zero-length
+                 * be equivalent to NULL.  Are zero-length strings meaningful?
                  */
 		vector<string*>* arguments;
 		string* directory;
 		string* stdinLocation;
 		string* stdoutLocation;
 		string* stderrLocation;
-        string jobManager;
+		string jobManager;
 
 		map<string, string>* env;
 		map<string, string>* attributes;
@@ -49,41 +51,41 @@ class Job {
 		Job(const string &executable);
 		virtual ~Job();
 
-		string& getExecutable();
+		const string& getExecutable() const;
                 
                 /*
                   Get the job identity.  The identity is a unique string
                   that is assigned to the job object upon construction
                   and does not change over it's lifetime.
                  */
-		string& getIdentity();
+		const string& getIdentity() const;
 
 		vector<string*>* getArguments();
 		void addArgument(string& arg);
 		void addArgument(const char* arg);
 
-		string* getDirectory();
+		const string* getDirectory() const;
 		void setDirectory(string& directory);
 
-		string* getStdinLocation();
+		const string* getStdinLocation() const;
 		void setStdinLocation(string& loc);
 
-		string* getStdoutLocation();
+		const string* getStdoutLocation() const;
 		void setStdoutLocation(string& loc);
 
-		string* getStderrLocation();
+		const string* getStderrLocation() const;
 		void setStderrLocation(string& loc);
 
-		string getJobManager();
+		const string &getJobManager() const;
 		void setJobManager(string jm);
 		void setJobManager(const char *jm);
 
 		map<string, string>* getEnv();
-		string* getEnv(string name);
+		const string* getEnv(string name) const;
 		void setEnv(string name, string value);
 
 		map<string, string>* getAttributes();
-		string* getAttribute(string name);
+		const string* getAttribute(string name);
 		void setAttribute(string name, string value);
 
 		vector<StagingSetEntry>* getStageIns();
@@ -95,10 +97,7 @@ class Job {
 		vector<string>* getCleanups();
 		void addCleanup(string cleanup);
 
-		string* getStderr();
-		string* getStdout();
-
-		JobStatus* getStatus();
+		const JobStatus* getStatus() const;
 		void setStatus(JobStatus* status);
 };
 

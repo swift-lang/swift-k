@@ -44,7 +44,7 @@ JobStatus::JobStatus() {
 	init(UNSUBMITTED, time(NULL), NULL, NULL);
 }
 
-JobStatusCode JobStatus::getStatusCode() {
+JobStatusCode JobStatus::getStatusCode() const {
 	return statusCode;
 }
 
@@ -52,7 +52,7 @@ time_t JobStatus::getTime() {
 	return stime;
 }
 
-string* JobStatus::getMessage() {
+const string* JobStatus::getMessage() const {
 	return message;
 }
 

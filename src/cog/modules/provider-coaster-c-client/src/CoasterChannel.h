@@ -103,7 +103,7 @@ class CoasterChannel: public CommandCallback {
 		void send(int tag, Buffer* buf, int flags, ChannelCallback* cb);
 
 		CoasterClient* getClient();
-		string& getURL();
+		const string& getURL() const;
 
 		void checkHeartbeat();
 
