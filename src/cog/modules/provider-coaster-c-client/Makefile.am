@@ -1,7 +1,19 @@
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src 
 EXTRA_DIST = autogen.sh
-LIBS = -pthread $LIBS
+LIBS = -pthread $(LIBS)
+include_HEADERS = src/Buffer.h src/ChannelCallback.h \
+            src/ChannelConfigurationCommand.h src/ClientHandlerFactory.h \
+            src/CoasterChannel.h src/CoasterClient.h \
+            src/CoasterError.h src/CoasterLoop.h src/CoasterSWIG.h \
+            src/CommandCallback.h src/Command.h src/ConditionVariable.h \
+            src/Flags.h src/HandlerFactory.h src/Handler.h \
+            src/HeartBeatCommand.h src/Job.h src/JobStatus.h \
+            src/JobStatusHandler.h src/JobSubmitCommand.h src/Lock.h \
+            src/Logger.h src/RemoteCoasterException.h src/RequestReply.h \
+            src/ServiceConfigurationCommand.h src/Settings.h \
+            src/StagingSetEntry.h
+
 AM_CXXFLAGS = -pthread
 
 binaries: all
