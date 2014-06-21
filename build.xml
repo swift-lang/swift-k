@@ -87,6 +87,9 @@
                                 <include name="apptimes"/>
                                 <include name="foreachworker"/>
 				<include name="gensites"/>
+                                <include name="moab-qdel"/>
+                                <include name="moab-qstat"/>
+                                <include name="moab-qsub"/>
                                 <include name="prop2scs.pl"/>
 				<include name="start-coaster-service"/>
 				<include name="stop-coaster-service"/>
