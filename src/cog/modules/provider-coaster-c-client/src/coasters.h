@@ -187,21 +187,21 @@ coaster_job_set_directory(coaster_job *job, const char *dir, size_t dir_len)
  * Add environment variables for the job.  Will overwrite any
  * previous values if names match.
  * name and value strings should not be NULL.
- * TODO: include string lengths
  */
 coaster_rc
-coaster_job_set_envs(coaster_job *job, int nvars, const char **names,
-                    const char **values) COASTERS_THROWS_NOTHING;
+coaster_job_set_envs(coaster_job *job, int nvars,
+        const char **names, size_t *name_lens,
+        const char **values, size_t *value_lens) COASTERS_THROWS_NOTHING;
 
 /*
  * Add attributes for the job.  Will overwrite any previous atrributes
  * if names match.
  * name and value strings should not be NULL.
- * TODO: include string lengths
  */
 coaster_rc
-coaster_job_set_attrs(coaster_job *job, int nattrs, const char **names,
-                    const char **values) COASTERS_THROWS_NOTHING;
+coaster_job_set_attrs(coaster_job *job, int nattrs,
+        const char **names, size_t *name_lens,
+        const char **values, size_t *value_lens) COASTERS_THROWS_NOTHING;
 
 // TODO: functions for setting stageins, stageouts, cleanups
 

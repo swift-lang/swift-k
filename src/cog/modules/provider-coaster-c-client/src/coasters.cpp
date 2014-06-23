@@ -313,8 +313,9 @@ coaster_job_set_directory(coaster_job *job, const char *dir, size_t dir_len)
 }
 
 coaster_rc
-coaster_job_set_envs(coaster_job *job, int nvars, const char **names,
-                    const char **values) COASTERS_THROWS_NOTHING {
+coaster_job_set_envs(coaster_job *job, int nvars,
+      const char **names, size_t *name_lens,
+      const char **values, size_t *value_lens) COASTERS_THROWS_NOTHING {
   if (job == NULL) {
     return COASTER_ERROR_INVALID;
   }
@@ -323,10 +324,12 @@ coaster_job_set_envs(coaster_job *job, int nvars, const char **names,
     for (int i = 0; i < nvars; i++)
     {
       const char *name = names[i];
+      size_t name_len = name_lens[i];
       const char *value = values[i];
+      size_t value_len = value_lens[i];
       COASTER_CONDITION(name != NULL && value != NULL,
             COASTER_ERROR_INVALID, "Env var name or value was NULL");
-      job->job.setEnv(name, value);
+      job->job.setEnv(name, name_len, value, value_len);
     }
 
     return COASTER_SUCCESS;
@@ -342,8 +345,10 @@ coaster_job_set_envs(coaster_job *job, int nvars, const char **names,
  * if names match.
  */
 coaster_rc
-coaster_job_set_attrs(coaster_job *job, int nattrs, const char **names,
-                    const char **values) COASTERS_THROWS_NOTHING {
+coaster_job_set_attrs(coaster_job *job, int nattrs,
+        const char **names, size_t *name_lens,
+        const char **values, size_t *value_lens) COASTERS_THROWS_NOTHING {
+ 
   if (job == NULL) {
     return COASTER_ERROR_INVALID;
   }
@@ -352,10 +357,12 @@ coaster_job_set_attrs(coaster_job *job, int nattrs, const char **names,
     for (int i = 0; i < nattrs; i++)
     {
       const char *name = names[i];
+      size_t name_len = name_lens[i];
       const char *value = values[i];
+      size_t value_len = value_lens[i];
       COASTER_CONDITION(name != NULL && value != NULL,
             COASTER_ERROR_INVALID, "Attribute name or value was NULL");
-      job->job.setAttribute(name, value);
+      job->job.setAttribute(name, name_len, value, value_len);
     }
 
     return COASTER_SUCCESS;

@@ -145,6 +145,15 @@ void Job::setEnv(string name, string value) {
 	env->insert(pair<string, string>(name, value));
 }
 
+void Job::setEnv(const char *name, size_t name_len,
+		 const char *value, size_t value_len) {
+	if (env == NULL) {
+		env = new map<string, string>;
+	}
+	env->insert(pair<string, string>(string(name, name_len),
+					 string(value, value_len)));
+}
+
 map<string, string>* Job::getAttributes() {
 	return attributes;
 }
@@ -170,6 +179,15 @@ void Job::setAttribute(string name, string value) {
 		attributes = new map<string, string>;
 	}
 	attributes->insert(pair<string, string>(name, value));
+}
+
+void Job::setAttribute(const char *name, size_t name_len,
+                       const char *value, size_t value_len) {
+	if (attributes == NULL) {
+		attributes = new map<string, string>;
+	}
+	attributes->insert(pair<string, string>(string(name, name_len),
+					    string(value, value_len)));
 }
 
 vector<StagingSetEntry>* Job::getStageIns() {

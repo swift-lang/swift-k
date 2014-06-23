@@ -103,10 +103,14 @@ class Job {
 		map<string, string>* getEnv();
 		const string* getEnv(string name) const;
 		void setEnv(string name, string value);
+		void setEnv(const char *name, size_t name_len,
+			    const char *value, size_t value_len);
 
 		map<string, string>* getAttributes();
 		const string* getAttribute(string name);
 		void setAttribute(string name, string value);
+		void setAttribute(const char *name, size_t name_len,
+			    const char *value, size_t value_len);
 
 		vector<StagingSetEntry>* getStageIns();
 		void addStageIn(string src, string dest, StagingMode mode);
