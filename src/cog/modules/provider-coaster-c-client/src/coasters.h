@@ -20,7 +20,9 @@
  * Created: Jun 18, 2014
  *    Author: Tim Armstrong
  *
- * Pure C interface for Coasters
+ * Pure C interface for Coasters.  This aims to expose a subset of the
+ * C++ API's functionality that is sufficient to support all common use
+ * cases for submitting jobs through Coasters.
  */
 
 #ifndef COASTERS_H_
@@ -56,7 +58,6 @@ typedef enum {
 } coaster_rc;
 
 // Set appropriate macro to specify that we shouldn't throw exceptions
-// Only used in this header: undefine later
 #ifdef __cplusplus
 #define COASTERS_THROWS_NOTHING throw()
 #else
@@ -75,7 +76,10 @@ coaster_client_start(const char *service_url, size_t service_url_len,
                     coaster_client **client) COASTERS_THROWS_NOTHING;
 
 /*
- * Stop coasters client and free memory.
+ * Stop coasters client and free all memory.
+ *
+ * After calling this the client is invalid and should not be used as
+ * an argument to any more Coaster C API function calls.
  */
 coaster_rc
 coaster_client_stop(coaster_client *client) COASTERS_THROWS_NOTHING;
@@ -88,6 +92,13 @@ coaster_client_stop(coaster_client *client) COASTERS_THROWS_NOTHING;
 coaster_rc
 coaster_settings_create(coaster_settings **settings)
                     COASTERS_THROWS_NOTHING;
+
+/*
+ * Free memory associated with coasters settings
+ */
+void
+coaster_settings_free(coaster_settings *settings)
+                                COASTERS_THROWS_NOTHING;
 
 /*
  * Parse settings from string.
@@ -130,12 +141,10 @@ coaster_settings_keys(coaster_settings *settings,
                       const char ***keys, size_t **key_lens, int *count)
                                 COASTERS_THROWS_NOTHING;
 
-void
-coaster_settings_free(coaster_settings *settings)
-                                COASTERS_THROWS_NOTHING;
-
 /*
  * Apply settings to started coasters client.
+ * TODO: currently it isn't safe to free settings until client is shut
+ *       down
  */
 coaster_rc
 coaster_apply_settings(coaster_client *client,
@@ -165,7 +174,7 @@ coaster_rc
 coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING;
 
 /*
- * Set input and output streams redirections.
+ * Set input and output stream redirections.
  * If set to NULL, don't modify.
  */
 coaster_rc
@@ -214,13 +223,14 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
 // TODO: functions for setting stageins, stageouts
 
 /*
- * Get local job ID.
+ * Get local job ID.  The job ID is a locally unique identifier for
+ * a coasters job that is assigned when the job is created.
  */
 job_id_t 
 coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING;
 
 /*
- * Get status of job.
+ * Get status of a submitted job.
  * Return COASTER_ERROR_INVALID if job is invalid or has no status.
  */
 coaster_rc
@@ -239,7 +249,7 @@ coaster_job_get_outstreams(coaster_job *job,
                 COASTERS_THROWS_NOTHING;
 
 /*
- * Submit a coasters job.
+ * Submit a coasters job through a coasters client.
  * A job can only be submitted once!
  */
 coaster_rc

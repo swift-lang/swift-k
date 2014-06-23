@@ -14,6 +14,7 @@ class ServiceConfigurationCommand: public Command {
 		Settings* settings;
 	public:
 		static string NAME;
+                // TODO: how long does this hold a reference to settings?
 		ServiceConfigurationCommand(Settings& s);
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
 	private:

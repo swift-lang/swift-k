@@ -60,7 +60,8 @@ class CoasterClient: public CommandCallback {
 		virtual ~CoasterClient();
 		void start();
 		void stop();
-
+                
+                // TODO: how long does this hold a reference to settings?
 		void setOptions(Settings& settings);
 
 		/*
