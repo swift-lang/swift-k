@@ -286,6 +286,15 @@ coaster_check_jobs(coaster_client *client, bool wait, int maxjobs,
  */
 const char *coaster_rc_string(coaster_rc code);
 
+/*
+ * Get additional information about last returned error in current
+ * thread.
+ * returns: error message, NULL if no information available.  The
+ *          returned string is valid until the next call by this thread
+ *          to a coasters API function.
+ */
+const char *coaster_last_err_info(void);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

@@ -25,6 +25,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <pthread.h>
 
 #include "CoasterClient.h"
 #include "CoasterError.h"
@@ -36,7 +37,7 @@ using std::free;
 using std::string;
 
 /*
-  Struct just wraps the object
+  Struct just wraps the objects
  */
 struct coaster_client {
   CoasterLoop loop;
@@ -46,27 +47,41 @@ struct coaster_client {
     Constructor: initialize loop then client
    */
   coaster_client(string serviceURL) :
-        loop(), client(serviceURL, loop) {
-
-  };
+        loop(), client(serviceURL, loop) { }
 };
 
+struct coaster_err_info {
+  string msg;
+
+  coaster_err_info(const string _msg): msg(msg) {}
+};
+
+static pthread_key_t err_key;
+static pthread_once_t err_key_init = PTHREAD_ONCE_INIT;
+
+static coaster_rc coaster_return_error(coaster_rc code,
+                                    const string &msg);
 static coaster_rc coaster_error_rc(const CoasterError &err);
 static coaster_rc exception_rc(const std::exception &ex);
+static void init_err_key(void);
+static void cleanup_err_key(void *errinfo);
+static void clear_err_info(void);
 
 // Check for error
-// TODO: store error message somewhere instead of printing?
 #define COASTER_CONDITION(cond, err_rc, err_msg) { \
-  if (!(cond)) { fprintf(stderr, (err_msg)); return (err_rc); }}
+  if (!(cond)) { coaster_return_error((err_rc), (err_msg)); }}
+
+// TODO: it's bad that this might allocate memory
+#define COASTER_CHECK_MALLOC(ptr) { \
+  if ((ptr) == NULL) { \
+    coaster_return_error(COASTER_ERROR_OOM, "out of memory"); }}
 
 coaster_rc
 coaster_client_start(const char *service_url, size_t service_url_len,
                     coaster_client **client) COASTERS_THROWS_NOTHING {
   try {
     *client = new coaster_client(string(service_url, service_url_len));
-    if (!(*client)) {
-      return COASTER_ERROR_OOM;
-    }
+    COASTER_CHECK_MALLOC(*client);
 
     (*client)->client.start();
     return COASTER_SUCCESS;
@@ -98,9 +113,7 @@ coaster_rc coaster_settings_create(coaster_settings **settings)
                                 COASTERS_THROWS_NOTHING {
   try {
     *settings = new Settings();
-    if (!(*settings)) {
-      return COASTER_ERROR_OOM;
-    }
+    COASTER_CHECK_MALLOC(*settings);
  
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
@@ -159,15 +172,13 @@ coaster_settings_keys(coaster_settings *settings,
 
     // Use malloc so C client code can free
     *keys = (const char**)malloc(sizeof((*keys)[0]) * (*count));
-    if (!(*keys)) {
-      return COASTER_ERROR_OOM;
-    }
+    COASTER_CHECK_MALLOC(*keys);
     
     if (key_lens != NULL) {
       *key_lens = (size_t *)malloc(sizeof((*key_lens)[0]) * (*count));
       if (!(*key_lens)) {
         free(*keys);
-        return COASTER_ERROR_OOM;
+        COASTER_CHECK_MALLOC(*key_lens);
       }
     }
     
@@ -205,7 +216,7 @@ coaster_apply_settings(coaster_client *client,
                                   coaster_settings *settings)
                                   COASTERS_THROWS_NOTHING {
   if (settings == NULL || client == NULL) {
-    return COASTER_ERROR_INVALID;
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid arg");
   }
 
   try {
@@ -259,7 +270,7 @@ coaster_job_set_redirects(coaster_job *job,
       const char *stderr_loc, size_t stderr_loc_len)
                   COASTERS_THROWS_NOTHING {
   if (job == NULL) {
-    return COASTER_ERROR_INVALID;
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid arg");
   }
   
   try {
@@ -288,7 +299,7 @@ coaster_rc
 coaster_job_set_directory(coaster_job *job, const char *dir, size_t dir_len)
                   COASTERS_THROWS_NOTHING {
   if (job == NULL) {
-    return COASTER_ERROR_INVALID;
+    return coaster_return_error(COASTER_ERROR_INVALID, "");
   }
   
   try {
@@ -309,7 +320,7 @@ coaster_job_set_envs(coaster_job *job, int nvars,
       const char **names, size_t *name_lens,
       const char **values, size_t *value_lens) COASTERS_THROWS_NOTHING {
   if (job == NULL) {
-    return COASTER_ERROR_INVALID;
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid arg");
   }
   
   try {
@@ -342,7 +353,7 @@ coaster_job_set_attrs(coaster_job *job, int nattrs,
         const char **values, size_t *value_lens) COASTERS_THROWS_NOTHING {
  
   if (job == NULL) {
-    return COASTER_ERROR_INVALID;
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid job");
   }
   
   try {
@@ -371,7 +382,7 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
         COASTERS_THROWS_NOTHING {
  
   if (job == NULL) {
-    return COASTER_ERROR_INVALID;
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid job");
   }
   
   try {
@@ -403,7 +414,8 @@ coaster_job_status_code(coaster_job *job, coaster_job_status *code)
                                             COASTERS_THROWS_NOTHING {
   const JobStatus *status;
   if (job == NULL || (status = job->getStatus()) == NULL) {
-    return COASTER_ERROR_INVALID;
+    return coaster_return_error(COASTER_ERROR_INVALID,
+                                "invalid or unsubmitted job");
   }
   
   *code = status->getStatusCode();
@@ -416,7 +428,7 @@ coaster_job_get_outstreams(coaster_job *job,
                 const char **stderr_s, size_t *stderr_len)
                 COASTERS_THROWS_NOTHING {
   if (job == NULL) {
-    return COASTER_ERROR_INVALID;
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid job");
   }
 
   const string *out = job->getStdout();
@@ -458,7 +470,7 @@ coaster_check_jobs(coaster_client *client, bool wait, int maxjobs,
                    coaster_job **jobs, int *njobs)
                 COASTERS_THROWS_NOTHING {
   if (client == NULL) {
-    return COASTER_ERROR_INVALID;
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid client");
   }
   
   try {
@@ -495,17 +507,82 @@ const char *coaster_rc_string(coaster_rc code)
   }
 }
 
+const char *coaster_last_err_info(void) {
+  // Ensure initialized
+  pthread_once(&err_key_init, init_err_key);
+
+  void *val = pthread_getspecific(err_key);
+  if (val == NULL) {
+    return NULL;
+  }
+
+  coaster_err_info *info = static_cast<coaster_err_info *>(val);
+  return info->msg.c_str();
+}
+
+static void init_err_key(void) {
+  pthread_key_create(&err_key, cleanup_err_key);
+}
+
+/*
+ * Called to cleanup error key
+ */
+static void cleanup_err_key(void *errinfo) {
+  delete static_cast<coaster_err_info*>(errinfo);
+}
+
+static void set_err_info(const string& msg) {
+  // Ensure key is initialized
+  pthread_once(&err_key_init, init_err_key);
+
+  void *prev = pthread_getspecific(err_key);
+  if (prev != NULL) {
+    cleanup_err_key(prev);
+  }
+  
+  coaster_err_info *err_info = new coaster_err_info(msg);
+  pthread_setspecific(err_key, static_cast<void*>(err_info));
+}
+
+static void clear_err_info(void) {
+  void *prev = pthread_getspecific(err_key);
+  if (prev != NULL) {
+    cleanup_err_key(prev);
+  }
+  
+  pthread_setspecific(err_key, NULL);
+}
+
+/*
+ * Helper to set error info when returning error.
+ */
+static coaster_rc coaster_return_error(coaster_rc code,
+                                    const string& msg) {
+  set_err_info(msg);  
+  return code;
+}
+
 /*
  * Set error information and return appropriate code
  */
 static coaster_rc coaster_error_rc(const CoasterError &err) {
-  // TODO: store detailed error info
+  const char *msg = err.what();
+  if (msg != NULL) {
+    set_err_info(string(msg));
+  } else {
+    clear_err_info();
+  }
   // TODO: distinguish different cases?
   return COASTER_ERROR_UNKNOWN;
 }
 
 static coaster_rc exception_rc(const std::exception &ex) {
-  // TODO: store error info?
+  const char *msg = ex.what();
+  if (msg != NULL) {
+    set_err_info(string(msg));
+  } else {
+    clear_err_info();
+  }
   // TODO: handle specific types, e.g. bad_alloc
   return COASTER_ERROR_UNKNOWN;
 }
