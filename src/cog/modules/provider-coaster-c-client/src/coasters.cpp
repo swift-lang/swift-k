@@ -51,12 +51,6 @@ struct coaster_client {
   };
 };
 
-struct coaster_settings {
-  Settings settings;
-
-  coaster_settings() : settings() {};
-};
-
 static coaster_rc coaster_error_rc(const CoasterError &err);
 static coaster_rc exception_rc(const std::exception &ex);
 
@@ -103,7 +97,7 @@ coaster_rc coaster_client_stop(coaster_client *client)
 coaster_rc coaster_settings_create(coaster_settings **settings)
                                 COASTERS_THROWS_NOTHING {
   try {
-    *settings = new coaster_settings();
+    *settings = new Settings();
     if (!(*settings)) {
       return COASTER_ERROR_OOM;
     }
@@ -129,7 +123,7 @@ coaster_settings_set(coaster_settings *settings,
           const char *key, size_t key_len,
           const char *value, size_t value_len) COASTERS_THROWS_NOTHING {
   try {
-    settings->settings.set(key, key_len, value, value_len); 
+    settings->set(key, key_len, value, value_len); 
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
@@ -143,7 +137,7 @@ coaster_settings_get(coaster_settings *settings,
             const char *key, size_t key_len,
             const char **value, size_t *value_len) COASTERS_THROWS_NOTHING {
   try {
-    std::map<string, string> &map = settings->settings.getSettings();
+    std::map<string, string> &map = settings->getSettings();
     std::string &str_value = map[string(key, key_len)];
     *value = str_value.c_str();
     *value_len = str_value.length();
@@ -160,7 +154,7 @@ coaster_settings_keys(coaster_settings *settings,
               const char ***keys, size_t **key_lens, int *count)
                                 COASTERS_THROWS_NOTHING {
   try {
-    std::map<string, string> &map = settings->settings.getSettings();
+    std::map<string, string> &map = settings->getSettings();
     *count = map.size();
 
     // Use malloc so C client code can free
@@ -210,8 +204,12 @@ coaster_rc
 coaster_apply_settings(coaster_client *client,
                                   coaster_settings *settings)
                                   COASTERS_THROWS_NOTHING {
+  if (settings == NULL || client == NULL) {
+    return COASTER_ERROR_INVALID;
+  }
+
   try {
-    client->client.setOptions(settings->settings);
+    client->client.setOptions(*settings);
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);

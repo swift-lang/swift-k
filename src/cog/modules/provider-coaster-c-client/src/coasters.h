@@ -42,13 +42,18 @@ extern "C" {
 
 // Opaque pointer types
 typedef struct coaster_client coaster_client;
-typedef struct coaster_settings coaster_settings;
 
+/*
+  Treat some types as direct pointers to real classes for C++, but opaque
+  pointers to dummy structs for C code to allow typechecking, but prevent
+  manipulation of the rbjects.
+ */
 #ifdef __cplusplus
-// Treat as direct pointer to class for C++
+typedef class Settings coaster_settings;
 typedef class Job coaster_job;
 #else
-// Treat as opaque pointer to unimplemented struct for C
+// Treat these types as opaque pointer to unimplemented struct for C
+typedef struct coaster_settings_opaque_ coaster_settings;
 typedef struct coaster_job_opaque_ coaster_job;
 #endif
 
