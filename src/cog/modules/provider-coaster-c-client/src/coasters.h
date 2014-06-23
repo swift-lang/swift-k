@@ -256,6 +256,21 @@ coaster_rc
 coaster_submit(coaster_client *client, coaster_job *job)
                 COASTERS_THROWS_NOTHING;
 
+/*
+ * Check for completion of jobs.
+ *
+ * NOTE: we only return job ids, client is responsible for reconciling
+ * these with the job objects.
+ *
+ * wait: if true, don't return until at least one job completes
+ * maxjobs: maximum number of jobs to return
+ * jobs: output array large enough to hold maxjobs
+ * njobs: output for number of jobs returned in jobs
+ */
+coaster_rc
+coaster_check_jobs(coaster_client *client, bool wait, int maxjobs,
+                   job_id_t *jobs, int *njobs)
+                COASTERS_THROWS_NOTHING;
 
 /*
  * Get name of return code.  Returns NULL if invalid code.

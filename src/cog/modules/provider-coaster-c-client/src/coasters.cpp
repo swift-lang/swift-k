@@ -461,6 +461,51 @@ coaster_submit(coaster_client *client, coaster_job *job)
   }
 }
 
+coaster_rc
+coaster_check_jobs(coaster_client *client, bool wait, int maxjobs,
+                   job_id_t *jobs, int *njobs)
+                COASTERS_THROWS_NOTHING {
+  if (client == NULL) {
+    return COASTER_ERROR_INVALID;
+  }
+  
+  try {
+    if (wait) {
+      client->client.waitForAnyJob();
+    }
+    
+    int count = 0;
+
+    // Need to use temporary storage for job pointers
+    const int job_buf_size = 32;
+    Job *job_buf[job_buf_size];
+
+    while (count < maxjobs) {
+      int maxleft = maxjobs - count;
+      int maxbatch = (maxleft < job_buf_size) ? maxleft : job_buf_size;
+
+      int n = client->client.getAndPurgeDoneJobs(maxbatch, job_buf);
+      
+      for (int i = 0; i < n; i++) {
+        jobs[count++] = job_buf[i]->getIdentity();
+      }
+
+      if (n < maxbatch) {
+        // Got last job
+        break;
+      }
+    }
+
+    *njobs = count;
+    return COASTER_SUCCESS;
+
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
 const char *coaster_rc_string(coaster_rc code)
 {
   switch (code)

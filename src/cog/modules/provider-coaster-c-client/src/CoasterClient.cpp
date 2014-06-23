@@ -276,8 +276,24 @@ list<Job*>* CoasterClient::getAndPurgeDoneJobs() { Lock::Scoped l(lock);
 	}
 }
 
+int CoasterClient::getAndPurgeDoneJobs(int size, Job** jobs)
+				      { Lock::Scoped l(lock);
+	int count = 0;
+	while (count < size && !doneJobs.empty()) {
+		jobs[count++] = doneJobs.front();
+		doneJobs.pop_front();
+	}
+	return count;
+}
+
 void CoasterClient::waitForJobs() { Lock::Scoped l(lock);
 	while (jobs.size() != 0) {
+		cv.wait(lock);
+	}
+}
+
+void CoasterClient::waitForAnyJob() { Lock::Scoped l(lock);
+	while (doneJobs.size() == 0) {
 		cv.wait(lock);
 	}
 }

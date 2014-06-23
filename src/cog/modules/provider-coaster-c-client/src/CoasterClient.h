@@ -60,8 +60,8 @@ class CoasterClient: public CommandCallback {
 		virtual ~CoasterClient();
 		void start();
 		void stop();
-                
-                // TODO: how long does this hold a reference to settings?
+		
+		// TODO: how long does this hold a reference to settings?
 		void setOptions(Settings& settings);
 
 		/*
@@ -80,10 +80,22 @@ class CoasterClient: public CommandCallback {
 
 		/*
 		 * Return a list of done jobs and remove references from this
-		 * client.
+		 * client.  This returns jobs in FIFO order of completion
 		 */
 		list<Job*>* getAndPurgeDoneJobs();
+		
+		/*
+		 * Give back up to size done jobs and remove references.
+		 * jobs: array with space for at least size jobs
+		 * returns number of completed jobs added to array
+		 */
+		int getAndPurgeDoneJobs(int size, Job** jobs);
+
 		void waitForJobs();
+		/*
+		 * Wait until there is at least one done job
+		 */
+		void waitForAnyJob();
 
 		void updateJobStatus(const string& remoteJobId, JobStatus* status);
 		void updateJobStatus(job_id_t jobId, JobStatus* status);
