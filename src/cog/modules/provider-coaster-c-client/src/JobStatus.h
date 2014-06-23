@@ -12,24 +12,9 @@
 #include <string>
 #include <iostream>
 #include "RemoteCoasterException.h"
+#include "coaster-defs.h"
 
 using namespace std;
-
-enum JobStatusCode {
-	UNSUBMITTED = 0,
-	SUBMITTING = 8,
-	SUBMITTED = 1,
-	ACTIVE = 2,
-	SUSPENDED = 3,
-	RESUMED = 4,
-	FAILED = 5,
-	CANCELED = 6,
-	COMPLETED = 7,
-	STAGE_IN = 16,
-	STAGE_OUT = 17,
-	UNKNOWN = 9999
-};
-
 
 class JobStatus {
 	private:

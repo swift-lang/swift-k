@@ -36,7 +36,7 @@ extern "C" {
 #include <stddef.h>
 #endif
 
-#include <stdint.h>
+#include "coaster-defs.h"
 
 // Opaque pointer types
 typedef struct coaster_client coaster_client;
@@ -206,13 +206,18 @@ coaster_job_set_attrs(coaster_job *job, int nattrs,
 // TODO: functions for setting stageins, stageouts, cleanups
 
 /*
- * Get local job ID string.
- * Return value points to job state: will be invalid if job is freed.
- *
- * id_len: string length of id
+ * Get local job ID.
  */
-int64_t 
+job_id_t 
 coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING;
+
+/*
+ * Get status of job.
+ * Return COASTER_ERROR_INVALID if job is invalid or has no status.
+ */
+coaster_rc
+coaster_job_status_code(coaster_job *job, coaster_job_status *code)
+                COASTERS_THROWS_NOTHING;
 
 /*
  * Submit a coasters job

@@ -380,6 +380,18 @@ coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING {
 }
 
 coaster_rc
+coaster_job_status_code(coaster_job *job, coaster_job_status *code)
+                                            COASTERS_THROWS_NOTHING {
+  const JobStatus *status;
+  if (job == NULL || (status = job->job.getStatus()) == NULL) {
+    return COASTER_ERROR_INVALID;
+  }
+  
+  *code = status->getStatusCode();
+  return COASTER_SUCCESS;
+}
+
+coaster_rc
 coaster_submit(coaster_client *client, coaster_job *job)
                 COASTERS_THROWS_NOTHING {
   try {

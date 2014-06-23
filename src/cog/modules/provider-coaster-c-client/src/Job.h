@@ -9,16 +9,14 @@
 #define JOB_H_
 
 #include "StagingSetEntry.h"
+#include "coaster-defs.h"
 #include "JobStatus.h"
+
 #include <string>
 #include <vector>
 #include <map>
-#include <stdint.h>
 
 using namespace std;
-
-// 64-bit job ids should be sufficient to be unique
-typedef int64_t job_id_t;
 
 /*
   Job represents a single Job that is to be submitted to coasters.
