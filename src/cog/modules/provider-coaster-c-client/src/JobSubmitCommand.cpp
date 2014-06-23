@@ -33,7 +33,9 @@ string* JobSubmitCommand::getRemoteId() {
 }
 
 void JobSubmitCommand::serialize() {
-	add(ss, "identity", job->getIdentity());
+        stringstream idSS;
+        idSS << job->getIdentity();
+	add(ss, "identity", idSS.str());
 	add(ss, "executable", job->getExecutable());
 	add(ss, "directory", job->getDirectory());
 

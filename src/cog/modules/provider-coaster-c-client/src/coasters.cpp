@@ -366,13 +366,10 @@ coaster_job_set_attrs(coaster_job *job, int nattrs, const char **names,
   }
 }
 
-const char *
-coaster_job_get_id(coaster_job *job, size_t *id_len)
-                                COASTERS_THROWS_NOTHING {
+int64_t
+coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING {
   // Shouldn't throw anything from accessor method
-  const string &id = job->job.getIdentity();
-  *id_len = id.length();
-  return id.c_str();
+  return job->job.getIdentity();
 }
 
 coaster_rc

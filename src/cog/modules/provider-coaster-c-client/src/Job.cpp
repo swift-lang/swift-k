@@ -4,15 +4,11 @@
 
 using namespace std;
 
-static int seq = 0;
+static job_id_t seq = 0;
 
 Job::Job(const string &pexecutable) {
 	executable = pexecutable;
-        // TODO: is there any reason we can't just store integer?
-	stringstream ss;
-	ss << "job-";
-	ss << seq++;
-	identity = ss.str();
+	identity = seq++;
 
 	arguments = NULL;
 	directory = NULL;
@@ -27,14 +23,27 @@ Job::Job(const string &pexecutable) {
 	stageOuts = NULL;
 	cleanups = NULL;
 
+	remoteIdentity = NULL;
+
 	stdout = NULL;
 	stderr = NULL;
 
 	status = NULL;
 }
 
-const string& Job::getIdentity() const {
+job_id_t Job::getIdentity() const {
 	return identity;
+}
+
+const string* Job::getRemoteIdentity() const {
+	return remoteIdentity;
+}
+
+void Job::setRemoteIdentity(const string& remoteId) {
+	if (remoteIdentity != NULL) {
+		delete remoteIdentity;
+	}
+	remoteIdentity = new string(remoteId);
 }
 
 vector<string*>* Job::getArguments() {
@@ -200,6 +209,13 @@ const JobStatus* Job::getStatus() const {
 	return status;
 }
 
+const string* Job::getStdout() const {
+	return stdout;
+}
+const string* Job::getStderr() const {
+	return stderr;
+}
+
 void Job::setStatus(JobStatus* newStatus) {
 	// Since the client can process a job status while another
 	// status is coming in, a status cannot be deleted when a new status comes in.
@@ -221,6 +237,10 @@ Job::~Job() {
 	}
 	if (stderrLocation != NULL) {
 		delete stderrLocation;
+	}
+	
+	if (remoteIdentity != NULL) {
+		delete remoteIdentity; 
 	}
 	if (arguments != NULL) {
 		for (int i = 0; i < arguments->size(); i++) {

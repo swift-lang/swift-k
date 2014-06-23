@@ -36,6 +36,8 @@ extern "C" {
 #include <stddef.h>
 #endif
 
+#include <stdint.h>
+
 // Opaque pointer types
 typedef struct coaster_client coaster_client;
 typedef struct coaster_settings coaster_settings;
@@ -209,9 +211,8 @@ coaster_job_set_attrs(coaster_job *job, int nattrs, const char **names,
  *
  * id_len: string length of id
  */
-const char *
-coaster_job_get_id(coaster_job *job, size_t *id_len)
-                                 COASTERS_THROWS_NOTHING;
+int64_t 
+coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING;
 
 /*
  * Submit a coasters job

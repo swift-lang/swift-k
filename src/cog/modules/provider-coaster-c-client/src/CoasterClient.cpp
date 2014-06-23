@@ -129,7 +129,7 @@ void CoasterClient::setOptions(Settings& s) {
 
 void CoasterClient::submit(Job& job) {
 	{ Lock::Scoped l(lock);
-		jobs[&job.getIdentity()] = &job;
+		jobs[job.getIdentity()] = &job;
 	}
 	JobSubmitCommand* sjc = new JobSubmitCommand(&job);
 	sjc->send(channel, this);
@@ -138,9 +138,9 @@ void CoasterClient::submit(Job& job) {
 void CoasterClient::errorReceived(Command* cmd, string* message, RemoteCoasterException* details) {
 	if (*(cmd->getName()) == JobSubmitCommand::NAME) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
-		LogInfo << "Job " << jsc->getJob()->getIdentity() << " failed: " << message << "\n" << details->str() << endl;
-                // TODO: this is using the wrong identity
-		updateJobStatus(jsc->getJob()->getIdentity(), new JobStatus(FAILED, message, details));
+		job_id_t jobId = jsc->getJob()->getIdentity();
+		LogInfo << "Job " << jobId << " failed: " << message << "\n" << details->str() << endl;
+		updateJobStatus(jobId, new JobStatus(FAILED, message, details));
 	}
 	else {
 		LogWarn << "Error received for command " << cmd;
@@ -160,11 +160,33 @@ void CoasterClient::replyReceived(Command* cmd) {
 	if (*(cmd->getName()) == JobSubmitCommand::NAME) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
 		string* remoteId = jsc->getRemoteId();
-		LogInfo << "Job " << jsc->getJob()->getIdentity() << " submitted; remoteId: " << remoteId << endl;
-		remoteJobIdMapping[*remoteId] = &jsc->getJob()->getIdentity();
-		updateJobStatus(*remoteId, new JobStatus(SUBMITTED));
+		Job *job = jsc->getJob();
+		job_id_t jobId = job->getIdentity();
+		LogInfo << "Job " << jobId << " submitted; remoteId: " << remoteId << endl;
+
+		// Track relationship between both IDs
+		job->setRemoteIdentity(*remoteId);
+		remoteJobIdMapping[*remoteId] = jobId;
+		updateJobStatus(jobId, new JobStatus(SUBMITTED));
 	}
 	delete cmd;
+}
+
+/*
+  Internal function, should be called with lock already held.
+ */
+void CoasterClient::updateJobStatusNoLock(Job* job, JobStatus* status) {
+	job->setStatus(status);
+	if (status->isTerminal()) {
+		// Remote id should have been set in job
+		const string *remoteId = job->getRemoteIdentity();
+		if (remoteId) {
+			remoteJobIdMapping.erase(*remoteId);
+		}
+		jobs.erase(job->getIdentity());
+		doneJobs.push_back(job);
+		cv.broadcast();
+	}
 }
 
 void CoasterClient::updateJobStatus(const string& remoteJobId, JobStatus* status) { Lock::Scoped l(lock);
@@ -172,16 +194,17 @@ void CoasterClient::updateJobStatus(const string& remoteJobId, JobStatus* status
 		LogWarn << "Received job status notification for unknown job (" << remoteJobId << "): " << status << endl;
 	}
 	else {
-		const string* jobId = remoteJobIdMapping[remoteJobId];
-		Job* job = jobs[jobId];
-		job->setStatus(status);
-		if (status->isTerminal()) {
-			remoteJobIdMapping.erase(remoteJobId);
-			jobs.erase(jobId);
-			doneJobs.push_back(job);
-			cv.broadcast();
-		}
+		job_id_t jobId = remoteJobIdMapping[remoteJobId];
+		updateJobStatusNoLock(jobs[jobId], status);
 	}
+}
+
+void CoasterClient::updateJobStatus(job_id_t jobId, JobStatus* status) { Lock::Scoped l(lock);
+	updateJobStatusNoLock(jobs[jobId], status);
+}
+
+void CoasterClient::updateJobStatus(Job* job, JobStatus* status) { Lock::Scoped l(lock);
+	updateJobStatusNoLock(job, status);
 }
 
 int CoasterClient::getPort() {
@@ -260,7 +283,7 @@ void CoasterClient::waitForJobs() { Lock::Scoped l(lock);
 }
 
 void CoasterClient::waitForJob(const Job& job) { Lock::Scoped l(lock);
-	while (jobs.count(&(job.getIdentity())) != 0) {
+	while (jobs.count(job.getIdentity()) != 0) {
 		cv.wait(lock);
 	}
 }

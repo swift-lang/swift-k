@@ -51,9 +51,8 @@ class CoasterClient: public CommandCallback {
 		CoasterLoop* loop;
 		HandlerFactory* handlerFactory;
 
-                // TODO: won't pointer here use pointer comparison?
-		map<const string*, Job*> jobs;
-		map<string, const string*> remoteJobIdMapping;
+		map<job_id_t, Job*> jobs;
+		map<string, job_id_t> remoteJobIdMapping;
 
 		list<Job*> doneJobs;
 	public:
@@ -64,33 +63,37 @@ class CoasterClient: public CommandCallback {
 
 		void setOptions(Settings& settings);
 
-                /*
-                 * Submit a job.  The job should have been filled in with
-                 * all properties.  The ownership of the job object stays
-                 * with the caller, but this client will retain a reference
-                 * to the job until done jobs are purged.
-                 */
+		/*
+		 * Submit a job.  The job should have been filled in with
+		 * all properties.  The ownership of the job object stays
+		 * with the caller, but this client will retain a reference
+		 * to the job until done jobs are purged.
+		 */
 		void submit(Job& job);
 
-                /*
-                 * Wait for job to be done.  Upon completion no actions
-                 * are taken: job must be purged from client explicitly.
-                 */
+		/*
+		 * Wait for job to be done.  Upon completion no actions
+		 * are taken: job must be purged from client explicitly.
+		 */
 		void waitForJob(const Job& job);
 
-                /*
-                 * Return a list of done jobs and remove references from this
-                 * client.
-                 */
+		/*
+		 * Return a list of done jobs and remove references from this
+		 * client.
+		 */
 		list<Job*>* getAndPurgeDoneJobs();
 		void waitForJobs();
 
-		void updateJobStatus(const string &jobId, JobStatus* status);
+		void updateJobStatus(const string& remoteJobId, JobStatus* status);
+		void updateJobStatus(job_id_t jobId, JobStatus* status);
+		void updateJobStatus(Job* job, JobStatus* status);
 
 		const string& getURL();
 
 		void errorReceived(Command* cmd, string* message, RemoteCoasterException* details);
 		void replyReceived(Command* cmd);
+	private:
+		void updateJobStatusNoLock(Job* job, JobStatus* status);
 };
 
 #endif /* COASTER_CLIENT_H_ */

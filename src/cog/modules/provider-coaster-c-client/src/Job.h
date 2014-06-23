@@ -13,15 +13,21 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <stdint.h>
 
 using namespace std;
 
+// 64-bit job ids should be sufficient to be unique
+typedef int64_t job_id_t;
+
 /*
-  TODO: document whether a Job can be submitted more than once
+  Job represents a single Job that is to be submitted to coasters.
+  The Job object is created and has its parameters set before submission.
+  Once submitted, its status is updated to reflect its progress.
  */
 class Job {
 	private:
-		string identity;
+		job_id_t identity;
 		string executable;
 		/* 
 		 * TODO: document expectations about lifetime of strings.
@@ -43,9 +49,12 @@ class Job {
 		vector<StagingSetEntry>* stageIns;
 		vector<StagingSetEntry>* stageOuts;
 		vector<string>* cleanups;
+		
+		string *remoteIdentity;
 
 		string* stdout;
 		string* stderr;
+
 		JobStatus* status;
 	public:
 		Job(const string &executable);
@@ -54,11 +63,20 @@ class Job {
 		const string& getExecutable() const;
 		
 		/*
-		  Get the job identity.  The identity is a unique string
+		  Get the job identity.  The identity is a locally unique integer
 		  that is assigned to the job object upon construction
 		  and does not change over it's lifetime.
 		 */
-		const string& getIdentity() const;
+		job_id_t getIdentity() const;
+	
+		/*
+		  Get the remote job identity.  This is a string
+		  assigned to the job by the Coasters service.  This
+		  will return NULL if we haven't yet found out the
+		  remote identity.
+		 */
+		const string* getRemoteIdentity() const;
+		void setRemoteIdentity(const string& remoteId);
 
 		vector<string*>* getArguments();
 		void addArgument(string& arg);
@@ -101,6 +119,9 @@ class Job {
 
 		const JobStatus* getStatus() const;
 		void setStatus(JobStatus* status);
+
+		const string* getStdout() const;
+		const string* getStderr() const;
 };
 
 #endif /* JOB_DESCRIPTION_H_ */
