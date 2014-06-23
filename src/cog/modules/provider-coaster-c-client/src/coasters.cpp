@@ -400,7 +400,7 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
   }
 }
 
-int64_t
+job_id_t
 coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING {
   // Shouldn't throw anything from accessor method
   return job->job.getIdentity();
