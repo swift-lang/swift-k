@@ -118,6 +118,7 @@ class Job {
 
 		vector<string>* getCleanups();
 		void addCleanup(string cleanup);
+		void addCleanup(const char *cleanup, size_t cleanup_len);
 
 		const JobStatus* getStatus() const;
 		void setStatus(JobStatus* status);

@@ -182,7 +182,7 @@ void Job::setAttribute(string name, string value) {
 }
 
 void Job::setAttribute(const char *name, size_t name_len,
-                       const char *value, size_t value_len) {
+		       const char *value, size_t value_len) {
 	if (attributes == NULL) {
 		attributes = new map<string, string>;
 	}
@@ -221,6 +221,13 @@ void Job::addCleanup(string cleanup) {
 		cleanups = new vector<string>;
 	}
 	cleanups->push_back(cleanup);
+}
+
+void Job::addCleanup(const char *cleanup, size_t cleanup_len) {
+	if (cleanups == NULL) {
+		cleanups = new vector<string>;
+	}
+	cleanups->push_back(string(cleanup, cleanup_len));
 }
 
 const JobStatus* Job::getStatus() const {

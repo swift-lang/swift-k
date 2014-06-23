@@ -373,6 +373,33 @@ coaster_job_set_attrs(coaster_job *job, int nattrs,
   }
 }
 
+coaster_rc
+coaster_job_add_cleanups(coaster_job *job, int ncleanups,
+        const char **cleanups, size_t *cleanup_lens)
+        COASTERS_THROWS_NOTHING {
+ 
+  if (job == NULL) {
+    return COASTER_ERROR_INVALID;
+  }
+  
+  try {
+    for (int i = 0; i < ncleanups; i++)
+    {
+      const char *cleanup = cleanups[i];
+      size_t cleanup_len = cleanup_lens[i];
+      COASTER_CONDITION(cleanup != NULL,
+            COASTER_ERROR_INVALID, "Cleanup was NULL");
+      job->job.addCleanup(cleanup, cleanup_len);
+    }
+
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
 int64_t
 coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING {
   // Shouldn't throw anything from accessor method
@@ -392,6 +419,37 @@ coaster_job_status_code(coaster_job *job, coaster_job_status *code)
 }
 
 coaster_rc
+coaster_job_get_outstreams(coaster_job *job,
+                const char **stdout_s, size_t *stdout_len,
+                const char **stderr_s, size_t *stderr_len)
+                COASTERS_THROWS_NOTHING {
+  if (job == NULL) {
+    return COASTER_ERROR_INVALID;
+  }
+
+  const string *out = job->job.getStdout();
+  const string *err = job->job.getStderr();
+
+  if (out != NULL) {
+    *stderr_s = out->c_str();
+    *stderr_len = out->length();
+  } else {
+    *stderr_s = NULL;
+    *stderr_len = 0;
+  }
+
+  if (err != NULL) {
+    *stderr_s = err->c_str();
+    *stderr_len = err->length();
+  } else {
+    *stderr_s = NULL;
+    *stderr_len = 0;
+  }
+
+  return COASTER_SUCCESS;
+}
+
+coaster_rc
 coaster_submit(coaster_client *client, coaster_job *job)
                 COASTERS_THROWS_NOTHING {
   try {
@@ -402,7 +460,6 @@ coaster_submit(coaster_client *client, coaster_job *job)
     return exception_rc(ex);
   }
 }
-
 
 const char *coaster_rc_string(coaster_rc code)
 {

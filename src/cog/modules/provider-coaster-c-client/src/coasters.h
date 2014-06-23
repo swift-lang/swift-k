@@ -203,7 +203,15 @@ coaster_job_set_attrs(coaster_job *job, int nattrs,
         const char **names, size_t *name_lens,
         const char **values, size_t *value_lens) COASTERS_THROWS_NOTHING;
 
-// TODO: functions for setting stageins, stageouts, cleanups
+/*
+ * Add cleanups for job.
+ */
+coaster_rc
+coaster_job_add_cleanups(coaster_job *job, int ncleanups,
+        const char **cleanups, size_t *cleanup_lens)
+        COASTERS_THROWS_NOTHING;
+
+// TODO: functions for setting stageins, stageouts
 
 /*
  * Get local job ID.
@@ -220,11 +228,24 @@ coaster_job_status_code(coaster_job *job, coaster_job_status *code)
                 COASTERS_THROWS_NOTHING;
 
 /*
- * Submit a coasters job
+ * Get stdin/out of completed job.
+ * Pointers set to NULL and lengths to 0 if not available.  Strings
+ * are owned by job: will become invalid if job is freed.
+ */
+coaster_rc
+coaster_job_get_outstreams(coaster_job *job,
+                const char **stdout_s, size_t *stdout_len,
+                const char **stderr_s, size_t *stderr_len)
+                COASTERS_THROWS_NOTHING;
+
+/*
+ * Submit a coasters job.
+ * A job can only be submitted once!
  */
 coaster_rc
 coaster_submit(coaster_client *client, coaster_job *job)
                 COASTERS_THROWS_NOTHING;
+
 
 /*
  * Get name of return code.  Returns NULL if invalid code.
