@@ -282,11 +282,11 @@ related properties:
 -----
 site.westmere.provider=local:slurm
 site.westmere.jobsPerNode=12
-site.westmere.maxWalltime=00:05:00
+site.westmere.taskWalltime=00:05:00
 site.westmere.queue=westmere
 site.westmere.initialScore=10000
 site.westmere.filesystem=local
-site.westmere.workdir=/scratch/midway/davidkelly999
+site.westmere.workdir=/scratch/midway/$USER
 -----
 
 However, you can also simplify this by grouping site properties together with
@@ -296,7 +296,7 @@ curly brackets.
 site.westmere {
    provider=local:slurm
    jobsPerNode=12
-   maxWalltime=00:05:00
+   taskWalltime=00:05:00
    queue=westmere
    initialScore=10000
    filesystem=local
