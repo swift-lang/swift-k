@@ -16,16 +16,22 @@ using namespace std;
 
 class Settings {
 	private:
-		map<string*, const char*> settings;
+		/*
+		 * Store settings as string values for simplicity: don't
+		 * worry about managing references.
+		 */
+		map<string, string> settings;
 	public:
 		Settings();
 		virtual ~Settings();
-		void set(string& key, string& value);
-		void set(string& key, const char* value);
-		void remove(string& key);
+		void set(const string& key, const string& value);
+		void set(const string& key, const char* value);
+		void set(const char* key, const char* value);
+		void set(const char* key, size_t key_len,
+			 const char* value, size_t value_len);
+		void remove(const string& key);
 
-                // TODO: will string* here force pointer comparison
-		map<string*, const char*>* getSettings();
+		map<string, string>& getSettings();
 
 		template<typename cls> friend cls& operator<< (cls& os, Settings& s);
 
@@ -58,12 +64,12 @@ class Settings {
 
 template<typename cls> cls& operator<< (cls& os, Settings& s) {
 	os << "Settings(";
-	map<string*, const char*>* m = s.getSettings();
-	map<string*, const char*>::iterator i;
+	map<string, string>& m = s.getSettings();
+	map<string, string>::iterator i;
 
-	for (i = m->begin(); i != m->end(); i++) {
+	for (i = m.begin(); i != m.end(); i++) {
 		os << i->first << ": " << i->second;
-		if (i != --m->end()) {
+		if (i != --m.end()) {
 			os << ", ";
 		}
 	}

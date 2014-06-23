@@ -145,9 +145,9 @@ coaster_rc coaster_settings_get(coaster_settings *settings,
                                 COASTERS_THROWS_NOTHING {
   try {
     std::string str_key(key);
-    std::map<string*, const char*> *map;
-    map = settings->settings.getSettings();
-    *value = (*map)[&str_key]; 
+    std::map<string, string> &map = settings->settings.getSettings();
+    std::string &str_value = map[str_key];
+    *value = str_value.c_str();
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
@@ -159,9 +159,8 @@ coaster_rc coaster_settings_keys(coaster_settings *settings,
                       const char ***keys, int *count)
                                 COASTERS_THROWS_NOTHING {
   try {
-    std::map<string*, const char*> *map;
-    map = settings->settings.getSettings();
-    *count = map->size();
+    std::map<string, string> &map = settings->settings.getSettings();
+    *count = map.size();
 
     // Use malloc so C client code can free
     *keys = (const char**)malloc(sizeof((*keys)[0]));
@@ -170,9 +169,9 @@ coaster_rc coaster_settings_keys(coaster_settings *settings,
     }
     
     int pos = 0;
-    for(std::map<string*, const char*>::iterator iter = map->begin();
-        iter != map->end(); ++iter) {
-      (*keys)[pos++] = iter->first->c_str();
+    for(std::map<string, string>::iterator iter = map.begin();
+        iter != map.end(); ++iter) {
+      (*keys)[pos++] = iter->first.c_str();
     }
 
     return COASTER_SUCCESS;

@@ -36,20 +36,25 @@ Settings::Settings() {
 Settings::~Settings() {
 }
 
-// TODO: need to check memory ownership conventions here
-// TODO: is this going to use pointer comparison?
-void Settings::set(string& key, string& value) {
-	settings[&key] = value.c_str();
+void Settings::set(const string& key, const string& value) {
+	settings[key] = value;
 }
 
-void Settings::set(string& key, const char* value) {
-	settings[&key] = value;
+void Settings::set(const string& key, const char* value) {
+	settings[key] = value;
+}
+void Settings::set(const char* key, const char* value) {
+	settings[key] = value;
+}
+void Settings::set(const char* key, size_t key_len,
+	 const char* value, size_t value_len) {
+	settings[string(key, key_len)] = string(value, value_len);
 }
 
-void Settings::remove(string& key) {
-	settings.erase(&key);
+void Settings::remove(const string& key) {
+	settings.erase(key);
 }
 
-map<string*, const char*>* Settings::getSettings() {
-	return &settings;
+map<string, string>& Settings::getSettings() {
+	return settings;
 }

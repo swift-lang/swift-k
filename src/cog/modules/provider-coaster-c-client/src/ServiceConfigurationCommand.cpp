@@ -15,12 +15,12 @@ void ServiceConfigurationCommand::send(CoasterChannel* channel, CommandCallback*
 }
 
 void ServiceConfigurationCommand::serialize() {
-	map<string*, const char*>::iterator i;
-	map<string*, const char*>* m = settings->getSettings();
+	map<string, string>::iterator i;
+	map<string, string>& m = settings->getSettings();
 
-	for (i = m->begin(); i != m->end(); i++) {
+	for (i = m.begin(); i != m.end(); i++) {
 		string ss;
-		ss.append(*(i->first));
+		ss.append(i->first);
 		ss.append("=");
 		ss.append(i->second);
 		addOutData(Buffer::copy(ss));
