@@ -43,7 +43,14 @@ extern "C" {
 // Opaque pointer types
 typedef struct coaster_client coaster_client;
 typedef struct coaster_settings coaster_settings;
-typedef struct coaster_job coaster_job;
+
+#ifdef __cplusplus
+// Treat as direct pointer to class for C++
+typedef class Job coaster_job;
+#else
+// Treat as opaque pointer to unimplemented struct for C
+typedef struct coaster_job_opaque_ coaster_job;
+#endif
 
 /*
  * Return codes for coaster errors
@@ -259,9 +266,6 @@ coaster_submit(coaster_client *client, coaster_job *job)
 /*
  * Check for completion of jobs.
  *
- * NOTE: we only return job ids, client is responsible for reconciling
- * these with the job objects.
- *
  * wait: if true, don't return until at least one job completes
  * maxjobs: maximum number of jobs to return
  * jobs: output array large enough to hold maxjobs
@@ -269,7 +273,7 @@ coaster_submit(coaster_client *client, coaster_job *job)
  */
 coaster_rc
 coaster_check_jobs(coaster_client *client, bool wait, int maxjobs,
-                   job_id_t *jobs, int *njobs)
+                   coaster_job **jobs, int *njobs)
                 COASTERS_THROWS_NOTHING;
 
 /*

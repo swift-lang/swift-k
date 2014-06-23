@@ -57,12 +57,6 @@ struct coaster_settings {
   coaster_settings() : settings() {};
 };
 
-struct coaster_job {
-  Job job;
-
-  coaster_job(const string &executable) : job(executable) {};
-};
-
 static coaster_rc coaster_error_rc(const CoasterError &err);
 static coaster_rc exception_rc(const std::exception &ex);
 
@@ -233,16 +227,16 @@ coaster_job_create(const char *executable, size_t executable_len,
                   coaster_job **job) COASTERS_THROWS_NOTHING {
   try {
     assert(executable != NULL);
-    coaster_job *j = new coaster_job(string(executable, executable_len));
+    Job *j = new Job(string(executable, executable_len));
    
     for (int i = 0; i < argc; i++)
     {
       assert(argv[i] != NULL);
-      j->job.addArgument(argv[i], arg_lens[i]);
+      j->addArgument(argv[i], arg_lens[i]);
     }
 
     if (job_manager != NULL) {
-      j->job.setJobManager(job_manager, job_manager_len);
+      j->setJobManager(job_manager, job_manager_len);
     }
 
     *job = j;
@@ -273,15 +267,15 @@ coaster_job_set_redirects(coaster_job *job,
   try {
     // job expects to get ownership of references, so use new
     if (stdin_loc != NULL) {
-      job->job.setStdinLocation(*new string(stdin_loc, stdin_loc_len));
+      job->setStdinLocation(*new string(stdin_loc, stdin_loc_len));
     }
 
     if (stdout_loc != NULL) {
-      job->job.setStdoutLocation(*new string(stdout_loc, stdout_loc_len));
+      job->setStdoutLocation(*new string(stdout_loc, stdout_loc_len));
     }
 
     if (stderr_loc != NULL) {
-      job->job.setStderrLocation(*new string(stderr_loc, stderr_loc_len));
+      job->setStderrLocation(*new string(stderr_loc, stderr_loc_len));
     }
 
     return COASTER_SUCCESS;
@@ -301,7 +295,7 @@ coaster_job_set_directory(coaster_job *job, const char *dir, size_t dir_len)
   
   try {
     if (dir != NULL) {
-      job->job.setDirectory(*new string(dir, dir_len));
+      job->setDirectory(*new string(dir, dir_len));
     }
 
     return COASTER_SUCCESS;
@@ -329,7 +323,7 @@ coaster_job_set_envs(coaster_job *job, int nvars,
       size_t value_len = value_lens[i];
       COASTER_CONDITION(name != NULL && value != NULL,
             COASTER_ERROR_INVALID, "Env var name or value was NULL");
-      job->job.setEnv(name, name_len, value, value_len);
+      job->setEnv(name, name_len, value, value_len);
     }
 
     return COASTER_SUCCESS;
@@ -362,7 +356,7 @@ coaster_job_set_attrs(coaster_job *job, int nattrs,
       size_t value_len = value_lens[i];
       COASTER_CONDITION(name != NULL && value != NULL,
             COASTER_ERROR_INVALID, "Attribute name or value was NULL");
-      job->job.setAttribute(name, name_len, value, value_len);
+      job->setAttribute(name, name_len, value, value_len);
     }
 
     return COASTER_SUCCESS;
@@ -389,7 +383,7 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
       size_t cleanup_len = cleanup_lens[i];
       COASTER_CONDITION(cleanup != NULL,
             COASTER_ERROR_INVALID, "Cleanup was NULL");
-      job->job.addCleanup(cleanup, cleanup_len);
+      job->addCleanup(cleanup, cleanup_len);
     }
 
     return COASTER_SUCCESS;
@@ -403,14 +397,14 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
 job_id_t
 coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING {
   // Shouldn't throw anything from accessor method
-  return job->job.getIdentity();
+  return job->getIdentity();
 }
 
 coaster_rc
 coaster_job_status_code(coaster_job *job, coaster_job_status *code)
                                             COASTERS_THROWS_NOTHING {
   const JobStatus *status;
-  if (job == NULL || (status = job->job.getStatus()) == NULL) {
+  if (job == NULL || (status = job->getStatus()) == NULL) {
     return COASTER_ERROR_INVALID;
   }
   
@@ -427,8 +421,8 @@ coaster_job_get_outstreams(coaster_job *job,
     return COASTER_ERROR_INVALID;
   }
 
-  const string *out = job->job.getStdout();
-  const string *err = job->job.getStderr();
+  const string *out = job->getStdout();
+  const string *err = job->getStderr();
 
   if (out != NULL) {
     *stderr_s = out->c_str();
@@ -453,7 +447,7 @@ coaster_rc
 coaster_submit(coaster_client *client, coaster_job *job)
                 COASTERS_THROWS_NOTHING {
   try {
-    client->client.submit(job->job);
+    client->client.submit(*job);
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
   } catch (const std::exception& ex) {
@@ -463,7 +457,7 @@ coaster_submit(coaster_client *client, coaster_job *job)
 
 coaster_rc
 coaster_check_jobs(coaster_client *client, bool wait, int maxjobs,
-                   job_id_t *jobs, int *njobs)
+                   coaster_job **jobs, int *njobs)
                 COASTERS_THROWS_NOTHING {
   if (client == NULL) {
     return COASTER_ERROR_INVALID;
@@ -474,29 +468,9 @@ coaster_check_jobs(coaster_client *client, bool wait, int maxjobs,
       client->client.waitForAnyJob();
     }
     
-    int count = 0;
+    int n = client->client.getAndPurgeDoneJobs(maxjobs, jobs);
 
-    // Need to use temporary storage for job pointers
-    const int job_buf_size = 32;
-    Job *job_buf[job_buf_size];
-
-    while (count < maxjobs) {
-      int maxleft = maxjobs - count;
-      int maxbatch = (maxleft < job_buf_size) ? maxleft : job_buf_size;
-
-      int n = client->client.getAndPurgeDoneJobs(maxbatch, job_buf);
-      
-      for (int i = 0; i < n; i++) {
-        jobs[count++] = job_buf[i]->getIdentity();
-      }
-
-      if (n < maxbatch) {
-        // Got last job
-        break;
-      }
-    }
-
-    *njobs = count;
+    *njobs = n;
     return COASTER_SUCCESS;
 
   } catch (const CoasterError& err) {
