@@ -8,6 +8,7 @@ static int seq = 0;
 
 Job::Job(const string &pexecutable) {
 	executable = pexecutable;
+        // TODO: is there any reason we can't just store integer?
 	stringstream ss;
 	ss << "job-";
 	ss << seq++;
@@ -55,6 +56,10 @@ void Job::addArgument(const char* arg) {
 	addArgument(*(new string(arg)));
 }
 
+void Job::addArgument(const char* arg, size_t arg_len) {
+	addArgument(*(new string(arg, arg_len)));
+}
+
 const string* Job::getDirectory() const {
 	return directory;
 }
@@ -98,6 +103,10 @@ void Job::setJobManager(string jm) {
 
 void Job::setJobManager(const char *jm) {
     jobManager = jm;
+}
+
+void Job::setJobManager(const char *jm, size_t jm_len) {
+    jobManager.assign(jm, jm_len);
 }
 
 map<string, string>* Job::getEnv() {

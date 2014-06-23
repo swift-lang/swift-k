@@ -17,6 +17,8 @@
 /*
  * Implementation of pure C functions.
  *
+ * Created: Jun 18, 2014
+ *    Author: Tim Armstrong
  */
 
 #include "coasters.h"
@@ -31,6 +33,8 @@
 using std::malloc;
 using std::free;
 
+using std::string;
+
 /*
   Struct just wraps the object
  */
@@ -41,7 +45,7 @@ struct coaster_client {
   /*
     Constructor: initialize loop then client
    */
-  coaster_client(const char *serviceURL) :
+  coaster_client(string serviceURL) :
         loop(), client(serviceURL, loop) {
 
   };
@@ -67,11 +71,11 @@ static coaster_rc exception_rc(const std::exception &ex);
 #define COASTER_CONDITION(cond, err_rc, err_msg) { \
   if (!(cond)) { fprintf(stderr, (err_msg)); return (err_rc); }}
 
-coaster_rc coaster_client_start(const char *serviceURL,
-                                coaster_client **client)
-                                COASTERS_THROWS_NOTHING {
+coaster_rc
+coaster_client_start(const char *service_url, size_t service_url_len,
+                    coaster_client **client) COASTERS_THROWS_NOTHING {
   try {
-    *client = new coaster_client(serviceURL);
+    *client = new coaster_client(string(service_url, service_url_len));
     if (!(*client)) {
       return COASTER_ERROR_OOM;
     }
@@ -126,12 +130,12 @@ coaster_rc coaster_settings_parse(coaster_settings *settings,
   return COASTER_ERROR_UNKNOWN;
 }
 
-coaster_rc coaster_settings_set(coaster_settings *settings,
-                      const char *key, const char *value)
-                                COASTERS_THROWS_NOTHING {
+coaster_rc
+coaster_settings_set(coaster_settings *settings,
+          const char *key, size_t key_len,
+          const char *value, size_t value_len) COASTERS_THROWS_NOTHING {
   try {
-    std::string str_key(key);
-    settings->settings.set(str_key, value); 
+    settings->settings.set(key, key_len, value, value_len); 
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
@@ -140,14 +144,15 @@ coaster_rc coaster_settings_set(coaster_settings *settings,
   }
 }
 
-coaster_rc coaster_settings_get(coaster_settings *settings,
-                      const char *key, const char **value)
-                                COASTERS_THROWS_NOTHING {
+coaster_rc
+coaster_settings_get(coaster_settings *settings,
+            const char *key, size_t key_len,
+            const char **value, size_t *value_len) COASTERS_THROWS_NOTHING {
   try {
-    std::string str_key(key);
     std::map<string, string> &map = settings->settings.getSettings();
-    std::string &str_value = map[str_key];
+    std::string &str_value = map[string(key, key_len)];
     *value = str_value.c_str();
+    *value_len = str_value.length();
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
@@ -155,23 +160,37 @@ coaster_rc coaster_settings_get(coaster_settings *settings,
     return exception_rc(ex);
   }
 }
-coaster_rc coaster_settings_keys(coaster_settings *settings,
-                      const char ***keys, int *count)
+
+coaster_rc
+coaster_settings_keys(coaster_settings *settings,
+              const char ***keys, size_t **key_lens, int *count)
                                 COASTERS_THROWS_NOTHING {
   try {
     std::map<string, string> &map = settings->settings.getSettings();
     *count = map.size();
 
     // Use malloc so C client code can free
-    *keys = (const char**)malloc(sizeof((*keys)[0]));
+    *keys = (const char**)malloc(sizeof((*keys)[0]) * (*count));
     if (!(*keys)) {
       return COASTER_ERROR_OOM;
+    }
+    
+    if (key_lens != NULL) {
+      *key_lens = (size_t *)malloc(sizeof((*key_lens)[0]) * (*count));
+      if (!(*key_lens)) {
+        free(*keys);
+        return COASTER_ERROR_OOM;
+      }
     }
     
     int pos = 0;
     for(std::map<string, string>::iterator iter = map.begin();
         iter != map.end(); ++iter) {
-      (*keys)[pos++] = iter->first.c_str();
+      (*keys)[pos] = iter->first.c_str();
+      if (key_lens != NULL) {
+        (*key_lens)[pos] = iter->first.length();
+      }
+      pos++;
     }
 
     return COASTER_SUCCESS;
@@ -182,7 +201,8 @@ coaster_rc coaster_settings_keys(coaster_settings *settings,
   }
 }
 
-void coaster_settings_free(coaster_settings *settings)
+void
+coaster_settings_free(coaster_settings *settings)
                                 COASTERS_THROWS_NOTHING {
   // Call destructor directly
   // Destructor shouldn't throw anything
@@ -192,7 +212,8 @@ void coaster_settings_free(coaster_settings *settings)
 /*
  * Apply settings to started coasters client.
  */
-coaster_rc coaster_apply_settings(coaster_client *client,
+coaster_rc
+coaster_apply_settings(coaster_client *client,
                                   coaster_settings *settings)
                                   COASTERS_THROWS_NOTHING {
   try {
@@ -206,23 +227,22 @@ coaster_rc coaster_apply_settings(coaster_client *client,
 }
 
 coaster_rc
-coaster_job_create(const char *executable, int argc, const char **argv,
-                  const char *job_manager, coaster_job **job)
-                      COASTERS_THROWS_NOTHING
-{
+coaster_job_create(const char *executable, size_t executable_len,
+                  int argc, const char **argv, const size_t *arg_lens,
+                  const char *job_manager, size_t job_manager_len,
+                  coaster_job **job) COASTERS_THROWS_NOTHING {
   try {
     assert(executable != NULL);
-    coaster_job *j = new coaster_job(executable);
+    coaster_job *j = new coaster_job(string(executable, executable_len));
    
     for (int i = 0; i < argc; i++)
     {
       assert(argv[i] != NULL);
-      j->job.addArgument(argv[i]);
+      j->job.addArgument(argv[i], arg_lens[i]);
     }
 
-    if (job_manager != NULL)
-    {
-      j->job.setJobManager(job_manager);
+    if (job_manager != NULL) {
+      j->job.setJobManager(job_manager, job_manager_len);
     }
 
     *job = j;
@@ -241,25 +261,28 @@ coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING {
 }
 
 coaster_rc
-coaster_job_set_redirects(coaster_job *job, const char *stdin_loc,
-                  const char *stdout_loc, const char *stderr_loc)
+coaster_job_set_redirects(coaster_job *job,
+      const char *stdin_loc, size_t stdin_loc_len,
+      const char *stdout_loc, size_t stdout_loc_len,
+      const char *stderr_loc, size_t stderr_loc_len)
                   COASTERS_THROWS_NOTHING {
   if (job == NULL) {
     return COASTER_ERROR_INVALID;
   }
   
   try {
-    std::string *stdin_str = (stdin_loc == NULL) ?
-                              NULL : new string(stdin_loc);
-    job->job.setStdinLocation(*stdin_str);
-    
-    std::string *stdout_str = (stdout_loc == NULL) ?
-                              NULL : new string(stdout_loc);
-    job->job.setStdinLocation(*stdout_str);
-    
-    std::string *stderr_str = (stderr_loc == NULL) ?
-                              NULL : new string(stderr_loc);
-    job->job.setStdinLocation(*stderr_str);
+    // job expects to get ownership of references, so use new
+    if (stdin_loc != NULL) {
+      job->job.setStdinLocation(*new string(stdin_loc, stdin_loc_len));
+    }
+
+    if (stdout_loc != NULL) {
+      job->job.setStdoutLocation(*new string(stdout_loc, stdout_loc_len));
+    }
+
+    if (stderr_loc != NULL) {
+      job->job.setStderrLocation(*new string(stderr_loc, stderr_loc_len));
+    }
 
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
@@ -270,16 +293,16 @@ coaster_job_set_redirects(coaster_job *job, const char *stdin_loc,
 }
 
 coaster_rc
-coaster_job_set_directory(coaster_job *job, const char *dir)
+coaster_job_set_directory(coaster_job *job, const char *dir, size_t dir_len)
                   COASTERS_THROWS_NOTHING {
   if (job == NULL) {
     return COASTER_ERROR_INVALID;
   }
   
   try {
-    std::string *dir_str = (dir == NULL) ?
-                              NULL : new string(dir);
-    job->job.setDirectory(*dir_str);
+    if (dir != NULL) {
+      job->job.setDirectory(*new string(dir, dir_len));
+    }
 
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
@@ -344,9 +367,11 @@ coaster_job_set_attrs(coaster_job *job, int nattrs, const char **names,
 }
 
 const char *
-coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING {
+coaster_job_get_id(coaster_job *job, size_t *id_len)
+                                COASTERS_THROWS_NOTHING {
   // Shouldn't throw anything from accessor method
   const string &id = job->job.getIdentity();
+  *id_len = id.length();
   return id.c_str();
 }
 

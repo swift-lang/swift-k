@@ -23,14 +23,14 @@ class Job {
 	private:
 		string identity;
 		string executable;
-                /* 
-                 * TODO: document expectations about lifetime of strings.
-                 * It seems very easy for client code to accidentally
-                 * pass in a pointer to a stack-allocated string or a
-                 * string with a shorter lifetime than the job.  Would
-                 * it work to just store them by value and have zero-length
-                 * be equivalent to NULL.  Are zero-length strings meaningful?
-                 */
+		/* 
+		 * TODO: document expectations about lifetime of strings.
+		 * It seems very easy for client code to accidentally
+		 * pass in a pointer to a stack-allocated string or a
+		 * string with a shorter lifetime than the job.  Would
+		 * it work to just store them by value and have zero-length
+		 * be equivalent to NULL.  Are zero-length strings meaningful?
+		 */
 		vector<string*>* arguments;
 		string* directory;
 		string* stdinLocation;
@@ -52,17 +52,18 @@ class Job {
 		virtual ~Job();
 
 		const string& getExecutable() const;
-                
-                /*
-                  Get the job identity.  The identity is a unique string
-                  that is assigned to the job object upon construction
-                  and does not change over it's lifetime.
-                 */
+		
+		/*
+		  Get the job identity.  The identity is a unique string
+		  that is assigned to the job object upon construction
+		  and does not change over it's lifetime.
+		 */
 		const string& getIdentity() const;
 
 		vector<string*>* getArguments();
 		void addArgument(string& arg);
 		void addArgument(const char* arg);
+		void addArgument(const char* arg, size_t arg_len);
 
 		const string* getDirectory() const;
 		void setDirectory(string& directory);
@@ -79,6 +80,7 @@ class Job {
 		const string &getJobManager() const;
 		void setJobManager(string jm);
 		void setJobManager(const char *jm);
+		void setJobManager(const char *jm, size_t jm_len);
 
 		map<string, string>* getEnv();
 		const string* getEnv(string name) const;
