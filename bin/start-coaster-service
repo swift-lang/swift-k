@@ -8,6 +8,25 @@ crash()
    exit 1
 }
 
+# Display usage message
+usage()
+{
+    echo "Usage: $(basename $0) [OPTION]..." >&2
+    echo "Options:" >&2
+    echo "-conf <CONFIG FILE>\
+           Coasters service configuration file (default: coaster-service.conf)" >&2
+}
+
+# Report a problem, then usage, then exit
+usage_crash()
+{
+   MSG=$1
+   echo ${MSG} >&2
+   echo
+   usage
+   exit 1
+}
+
 # Wait for a file to be created, up to given amount of time
 wait_for_file()
 {
@@ -84,7 +103,7 @@ start-workers-scheduler()
 while [ $# -gt 0 ]; do
    case $1 in
       -conf) CMDLN_CONF=$2; shift 2;;
-      *) echo "Do not recognize command line option: $1" 1>&2; exit 1;;
+      *) echo "Do not recognize command line option: $1" 1>&2; usage; exit 1;;
    esac
 done
 
@@ -102,7 +121,7 @@ if [ -f "$CMDLN_CONF" ]; then
 elif [ -f "coaster-service.conf" ]; then
    CONFIG_FILE="coaster-service.conf"
 else
-   crash "Cannot find coaster-service.conf!"
+   usage_crash "Cannot find coaster-service.conf!"
 fi
 
 echo "Start-coaster-service..."
