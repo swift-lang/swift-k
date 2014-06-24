@@ -209,7 +209,10 @@ void CoasterLoop::removeChannel(CoasterChannel* channel) { Lock::Scoped l(lock);
 void CoasterLoop::requestWrite(int count) {
 	writesPending += count;
 	LogDebug << "request " << count <<  " writes; writesPending: " << writesPending << endl;
-	char tmp[count]; // doesn't need to be initialized since it doesn't matter what goes on the pipe
+	char tmp[count];
+	/* it doesn't matter what goes on the pipe, but initialize to zero to
+           avoid spurious valgrind and other warnings */
+        memset(tmp, 0, count);
 	int result = write(wakePipe[1], tmp, count);
 	if (result != count) {
 		LogWarn << "written " << result << " bytes instead of " << count << endl;
