@@ -216,8 +216,9 @@ int CoasterClient::getPort() {
 		return 53001;
 	}
 	else {
-		const char* sport = URL.substr(index + 1).c_str();
-		return atoi(sport);
+		// need to have string as local variable to prevent free
+		string sport = URL.substr(index + 1);
+		return atoi(sport.c_str());
 	}
 }
 
