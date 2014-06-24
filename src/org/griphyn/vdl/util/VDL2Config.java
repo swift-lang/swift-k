@@ -113,6 +113,8 @@ public class VDL2Config extends Properties {
 		put(VDL2ConfigProperties.SITEDIR_KEEP, "false", ConfigPropertyType.BOOLEAN);
 		put(VDL2ConfigProperties.PROVENANCE_LOG, "false", ConfigPropertyType.BOOLEAN);
 		
+		put("execution.retries", "0", ConfigPropertyType.INT);
+		
 		put("replication.enabled", "false", ConfigPropertyType.BOOLEAN);
 		put("replication.min.queue.time", "60", ConfigPropertyType.INT);
 		put("replication.limit", "3", ConfigPropertyType.INT);
