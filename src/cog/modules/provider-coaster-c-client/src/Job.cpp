@@ -50,23 +50,27 @@ vector<string*>* Job::getArguments() {
 	return arguments;
 }
 
-void Job::addArgument(string& arg) {
+void Job::addArgument(string* arg) {
 	if (arguments == NULL) {
 		arguments = new vector<string*>;
 	}
-	arguments->push_back(new string(arg));
+	arguments->push_back(arg);
 }
 
 const string& Job::getExecutable() const {
 	return executable;
 }
 
+void Job::addArgument(const string& arg) {
+	addArgument(new string(arg));
+}
+
 void Job::addArgument(const char* arg) {
-	addArgument(*(new string(arg)));
+	addArgument(new string(arg));
 }
 
 void Job::addArgument(const char* arg, size_t arg_len) {
-	addArgument(*(new string(arg, arg_len)));
+	addArgument(new string(arg, arg_len));
 }
 
 const string* Job::getDirectory() const {

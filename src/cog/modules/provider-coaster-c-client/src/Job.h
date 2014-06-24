@@ -77,7 +77,12 @@ class Job {
 		void setRemoteIdentity(const string& remoteId);
 
 		vector<string*>* getArguments();
-		void addArgument(string& arg);
+
+                /*
+                 * Add argument, taking ownership
+                 */
+		void addArgument(string* arg);
+		void addArgument(const string& arg);
 		void addArgument(const char* arg);
 		void addArgument(const char* arg, size_t arg_len);
 

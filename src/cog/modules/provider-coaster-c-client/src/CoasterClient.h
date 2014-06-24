@@ -45,7 +45,7 @@ class CoasterClient: public CommandCallback {
 		int sockFD;
 
 		int getPort();
-		string& getHostName();
+		const string& getHostName();
 		struct addrinfo* resolve(const char* hostName, int port);
 
 		CoasterLoop* loop;

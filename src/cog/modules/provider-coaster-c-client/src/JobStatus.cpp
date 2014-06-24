@@ -76,6 +76,9 @@ JobStatus::~JobStatus() {
 	if (prev != NULL) {
 		delete prev;
 	}
+	if (message != NULL) {
+		//delete message;
+	}
 }
 
 const char* statusCodeToStr(JobStatusCode code) {

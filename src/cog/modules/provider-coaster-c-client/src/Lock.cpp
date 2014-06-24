@@ -11,11 +11,26 @@
 
 static int unique = 0;
 
-#define DEBUG_LOCKS 0
+#define DEBUG_LOCKS 1
+#define DEBUG_LOCKS_STACKS 1
+
+#if DEBUG_LOCKS_STACKS == 1
+#include <execinfo.h>
+#define print_stack() \
+  {                                                         \
+       void *bt[32];                                        \
+       int nbt = backtrace(bt, 32);                         \
+       backtrace_symbols_fd(bt, nbt, fileno(stdout));       \
+  }
+#else
+#define print_stack()
+#endif
+
 #if DEBUG_LOCKS == 1
 #define debug(format, args...)           \
   {    printf("LOCK: %i " format "\n", id, ## args);        \
-       fflush(stdout);                   \
+       fflush(stdout);                                      \
+       print_stack();                                      \
   }
 #else
 #define debug(...) 0;

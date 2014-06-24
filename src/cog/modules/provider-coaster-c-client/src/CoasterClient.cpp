@@ -34,6 +34,9 @@ CoasterClient::CoasterClient(string URL, CoasterLoop& ploop) {
 
 CoasterClient::~CoasterClient() {
 	stop();
+	if (hostName != NULL) {
+		delete hostName;
+	}
 }
 
 void CoasterClient::start() {
@@ -222,13 +225,13 @@ int CoasterClient::getPort() {
 	}
 }
 
-string& CoasterClient::getHostName() {
+const string& CoasterClient::getHostName() {
 	size_t index;
 
 	if (hostName == NULL) {
 		index = URL.find(':');
 		if (index == string::npos) {
-			hostName = &URL;
+			hostName = new string(URL);
 		}
 		else {
 			hostName = new string(URL.substr(0, index));
