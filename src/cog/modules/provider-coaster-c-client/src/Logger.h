@@ -41,7 +41,7 @@ class Logger: public ostream {
 	public:
 		virtual ~Logger();
 		Logger& operator<< (Level level);
-		Logger& operator<< (string& str);
+		Logger& operator<< (const string& str);
 		Logger& operator<< (const string* str);
 		Logger& operator<< (const char* str);
 		Logger& operator<< (int i);

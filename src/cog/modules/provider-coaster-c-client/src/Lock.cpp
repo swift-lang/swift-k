@@ -11,8 +11,8 @@
 
 static int unique = 0;
 
-#define DEBUG_LOCKS 1
-#define DEBUG_LOCKS_STACKS 1
+#define DEBUG_LOCKS 0
+#define DEBUG_LOCKS_STACKS 0
 
 #if DEBUG_LOCKS_STACKS == 1
 #include <execinfo.h>

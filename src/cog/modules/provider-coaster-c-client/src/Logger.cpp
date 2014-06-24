@@ -52,7 +52,7 @@ const char* Logger::levelToStr(Level level) {
 	}
 }
 
-Logger& Logger::operator<< (string& str) {
+Logger& Logger::operator<< (const string& str) {
 	header();
 	if (level >= threshold) {
 		buffer << str;
