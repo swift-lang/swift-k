@@ -16,21 +16,27 @@ static int unique = 0;
 
 #if DEBUG_LOCKS_STACKS == 1
 #include <execinfo.h>
+#define __GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h> // Linux-specific
 #define print_stack() \
-  {                                                         \
-       void *bt[32];                                        \
-       int nbt = backtrace(bt, 32);                         \
-       backtrace_symbols_fd(bt, nbt, fileno(stdout));       \
+  {							\
+	printf("TID: %li\n", (long)syscall(SYS_gettid));\
+        fflush(stdout);					\
+	void *bt[32];					\
+	int nbt = backtrace(bt, 32);			\
+	backtrace_symbols_fd(bt, nbt, fileno(stdout));  \
+        fflush(stdout);					\
   }
 #else
 #define print_stack()
 #endif
 
 #if DEBUG_LOCKS == 1
-#define debug(format, args...)           \
-  {    printf("LOCK: %i " format "\n", id, ## args);        \
-       fflush(stdout);                                      \
-       print_stack();                                      \
+#define debug(format, args...)	   \
+  {    printf("LOCK: %i " format "\n", id, ## args);	\
+       fflush(stdout);				      \
+       print_stack();				      \
   }
 #else
 #define debug(...) 0;
@@ -49,6 +55,7 @@ Lock::~Lock() {
 void Lock::lock() {
 	debug("ACQUIRE");
 	pthread_mutex_lock(&l);
+	debug("ACQUIRED");
 }
 
 void Lock::unlock() {
