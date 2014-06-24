@@ -209,9 +209,9 @@ export WORKERURL="http://$IPADDR:$LOCAL_PORT"
 
 echo Generating sites.xml
 if [ -f "gensites.template" ]; then
-   gensites $( cat gensites.template ) -p $CONFIG_FILE > sites.xml
+   $SWIFT_BIN/gensites $( cat gensites.template ) -p $CONFIG_FILE > sites.xml
 else
-   gensites persistent-coasters -p $CONFIG_FILE > sites.xml
+   $SWIFT_BIN/gensites persistent-coasters -p $CONFIG_FILE > sites.xml
 fi
 
 # Start workers
