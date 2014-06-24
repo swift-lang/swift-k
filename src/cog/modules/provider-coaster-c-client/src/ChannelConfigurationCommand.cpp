@@ -4,7 +4,9 @@
 
 using namespace std;
 
-string ChannelConfigurationCommand::NAME("CHANNELCONFIG");
+const string ChannelConfigurationCommand::NAME("CHANNELCONFIG");
+const string ChannelConfigurationCommand::EMPTY("");
+const string ChannelConfigurationCommand::KEEPALIVE("keepalive(-1)");
 
 static int seq = 1;
 
@@ -21,10 +23,11 @@ void ChannelConfigurationCommand::send(CoasterChannel* channel, CommandCallback*
 }
 
 void ChannelConfigurationCommand::serialize() {
-	addOutData(Buffer::wrap("keepalive(-1)"));
-	addOutData(Buffer::wrap("")); // callback URL
+	// use constant strings to avoid memory management issues
+	addOutData(Buffer::wrap(KEEPALIVE));
+	addOutData(Buffer::wrap(EMPTY)); // callback URL
 	addOutData(Buffer::copy(localId));
-	addOutData(Buffer::wrap("")); // remoteId
+	addOutData(Buffer::wrap(EMPTY)); // remoteId
 }
 
 void ChannelConfigurationCommand::replyReceived() {

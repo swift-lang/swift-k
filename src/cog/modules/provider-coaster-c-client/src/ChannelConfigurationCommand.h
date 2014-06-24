@@ -13,7 +13,9 @@ class ChannelConfigurationCommand: public Command {
 		string localId;
 		string remoteId;
 	public:
-		static string NAME;
+		static const string NAME;
+                static const string EMPTY;
+                static const string KEEPALIVE;
 		ChannelConfigurationCommand();
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
 		virtual void replyReceived();
