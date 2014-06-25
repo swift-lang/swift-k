@@ -6,6 +6,8 @@
 #include <string>
 #include "Buffer.h"
 
+namespace Coaster {
+
 class ChannelConfigurationCommand: public Command {
 	private:
 		std::string localId;
@@ -20,5 +22,7 @@ class ChannelConfigurationCommand: public Command {
 	private:
 		void serialize();
 };
+
+}
 
 #endif

@@ -8,6 +8,8 @@
 #include "RequestReply.h"
 #include "CoasterError.h"
 
+using namespace Coaster;
+
 #include <sstream>
 
 using std::list;

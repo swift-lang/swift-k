@@ -7,6 +7,8 @@
 
 #include "CmdCBCV.h"
 
+using namespace Coaster;
+
 using std::string;
 
 CmdCBCV::CmdCBCV() {

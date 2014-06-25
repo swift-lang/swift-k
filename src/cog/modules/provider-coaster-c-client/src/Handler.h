@@ -11,6 +11,8 @@
 #include "CoasterChannel.h"
 #include "RequestReply.h"
 
+namespace Coaster {
+
 class CoasterChannel;
 
 class Handler: public RequestReply {
@@ -28,5 +30,7 @@ class Handler: public RequestReply {
 
 		virtual void dataSent(Buffer* buf);
 };
+
+}
 
 #endif /* HANDLER_H_ */

@@ -8,6 +8,8 @@
 #include "ClientHandlerFactory.h"
 #include "JobStatusHandler.h"
 
+using namespace Coaster;
+
 ClientHandlerFactory::ClientHandlerFactory() {
 	addHandler<JobStatusHandler>("JOBSTATUS");
 }

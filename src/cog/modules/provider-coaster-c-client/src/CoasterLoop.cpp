@@ -13,9 +13,14 @@
 #include <errno.h>
 #include <string.h>
 
+using namespace Coaster;
+
 using std::list;
 using std::map;
 using std::string;
+
+// 1 minute
+#define HEARTBEAT_CHECK_INTERVAL 60
 
 void* run(void* ptr);
 void checkSelectError(int ret);

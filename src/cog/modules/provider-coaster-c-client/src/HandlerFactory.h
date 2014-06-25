@@ -12,6 +12,8 @@
 #include <string>
 #include "Handler.h"
 
+namespace Coaster {
+
 class Handler;
 
 class HandlerFactory {
@@ -31,5 +33,6 @@ template<typename T> void HandlerFactory::addHandler(std::string name) {
 	creators[name] = &newHandler<T>;
 }
 
+}
 
 #endif /* HANDLERFACTORY_H_ */

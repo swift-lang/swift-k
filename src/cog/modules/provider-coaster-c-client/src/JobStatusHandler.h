@@ -11,11 +11,15 @@
 #include "Handler.h"
 #include "JobStatus.h"
 
+namespace Coaster {
+
 class JobStatusHandler: public Handler {
 	public:
 		JobStatusHandler();
 		virtual ~JobStatusHandler();
 		virtual void requestReceived();
 };
+
+}
 
 #endif /* JOBSTATUSHANDLER_H_ */

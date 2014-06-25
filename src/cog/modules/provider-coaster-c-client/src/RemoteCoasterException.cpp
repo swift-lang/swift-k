@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <iostream>
 
+using namespace Coaster;
+
 using std::exception;
 using std::string;
 

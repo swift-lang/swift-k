@@ -49,8 +49,13 @@ typedef struct coaster_client coaster_client;
   manipulation of the rbjects.
  */
 #ifdef __cplusplus
-typedef class Settings coaster_settings;
-typedef class Job coaster_job;
+namespace Coaster {
+  class Settings;
+  class Job;
+}
+
+typedef class Coaster::Settings coaster_settings;
+typedef class Coaster::Job coaster_job;
 #else
 // Treat these types as opaque pointer to unimplemented struct for C
 typedef struct coaster_settings_opaque_ coaster_settings;

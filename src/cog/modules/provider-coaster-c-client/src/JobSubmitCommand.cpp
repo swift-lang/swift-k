@@ -3,6 +3,8 @@
 #include <cstring>
 #include <string>
 
+using namespace Coaster;
+
 using std::cout;
 using std::map;
 using std::ostream;

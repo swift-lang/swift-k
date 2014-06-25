@@ -12,6 +12,8 @@
 #include <sys/time.h>
 #include <string>
 
+namespace Coaster {
+
 class HeartBeatCommand: public Command {
 	private:
 		long sendtime;
@@ -23,5 +25,7 @@ class HeartBeatCommand: public Command {
 		virtual void dataSent(Buffer* buf);
 		virtual void replyReceived();
 };
+
+}
 
 #endif /* HEARTBEATCOMMAND_H_ */

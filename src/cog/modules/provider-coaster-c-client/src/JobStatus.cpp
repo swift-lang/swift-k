@@ -9,6 +9,8 @@
 #include <time.h>
 #include "JobStatus.h"
 
+using namespace Coaster;
+
 using std::string;
 
 void JobStatus::init(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception) {
@@ -82,7 +84,7 @@ JobStatus::~JobStatus() {
 	}
 }
 
-const char* statusCodeToStr(JobStatusCode code) {
+const char* Coaster::statusCodeToStr(JobStatusCode code) {
 	switch (code) {
 		case UNSUBMITTED: return "UNSUBMITTED";
 		case SUBMITTING: return "SUBMITTING";

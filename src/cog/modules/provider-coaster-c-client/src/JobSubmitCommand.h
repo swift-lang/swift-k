@@ -7,6 +7,8 @@
 #include <string>
 #include "Buffer.h"
 
+namespace Coaster {
+
 class JobSubmitCommand: public Command {
 	private:
 		Job* job;
@@ -20,5 +22,7 @@ class JobSubmitCommand: public Command {
 	private:
 		void serialize();
 };
+
+}
 
 #endif

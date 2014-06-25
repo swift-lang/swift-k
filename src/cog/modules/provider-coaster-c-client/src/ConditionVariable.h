@@ -11,6 +11,8 @@
 #include <pthread.h>
 #include "Lock.h"
 
+namespace Coaster {
+
 class ConditionVariable {
 	private:
 		pthread_cond_t cv;
@@ -26,5 +28,7 @@ class ConditionVariable {
 		void signal();
 		void broadcast();
 };
+
+}
 
 #endif /* CONDITIONVARIABLE_H_ */

@@ -19,8 +19,7 @@
 #include <ctime>
 #include <stdio.h>
 
-// 1 minute
-#define HEARTBEAT_CHECK_INTERVAL 60
+namespace Coaster {
 
 class CoasterLoop {
 	private:
@@ -77,4 +76,5 @@ class CoasterLoop {
 		void checkHeartbeats();
 };
 
+}
 #endif /* COASTER_LOOP_H_ */

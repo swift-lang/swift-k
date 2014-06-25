@@ -7,6 +7,8 @@
 
 #include "ConditionVariable.h"
 
+using namespace Coaster;
+
 ConditionVariable::ConditionVariable() {
 	pthread_cond_init(&cv, NULL);
 }

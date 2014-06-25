@@ -12,6 +12,8 @@
 #include <ostream>
 #include <stdexcept>
 
+namespace Coaster {
+
 /*
  * TODO: need documentation on behavior of buffers w.r.t memory lifespan.
  */
@@ -72,5 +74,7 @@ class DynamicBuffer: public Buffer {
 		virtual const char* getData();
 		virtual char* getModifiableData();
 };
+
+}
 
 #endif /* BUFFER_H_ */

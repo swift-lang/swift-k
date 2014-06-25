@@ -2,6 +2,8 @@
 
 #include "Logger.h"
 
+using namespace Coaster;
+
 using std::list;
 using std::string;
 using std::vector;

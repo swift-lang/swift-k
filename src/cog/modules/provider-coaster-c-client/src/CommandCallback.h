@@ -11,6 +11,8 @@
 #include <string>
 #include "RemoteCoasterException.h"
 
+namespace Coaster {
+
 class Command;
 
 class CommandCallback {
@@ -19,5 +21,6 @@ class CommandCallback {
 		virtual void replyReceived(Command* cmd) = 0;
 };
 
+}
 
 #endif /* COMMANDCALLBACK_H_ */

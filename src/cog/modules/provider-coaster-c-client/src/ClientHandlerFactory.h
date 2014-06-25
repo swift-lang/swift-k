@@ -10,10 +10,14 @@
 
 #include "HandlerFactory.h"
 
+namespace Coaster {
+
 class ClientHandlerFactory: public HandlerFactory {
 	public:
 		ClientHandlerFactory();
 		virtual ~ClientHandlerFactory();
 };
+
+}
 
 #endif /* CLIENTHANDLERFACTORY_H_ */

@@ -30,6 +30,9 @@
 #include "CoasterClient.h"
 #include "CoasterError.h"
 #include "CoasterLoop.h"
+#include "Settings.h"
+
+using namespace Coaster;
 
 using std::malloc;
 using std::free;

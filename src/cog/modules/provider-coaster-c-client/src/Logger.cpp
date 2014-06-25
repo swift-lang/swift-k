@@ -10,6 +10,8 @@
 #include <sys/time.h>
 #include <time.h>
 
+using namespace Coaster;
+
 using std::cout;
 using std::ostream;
 using std::string;
@@ -167,7 +169,7 @@ void Logger::header() {
 	}
 }
 
-Logger& endl(Logger& l) {
+Logger& Coaster::endl(Logger& l) {
 	l.endItem();
 	return l;
 }

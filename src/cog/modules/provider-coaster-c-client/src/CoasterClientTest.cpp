@@ -7,6 +7,8 @@
 #include "Job.h"
 #include "Settings.h"
 
+using namespace Coaster;
+
 using std::cerr;
 using std::cout;
 using std::exception;

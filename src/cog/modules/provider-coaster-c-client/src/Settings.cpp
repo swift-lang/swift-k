@@ -7,6 +7,8 @@
 
 #include "Settings.h"
 
+using namespace Coaster;
+
 using std::string;
 using std::map;
 

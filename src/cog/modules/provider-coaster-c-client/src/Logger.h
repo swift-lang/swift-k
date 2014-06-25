@@ -16,6 +16,7 @@
 #include <string>
 #include "Lock.h"
 
+namespace Coaster {
 
 class Logger: public std::ostream {
 	public:
@@ -73,5 +74,7 @@ Logger& endl(Logger& l);
 #define LogWarn Logger::singleton().setFile(__FILE__) << Logger::WARN
 #define LogInfo Logger::singleton().setFile(__FILE__) << Logger::INFO
 #define LogDebug Logger::singleton().setFile(__FILE__) << Logger::DEBUG
+
+}
 
 #endif /* LOGGER_H_ */

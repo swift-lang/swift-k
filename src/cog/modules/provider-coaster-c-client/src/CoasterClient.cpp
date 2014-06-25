@@ -23,6 +23,8 @@
 
 #include "Logger.h"
 
+using namespace Coaster;
+
 using std::list;
 using std::map;
 using std::string;

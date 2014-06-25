@@ -10,6 +10,8 @@
 
 #include <pthread.h>
 
+namespace Coaster {
+
 class Lock {
 	int id;
 	private:
@@ -41,5 +43,7 @@ class Lock {
 				virtual ~Scoped();
 		};
 };
+
+}
 
 #endif /* LOCK_H_ */

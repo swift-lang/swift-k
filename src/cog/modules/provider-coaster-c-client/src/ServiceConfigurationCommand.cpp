@@ -1,6 +1,8 @@
 #include "ServiceConfigurationCommand.h"
 #include <map>
 
+using namespace Coaster;
+
 using std::map;
 using std::string;
 

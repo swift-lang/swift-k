@@ -9,6 +9,8 @@
 
 #include "Lock.h"
 
+using namespace Coaster;
+
 static int unique = 0;
 
 #define DEBUG_LOCKS 0

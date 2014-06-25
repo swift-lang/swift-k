@@ -10,6 +10,8 @@
 
 #include <string>
 
+namespace Coaster {
+
 class RemoteCoasterException {
 	private:
 		std::string* className;
@@ -19,5 +21,7 @@ class RemoteCoasterException {
 		virtual ~RemoteCoasterException();
 		std::string& str();
 };
+
+}
 
 #endif /* REMOTECOASTEREXCEPTION_H_ */

@@ -30,12 +30,13 @@
 #include "Logger.h"
 #include "RemoteCoasterException.h"
 
+namespace Coaster {
+
 class Command;
 class Handler;
 class CoasterLoop;
 class CoasterClient;
 class HandlerFactory;
-
 
 class DataChunk {
 	private:
@@ -123,6 +124,8 @@ class CoasterChannel: public CommandCallback {
 template<typename cls> cls& operator<< (cls& os, CoasterChannel* channel) {
 	os << "Channel[" << channel->getURL() << "]";
 	return os;
+}
+
 }
 
 #endif /* COASTER_CHANNEL_H_ */

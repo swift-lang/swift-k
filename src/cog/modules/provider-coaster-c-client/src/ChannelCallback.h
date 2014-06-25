@@ -10,6 +10,8 @@
 
 #include "Buffer.h"
 
+namespace Coaster {
+
 class ChannelCallback {
 	public:
 		ChannelCallback();
@@ -22,5 +24,7 @@ class DeleteBufferCallback : public ChannelCallback {
 		static DeleteBufferCallback CALLBACK;
 		virtual void dataSent(Buffer* buf);
 };
+
+}
 
 #endif /* CHANNELCALLBACK_H_ */

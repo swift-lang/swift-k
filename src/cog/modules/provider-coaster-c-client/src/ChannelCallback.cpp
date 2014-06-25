@@ -7,6 +7,8 @@
 
 #include "ChannelCallback.h"
 
+using namespace Coaster;
+
 ChannelCallback::ChannelCallback() {
 }
 

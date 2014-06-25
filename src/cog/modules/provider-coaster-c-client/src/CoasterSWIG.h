@@ -12,6 +12,8 @@
 %}
 #endif
 
+namespace Coaster {
+
 CoasterLoop* CoasterSWIGLoopCreate(void);
 int CoasterSWIGLoopDestroy(CoasterLoop* loop);
 
@@ -35,3 +37,4 @@ int CoasterSWIGTest(CoasterLoop *loop, char *service_URL, CoasterClient *c);
 //int CoasterSWIGTest(CoasterLoop *loop, char *service_URL);
 //int CoasterSWIGTest(CoasterClient *client);
 
+}

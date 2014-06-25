@@ -2,6 +2,8 @@
 #include <sstream>
 #include "Logger.h"
 
+using namespace Coaster;
+
 using std::string;
 using std::stringstream;
 

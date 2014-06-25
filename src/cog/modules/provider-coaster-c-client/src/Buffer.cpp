@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+using namespace Coaster;
+
 using std::string;
 using std::out_of_range;
 using std::logic_error;

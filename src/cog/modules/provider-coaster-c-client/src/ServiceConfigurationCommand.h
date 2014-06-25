@@ -7,6 +7,8 @@
 #include "Buffer.h"
 #include "Settings.h"
 
+namespace Coaster {
+
 class ServiceConfigurationCommand: public Command {
 	private:
 		Settings* settings;
@@ -18,5 +20,7 @@ class ServiceConfigurationCommand: public Command {
 	private:
 		void serialize();
 };
+
+}
 
 #endif

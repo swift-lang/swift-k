@@ -9,6 +9,8 @@
 
 #include <sstream>
 
+using namespace Coaster;
+
 using std::string;
 using std::stringstream;
 

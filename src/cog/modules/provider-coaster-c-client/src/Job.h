@@ -16,6 +16,8 @@
 #include <vector>
 #include <map>
 
+namespace Coaster {
+
 /*
   Job represents a single Job that is to be submitted to coasters.
   The Job object is created and has its parameters set before submission.
@@ -134,5 +136,7 @@ class Job {
 		const std::string* getStdout() const;
 		const std::string* getStderr() const;
 };
+
+}
 
 #endif /* JOB_DESCRIPTION_H_ */

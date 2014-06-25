@@ -9,6 +9,8 @@
 #include "Logger.h"
 #include <sstream>
 
+using namespace Coaster;
+
 using std::string;
 
 string HeartBeatCommand::NAME("HEARTBEAT");

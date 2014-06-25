@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <sstream>
 
+using namespace Coaster;
+
 using std::exception;
 using std::list;
 using std::map;

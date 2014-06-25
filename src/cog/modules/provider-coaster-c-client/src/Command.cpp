@@ -7,6 +7,8 @@ using std::list;
 using std::string;
 using std::vector;
 
+using namespace Coaster;
+
 Command::Command(const string* pname) {
 	name = pname;
 	ferrorReceived = false;

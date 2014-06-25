@@ -11,6 +11,8 @@
 #include <string>
 #include <map>
 
+namespace Coaster {
+
 class Settings {
 	private:
 		/*
@@ -79,4 +81,5 @@ template<typename cls> cls& operator<< (cls& os, Settings& s) {
 	return os;
 }
 
+}
 #endif /* SETTINGS_H_ */

@@ -13,6 +13,8 @@
 #include "RemoteCoasterException.h"
 #include "coaster-defs.h"
 
+namespace Coaster {
+
 class JobStatus {
 	private:
 		JobStatusCode statusCode;
@@ -60,6 +62,8 @@ template<typename cls> cls& operator<< (cls& os, JobStatus* s) {
 	}
 	os << ")";
 	return os;
+}
+
 }
 
 #endif /* JOB_STATUS_H_ */

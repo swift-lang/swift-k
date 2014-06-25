@@ -10,6 +10,8 @@
 
 #include <string>
 
+namespace Coaster {
+
 enum StagingMode { ALWAYS = 1, IF_PRESENT = 2, ON_ERROR = 4, ON_SUCCESS = 8 };
 
 class StagingSetEntry {
@@ -24,5 +26,7 @@ class StagingSetEntry {
 		StagingMode getMode();
 		virtual ~StagingSetEntry();
 };
+
+}
 
 #endif /* STAGINGSETENTRY_H_ */

@@ -11,6 +11,8 @@
 #include "Settings.h"
 #include "Job.h"
 
+using namespace Coaster;
+
 /** CoasterSWIGLoopCreate : create, starts and returns
  *  a pointer to a CoasterLoop object.
  */

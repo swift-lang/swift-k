@@ -11,6 +11,8 @@
 #include "Settings.h"
 #include "Logger.h"
 
+using namespace Coaster;
+
 using std::cerr;
 using std::cout;
 using std::exception;

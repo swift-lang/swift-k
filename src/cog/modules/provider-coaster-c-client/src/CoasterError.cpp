@@ -8,8 +8,12 @@
 #include "CoasterError.h"
 #include <cstdlib>
 
+using namespace Coaster;
+
 using std::string;
 using std::stringstream;
+
+#define MAX_MSG_LEN 256
 
 CoasterError::CoasterError(const string& msg) {
 	this->message = msg;

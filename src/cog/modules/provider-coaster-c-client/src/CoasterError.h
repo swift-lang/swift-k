@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <sstream>
 
-#define MAX_MSG_LEN 256
+namespace Coaster {
 
 class CoasterError: public std::exception {
 	private:
@@ -25,5 +25,7 @@ class CoasterError: public std::exception {
 		virtual ~CoasterError() throw();
 		virtual const char* what() const throw();
 };
+
+}
 
 #endif /* COASTERERROR_H_ */

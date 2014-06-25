@@ -17,6 +17,8 @@
 #include "CommandCallback.h"
 #include "RemoteCoasterException.h"
 
+namespace Coaster {
+
 class CoasterChannel;
 class CommandCallback;
 
@@ -53,6 +55,8 @@ class Command: public RequestReply {
 template<typename cls> cls& operator<< (cls& os, Command* cmd) {
 	os << "Command[" << cmd->getName() << ", tag: " << cmd->getTag() << "]";
 	return os;
+}
+
 }
 
 #endif /* COMMAND_H_ */

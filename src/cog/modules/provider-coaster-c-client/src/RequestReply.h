@@ -14,6 +14,8 @@
 #include <vector>
 #include <list>
 
+namespace Coaster {
+
 class CoasterChannel;
 
 class RequestReply: public ChannelCallback {
@@ -60,5 +62,7 @@ class RequestReply: public ChannelCallback {
 		virtual void signalReceived(Buffer*);
 		virtual void receiveCompleted(int flags) = 0;
 };
+
+}
 
 #endif /* REQUESTREPLY_H_ */

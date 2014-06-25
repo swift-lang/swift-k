@@ -26,6 +26,8 @@
 
 #endif 
 
+namespace Coaster {
+
 class ClientHandlerFactory;
 class HandlerFactory;
 class CoasterLoop;
@@ -111,5 +113,7 @@ class CoasterClient: public CommandCallback {
 	private:
 		void updateJobStatusNoLock(Job* job, JobStatus* status);
 };
+
+}
 
 #endif /* COASTER_CLIENT_H_ */

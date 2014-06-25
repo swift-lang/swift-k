@@ -2,6 +2,8 @@
 #include <sstream>
 #include <cstring>
 
+using namespace Coaster;
+
 using std::map;
 using std::pair;
 using std::string;

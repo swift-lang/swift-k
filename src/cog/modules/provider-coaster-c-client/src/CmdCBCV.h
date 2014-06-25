@@ -13,6 +13,8 @@
 #include "ConditionVariable.h"
 #include "RemoteCoasterException.h"
 
+namespace Coaster {
+
 class CmdCBCV: public CommandCallback {
 	private:
 		bool done;
@@ -26,4 +28,5 @@ class CmdCBCV: public CommandCallback {
 		void wait();
 };
 
+}
 #endif /* CMDCBCV_H_ */
