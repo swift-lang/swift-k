@@ -268,6 +268,9 @@ coaster_job_get_outstreams(coaster_job *job,
 /*
  * Submit a coasters job through a coasters client.
  * A job can only be submitted once!
+ * Ownership of the job is shared between the caller and
+ * the client until the job has completed, or the client
+ * shuts down.
  */
 coaster_rc
 coaster_submit(coaster_client *client, coaster_job *job)
