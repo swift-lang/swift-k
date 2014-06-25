@@ -53,6 +53,12 @@ class CoasterLoop {
 		CoasterLoop();
 		virtual ~CoasterLoop();
 		void start();
+
+		/*
+		 * Stop the coaster loop.  Returns once stopped.
+		 * All channels should be removed (e.g. by stopping clients)
+		 * before stopping the loop.
+		 */
 		void stop();
 		
 		/*

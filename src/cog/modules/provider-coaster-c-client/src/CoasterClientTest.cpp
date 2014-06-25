@@ -40,7 +40,7 @@ int main(void) {
 		client.waitForJob(j1);
 		client.waitForJob(j2);
 		list<Job*>* doneJobs = client.getAndPurgeDoneJobs();
-
+		
 		delete doneJobs;
 
 		if (j1.getStatus()->getStatusCode() == FAILED) {
@@ -52,6 +52,8 @@ int main(void) {
 
 		cout << "All done" << endl;
 
+		client.stop();
+		loop.stop();
 		return EXIT_SUCCESS;
 	}
 	catch (exception& e) {
