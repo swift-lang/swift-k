@@ -14,10 +14,12 @@ void JobStatus::init(JobStatusCode statusCode, time_t time, const string* messag
 	this->stime = time;
 	// always copy strings because the job status' lifetime is weird
 	if (message != NULL) {
-		this->message = new string(*message);
+		this->haveMessage = true;
+		this->message.assign(*message);
 	}
 	else {
-		this->message = NULL;
+		this->haveMessage = false;
+		this->message.clear();
 	}
 	if (exception != NULL) {
 		this->exception = exception;
@@ -53,7 +55,7 @@ time_t JobStatus::getTime() {
 }
 
 const string* JobStatus::getMessage() const {
-	return message;
+	return haveMessage ? &message : NULL;
 }
 
 RemoteCoasterException* JobStatus::getException() {
@@ -75,9 +77,6 @@ bool JobStatus::isTerminal() {
 JobStatus::~JobStatus() {
 	if (prev != NULL) {
 		delete prev;
-	}
-	if (message != NULL) {
-		//delete message;
 	}
 }
 

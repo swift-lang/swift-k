@@ -20,7 +20,8 @@ class JobStatus {
 	private:
 		JobStatusCode statusCode;
 		time_t stime;
-		string* message;
+		bool haveMessage;
+		string message;
 		RemoteCoasterException* exception;
 		JobStatus* prev;
 
