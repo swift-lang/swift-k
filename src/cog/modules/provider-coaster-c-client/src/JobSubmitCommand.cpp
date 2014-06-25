@@ -99,14 +99,19 @@ void add(string& ss, const char* key, const char* value, int n) {
 		ss.append(1, '=');
 		while (*value) {
 			char c = *value;
-			// TODO: are fallthroughs deliberate?
+			// TODO: are fallthroughs deliberate? Yes, they were.
 			switch (c) {
 				case '\n':
-					c = 'n';
+					ss.append(1, '\\');
+					ss.append(1, 'n');
+					break;
 				case '\\':
 					ss.append(1, '\\');
+					ss.append(1, '\\');
+					break;
 				default:
 					ss.append(1, c);
+					break;
 			}
 			value++;
 			n--;
