@@ -19,6 +19,7 @@ using std::string;
 Logger::Logger(ostream& pout) {
 	out = &pout;
 	level = NONE;
+        threshold = INFO; // Only show info and higher by default
 	file = "<unknown>";
 	startOfItem = true;
 }
