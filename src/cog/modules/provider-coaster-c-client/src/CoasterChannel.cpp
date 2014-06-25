@@ -149,8 +149,7 @@ void CoasterChannel::dispatchReply() {
 	Command* cmd = commands[rtag];
 	if (rflags & FLAG_SIGNAL) {
 		try {
-			cmd->signalReceived(msg.buf);
-			msg.buf = NULL; // gave ownership to cmd
+			cmd->signalReceived(msg.detachBuffer());
 		}
 		catch (exception &e) {
 			LogWarn << "Command::signalReceived() threw exception: " << e.what() << endl;
@@ -160,8 +159,7 @@ void CoasterChannel::dispatchReply() {
 		}
 	}
 	else {
-		cmd->dataReceived(msg.buf, rflags);
-		msg.buf = NULL; // gave ownership to cmd
+		cmd->dataReceived(msg.detachBuffer(), rflags);
 		if (rflags & FLAG_FINAL) {
 			unregisterCommand(cmd);
 			try {
@@ -184,8 +182,7 @@ void CoasterChannel::dispatchRequest() {
 		msg.buf->str(name);
 
 		// Done with data
-		delete msg.buf;
-		msg.buf = NULL;
+		msg.deleteBuffer();
 
 		LogDebug << "Handling initial request for " << name << endl;
 		Handler* h = handlerFactory->newInstance(name);
@@ -200,8 +197,7 @@ void CoasterChannel::dispatchRequest() {
 		Handler* h = handlers[rtag];
 		if (rflags & FLAG_SIGNAL) {
 			try {
-				h->signalReceived(msg.buf);
-				msg.buf = NULL; // gave ownership to h
+				h->signalReceived(msg.detachBuffer());
 			}
 			catch (exception &e) {
 				LogWarn << "Handler::signalReceived() threw exception: " << e.what() << endl;
@@ -211,8 +207,7 @@ void CoasterChannel::dispatchRequest() {
 			}
 		}
 		else {
-			h->dataReceived(msg.buf, rflags);
-			msg.buf = NULL; // gave ownership to h
+			h->dataReceived(msg.detachBuffer(), rflags);
 
 			if (rflags & FLAG_FINAL) {
 				try{

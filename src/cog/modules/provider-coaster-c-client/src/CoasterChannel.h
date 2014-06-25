@@ -51,6 +51,24 @@ class DataChunk {
 		DataChunk();
 		DataChunk(Buffer* buf, ChannelCallback* pcb);
 		void reset();
+
+                /*
+                 * Detach buffer from DataChunk to pass ownership
+                 * elswehere
+                 */
+                inline Buffer* detachBuffer() {
+                	Buffer* b = buf;
+                        buf = NULL;
+                        return b;
+                }
+
+                /*
+                 * Delete buffer
+                 */
+                inline void deleteBuffer() {
+			delete buf;
+                        buf = NULL;
+                }
 };
 
 class CoasterChannel: public CommandCallback {
