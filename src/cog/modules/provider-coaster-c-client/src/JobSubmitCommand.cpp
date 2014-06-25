@@ -53,11 +53,9 @@ void JobSubmitCommand::serialize() {
 	add(ss, "stderr", job->getStderrLocation());
 
 
-	vector<string*>* arguments = job->getArguments();
-	if (arguments != NULL) {
-		for (vector<string*>::iterator i = arguments->begin(); i != arguments->end(); ++i) {
-			add(ss, "arg", *i);
-		}
+	const vector<string*>& arguments = job->getArguments();
+	for (vector<string*>::const_iterator i = arguments.begin(); i != arguments.end(); ++i) {
+		add(ss, "arg", *i);
 	}
 
 	map<string, string>* env = job->getEnv();

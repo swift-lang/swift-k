@@ -7,6 +7,7 @@ using namespace Coaster;
 using std::map;
 using std::pair;
 using std::string;
+using std::stringstream;
 using std::vector;
 
 static job_id_t seq = 0;
@@ -15,7 +16,6 @@ Job::Job(const string &pexecutable) {
 	executable = pexecutable;
 	identity = seq++;
 
-	arguments = NULL;
 	directory = NULL;
 	stdinLocation = NULL;
 	stdoutLocation = NULL;
@@ -51,15 +51,12 @@ void Job::setRemoteIdentity(const string& remoteId) {
 	remoteIdentity = new string(remoteId);
 }
 
-vector<string*>* Job::getArguments() {
+const vector<string*>& Job::getArguments() {
 	return arguments;
 }
 
 void Job::addArgument(string* arg) {
-	if (arguments == NULL) {
-		arguments = new vector<string*>;
-	}
-	arguments->push_back(arg);
+	arguments.push_back(arg);
 }
 
 const string& Job::getExecutable() const {
@@ -250,6 +247,24 @@ const string* Job::getStderr() const {
 	return stderr;
 }
 
+/*
+ * Just include the executable and arguments for now
+ */
+string Job::toString() const {
+	stringstream ss;
+	ss << executable;
+	for (vector<string*>::const_iterator it = arguments.begin();
+	     it != arguments.end(); ++it) {
+		const string *arg = *it;
+		if (arg == NULL) {
+			ss << " NULL";	
+		} else {
+			ss << " " << *arg ;
+		}
+	}
+	return ss.str();
+}
+
 void Job::setStatus(JobStatus* newStatus) {
 	// Since the client can process a job status while another
 	// status is coming in, a status cannot be deleted when a new status comes in.
@@ -276,10 +291,7 @@ Job::~Job() {
 	if (remoteIdentity != NULL) {
 		delete remoteIdentity; 
 	}
-	if (arguments != NULL) {
-		for (int i = 0; i < arguments->size(); i++) {
-			delete arguments->at(i);
-		}
-		delete arguments;
+	for (int i = 0; i < arguments.size(); i++) {
+		delete arguments.at(i);
 	}
 }

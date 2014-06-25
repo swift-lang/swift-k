@@ -25,6 +25,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 #include <pthread.h>
 
 #include "CoasterClient.h"
@@ -38,6 +39,7 @@ using std::malloc;
 using std::free;
 
 using std::string;
+using std::memcpy;
 
 /*
   Struct just wraps the objects
@@ -262,6 +264,29 @@ coaster_rc
 coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING {
   // Destructor shouldn't throw anything
   delete job;
+}
+
+coaster_rc
+coaster_job_to_string(const coaster_job *job, char **str, size_t *str_len)
+                                   COASTERS_THROWS_NOTHING {
+  if (job == NULL || str == NULL || str_len == NULL) {
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid argument");
+  }
+
+  try {
+    string jobStr = job->toString();
+
+    *str = (char*)malloc(jobStr.length() + 1);
+    COASTER_CHECK_MALLOC(*str);
+    memcpy(*str, jobStr.c_str(), jobStr.length() + 1);
+    *str_len = jobStr.length();
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+
 }
 
 coaster_rc

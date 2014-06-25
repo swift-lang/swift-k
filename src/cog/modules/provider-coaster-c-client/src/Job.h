@@ -35,7 +35,7 @@ class Job {
 		 * it work to just store them by value and have zero-length
 		 * be equivalent to NULL.  Are zero-length strings meaningful?
 		 */
-		std::vector<std::string*>* arguments;
+		std::vector<std::string*> arguments;
 		std::string* directory;
 		std::string* stdinLocation;
 		std::string* stdoutLocation;
@@ -55,7 +55,7 @@ class Job {
 
 		JobStatus* status;
 		
-                /* Disable default copy constructor */
+		/* Disable default copy constructor */
 		Job(const Job&);
 		/* Disable default assignment */
 		Job& operator=(const Job&);
@@ -81,11 +81,11 @@ class Job {
 		const std::string* getRemoteIdentity() const;
 		void setRemoteIdentity(const std::string& remoteId);
 
-		std::vector<std::string*>* getArguments();
+		const std::vector<std::string*>& getArguments();
 
-                /*
-                 * Add argument, taking ownership
-                 */
+		/*
+		 * Add argument, taking ownership
+		 */
 		void addArgument(std::string* arg);
 		void addArgument(const std::string& arg);
 		void addArgument(const char* arg);
@@ -135,6 +135,12 @@ class Job {
 
 		const std::string* getStdout() const;
 		const std::string* getStderr() const;
+		
+		/*
+		 * Return a human-readable string representation
+		 * of the job.
+		 */
+		std::string toString() const;
 };
 
 }

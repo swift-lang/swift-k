@@ -191,6 +191,14 @@ coaster_rc
 coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING;
 
 /*
+ * Create a human readable string describing job.
+ * str: output for dynamically allocated string, to be freed by caller
+ */
+coaster_rc
+coaster_job_to_string(const coaster_job *job, char **str, size_t *str_len)
+                                  COASTERS_THROWS_NOTHING;
+
+/*
  * Set input and output stream redirections.
  * If set to NULL, don't modify.
  */
