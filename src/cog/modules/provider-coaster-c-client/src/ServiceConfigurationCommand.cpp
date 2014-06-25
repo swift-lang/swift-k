@@ -1,7 +1,8 @@
 #include "ServiceConfigurationCommand.h"
 #include <map>
 
-using namespace std;
+using std::map;
+using std::string;
 
 string ServiceConfigurationCommand::NAME("CONFIGSERVICE");
 

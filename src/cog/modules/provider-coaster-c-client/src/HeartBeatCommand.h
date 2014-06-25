@@ -12,13 +12,11 @@
 #include <sys/time.h>
 #include <string>
 
-using namespace std;
-
 class HeartBeatCommand: public Command {
 	private:
 		long sendtime;
 	public:
-		static string NAME;
+		static std::string NAME;
 		HeartBeatCommand();
 		virtual ~HeartBeatCommand();
 		void send(CoasterChannel* channel, CommandCallback* cb);

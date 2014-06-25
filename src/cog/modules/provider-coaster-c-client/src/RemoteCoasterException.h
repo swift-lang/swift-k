@@ -10,16 +10,14 @@
 
 #include <string>
 
-using namespace std;
-
 class RemoteCoasterException {
 	private:
-		string* className;
-		string data;
+		std::string* className;
+		std::string data;
 	public:
 		RemoteCoasterException(const char* data, int len);
 		virtual ~RemoteCoasterException();
-		string& str();
+		std::string& str();
 };
 
 #endif /* REMOTECOASTEREXCEPTION_H_ */

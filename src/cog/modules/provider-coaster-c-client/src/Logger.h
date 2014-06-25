@@ -16,15 +16,14 @@
 #include <string>
 #include "Lock.h"
 
-using namespace std;
 
-class Logger: public ostream {
+class Logger: public std::ostream {
 	public:
 		enum Level { NONE = -1, DEBUG = 0, INFO = 1, WARN = 2, ERROR = 3, FATAL = 4 };
 		static Logger* instance;
 	private:
-		ostream* out;
-		stringstream buffer;
+		std::ostream* out;
+		std::stringstream buffer;
 		Level level, threshold;
 		const char* file;
 		const char* strLevel;
@@ -37,7 +36,7 @@ class Logger: public ostream {
 		/* Disable default assignment */
 		Logger& operator=(const Logger&);
 	protected:
-		Logger(ostream& out);
+		Logger(std::ostream& out);
 		void setLevel(Level level);
 		const char* levelToStr(Level level);
 		void header();
@@ -46,8 +45,8 @@ class Logger: public ostream {
 	public:
 		virtual ~Logger();
 		Logger& operator<< (Level level);
-		Logger& operator<< (const string& str);
-		Logger& operator<< (const string* str);
+		Logger& operator<< (const std::string& str);
+		Logger& operator<< (const std::string* str);
 		Logger& operator<< (const char* str);
 		Logger& operator<< (int i);
 		Logger& operator<< (long l);
@@ -55,7 +54,7 @@ class Logger: public ostream {
 		Logger& setFile(const char* file);
 		void endItem();
 		void log(Level level, const char* fileName, const char* msg);
-		void log(Level level, const char* fileName, string msg);
+		void log(Level level, const char* fileName, std::string msg);
 
 		void setThreshold(Level level);
 

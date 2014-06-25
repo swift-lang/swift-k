@@ -3,7 +3,12 @@
 #include <cstring>
 #include <string>
 
-using namespace std;
+using std::cout;
+using std::map;
+using std::ostream;
+using std::string;
+using std::stringstream;
+using std::vector;
 
 void add(string& ss, const char* key, const string* value);
 void add(string& ss, const char* key, const string& value);

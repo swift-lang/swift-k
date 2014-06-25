@@ -21,7 +21,7 @@ class CmdCBCV: public CommandCallback {
 	public:
 		CmdCBCV();
 		virtual ~CmdCBCV();
-		virtual void errorReceived(Command* cmd, string* message, RemoteCoasterException* details);
+		virtual void errorReceived(Command* cmd, std::string* message, RemoteCoasterException* details);
 		virtual void replyReceived(Command* cmd);
 		void wait();
 };

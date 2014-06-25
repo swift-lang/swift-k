@@ -10,6 +10,10 @@
 #include <sys/time.h>
 #include <time.h>
 
+using std::cout;
+using std::ostream;
+using std::string;
+
 Logger::Logger(ostream& pout) {
 	out = &pout;
 	level = NONE;

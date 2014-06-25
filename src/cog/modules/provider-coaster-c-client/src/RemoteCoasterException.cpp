@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <iostream>
 
+using std::exception;
+using std::string;
+
 void expect(const char* s, int len, int& ptr, const char* e);
 void skip(const char* s, int len, int& ptr, int n);
 int getShort(const char* s, int len, int& ptr);

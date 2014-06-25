@@ -15,9 +15,14 @@
 #include <sys/socket.h>
 #include "Logger.h"
 
+#include <algorithm>
 #include <sstream>
 
-using namespace std;
+using std::exception;
+using std::list;
+using std::map;
+using std::min;
+using std::string;
 
 int socksend(int fd, const char* buf, int len, int flags);
 void pp(char* dest, const char* src, int len);

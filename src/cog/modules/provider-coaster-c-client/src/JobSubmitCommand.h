@@ -4,22 +4,19 @@
 #include "Command.h"
 #include "CommandCallback.h"
 #include "Job.h"
-#include <vector>
 #include <string>
 #include "Buffer.h"
-
-using namespace std;
 
 class JobSubmitCommand: public Command {
 	private:
 		Job* job;
-		string ss;
+		std::string ss;
 	public:
-		static string NAME;
+		static std::string NAME;
 		JobSubmitCommand(Job* job);
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
 		Job* getJob();
-		string getRemoteId();
+		std::string getRemoteId();
 	private:
 		void serialize();
 };

@@ -10,19 +10,17 @@
 
 #include <string>
 
-using namespace std;
-
 enum StagingMode { ALWAYS = 1, IF_PRESENT = 2, ON_ERROR = 4, ON_SUCCESS = 8 };
 
 class StagingSetEntry {
 	private:
-		string source;
-		string destination;
+		std::string source;
+		std::string destination;
 		StagingMode mode;
 	public:
-		StagingSetEntry(string source, string destination, StagingMode mode);
-		string getSource();
-		string getDestination();
+		StagingSetEntry(std::string source, std::string destination, StagingMode mode);
+		std::string getSource();
+		std::string getDestination();
 		StagingMode getMode();
 		virtual ~StagingSetEntry();
 };

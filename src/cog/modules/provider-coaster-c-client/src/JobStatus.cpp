@@ -9,6 +9,8 @@
 #include <time.h>
 #include "JobStatus.h"
 
+using std::string;
+
 void JobStatus::init(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception) {
 	this->statusCode = statusCode;
 	this->stime = time;

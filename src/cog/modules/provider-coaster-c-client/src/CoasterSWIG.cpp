@@ -10,7 +10,6 @@
 #include "CoasterClient.h"
 #include "Settings.h"
 #include "Job.h"
-using namespace std;
 
 /** CoasterSWIGLoopCreate : create, starts and returns
  *  a pointer to a CoasterLoop object.

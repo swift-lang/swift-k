@@ -16,16 +16,14 @@
 
 class CoasterChannel;
 
-using namespace std;
-
 class RequestReply: public ChannelCallback {
 	private:
 		CoasterChannel* channel;
-		list<Buffer*> outData;
-		vector<Buffer*> inData;
-		vector<Buffer*>* errorData;
+		std::list<Buffer*> outData;
+		std::vector<Buffer*> inData;
+		std::vector<Buffer*>* errorData;
 
-		void clearBufferVector(vector<Buffer*>* v);
+		void clearBufferVector(std::vector<Buffer*>* v);
 		
                 /* Disable default copy constructor for this and subclasses */
 		RequestReply(const RequestReply&);
@@ -37,15 +35,15 @@ class RequestReply: public ChannelCallback {
 		virtual void addInData(Buffer*);
 		virtual void addErrorData(Buffer*);
 
-		virtual list<Buffer*>* getOutData();
-		virtual vector<Buffer*>* getErrorData();
-		virtual vector<Buffer*>* getInData();
+		virtual std::list<Buffer*>* getOutData();
+		virtual std::vector<Buffer*>* getErrorData();
+		virtual std::vector<Buffer*>* getInData();
 
 		int getInDataAsInt(int index);
 		long getInDataAsLong(int index);
-		void getInDataAsString(int index, string& dest);
+		void getInDataAsString(int index, std::string& dest);
 
-		string getErrorString();
+		std::string getErrorString();
 
 		int tag;
 	public:

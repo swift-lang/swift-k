@@ -9,6 +9,8 @@
 #include "Logger.h"
 #include <sstream>
 
+using std::string;
+
 string HeartBeatCommand::NAME("HEARTBEAT");
 
 HeartBeatCommand::HeartBeatCommand(): Command(&NAME) {

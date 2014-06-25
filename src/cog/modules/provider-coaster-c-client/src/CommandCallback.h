@@ -13,11 +13,9 @@
 
 class Command;
 
-using namespace std;
-
 class CommandCallback {
 	public:
-		virtual void errorReceived(Command* cmd, string* message, RemoteCoasterException* details) = 0;
+		virtual void errorReceived(Command* cmd, std::string* message, RemoteCoasterException* details) = 0;
 		virtual void replyReceived(Command* cmd) = 0;
 };
 

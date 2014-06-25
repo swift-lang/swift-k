@@ -17,21 +17,19 @@
 #include "CommandCallback.h"
 #include "RemoteCoasterException.h"
 
-using namespace std;
-
 class CoasterChannel;
 class CommandCallback;
 
 
 class Command: public RequestReply {
 	private:
-		const string* name;
+		const std::string* name;
 		CommandCallback* cb;
 		bool ferrorReceived, freceiveCompleted;
 	public:
-		Command(const string* pname);
+		Command(const std::string* pname);
 
-		const string* getName();
+		const std::string* getName();
 
 		virtual void send(CoasterChannel* channel);
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
@@ -44,7 +42,7 @@ class Command: public RequestReply {
 
 		virtual bool isReceiveCompleted() const;
 		virtual bool isErrorReceived() const;
-		virtual string* getErrorMessage();
+		virtual std::string* getErrorMessage();
 		virtual RemoteCoasterException* getErrorDetail();
 
 		virtual void dataSent(Buffer* buf);

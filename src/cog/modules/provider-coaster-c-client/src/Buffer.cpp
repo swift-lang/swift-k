@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+using std::string;
+using std::out_of_range;
+using std::logic_error;
+
 Buffer::Buffer(int plen) {
 	len = plen;
 }

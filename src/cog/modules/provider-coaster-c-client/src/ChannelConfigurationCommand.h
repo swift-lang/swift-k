@@ -6,16 +6,14 @@
 #include <string>
 #include "Buffer.h"
 
-using namespace std;
-
 class ChannelConfigurationCommand: public Command {
 	private:
-		string localId;
-		string remoteId;
+		std::string localId;
+		std::string remoteId;
 	public:
-		static const string NAME;
-                static const string EMPTY;
-                static const string KEEPALIVE;
+		static const std::string NAME;
+                static const std::string EMPTY;
+                static const std::string KEEPALIVE;
 		ChannelConfigurationCommand();
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
 		virtual void replyReceived();

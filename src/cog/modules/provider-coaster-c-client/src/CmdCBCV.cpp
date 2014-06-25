@@ -7,6 +7,8 @@
 
 #include "CmdCBCV.h"
 
+using std::string;
+
 CmdCBCV::CmdCBCV() {
 	done = false;
 }

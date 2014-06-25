@@ -12,8 +12,6 @@
 #include <ostream>
 #include <stdexcept>
 
-using namespace std;
-
 /*
  * TODO: need documentation on behavior of buffers w.r.t memory lifespan.
  */
@@ -33,9 +31,9 @@ class Buffer {
 		virtual void setData(const char* data);
 		virtual ~Buffer();
 
-		virtual string* str();
+		virtual std::string* str();
 		/* Set string to buffer contents */
-		virtual void str(string &str);
+		virtual void str(std::string &str);
 
 		int getInt(int index);
 		long getLong(int index);
@@ -46,9 +44,9 @@ class Buffer {
 		static Buffer* wrap(int i);
 		static Buffer* wrap(long l);
 		static Buffer* wrap(const char* buf, int len);
-		static Buffer* wrap(string s);
-		static Buffer* wrap(const string* s);
-		static Buffer* copy(string& s);
+		static Buffer* wrap(std::string s);
+		static Buffer* wrap(const std::string* s);
+		static Buffer* copy(std::string& s);
 
 		template<typename cls> friend cls& operator<< (cls& os, Buffer& buf);
 };

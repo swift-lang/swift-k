@@ -7,13 +7,11 @@
 #include "Buffer.h"
 #include "Settings.h"
 
-using namespace std;
-
 class ServiceConfigurationCommand: public Command {
 	private:
 		Settings* settings;
 	public:
-		static string NAME;
+		static std::string NAME;
                 // TODO: how long does this hold a reference to settings?
 		ServiceConfigurationCommand(Settings& s);
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);

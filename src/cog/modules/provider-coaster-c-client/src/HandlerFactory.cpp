@@ -7,6 +7,9 @@
 
 #include "HandlerFactory.h"
 
+using std::string;
+using std::map;
+
 HandlerFactory::HandlerFactory() {
 }
 

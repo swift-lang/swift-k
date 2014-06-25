@@ -11,7 +11,12 @@
 #include "Settings.h"
 #include "Logger.h"
 
-using namespace std;
+using std::cerr;
+using std::cout;
+using std::exception;
+using std::list;
+using std::string;
+using std::vector;
 
 static struct option long_options[] = {
    {"service", required_argument, 0, 's'},

@@ -7,7 +7,10 @@
 #include "Job.h"
 #include "Settings.h"
 
-using namespace std;
+using std::cerr;
+using std::cout;
+using std::exception;
+using std::list;
 
 int main(void) {
 	try {

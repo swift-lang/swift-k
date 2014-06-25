@@ -2,6 +2,10 @@
 
 #include "Logger.h"
 
+using std::list;
+using std::string;
+using std::vector;
+
 void Handler::receiveCompleted(int flags) {
 	if (flags & FLAG_ERROR) {
 		errorReceived();

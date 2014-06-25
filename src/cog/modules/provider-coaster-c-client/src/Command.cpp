@@ -3,6 +3,9 @@
 #include "Logger.h"
 #include "CoasterError.h"
 
+using std::list;
+using std::string;
+using std::vector;
 
 Command::Command(const string* pname) {
 	name = pname;

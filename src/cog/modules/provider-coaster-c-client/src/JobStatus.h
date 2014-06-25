@@ -10,36 +10,33 @@
 
 #include <time.h>
 #include <string>
-#include <iostream>
 #include "RemoteCoasterException.h"
 #include "coaster-defs.h"
-
-using namespace std;
 
 class JobStatus {
 	private:
 		JobStatusCode statusCode;
 		time_t stime;
 		bool haveMessage;
-		string message;
+		std::string message;
 		RemoteCoasterException* exception;
 		JobStatus* prev;
 
-		void init(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception);
+		void init(JobStatusCode statusCode, time_t time, const std::string* message, RemoteCoasterException* exception);
 
 		/* Disable default copy constructor */
 		JobStatus(const JobStatus&);
 		/* Disable default assignment */
 		JobStatus& operator=(const JobStatus&);
 	public:
-		JobStatus(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception);
-		JobStatus(JobStatusCode statusCode, const string* message, RemoteCoasterException* exception);
+		JobStatus(JobStatusCode statusCode, time_t time, const std::string* message, RemoteCoasterException* exception);
+		JobStatus(JobStatusCode statusCode, const std::string* message, RemoteCoasterException* exception);
 		JobStatus(JobStatusCode statusCode);
 		JobStatus();
 		virtual ~JobStatus();
 		JobStatusCode getStatusCode() const;
 		time_t getTime();
-		const string* getMessage() const;
+		const std::string* getMessage() const;
 		RemoteCoasterException* getException();
 		const JobStatus* getPreviousStatus();
 		void setPreviousStatus(JobStatus* prev);

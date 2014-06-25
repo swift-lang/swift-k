@@ -15,7 +15,7 @@ class CoasterChannel;
 
 class Handler: public RequestReply {
 	protected:
-		virtual void sendReply(string& reply);
+		virtual void sendReply(std::string& reply);
 		virtual void sendReply(const char* reply);
 
 	public:

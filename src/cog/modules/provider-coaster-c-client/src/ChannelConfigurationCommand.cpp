@@ -2,7 +2,8 @@
 #include <sstream>
 #include "Logger.h"
 
-using namespace std;
+using std::string;
+using std::stringstream;
 
 const string ChannelConfigurationCommand::NAME("CHANNELCONFIG");
 const string ChannelConfigurationCommand::EMPTY("");

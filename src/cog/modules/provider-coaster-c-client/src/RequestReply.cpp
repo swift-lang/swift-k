@@ -10,7 +10,10 @@
 
 #include <sstream>
 
-using namespace std;
+using std::list;
+using std::stringstream;
+using std::string;
+using std::vector;
 
 RequestReply::RequestReply() {
 	channel = NULL;

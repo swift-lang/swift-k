@@ -2,9 +2,10 @@
 #include <sstream>
 #include <cstring>
 
+using std::map;
+using std::pair;
 using std::string;
 using std::vector;
-using std::map;
 
 static job_id_t seq = 0;
 

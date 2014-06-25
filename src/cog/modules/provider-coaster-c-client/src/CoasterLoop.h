@@ -22,15 +22,13 @@
 // 1 minute
 #define HEARTBEAT_CHECK_INTERVAL 60
 
-using namespace std;
-
 class CoasterLoop {
 	private:
 		pthread_t thread;
 
-		map<int, CoasterChannel*> channelMap;
-		list<CoasterChannel*> addList;
-		list<CoasterChannel*> removeList;
+		std::map<int, CoasterChannel*> channelMap;
+		std::list<CoasterChannel*> addList;
+		std::list<CoasterChannel*> removeList;
 
 		int wakePipe[2];
 		fd_set rfds, wfds;

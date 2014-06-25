@@ -30,8 +30,6 @@
 #include "Logger.h"
 #include "RemoteCoasterException.h"
 
-using namespace std;
-
 class Command;
 class Handler;
 class CoasterLoop;
@@ -57,12 +55,12 @@ class DataChunk {
 
 class CoasterChannel: public CommandCallback {
 	private:
-		list<DataChunk*> sendQueue;
+		std::list<DataChunk*> sendQueue;
 		DataChunk readChunk;
 
 		HandlerFactory* handlerFactory;
-		map<int, Handler*> handlers;
-		map<int, Command*> commands;
+		std::map<int, Handler*> handlers;
+		std::map<int, Command*> commands;
 
 		int sockFD;
 		bool connected;
@@ -95,7 +93,7 @@ class CoasterChannel: public CommandCallback {
 		int getSockFD();
 		void setSockFD(int psockFD);
 
-		list<DataChunk*> getSendQueue();
+		std::list<DataChunk*> getSendQueue();
 
 		void shutdown();
 		void start();
@@ -112,13 +110,13 @@ class CoasterChannel: public CommandCallback {
 		void send(int tag, Buffer* buf, int flags, ChannelCallback* cb);
 
 		CoasterClient* getClient();
-		const string& getURL() const;
+		const std::string& getURL() const;
 
 		void checkHeartbeat();
 
 		template<typename cls> friend cls& operator<< (cls& os, CoasterChannel* channel);
 
-		void errorReceived(Command* cmd, string* message, RemoteCoasterException* details);
+		void errorReceived(Command* cmd, std::string* message, RemoteCoasterException* details);
 		void replyReceived(Command* cmd);
 };
 

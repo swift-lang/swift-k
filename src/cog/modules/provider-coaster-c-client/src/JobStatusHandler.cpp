@@ -9,6 +9,9 @@
 
 #include <sstream>
 
+using std::string;
+using std::stringstream;
+
 JobStatusHandler::JobStatusHandler() {
 }
 

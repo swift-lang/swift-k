@@ -26,8 +26,6 @@
 
 #endif 
 
-using namespace std;
-
 class ClientHandlerFactory;
 class HandlerFactory;
 class CoasterLoop;
@@ -37,31 +35,31 @@ class CoasterClient: public CommandCallback {
 	private:
 		Lock lock;
 		ConditionVariable cv;
-		string URL;
-		string* hostName;
+		std::string URL;
+		std::string* hostName;
 		CoasterChannel* channel;
 		bool started;
 
 		int sockFD;
 
 		int getPort();
-		const string& getHostName();
+		const std::string& getHostName();
 		struct addrinfo* resolve(const char* hostName, int port);
 
 		CoasterLoop* loop;
 		HandlerFactory* handlerFactory;
 
-		map<job_id_t, Job*> jobs;
-		map<string, job_id_t> remoteJobIdMapping;
+		std::map<job_id_t, Job*> jobs;
+		std::map<std::string, job_id_t> remoteJobIdMapping;
 
-		list<Job*> doneJobs;
+		std::list<Job*> doneJobs;
 		
                 /* Disable default copy constructor */
 		CoasterClient(const CoasterClient&);
 		/* Disable default assignment */
 		CoasterClient& operator=(const CoasterClient&);
 	public:
-		CoasterClient(string URL, CoasterLoop& loop);
+		CoasterClient(std::string URL, CoasterLoop& loop);
 		virtual ~CoasterClient();
 		void start();
 		void stop();
@@ -87,7 +85,7 @@ class CoasterClient: public CommandCallback {
 		 * Return a list of done jobs and remove references from this
 		 * client.  This returns jobs in FIFO order of completion
 		 */
-		list<Job*>* getAndPurgeDoneJobs();
+		std::list<Job*>* getAndPurgeDoneJobs();
 		
 		/*
 		 * Give back up to size done jobs and remove references.
@@ -102,13 +100,13 @@ class CoasterClient: public CommandCallback {
 		 */
 		void waitForAnyJob();
 
-		void updateJobStatus(const string& remoteJobId, JobStatus* status);
+		void updateJobStatus(const std::string& remoteJobId, JobStatus* status);
 		void updateJobStatus(job_id_t jobId, JobStatus* status);
 		void updateJobStatus(Job* job, JobStatus* status);
 
-		const string& getURL();
+		const std::string& getURL();
 
-		void errorReceived(Command* cmd, string* message, RemoteCoasterException* details);
+		void errorReceived(Command* cmd, std::string* message, RemoteCoasterException* details);
 		void replyReceived(Command* cmd);
 	private:
 		void updateJobStatusNoLock(Job* job, JobStatus* status);

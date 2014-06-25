@@ -13,6 +13,10 @@
 #include <errno.h>
 #include <string.h>
 
+using std::list;
+using std::map;
+using std::string;
+
 void* run(void* ptr);
 void checkSelectError(int ret);
 

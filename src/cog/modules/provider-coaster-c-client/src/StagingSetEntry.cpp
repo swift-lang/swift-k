@@ -7,6 +7,8 @@
 
 #include "StagingSetEntry.h"
 
+using std::string;
+
 StagingSetEntry::StagingSetEntry(string psource, string pdestination, StagingMode pmode) {
 	source = psource;
 	destination = pdestination;
