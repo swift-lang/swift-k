@@ -251,9 +251,8 @@ bool CoasterChannel::write() { Lock::Scoped l(writeLock);
 }
 
 DataChunk* CoasterChannel::makeHeader(int tag, Buffer* buf, int flags) {
-	// TODO: when should this be freed?
 	DynamicBuffer *hdrbuf = new DynamicBuffer(HEADER_LENGTH);
-	DataChunk* whdr = new DataChunk(hdrbuf, NULL);
+	DataChunk* whdr = new DataChunk(hdrbuf, &DeleteBufferCallback::CALLBACK);
 	Buffer* hdr = whdr->buf;
 	hdr->putInt(0, tag);
 	hdr->putInt(4, flags);

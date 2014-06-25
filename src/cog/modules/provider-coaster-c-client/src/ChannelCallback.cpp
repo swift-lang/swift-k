@@ -12,3 +12,9 @@ ChannelCallback::ChannelCallback() {
 
 ChannelCallback::~ChannelCallback() {
 }
+
+DeleteBufferCallback DeleteBufferCallback::CALLBACK;
+
+void DeleteBufferCallback::dataSent(Buffer* buf) {
+	delete buf;
+}

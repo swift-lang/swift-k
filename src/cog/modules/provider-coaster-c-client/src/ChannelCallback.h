@@ -17,4 +17,10 @@ class ChannelCallback {
 		virtual void dataSent(Buffer* buf) = 0;
 };
 
+class DeleteBufferCallback : public ChannelCallback {
+	public:
+		static DeleteBufferCallback CALLBACK;
+		virtual void dataSent(Buffer* buf);
+};
+
 #endif /* CHANNELCALLBACK_H_ */
