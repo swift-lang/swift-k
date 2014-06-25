@@ -54,6 +54,11 @@ CoasterChannel::CoasterChannel(CoasterClient* client, CoasterLoop* loop, Handler
 
 CoasterChannel::~CoasterChannel() {
 	delete rhdr.buf;
+        for (map<int, Handler*>::iterator it = handlers.begin();
+             it != handlers.end(); ++it) {
+        	delete it->second;
+        }
+
 }
 
 void CoasterChannel::start() {
@@ -164,7 +169,7 @@ void CoasterChannel::dispatchRequest() {
 	if (handlers.count(rtag) == 0) {
 		// initial request
 		string name;
-                msg.buf->str(name);
+		msg.buf->str(name);
 		LogDebug << "Handling initial request for " << name << endl;
 		Handler* h = handlerFactory->newInstance(name);
 		if (h == NULL) {
