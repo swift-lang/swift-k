@@ -16,8 +16,6 @@
 #include <vector>
 #include <map>
 
-using namespace std;
-
 /*
   Job represents a single Job that is to be submitted to coasters.
   The Job object is created and has its parameters set before submission.
@@ -26,7 +24,7 @@ using namespace std;
 class Job {
 	private:
 		job_id_t identity;
-		string executable;
+		std::string executable;
 		/* 
 		 * TODO: document expectations about lifetime of strings.
 		 * It seems very easy for client code to accidentally
@@ -35,30 +33,35 @@ class Job {
 		 * it work to just store them by value and have zero-length
 		 * be equivalent to NULL.  Are zero-length strings meaningful?
 		 */
-		vector<string*>* arguments;
-		string* directory;
-		string* stdinLocation;
-		string* stdoutLocation;
-		string* stderrLocation;
-		string jobManager;
+		std::vector<std::string*>* arguments;
+		std::string* directory;
+		std::string* stdinLocation;
+		std::string* stdoutLocation;
+		std::string* stderrLocation;
+		std::string jobManager;
 
-		map<string, string>* env;
-		map<string, string>* attributes;
-		vector<StagingSetEntry>* stageIns;
-		vector<StagingSetEntry>* stageOuts;
-		vector<string>* cleanups;
+		std::map<std::string, std::string>* env;
+		std::map<std::string, std::string>* attributes;
+		std::vector<StagingSetEntry>* stageIns;
+		std::vector<StagingSetEntry>* stageOuts;
+		std::vector<std::string>* cleanups;
 		
-		string *remoteIdentity;
+		std::string *remoteIdentity;
 
-		string* stdout;
-		string* stderr;
+		std::string* stdout;
+		std::string* stderr;
 
 		JobStatus* status;
+		
+                /* Disable default copy constructor */
+		Job(const Job&);
+		/* Disable default assignment */
+		Job& operator=(const Job&);
 	public:
-		Job(const string &executable);
+		Job(const std::string &executable);
 		virtual ~Job();
 
-		const string& getExecutable() const;
+		const std::string& getExecutable() const;
 		
 		/*
 		  Get the job identity.  The identity is a locally unique integer
@@ -73,63 +76,63 @@ class Job {
 		  will return NULL if we haven't yet found out the
 		  remote identity.
 		 */
-		const string* getRemoteIdentity() const;
-		void setRemoteIdentity(const string& remoteId);
+		const std::string* getRemoteIdentity() const;
+		void setRemoteIdentity(const std::string& remoteId);
 
-		vector<string*>* getArguments();
+		std::vector<std::string*>* getArguments();
 
                 /*
                  * Add argument, taking ownership
                  */
-		void addArgument(string* arg);
-		void addArgument(const string& arg);
+		void addArgument(std::string* arg);
+		void addArgument(const std::string& arg);
 		void addArgument(const char* arg);
 		void addArgument(const char* arg, size_t arg_len);
 
-		const string* getDirectory() const;
-		void setDirectory(string& directory);
+		const std::string* getDirectory() const;
+		void setDirectory(std::string& directory);
 
-		const string* getStdinLocation() const;
-		void setStdinLocation(string& loc);
+		const std::string* getStdinLocation() const;
+		void setStdinLocation(std::string& loc);
 
-		const string* getStdoutLocation() const;
-		void setStdoutLocation(string& loc);
+		const std::string* getStdoutLocation() const;
+		void setStdoutLocation(std::string& loc);
 
-		const string* getStderrLocation() const;
-		void setStderrLocation(string& loc);
+		const std::string* getStderrLocation() const;
+		void setStderrLocation(std::string& loc);
 
-		const string &getJobManager() const;
-		void setJobManager(string jm);
+		const std::string &getJobManager() const;
+		void setJobManager(std::string jm);
 		void setJobManager(const char *jm);
 		void setJobManager(const char *jm, size_t jm_len);
 
-		map<string, string>* getEnv();
-		const string* getEnv(string name) const;
-		void setEnv(string name, string value);
+		std::map<std::string, std::string>* getEnv();
+		const std::string* getEnv(std::string name) const;
+		void setEnv(std::string name, std::string value);
 		void setEnv(const char *name, size_t name_len,
 			    const char *value, size_t value_len);
 
-		map<string, string>* getAttributes();
-		const string* getAttribute(string name);
-		void setAttribute(string name, string value);
+		std::map<std::string, std::string>* getAttributes();
+		const std::string* getAttribute(std::string name);
+		void setAttribute(std::string name, std::string value);
 		void setAttribute(const char *name, size_t name_len,
 			    const char *value, size_t value_len);
 
-		vector<StagingSetEntry>* getStageIns();
-		void addStageIn(string src, string dest, StagingMode mode);
+		std::vector<StagingSetEntry>* getStageIns();
+		void addStageIn(std::string src, std::string dest, StagingMode mode);
 
-		vector<StagingSetEntry>* getStageOuts();
-		void addStageOut(string src, string dest, StagingMode mode);
+		std::vector<StagingSetEntry>* getStageOuts();
+		void addStageOut(std::string src, std::string dest, StagingMode mode);
 
-		vector<string>* getCleanups();
-		void addCleanup(string cleanup);
+		std::vector<std::string>* getCleanups();
+		void addCleanup(std::string cleanup);
 		void addCleanup(const char *cleanup, size_t cleanup_len);
 
 		const JobStatus* getStatus() const;
 		void setStatus(JobStatus* status);
 
-		const string* getStdout() const;
-		const string* getStderr() const;
+		const std::string* getStdout() const;
+		const std::string* getStderr() const;
 };
 
 #endif /* JOB_DESCRIPTION_H_ */

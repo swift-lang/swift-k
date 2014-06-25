@@ -7,6 +7,9 @@
 
 #include "Settings.h"
 
+using std::string;
+using std::map;
+
 string Settings::Key::SLOTS = "slots";
 string Settings::Key::JOBS_PER_NODE = "jobsPerNode";
 string Settings::Key::NODE_GRANULARITY = "nodeGranularity";

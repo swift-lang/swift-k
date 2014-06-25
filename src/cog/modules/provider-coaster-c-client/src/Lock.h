@@ -30,7 +30,12 @@ class Lock {
 
 		class Scoped {
 			private:
-				Lock* myLock;
+				Lock& myLock;
+
+                                /* Disable default copy constructor */
+                                Scoped(const Scoped&);
+                                /* Disable default assignment */
+                                Scoped& operator=(const Scoped&);
 			public:
 				Scoped(Lock& plock);
 				virtual ~Scoped();

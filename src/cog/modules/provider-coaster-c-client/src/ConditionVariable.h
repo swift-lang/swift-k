@@ -14,6 +14,11 @@
 class ConditionVariable {
 	private:
 		pthread_cond_t cv;
+		
+		/* Disable default copy constructor */
+		ConditionVariable(const ConditionVariable&);
+		/* Disable default assignment */
+		ConditionVariable& operator=(const ConditionVariable&);
 	public:
 		ConditionVariable();
 		virtual ~ConditionVariable();

@@ -27,6 +27,10 @@ class JobStatus {
 
 		void init(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception);
 
+		/* Disable default copy constructor */
+		JobStatus(const JobStatus&);
+		/* Disable default assignment */
+		JobStatus& operator=(const JobStatus&);
 	public:
 		JobStatus(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception);
 		JobStatus(JobStatusCode statusCode, const string* message, RemoteCoasterException* exception);

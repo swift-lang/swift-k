@@ -67,11 +67,10 @@ pthread_mutex_t* Lock::getMutex() {
 	return &l;
 }
 
-Lock::Scoped::Scoped(Lock& plock) {
-	myLock = &plock;
-	myLock->lock();
+Lock::Scoped::Scoped(Lock& plock) : myLock(plock) {
+	myLock.lock();
 }
 
 Lock::Scoped::~Scoped() {
-	myLock->unlock();
+	myLock.unlock();
 }
