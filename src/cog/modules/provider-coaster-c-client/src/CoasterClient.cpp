@@ -37,6 +37,7 @@ CoasterClient::~CoasterClient() {
 	if (hostName != NULL) {
 		delete hostName;
 	}
+	delete handlerFactory;
 }
 
 void CoasterClient::start() {
