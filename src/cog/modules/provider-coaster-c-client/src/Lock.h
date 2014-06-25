@@ -14,6 +14,11 @@ class Lock {
 	int id;
 	private:
 		pthread_mutex_t l;
+
+		/* Disable default copy constructor */
+		Lock(const Lock&);
+		/* Disable default assignment */
+		Lock& operator=(const Lock&);
 	public:
 		Lock();
 		virtual ~Lock();

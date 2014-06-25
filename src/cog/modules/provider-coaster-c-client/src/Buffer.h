@@ -16,10 +16,13 @@ using namespace std;
 
 /*
  * TODO: need documentation on behavior of buffers w.r.t memory lifespan.
- * May need to disable copy constructors or add move constructors in
- * some cases too.
  */
 class Buffer {
+	private:
+		/* Disable default copy constructor for Buffer subclasses */
+		Buffer(const Buffer&);
+		/* Disable default assignment for Buffer subclasses */
+		Buffer& operator=(const Buffer&);
 	protected:
 		int len;
 	public:

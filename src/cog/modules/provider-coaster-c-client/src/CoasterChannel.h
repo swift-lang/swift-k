@@ -40,6 +40,11 @@ class HandlerFactory;
 
 
 class DataChunk {
+	private:
+		/* Disable default copy constructor */
+		DataChunk(const DataChunk&);
+		/* Disable default assignment */
+		DataChunk& operator=(const DataChunk&);
 	public:
 		Buffer* buf;
 		int bufpos;
@@ -79,6 +84,10 @@ class CoasterChannel: public CommandCallback {
 		void dispatchReply();
 		bool read(DataChunk* dc);
 
+		/* Disable default copy constructor */
+		DataChunk(const DataChunk&);
+		/* Disable default assignment */
+		DataChunk& operator=(const DataChunk&);
 	public:
 		CoasterChannel(CoasterClient* client, CoasterLoop* pLoop, HandlerFactory* pHandlerFactory);
 		virtual ~CoasterChannel();

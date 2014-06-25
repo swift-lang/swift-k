@@ -42,6 +42,11 @@ class CoasterLoop {
 		void acknowledgeWriteRequest(int count);
 
 		time_t lastHeartbeatCheck;
+
+		/* Disable default copy constructor */
+		CoasterLoop(const CoasterLoop&);
+		/* Disable default assignment */
+		CoasterLoop& operator=(const CoasterLoop&);
 	public:
 		bool started;
 		bool done;

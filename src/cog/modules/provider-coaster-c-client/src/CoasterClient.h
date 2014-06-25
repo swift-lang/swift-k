@@ -55,6 +55,11 @@ class CoasterClient: public CommandCallback {
 		map<string, job_id_t> remoteJobIdMapping;
 
 		list<Job*> doneJobs;
+		
+                /* Disable default copy constructor */
+		CoasterClient(const CoasterClient&);
+		/* Disable default assignment */
+		CoasterClient& operator=(const CoasterClient&);
 	public:
 		CoasterClient(string URL, CoasterLoop& loop);
 		virtual ~CoasterClient();

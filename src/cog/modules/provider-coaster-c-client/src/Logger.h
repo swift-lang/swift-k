@@ -31,6 +31,11 @@ class Logger: public ostream {
 		char ts[TS_LEN + 1];
 		bool startOfItem;
 		Lock lock;
+		
+                /* Disable default copy constructor */
+		Logger(const Logger&);
+		/* Disable default assignment */
+		Logger& operator=(const Logger&);
 	protected:
 		Logger(ostream& out);
 		void setLevel(Level level);

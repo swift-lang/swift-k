@@ -26,6 +26,11 @@ class RequestReply: public ChannelCallback {
 		vector<Buffer*>* errorData;
 
 		void clearBufferVector(vector<Buffer*>* v);
+		
+                /* Disable default copy constructor for this and subclasses */
+		RequestReply(const RequestReply&);
+		/* Disable default assignment for this and subclasses */
+		RequestReply& operator=(const RequestReply&);
 
 	protected:
 		virtual void addOutData(Buffer*);
