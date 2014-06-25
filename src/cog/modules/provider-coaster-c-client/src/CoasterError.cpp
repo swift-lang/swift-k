@@ -6,29 +6,32 @@
  */
 
 #include "CoasterError.h"
-#include <stdlib.h>
+#include <cstdlib>
 
-CoasterError::CoasterError(string msg) {
-	// TODO: this stores pointer to string of unknown lifetime
-	message = msg.c_str();
+using std::string;
+using std::stringstream;
+
+CoasterError::CoasterError(const string& msg) {
+	this->message = msg;
 }
 
 CoasterError::CoasterError(const char* format, ...) {
 	va_list args;
-        // TODO: this isn't freed
-	char* buf = (char *) malloc(MAX_MSG_LEN + 1);
+	char msg[MAX_MSG_LEN + 1];
 
 	va_start(args, format);
-	vsnprintf(buf, MAX_MSG_LEN, format, args);
+	int msg_len = vsnprintf(msg, MAX_MSG_LEN, format, args);
 	va_end(args);
-	message = buf;
+	this->message.assign(msg, msg_len);
 }
 
-CoasterError::CoasterError(const stringstream* ss) {
-	// TODO: this stores pointer to string of unknown lifetime
-	message = ss->str().c_str();
+CoasterError::CoasterError(const stringstream& ss) {
+	message = ss.str();
+}
+
+CoasterError::~CoasterError() throw() {
 }
 
 const char* CoasterError::what() const throw() {
-	return message;
+	return message.c_str();
 }

@@ -85,9 +85,9 @@ class CoasterChannel: public CommandCallback {
 		bool read(DataChunk* dc);
 
 		/* Disable default copy constructor */
-		DataChunk(const DataChunk&);
+		CoasterChannel(const CoasterChannel&);
 		/* Disable default assignment */
-		DataChunk& operator=(const DataChunk&);
+		CoasterChannel& operator=(const CoasterChannel&);
 	public:
 		CoasterChannel(CoasterClient* client, CoasterLoop* pLoop, HandlerFactory* pHandlerFactory);
 		virtual ~CoasterChannel();

@@ -15,15 +15,14 @@
 
 #define MAX_MSG_LEN 256
 
-using namespace std;
-
-class CoasterError: public exception {
+class CoasterError: public std::exception {
 	private:
-		const char* message;
+		std::string message;
 	public:
-		CoasterError(string msg);
+		CoasterError(const std::string& msg);
 		CoasterError(const char* format, ...);
-		CoasterError(const stringstream* ss);
+		CoasterError(const std::stringstream& ss);
+		virtual ~CoasterError() throw();
 		virtual const char* what() const throw();
 };
 
