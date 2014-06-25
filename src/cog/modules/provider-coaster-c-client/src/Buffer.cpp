@@ -36,6 +36,10 @@ string* Buffer::str() {
 	return new string(getData(), getLen());
 }
 
+void Buffer::str(string& str) {
+	str.assign(getData(), getLen());
+}
+
 int Buffer::getInt(int index) {
 	if (index + 4 > getLen()) {
 		throw out_of_range("getInt index out of range");

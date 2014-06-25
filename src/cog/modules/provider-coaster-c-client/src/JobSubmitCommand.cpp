@@ -25,16 +25,18 @@ Job* JobSubmitCommand::getJob() {
 	return job;
 }
 
-string* JobSubmitCommand::getRemoteId() {
+string JobSubmitCommand::getRemoteId() {
 	if (!isReceiveCompleted() || isErrorReceived()) {
 		throw CoasterError("getRemoteId called before reply was received");
 	}
-	return getInData()->at(0)->str();
+	string result;
+	getInData()->at(0)->str(result);
+	return result;
 }
 
 void JobSubmitCommand::serialize() {
-        stringstream idSS;
-        idSS << job->getIdentity();
+	stringstream idSS;
+	idSS << job->getIdentity();
 	add(ss, "identity", idSS.str());
 	add(ss, "executable", job->getExecutable());
 	add(ss, "directory", job->getDirectory());
@@ -66,12 +68,12 @@ void JobSubmitCommand::serialize() {
 	}
 
 	if (job->getJobManager().empty()) {
-        cout<< "getJobManager == NULL, setting to :  fork "<< endl;
+	cout<< "getJobManager == NULL, setting to :  fork "<< endl;
 		add(ss, "jm", "fork");
 	}
 	else {
-        const char *jm_string = (job->getJobManager()).c_str();
-        cout<< "getJobManager != !NULL, setting to : "<< job->getJobManager() << endl;
+	const char *jm_string = (job->getJobManager()).c_str();
+	cout<< "getJobManager != !NULL, setting to : "<< job->getJobManager() << endl;
 		add(ss, "jm", jm_string);
 	}
 	addOutData(Buffer::wrap(ss));
@@ -97,7 +99,7 @@ void add(string& ss, const char* key, const char* value, int n) {
 		ss.append(1, '=');
 		while (*value) {
 			char c = *value;
-                        // TODO: are fallthroughs deliberate?
+			// TODO: are fallthroughs deliberate?
 			switch (c) {
 				case '\n':
 					c = 'n';

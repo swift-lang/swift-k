@@ -31,7 +31,7 @@ void ChannelConfigurationCommand::serialize() {
 }
 
 void ChannelConfigurationCommand::replyReceived() {
-	remoteId.append(*getInData()->at(0)->str());
+	getInData()->at(0)->str(remoteId);
 	LogInfo << "Channel id: " << localId << "-" << remoteId << endl;
 	Command::replyReceived();
 }

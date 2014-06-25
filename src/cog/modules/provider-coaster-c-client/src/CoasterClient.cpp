@@ -162,14 +162,14 @@ void CoasterClient::errorReceived(Command* cmd, string* message, RemoteCoasterEx
 void CoasterClient::replyReceived(Command* cmd) {
 	if (*(cmd->getName()) == JobSubmitCommand::NAME) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
-		string* remoteId = jsc->getRemoteId();
+		string remoteId = jsc->getRemoteId();
 		Job *job = jsc->getJob();
 		job_id_t jobId = job->getIdentity();
 		LogInfo << "Job " << jobId << " submitted; remoteId: " << remoteId << endl;
 
 		// Track relationship between both IDs
-		job->setRemoteIdentity(*remoteId);
-		remoteJobIdMapping[*remoteId] = jobId;
+		job->setRemoteIdentity(remoteId);
+		remoteJobIdMapping[remoteId] = jobId;
 		updateJobStatus(jobId, new JobStatus(SUBMITTED));
 	}
 	delete cmd;

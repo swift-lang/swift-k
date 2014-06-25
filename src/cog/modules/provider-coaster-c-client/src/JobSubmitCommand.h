@@ -19,7 +19,7 @@ class JobSubmitCommand: public Command {
 		JobSubmitCommand(Job* job);
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
 		Job* getJob();
-		string* getRemoteId();
+		string getRemoteId();
 	private:
 		void serialize();
 };

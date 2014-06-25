@@ -163,7 +163,8 @@ void CoasterChannel::dispatchReply() {
 void CoasterChannel::dispatchRequest() {
 	if (handlers.count(rtag) == 0) {
 		// initial request
-		string* name = msg.buf->str();
+		string name;
+                msg.buf->str(name);
 		LogDebug << "Handling initial request for " << name << endl;
 		Handler* h = handlerFactory->newInstance(name);
 		if (h == NULL) {
@@ -172,7 +173,6 @@ void CoasterChannel::dispatchRequest() {
 		else {
 			registerHandler(rtag, h);
 		}
-		delete name;
 	}
 	else {
 		Handler* h = handlers[rtag];

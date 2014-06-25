@@ -31,6 +31,8 @@ class Buffer {
 		virtual ~Buffer();
 
 		virtual string* str();
+		/* Set string to buffer contents */
+		virtual void str(string &str);
 
 		int getInt(int index);
 		long getLong(int index);

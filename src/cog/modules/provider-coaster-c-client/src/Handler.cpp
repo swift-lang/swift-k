@@ -17,16 +17,15 @@ void Handler::errorReceived() {
 		LogWarn << "Unspecified error receiving request." << endl;
 	}
 	else if (errorData->size() == 1) {
-		string* msg = errorData->at(0)->str();
+		string msg;
+		errorData->at(0)->str(msg);
 		LogWarn << "Error receiving request: " << msg << endl;
-		delete msg;
 	}
 	else {
-		string* msg = errorData->at(0)->str();
-		string* detail = errorData->at(1)->str();
+		string msg, detail;
+		errorData->at(0)->str(msg);
+		errorData->at(1)->str(detail);
 		LogWarn << "Error receiving request: " << msg << "\n" << detail << endl;
-		delete msg;
-		delete detail;
 	}
 }
 
