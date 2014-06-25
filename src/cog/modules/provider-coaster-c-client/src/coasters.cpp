@@ -98,8 +98,6 @@ coaster_client_start(const char *service_url, size_t service_url_len,
 coaster_rc coaster_client_stop(coaster_client *client)
                                COASTERS_THROWS_NOTHING {
   try {
-    // TODO: stop things
-    
     client->client.stop();
     client->loop.stop();
     
