@@ -17,6 +17,7 @@ using namespace Coaster;
 
 using std::list;
 using std::map;
+using std::pair;
 using std::string;
 
 // 1 minute
@@ -191,12 +192,17 @@ void CoasterLoop::addSockets() {
 
 void CoasterLoop::removeSockets() {
 	// must be called with lock held
-	list<CoasterChannel*>::iterator i;
+	list<pair<CoasterChannel*, bool> >::iterator i;
 	for (i = removeList.begin(); i != removeList.end(); ++i) {
-		int sockFD = (*i)->getSockFD();
+		CoasterChannel* chan = i->first;
+		bool deleteChan = i->second;
+		int sockFD = chan->getSockFD();
 		FD_CLR(sockFD, &rfds);
 		channelMap.erase(sockFD);
 		socketCount--;
+		if (deleteChan) {
+			delete chan;
+		}
 	}
 
 	if (removeList.size() > 0) {
@@ -211,8 +217,9 @@ void CoasterLoop::addChannel(CoasterChannel* channel) { Lock::Scoped l(lock);
 	addList.push_back(channel);
 }
 
-void CoasterLoop::removeChannel(CoasterChannel* channel) { Lock::Scoped l(lock);
-	removeList.push_back(channel);
+void CoasterLoop::removeChannel(CoasterChannel* channel, bool deleteChan) {
+	Lock::Scoped l(lock);
+	removeList.push_back(pair<CoasterChannel*, bool>(channel, deleteChan));
 }
 
 void CoasterLoop::requestWrite(int count) {
@@ -220,8 +227,8 @@ void CoasterLoop::requestWrite(int count) {
 	LogDebug << "request " << count <<  " writes; writesPending: " << writesPending << endl;
 	char tmp[count];
 	/* it doesn't matter what goes on the pipe, but initialize to zero to
-           avoid spurious valgrind and other warnings */
-        memset(tmp, 0, count);
+	   avoid spurious valgrind and other warnings */
+	memset(tmp, 0, count);
 	int result = write(wakePipe[1], tmp, count);
 	if (result != count) {
 		LogWarn << "written " << result << " bytes instead of " << count << endl;

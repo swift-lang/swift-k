@@ -12,6 +12,7 @@
 #include "Lock.h"
 #include <map>
 #include <list>
+#include <utility>
 #include <pthread.h>
 #include <sys/select.h>
 #include <sys/types.h>
@@ -27,7 +28,7 @@ class CoasterLoop {
 
 		std::map<int, CoasterChannel*> channelMap;
 		std::list<CoasterChannel*> addList;
-		std::list<CoasterChannel*> removeList;
+		std::list<std::pair<CoasterChannel*, bool> > removeList;
 
 		int wakePipe[2];
 		fd_set rfds, wfds;
@@ -56,11 +57,18 @@ class CoasterLoop {
 		
 		/*
 		 * Add a channel for the loop to monitor.
-		 * Ownership of the channel is retained by the caller.
+		 * Ownership of the channel is shared between caller and the loop.
 		 * Must be removed later by a call to removeChannel().
 		 */
 		void addChannel(CoasterChannel* channel);
-		void removeChannel(CoasterChannel* channel);
+
+		/*
+		 * Schedule removal of channel from loop.
+		 * The removal is performed by the loop thread
+		 * sometime after the call.
+		 * deleteChan: if true, the channel will be deleted after removal
+		 */
+		void removeChannel(CoasterChannel* channel, bool deleteChan);
 		void addSockets();
 		void removeSockets();
 		void requestWrite(int count);

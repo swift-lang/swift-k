@@ -121,10 +121,8 @@ void CoasterClient::stop() {
 	LogInfo << "Stopping client " << getHostName() << endl;
 
 	channel->shutdown();
-	loop->removeChannel(channel);
+	loop->removeChannel(channel, true);
 	close(sockFD);
-
-	delete channel;
 
 	LogInfo << "Done" << endl;
 
