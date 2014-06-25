@@ -64,7 +64,7 @@ typedef struct coaster_job_opaque_ coaster_job;
 
 /*
  * Return codes for coaster errors
- * TODO: way to pass back error messages?
+ * Additional info may be available through coaster_last_err_info()
  */
 typedef enum {
   COASTER_SUCCESS,
