@@ -54,10 +54,10 @@ CoasterChannel::CoasterChannel(CoasterClient* client, CoasterLoop* loop, Handler
 
 CoasterChannel::~CoasterChannel() {
 	delete rhdr.buf;
-        for (map<int, Handler*>::iterator it = handlers.begin();
-             it != handlers.end(); ++it) {
-        	delete it->second;
-        }
+	for (map<int, Handler*>::iterator it = handlers.begin();
+	     it != handlers.end(); ++it) {
+		delete it->second;
+	}
 
 }
 
@@ -86,6 +86,7 @@ void CoasterChannel::read() {
 				// full header read
 				msg.reset();
 				decodeHeader(&rtag, &rflags, &rlen);
+				// TODO: this is being leaked
 				msg.buf = new DynamicBuffer(rlen);
 				readState = READ_STATE_DATA;
 			}
