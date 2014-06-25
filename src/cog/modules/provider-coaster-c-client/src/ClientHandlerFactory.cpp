@@ -15,5 +15,4 @@ ClientHandlerFactory::ClientHandlerFactory() {
 }
 
 ClientHandlerFactory::~ClientHandlerFactory() {
-	// TODO Auto-generated destructor stub
 }

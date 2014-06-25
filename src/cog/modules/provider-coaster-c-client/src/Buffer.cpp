@@ -160,7 +160,16 @@ StaticBuffer::~StaticBuffer() {
 }
 
 DynamicBuffer::DynamicBuffer(int plen): Buffer(plen) {
-	data = (char *) malloc(len);
+	if (plen > 0) {
+		data = (char *) malloc(len);
+		if (data == NULL) {
+			throw std::bad_alloc();
+		}
+	}
+	else {
+		data = NULL;
+	}
+
 }
 
 
@@ -172,7 +181,18 @@ char* DynamicBuffer::getModifiableData() {
 	return data;
 }
 
+void DynamicBuffer::resize(int plen) {
+	char *tmp = (char*)realloc(data, plen);
+	if (tmp == NULL) {
+		throw std::bad_alloc();
+	}
+	data = tmp;
+	len = plen;
+}
+
 DynamicBuffer::~DynamicBuffer() {
-	free(data);
+	if (data != NULL) {
+		free(data);
+	}
 }
 

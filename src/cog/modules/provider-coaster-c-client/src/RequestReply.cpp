@@ -100,6 +100,10 @@ vector<Buffer*>* RequestReply::getErrorData() {
 	return errorData;
 }
 
+/*
+ * Received data from channel.
+ * NOTE: we now own buf!
+ */
 void RequestReply::dataReceived(Buffer* buf, int flags) {
 	if (flags & FLAG_ERROR) {
 		addErrorData(buf);

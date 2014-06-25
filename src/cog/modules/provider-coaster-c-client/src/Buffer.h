@@ -73,6 +73,11 @@ class DynamicBuffer: public Buffer {
 
 		virtual const char* getData();
 		virtual char* getModifiableData();
+		
+		/*
+		 * Resize to specified size.
+		 */
+		void resize(int plen);
 };
 
 }

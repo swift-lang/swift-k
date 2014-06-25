@@ -48,7 +48,6 @@ class DataChunk {
 		Buffer* buf;
 		int bufpos;
 		ChannelCallback* cb;
-
 		DataChunk();
 		DataChunk(Buffer* buf, ChannelCallback* pcb);
 		void reset();
@@ -66,6 +65,7 @@ class CoasterChannel: public CommandCallback {
 		int sockFD;
 		bool connected;
 
+		DynamicBuffer rhdr_buf;
 		DataChunk rhdr, msg;
 		int rtag, rflags, rlen;
 

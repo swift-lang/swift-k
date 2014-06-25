@@ -8,6 +8,7 @@
 #include "CoasterChannel.h"
 #include "CoasterError.h"
 #include "HeartBeatCommand.h"
+#include <cassert>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -32,8 +33,6 @@ void pp(char* dest, const char* src, int len);
 class HeartBeatCommand;
 
 DataChunk::DataChunk() {
-	buf = NULL;
-	cb = NULL;
 	bufpos = 0;
 }
 
@@ -47,7 +46,10 @@ void DataChunk::reset() {
 	bufpos = 0;
 }
 
-CoasterChannel::CoasterChannel(CoasterClient* client, CoasterLoop* loop, HandlerFactory* handlerFactory) {
+CoasterChannel::CoasterChannel(CoasterClient* client, CoasterLoop* loop,
+			       HandlerFactory* handlerFactory) :
+			       rhdr_buf(HEADER_LENGTH),
+			       rhdr(&rhdr_buf, (ChannelCallback*)NULL) {
 	sockFD = 0;
 	this->handlerFactory = handlerFactory;
 	tagSeq = rand() % 65536;
@@ -55,12 +57,10 @@ CoasterChannel::CoasterChannel(CoasterClient* client, CoasterLoop* loop, Handler
 	this->client = client;
 
 	readState = READ_STATE_HDR;
-
-	rhdr.buf = new DynamicBuffer(HEADER_LENGTH);
+	msg.buf = NULL;
 }
 
 CoasterChannel::~CoasterChannel() {
-	delete rhdr.buf;
 	for (map<int, Handler*>::iterator it = handlers.begin();
 	     it != handlers.end(); ++it) {
 		delete it->second;
@@ -91,9 +91,11 @@ void CoasterChannel::read() {
 		case READ_STATE_HDR:
 			if (read(&rhdr)) {
 				// full header read
-				msg.reset();
 				decodeHeader(&rtag, &rflags, &rlen);
-				// TODO: this is being leaked
+				// setup message buffer for rest of message
+				msg.reset();
+				// Buffer should be cleared
+				assert(msg.buf == NULL);
 				msg.buf = new DynamicBuffer(rlen);
 				readState = READ_STATE_DATA;
 			}
@@ -148,6 +150,7 @@ void CoasterChannel::dispatchReply() {
 	if (rflags & FLAG_SIGNAL) {
 		try {
 			cmd->signalReceived(msg.buf);
+			msg.buf = NULL; // gave ownership to cmd
 		}
 		catch (exception &e) {
 			LogWarn << "Command::signalReceived() threw exception: " << e.what() << endl;
@@ -158,6 +161,7 @@ void CoasterChannel::dispatchReply() {
 	}
 	else {
 		cmd->dataReceived(msg.buf, rflags);
+		msg.buf = NULL; // gave ownership to cmd
 		if (rflags & FLAG_FINAL) {
 			unregisterCommand(cmd);
 			try {
@@ -178,6 +182,11 @@ void CoasterChannel::dispatchRequest() {
 		// initial request
 		string name;
 		msg.buf->str(name);
+
+		// Done with data
+		delete msg.buf;
+		msg.buf = NULL;
+
 		LogDebug << "Handling initial request for " << name << endl;
 		Handler* h = handlerFactory->newInstance(name);
 		if (h == NULL) {
@@ -192,6 +201,7 @@ void CoasterChannel::dispatchRequest() {
 		if (rflags & FLAG_SIGNAL) {
 			try {
 				h->signalReceived(msg.buf);
+				msg.buf = NULL; // gave ownership to h
 			}
 			catch (exception &e) {
 				LogWarn << "Handler::signalReceived() threw exception: " << e.what() << endl;
@@ -202,6 +212,8 @@ void CoasterChannel::dispatchRequest() {
 		}
 		else {
 			h->dataReceived(msg.buf, rflags);
+			msg.buf = NULL; // gave ownership to h
+
 			if (rflags & FLAG_FINAL) {
 				try{
 					h->receiveCompleted(rflags);
