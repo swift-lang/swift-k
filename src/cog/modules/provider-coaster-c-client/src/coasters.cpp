@@ -430,13 +430,13 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
 }
 
 job_id_t
-coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING {
+coaster_job_get_id(const coaster_job *job) COASTERS_THROWS_NOTHING {
   // Shouldn't throw anything from accessor method
   return job->getIdentity();
 }
 
 coaster_rc
-coaster_job_status_code(coaster_job *job, coaster_job_status *code)
+coaster_job_status_code(const coaster_job *job, coaster_job_status *code)
                                             COASTERS_THROWS_NOTHING {
   const JobStatus *status;
   if (job == NULL || (status = job->getStatus()) == NULL) {
@@ -449,7 +449,7 @@ coaster_job_status_code(coaster_job *job, coaster_job_status *code)
 }
 
 coaster_rc
-coaster_job_get_outstreams(coaster_job *job,
+coaster_job_get_outstreams(const coaster_job *job,
                 const char **stdout_s, size_t *stdout_len,
                 const char **stderr_s, size_t *stderr_len)
                 COASTERS_THROWS_NOTHING {

@@ -252,14 +252,14 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
  * a coasters job that is assigned when the job is created.
  */
 job_id_t 
-coaster_job_get_id(coaster_job *job) COASTERS_THROWS_NOTHING;
+coaster_job_get_id(const coaster_job *job) COASTERS_THROWS_NOTHING;
 
 /*
  * Get status of a submitted job.
  * Return COASTER_ERROR_INVALID if job is invalid or has no status.
  */
 coaster_rc
-coaster_job_status_code(coaster_job *job, coaster_job_status *code)
+coaster_job_status_code(const coaster_job *job, coaster_job_status *code)
                 COASTERS_THROWS_NOTHING;
 
 /*
@@ -268,7 +268,7 @@ coaster_job_status_code(coaster_job *job, coaster_job_status *code)
  * are owned by job: will become invalid if job is freed.
  */
 coaster_rc
-coaster_job_get_outstreams(coaster_job *job,
+coaster_job_get_outstreams(const coaster_job *job,
                 const char **stdout_s, size_t *stdout_len,
                 const char **stderr_s, size_t *stderr_len)
                 COASTERS_THROWS_NOTHING;
