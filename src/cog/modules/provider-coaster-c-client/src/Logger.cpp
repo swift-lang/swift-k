@@ -118,7 +118,7 @@ void Logger::log(Level level, const char* fileName, const char* msg) {
 		setLevel(level);
 		setFile(fileName);
 		header();
-		buffer << msg << endl;
+		buffer << msg << std::endl;
 		commitBuffer();
 	}
 }
@@ -127,7 +127,7 @@ void Logger::log(Level level, const char* fileName, string msg) {
 		setLevel(level);
 		setFile(fileName);
 		header();
-		buffer << msg << endl;
+		buffer << msg << std::endl;
 		commitBuffer();
 	}
 }
