@@ -615,3 +615,10 @@ static coaster_rc exception_rc(const std::exception &ex) {
   // TODO: handle specific types, e.g. bad_alloc
   return COASTER_ERROR_UNKNOWN;
 }
+
+coaster_rc coaster_set_log_threshold(coaster_log_level threshold) {
+  
+  Logger::singleton().setThreshold(threshold);
+
+  return COASTER_SUCCESS;
+}

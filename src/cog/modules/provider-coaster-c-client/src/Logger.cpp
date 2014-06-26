@@ -18,8 +18,8 @@ using std::string;
 
 Logger::Logger(ostream& pout) {
 	out = &pout;
-	level = NONE;
-        threshold = INFO; // Only show info and higher by default
+	level = COASTER_LOG_NONE;
+	threshold = COASTER_LOG_INFO; // Only show info and higher by default
 	file = "<unknown>";
 	startOfItem = true;
 }
@@ -27,32 +27,32 @@ Logger::Logger(ostream& pout) {
 Logger::~Logger() {
 }
 
-Logger& Logger::operator<< (Level plevel) {
+Logger& Logger::operator<< (CoasterLogLevel plevel) {
 	setLevel(plevel);
 	return *this;
 }
 
-void Logger::setLevel(Level plevel) {
+void Logger::setLevel(CoasterLogLevel plevel) {
 	level = plevel;
 	strLevel = levelToStr(level);
 }
 
-void Logger::setThreshold(Level plevel) {
+void Logger::setThreshold(CoasterLogLevel plevel) {
 	threshold = plevel;
 }
 
 
-const char* Logger::levelToStr(Level level) {
+const char* Logger::levelToStr(CoasterLogLevel level) {
 	switch (level) {
-		case NONE:
+		case COASTER_LOG_NONE:
 			return "NONE ";
-		case ERROR:
+		case COASTER_LOG_ERROR:
 			return "ERROR";
-		case WARN:
+		case COASTER_LOG_WARN:
 			return "WARN ";
-		case INFO:
+		case COASTER_LOG_INFO:
 			return "INFO ";
-		case DEBUG:
+		case COASTER_LOG_DEBUG:
 			return "DEBUG";
 		default:
 			return "?????";
@@ -113,7 +113,7 @@ Logger& Logger::setFile(const char* pfile) {
 	 return *this;
 }
 
-void Logger::log(Level level, const char* fileName, const char* msg) {
+void Logger::log(CoasterLogLevel level, const char* fileName, const char* msg) {
 	if (level >= threshold) {
 		setLevel(level);
 		setFile(fileName);
@@ -122,7 +122,7 @@ void Logger::log(Level level, const char* fileName, const char* msg) {
 		commitBuffer();
 	}
 }
-void Logger::log(Level level, const char* fileName, string msg) {
+void Logger::log(CoasterLogLevel level, const char* fileName, string msg) {
 	if (level >= threshold) {
 		setLevel(level);
 		setFile(fileName);

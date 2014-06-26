@@ -311,6 +311,8 @@ const char *coaster_rc_string(coaster_rc code);
  */
 const char *coaster_last_err_info(void);
 
+coaster_rc coaster_set_log_threshold(coaster_log_level threshold);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
