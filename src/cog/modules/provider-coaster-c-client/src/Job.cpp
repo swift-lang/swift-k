@@ -10,7 +10,7 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-static job_id_t seq = 0;
+static coaster_job_id seq = 0;
 
 Job::Job(const string &pexecutable) {
 	executable = pexecutable;
@@ -36,7 +36,7 @@ Job::Job(const string &pexecutable) {
 	status = NULL;
 }
 
-job_id_t Job::getIdentity() const {
+coaster_job_id Job::getIdentity() const {
 	return identity;
 }
 
@@ -200,7 +200,7 @@ vector<StagingSetEntry>* Job::getStageIns() {
 	return stageIns;
 }
 
-void Job::addStageIn(string src, string dest, StagingMode mode) {
+void Job::addStageIn(string src, string dest, CoasterStagingMode mode) {
 	if (stageIns == NULL) {
 		stageIns = new vector<StagingSetEntry>;
 	}
@@ -211,7 +211,7 @@ vector<StagingSetEntry>* Job::getStageOuts() {
 	return stageOuts;
 }
 
-void Job::addStageOut(string src, string dest, StagingMode mode) {
+void Job::addStageOut(string src, string dest, CoasterStagingMode mode) {
 	if (stageOuts == NULL) {
 		stageOuts = new vector<StagingSetEntry>;
 	}

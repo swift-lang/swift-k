@@ -13,7 +13,7 @@ using namespace Coaster;
 
 using std::string;
 
-void JobStatus::init(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception) {
+void JobStatus::init(CoasterJobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception) {
 	this->statusCode = statusCode;
 	this->stime = time;
 	// always copy strings because the job status' lifetime is weird
@@ -34,15 +34,15 @@ void JobStatus::init(JobStatusCode statusCode, time_t time, const string* messag
 	prev = NULL;
 }
 
-JobStatus::JobStatus(JobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception) {
+JobStatus::JobStatus(CoasterJobStatusCode statusCode, time_t time, const string* message, RemoteCoasterException* exception) {
 	init(statusCode, time, message, exception);
 }
 
-JobStatus::JobStatus(JobStatusCode statusCode, const string* message, RemoteCoasterException* exception) {
+JobStatus::JobStatus(CoasterJobStatusCode statusCode, const string* message, RemoteCoasterException* exception) {
 	 init(statusCode, time(NULL), message, exception);
 }
 
-JobStatus::JobStatus(JobStatusCode statusCode) {
+JobStatus::JobStatus(CoasterJobStatusCode statusCode) {
 	init(statusCode, time(NULL), NULL, NULL);
 }
 
@@ -50,7 +50,7 @@ JobStatus::JobStatus() {
 	init(UNSUBMITTED, time(NULL), NULL, NULL);
 }
 
-JobStatusCode JobStatus::getStatusCode() const {
+CoasterJobStatusCode JobStatus::getStatusCode() const {
 	return statusCode;
 }
 
@@ -84,19 +84,19 @@ JobStatus::~JobStatus() {
 	}
 }
 
-const char* Coaster::statusCodeToStr(JobStatusCode code) {
+const char* Coaster::statusCodeToStr(CoasterJobStatusCode code) {
 	switch (code) {
-		case UNSUBMITTED: return "UNSUBMITTED";
-		case SUBMITTING: return "SUBMITTING";
-		case SUBMITTED: return "SUBMITTED";
-		case ACTIVE: return "ACTIVE";
-		case SUSPENDED: return "SUSPENDED";
-		case RESUMED: return "RESUMED";
-		case FAILED: return "FAILED";
-		case CANCELED: return "CANCELED";
-		case COMPLETED: return "COMPLETED";
-		case STAGE_IN: return "STAGE_IN";
-		case STAGE_OUT: return "STAGE_OUT";
+		case JobStatus::UNSUBMITTED: return "UNSUBMITTED";
+		case JobStatus::SUBMITTING: return "SUBMITTING";
+		case JobStatus::SUBMITTED: return "SUBMITTED";
+		case JobStatus::ACTIVE: return "ACTIVE";
+		case JobStatus::SUSPENDED: return "SUSPENDED";
+		case JobStatus::RESUMED: return "RESUMED";
+		case JobStatus::FAILED: return "FAILED";
+		case JobStatus::CANCELED: return "CANCELED";
+		case JobStatus::COMPLETED: return "COMPLETED";
+		case JobStatus::STAGE_IN: return "STAGE_IN";
+		case JobStatus::STAGE_OUT: return "STAGE_OUT";
 		default: return "UNKNWON";
 	}
 }

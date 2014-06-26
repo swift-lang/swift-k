@@ -11,7 +11,7 @@ using namespace Coaster;
 
 using std::string;
 
-StagingSetEntry::StagingSetEntry(string psource, string pdestination, StagingMode pmode) {
+StagingSetEntry::StagingSetEntry(string psource, string pdestination, CoasterStagingMode pmode) {
 	source = psource;
 	destination = pdestination;
 	mode = pmode;
@@ -25,7 +25,7 @@ string StagingSetEntry::getDestination() {
 	return destination;
 }
 
-StagingMode StagingSetEntry::getMode() {
+CoasterStagingMode StagingSetEntry::getMode() {
 	return mode;
 }
 

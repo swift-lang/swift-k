@@ -17,39 +17,52 @@ namespace Coaster {
 
 class JobStatus {
 	private:
-		JobStatusCode statusCode;
+		CoasterJobStatusCode statusCode;
 		time_t stime;
 		bool haveMessage;
 		std::string message;
 		RemoteCoasterException* exception;
 		JobStatus* prev;
 
-		void init(JobStatusCode statusCode, time_t time, const std::string* message, RemoteCoasterException* exception);
+		void init(CoasterJobStatusCode statusCode, time_t time, const std::string* message, RemoteCoasterException* exception);
 
 		/* Disable default copy constructor */
 		JobStatus(const JobStatus&);
 		/* Disable default assignment */
 		JobStatus& operator=(const JobStatus&);
 	public:
-		JobStatus(JobStatusCode statusCode, time_t time, const std::string* message, RemoteCoasterException* exception);
-		JobStatus(JobStatusCode statusCode, const std::string* message, RemoteCoasterException* exception);
-		JobStatus(JobStatusCode statusCode);
+		JobStatus(CoasterJobStatusCode statusCode, time_t time, const std::string* message, RemoteCoasterException* exception);
+		JobStatus(CoasterJobStatusCode statusCode, const std::string* message, RemoteCoasterException* exception);
+		JobStatus(CoasterJobStatusCode statusCode);
 		JobStatus();
 		virtual ~JobStatus();
-		JobStatusCode getStatusCode() const;
+		CoasterJobStatusCode getStatusCode() const;
 		time_t getTime();
 		const std::string* getMessage() const;
 		RemoteCoasterException* getException();
 		const JobStatus* getPreviousStatus();
 		void setPreviousStatus(JobStatus* prev);
-		static const char* statusCodeToStr(JobStatusCode code);
+		static const char* statusCodeToStr(CoasterJobStatusCode code);
 		bool isTerminal();
 
 		template<typename cls> friend cls& operator<< (cls& os, JobStatus& s);
 		template<typename cls> friend cls& operator<< (cls& os, JobStatus* s);
+
+                static const CoasterJobStatusCode UNSUBMITTED = COASTER_STATUS_UNSUBMITTED;
+                static const CoasterJobStatusCode SUBMITTING = COASTER_STATUS_SUBMITTING;
+                static const CoasterJobStatusCode SUBMITTED = COASTER_STATUS_SUBMITTED;
+                static const CoasterJobStatusCode ACTIVE = COASTER_STATUS_ACTIVE;
+	        static const CoasterJobStatusCode SUSPENDED = COASTER_STATUS_SUSPENDED;
+                static const CoasterJobStatusCode RESUMED = COASTER_STATUS_RESUMED;
+                static const CoasterJobStatusCode FAILED = COASTER_STATUS_FAILED;
+                static const CoasterJobStatusCode CANCELED = COASTER_STATUS_CANCELED;
+                static const CoasterJobStatusCode COMPLETED = COASTER_STATUS_COMPLETED;
+                static const CoasterJobStatusCode STAGE_IN = COASTER_STATUS_STAGE_IN;
+                static const CoasterJobStatusCode STAGE_OUT = COASTER_STATUS_STAGE_OUT;
+                static const CoasterJobStatusCode UNKNOWN = COASTER_STATUS_UNKNOWN;
 };
 
-const char* statusCodeToStr(JobStatusCode code);
+const char* statusCodeToStr(CoasterJobStatusCode code);
 
 template<typename cls> cls& operator<< (cls& os, JobStatus& s) {
 	return os << &s;

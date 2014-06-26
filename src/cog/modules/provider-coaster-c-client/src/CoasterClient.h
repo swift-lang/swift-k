@@ -51,8 +51,8 @@ class CoasterClient: public CommandCallback {
 		CoasterLoop* loop;
 		HandlerFactory* handlerFactory;
 
-		std::map<job_id_t, Job*> jobs;
-		std::map<std::string, job_id_t> remoteJobIdMapping;
+		std::map<coaster_job_id, Job*> jobs;
+		std::map<std::string, coaster_job_id> remoteJobIdMapping;
 
 		std::list<Job*> doneJobs;
 		
@@ -103,7 +103,7 @@ class CoasterClient: public CommandCallback {
 		void waitForAnyJob();
 
 		void updateJobStatus(const std::string& remoteJobId, JobStatus* status);
-		void updateJobStatus(job_id_t jobId, JobStatus* status);
+		void updateJobStatus(coaster_job_id jobId, JobStatus* status);
 		void updateJobStatus(Job* job, JobStatus* status);
 
 		const std::string& getURL();

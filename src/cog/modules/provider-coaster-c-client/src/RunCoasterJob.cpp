@@ -262,7 +262,7 @@ int runJob() {
 
 	client.waitForJob(j);
 
-	if (j.getStatus()->getStatusCode() == FAILED) {
+	if (j.getStatus()->getStatusCode() == JobStatus::FAILED) {
 		cerr << "Job failed: " << *j.getStatus()->getMessage() << endl;
 		return 2;
 	}

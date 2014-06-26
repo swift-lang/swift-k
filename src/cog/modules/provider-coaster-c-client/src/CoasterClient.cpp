@@ -146,9 +146,9 @@ void CoasterClient::submit(Job& job) {
 void CoasterClient::errorReceived(Command* cmd, string* message, RemoteCoasterException* details) {
 	if (*(cmd->getName()) == JobSubmitCommand::NAME) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
-		job_id_t jobId = jsc->getJob()->getIdentity();
+		coaster_job_id jobId = jsc->getJob()->getIdentity();
 		LogInfo << "Job " << jobId << " failed: " << message << "\n" << details->str() << endl;
-		updateJobStatus(jobId, new JobStatus(FAILED, message, details));
+		updateJobStatus(jobId, new JobStatus(JobStatus::FAILED, message, details));
 	}
 	else {
 		LogWarn << "Error received for command " << cmd;
@@ -169,13 +169,13 @@ void CoasterClient::replyReceived(Command* cmd) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
 		string remoteId = jsc->getRemoteId();
 		Job *job = jsc->getJob();
-		job_id_t jobId = job->getIdentity();
+		coaster_job_id jobId = job->getIdentity();
 		LogInfo << "Job " << jobId << " submitted; remoteId: " << remoteId << endl;
 
 		// Track relationship between both IDs
 		job->setRemoteIdentity(remoteId);
 		remoteJobIdMapping[remoteId] = jobId;
-		updateJobStatus(jobId, new JobStatus(SUBMITTED));
+		updateJobStatus(jobId, new JobStatus(JobStatus::SUBMITTED));
 	}
 	delete cmd;
 }
@@ -202,12 +202,12 @@ void CoasterClient::updateJobStatus(const string& remoteJobId, JobStatus* status
 		LogWarn << "Received job status notification for unknown job (" << remoteJobId << "): " << status << endl;
 	}
 	else {
-		job_id_t jobId = remoteJobIdMapping[remoteJobId];
+		coaster_job_id jobId = remoteJobIdMapping[remoteJobId];
 		updateJobStatusNoLock(jobs[jobId], status);
 	}
 }
 
-void CoasterClient::updateJobStatus(job_id_t jobId, JobStatus* status) { Lock::Scoped l(lock);
+void CoasterClient::updateJobStatus(coaster_job_id jobId, JobStatus* status) { Lock::Scoped l(lock);
 	updateJobStatusNoLock(jobs[jobId], status);
 }
 

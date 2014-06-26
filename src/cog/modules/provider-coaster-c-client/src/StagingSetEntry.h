@@ -10,21 +10,26 @@
 
 #include <string>
 
-namespace Coaster {
+#include "coaster-defs.h"
 
-enum StagingMode { ALWAYS = 1, IF_PRESENT = 2, ON_ERROR = 4, ON_SUCCESS = 8 };
+namespace Coaster {
 
 class StagingSetEntry {
 	private:
 		std::string source;
 		std::string destination;
-		StagingMode mode;
+		CoasterStagingMode mode;
 	public:
-		StagingSetEntry(std::string source, std::string destination, StagingMode mode);
+		StagingSetEntry(std::string source, std::string destination, CoasterStagingMode mode);
 		std::string getSource();
 		std::string getDestination();
-		StagingMode getMode();
+		CoasterStagingMode getMode();
 		virtual ~StagingSetEntry();
+
+		static const CoasterStagingMode ALWAYS = COASTER_STAGE_ALWAYS;
+		static const CoasterStagingMode IF_PRESENT = COASTER_STAGE_IF_PRESENT;
+		static const CoasterStagingMode ON_ERROR = COASTER_STAGE_ON_ERROR;
+		static const CoasterStagingMode ON_SUCCESS = COASTER_STAGE_ON_SUCCESS;
 };
 
 }

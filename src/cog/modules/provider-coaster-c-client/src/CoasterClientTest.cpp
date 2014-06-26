@@ -44,10 +44,10 @@ int main(void) {
 		
 		delete doneJobs;
 
-		if (j1.getStatus()->getStatusCode() == FAILED) {
+		if (j1.getStatus()->getStatusCode() == JobStatus::FAILED) {
 			cerr << "Job 1 failed: " << *j1.getStatus()->getMessage() << endl;
 		}
-		if (j2.getStatus()->getStatusCode() == FAILED) {
+		if (j2.getStatus()->getStatusCode() == JobStatus::FAILED) {
 			cerr << "Job 2 failed: " << *j2.getStatus()->getMessage() << endl;
 		}
 

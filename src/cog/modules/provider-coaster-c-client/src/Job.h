@@ -25,7 +25,7 @@ namespace Coaster {
  */
 class Job {
 	private:
-		job_id_t identity;
+		coaster_job_id identity;
 		std::string executable;
 		/* 
 		 * TODO: document expectations about lifetime of strings.
@@ -70,7 +70,7 @@ class Job {
 		  that is assigned to the job object upon construction
 		  and does not change over it's lifetime.
 		 */
-		job_id_t getIdentity() const;
+		coaster_job_id getIdentity() const;
 	
 		/*
 		  Get the remote job identity.  This is a string
@@ -121,10 +121,10 @@ class Job {
 			    const char *value, size_t value_len);
 
 		std::vector<StagingSetEntry>* getStageIns();
-		void addStageIn(std::string src, std::string dest, StagingMode mode);
+		void addStageIn(std::string src, std::string dest, CoasterStagingMode mode);
 
 		std::vector<StagingSetEntry>* getStageOuts();
-		void addStageOut(std::string src, std::string dest, StagingMode mode);
+		void addStageOut(std::string src, std::string dest, CoasterStagingMode mode);
 
 		std::vector<std::string>* getCleanups();
 		void addCleanup(std::string cleanup);
