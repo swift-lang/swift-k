@@ -89,9 +89,9 @@ typedef struct {
 
 // Set appropriate macro to specify that we shouldn't throw exceptions
 #ifdef __cplusplus
-#define COASTERS_THROWS_NOTHING throw()
+#define COASTER_THROWS_NOTHING throw()
 #else
-#define COASTERS_THROWS_NOTHING
+#define COASTER_THROWS_NOTHING
 #endif
 
 /*
@@ -103,7 +103,7 @@ typedef struct {
  */
 coaster_rc
 coaster_client_start(const char *service_url, size_t service_url_len,
-                    coaster_client **client) COASTERS_THROWS_NOTHING;
+                    coaster_client **client) COASTER_THROWS_NOTHING;
 
 /*
  * Stop coasters client and free all memory.
@@ -112,7 +112,7 @@ coaster_client_start(const char *service_url, size_t service_url_len,
  * an argument to any more Coaster C API function calls.
  */
 coaster_rc
-coaster_client_stop(coaster_client *client) COASTERS_THROWS_NOTHING;
+coaster_client_stop(coaster_client *client) COASTER_THROWS_NOTHING;
 
 /*
  * Create empty settings object
@@ -121,14 +121,14 @@ coaster_client_stop(coaster_client *client) COASTERS_THROWS_NOTHING;
  */
 coaster_rc
 coaster_settings_create(coaster_settings **settings)
-                    COASTERS_THROWS_NOTHING;
+                    COASTER_THROWS_NOTHING;
 
 /*
  * Free memory associated with coasters settings
  */
 void
 coaster_settings_free(coaster_settings *settings)
-                                COASTERS_THROWS_NOTHING;
+                                COASTER_THROWS_NOTHING;
 
 /*
  * Parse settings from string.
@@ -139,14 +139,14 @@ coaster_settings_free(coaster_settings *settings)
  */
 coaster_rc
 coaster_settings_parse(coaster_settings *settings, const char *str,
-                       size_t str_len) COASTERS_THROWS_NOTHING;
+                       size_t str_len) COASTER_THROWS_NOTHING;
 /*
  * Set settings individually.
  */
 coaster_rc
 coaster_settings_set(coaster_settings *settings,
             const char *key, size_t key_len,
-            const char *value, size_t value_len) COASTERS_THROWS_NOTHING;
+            const char *value, size_t value_len) COASTER_THROWS_NOTHING;
 /*
  * Get settings individually.
  * value[_len]: set to value of string, null if not present in settings.
@@ -156,7 +156,7 @@ coaster_settings_set(coaster_settings *settings,
 coaster_rc
 coaster_settings_get(coaster_settings *settings,
             const char *key, size_t key_len,
-            const char **value, size_t *value_len) COASTERS_THROWS_NOTHING;
+            const char **value, size_t *value_len) COASTER_THROWS_NOTHING;
 
 /*
  * Enumerate settings.
@@ -169,7 +169,7 @@ coaster_settings_get(coaster_settings *settings,
 coaster_rc
 coaster_settings_keys(coaster_settings *settings,
                       const char ***keys, size_t **key_lens, int *count)
-                                COASTERS_THROWS_NOTHING;
+                                COASTER_THROWS_NOTHING;
 
 /*
  * Apply settings to started coasters client.
@@ -179,7 +179,7 @@ coaster_settings_keys(coaster_settings *settings,
 coaster_rc
 coaster_apply_settings(coaster_client *client,
                                   coaster_settings *settings)
-                                  COASTERS_THROWS_NOTHING;
+                                  COASTER_THROWS_NOTHING;
 
 /*
  * Create a new coasters job for later submission.
@@ -195,13 +195,13 @@ coaster_rc
 coaster_job_create(const char *executable, size_t executable_len,
                   int argc, const char **argv, const size_t *arg_lens,
                   const char *job_manager, size_t job_manager_len,
-                  coaster_job **job) COASTERS_THROWS_NOTHING;
+                  coaster_job **job) COASTER_THROWS_NOTHING;
 
 /*
  * Free a coasters job
  */
 coaster_rc
-coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING;
+coaster_job_free(coaster_job *job) COASTER_THROWS_NOTHING;
 
 /*
  * Create a human readable string describing job.
@@ -209,7 +209,7 @@ coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING;
  */
 coaster_rc
 coaster_job_to_string(const coaster_job *job, char **str, size_t *str_len)
-                                  COASTERS_THROWS_NOTHING;
+                                  COASTER_THROWS_NOTHING;
 
 /*
  * Set input and output stream redirections.
@@ -220,7 +220,7 @@ coaster_job_set_redirects(coaster_job *job,
       const char *stdin_loc, size_t stdin_loc_len,
       const char *stdout_loc, size_t stdout_loc_len,
       const char *stderr_loc, size_t stderr_loc_len)
-                  COASTERS_THROWS_NOTHING;
+                  COASTER_THROWS_NOTHING;
 
 /*
  * Set job directory.
@@ -228,7 +228,7 @@ coaster_job_set_redirects(coaster_job *job,
  */
 coaster_rc
 coaster_job_set_directory(coaster_job *job, const char *dir, size_t dir_len)
-                  COASTERS_THROWS_NOTHING;
+                  COASTER_THROWS_NOTHING;
 
 /*
  * Add environment variables for the job.  Will overwrite any
@@ -238,7 +238,7 @@ coaster_job_set_directory(coaster_job *job, const char *dir, size_t dir_len)
 coaster_rc
 coaster_job_set_envs(coaster_job *job, int nvars,
         const char **names, size_t *name_lens,
-        const char **values, size_t *value_lens) COASTERS_THROWS_NOTHING;
+        const char **values, size_t *value_lens) COASTER_THROWS_NOTHING;
 
 /*
  * Add attributes for the job.  Will overwrite any previous atrributes
@@ -248,7 +248,7 @@ coaster_job_set_envs(coaster_job *job, int nvars,
 coaster_rc
 coaster_job_set_attrs(coaster_job *job, int nattrs,
         const char **names, size_t *name_lens,
-        const char **values, size_t *value_lens) COASTERS_THROWS_NOTHING;
+        const char **values, size_t *value_lens) COASTER_THROWS_NOTHING;
 
 /*
  * Add cleanups for job.
@@ -256,7 +256,7 @@ coaster_job_set_attrs(coaster_job *job, int nattrs,
 coaster_rc
 coaster_job_add_cleanups(coaster_job *job, int ncleanups,
         const char **cleanups, size_t *cleanup_lens)
-        COASTERS_THROWS_NOTHING;
+        COASTER_THROWS_NOTHING;
 
 /*
  * Add staging set entries for job
@@ -265,14 +265,14 @@ coaster_rc
 coaster_job_add_stages(coaster_job *job,
     int nstageins, coaster_stage_entry *stageins,
     int nstageouts, coaster_stage_entry *stageouts)
-        COASTERS_THROWS_NOTHING;
+        COASTER_THROWS_NOTHING;
 
 /*
  * Get local job ID.  The job ID is a locally unique identifier for
  * a coasters job that is assigned when the job is created.
  */
 coaster_job_id 
-coaster_job_get_id(const coaster_job *job) COASTERS_THROWS_NOTHING;
+coaster_job_get_id(const coaster_job *job) COASTER_THROWS_NOTHING;
 
 /*
  * Get status of a submitted job.
@@ -280,7 +280,7 @@ coaster_job_get_id(const coaster_job *job) COASTERS_THROWS_NOTHING;
  */
 coaster_rc
 coaster_job_status_code(const coaster_job *job, coaster_job_status *code)
-                COASTERS_THROWS_NOTHING;
+                COASTER_THROWS_NOTHING;
 
 /*
  * Get stdin/out of completed job.
@@ -291,7 +291,7 @@ coaster_rc
 coaster_job_get_outstreams(const coaster_job *job,
                 const char **stdout_s, size_t *stdout_len,
                 const char **stderr_s, size_t *stderr_len)
-                COASTERS_THROWS_NOTHING;
+                COASTER_THROWS_NOTHING;
 
 /*
  * Submit a coasters job through a coasters client.
@@ -302,7 +302,7 @@ coaster_job_get_outstreams(const coaster_job *job,
  */
 coaster_rc
 coaster_submit(coaster_client *client, coaster_job *job)
-                COASTERS_THROWS_NOTHING;
+                COASTER_THROWS_NOTHING;
 
 /*
  * Check for completion of jobs.
@@ -315,7 +315,7 @@ coaster_submit(coaster_client *client, coaster_job *job)
 coaster_rc
 coaster_check_jobs(coaster_client *client, bool wait, int maxjobs,
                    coaster_job **jobs, int *njobs)
-                COASTERS_THROWS_NOTHING;
+                COASTER_THROWS_NOTHING;
 
 /*
  * Get name of return code.  Returns NULL if invalid code.
