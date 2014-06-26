@@ -94,7 +94,7 @@ void CoasterClient::start() {
 
 	// configure non-blocking
 	int flags = fcntl(sockFD, F_GETFL);
-	if (flags & O_NONBLOCK == 0) {
+	if ((flags & O_NONBLOCK) == 0) {
 		if (fcntl(sockFD, F_SETFL, flags | O_NONBLOCK) < 0) {
 			throw CoasterError("Failed to configure socket for non-blocking operations: %s", strerror(errno));
 		}

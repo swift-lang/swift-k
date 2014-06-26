@@ -11,6 +11,7 @@ using namespace Coaster;
 
 using std::cerr;
 using std::cout;
+using std::endl;
 using std::exception;
 using std::list;
 
