@@ -58,7 +58,7 @@ struct coaster_client {
 struct coaster_err_info {
   string msg;
 
-  coaster_err_info(const string _msg): msg(msg) {}
+  coaster_err_info(const string _msg): msg(_msg) {}
 };
 
 static pthread_key_t err_key;
@@ -265,6 +265,7 @@ coaster_rc
 coaster_job_free(coaster_job *job) COASTERS_THROWS_NOTHING {
   // Destructor shouldn't throw anything
   delete job;
+  return COASTER_SUCCESS;
 }
 
 coaster_rc
@@ -485,6 +486,7 @@ coaster_submit(coaster_client *client, coaster_job *job)
                 COASTERS_THROWS_NOTHING {
   try {
     client->client.submit(*job);
+    return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
   } catch (const std::exception& ex) {
