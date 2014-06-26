@@ -74,6 +74,19 @@ typedef enum {
   COASTER_ERROR_UNKNOWN,
 } coaster_rc;
 
+/*
+ * Information about a file to be staged
+ */
+typedef struct {
+  const char *src;
+  size_t src_len;
+
+  const char *dst;
+  size_t dst_len;
+
+  coaster_staging_mode mode;
+} coaster_stage_entry;
+
 // Set appropriate macro to specify that we shouldn't throw exceptions
 #ifdef __cplusplus
 #define COASTERS_THROWS_NOTHING throw()
@@ -245,7 +258,14 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
         const char **cleanups, size_t *cleanup_lens)
         COASTERS_THROWS_NOTHING;
 
-// TODO: functions for setting stageins, stageouts
+/*
+ * Add staging set entries for job
+ */
+coaster_rc
+coaster_job_add_stages(coaster_job *job,
+    int nstageins, coaster_stage_entry *stageins,
+    int nstageouts, coaster_stage_entry *stageouts)
+        COASTERS_THROWS_NOTHING;
 
 /*
  * Get local job ID.  The job ID is a locally unique identifier for

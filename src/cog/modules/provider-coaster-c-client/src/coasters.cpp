@@ -414,8 +414,7 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
   }
   
   try {
-    for (int i = 0; i < ncleanups; i++)
-    {
+    for (int i = 0; i < ncleanups; i++) {
       const char *cleanup = cleanups[i];
       size_t cleanup_len = cleanup_lens[i];
       COASTER_CONDITION(cleanup != NULL,
@@ -429,6 +428,38 @@ coaster_job_add_cleanups(coaster_job *job, int ncleanups,
   } catch (const std::exception& ex) {
     return exception_rc(ex);
   }
+}
+
+coaster_rc
+coaster_job_add_stages(coaster_job *job,
+    int nstageins, coaster_stage_entry *stageins,
+    int nstageouts, coaster_stage_entry *stageouts)
+        COASTERS_THROWS_NOTHING {
+
+  if (job == NULL) {
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid job");
+  }
+  
+  try {
+    for (int i = 0; i < nstageins; i++) {
+      coaster_stage_entry *s = &stageins[i];
+      job->addStageIn(string(s->src, s->src_len),
+                      string(s->dst, s->dst_len), s->mode);
+    }
+    
+    for (int i = 0; i < nstageouts; i++) {
+      coaster_stage_entry *s = &stageouts[i];
+      job->addStageOut(string(s->src, s->src_len),
+                       string(s->dst, s->dst_len), s->mode);
+    }
+
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+
 }
 
 coaster_job_id
