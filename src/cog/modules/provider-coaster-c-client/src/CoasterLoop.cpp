@@ -79,6 +79,8 @@ void CoasterLoop::stop() {
 	if (pthread_join(thread, NULL) != 0) {
 		throw CoasterError(string("Could not join thread: ") + strerror(errno));
 	}
+
+	// TODO: close pipe?
 	LogInfo << "Coaster loop stopped" << endl;
 }
 
@@ -214,15 +216,24 @@ void CoasterLoop::removeSockets() {
 }
 
 void CoasterLoop::addChannel(CoasterChannel* channel) { Lock::Scoped l(lock);
+	if (!started || done) {
+		LogWarn << "Add channel to non-running loop" << endl;
+	}
 	addList.push_back(channel);
 }
 
 void CoasterLoop::removeChannel(CoasterChannel* channel, bool deleteChan) {
 	Lock::Scoped l(lock);
+	if (!started || done) {
+		LogWarn << "Remove channel to non-running loop" << endl;
+	}
 	removeList.push_back(pair<CoasterChannel*, bool>(channel, deleteChan));
 }
 
 void CoasterLoop::requestWrite(int count) {
+	if (!started) {
+		throw new CoasterError("requestWrite() on non-started loop");
+	}
 	writesPending += count;
 	LogDebug << "request " << count <<  " writes; writesPending: " << writesPending << endl;
 	char tmp[count];

@@ -65,6 +65,7 @@ class CoasterLoop {
 		 * Add a channel for the loop to monitor.
 		 * Ownership of the channel is shared between caller and the loop.
 		 * Must be removed later by a call to removeChannel().
+		 * Loop must be started before adding channel
 		 */
 		void addChannel(CoasterChannel* channel);
 

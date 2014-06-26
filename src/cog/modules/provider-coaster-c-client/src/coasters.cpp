@@ -88,6 +88,7 @@ coaster_client_start(const char *service_url, size_t service_url_len,
     *client = new coaster_client(string(service_url, service_url_len));
     COASTER_CHECK_MALLOC(*client);
 
+    (*client)->loop.start();
     (*client)->client.start();
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
