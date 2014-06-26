@@ -46,12 +46,13 @@ AC_ARG_ENABLE([debug],
     [debugit=no])
 AC_MSG_RESULT([$debugit])
 
+AM_CXXFLAGS="-Wall"
 if test x"$debugit" = x"yes"; then
     AC_DEFINE([CONF_DEBUG],[],[Debug Mode])
-    AM_CXXFLAGS="-g3 -O0"
+    AM_CXXFLAGS+=" -g3 -O0"
 else
     AC_DEFINE([CONF_NODEBUG],[],[No-debug Mode])
-    AM_CXXFLAGS="-O2"
+    AM_CXXFLAGS+= "-O2"
 fi
 
 USE_TCL=0

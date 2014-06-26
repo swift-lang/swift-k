@@ -41,7 +41,7 @@ static int unique = 0;
        print_stack();				      \
   }
 #else
-#define debug(...) 0;
+#define debug(...)
 #endif
 
 Lock::Lock() {

@@ -129,6 +129,9 @@ bool CoasterChannel::read(DataChunk* dc) {
 		if (dc->bufpos == dc->buf->getLen()) {
 			return true;
 		}
+		else {
+			return false;
+		}
 	}
 }
 

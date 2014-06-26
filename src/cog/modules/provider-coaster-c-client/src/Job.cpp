@@ -291,7 +291,7 @@ Job::~Job() {
 	if (remoteIdentity != NULL) {
 		delete remoteIdentity; 
 	}
-	for (int i = 0; i < arguments.size(); i++) {
+	for (unsigned int i = 0; i < arguments.size(); i++) {
 		delete arguments.at(i);
 	}
 }
