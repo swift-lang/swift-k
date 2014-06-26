@@ -127,7 +127,7 @@ coaster_rc coaster_settings_create(coaster_settings **settings)
 }
 
 coaster_rc coaster_settings_parse(coaster_settings *settings,
-                                  const char *str)
+                            const char *str, size_t str_len)
                                 COASTERS_THROWS_NOTHING {
 
   // TODO: parsing using code currently in CoasterSwig
