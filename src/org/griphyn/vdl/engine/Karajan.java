@@ -549,8 +549,7 @@ public class Karajan {
     			mappingST.setAttribute("descriptor", "ConcurrentMapper");
     			StringTemplate paramST = template("swift_parameter");
     			paramST.setAttribute("name", "prefix");
-    			paramST.setAttribute("expr", "\"" + var.getName() + "-"
-    					+ UUIDGenerator.getInstance().generateRandomBasedUUID().toString() + "\"");
+    			paramST.setAttribute("expr", "\"" + var.getName() + "-" + lineNumber(var.getSrc()) + "\"");
     			mappingST.setAttribute("params", paramST);
     			variableST.setAttribute("mapping", mappingST);
     			variableST.setAttribute("nil", Boolean.TRUE);
@@ -1142,7 +1141,7 @@ public class Karajan {
 
 			StringTemplate foreachST = template("foreach");
 			foreachST.setAttribute("var", foreach.getVar());
-			foreachST.setAttribute("line", foreach.getSrc().substring(foreach.getSrc().indexOf(' ') + 1));
+			foreachST.setAttribute("line", lineNumber(foreach.getSrc()));
 
 			XmlObject in = foreach.getIn().getAbstractExpression();
 			StringTemplate inST = expressionToKarajan(in, scope);
@@ -2052,10 +2051,14 @@ public class Karajan {
 	
 	private int fieldCounter = 1;
 	private String addInternedField(String name, String type) {
-	    String v = "swift.field." + name + "." + type.replace("[", ".array.").replace("]", "");
+	    String v = internedFieldName(name, type);
 	    usedFields.put(new InternedField(name, type), v);
 	    return v;
     }
+	
+	public static String internedFieldName(String name, String type) {
+	    return "swift.field." + name + "." + type.replace("[", ".array.").replace("]", "");
+	}
 
     public void generateInternedConstants(StringTemplate programTemplate) {
 	    generateInternedConstants(programTemplate, stringInternMap, "sConst");
@@ -2106,6 +2109,10 @@ public class Karajan {
 	
 	public static String normalize(String type) {
 	    return org.griphyn.vdl.type.Types.normalize(type);
+	}
+	
+	public static String lineNumber(String src) {
+	    return src.substring(src.indexOf(' ') + 1);
 	}
 
 	String datatype(StringTemplate st) {
