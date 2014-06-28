@@ -83,14 +83,10 @@ public class ExternalMapper extends AbstractMapper {
 		    }
 			Process p = Runtime.getRuntime().exec(cmd.toArray(STRING_ARRAY));
 			process(p.getInputStream());
-			List<String> lines = fetchOutput(p.getInputStream());
-			if (logger.isDebugEnabled()) {
-			    logger.debug("external mapper output: " + lines);
-			}
 			int ec = p.waitFor();
 			if (ec != 0) {
 				throw new RuntimeException("External executable failed. Exit code: " + ec + "\n\t"
-						+ join(lines) + "\n\t" + join(fetchOutput(p.getErrorStream())));
+						+ join(fetchOutput(p.getErrorStream())));
 			}
 		}
 		catch (IOException e) {
