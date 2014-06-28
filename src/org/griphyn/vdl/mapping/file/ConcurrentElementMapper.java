@@ -28,15 +28,8 @@ package org.griphyn.vdl.mapping.file;
 
 public class ConcurrentElementMapper extends AbstractFileNameElementMapper {
 
-	/** determines how many directories and element files are permitted
-	    in each directory. There will be no more than
-	    DIRECTORY_LOAD_FACTOR element files and no more than
-	    DIRECTORY_LOAD_FACTOR directories, so there could be up to
-	    2 * DIRECTORY_LOAD_FACTOR elements. */
-	public final static int DIRECTORY_LOAD_FACTOR=25;
-
 	public String mapField(String fieldName) {
-		return "-field/"+fieldName;
+		return fieldName;
 	}
 
 	public String rmapField(String pathElement) {
@@ -44,33 +37,96 @@ public class ConcurrentElementMapper extends AbstractFileNameElementMapper {
 	}
 
 	public String mapIndex(int index, int pos) {
-		StringBuffer sb = new StringBuffer();
-		sb.append("-array/");
-		sb.append(splitIndexByLoadFactor(index));
-		sb.append("/");
-		sb.append("elt-");
-		sb.append(String.valueOf(index));
-		return sb.toString();
+		return indexToPath(index);
+	}
+
+	/**
+     * Indices 0 to 9 -> [0] ... [9]
+     * Indices 10 to 99 -> [d0-d9]/[d0]...[d9]
+     * Indices 100 to 999 -> [d00-d99]/[de0-de9]/...
+     * ...
+     * etc.
+     */
+	public static String indexToPath(int index) {
+	    boolean neg = false;
+	    if (index < 0) {
+	        neg = true;
+	        index = -index;
+	    }
+	    
+	    StringBuilder sb = new StringBuilder();
+	    sb.append("/");
+	    indexToPath(sb, neg, 0, index);
+	    return sb.toString();
 	}
 
 
-	String splitIndexByLoadFactor(int index) {
-		if (index <= DIRECTORY_LOAD_FACTOR) {
-			return "";
-		} 
-		else {
-			String prefix = "h" + String.valueOf(index % DIRECTORY_LOAD_FACTOR) + "/";
-			String suffix = splitIndexByLoadFactor(index / DIRECTORY_LOAD_FACTOR);
-			return prefix + suffix;
-		}
-	}
+	public static void indexToPath(StringBuilder sb, boolean negative, int prefix, int index) {
+	    if (index < 10) {
+	        sb.append('[');
+            if (negative) {
+                sb.append('-');
+            }
+            if (prefix != 0) {
+                sb.append(prefix / 10);
+            }
+            sb.append(index);
+            sb.append(']');
+	    }
+	    else {
+            int t = getFirstDigit(index);
+            int o = getOrder(index);
+            sb.append("[");
+            if (negative) {
+                sb.append('-');
+            }
+            if (prefix != 0) {
+                sb.append(prefix / o / 10);
+            }
+            sb.append(t);
+            sb.append('-');
+            if (prefix != 0) {
+                sb.append(prefix / o / 10);
+            }
+            sb.append(t + o - o / 10);
+            sb.append("]/");
+            indexToPath(sb, negative, prefix + t, index - t);
+	    }
+    }
 
+	/**
+	 * Assume n >= 10
+	 * Return n with all but the most significant digit
+	 * set to 0
+	 */
+    private static int getFirstDigit(int n) {
+        int order = 1;
+        while (n >= 10) {
+            n = n / 10;
+            order = order * 10;
+        }
+        return n * order;
+    }
+    
+    /**
+     * Assume n >= 10
+     * Return 1 followed by the number of digits in n minus one
+     */
+    private static int getOrder(int n) {
+        int order = 1;
+        while (n >= 10) {
+            n = n / 10;
+            order = order * 10;
+        }
+        return order;
+    }
 
+    // TODO: this should be but is not the inverse of mapIndex
 	public int rmapIndex(String pathElement) {
 		return Integer.parseInt(pathElement);
 	}
 
 	public String getSeparator(int depth) {
 		return "_";
-	}
+	}	
 }
