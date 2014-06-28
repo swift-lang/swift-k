@@ -31,6 +31,7 @@ import org.griphyn.vdl.mapping.PhysicalFormat;
 /** Maps every Path to a single file name (specified by the "file" parameter).
   */
 public class SingleFileMapper extends AbstractMapper {
+    public static final String NAME = "SingleFileMapper";
 	
 	@Override
     protected void getValidMappingParams(Set<String> s) {
@@ -49,7 +50,7 @@ public class SingleFileMapper extends AbstractMapper {
 
     @Override
     public String getName() {
-        return "SingleFileMapper";
+        return NAME;
     }
 
     @Override
