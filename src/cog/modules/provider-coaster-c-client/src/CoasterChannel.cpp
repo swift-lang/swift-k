@@ -27,8 +27,8 @@ using std::map;
 using std::min;
 using std::string;
 
-int socksend(int fd, const char* buf, int len, int flags);
-void pp(char* dest, const char* src, int len);
+static int socksend(int fd, const char* buf, int len, int flags);
+static void pp(char* dest, const char* src, int len);
 
 class HeartBeatCommand;
 
@@ -357,11 +357,11 @@ const string& CoasterChannel::getURL() const {
 /*
  * Without this, GCC gets confused by CoasterChannel::send.
  */
-int socksend(int fd, const char* buf, int len, int flags) {
+static int socksend(int fd, const char* buf, int len, int flags) {
 	return send(fd, buf, len, flags);
 }
 
-void pp(char* dest, const char* src, int len) {
+static void pp(char* dest, const char* src, int len) {
 	for(int i = 0; i < len; i++) {
 		char c = src[i];
 		if (c < '0' || c > 127) {
