@@ -134,12 +134,14 @@ coaster_settings_free(coaster_settings *settings)
  * Parse settings from string.
  *
  * str[_len]: String with key/value settings and length of string.
-      Settings separated by commas, key/values separated by equals sign.
-      If NULL, will create empty settings object.
+      Settings separated by separator char, key/values separated by equals sign.
+      Backslash escapes the next character.
+      Keys and values can be quoted with ".
+   separator: character to separate keys/values
  */
 coaster_rc
 coaster_settings_parse(coaster_settings *settings, const char *str,
-                       size_t str_len) COASTER_THROWS_NOTHING;
+             size_t str_len, char separator) COASTER_THROWS_NOTHING;
 /*
  * Set settings individually.
  */

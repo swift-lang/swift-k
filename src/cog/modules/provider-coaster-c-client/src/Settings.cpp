@@ -60,6 +60,20 @@ void Settings::remove(const string& key) {
 	settings.erase(key);
 }
 
+bool Settings::contains(const string& key) {
+	return settings.find(key) != settings.end();
+}
+
+bool Settings::get(const string& key, string& value) {
+	map<string, string>::iterator it = settings.find(key);
+	if (settings.find(key) == settings.end()) {
+		return false;
+	} else {
+		value = it->second;
+		return true;
+	}
+}
+
 map<string, string>& Settings::getSettings() {
 	return settings;
 }

@@ -34,6 +34,15 @@ class Settings {
 		void set(const char* key, size_t key_len,
 			 const char* value, size_t value_len);
 		void remove(const std::string& key);
+		
+		bool contains(const std::string& key);
+
+		/*
+		 * Get key from map
+		 * returns true if key exists, false if doesn't
+		 * value: set to value if key exists
+		 */
+		bool get(const std::string& key, std::string &value);
 
 		std::map<std::string, std::string>& getSettings();
 

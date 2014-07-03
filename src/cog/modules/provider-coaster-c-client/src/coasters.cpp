@@ -127,12 +127,94 @@ coaster_rc coaster_settings_create(coaster_settings **settings)
   }
 }
 
-coaster_rc coaster_settings_parse(coaster_settings *settings,
-                            const char *str, size_t str_len)
-                                COASTER_THROWS_NOTHING {
+static void
+settings_emit(coaster_settings *settings, string &key, string &value);
 
-  // TODO: parsing using code currently in CoasterSwig
-  return COASTER_ERROR_UNKNOWN;
+coaster_rc
+coaster_settings_parse(coaster_settings *settings,
+              const char *str, size_t str_len, char separator)
+                                COASTER_THROWS_NOTHING {
+  COASTER_CONDITION(settings != NULL, COASTER_ERROR_INVALID,
+                    "Null Coaster settings object");
+  COASTER_CONDITION(str != NULL, COASTER_ERROR_INVALID,
+                    "Null Coaster settings string");
+  string key, value; // Storage for current key and value
+  
+  bool in_key = true; // Either in key or value
+  bool in_quotes = false;
+  bool in_escape = false;
+
+  for (size_t pos = 0; pos < str_len; pos++) {
+    char c = str[pos];
+    string &curr = in_key ? key : value;
+
+    if (in_escape) {
+      // Current character is escaped
+      curr.push_back(c);
+      in_escape = false;
+
+    } else if (in_quotes) {
+      if (c == '\\') {
+        in_escape = true;
+      } else if (c == '"') {
+        in_quotes = false;
+      } else {
+        curr.push_back(c);
+      }
+    } else {
+      // Not in escape or quotes
+      if (c == '\\') {
+        in_escape = true;
+      } else if (c == '"') {
+        in_quotes = true;
+      } else if (c == '=') {
+        COASTER_CONDITION(in_key, COASTER_ERROR_INVALID,
+                  "'=' not allowed in unquoted Coaster settings value");
+        in_key = false;
+      } else if (c == separator) {
+        COASTER_CONDITION(!in_key, COASTER_ERROR_INVALID,
+                  "',' not allowed in unquoted Coaster settings key");
+        
+        settings_emit(settings, key, value);          
+        
+        in_key = true;
+      } else {
+        curr.push_back(c);
+      }
+    }
+  }
+
+  // Check for invalid state
+  COASTER_CONDITION(!in_escape, COASTER_ERROR_INVALID,
+        "Trailing '\\' escape at end of Coaster settings");
+  COASTER_CONDITION(!in_quotes, COASTER_ERROR_INVALID,
+        "Unclosed '\"' quote at end of Coaster settings");
+  COASTER_CONDITION(!in_key, COASTER_ERROR_INVALID,
+        "Key without value at end of Coaster settings");
+
+  settings_emit(settings, key, value);
+
+  return COASTER_SUCCESS;
+}
+
+
+/*
+ * Helper function to emit completed key/value setting
+ */
+static void
+settings_emit(coaster_settings *settings, string &key, string &value) {
+  if (settings->contains(key)) {
+    string old_value;
+    settings->get(key, old_value);
+    LogWarn << "Overwrote previous Coaster settings value for "
+                "key: \"" << key << "\".  Old value: \"" << 
+                old_value << "\", New value: \"" <<
+                value << "\"." << endl;
+  }
+
+  settings->set(key, value);
+  key.clear();
+  value.clear();
 }
 
 coaster_rc
