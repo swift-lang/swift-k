@@ -1,3 +1,0 @@
-The Java CoG Kit graph editor allows visualization end editing of herarchical
-directed graphs. It supports dynamic properties, multiple targets
-(Swing, PostScript, HTML), and is pretty scalable.
