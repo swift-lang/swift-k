@@ -91,7 +91,7 @@ public class Action {
             if (srcdir.length() == 0) {
                 srcdir = ".";
             }
-            String desthost = bc.getHost();
+            String desthost = bc.getName();
             String workdir = (String) bc.getProperty("workdir");
             
             if (workdir != null && !workdir.startsWith("/")) {

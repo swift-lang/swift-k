@@ -227,4 +227,8 @@ public class SysInfo{
         }
         return s.toString();
     }
+    
+    public static SysInfo fromString(String str) {
+    	return new SysInfo(str);
+    }
 }
