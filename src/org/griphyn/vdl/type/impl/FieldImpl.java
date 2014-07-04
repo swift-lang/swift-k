@@ -68,4 +68,8 @@ public class FieldImpl implements Field {
         }
         return o1.equals(o2);
     }
+    
+    public String toString() {
+        return id + ": " + type; 
+    }
 }
