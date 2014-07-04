@@ -73,8 +73,8 @@ public abstract class RequestHandler extends RequestReply {
 				channel.sendTaggedReply(getId(), buf, !i.hasNext(), err);
 			}
 		}
-		if (logger.isInfoEnabled()) {
-			logger.info(this + " unregistering (send)");
+		if (logger.isDebugEnabled()) {
+			logger.debug(this + " unregistering (send)");
 		}
 		unregister();
 	}
