@@ -1,2 +1,0 @@
-The resources module contains resources (such as icons, images, and certain text files)
-that are shared between Java CoG Kit applications.

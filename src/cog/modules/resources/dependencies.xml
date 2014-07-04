@@ -1,5 +1,0 @@
-<project name="Project dependencies" default="deps" basedir=".">
-	<!-- project dependencies -->
-	<target name="deps">
-	</target>
-</project>
