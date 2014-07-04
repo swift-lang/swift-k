@@ -206,6 +206,11 @@ public class JobSpecificationImpl implements JobSpecification {
         }
     }
 
+    @Override
+    public void setEnvironmentVariables(Map<String, String> env) {
+        this.environment = env;
+    }
+
     public void setStdOutput(String output) {
         this.stdout = output;
         this.stdoutLocation = inferStreamType(redirected, output != null,
