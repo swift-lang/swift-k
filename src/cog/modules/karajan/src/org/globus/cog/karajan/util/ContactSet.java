@@ -13,15 +13,15 @@ import java.util.List;
 import java.util.Map;
 
 public class ContactSet {
-	public Map<String, BoundContact> contacts;
-	public List<BoundContact> cl;
+	private Map<String, BoundContact> contacts;
+	private List<BoundContact> cl;
 
 	public ContactSet() {
 		contacts = new HashMap<String, BoundContact>();
 	}
 
 	public void addContact(BoundContact contact) {
-		contacts.put(contact.getHost(), contact);
+		contacts.put(contact.getName(), contact);
 		if (cl == null) {
 			cl = new ArrayList<BoundContact>();
 		}
@@ -29,7 +29,7 @@ public class ContactSet {
 	}
 
 	public void removeContact(BoundContact contact) {
-		contacts.remove(contact.getHost());
+		contacts.remove(contact.getName());
 		cl.remove(contact);
 	}
 
@@ -59,7 +59,7 @@ public class ContactSet {
 	public void setContacts(List<BoundContact> cl) {
 		this.cl = cl;
 		for (BoundContact contact : cl) {
-			contacts.put(contact.getHost(), contact);
+			contacts.put(contact.getName(), contact);
 		}
 	}
 

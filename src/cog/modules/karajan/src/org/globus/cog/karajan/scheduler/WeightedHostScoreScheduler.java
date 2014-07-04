@@ -115,7 +115,6 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 			float thisJobThrottle = defaultJobThrottle;
 			double thisDelayBase = defaultDelayBase;
 			double thisInitialScore = 0;
-			// TODO constants instead of these literals
 			if (contact.hasProperty(JOB_THROTTLE)) {
 				thisJobThrottle = floatThrottleValue(contact.getProperty(JOB_THROTTLE));
 			}

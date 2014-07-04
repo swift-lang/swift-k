@@ -132,7 +132,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 			if (next != null) {
 				next = virtualContacts.get(contact);
 				if (!checkLoad(next)) {
-					throw new NoFreeResourceException("Contact " + next.getHost()
+					throw new NoFreeResourceException("Contact " + next.getName()
 							+ " has too many tasks");
 				}
 				if (logger.isDebugEnabled()) {

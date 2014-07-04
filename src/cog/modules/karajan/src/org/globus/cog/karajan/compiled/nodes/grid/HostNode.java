@@ -36,7 +36,7 @@ public class HostNode extends AbstractSingleValuedFunction {
 		try {
 			BoundContact contact = new BoundContact();
 			String host = this.name.getValue(stack);
-			contact.setHost(host);
+			contact.setName(host);
 			contact.setCpus(this.cpus.getValue(stack).intValue());
 			for (Object o : c_vargs.get(stack)) {
 				if (!(o instanceof Service)) {

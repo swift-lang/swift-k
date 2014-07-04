@@ -17,32 +17,34 @@ package org.globus.cog.karajan.util;
  * concrete site.
  * 
  */
+import org.globus.cog.abstraction.impl.common.IdentityImpl;
+import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 
 public abstract class Contact {
-	private static int idcounter = 0;
-	private final int id;
+	private Identity identity;
 	private TaskConstraints constraints;
 	
 	public Contact() {
-		synchronized(Contact.class) {
-			id = idcounter++;
-		}
+	    identity = new IdentityImpl("host");
 	}
 	
-	public boolean equals(Object obj){
+	public boolean equals(Object obj) {
+	    if (this == obj) {
+	        return true;
+	    }
 		if (obj instanceof Contact){
-			return id == ((Contact) obj).id;
+			return identity.equals(((Contact) obj).identity);
 		}
 		return false;
 	}
 	
-	public int hashCode(){
-		return id;
+	public int hashCode() {
+		return identity.hashCode();
 	}
 
-	public int getId() {
-		return id;
+	public Identity getId() {
+		return identity;
 	}
 	
 	public abstract boolean isVirtual();

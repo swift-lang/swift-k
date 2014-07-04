@@ -29,7 +29,7 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 public class BoundContact extends Contact {
 	private Map<TypeProviderPair,Service> services;
 
-	private String host;
+	private String name;
 
 	private int cpus;
 
@@ -45,17 +45,17 @@ public class BoundContact extends Contact {
 		cpus = 1;
 	}
 
-	public BoundContact(String host) {
+	public BoundContact(String name) {
 		this();
-		this.host = host;
+		this.name = name;
 	}
 
-	public void setHost(String host) {
-		this.host = host;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public String getHost() {
-		return host;
+	public String getName() {
+		return name;
 	}
 
 	public void addService(Service sc) {
@@ -64,9 +64,9 @@ public class BoundContact extends Contact {
 		if (!services.containsKey(first)) {
 			services.put(first, sc);
 		}
-		if (getHost() == null) {
+		if (getName() == null) {
 			if (sc.getServiceContact().getHost() != null) {
-				setHost(sc.getServiceContact().getHost());
+				setName(sc.getServiceContact().getHost());
 			}
 		}
 	}
@@ -89,6 +89,21 @@ public class BoundContact extends Contact {
 
 	public Service getService(TaskHandlerWrapper handler) {
 		return getService(getServiceType(handler.getType()), handler.getProvider());
+	}
+	
+	public Service findService(int type) {
+	    Service found = null;
+	    
+	    for (Map.Entry<TypeProviderPair, Service> e : services.entrySet()) {
+	        if (e.getKey().type == type) {
+	            if (found != null) {
+	                throw new IllegalStateException("More than one service of type " + 
+	                    type + " exists for host '" + this.getName() + "'");
+	            }
+	            found = e.getValue();
+	        }
+	    }
+	    return found;
 	}
 
 	public static int getServiceType(int handlerType) {
@@ -144,23 +159,23 @@ public class BoundContact extends Contact {
 	}
 
 	public String toString() {
-		return host;
+		return name;
 	}
 
 	public boolean equals(Object obj) {
 		if (obj instanceof BoundContact) {
 			BoundContact bc = (BoundContact) obj;
-			if (host == null) {
-				return bc.getHost() == null;
+			if (name == null) {
+				return bc.getName() == null;
 			}
-			return host.equals(bc.getHost());
+			return name.equals(bc.getName());
 		}
 		return false;
 	}
 
 	public int hashCode() {
-		if (host != null) {
-			return host.hashCode();
+		if (name != null) {
+			return name.hashCode();
 		}
 		else {
 			return System.identityHashCode(this);
@@ -221,7 +236,7 @@ public class BoundContact extends Contact {
 			addService(executionService);
 			//TODO A better way to avoid this being equal to a host who happens
 			//to have the same name should be implemented
-			setHost("_localhost");
+			setName("_localhost");
 		}
 
 		public Service getService(int type, String provider) {
@@ -256,10 +271,10 @@ public class BoundContact extends Contact {
 		}
 	}
 	
-	public void addProperty(String name, Object value) {
+	public void setProperty(String name, Object value) {
 		if (properties == null) {
 			properties = new HashMap<String, Object>();
 		}
 		properties.put(name, value);
-	}
+	}	
 }
