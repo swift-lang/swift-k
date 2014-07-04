@@ -172,6 +172,13 @@ public class ServiceImpl implements Service {
         }
     }
 
+    @Override
+    public void removeAttribute(String name) {
+        if (attributes != null) {
+            attributes.remove(name);
+        }
+    }
+
     public String toString() {
         return serviceContact + "(" + this.provider + ")";
     }

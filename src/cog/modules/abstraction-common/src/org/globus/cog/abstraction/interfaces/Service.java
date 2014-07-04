@@ -162,4 +162,6 @@ public interface Service {
     public Enumeration getAllAttributes();
     
     public Collection<String> getAttributeNames();
+
+    public void removeAttribute(String name);
 }
