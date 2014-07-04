@@ -1,3 +1,4 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 	<head>
 		<title>Swift System Monitor</title>
@@ -5,82 +6,128 @@
 		<link href="css/spectrum.css" rel="stylesheet" type="text/css" />
 		<link href="css/theme-light.css" rel="stylesheet" type="text/css" />
 		<link href="css/theme-light/jquery-ui-1.10.3.custom.css" rel="stylesheet" />
+		<link href="css/jqpagination.css" rel="stylesheet" />
 		<script src="js/jquery-1.9.1.js"></script>
 		<script src="js/jquery-ui-1.10.3.custom.js"></script>
+		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 		<script language="javascript" type="text/javascript" src="js/jquery.flot.js"></script>
         <script language="javascript" type="text/javascript" src="js/jquery.flot.selection.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.flot.categories.js"></script>
         <script language="javascript" type="text/javascript" src="js/jquery.flot.axislabels.js"></script>
         <script language="javascript" type="text/javascript" src="js/jquery.flot.time.min.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.flot.pie.js"></script>
         <script language="javascript" type="text/javascript" src="js/jquery.flot.crosshair.min.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.flot.stack.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.loadTemplate-1.4.4.min.js"></script>
         <script language="javascript" type="text/javascript" src="js/spectrum.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.noty.packaged.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.jqpagination.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.sparkline.js"></script>
         <script type="text/javascript" src="js/async.js"></script>
 		<script type="text/javascript" src="js/plots.js"></script>
+		<script type="text/javascript" src="js/page.js"></script>
+		<script type="text/javascript" src="js/browser.js"></script>
+		<script type="text/javascript" src="js/charts-flot.js"></script>
+		<script>
+		summaryAppStates = ["Initializing", "Sel. site", "Stage in", "Submitting", "Submitted", "Active", "Stage out", "Failed", "Replicating", "Finished successfully"];
+		appStates = summaryAppStates.slice(0, 9);
+		appStates.push("Finished in prev. run");
+		appStates.push("Finished successfully");
+		browserSetHome("#browser?type=apps");
+		</script>
 	</head>
 	<body>
 		<div id="tabs">
-			<ul>
+			<ul id="tabs-heading">
 				<li><a href="#tab-summary">Summary</a></li>
 				<li><a href="#tab-graphs">Graphs</a></li>
-				<li><a href="#tab-apps">Applications</a></li>
+				<li><a href="#browser">Browser</a></li>
 				<li><a href="#tab-tasks">Tasks</a></li>
 			</ul>
-			<div id="tab-summary">
-				<div class="mlabel">App Summary</div>
-				<div class="ui-corner-all bordered fixed-width">
+			<div id="tab-summary" class="tab-contents">
+				<div class="pbi" id="pbi-main"><span class="pbl emph"></span></div>
+				<div class="ui-corner-all bordered fixed-width" id="summary-container">
+					<div class="mlabel">App Summary</div>
 					<table id="appSummary">
-					
+						
 					</table>
 				</div>
-				<div class="ui-corner-all bordered fixed-width">
+				<div class="ui-corner-all bordered fixed-width" id="heap-container">
 					<table>
 						<tr><td><span class="label">Heap:</span></td><td width="100%"><div class="pbi" id="pbi-heap"><span class="pbl"></span></div></td></tr>
 					</table>
 				</div>
-				<div class="pbi" id="pbi-main"><span class="pbl emph"></span></div>
 			</div>
-			<div id="tab-graphs">
+			<div id="tab-graphs" class="tab-contents">
 				<div class="expand toolbar" id="#graphs-toolbar">
 					<div id="addGraph" class="button"><img src="images/plus.png" alt="Add graph"/></div>	
 				</div>
 				<div id="plots" class="expand">
 				</div>
 			</div>
-			<div id="tab-apps"></div>
+			<div id="browser" class="tab-contents">
+				<ul class="toolbar">
+					<li><a href="#browser?type=apps" id="browser-apps" class="button bookmark uify">Applications Overview</a></li>
+					<li><a href="#browser?type=applist&state=7" id="failed-apps" class="button bookmark uify">Failed Instances</a></li>
+					<li><a href="#browser?type=sites" id="browser-sites" class="button bookmark uify">Sites</a></li>
+				</ul>
+				<div id="browser-container">
+				</div>
+			</div>
 			<div id="tab-tasks"></div>
 		</div>
+		<script type="text/html" id="appSummary-template">
+			<tr>
+				<td>
+					<span class="label nowrap" data-content="state">:</span>
+				</td>
+				<td width="100%">
+					<div class="pbi" data-id="id"><span class="pbl"></span></div>
+				</td>
+			</tr>
+		</script>
 		
-		<div id="error-text">
-		</div>
-		
-		<script language="JavaScript" type="text/javascript">
-		
-			setupUpdates();
+		<script>
+			initializePlots();
 			$("#addGraph").button();
 			$("#addGraph").click(function() {
 				addPlot();
 			});
-			states = ["Initializing", "Selecting site", "Stage in", "Submitting", "Submitted", "Active", "Stage out", "Failed", "Replicating", "Finished successfully"];
-			for (var i = 0; i < states.length; i++) {
-				$("#appSummary").append('<tr><td><span class="label nowrap">' + states[i] + 
-						':</span></td><td width="100%"><div class="pbi" id="pb' + i + '"><span class="pbl"></span></div></td></tr>');
+			for (var i = 0; i < summaryAppStates.length; i++) {
+				$("#appSummary").loadTemplate("#appSummary-template", {
+					state: summaryAppStates[i],
+					id: "pb" + i
+				}, {append: true});
 			}
 		
 			registerUpdate("summary", "summary.state", update);
+			activeTab = "#none";
 			
 			$("#tabs").tabs({
 				activate: function(event, ui) {
-					var label = ui.newTab.children("a").html();
-					if (label == "Graphs") {
-						resizePlotsContainer();	
+					pauseUpdates(activeTab.substring(1));
+					var id = ui.newTab.children("a").attr("href");
+					resumeUpdates(id.substring(1));
+					activeTab = id;
+					window.scrollTo(0, 0);
+					if (id == "#browser") {
+						browserEnable();
+						window.location.href = browserGetAddr();
 					}
 					else {
-						$("#tabs").css("width", "100%");
-						$("#tabs").css("height", "100%");
+						browserDisable();
+						window.location.href = id;
+					}
+					console.log("Loc: " + window.location.href);
+					resizeTabs(id);
+					uify(id);
+					if (id == "#tab-graphs") {
+						resizePlotsContainer();	
 					}
 				}
 			});
 			
-			for (var i = 0; i < states.length; i++) {
+			for (var i = 0; i < summaryAppStates.length; i++) {
 				$("#pb" + i).progressbar({ value: 0	});
 			}
 			
@@ -89,10 +136,10 @@
 						
 			function update(id, data, error) {
 				if (error != null) {
-					$("#error-text").html(error);
+					noty({text: error});
 				}
-				else if (data["error"] != null) {
-					$("#error-text").html(data["error"]);
+				else if (data.error != null) {
+					noty({text: data.error});
 					stopUpdates();
 				}
 				else {
@@ -101,13 +148,13 @@
 						s = s + "\n" + k + ": " + data[k];
 					}
 					var max = parseInt(data["maxCount"]);
-					for (i = 0; i < states.length; i++) {
-						if (data[states[i]] != null) {
-							var v = data[states[i]];
+					for (i = 0; i < summaryAppStates.length; i++) {
+						if (data[summaryAppStates[i]] != null) {
+							var v = data[summaryAppStates[i]];
 							var sel = "#pb" + i;
-							$(".pbl", sel).text(data[states[i]]);
+							$(".pbl", sel).text(data[summaryAppStates[i]]);
 							$(sel).progressbar("option", "max", max);
-							$(sel).progressbar("option", "value", parseInt(data[states[i]]));
+							$(sel).progressbar("option", "value", parseInt(data[summaryAppStates[i]]));
 						}
 					}
 					
@@ -120,6 +167,407 @@
 					$(".pbl", "#pbi-main").text(data["progressString"]);
 				}
 			}
+			
+			setActiveTabFromURL();
+		</script>
+		<!-- templates -->
+		<script type="text/xml" class="template" id="browser-template-apps" params="data" mode="replace">
+			<div>
+				<h1>Applications Overview</h1>
+				<table class="bordered ui-corner-all">
+					<tr>
+						<td>
+							<table class="alt-shaded collapsed-border" id="app-names-table">
+								<tr id="app-names-heading-row" class="ui-widget-header">
+									<th>Name</th>
+									<for name="h" in="{$data.enabledStates}">
+										<th>{appStates[$h]}</th>
+									</for>
+								</tr>
+								<for name="key" in="{$data.apps}">
+									<tr>
+										<td><a tref="#browser?type=appdetail&amp;name={$key}">{$key}</a></td>
+										<for name="c" in="{$data.apps[$key]}">
+											<if test="{$c[1] == 0}">
+												<then>
+													<td class="numeric">{$c[1]}</td>
+												</then>
+												<else>
+													<td class="numeric"><a tref="#browser?type=applist&amp;name={$key}&amp;state={$c[0]}">{$c[1]}</a></td>
+												</else>
+											</if>
+										</for>
+									</tr>
+								</for>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</script>
+		<script type="text/xml" class="template" id="browser-template-appdetail" params="data" mode="replace">
+			<div>
+				<h1>Details for application "{$data.name}"</h1>
+				<table>
+					<tr><th class="centered">Application count per site</th><th class="centered">Average run time per site</th></tr>
+					<tr>
+						<td><div id="appdetail-count-per-site" class="plot-medium"></div></td>
+						<td><div id="appdetail-time-per-site" class="plot-medium"></div></td>
+					</tr>
+					<js>
+						countPerSitePlot("#appdetail-count-per-site", _p.data.sites);
+						timePerSitePlot("#appdetail-time-per-site", _p.data.sites);
+					</js>
+					<proc name="p1" params="title, pdata, host">
+						<tr><td colspan="2"><h2>{$title}</h2></td></tr>
+						<tr><td colspan="2">
+							Total: <a tref="#browser?type=applist&amp;name={$pdata.name}&amp;host={$host}">{$pdata.count} instances</a>,
+							<if test="{$pdata.completedCount == 0}">
+								<then>Completed: 0 instances,</then>
+								<else>
+									Completed: <a tref="#browser?type=applist&amp;name={$pdata.name}&amp;host={$host}&amp;state=10">{$pdata.completedCount} instances</a>,
+								</else>
+							</if>
+							<if test="{$pdata.failedCount == 0}">
+								<then>Failed: 0 instances,</then>
+								<else>
+									Failed: <a tref="#browser?type=applist&amp;name={$pdata.name}&amp;host={$host}&amp;state=7">{$pdata.failedCount} instances</a>
+								</else>
+							</if>
+						</td></tr>
+						<tr>
+							<td colspan="2"><h3>Average time spent in specific states</h3></td>
+						</tr>
+						<tr>
+							<th class="centered">All states</th>
+							<th class="centered">Only staging and active</th>
+						</tr>
+						<tr>
+							<td>Total: {scaleAndFormatMS(sumTimes1($pdata.avgStateTimes))}</td>
+							<td>Total: {scaleAndFormatMS(sumTimes2($pdata.avgStateTimes))}</td>
+						</tr>
+						<tr>
+							<td><div id="appdetail-state-avg-time1-{$host}" class="plot-medium"></div></td>
+							<td><div id="appdetail-state-avg-time2-{$host}" class="plot-medium"></div></td>
+						</tr>
+						<js>
+							stateTimesPie1("#appdetail-state-avg-time1-{$host}", [{$pdata.avgStateTimes}]);
+							stateTimesPie2("#appdetail-state-avg-time2-{$host}", [{$pdata.avgStateTimes}]);
+						</js>
+						<tr>
+							<td colspan="2"><h3>Total run time distribution</h3></td>
+						</tr>
+						<tr>
+							<th class="centered">Completed jobs</th>
+							<th class="centered">Failed jobs</th>
+						</tr>
+						<tr>
+							<td>Average: {scaleAndFormatMS($pdata.completedTimeAvg)}</td>
+							<td>Average: {scaleAndFormatMS($pdata.failedTimeAvg)}</td>
+						</tr>
+						<tr>
+							<td><div id="appdetail-c-time-dist-{$host}" class="plot-medium"></div></td>
+							<td><div id="appdetail-f-time-dist-{$host}" class="plot-medium"></div></td>
+						</tr>
+						<js>
+							histogram("#appdetail-c-time-dist-{$host}", [{$pdata.completedTimeDist}], {$pdata.distMinTime}, 
+								{$pdata.distMaxTime}, COMPLETED_COLOR);
+							histogram("#appdetail-f-time-dist-{$host}", [{$pdata.failedTimeDist}], {$pdata.distMinTime}, 
+								{$pdata.distMaxTime}, FAILED_COLOR);
+						</js>
+					</proc>
+					<call name="p1" title="All sites combined" pdata="{$data}" host="{null}"/>
+					<for name="site" in="{$data.sites}">
+						<call name="p1" title="Site: {$site.name}" pdata="{$site}" host="{$site.name}"/>
+					</for>
+				</table>
+			</div>
+		</script>
+		<script type="text/xml" class="template" id="browser-template-applist" params="data" mode="replace">
+			<div>
+				<h1>{$data.title}</h1>
+				<table class="bordered ui-corner-all">
+					<tr>
+						<td class="paging">
+							<pager id="applistpager" maxPage="{$data.pages}" crtPage="{$data.crtPage}" 
+								target="#browser?type=applist&amp;name={$data.name}&amp;state={$data.state}&amp;host={$data.host}&amp;page=%"/>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<table class="alt-shaded collapsed-border" id="app-names-table">
+								<tr id="app-names-heading-row" class="ui-widget-header">
+									<th>ID</th><th>State</th><th>Start Time</th><th>Run Time (min)</th><th>Host (/ Worker)</th><th>Arguments</th>
+								</tr>
+								<for name="s" in="{$data.data}">
+									<tr>
+										<td><a tref="#browser?type=appinstance&amp;id={$s.id}">{$s.id}</a></td>
+										<td>{appStates[$s.state]}</td>
+										<td>{formatTimestamp($s.startTime)}</td>
+										<if test="{$s.runTime == 0}">
+											<then>
+												<td>N/A</td>
+											</then>
+											<else>
+												<td class="numeric">{formatInterval($s.runTime)}</td>
+											</else>
+										</if>
+										<td>
+											<a tref="#browser?type=host&amp;name={$s.host}">{$s.host}</a>
+											<if test="{'worker' in $s}">
+												<then>
+													/ <a tref="#browser?type=worker&amp;host={$s.host}&amp;id={$s.worker}">{$s.worker}</a>
+												</then>
+											</if>
+										</td>
+										<td class="numeric">{cutString($s.args, 40)}</td>
+									</tr>
+								</for>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</script>
+		<script type="text/xml" class="template" id="browser-template-appinstance" params="data" mode="replace">
+			<div>
+				<proc name="attr" params="data, key">
+					<if test="{$key in $data}">
+						<then>{$data[$key]}</then>
+						<else>N/A</else>
+					</if>
+				</proc>
+				<proc name="row" params="data, key, label">
+					<tr>
+						<th>{$label}:</th>
+						<td><call name="attr" data="{$data}" key="{$key}"/></td>
+					</tr>
+				</proc>
+				<h1>Application instance "{$data.id}"</h1>
+				<table class="float-left">
+					<tr>
+						<th>Total time: </th>
+						<td>{formatInterval($data.totalTime)} <div id="appinstance-time1" class="plot-strip"></div></td>
+					</tr>
+					<tr>
+						<th>Run time: </th>
+						<td>{formatInterval($data.runTime)} <div id="appinstance-time2" class="plot-strip"></div></td>
+					</tr>
+					<js>
+						stateTimesStrip1("#appinstance-time1", _p.data.timeline);
+						stateTimesStrip2("#appinstance-time2", _p.data.timeline);
+					</js>
+					<tr>
+						<th>Host:</th>
+						<td>
+							<a tref="#browser?type=host&amp;name={$data.host}">{$data.host}</a>
+							<if test="{'worker' in $data}">
+								<then>
+									/ <a tref="#browser?type=worker&amp;host={$data.host}&amp;id={$data.worker}">{$data.worker}</a>
+								</then>
+							</if>
+						</td>
+					</tr>
+					<call name="row" data="{$data}" label="Executable" key="executable"/>
+					<call name="row" data="{$data}" label="Directory" key="directory"/>
+					<call name="row" data="{$data}" label="Arguments" key="args"/>
+					<call name="row" data="{$data}" label="STDIN" key="stdin"/>
+					<call name="row" data="{$data}" label="STDOUT" key="stdout"/>
+					<call name="row" data="{$data}" label="STDERR" key="stderr"/>
+					<call name="row" data="{$data}" label="Input files" key="stagein"/>
+					<call name="row" data="{$data}" label="Output files" key="stageout"/>
+				</table>
+				<div id="legend" class="float-left"></div>
+			</div>
+		</script>
+		<script type="text/xml" class="template" id="browser-template-sites" params="data" mode="replace">
+			<div>
+				<h1>Sites Information</h1>
+				<table class="bordered ui-corner-all">
+					<proc name="p1" params="sname, pdata, enabledStates">
+						<tr><td colspan="{$enabledStates.length + 2}"><h2>{$sname}</h2></td></tr>
+						<tr>
+							<td colspan="{$enabledStates.length + 2}">
+								<a tref="#browser?type=applist&amp;host={$sname}">{$pdata.appCount}</a> application instances
+							</td>
+						</tr>
+						<tr>
+							<td colspan="{$enabledStates.length + 2}">
+								<a tref="#browser?type=workerlist&amp;host={$sname}">{$pdata.workers.length}</a> workers
+							</td>
+						</tr>
+						<tr id="app-names-heading-row" class="ui-widget-header">
+							<th colspan="2">Application name</th>
+							<for name="h" in="{$enabledStates}">
+								<th>{appStates[$h]}</th>
+							</for>
+						</tr>
+						<for name="key" in="{$pdata.stateCounts}">
+							<tr>
+								<td rowspan="2"><a tref="#browser?type=appdetail&amp;name={$key}">{$key}</a></td>
+								<td class="numeric">Count</td>
+								<for name="c" in="{$pdata.stateCounts[$key]}">
+									<if test="{$c == 0}">
+										<then>
+											<td class="numeric">{$c}</td>
+										</then>
+										<else>
+											<td class="numeric"><a tref="#browser?type=applist&amp;name={$key}&amp;state={$c}">{$c}</a></td>
+										</else>
+									</if>
+								</for>
+							</tr>
+							<tr>
+								<td class="numeric">Avg. Times</td>
+								<for name="c" in="{$pdata.avgStateTimes[$key]}">
+									<td class="numeric">{formatInterval($c)}</td>
+								</for>
+							</tr>
+						</for>
+					</proc>
+					<for name="site" in="{$data.sites}">
+						<call name="p1" sname="{$site.name}" pdata="{$site}" enabledStates="{$data.enabledStates}"/>
+					</for>
+				</table>
+			</div>
+		</script>
+		<script type="text/xml" class="template" id="browser-template-workerlist" params="data" mode="replace">
+			<div>
+				<h1>Worker list</h1>
+				<table class="bordered ui-corner-all">
+					<tr>
+						<td class="paging">
+							<pager id="workerlistpager" maxPage="{$data.pages}" crtPage="{$data.crtPage}" 
+								target="#browser?type=workerlist&amp;page=%"/>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<table class="alt-shaded collapsed-border" id="app-names-table">
+								<tr id="app-names-heading-row" class="ui-widget-header">
+									<th>ID</th><th>Node</th><th># Cores</th><th>Start Time</th><th>Walltime</th><th>Active Apps</th><th>CPU load</th>
+								</tr>
+								<for name="s" in="{$data.data}">
+									<tr>
+										<td><a tref="#browser?type=worker&amp;id={$s.id}">{$s.id}</a></td>
+										<td>{$s.node}</td>
+										<td class="numeric">{$s.cores}</td>
+										<td>{formatTimestamp($s.startTime)}</td>
+										<td class="numeric">{formatInterval($s.walltime)}</td>
+										<td class="numeric">{$s.activeApps}</td>
+										<td class="numeric">
+											<span id="load-{$s.node}" style="width:100px;height:20px;"></span>
+											<js>
+												cpuLoadSpark("#load-" + _p.s.node, _p.s.cpuLoad);
+											</js>
+										</td>
+									</tr>
+								</for>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</script>
+		<script type="text/xml" class="template" id="browser-template-worker" params="data" mode="replace">
+			<div>
+				<proc name="attr" params="data, key">
+					<if test="{$key in $data}">
+						<then>{$data[$key]}</then>
+						<else>N/A</else>
+					</if>
+				</proc>
+				<proc name="row" params="data, key, label">
+					<tr>
+						<th>{$label}:</th>
+						<td><call name="attr" data="{$data}" key="{$key}"/></td>
+					</tr>
+				</proc>
+				<h1>Details for worker "{$data.id}"</h1>
+				<table>
+					<call name="row" data="{$data}" label="Node" key="node"/>
+					<call name="row" data="{$data}" label="Cores" key="cores"/>
+					<tr>
+						<th>Start time: </th>
+						<td>{formatTimestamp($data.startTime)}</td>
+					</tr>
+					<tr>
+						<th>Walltime: </th>
+						<td>{formatInterval($data.walltime)}</td>
+					</tr>
+					<tr>
+						<th>Applications: </th>
+						<td>{$data.activeApps} running, {$data.completedApps} completed, {$data.failedApps} failed</td>
+					</tr>
+					<tr>
+						<th>CPU Load:</th>
+						<td><div id="cpu-load-plot" class="plot-medium"></div></td>
+						<js>
+							cpuLoadPlot("#cpu-load-plot", _p.data.cpuLoad);
+						</js>
+					</tr>
+					<tr>
+						<th>Disk Usage:</th>
+						<td>
+							<table>
+								<tr>
+									<for name="d" in="{$data.diskUsage}">
+										<td>{$d.mount}</td>
+									</for>
+								</tr>
+								<tr>
+									<for name="d" in="{$data.diskUsage}">
+										<td><div id="du-{$d.index}" class="plot-small"></div></td>
+									</for>
+								</tr>
+							</table>
+						</td>
+						<js>
+							diskUsagePlots("#du-", _p.data.diskUsage);
+						</js>
+					</tr>
+					<tr>
+						<th>Read Throughput:</th>
+						<td>
+							<table>
+								<tr>
+									<for name="d" in="{$data.ioLoad}">
+										<td>{$d.device}</td>
+									</for>
+								</tr>
+								<tr>
+									<for name="d" in="{$data.ioLoad}">
+										<td><div id="dlr-{$d.index}" class="plot-small"></div></td>
+									</for>
+								</tr>
+							</table>
+						</td>
+						<js>
+							ioLoadPlots("#dlr-", _p.data.ioLoad, "rt", formatThroughput, "#afaf00");
+						</js>
+					</tr>
+					<tr>
+						<th>Write Throughput:</th>
+						<td>
+							<table>
+								<tr>
+									<for name="d" in="{$data.ioLoad}">
+										<td>{$d.device}</td>
+									</for>
+								</tr>
+								<tr>
+									<for name="d" in="{$data.ioLoad}">
+										<td><div id="dlw-{$d.index}" class="plot-small"></div></td>
+									</for>
+								</tr>
+							</table>
+						</td>
+						<js>
+							ioLoadPlots("#dlw-", _p.data.ioLoad, "wt", formatThroughput, "#00afaf");
+						</js>
+					</tr>
+				</table>
+			</div>
 		</script>
 	</body>
 </html>

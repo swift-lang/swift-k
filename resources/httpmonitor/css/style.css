@@ -11,6 +11,22 @@
 	width: 100%;
 }
 
+#summary-container {
+}
+
+#summary-container, #heap-container {
+	width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#pbi-main {
+	width: 95%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 38px;
+}
+
 .bordered {
 	margin: 4px;
 	padding: 4px;
@@ -18,11 +34,11 @@
 
 .mlabel {
 	position: relative;
-	top: 14px;
+	top: -14px;
 	left: 16px;
 	padding-left: 9px;
 	padding-right: 4px;
-	width: 80px;
+	width: 100px;
 }
 
 #appSummary .label {
@@ -151,4 +167,89 @@ span .small-button {
 	margin: 2px;
 	padding: 4px;
 	background-color: white;
+}
+
+
+th {
+	font-size: 12px;
+	font-weight: bold;
+}
+
+th:first-child {
+	border-left: none;
+}
+
+th {
+	/*border-left: thin solid black;
+	border-bottom: thin solid black;*/
+	padding-left: 8px;
+	padding-right: 8px;
+	padding-bottom: 4px;
+	margin: 0px;
+}
+
+td {
+	font-size: 12px;
+	padding: 4px;
+	padding-left: 8px;
+	padding-right: 8px;
+}
+
+.alt-shaded tr:nth-child(odd) {
+    background-color: #f0f0f0;
+}
+
+td.numeric {
+	text-align: right;
+	padding-right: 8px;
+}
+
+table.collapsed-border {
+	border-collapse: collapse;
+}
+
+.toolbar li {
+	display: inline;
+}
+
+.paging {
+	text-align: center;
+}
+
+#browser h1 {
+	font-size: 14pt;
+	width: 99%;
+	background-color: #f0f0f0;
+	padding: 4px 0px 4px 8px;
+	margin-right: 16px;
+	margin-left: 0px;
+}
+
+#browser em {
+	font-weight: bold;
+}
+
+.plot-medium {
+	width: 400px;
+	height: 200px;
+}
+
+.plot-small {
+	width: 240px;
+	height: 120px;
+}
+
+
+.plot-strip {
+	width: 400px;
+	height: 16px;
+}
+
+
+.centered {
+	text-align: center;
+}
+
+.float-left {
+	float: left;
 }
