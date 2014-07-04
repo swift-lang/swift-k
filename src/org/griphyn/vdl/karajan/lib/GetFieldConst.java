@@ -24,22 +24,38 @@ import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.Param;
-import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.functions.AbstractFunction;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Types;
 
-public class GetFieldConst extends AbstractSingleValuedFunction {
+public class GetFieldConst extends AbstractFunction {
     private ArgRef<String> name;
     private ArgRef<String> type;
 
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("name", "type"));
+    }
     
     @Override
-    protected Param[] getParams() {
-        return params("name", "type");
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
+        String name = this.name.getValue();
+        String type = this.type.getValue();
+        try {
+            staticReturn(scope, Field.Factory.getImmutableField(name, Types.getType(type)));
+        }
+        catch (NoSuchTypeException e) {
+            throw new ExecutionException("No such type: " + name, e);
+        }
+        
+        return null;
     }
-
 
     @Override
 	public Object function(Stack stack) {

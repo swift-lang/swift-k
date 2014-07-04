@@ -22,7 +22,6 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import k.rt.Context;
 import k.rt.ExecutionException;
@@ -39,6 +38,7 @@ import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DuplicateMappingChecker;
+import org.griphyn.vdl.mapping.GenericMappingParamSet;
 import org.griphyn.vdl.mapping.InvalidMapperException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MapperFactory;
@@ -50,9 +50,6 @@ import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.mapping.nodes.RootClosedArrayDataNode;
 import org.griphyn.vdl.mapping.nodes.RootClosedPrimitiveDataNode;
 import org.griphyn.vdl.mapping.nodes.RootFutureArrayDataNode;
-import org.griphyn.vdl.mapping.nodes.RootFutureMappedSingleDataNode;
-import org.griphyn.vdl.mapping.nodes.RootFuturePrimitiveDataNode;
-import org.griphyn.vdl.mapping.nodes.RootFutureStructDataNode;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
@@ -63,15 +60,17 @@ public class New extends SwiftFunction {
 	
 	private static final Mapper NULL_MAPPER = new NullMapper();
 	
+	private static DuplicateMappingChecker staticDMC = new DuplicateMappingChecker(null);
+	
 	private ArgRef<Field> field;
-	private ArgRef<Map<String, Object>> mapping;
+	private ArgRef<GenericMappingParamSet> mapping;
 	private ArgRef<Object> value;
 	private ArgRef<Number> waitCount;
 	private ArgRef<Boolean> input;
 	private ArgRef<Integer> _defline;
 	
 	private VarRef<Context> context;
-	private VarRef<String> cwd;
+	private VarRef<String> cwd; 
 	
 	@Override
 	protected Signature getSignature() {
@@ -103,7 +102,7 @@ public class New extends SwiftFunction {
     public Object function(Stack stack) {
 		Field field = this.field.getValue(stack);
 		Object value = this.value.getValue(stack);
-        Map<String, Object> mapping = this.mapping.getValue(stack);
+        GenericMappingParamSet mapping = this.mapping.getValue(stack);
 		Number waitCount = this.waitCount.getValue(stack);
 		boolean input = this.input.getValue(stack);
 		Integer line = this._defline.getValue(stack);
@@ -117,14 +116,12 @@ public class New extends SwiftFunction {
 		String dbgname = (String) field.getId();
 		
 		if (type.hasMappedComponents()) {
-		    String desc = (String) mapping.remove("swift#descriptor");
 		    try {
-                mapper = MapperFactory.getMapper(desc);
+                mapper = MapperFactory.getMapper(mapping.getDescriptor());
             }
             catch (InvalidMapperException e) {
-                throw new ExecutionException(this, "Invalid mapper '" + desc + "'");
+                throw new ExecutionException(this, "Invalid mapper '" + mapping.getDescriptor() + "'");
             }
-		    mapping.remove("descriptor");
 		    mapper.setParameters(mapping);
 		    mapper.setBaseDir(cwd.getValue(stack));
 		}
