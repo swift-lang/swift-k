@@ -1,4 +1,0 @@
-This wizard was developed with the goal of simplifying the configuration process of the Java CoG Kit. The following people were involved in the development of this installation wizard:
-
-Gregor von Laszewski
-Mihael Hategan

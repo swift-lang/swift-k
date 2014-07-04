@@ -1,2 +1,0 @@
-The setup module allows the configuration of the Java CoG Kit through
-an easy and intuitive graphical interface.

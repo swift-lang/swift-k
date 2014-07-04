@@ -1,7 +1,0 @@
- Please enter the location of your GSI certificate.
- 
- If you do not yet have a GSI certificate please apply for one with the appropriate certification authority for your organization.
- 
- To browse for your GSI certificate please press the browse button ("...").
- 
- To view the selected file press "View".

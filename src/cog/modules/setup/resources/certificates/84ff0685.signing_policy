@@ -1,6 +1,0 @@
-# Community Grids Lab CA Policy
-
-access_id_CA   X509    '/C=US/O=Indiana University/OU=Community Grids Lab/CN=CGL Certificate Authority'
-pos_rights     globus  CA:sign
-cond_subjects  globus  '/C=US/O=Indiana University/OU=Community Grids Lab/*'
-

@@ -1,7 +1,0 @@
- Please verify that the date on your machine is correct.
- 
- Below, after the date and time, you will see an offset which indicates (in milliseconds) the difference between your clock value and the value that it is supposed to have.
- 
- Pressing the "Retest" button will update the offset from a time server.
- 
- We recommend that you synchronize your system clock using NTP.

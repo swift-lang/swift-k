@@ -1,2 +1,0 @@
-CoG Setup is used to easily set up the Java CoG Kit through an intuitive
-graphical wizard.

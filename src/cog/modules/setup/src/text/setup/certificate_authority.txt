@@ -1,9 +1,0 @@
- The Certificate Authorities that you add here will be used to authenticate the services that you will connect to.
- 
- To add a certificate or a directory containing certificates to the list, use the "Add..." button.
- 
- Enable or disable an entry in the list using the associated check-box.
- 
- To remove an entry from the list, select it and press "Remove".
- 
- To view a certificate file, or the contents of a directory, select it from the list and click "View".

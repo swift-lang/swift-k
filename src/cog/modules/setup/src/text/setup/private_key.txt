@@ -1,7 +1,0 @@
- Please enter the location of your private key.
- 
- To browse for the private key please press the browse button ("...").
- 
- To view the selected file press "View".
- 
- To test if the private key matches the certificate specified earlier, press the "Test" button.
