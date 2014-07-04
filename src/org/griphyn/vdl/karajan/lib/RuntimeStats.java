@@ -340,6 +340,18 @@ public class RuntimeStats {
 			Map<String, MutableInt> summary = getSummary();
 			long now = System.currentTimeMillis();
 			
+			if (logger.isInfoEnabled()) {
+                Runtime r = Runtime.getRuntime();
+                long maxHeap = r.maxMemory();
+                long freeMemory = r.freeMemory();
+                long totalMemory = r.totalMemory();
+                long usedMemory = totalMemory - freeMemory;
+                int threadCount = Thread.activeCount(); 
+                
+                logger.info("HeapMax: " + maxHeap + ", CrtHeap: " + totalMemory + ", UsedHeap: " + usedMemory + 
+                    ", JVMThreads: " + threadCount);
+            }
+			
 			if (!forced && lastState != null && lastState.equals(summary)) {
 			    return false;
 			}
@@ -377,16 +389,6 @@ public class RuntimeStats {
 			System.err.println(msg);
 			if (logger.isInfoEnabled()) {
 			    logger.info(msg);
-			}
-			
-			if (logger.isInfoEnabled()) {
-			    Runtime r = Runtime.getRuntime();
-			    long maxHeap = r.maxMemory();
-			    long freeMemory = r.freeMemory();
-			    long totalMemory = r.totalMemory();
-			    long usedMemory = totalMemory - freeMemory;
-    			
-			    logger.info("HeapMax: " + maxHeap + ", CrtHeap: " + totalMemory + ", UsedHeap: " + usedMemory);
 			}
 			
 			return true;
