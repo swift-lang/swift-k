@@ -154,6 +154,18 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 }
                 tree = load(project);
             }
+            else if (project.endsWith(".kml")) {
+                try {
+                    tree = load(project);
+                }
+                catch (Exception pe) {
+                    // the compiler should have already logged useful
+                    // error messages, so this log line is just for
+                    // debugging
+                    logger.debug("Exception when compiling " + project, pe);
+                    System.exit(3);
+                }
+            }
             else if (source != null) {
                 try {
                     String kml = compileString(source, provenanceEnabled);
