@@ -97,14 +97,9 @@ public class VDL2Config extends Properties {
 		put(VDL2ConfigProperties.TC_FILE, "${swift.home}/etc/tc.data", ConfigPropertyType.FILE);
 		put(VDL2ConfigProperties.LAZY_ERRORS, "false", ConfigPropertyType.BOOLEAN);
 		put(VDL2ConfigProperties.CACHING_ALGORITHM, "LRU", ConfigPropertyType.STRING);
-		put(VDL2ConfigProperties.PGRAPH, "false", ConfigPropertyType.BOOLEAN);
-		put(VDL2ConfigProperties.PGRAPH_GRAPH_OPTIONS, "splines=\"compound\", rankdir=\"TB\"", ConfigPropertyType.STRING);
-		put(VDL2ConfigProperties.PGRAPH_NODE_OPTIONS, "color=\"seagreen\", style=\"filled\"", ConfigPropertyType.STRING);
 		put(VDL2ConfigProperties.CLUSTERING_ENABLED, "false", ConfigPropertyType.BOOLEAN);
 		put(VDL2ConfigProperties.CLUSTERING_QUEUE_DELAY, "4", ConfigPropertyType.INT);
 		put(VDL2ConfigProperties.CLUSTERING_MIN_TIME, "60", ConfigPropertyType.INT);
-		put(VDL2ConfigProperties.KICKSTART_ENABLED, "maybe", ConfigPropertyType.choices("true", "false", "maybe"));
-		put(VDL2ConfigProperties.KICKSTART_ALWAYS_TRANSFER, "false", ConfigPropertyType.BOOLEAN);
 		put("throttle.submit", "4", ConfigPropertyType.INT);
 		put("throttle.host.submit", "2", ConfigPropertyType.INT);
 		put("throttle.transfers", "4", ConfigPropertyType.INT);
