@@ -99,8 +99,15 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
                         throw new ExecutionException(this, "Invalid site entry '" + poolName(n) + "': ", e);
                     }
                 }
-                else if (ctype.equals("application")) {
-                    cs.addApplication(application(n));
+                else if (ctype.equals("apps")) {
+                    SwiftContact dummy = new SwiftContact();
+                    apps(dummy, n);
+                    for (Application app : dummy.getApplications()) {
+                        cs.addApplication(app);
+                    }
+                }
+                else {
+                    throw new IllegalArgumentException("Invalid node: " + ctype);
                 }
             }
         }
