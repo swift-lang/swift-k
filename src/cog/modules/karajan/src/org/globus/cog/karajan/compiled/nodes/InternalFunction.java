@@ -101,6 +101,7 @@ public abstract class InternalFunction extends Sequential {
 		}
 		else {
 			//p.arity = arity;
+			//TODO
 			p.setDynamic();
 		}
 		return p;
@@ -220,9 +221,6 @@ public abstract class InternalFunction extends Sequential {
 	}
 	
 	protected ArgInfo compileArgs(WrapperNode w, Signature sig, Scope scope) throws CompilationException {
-		if (w.toString().contains("stageIn @ swift-int-staging.k, line: 121")) {
-			System.out.print("");
-		}
 		resolveChannelReturns(w, sig, scope);
 		resolveParamReturns(w, sig, scope);
 		
