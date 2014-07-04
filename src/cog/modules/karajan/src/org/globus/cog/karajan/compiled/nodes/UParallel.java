@@ -57,17 +57,12 @@ public class UParallel extends CompoundNode {
 		int state = thr.checkSliceAndPopState();
 		Stack stack = thr.getStack();
 		ThreadSetFixed ts = (ThreadSetFixed) thr.popState();
-		int fc = thr.popIntState();
 		try {
 			switch (state) {
 				case 0:
-					fc = stack.frameCount();
-					state++;
-				case 1:
 				    int ec = childCount();
 					final ThreadSetFixed tsf = new ThreadSetFixed(ec);
 					ts = tsf;
-					final int fcf = fc;
 					for (int i = 0; i < ec; i++) {
 						final int fi = i;
 						LWThread ct = thr.fork(i, new KRunnable() {
@@ -78,14 +73,10 @@ public class UParallel extends CompoundNode {
 									tsf.threadDone(thr, null);
 								}
 								catch (ExecutionException e) {
-									Stack stack = thr.getStack();
-									stack.dropToFrame(fcf);
 									tsf.threadDone(thr, e);
 									tsf.abortAll();
 								}
 								catch (RuntimeException e) {
-									Stack stack = thr.getStack();
-									stack.dropToFrame(fcf);
 									tsf.threadDone(thr, new ExecutionException(UParallel.this, e));
 									tsf.abortAll();
 								}
@@ -97,12 +88,11 @@ public class UParallel extends CompoundNode {
 					}
 					ts.startAll();
 					state++;
-				case 2:
+				case 1:
 					ts.waitFor();
 			}
 		}
 		catch (Yield y) {
-			y.getState().push(fc);
 			y.getState().push(ts);
 			y.getState().push(state);
 			throw y;
