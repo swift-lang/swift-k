@@ -9,6 +9,7 @@ package org.globus.cog.abstraction.interfaces;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 /**
@@ -180,6 +181,8 @@ public interface JobSpecification extends Specification {
     public void addEnvironmentVariable(String name, String value);
 
     public void addEnvironmentVariable(String name, int i);
+    
+    public void setEnvironmentVariables(Map<String, String> env);
 
     /**
      * Removes the environment variable with the given name from the remote
