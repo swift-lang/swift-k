@@ -58,8 +58,6 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.event.ChartChangeEvent;
 import org.jfree.chart.event.ChartChangeEventType;
 import org.jfree.chart.event.ChartChangeListener;
-import org.jfree.chart.event.PlotChangeEvent;
-import org.jfree.chart.event.PlotChangeListener;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.Range;
@@ -199,7 +197,12 @@ public class GraphPanel extends JPanel implements ChartMouseListener {
                 enableTooltip(x);
             }
         };
-        GlobalTimer.getTimer().schedule(tooltipTimerTask, TOOLTIP_DISPLAY_DELAY);
+        try {
+            GlobalTimer.getTimer().schedule(tooltipTimerTask, TOOLTIP_DISPLAY_DELAY);
+        }
+        catch (IllegalStateException e) {
+            System.err.println(this + ": " + e.getMessage());
+        }
     }
 
     protected synchronized void disableToolTip() {

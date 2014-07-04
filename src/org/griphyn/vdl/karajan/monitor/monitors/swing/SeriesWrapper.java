@@ -221,7 +221,6 @@ public class SeriesWrapper extends TimeSeries implements Listener {
         return new Second(new Date(time));
     }
 
-
     @Override
     public Class getTimePeriodClass() {
         return Second.class;

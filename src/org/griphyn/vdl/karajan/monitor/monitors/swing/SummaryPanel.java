@@ -38,7 +38,7 @@ public class SummaryPanel extends JPanel {
 
     public SummaryPanel(SystemState state) {
         this.state = state;
-        this.start = System.currentTimeMillis();
+        this.start = state.getCurrentTime();
         SpringLayout l = new SpringLayout();
         setLayout(l);
         
@@ -161,7 +161,7 @@ public class SummaryPanel extends JPanel {
             }
         }
         long heapMax = state.getMaxHeap();
-        long heapCrt = state.getCurrentHeap();
+        long heapCrt = state.getUsedHeap();
         memory.setMaximum((int) (heapMax / 1000000));
         memory.setValue((int) (heapCrt / 1000000));
         memory.setString(state.getCurrentHeapFormatted() + " / " + state.getMaxHeapFormatted());

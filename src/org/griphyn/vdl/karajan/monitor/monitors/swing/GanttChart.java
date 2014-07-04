@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimerTask;
 
 import javax.swing.BoundedRangeModel;
 import javax.swing.JComponent;
@@ -47,7 +48,6 @@ import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
-import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -56,6 +56,7 @@ import javax.swing.table.TableCellRenderer;
 
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.SystemStateListener;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
@@ -80,13 +81,14 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 	private JScrollBar hsb;
 	private JSpinner scalesp;
 	private long firstEvent;
-	private Timer timer;
 	private double scale;
 	private int offset, maxX;
 	private JLabel ctime;
 	private boolean scrollVerticallyOnNextUpdate;
+	private SystemState state;
 
-	public GanttChart() {
+	public GanttChart(SystemState state) {
+	    this.state = state;
 		scale = INITIAL_SCALE;
 		jobs = new ArrayList<Job>();
 		jobmap = new HashMap<String, Job>();
@@ -127,8 +129,12 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 		add(createTools(), BorderLayout.NORTH);
 		add(hsb, BorderLayout.SOUTH);
 		
-		timer = new Timer(1000, this);
-		timer.start();
+		state.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                GanttChart.this.actionPerformed(null);
+            }
+		}, 1000, 1000);
 	}
 	
 	private JComponent createTools() {
@@ -166,7 +172,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 
 	public void itemUpdated(SystemStateListener.UpdateType updateType, StatefulItem item) {
 		if (firstEvent == 0) {
-			firstEvent = System.currentTimeMillis();
+			firstEvent = state.getCurrentTime();
 		}
 		if (item.getItemClass().equals(StatefulItemClass.APPLICATION)) {
 			ApplicationItem ai = (ApplicationItem) item;
@@ -248,7 +254,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 
 	public void actionPerformed(ActionEvent e) {
 		if (firstEvent != 0) {
-			ctime.setText("Current time: " + (System.currentTimeMillis() - firstEvent) / 1000 + "s");
+			ctime.setText("Current time: " + (state.getCurrentTime() - firstEvent) / 1000 + "s");
 		}
 		cmodel.fireTableDataChanged();
 	}
@@ -428,7 +434,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 		public int time;
 
 		public Event(int type) {
-			this.time = (int) (System.currentTimeMillis() - firstEvent);
+			this.time = (int) (state.getCurrentTime() - firstEvent);
 			this.type = type;
 		}
 	}
@@ -541,7 +547,7 @@ public class GanttChart extends JPanel implements SystemStateListener, ActionLis
 			}
 
 			if (!endcap) {
-				ex = (int) (System.currentTimeMillis() - firstEvent);
+				ex = (int) (state.getCurrentTime() - firstEvent);
 			}
 
 			g.setColor(LINE_COLOR);

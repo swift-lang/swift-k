@@ -156,7 +156,7 @@ public class SwingMonitor extends AbstractMonitor {
 		tablemap.put(StatefulItemClass.TASK, tasks);
 		tabs.add("Tasks", (Component) tasks);
 		
-		gantt = new GanttChart();
+		gantt = new GanttChart(getState());
 		tabs.add("Gantt Chart", gantt);
 		
 	}
