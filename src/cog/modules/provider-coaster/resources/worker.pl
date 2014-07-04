@@ -166,6 +166,9 @@ my $PROFILE = 0;
 # Contains tuples (EVENT, PID, TIMESTAMP) (flattened)
 my @PROFILE_EVENTS = ();
 
+my $PROBE_INTERVAL = 1;
+my $LAST_PROBE_TIME = time() - $PROBE_INTERVAL + 1;
+
 my $ID = "-";
 my $CONNECTED = 0;
 
@@ -190,11 +193,16 @@ sub wlog {
 
 # Command-line arguments:
 my %OPTS=();
-getopts("w:h", \%OPTS);
+getopts("cw:h", \%OPTS);
 
 if (defined $OPTS{"h"}) {
-	print "worker.pl <serviceURL> <blockID> <logdir> [-w <maxwalltime>]\n";
+	print "worker.pl <serviceURL> <blockID> <logdir> [-w <maxwalltime>] [-c <concurrency>]\n";
 	exit(1);
+}
+
+my $CONCURRENCY;
+if (defined $OPTS{"c"}) {
+	$CONCURRENCY = $OPTS{"c"}; 
 }
 
 my $URISTR=$ARGV[0];
@@ -407,7 +415,14 @@ sub reconnect() {
 			$SOCK->blocking(0);
 			$SOCK->autoflush(1);
 			# myhost is used by the CoasterService for MPI tasks
-			queueCmd(registerCB(), "REGISTER", $BLOCKID, $myhost, "maxwalltime = $MAXWALLTIME");
+			if (defined $CONCURRENCY) {
+				wlog DEBUG, "Registering with concurrency=$CONCURRENCY\n";
+				queueCmd(registerCB(), "REGISTER", $BLOCKID, $myhost, "maxwalltime = $MAXWALLTIME, concurrency = $CONCURRENCY");
+			}
+			else {
+				wlog DEBUG, "Registering without concurrency\n";
+				queueCmd(registerCB(), "REGISTER", $BLOCKID, $myhost, "maxwalltime = $MAXWALLTIME");
+			}
 			last;
 		}
 		else {
@@ -971,6 +986,7 @@ sub loopOne {
 	checkHeartbeat();
 	checkJobs();
 	checkCommands();
+	checkStartProbes();
 	
 	if (@SENDQ) {
 		# if there are commands to send, don't just wait for data
@@ -1408,7 +1424,7 @@ sub stagein {
 	}
 	else {
 		if ($STAGEINDEX == 0) {
-			queueJobStatusCmd($jobid, STAGEIN, 0, "workerid=$ID");
+			queueJobStatusCmd($jobid, STAGEIN, 0, "workerid=$BLOCKID:$ID");
 		}
 		wlog INFO, "$jobid Staging in $$STAGE[$STAGEINDEX]\n";
 		$JOBDATA{$jobid}{"stageindex"} =  $STAGEINDEX + 1;
@@ -1571,9 +1587,9 @@ sub stageout {
 			$skip = 3;
 		}
 		if (!$skip) {
-			if (!defined($JOBDATA{$jobid}{"stagoutStatusSent"})) {
+			if (!defined($JOBDATA{$jobid}{"stageoutStatusSent"})) {
 				wlog DEBUG, "$jobid Sending STAGEOUT status\n";
-				queueJobStatusCmd($jobid, STAGEOUT, 0, "workerid=$ID");
+				queueJobStatusCmd($jobid, STAGEOUT, 0, "");
 				$JOBDATA{$jobid}{"stageoutStatusSent"} = 1;
 			}
 			my $rfile = $$STAGED[$STAGEINDEX];
@@ -2372,6 +2388,8 @@ sub checkJobs {
 	$JOBSDONE = 0;
 	$LAST_JOB_CHECK_TIME = $now;
 	
+	checkProbes();
+	
 	if (!%JOBWAITDATA) {
 		return;
 	}
@@ -2552,6 +2570,262 @@ sub stracerunjob {
 	runjob($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA);
 }
 
+my $PROBES_PID = 0;
+my $PROBES_OUT;
+
+sub checkProbes() {
+	if ($PROBES_PID == 0) {
+		return;
+	}
+	my $tid = waitpid($PROBES_PID, &WNOHANG);
+	if ($tid == $PROBES_PID) {
+		wlog DEBUG, "Probes done (pid=$tid)\n";
+		$PROBES_PID = 0;
+		processProbes($PROBES_OUT);
+	}
+}
+
+sub processProbes() {
+	my ($in) = @_;
+	
+	my $current = 0;
+	my $time;
+	
+	wlog DEBUG, "Processing probe data\n";
+	
+	while (my $line = <$in>) {
+		$line = trim($line);
+		wlog TRACE, "Probe line: $line\n";
+		if ($line eq "") {
+			$current = 0;
+		}
+		if ($current == 0 && $line =~ /^-/) {
+			my @arr = split(/\s+/, $line);
+			$time = $arr[1];
+			if ($line =~ /^-CPU/) {
+				$current = 1;
+			}
+			elsif ($line =~ /^-DF/) {
+				$current = 2;
+			}
+			elsif ($line =~ /^-DL/) {
+				$current = 3;
+			}			
+		}
+		elsif ($current == 1) {
+			calculateAndSendCPUStats($time, $line);
+		}
+		elsif ($current == 2) {
+			calculateAndSendDFStats($time, $line);
+		}
+		elsif ($current == 3) {
+			calculateAndSendDLStats($time, $line);
+		}
+	}
+}
+
+my $LAST_CPU_LINE;
+
+sub calculateAndSendCPUStats() {
+	my ($time, $line) = @_;
+	
+	# cpu  6687663 4396 12825492 47536746 74378 10 2743 0 0 0
+	#      user    nice system   idle     ....
+	# the units are not important. Usage since last time is 
+	# delta(user + nice + system) / delta(all)
+	if (defined $LAST_CPU_LINE) {
+		my @e1 = split(/\s+/, $LAST_CPU_LINE);
+		my @e2 = split(/\s+/, $line);
+		my $t1 = sum(1, -1, @e1);
+		my $a1 = sum(1, 3, @e1);
+		my $t2 = sum(1, -1, @e2);
+		my $a2 = sum(1, 3, @e2);
+		my $load = ($a2 - $a1) / ($t2 - $t1);
+		
+		queueCmd((nullCB(), "RLOG", "INFO", "PROBE type=CPU workerid=$BLOCKID:$ID time=$time load=$load"));
+	}
+	$LAST_CPU_LINE = $line;
+}
+
+sub sum() {
+	my ($start, $end, @a) = @_;
+	
+	if ($end == -1) {
+		$end = (scalar @a) - 1;
+		
+	}
+	my $s = 0;
+	
+	for (my $i = $start; $i <= $end; $i++) {
+		$s = $s + $a[$i];
+	}
+	return $s;
+}
+
+sub calculateAndSendDFStats() {
+	my ($time, $line) = @_;
+	
+	if ($line =~ /^Filesystem/) {
+		# header
+		return;
+	}
+	
+	my @els = split(/\s+/, $line);
+	my $mount = $els[5];
+	if (($mount =~ /^\/sys/) || ($mount =~ /^\/dev/) || $mount =~ (/^\/run/)) {
+		return;
+	}
+	queueCmd((nullCB(), "RLOG", "INFO", "PROBE type=DF workerid=$BLOCKID:$ID time=$time mount=$mount fs=$els[0] used=$els[2] avail=$els[3]"));
+}
+
+
+my %LAST_DL_LINES = ();
+my %SECTOR_SIZES = ();
+sub calculateAndSendDLStats() {
+	my ($time, $line) = @_;
+	
+	if (!exists $SECTOR_SIZES{"initialized"}) {
+		$SECTOR_SIZES{"initialized"} = 1;
+		readSectorSizes();
+	}
+	my @els2 = split(/\s+/, $line);
+	if (defined $LAST_DL_LINES{$els2[2]}) {
+		#    0       1     2       3    4           5      6        7      8        9      10   11           12        13
+		#    8       0   sda  696479 4064    19412366 241348   852846 631973 43482080 1408616   0        889264   1649296
+		#    maj     min name reads  reads   sectors  ms spent writes writes sectors  ms spent  IOs in   ms spent weighted
+		#                     compl. merged  read     reading  compl. merged written  writing   progress in IO    ms in IO
+		# see https://www.kernel.org/doc/Documentation/iostats.txt
+		my @els1 = split(/\s+/, $LAST_DL_LINES{$els2[2]}[0]);
+		my $lastTime = $LAST_DL_LINES{$els2[2]}[1];
+		
+		my $ss = getSectorSize($els2[2]);
+		my $wms = ($els2[10] - $els1[10]);
+		my $rms = ($els2[6] - $els1[6]);
+		
+		my $rthroughput;
+		my $wthroughput;
+		
+		# throughput is (bytes read|written) / (time spent reading|writing)
+		if ($rms == 0) {
+			$rthroughput = 0;
+		}
+		else {
+			$rthroughput = $ss * ($els2[5] - $els1[5]) * 1000 / $rms;
+		}
+		if ($wms == 0) {
+			$wthroughput = 0;
+		}
+		else {
+			$wthroughput = $ss * ($els2[9] - $els1[9]) * 1000 / $wms;
+		}
+		
+		# load is the time doing i/o out of the total time
+		my $load = ($els2[12] - $els1[12]) / ($time - $lastTime) / 1000;
+		
+		queueCmd((nullCB(), "RLOG", "INFO", "PROBE type=DL workerid=$BLOCKID:$ID time=$time dev=$els2[2] wtr=$wthroughput rtr=$rthroughput load=$load"));
+	}
+	$LAST_DL_LINES{$els2[2]} = [$line, $time];
+}
+
+sub getSectorSize() {
+	my ($key) = @_;
+	
+	if (defined $SECTOR_SIZES{$key}) {
+		return $SECTOR_SIZES{$key};
+	}
+	else {
+		return 512;
+	}
+}
+
+sub readSectorSizes() {
+	%SECTOR_SIZES = ();
+	my $s = `lsblk -l -o NAME,PHY-SeC` || (wlog DEBUG, "Cannot get disk sector sizes: $!" && return);
+	my @els = split(/\n/, $s);
+	foreach (@els) {
+		my @kv = split(/\s+/, $_);
+		$SECTOR_SIZES{$kv[0]} = $kv[1];
+	}
+}
+
+sub checkStartProbes() {
+	my $now = time();
+	
+	if ($now - $LAST_PROBE_TIME > $PROBE_INTERVAL) {
+		$LAST_PROBE_TIME = $now;
+		startProbes();
+	}
+}
+
+sub startProbes() {
+	my $CHILD_W;
+	pipe($PROBES_OUT, $CHILD_W);
+	
+	my $pid = fork();
+	
+	if (defined($pid)) {
+		if ($pid == 0) {
+			close $PROBES_OUT;
+			runProbes($CHILD_W);
+			close $CHILD_W;
+			exit 0;
+		}
+		else {
+			# parent process; no need to wait here
+			close $CHILD_W;
+			wlog DEBUG, "Probes started; pid=$pid\n";
+			$PROBES_PID = $pid;
+		}
+	}
+	else {
+		queueCmd((nullCB(), "RLOG", "INFO", "Could not fork probe process"));
+	}
+}
+
+sub runProbes() {
+	my ($OUT) = @_;
+	runCPUStatsProbe($OUT);
+	runDiskUseProbe($OUT);
+	runDiskLatencyProbe($OUT);
+}
+
+sub runCPUStatsProbe() {
+	my ($OUT) = @_;
+	my $f;
+	open($f, "/proc/stat") || (wlog DEBUG, "Cannot open /proc/stat: $!\n" && return);
+	my $line = <$f>;
+	close($f);
+	print $OUT "-CPU ".time()."\n";
+	print $OUT $line;
+	print $OUT "\n\n";
+}
+
+sub runDiskUseProbe() {
+	my ($OUT) = @_;
+	my $s = `df` || {wlog DEBUG, "Cannot run df: $!\n" && return};
+	print $OUT "-DF ".time()."\n";
+	print $OUT $s;
+	print $OUT "\n\n";
+}
+
+sub runDiskLatencyProbe() {
+	my ($OUT) = @_;
+	my $f;
+	open($f, "/proc/diskstats") || (wlog DEBUG, "Cannot open /proc/diskstats: $!\n" && return);
+	print $OUT "-DL ".time()."\n";
+	while (my $line = <$f>) {
+		# skip ram and loop devices
+		if (index($line, "ram") != -1) {
+			next;
+		}
+		if (index($line, "loop") != -1) {
+			next;
+		}
+		print $OUT $line;
+	}
+	close($f);
+	print $OUT "\n\n";
+}
 
 $ENV{"LANG"} = "C";
 
