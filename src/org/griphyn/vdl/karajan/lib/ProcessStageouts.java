@@ -57,8 +57,8 @@ public class ProcessStageouts extends SwiftFunction {
         Collection<DSHandle> stageouts = this.stageouts.getValue(stack);
         Collection<AbsFile> collectList = this.collectList.getValue(stack);
         
-        if (logger.isInfoEnabled()) {
-            logger.info("Collect list: " + collectList);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Collect list: " + collectList);
         }
         Channel<Object> log = cr_restartLog.get(stack);
         
