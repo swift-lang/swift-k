@@ -83,7 +83,7 @@ namespace(swift) {
 
 	export(executable, def("org.griphyn.vdl.karajan.lib.Executable"))
 	export(TCProfile, def("org.griphyn.vdl.karajan.lib.TCProfile"))
-	export(siteProfile, def("org.griphyn.vdl.karajan.lib.SiteProfile"))
+	export(siteProfile, def("org.griphyn.vdl.karajan.lib.SiteProperty"))
 
 	export(setFutureFault, def("org.griphyn.vdl.karajan.lib.SetFutureFault"))
 
