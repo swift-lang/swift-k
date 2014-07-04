@@ -21,11 +21,7 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import k.rt.ExecutionException;
 import k.rt.Stack;
@@ -33,15 +29,11 @@ import k.rt.Stack;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.functions.Map.Entry;
-import org.globus.swift.catalog.TCEntry;
+import org.globus.swift.catalog.site.Application;
 import org.globus.swift.catalog.site.SwiftContact;
-import org.globus.swift.catalog.util.Profile;
-import org.griphyn.vdl.karajan.TCCache;
-import org.griphyn.vdl.util.FQN;
+import org.griphyn.vdl.engine.Warnings;
 
 public class TCProfile extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(TCProfile.class);
@@ -58,7 +50,7 @@ public class TCProfile extends SwiftFunction {
     private VarRef<Object> r_count;
     private VarRef<Object> r_jobType;
     private VarRef<Object> r_attributes;
-    private ChannelRef<Map.Entry<Object, Object>> cr_environment;
+    private VarRef<Map<String, String>> r_environment;
     
     private enum Attr {
         COUNT, JOB_TYPE;
@@ -77,66 +69,67 @@ public class TCProfile extends SwiftFunction {
         return new Signature(
             params("host", optional("attributes", null), optional("tr", null)),
             returns("count", "jobType",
-                "attributes", channel("environment", DYNAMIC))
+                "attributes", "environment")
         );
     }
 
     public Object function(Stack stack) {
-		TCCache tc = getTC(stack);
 		String tr = this.tr.getValue(stack);
 		
-		Map<String, Object> dynamicAttributes = readDynamicAttributes(stack);
-		
 		SwiftContact bc = this.host.getValue(stack);
-		
-		Map<String, Object> attrs = null;	
-		attrs = attributesFromHost(bc, attrs, stack);
-
-		TCEntry tce = null;
-		if (tr != null) {
-		    tce = getTCE(tc, new FQN(tr), bc);
+		Application app = bc.findApplication(tr);
+		if (app == null) {
+		    throw new RuntimeException("Application '" + tr + "' not found on site '" + bc.getName() + "'");
 		}
 		
-		if (tce != null) {
-			addEnvironment(stack, tce);
-			addEnvironment(stack, bc);
-			attrs = attributesFromTC(tce, attrs, stack);
-		}
-		attrs = addDynamicAttributes(attrs, dynamicAttributes);
-		checkWalltime(attrs, tr, stack);
-		addAttributes(attrs, stack);
+		addEnvironment(stack, app.getEnv());
+		
+		Map<String, Object> dynamicAttributes = this.attributes.getValue(stack);
+		Map<String, Object> attrs = null;
+		
+		attrs = combineAttributes(stack, attrs, app.getProperties());
+		attrs = combineAttributes(stack, attrs, dynamicAttributes);
+		
+		checkWalltime(stack, attrs, tr);
+		setAttributes(stack, attrs);
 		return null;
 	}
 
-	/**
+	private void addEnvironment(Stack stack, Map<String, String> env) {
+	    r_environment.setValue(stack, env);
+    }
+
+    /**
 	   Bring in the dynamic attributes from the Karajan stack 
 	   @return Map, may be null
 	 */
 	private Map<String, Object> readDynamicAttributes(Stack stack) {
 		return this.attributes.getValue(stack);
 	}
-	
+
 	/**
-       Store dynamic attributes into returned attributes, 
-       overwriting if necessary
-       @param result Attributes so far known, may be null
-       @param dynamicAttributes Attributes to insert, may be null
-       @result Combination, may be null
+	 * Combine attributes creating result as necessary
 	 */
-	private Map<String, Object>
-	addDynamicAttributes(Map<String, Object> result,
-	                     Map<String, Object> dynamicAttributes) {
-		if (result == null && dynamicAttributes == null)
-			return null;
-		if (result == null)
-			return dynamicAttributes;
-		if (dynamicAttributes == null)
-			return result;
-		result.putAll(dynamicAttributes);
+	private Map<String, Object>	combineAttributes(Stack stack, Map<String, Object> result, Map<String, Object> src) {
+	    if (src == null || src.isEmpty()) {
+	        return result;
+	    }
+		for (Map.Entry<String, Object> e : src.entrySet()) {
+		    Attr a = ATTR_TYPES.get(e.getKey());
+            if (a != null) {
+                setAttr(a, stack, e.getValue());
+            }
+            else {
+                if (result == null) {
+                    result = new HashMap<String, Object>();
+                }
+                result.put(e.getKey(), e.getValue());
+            }
+		}
 		return result;
 	}
 	
-	private void checkWalltime(Map<String, Object> attrs, String tr, Stack stack) {
+	private void checkWalltime(Stack stack, Map<String, Object> attrs, String tr) {
 		if (attrs == null) {
 			return;
 		}
@@ -149,111 +142,13 @@ public class TCProfile extends SwiftFunction {
             WallTime.timeToSeconds(walltime.toString());
         }
         catch (ExecutionException e) {
-            warn(tr, "Warning: invalid walltime specification for \"" + tr
+            Warnings.warn(Warnings.Type.SITE, "Invalid walltime specification for \"" + tr
                     + "\" (" + walltime + ").");
         }
 	}
-	
-	private static final Set<String> warnedAboutWalltime = 
-	    new HashSet<String>();
-	
-	private void warn(String tr, String message) {
-        synchronized (warnedAboutWalltime) {
-            if (warnedAboutWalltime.add(tr)) {
-                System.out.println(message);
-            }
-        }
-    }
-
-	private void addEnvironment(Stack stack, TCEntry tce) {
-		List<Profile> list = tce.getProfiles(Profile.ENV);
-		if (list != null) {
-			for (Profile p : list) {
-			    cr_environment.append(stack, new Entry(p.getProfileKey(), p.getProfileValue()));
-			}
-		}
-	}
-
-	public static final String PROFILE_GLOBUS_PREFIX = (Profile.GLOBUS + "::").toLowerCase();
-
-	private void addEnvironment(Stack stack, SwiftContact bc) {
-		Map<FQN, Object> profiles = bc.getProfiles();
-		if (profiles != null) {
-    		for (Map.Entry<FQN, Object> e : profiles.entrySet()) {
-    			FQN fqn = e.getKey();
-    			String value = (String) e.getValue();
-    			if (Profile.ENV.equalsIgnoreCase(fqn.getNamespace())) {
-    			    cr_environment.append(stack, new Entry(fqn.getName(), value));
-    			}
-    		}
-		}
-	}
-	
-	private void addAttributes(Map<String,Object> attrs, Stack stack) {
-	    if (logger.isDebugEnabled()) {
-	        logger.debug("Attributes: " + attrs);
-	    }
-	    if (attrs == null) {
-	        return;
-	    }
-	    Iterator<Map.Entry<String, Object>> i = attrs.entrySet().iterator();
-	    while (i.hasNext()) {
-	        Map.Entry<String, Object> e = i.next();
-	        Attr a = ATTR_TYPES.get(e.getKey());
-	        if (a != null) {
-	            setAttr(a, stack, e.getValue());
-	            i.remove();
-	        }
-	    }
-	    if (attrs.size() == 0) {
-	        return;
-	    }
+		
+	private void setAttributes(Stack stack, Map<String, Object> attrs) {
 	    this.r_attributes.setValue(stack, attrs);
-	}
-
-	private Map<String,Object> attributesFromTC(TCEntry tce, Map<String,Object> attrs, Stack stack) {
-	    List<Profile> list = tce.getProfiles(Profile.GLOBUS);
-		if (list != null) {
-			for (Profile p : list) {
-				Attr a = ATTR_TYPES.get(p.getProfileKey());
-				if (a == null) {
-				    if (attrs == null) {
-				        attrs = new HashMap<String,Object>();
-				    }
-				    attrs.put(p.getProfileKey(), p.getProfileValue());
-				}
-				else {
-				    setAttr(a, stack, p.getProfileValue());
-				}
-			}
-		}
-		return attrs;
-	}
-	
-	/**
-	   Inserts namespace=globus attributes from BoundContact bc 
-	   into given attrs
-	 */
-	private Map<String,Object> attributesFromHost(SwiftContact bc, Map<String, Object> attrs, Stack stack) {
-		Map<FQN, Object> profiles = bc.getProfiles();
-		if (profiles != null) {
-		    for (Map.Entry<FQN, Object> e : profiles.entrySet()) {
-		        FQN fqn = e.getKey();
-		        if (Profile.GLOBUS.equalsIgnoreCase(fqn.getNamespace())) {
-		            Attr a = ATTR_TYPES.get(fqn.getName());
-		            if (a == null) {
-		                if (attrs == null) {
-		                    attrs = new HashMap<String,Object>();
-		                }
-		                attrs.put(fqn.getName(), e.getValue());
-		            }
-		            else {
-		                setAttr(a, stack, e.getValue());
-		            }
-		        }
-		    }
-		}
-		return attrs;
 	}
 
     private void setAttr(Attr a, Stack stack, Object value) {

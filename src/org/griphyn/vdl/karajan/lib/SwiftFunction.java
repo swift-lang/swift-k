@@ -21,11 +21,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import k.rt.Channel;
 import k.rt.Context;
@@ -41,14 +38,8 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.functions.AbstractFunction;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.swift.catalog.TCEntry;
-import org.globus.swift.catalog.transformation.File;
-import org.globus.swift.catalog.types.TCType;
 import org.griphyn.vdl.karajan.AssertFailedException;
-import org.griphyn.vdl.karajan.TCCache;
-import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
@@ -65,9 +56,7 @@ import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
-import org.griphyn.vdl.util.FQN;
 import org.griphyn.vdl.util.VDL2Config;
-import org.griphyn.vdl.util.VDL2ConfigProperties;
 
 public abstract class SwiftFunction extends AbstractFunction {
 	public static final Logger logger = Logger.getLogger(SwiftFunction.class);
@@ -386,50 +375,7 @@ public abstract class SwiftFunction extends AbstractFunction {
 			return Path.parse((String) o);
 		}
 	}
-
-	private static Set<List<Object>> warnset = new HashSet<List<Object>>();
-
-	protected TCEntry getTCE(TCCache tc, FQN fqn, BoundContact bc) {
-		List<TCEntry> l;
-		try {
-			l = tc.getTCEntries(fqn, bc.getHost(), TCType.INSTALLED);
-		}
-		catch (Exception e) {
-			throw new ExecutionException(this, e);
-		}
-		if (l == null || l.isEmpty()) {
-			return null;
-		}
-		if (l.size() > 1) {
-			synchronized (warnset) {
-				LinkedList<Object> wl = new LinkedList<Object>();
-				wl.add(fqn);
-				wl.add(bc);
-				if (!warnset.contains(wl)) {
-					logger.warn("Multiple entries found for " + fqn + " on " + bc
-							+ ". Using the first one");
-					warnset.add(wl);
-				}
-			}
-		}
-		return l.get(0);
-	}
-
-	public static final String TC = "vdl:TC";
-
-	public TCCache getTC(Stack stack) throws ExecutionException {
-	    Context c = this.context.getValue(stack);
-		synchronized (c) {
-			TCCache tc = (TCCache) c.getAttribute(TC);
-			if (tc == null) {
-				String prop = ConfigProperty.getProperty(VDL2ConfigProperties.TC_FILE, (VDL2Config) c.getAttribute("SWIFT:CONFIG"));
-				tc = new TCCache(File.getNonSingletonInstance(prop));
-				c.setAttribute(TC, tc);
-			}
-			return tc;
-		}
-	}
-
+	
 	private static int provenanceIDCount = 451000;
 
 	public static synchronized int nextProvenanceID() {

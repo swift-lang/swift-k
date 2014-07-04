@@ -24,15 +24,13 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.util.BoundContact;
-import org.globus.swift.catalog.TCEntry;
-import org.griphyn.vdl.karajan.TCCache;
-import org.griphyn.vdl.util.FQN;
+import org.globus.swift.catalog.site.Application;
+import org.globus.swift.catalog.site.SwiftContact;
 
 public class Executable extends SwiftFunction {
     
     private ArgRef<String> tr;
-    private ArgRef<BoundContact> host;
+    private ArgRef<SwiftContact> host;
     
 	
 	@Override
@@ -42,21 +40,16 @@ public class Executable extends SwiftFunction {
 
 
     public Object function(Stack stack) {
-		TCCache tc = getTC(stack);
 		String tr = this.tr.getValue(stack);
-		BoundContact bc = this.host.getValue(stack);
-		TCEntry tce = getTCE(tc, new FQN(tr), bc);
-		if (tce == null) {
+		SwiftContact bc = this.host.getValue(stack);
+		// at this point, a host has been allocated, so we already
+		// know that the app is available on it
+		Application app = bc.findApplication(tr);
+		if (app.executableIsWildcard()) {
 			return tr;
 		}
 		else {
-			String pt = tce.getPhysicalTransformation();
-			if ("*".equals(pt)) {
-			    return tr;
-			}
-			else {
-			    return pt;
-			}
+			return app.getExecutable();
 		}
 	}
 }

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import k.rt.Abort;
@@ -35,6 +36,8 @@ import k.rt.Stack;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
+import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
+import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.analyzer.ArgRef;
@@ -58,6 +61,7 @@ public class Execute extends GridExec {
 	private ArgRef<Channel<Object>> replicationChannel;
 	private ArgRef<String> jobid;
 	private ArgRef<ProgressState> progress;
+	private ArgRef<Map<String, String>> environment;
 	
 	private VarRef<Context> context;
 	
@@ -73,7 +77,8 @@ public class Execute extends GridExec {
 	    params.add(optional("jobid", null));
 	    removeParams(params, "stdout", "stderr", "stdoutLocation", "stderrLocation", 
 	        "stdin", "provider", "securityContext", "nativespec", 
-	        "delegation", "batch");
+	        "delegation", "batch", "environment");
+	    params.add(optional("environment", null));
 	    return sig;
     }
 	
@@ -103,6 +108,11 @@ public class Execute extends GridExec {
     }
 
     @Override
+    protected void addEnvironment(Stack stack, JobSpecificationImpl js) throws ExecutionException {
+        js.setEnvironmentVariables(environment.getValue(stack));
+    }
+
+    @Override
     public void submitScheduled(Scheduler scheduler, Task task, Stack stack, Object constraints) {
 		try {
 		    setTaskIdentity(stack, task);
@@ -129,12 +139,28 @@ public class Execute extends GridExec {
 	        logger.debug("Submitting task " + task);
 	    }
 	    String jobid = this.jobid.getValue(stack);
-	    if (logger.isDebugEnabled()) {
-	        logger.debug("jobid=" + jobid + " task=" + task);
+	    if (logger.isInfoEnabled()) {
+	        JobSpecification spec = (JobSpecification) task.getSpecification();
+	        logger.info(buildTaskInfoString(task, spec));
 	    }
 	}
 
-	protected void registerReplica(Stack stack, Task task) throws CanceledReplicaException {
+	private String buildTaskInfoString(Task task, JobSpecification spec) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("JOB_TASK jobid=");
+        sb.append(jobid);
+        sb.append(" taskid=");
+        sb.append(task.getIdentity());
+        sb.append(" exec=");
+        sb.append(spec.getExecutable());
+        sb.append(" dir=");
+        sb.append(spec.getDirectory());
+        sb.append(" args=");
+        sb.append(spec.getArguments());
+        return sb.toString();
+    }
+
+    protected void registerReplica(Stack stack, Task task) throws CanceledReplicaException {
 		String rg = this.replicationGroup.getValue(stack);
 		if (rg != null) {
 			getReplicationManager(stack).register(rg, task);
@@ -152,12 +178,22 @@ public class Execute extends GridExec {
     		Stack stack = getStack();
     		try {
     			if (stack != null) {
-    				int c = e.getStatus().getStatusCode();
+    			    Status s = e.getStatus();
+    				int c = s.getStatusCode();
+    				if (logger.isInfoEnabled()) {
+    				    if (s.getMessage() == null) {
+    				        logger.info("TASK_STATUS_CHANGE taskid=" + e.getSource().getIdentity() + " status=" + c);
+    				    }
+    				    else {
+    				        logger.info("TASK_STATUS_CHANGE taskid=" + e.getSource().getIdentity() + " status=" + c + 
+    				            " " + s.getMessage());
+    				    }
+                    }
     				ProgressState ps = progress.getValue(stack);
     				if (c == Status.SUBMITTED) {
     				    ps.setState("Submitted");
     				    if (replicationEnabled) {
-    				        getReplicationManager(stack).submitted(task, e.getStatus().getTime());
+    				        getReplicationManager(stack).submitted(task, s.getTime());
     				    }
     				}
     				else if (c == Status.STAGE_IN) {
@@ -169,7 +205,7 @@ public class Execute extends GridExec {
     				else if (c == Status.ACTIVE) {
     					ps.setState("Active");
     					if (replicationEnabled) {
-    					    getReplicationManager(stack).active(task, e.getStatus().getTime());
+    					    getReplicationManager(stack).active(task, s.getTime());
     					    Execute.this.replicationChannel.getValue(stack).close();
     					}
     				}

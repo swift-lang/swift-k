@@ -9,6 +9,9 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
@@ -24,11 +27,10 @@ import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
-import org.globus.cog.karajan.util.BoundContact;
-import org.globus.cog.karajan.util.ContactSet;
+import org.globus.swift.catalog.site.Application;
 import org.globus.swift.catalog.site.SiteCatalogParser;
 import org.globus.swift.catalog.site.SwiftContact;
-import org.griphyn.vdl.util.FQN;
+import org.globus.swift.catalog.site.SwiftContactSet;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -36,10 +38,6 @@ import org.w3c.dom.NodeList;
 
 public class SiteCatalog extends AbstractSingleValuedFunction {
     private ArgRef<String> fileName;
-    
-    private enum Version {
-        V1, V2;
-    }
 
     @Override
     protected Param[] getParams() {
@@ -58,48 +56,59 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
             throw new ExecutionException(this, "Failed to parse site catalog", e);
         }
     }
+    
+    private static class KVPair {
+        public final String key;
+        public final String value;
+        
+        public KVPair(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
 
     private Object buildResources(Document doc) {
         Node root = getRoot(doc);
         
         if (root.getLocalName().equals("config")) {
-            return parse(root, Version.V1);
+            throw new IllegalArgumentException("Old sites file format. Please upgrade your sites file to the new format.");
         }
         else if (root.getLocalName().equals("sites")) {
-            return parse(root, Version.V1);
+            return parse(root);
         }
         else {
             throw new IllegalArgumentException("Illegal sites file root node: " + root.getLocalName());
         }
     }
-    
-    
-
-    private Object parse(Node config, Version v) {
-        ContactSet cs = new ContactSet();
+       
+    private Object parse(Node config) {
+        SwiftContactSet cs = new SwiftContactSet();
         NodeList pools = config.getChildNodes();
         for (int i = 0; i < pools.getLength(); i++) {
             Node n = pools.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
-                try {
-                    BoundContact bc = pool(n, v);
-                    if (bc != null) {
-                        cs.addContact(bc);
+                String ctype = n.getNodeName();
+                if (ctype.equals("site")) {
+                    try {
+                        SwiftContact bc = pool(n);
+                        if (bc != null) {
+                            cs.addContact(bc);
+                        }
+                    }
+                    catch (Exception e) {
+                        throw new ExecutionException(this, "Invalid site entry '" + poolName(n) + "': ", e);
                     }
                 }
-                catch (Exception e) {
-                    throw new ExecutionException(this, "Invalid site entry '" + poolName(n, v) + "': ", e);
+                else if (ctype.equals("application")) {
+                    cs.addApplication(application(n));
                 }
             }
         }
         return cs;
     }
 
-    private String poolName(Node site, Version v) {
-       if (site.getLocalName().equals("pool")) {
-           return attr(site, "handle");
-       }
-       else if (site.getLocalName().equals("site")) {
+    private String poolName(Node site) {
+       if (site.getLocalName().equals("site")) {
            return attr(site, "name");
        }
        else {
@@ -117,17 +126,107 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
         throw new IllegalArgumentException("Missing root element");
     }
 
-    private BoundContact pool(Node n, Version v) throws InvalidProviderException, ProviderMethodException {
+    private SwiftContact pool(Node n) throws InvalidProviderException, ProviderMethodException {
         if (n.getNodeType() != Node.ELEMENT_NODE) {
             return null;
         }
-        String name = poolName(n, v);
+        String name = poolName(n);
         SwiftContact bc = new SwiftContact(name);
         
         String sysinfo = attr(n, "sysinfo", null);
         if (sysinfo != null) {
-            bc.addProperty("sysinfo", sysinfo);
+            bc.setProperty("sysinfo", sysinfo);
         }
+                
+        NodeList cs = n.getChildNodes();
+        
+        for (int i = 0; i < cs.getLength(); i++) {
+            Node c = cs.item(i);
+            if (c.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            String ctype = c.getNodeName();
+            
+            if (ctype.equals("execution")) {
+                bc.addService(execution(c));
+            }
+            else if (ctype.equals("filesystem")) {
+                bc.addService(filesystem(c));
+            }
+            else if (ctype.equals("workdirectory")) {
+                bc.setProperty("workdir", text(c));
+            }
+            else if (ctype.equals("scratch")) {
+                bc.setProperty("scratch", text(c));
+            }
+            else if (ctype.equals("property")) {
+                bc.setProperty(attr(c, "name"), text(c));
+            }
+            else if (ctype.equals("apps")) {
+                apps(bc, c);
+            }
+            else {
+                throw new IllegalArgumentException("Unknown node type: " + ctype);
+            }
+        }
+        return bc;
+    }
+
+    private void apps(SwiftContact bc, Node n) {
+        NodeList cs = n.getChildNodes();
+        
+        List<KVPair> envs = new ArrayList<KVPair>();
+        List<KVPair> props = new ArrayList<KVPair>();
+        for (int i = 0; i < cs.getLength(); i++) {
+            Node c = cs.item(i);
+            if (c.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            String ctype = c.getNodeName();
+            
+            if (ctype.equals("app")) {
+                bc.addApplication(application(c));
+            }
+            else if (ctype.equals("env")) {
+                envs.add(env(c));
+            }
+            else if (ctype.equals("property")) {
+                props.add(this.property(c));
+            }
+            else {
+                throw new IllegalArgumentException("Unknown node type: " + ctype);
+            }
+        }
+        
+        mergeEnvsToApps(bc, envs);
+        mergePropsToApps(bc, props);
+    }
+
+    private void mergeEnvsToApps(SwiftContact bc, List<KVPair> envs) {
+        for (Application app : bc.getApplications()) {
+            for (KVPair kvp : envs) {
+                if (!app.getEnv().containsKey(kvp.key)) {
+                    // only merge if app does not override
+                    app.setEnv(kvp.key, kvp.value);
+                }
+            }
+        }
+    }
+    
+    private void mergePropsToApps(SwiftContact bc, List<KVPair> props) {
+        for (Application app : bc.getApplications()) {
+            for (KVPair kvp : props) {
+                if (!app.getProperties().containsKey(kvp.key)) {
+                    app.addProperty(kvp.key, kvp.value);
+                }
+            }
+        }
+    }
+
+    private Application application(Node n) {
+        Application app = new Application();
+        app.setName(attr(n, "name"));
+        app.setExecutable(attr(n, "executable"));
         
         NodeList cs = n.getChildNodes();
         
@@ -138,78 +237,20 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
             }
             String ctype = c.getNodeName();
             
-            if (v == Version.V1 && ctype.equals("gridftp")) {
-                bc.addService(gridftp(c));
+            if (ctype.equals("env")) {
+                KVPair env = env(c);
+                app.setEnv(env.key, env.value);
             }
-            else if (v == Version.V1 && ctype.equals("jobmanager")) {
-                bc.addService(jobmanager(c));
-            }
-            else if (ctype.equals("execution")) {
-                bc.addService(execution(c));
-            }
-            else if (ctype.equals("filesystem")) {
-                bc.addService(filesystem(c));
-            }
-            else if (ctype.equals("workdirectory")) {
-                bc.addProperty("workdir", text(c));
-            }
-            else if (ctype.equals("scratch")) {
-                bc.addProperty("scratch", text(c));
-            }
-            else if (ctype.equals("env")) {
-                env(bc, c);
-            }
-            else if (ctype.equals("profile")) {
-                profile(bc, c);
-            }
-            else if (v == Version.V2 && ctype.equals("application")) {
-                application(bc, c);
+            else if (ctype.equals("property")) {
+                KVPair prop = property(c);
+                app.addProperty(prop.key, prop.value);
             }
             else {
                 throw new IllegalArgumentException("Unknown node type: " + ctype);
             }
         }
-        return bc;
-    }
-
-    private void application(BoundContact bc, Node c) {
-    }
-
-    private Service jobmanager(Node n) throws InvalidProviderException, ProviderMethodException {
-        String provider;
-        String url = attr(n, "url");
-        String major = attr(n, "major");
-        if (url.equals("local://localhost")) {
-            provider = "local";
-        }
-        else if (url.equals("pbs://localhost")) {
-            provider = "pbs";
-        }
-        else if ("2".equals(major)) {
-            provider = "gt2";
-        }
-        else if ("4".equals(major)) {
-            provider = "gt4";
-        }
-        else {
-            throw new IllegalArgumentException("Unknown job manager version: " + major + ", url = '" + url + "'");
-        }
         
-        ServiceContact contact = new ServiceContactImpl(url);
-            return new ServiceImpl(provider, Service.EXECUTION, 
-                contact, AbstractionFactory.newSecurityContext(provider, contact));
-    }
-
-    private Service gridftp(Node n) throws InvalidProviderException, ProviderMethodException {
-        String url = attr(n, "url");
-        if (url.equals("local://localhost")) {
-            return new ServiceImpl("local", Service.FILE_OPERATION, new ServiceContactImpl("localhost"), null);
-        }
-        else {
-            ServiceContact contact = new ServiceContactImpl(url);
-            return new ServiceImpl("gsiftp", Service.FILE_OPERATION, 
-                contact, AbstractionFactory.newSecurityContext("gsiftp", contact));
-        }
+        return app;
     }
 
     private Service execution(Node n) throws InvalidProviderException, ProviderMethodException {
@@ -233,7 +274,37 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
             s.setJobManager(jobManager);
         }
         
+        properties(s, n);
+                
         return s;
+    }
+
+    private void properties(Service s, Node n) {
+        NodeList cs = n.getChildNodes();
+        
+        for (int i = 0; i < cs.getLength(); i++) {
+            Node c = cs.item(i);
+            if (c.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            String ctype = c.getNodeName();
+            
+            if (ctype.equals("property")) {
+                property(s, c);
+            }
+            else {
+                throw new IllegalArgumentException("Unknown node type: " + ctype);
+            }
+        }
+
+    }
+
+    private void property(Service s, Node c) {
+        s.setAttribute(attr(c, "name"), text(c));
+    }
+    
+    private KVPair property(Node c) {
+        return new KVPair(attr(c, "name"), text(c));
     }
 
     private Service filesystem(Node n) throws InvalidProviderException, ProviderMethodException {
@@ -251,30 +322,16 @@ public class SiteCatalog extends AbstractSingleValuedFunction {
             s.setSecurityContext(AbstractionFactory.newSecurityContext(provider, contact));
         }
         
+        properties(s, n);
+        
         return s;
     }
-
-    private void env(SwiftContact bc, Node n) {
-        String key = attr(n, "key");
+    
+    private KVPair env(Node n) {
+        String key = attr(n, "name");
         String value = text(n);
         
-        bc.addProfile(new FQN("env", key), value);
-    }
-
-    private void profile(SwiftContact bc, Node n) {
-        String ns = attr(n, "namespace");
-        String key = attr(n, "key");
-        String value = text(n);
-        
-        if (value == null) {
-            throw new IllegalArgumentException("No value for profile " + ns + ":" + key);
-        }
-        if (ns.equals("karajan")) {
-            bc.addProperty(key, value);
-        }
-        else {
-        	bc.addProfile(new FQN(ns, key), value);
-        }
+        return new KVPair(key, value);
     }
 
     private String text(Node n) {

@@ -33,7 +33,6 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 import org.griphyn.vdl.karajan.lib.cache.CacheMapAdapter;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.util.FQN;
 
 public class JobConstraints extends CacheFunction {
     private ArgRef<String> tr;
@@ -53,7 +52,7 @@ public class JobConstraints extends CacheFunction {
 		String tr = this.tr.getValue(stack);
 		String[] filenames = null;
 		Collection<DSHandle> stageins = this.stagein.getValue(stack);
-		SwiftTaskConstraints tc = new SwiftTaskConstraints(tr, new FQN(tr));
+		SwiftTaskConstraints tc = new SwiftTaskConstraints(tr);
 		if (stageins != null) {
 		    tc.setStageins(stageins);
 		    tc.setFilecache(new CacheMapAdapter(getCache(stack)));
@@ -67,13 +66,11 @@ public class JobConstraints extends CacheFunction {
 	private static class SwiftTaskConstraints implements TaskConstraints {
 	    
 	    private final String tr;
-	    private final FQN trfqn;
 	    private Collection<DSHandle> stageins;
 	    private CacheMapAdapter filecache;
 
-	    public SwiftTaskConstraints(String tr, FQN trfqn) {
+	    public SwiftTaskConstraints(String tr) {
 	        this.tr = tr;
-	        this.trfqn = trfqn;
         }
 
         public Collection<DSHandle> getStageins() {
@@ -97,9 +94,6 @@ public class JobConstraints extends CacheFunction {
         public Object getConstraint(String name) {
             if ("tr".equals(name)) {
                 return tr;
-            }
-            else if ("trfqn".equals(name)) {
-                return trfqn;
             }
             else if ("stageins".equals(name)) {
                 return stageins;
