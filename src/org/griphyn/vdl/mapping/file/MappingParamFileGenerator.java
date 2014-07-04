@@ -104,7 +104,8 @@ public class MappingParamFileGenerator {
         }
         br.close();
         
-        String pkg = f.getParentFile().getAbsolutePath().substring(base.getAbsolutePath().length() + 1).replace('/', '.');
+        String pkg = f.getParentFile().getAbsolutePath().substring(
+            base.getAbsolutePath().length() + 1).replace(File.pathSeparatorChar, '.');
         File nf = new File(makeFileName(f));
         writeFile(nf, pkg, params, opts);
     }
