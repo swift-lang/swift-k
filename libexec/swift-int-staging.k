@@ -82,9 +82,9 @@ namespace(swift) {
 
 				swift:execute(
 					progress,
-					siteProfile(rhost, "swift:wrapperInterpreter"),
+					siteProfile(rhost, "wrapperInterpreter"),
 					list(
-						siteProfile(rhost, "swift:wrapperInterpreterOptions"),
+						siteProfile(rhost, "wrapperInterpreterOptions"),
 						"_swiftwrap.staging",
 						"-e", executable(tr, rhost),
 						"-out", if(stdout == null, "stdout.txt", getFieldValue(stdout)),
@@ -107,7 +107,7 @@ namespace(swift) {
 					replicationChannel = replicationChannel
 					jobid = jobid
 				
-					stagingMethod := siteProfile(rhost, "swift:stagingMethod", default="proxy")
+					stagingMethod := siteProfile(rhost, "stagingMethod", default="proxy")
 
 					stageIn("{PIN}{stagingMethod}://localhost/{SWIFT:HOME}/libexec/_swiftwrap.staging", "_swiftwrap.staging")
 
