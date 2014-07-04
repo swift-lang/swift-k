@@ -1,9 +1,0 @@
-This command submits a user-specified executable for remote
-execution. The user can specify the service contact for the job
-manager, the provider, the executable, and the optional
-arguments. Several other optional parameters control the behavior
-of the execution. The user can execute this job as a batch job,
-whereby the job status will not be updated on the client side. The
-user can also redirect the job output and error to a user-supplied
-file, either on the remote machine or on the local machine. It also allows 
-long-running jobs to be checkpointed to a local file. 
