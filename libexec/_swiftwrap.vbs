@@ -222,7 +222,6 @@ log "DIRS=" + DIRS
 log "INF=" + INF
 log "OUTF=" + OUTF
 log "STATUSMODE=" + STATUSMODE
-log "KICKSTART=" + KICKSTART
 log "ARGS=" + Join(ARGS)
 
 logstate "CREATE_JOBDIR"
@@ -268,61 +267,57 @@ Else
 	End If
 End If
 
-If KICKSTART = "" Then
-	Set min = Nothing
-	Set mout = Nothing
-	Set merr = Nothing
-	If STDIN <> "" Then
-		Set min = fs.OpenTextFile(STDIN, 1, False)
-	End If
-	If STDOUT <> "" Then
-		Set mout = fs.OpenTextFile(STDOUT, 2, True)
-	End If
-	If STDERR <> "" Then
-		Set merr = fs.OpenTextFile(STDERR, 2, True)
-	End If
-	qargs = prepareArgs(ARGS)
-	log "Cmd: " + prepareOne(EXEC) + " " + qargs
-	Set p = shell.exec(prepareOne(EXEC) + " " + qargs)
-	log "Executable started"
+Set min = Nothing
+Set mout = Nothing
+Set merr = Nothing
+If STDIN <> "" Then
+	Set min = fs.OpenTextFile(STDIN, 1, False)
+End If
+If STDOUT <> "" Then
+	Set mout = fs.OpenTextFile(STDOUT, 2, True)
+End If
+If STDERR <> "" Then
+	Set merr = fs.OpenTextFile(STDERR, 2, True)
+End If
+qargs = prepareArgs(ARGS)
+log "Cmd: " + prepareOne(EXEC) + " " + qargs
+Set p = shell.exec(prepareOne(EXEC) + " " + qargs)
+log "Executable started"
 
-	Do Until p.StdOut.AtEndOfStream and p.StdErr.AtEndOfStream and p.Status <> 0
-		some = False
-		If Not min Is Nothing Then
-			l = min.ReadLine
-			p.StdIn.Write(l)
-			some = True
-		End If
-		If Not p.StdOut.AtEndOfStream Then
-			l = p.StdOut.ReadLine
-			If Not mout Is Nothing Then
-				mout.Write(l)
-			End If
-			some = True
-		End If
-		If Not p.StdErr.AtEndOfStream Then
-			l = p.StdErr.ReadLine
-			If Not merr Is Nothing Then
-				merr.Write(l)
-			End If
-			some = True
-		End If
-		WScript.Sleep(100)
-	Loop
+Do Until p.StdOut.AtEndOfStream and p.StdErr.AtEndOfStream and p.Status <> 0
+	some = False
 	If Not min Is Nothing Then
-		min.close()
+		l = min.ReadLine
+		p.StdIn.Write(l)
+		some = True
 	End If
-	If Not mout Is Nothing Then
-		mout.close()
+	If Not p.StdOut.AtEndOfStream Then
+		l = p.StdOut.ReadLine
+		If Not mout Is Nothing Then
+			mout.Write(l)
+		End If
+		some = True
 	End If
-	If Not merr Is Nothing Then
-		merr.close()
+	If Not p.StdErr.AtEndOfStream Then
+		l = p.StdErr.ReadLine
+		If Not merr Is Nothing Then
+			merr.Write(l)
+		End If
+		some = True
 	End If
-	If p.ExitCode <> 0 Then
-		fail "Exit code " + CStr(p.ExitCode), p.ExitCode
-	End If
-Else
-	fail "Kickstart is not supported on Windows", 250
+	WScript.Sleep(100)
+Loop
+If Not min Is Nothing Then
+	min.close()
+End If
+If Not mout Is Nothing Then
+	mout.close()
+End If
+If Not merr Is Nothing Then
+	merr.close()
+End If
+If p.ExitCode <> 0 Then
+	fail "Exit code " + CStr(p.ExitCode), p.ExitCode
 End If
 	
 shell.CurrentDirectory = WFDIR
