@@ -113,8 +113,8 @@ $it.name$=$if(it.default)$$it.default$$else$null$endif$
 swift_execute(outputs,inputs,stageins,stageouts,attributes,application,name,line) ::= <<
 swift:unitStart("PROCEDURE", name="$name$", line=$line$, outputs="$outputs:list();separator=","$")
 swift:execute(
+	"$application.exec$"
 	$attributes$
-	swift:tr("$application.exec$")
 	$stageins:swift_stagein();separator="\n"$
 	$stageouts:swift_stageout();separator="\n"$
 	$swift_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
@@ -152,15 +152,15 @@ swift:arguments(
 )
 
 $if (stdin)$
-swift:stdin($stdin$)
+stdin = $stdin$
 $endif$
 
 $if (stdout)$
-swift:stdout($stdout$)
+stdout = $stdout$
 $endif$
 
 $if (stderr)$
-swift:stderr($stderr$)
+stderr = $stderr$
 $endif$
 >>
 
@@ -309,7 +309,7 @@ variable_log() ::= <<
 
 swift_mapping(mapping, file) ::= <<
 $if(file)$
-swift:mapping("single_file_mapper", swift:parameter("file", "$file.name$") $if(file.params)$$file.params;separator="\n"$$endif$)
+swift:mapping("SingleFileMapper", swift:parameter("file", "$file.name$") $if(file.params)$$file.params;separator="\n"$$endif$)
 $else$
 swift:mapping("$mapping.descriptor$", $mapping.params;separator="\n"$)
 $endif$
