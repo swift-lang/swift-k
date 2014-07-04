@@ -8,6 +8,10 @@
 			<property name="launcher-name" value="VDLt2VDLx"/>
 			<property name="class-name" value="org.griphyn.vdl.toolkit.VDLt2VDLx"/>
 		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="swift-log-info"/>
+			<property name="class-name" value="org.griphyn.vdl.karajan.monitor.monitors.http.SwiftLogInfo"/>
+		</ant>
 	</target>
 	<target name="webstart">
 	</target>
