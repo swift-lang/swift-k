@@ -166,7 +166,7 @@ my $PROFILE = 0;
 # Contains tuples (EVENT, PID, TIMESTAMP) (flattened)
 my @PROFILE_EVENTS = ();
 
-my $PROBE_INTERVAL = 1;
+my $PROBE_INTERVAL = 60;
 my $LAST_PROBE_TIME = time() - $PROBE_INTERVAL + 1;
 
 my $ID = "-";
