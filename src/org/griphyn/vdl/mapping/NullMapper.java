@@ -11,7 +11,6 @@ package org.griphyn.vdl.mapping;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
@@ -74,7 +73,7 @@ public class NullMapper implements Mapper {
     }
 
     @Override
-    public void setParameters(Map<String, Object> params) {
+    public void setParameters(GenericMappingParamSet params) {
     }
 
     @Override

@@ -10,7 +10,6 @@
 package org.griphyn.vdl.mapping.nodes;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 import k.rt.Future;
@@ -24,6 +23,7 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 import org.griphyn.vdl.mapping.FileSystemLister;
+import org.griphyn.vdl.mapping.GenericMappingParamSet;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
@@ -98,7 +98,7 @@ public class InitMapper implements Mapper, FutureListener {
     }
 
     @Override
-    public void setParameters(Map<String, Object> params) {
+    public void setParameters(GenericMappingParamSet params) {
     }
 
     @Override

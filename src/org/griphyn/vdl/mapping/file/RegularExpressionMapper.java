@@ -20,8 +20,6 @@ package org.griphyn.vdl.mapping.file;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,6 +27,7 @@ import java.util.regex.Pattern;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.FileSystemLister;
+import org.griphyn.vdl.mapping.GenericMappingParamSet;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -116,7 +115,7 @@ public class RegularExpressionMapper extends AbstractMapper {
 
 	public static void main(String[] args) {
 		RegularExpressionMapper reMapper = new RegularExpressionMapper();
-		Map<String, Object> params = new HashMap<String, Object>();
+		GenericMappingParamSet params = new GenericMappingParamSet("regex");
 		params.put("source", "2mass-j1223.fits");
 		params.put("match", "(.*)\\.(.*)");
 		params.put("transform", "\\1_area.\\2");

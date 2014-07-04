@@ -115,9 +115,4 @@ public class RootFutureArrayDataNode extends AbstractFutureArrayDataNode impleme
     public Mapper getActualMapper() {
         return mapper;
     }
-    
-    @Override
-    public void closeArraySizes() {
-        closeShallow();
-    }
 }

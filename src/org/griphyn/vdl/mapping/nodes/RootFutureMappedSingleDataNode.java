@@ -118,9 +118,4 @@ public class RootFutureMappedSingleDataNode extends AbstractFutureMappedSingleDa
     public Mapper getActualMapper() {
         return mapper;
     }
-    
-    @Override
-    public void closeArraySizes() {
-        // does not apply
-    }
 }

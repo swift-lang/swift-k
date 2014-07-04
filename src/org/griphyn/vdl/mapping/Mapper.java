@@ -18,7 +18,6 @@
 package org.griphyn.vdl.mapping;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
@@ -83,7 +82,7 @@ public interface Mapper {
     
     Set<String> getSupportedParamNames();
     
-    void setParameters(Map<String, Object> params);
+    void setParameters(GenericMappingParamSet params);
     
     /**
      * Called after all parameters have been closed

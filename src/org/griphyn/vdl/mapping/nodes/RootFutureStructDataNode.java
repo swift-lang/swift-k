@@ -129,9 +129,4 @@ public class RootFutureStructDataNode extends AbstractFutureStructDataNode imple
     public Mapper getActualMapper() {
         return mapper;
     }
-    
-    @Override
-    public void closeArraySizes() {
-        // does not apply
-    }
 }

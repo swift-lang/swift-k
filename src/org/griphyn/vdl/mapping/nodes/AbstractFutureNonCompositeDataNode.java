@@ -91,4 +91,8 @@ public abstract class AbstractFutureNonCompositeDataNode extends AbstractFutureD
         value = null;
         super.clean0();
     }
+    
+    @Override
+    public void closeArraySizes() {
+    }
 }

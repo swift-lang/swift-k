@@ -4,8 +4,8 @@
 package org.griphyn.vdl.mapping;
 
 import java.util.Collection;
-import java.util.Map;
 
+import org.globus.cog.karajan.util.Pair;
 import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
@@ -86,10 +86,10 @@ public abstract class MappingParamSet {
         }
     }
         
-    public void setAll(Map<String, Object> m) {
+    public void setAll(GenericMappingParamSet m) {
         if (m != null) {
-            for (Map.Entry<String, Object> e : m.entrySet()) {
-                set0(e.getKey(), e.getValue());
+            for (Pair<String, Object> e : m.getParams()) {
+                set0(e.s, e.t);
             }
         }
     }

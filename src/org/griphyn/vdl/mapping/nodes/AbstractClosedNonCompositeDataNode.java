@@ -39,4 +39,8 @@ public abstract class AbstractClosedNonCompositeDataNode extends AbstractClosedD
     public boolean isArray() {
         return false;
     }
+    
+    @Override
+    public void closeArraySizes() {
+    }
 }

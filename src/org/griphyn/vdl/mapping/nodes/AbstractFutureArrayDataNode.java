@@ -170,6 +170,19 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
             handles = Collections.emptyMap();
         }
     }
+    
+    @Override
+    public void closeArraySizes() {
+        closeShallow();
+        try {
+            for (DSHandle h : getAllFields()) {
+                h.closeArraySizes();
+            }
+        }
+        catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     @Override
     public void closeDeep() {

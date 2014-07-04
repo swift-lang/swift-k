@@ -139,4 +139,11 @@ public abstract class AbstractFutureStructDataNode extends AbstractFutureDataNod
             throw exception;
         }
     }
+    
+    @Override
+    public void closeArraySizes() {
+        for (DSHandle h : fields) {
+            h.closeArraySizes();
+        }
+    }
 }

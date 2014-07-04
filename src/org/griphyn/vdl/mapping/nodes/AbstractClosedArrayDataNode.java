@@ -155,4 +155,11 @@ public abstract class AbstractClosedArrayDataNode extends AbstractClosedDataNode
     public int arraySize() {
         return values.length;
     }
+
+    @Override
+    public void closeArraySizes() {
+        for (DSHandle h : values) {
+            h.closeArraySizes();
+        }
+    }
 }

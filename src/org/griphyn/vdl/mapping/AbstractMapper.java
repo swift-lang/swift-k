@@ -19,7 +19,6 @@ package org.griphyn.vdl.mapping;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -66,7 +65,7 @@ public abstract class AbstractMapper implements Mapper {
     }
     
     @Override
-    public void setParameters(Map<String, Object> params) {
+    public void setParameters(GenericMappingParamSet params) {
         this.params = newParams();
         this.params.setAll(params);
     }

@@ -84,6 +84,8 @@ public interface DSHandle {
     public void closeShallow();
 
     public void closeDeep();
+    
+    public void closeArraySizes();
 
     public Collection<Path> getFringePaths() throws HandleOpenException;
     
