@@ -28,7 +28,7 @@ public class PerformanceDiagnosticOutputStream extends OutputStream {
 		Timer.every(1000, new Runnable() {
 			public void run() {
 				count += 1;
-				if (count % INTERVAL == 0) {
+				if (count % INTERVAL == 0 && getTotal() > 0) {
     				String s;
     				logger.info(s = "[OUT] Total transferred: "
     						+ units(getTotal()) + "B, current rate: "

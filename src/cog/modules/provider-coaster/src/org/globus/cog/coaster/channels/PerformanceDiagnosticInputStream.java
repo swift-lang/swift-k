@@ -29,16 +29,11 @@ public class PerformanceDiagnosticInputStream extends InputStream {
 		Timer.every(1000, new Runnable() {
 			public void run() {
 				count += 1;
-				if (count % INTERVAL == 0) {
+				if (count % INTERVAL == 0 && getTotal() > 0) {
     				String s;
     				logger.info(s = "[IN] Total transferred: " + units(getTotal()) + "B, current rate: "
     						+ units(getCurrentRate()) + "B/s, average rate: " + units(getAverageRate())
     						+ "B/s");
-    				logger.info(s = "[MEM] Heap total: "
-    						+ units(Runtime.getRuntime().totalMemory())
-    						+ "B, Heap used: "
-    						+ units(Runtime.getRuntime().totalMemory()
-    								- Runtime.getRuntime().freeMemory()) + "B");
 				}
 				last = bytes;
 			}
