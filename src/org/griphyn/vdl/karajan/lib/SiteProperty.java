@@ -32,69 +32,69 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.util.BoundContact;
+import org.globus.swift.catalog.site.SwiftContact;
 import org.globus.swift.catalog.types.Os;
-import org.griphyn.vdl.util.FQN;
+import org.globus.swift.catalog.types.SysInfo;
 
-public class SiteProfile extends SwiftFunction {
-    public static final Logger logger = Logger.getLogger(SiteProfile.class);
+public class SiteProperty extends SwiftFunction {
+    public static final Logger logger = Logger.getLogger(SiteProperty.class);
     
-    private ArgRef<BoundContact> host;
-    private ArgRef<String> fqn;
+    private ArgRef<SwiftContact> host;
+    private ArgRef<String> name;
     private ArgRef<Object> _default;
     private ChannelRef<Object> cr_vargs;
     
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("host", "fqn", optional("default", null)), returns(channel("...", 1)));
+        return new Signature(params("host", "name", optional("default", null)), returns(channel("...", 1)));
     }
 
 	public Object function(Stack stack) throws ExecutionException {
-		BoundContact bc = host.getValue(stack);
-		return getSingle(bc, new FQN(fqn.getValue(stack)), _default.getValue(stack));
+		SwiftContact bc = host.getValue(stack);
+		return getSingle(bc, name.getValue(stack), _default.getValue(stack));
 	}
 	
-	public static final FQN SWIFT_WRAPPER_INTERPRETER = new FQN("swift:wrapperInterpreter");
-	public static final FQN SWIFT_WRAPPER_INTERPRETER_OPTIONS = new FQN("swift:wrapperInterpreterOptions");
-	public static final FQN SWIFT_WRAPPER_SCRIPT = new FQN("swift:wrapperScript");
-	public static final FQN SWIFT_CLEANUP_COMMAND = new FQN("swift:cleanupCommand");
-	public static final FQN SWIFT_CLEANUP_COMMAND_OPTIONS = new FQN("swift:cleanupCommandOptions");
-	public static final FQN SYSINFO_OS = new FQN("SYSINFO:OS");
+	public static final String SWIFT_WRAPPER_INTERPRETER = "wrapperInterpreter";
+	public static final String SWIFT_WRAPPER_INTERPRETER_OPTIONS = "wrapperInterpreterOptions";
+	public static final String SWIFT_WRAPPER_SCRIPT = "wrapperScript";
+	public static final String SWIFT_CLEANUP_COMMAND = "cleanupCommand";
+	public static final String SWIFT_CLEANUP_COMMAND_OPTIONS = "cleanupCommandOptions";
+	public static final String SYSINFO_OS = "OS";
 	
-	private static final Map<Os, Map<FQN,Object>> DEFAULTS;
-	private static final Set<FQN> DEFAULTS_NAMES; 
+	private static final Map<Os, Map<String, Object>> DEFAULTS;
+	private static final Set<String> DEFAULTS_NAMES; 
 	
-	private static void addDefault(Os os, FQN fqn, Object value) {
-		DEFAULTS_NAMES.add(fqn);
-		Map<FQN,Object> osm = DEFAULTS.get(os);
+	private static void addDefault(Os os, String name, Object value) {
+		DEFAULTS_NAMES.add(name);
+		Map<String, Object> osm = DEFAULTS.get(os);
 		if (osm == null) {
-			osm = new HashMap<FQN,Object>();
+			osm = new HashMap<String, Object>();
 			DEFAULTS.put(os, osm);
 		}
-		osm.put(fqn, value);
+		osm.put(name, value);
 	}
 	
-	private static boolean hasDefault(Os os, FQN fqn) {
-	    Map<FQN,Object> osm = DEFAULTS.get(os);
+	private static boolean hasDefault(Os os, String name) {
+	    Map<String, Object> osm = DEFAULTS.get(os);
 		if (osm == null) {
 			return false;
 		}
 		else {
-			return osm.containsKey(fqn);
+			return osm.containsKey(name);
 		}
 	}
 	
-	private static Object getDefault(Os os, FQN fqn) {
-	    Map<FQN,Object> osm = DEFAULTS.get(os);
+	private static Object getDefault(Os os, String name) {
+	    Map<String, Object> osm = DEFAULTS.get(os);
 		if (osm == null) {
 			osm = DEFAULTS.get(null);
 		}
-		return osm.get(fqn);
+		return osm.get(name);
 	}
 	
 	static {
-		DEFAULTS = new HashMap<Os,Map<FQN,Object>>();
-		DEFAULTS_NAMES = new HashSet<FQN>();
+		DEFAULTS = new HashMap<Os, Map<String, Object>>();
+		DEFAULTS_NAMES = new HashSet<String>();
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_INTERPRETER, "cscript.exe");
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_SCRIPT, "_swiftwrap.vbs");
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_INTERPRETER_OPTIONS, new String[] {"//Nologo"});
@@ -107,22 +107,22 @@ public class SiteProfile extends SwiftFunction {
 		addDefault(null, SWIFT_CLEANUP_COMMAND_OPTIONS, new String[] {"-rf"});
 	}
 	
-	private Object getSingle(BoundContact bc, FQN fqn, Object defval) 
+	private Object getSingle(SwiftContact bc, String name, Object defval) 
 	    throws ExecutionException {
-            String value = getProfile(bc, fqn);
+            String value = getProperty(bc, name);
             if (value == null) {
             	Os os = getOS(bc);
-            	if (DEFAULTS_NAMES.contains(fqn)) {
-            		return getDefault(os, fqn);
+            	if (DEFAULTS_NAMES.contains(name)) {
+            		return getDefault(os, name);
             	}
-                else if (SYSINFO_OS.equals(fqn)) {
+                else if (SYSINFO_OS.equals(name)) {
                 	return os;
                 }
                 else if (defval != null) {
                     return defval;
                 }
                 else {
-                	throw new ExecutionException(this, "Missing profile: " + fqn);
+                	throw new ExecutionException(this, "Missing profile: " + name);
                 }
             }
             else {
@@ -130,8 +130,8 @@ public class SiteProfile extends SwiftFunction {
             }
 	}
 
-    private String getProfile(BoundContact bc, FQN fqn) {
-        Object o = bc.getProperty(fqn.toString());
+    private String getProperty(SwiftContact bc, String name) {
+        Object o = bc.getProperty(name);
         if (o == null) {
             return null;
         }
@@ -140,17 +140,13 @@ public class SiteProfile extends SwiftFunction {
         }
     }
     
-    private Os getOS(BoundContact bc) {
+    private Os getOS(SwiftContact bc) {
     	Object o = bc.getProperty("sysinfo");
     	if (o == null) {
     		return Os.LINUX;
     	}
     	else {
-    		String[] p = o.toString().split("::");
-    		if (p.length < 2) {
-    			throw new ExecutionException("Invalid sysinfo for " + bc + ": " + o);
-    		}
-    		return Os.fromString(p[1]);
+    		return SysInfo.fromString(o.toString()).getOs();
     	}
-    }
+    }    
 }
