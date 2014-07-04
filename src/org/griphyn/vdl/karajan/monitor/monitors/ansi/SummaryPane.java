@@ -97,7 +97,7 @@ public class SummaryPane extends Container {
             // mem
             Runtime r = Runtime.getRuntime();
             long heapMax = state.getMaxHeap();
-            long heapCrt = state.getCurrentHeap();
+            long heapCrt = state.getUsedHeap();
             double fraction = (double) heapCrt / heapMax;
             memory.setValue((float) fraction);
             memory.setText(state.getCurrentHeapFormatted() + " / " + state.getMaxHeapFormatted());
