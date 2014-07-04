@@ -44,16 +44,14 @@ import org.globus.cog.karajan.scheduler.AbstractScheduler;
 import org.globus.cog.karajan.scheduler.ContactAllocationTask;
 import org.globus.cog.karajan.scheduler.ResourceConstraintChecker;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
+import org.globus.cog.karajan.scheduler.WeightedHost;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
 import org.globus.cog.karajan.scheduler.WeightedHostSet;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.TypeUtil;
-import org.globus.swift.catalog.TCEntry;
-import org.globus.swift.catalog.transformation.File;
-import org.globus.swift.catalog.types.TCType;
-import org.griphyn.vdl.util.FQN;
+import org.globus.swift.catalog.site.SwiftContact;
 
 
 public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements CoasterResourceTracker {
@@ -61,7 +59,6 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 
 	private static Timer timer;
 
-	private TCCache tc;
 	private LinkedList<Entry> dq;
 	private int clusteringQueueDelay = 1;
 	private int minClusterTime = 60;
@@ -98,9 +95,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 
 	public void setProperty(String name, Object value) {
 		if (PROP_TC_FILE.equals(name)) {
-			tc = new TCCache(File.getNonSingletonInstance((String) value));
-			this.setConstraintChecker(new TCChecker(tc));
-			this.addTaskTransformer(new VDSTaskTransformer(tc));
+			this.setConstraintChecker(new SwiftSiteChecker());
+			this.addTaskTransformer(new VDSTaskTransformer());
 		}
 		else if (PROP_CLUSTERING_QUEUE_DELAY.equals(name)) {
 			clusteringQueueDelay = TypeUtil.toInt(value);
@@ -115,7 +111,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 			super.setProperty(name, value);
 		}
 	}
-
+	
 	@Override
 	public void enqueue(Task task, Object constraints, StatusListener l) {
 		if (shouldBeClustered(task, constraints)) {
@@ -465,23 +461,46 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 	    }
         super.setResources(cs);
         for (BoundContact bc : cs.getContacts()) {
-            if ("passive".equals(bc.getProperty("globus:workerManager")) 
-                    && "true".equals(bc.getProperty("globus:throttleTracksWorkers"))) {
-                Service s = bc.getService(Service.EXECUTION, "coaster");
-                if (s != null) {
-                    s.setAttribute("resource-tracker", this);
+            Service es = bc.getService(Service.EXECUTION, "coaster");
+            if (es != null && "passive".equals(es.getAttribute("workerManager"))
+                    && "true".equals(bc.getProperty("throttleTracksWorkers"))) {
+                if (es != null) {
+                    es.setAttribute("resource-tracker", this);
                     WeightedHostSet whs = getWeightedHostSet();
                     // set throttle to one so that a task gets sent
                     // to the provider and the connection/service is 
                     // initialized/started
                     whs.changeThrottleOverride(whs.findHost(bc), 1);
-                    serviceContactMapping.put(s, bc);
+                    serviceContactMapping.put(es, bc);
                 }
+            }
+            
+            Object maxParallelJobs = bc.getProperty("maxParallelTasks");
+            Object initialParallelJobs = bc.getProperty("initialParallelTasks");
+            if (maxParallelJobs != null) {
+                double max = parseAndCheck(maxParallelJobs, "maxParallelTasks", bc);
+                bc.setProperty("jobThrottle", WeightedHost.jobThrottleFromMaxParallelism(max));
+                if (initialParallelJobs != null) {
+                    double initial = parseAndCheck(initialParallelJobs, "initialParallelTasks", bc);
+                    bc.setProperty("initialScore", WeightedHost.initialScoreFromInitialParallelism(initial, max));
+                }
+            }
+            else if (initialParallelJobs != null) {
+                throw new IllegalArgumentException("initialParallelJobs cannot be used without maxParallelTasks");
             }
         }
     }
 	
-	public void resourceUpdated(Service service, String name, String value) {
+	private double parseAndCheck(Object value, String name, BoundContact bc) {
+        double d = TypeUtil.toDouble(value);
+        if (d < 1) {
+            throw new IllegalArgumentException("Invalid " + name + " value (" + d + ") for site '" + 
+                bc.getName() + "'. Must be greater or equal to 1.");
+        }
+        return d;
+    }
+
+    public void resourceUpdated(Service service, String name, String value) {
 	    if (logger.isInfoEnabled()) {
 	        logger.info(service + " resource updated: " + name + " -> " + value);
 	    }
@@ -495,29 +514,13 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 	    }
     }
 
-	public static class TCChecker implements ResourceConstraintChecker {
-		private TCCache tc;
-
-		public TCChecker(TCCache tc) {
-			this.tc = tc;
-		}
+	public static class SwiftSiteChecker implements ResourceConstraintChecker {
 
 		public boolean checkConstraints(BoundContact resource, TaskConstraints tc) {
-			if (isPresent("trfqn", tc)) {
-				FQN tr = (FQN) tc.getConstraint("trfqn");
-				try {
-					List<TCEntry> l = this.tc.getTCEntries(tr, resource.getHost(), TCType.INSTALLED);
-					if (l == null || l.isEmpty()) {
-						return false;
-					}
-					else {
-						return true;
-					}
-				}
-				catch (Exception e) {
-					logger.warn("Exception caught while querying TC", e);
-					return false;
-				}
+			if (isPresent("tr", tc)) {
+			    SwiftContact sc = (SwiftContact) resource;
+				String tr = (String) tc.getConstraint("tr");
+			    return sc.findApplication(tr) != null;
 			}
 			else {
 				return true;

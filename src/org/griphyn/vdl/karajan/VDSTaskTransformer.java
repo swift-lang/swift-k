@@ -41,8 +41,8 @@ public class VDSTaskTransformer implements TaskTransformer {
 
 	private TaskTransformer impl;
 
-	public VDSTaskTransformer(TCCache tc) {
-		this.impl = new TCTransformer(tc);
+	public VDSTaskTransformer() {
+		this.impl = new SwiftTransformer();
 	}
 
 	public void transformTask(Task task, Contact[] contacts, Service[] services) {
@@ -54,7 +54,6 @@ public class VDSTaskTransformer implements TaskTransformer {
 		public void transformTask(Task task, Contact[] contacts, Service[] services) {
 			if (task.getType() == Task.JOB_SUBMISSION) {
 				applyJobWorkDirectory(task, contacts);
-				applyTCEntry(task, contacts);
 			}
 			else if (task.getType() == Task.FILE_TRANSFER) {
 				applyTransferWorkDirectory(task, contacts);
@@ -158,21 +157,8 @@ public class VDSTaskTransformer implements TaskTransformer {
 			}
 		}
 
-		protected abstract void applyTCEntry(Task task, Contact[] contacts);
 	}
 
-	public static class TCTransformer extends AbstractTransformer {
-		private TCCache tc;
-
-		public TCTransformer(TCCache tc) {
-			this.tc = tc;
-		}
-
-		protected void applyTCEntry(Task task, Contact[] contacts) {
-			// this method used to filter the task executable through
-		    // tc.data, but the task executable at this point was
-		    // always set to /bin/bash (or whatever the wrapper interpreter was).
-		    // That was useless.
-		}
+	public static class SwiftTransformer extends AbstractTransformer {
 	}
 }
