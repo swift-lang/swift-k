@@ -78,7 +78,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_VERSION = "version";
     public static final String ARG_RESUME = "resume";
     public static final String ARG_INSTANCE_CONFIG = "config";
-    public static final String ARG_TYPECHECK = "typecheck";
     public static final String ARG_DRYRUN = "dryrun";
     public static final String ARG_VERBOSE = "verbose";
     public static final String ARG_DEBUG = "debug";
@@ -91,11 +90,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_MINIMAL_LOGGING = "minimal.logging";
     public static final String ARG_PAUSE_ON_START = "pause.on.start";
     public static final String ARG_EXECUTE = "e";
-
-    public static final String CONST_VDL_OPERATION = "vdl:operation";
-    public static final String VDL_OPERATION_RUN = "run";
-    public static final String VDL_OPERATION_TYPECHECK = "typecheck";
-    public static final String VDL_OPERATION_DRYRUN = "dryrun";
 
     public static String buildVersion;
 
@@ -565,69 +559,51 @@ public class Loader extends org.globus.cog.karajan.Loader {
         ArgumentParser ap = new ArgumentParser();
         ap.setArguments(true);
         ap.setExecutableName("swift");
-        ap
-            .addOption(ArgumentParser.DEFAULT,
-                "A file (.swift or .kml) to execute", "file",
-                ArgumentParser.OPTIONAL);
+        ap.addOption(ArgumentParser.DEFAULT,
+            "A file (.swift or .kml) to execute", "file",
+            ArgumentParser.OPTIONAL);
 
         ap.addFlag(ARG_HELP, "Display usage information");
-	ap.addFlag(ARG_VERSION, "Version:");
+        ap.addFlag(ARG_VERSION, "Version:");
         ap.addAlias(ARG_HELP, "h");
 
         ap.addFlag(ARG_RECOMPILE, 
             "Forces Swift to re-compile the invoked Swift script. " +
             "While Swift is meant to detect when recompilation is necessary, " +
             "in some special cases it fails to do so. This flag helps with those special cases.");
-        ap.addFlag(ARG_TYPECHECK,
-            "Does a typecheck instead of executing the SwiftScript program");
 
-        ap
-            .addFlag(
-                ARG_DRYRUN,
-                "Runs the SwiftScript program without submitting any jobs (can be used to get a graph)");
-
-        ap.addFlag(ARG_MONITOR, "Shows a graphical resource monitor");
+        ap.addFlag(ARG_DRYRUN,
+            "Runs the SwiftScript program without submitting any jobs (can be used to get a graph)");
 
         ap.addOption(ARG_RESUME, "Resumes the execution using a log file",
             "file", ArgumentParser.OPTIONAL);
-        ap
-            .addOption(
-                ARG_INSTANCE_CONFIG,
-                "Indicates the Swift configuration file to be used for this run."
-                        + " Properties in this configuration file will override the default properties. "
-                        + "If individual command line arguments are used for properties, they will override "
-                        + "the contents of this file.", "file",
-                ArgumentParser.OPTIONAL);
-        ap
-            .addFlag(
-                ARG_VERBOSE,
-                "Increases the level of output that Swift produces on the console to include more detail "
-                        + "about the execution");
+        ap.addOption(ARG_INSTANCE_CONFIG,
+            "Indicates the Swift configuration file to be used for this run." + 
+            " Properties in this configuration file will override the default properties. " + 
+            "If individual command line arguments are used for properties, they will override " + 
+            "the contents of this file.", "file",
+            ArgumentParser.OPTIONAL);
+        ap.addFlag(ARG_VERBOSE,
+            "Increases the level of output that Swift produces on the console to include more detail " + 
+            "about the execution");
         ap.addAlias(ARG_VERBOSE, "v");
-        ap
-            .addFlag(
-                ARG_DEBUG,
-                "Increases the level of output that Swift produces on the console to include lots of "
-                        + "detail about the execution");
+        ap.addFlag(ARG_DEBUG,
+            "Increases the level of output that Swift produces on the console to include lots of " + 
+            "detail about the execution");
         ap.addAlias(ARG_DEBUG, "d");
-        ap
-            .addOption(
-                ARG_LOGFILE,
-                "Specifies a file where log messages should go to. By default Swift "
-                        + "uses the name of the SwiftScript program being run and additional information to make the name unique.",
-                "file", ArgumentParser.OPTIONAL);
-        ap
-        .addOption(
-            ARG_CDMFILE,
+        ap.addOption(ARG_LOGFILE,
+            "Specifies a file where log messages should go to. By default Swift " + 
+            "uses the name of the SwiftScript program being run and additional information to make the name unique.",
+            "file", ArgumentParser.OPTIONAL);
+        ap.addOption(ARG_CDMFILE,
             "Specifies a CDM policy file.",
             "file", ArgumentParser.OPTIONAL);
-        ap
-            .addOption(
-                ARG_RUNID,
-                "Specifies the run identifier. This must be unique for every invocation of a workflow and is used in several places to keep files from different executions cleanly separated. By default, a datestamp and random number are used to generate a run identifier.",
-                "string", ArgumentParser.OPTIONAL);
-        ap.addOption(
-            ARG_UI, 
+        ap.addOption(ARG_RUNID,
+            "Specifies the run identifier. This must be unique for every invocation of a script and " +
+            "is used in several places to keep files from different runs cleanly separated. " +
+            "By default, a datestamp and random number are used to generate a run identifier.",
+            "string", ArgumentParser.OPTIONAL);
+        ap.addOption(ARG_UI, 
             "Indicates how swift should display run-time information. The following are valid values:" +
             "\n\t'summary' (default) - causesSswift to regularly print a count of jobs for each state that a job can be in" +
             "\n\t'text' - regularly prints a more detailed table with Swift run-time information" +
@@ -637,11 +613,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
             "\n\t'http' - enables an http server allowing access to swift run-time information using a web browser",
             "<summary|text|TUI[:port]|http[:[password@]port]>", ArgumentParser.OPTIONAL);
         ap.addFlag(ARG_REDUCED_LOGGING, "Makes logging more terse by disabling provenance " +
-        		"information and low-level task messages");
+            "information and low-level task messages");
         ap.addFlag(ARG_MINIMAL_LOGGING, "Makes logging much more terse: " +
-                 "reports warnings only");
+            "reports warnings only");
         ap.addFlag(ARG_PAUSE_ON_START, "Pauses execution on start. Useful for " +
-        		"attaching a debugger or profiler to the swift process");
+            "attaching a debugger or profiler to the swift process");
         ap.addOption(ARG_EXECUTE, "Runs the swift script code contained in <string>", 
             "string", ArgumentParser.OPTIONAL);
 
