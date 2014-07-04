@@ -11,13 +11,13 @@ package org.globus.cog.abstraction.coaster.service;
 
 import java.util.Map;
 
-import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public interface RegistrationManager {
 
     String registrationReceived(String blockID, String workerID,
                                 String workerHostname,
-                                ChannelContext channelContext,
+                                CoasterChannel channel,
                                 Map<String, String> options);
 
     String nextId(String id);

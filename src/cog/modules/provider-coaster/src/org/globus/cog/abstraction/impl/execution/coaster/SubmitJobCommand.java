@@ -55,6 +55,7 @@ public class SubmitJobCommand extends Command {
     private Task t;
     private boolean compression = SubmitJobHandler.COMPRESSION;
     private boolean simple;
+    private String configId;
 
     public boolean getCompression() {
         return compression;
@@ -63,10 +64,15 @@ public class SubmitJobCommand extends Command {
     public void setCompression(boolean compression) {
         this.compression = compression;
     }
-
+    
     public SubmitJobCommand(Task t) {
+        this(t, null);
+    }
+
+    public SubmitJobCommand(Task t, String configId) {
         super(NAME);
         this.t = t;
+        this.configId = configId;
     }
 
     public void send() throws ProtocolException {
@@ -86,6 +92,9 @@ public class SubmitJobCommand extends Command {
         StringBuilder sb = new StringBuilder();
         
         String identity = t.getIdentity().getValue();
+        if (!simple) {
+            add(sb, "configid", configId);
+        }
         add(sb, "identity", identity);
         add(sb, "executable", spec.getExecutable());
         add(sb, "directory", spec.getDirectory());

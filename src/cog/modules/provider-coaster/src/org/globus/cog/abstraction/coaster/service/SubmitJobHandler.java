@@ -40,6 +40,7 @@ import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.handlers.RequestHandler;
+import org.globus.cog.karajan.util.Pair;
 
 public class SubmitJobHandler extends RequestHandler {
     
@@ -48,21 +49,33 @@ public class SubmitJobHandler extends RequestHandler {
     public static final boolean COMPRESSION = false;
     
     private CoasterService service;
+    
+    private static class TaskConfigPair {
+        public final Task task;
+        public final String configid;
+        
+        public TaskConfigPair(Task task, String configid) {
+            this.task = task;
+            this.configid = configid;
+        }
+    }
 
     public void requestComplete() throws ProtocolException {
         Task task;
         try {
             ChannelContext channelContext = getChannel().getChannelContext();
             service = (CoasterService) channelContext.getService();
+            TaskConfigPair p;
             if (COMPRESSION) {
-                task = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
+                p = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
             }
             else {
-                task = read(new ByteArrayInputStream(getInData(0)));
+                p = read(new ByteArrayInputStream(getInData(0)));
             }
+            task = p.task;
             new TaskNotifier(task, channelContext);
-            service.getJobQueue().setClientChannelContext(channelContext);
-            service.getJobQueue().enqueue(task);
+            service.getJobQueue(p.configid).setClientChannelContext(channelContext);
+            service.getJobQueue(p.configid).enqueue(task);
             // make sure we'll have something to send notifications to
             ChannelManager.getManager().reserveLongTerm(getChannel());
         }
@@ -73,7 +86,7 @@ public class SubmitJobHandler extends RequestHandler {
         sendReply(task.getIdentity().toString());
     }
 
-    private Task read(InputStream is) throws IOException, ProtocolException, IllegalSpecException {
+    private TaskConfigPair read(InputStream is) throws IOException, ProtocolException, IllegalSpecException {
         Helper helper = new Helper(is);
 
         Task task = new TaskImpl();
@@ -81,6 +94,7 @@ public class SubmitJobHandler extends RequestHandler {
         JobSpecification spec = new JobSpecificationImpl();
         task.setSpecification(spec);
 
+        String configId = helper.read("configid");
         String clientId = helper.read("identity");
         if (clientId == null) {
             throw new IllegalSpecException("Missing job identity");
@@ -159,7 +173,7 @@ public class SubmitJobHandler extends RequestHandler {
         setServiceParams(service, intern(helper.read("contact")), intern(helper.read("provider")), intern(helper.read("jm")));
         task.setService(0, service);
         
-        return task;
+        return new TaskConfigPair(task, configId);
     }
     
     private String intern(String str) {

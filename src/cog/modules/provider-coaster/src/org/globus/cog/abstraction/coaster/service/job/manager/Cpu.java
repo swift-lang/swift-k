@@ -60,8 +60,8 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
     }
 
     public void workerStarted() {
-	 if (logger.isDebugEnabled()) {
-	        logger.debug("worker started: block=" + block.getId() +
+	 if (logger.isInfoEnabled()) {
+	        logger.info("worker started: block=" + block.getId() +
 	                     " host=" + getNode().getHostname() +
 	                     " id=" + id);
 	 }
@@ -259,12 +259,18 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
 
     protected void submit(Job job) {
         Task task = job.getTask();
-        if (logger.isInfoEnabled()) {
+        if (logger.isDebugEnabled()) {
+            JobSpecification spec =
+                (JobSpecification) task.getSpecification();
+            logger.debug(block.getId() + ":" + getId() + " (quality: " + getQuality() + ")" + 
+                " submitting " + task.getIdentity() + ": " +
+                spec.getExecutable() + " " + spec.getArguments());
+        }
+        else if (logger.isInfoEnabled()) {
             JobSpecification spec =
                 (JobSpecification) task.getSpecification();
             logger.info(block.getId() + ":" + getId() + " (quality: " + getQuality() + ")" + 
-                " submitting " + task.getIdentity() + ": " +
-                spec.getExecutable() + " " + spec.getArguments());
+                " submitting " + task.getIdentity());
         }
         task.setStatus(Status.SUBMITTING);
         try {

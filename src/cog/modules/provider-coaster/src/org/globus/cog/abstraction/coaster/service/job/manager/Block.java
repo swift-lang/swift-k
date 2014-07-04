@@ -14,6 +14,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TimerTask;
 import java.util.TreeMap;
@@ -24,7 +25,7 @@ import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class Block implements StatusListener, Comparable<Block> {
     public static final Logger logger = Logger.getLogger(Block.class);
@@ -64,7 +65,7 @@ public class Block implements StatusListener, Comparable<Block> {
     	return sid++;
     }
 
-    private static final NumberFormat IDF = new DecimalFormat("000000");
+    public static final NumberFormat IDF = new DecimalFormat("000000");
     
     public static int totalRequestedWorkers, totalActiveWorkers, totalFailedWorkers, totalCompletedWorkers, totalCompletedJobs;
 
@@ -382,19 +383,23 @@ public class Block implements StatusListener, Comparable<Block> {
         return id;
     }
 
-    public String workerStarted(String workerID,
-                                String workerHostname,
-                                ChannelContext channelContext) {
+    public String workerStarted(String workerID, String workerHostname,
+            CoasterChannel channel, Map<String, String> options) {
+        int concurrency = 1;
+        if (options.containsKey("concurrency")) {
+            concurrency = Integer.parseInt(options.get("concurrency"));
+        }
+        else {
+            concurrency = bqp.getSettings().getJobsPerNode();
+        }
         synchronized (cpus) {
             int wid = Integer.parseInt(workerID);
-            Node n = new Node(wid, this, workerHostname,
-                              channelContext);
+            Node n = new Node(wid, this, workerHostname, channel, concurrency);
             nodes.add(n);
-            int jobsPerNode = bqp.getSettings().getJobsPerNode();
-            this.activeWorkers += jobsPerNode;
-            totalActiveWorkers += jobsPerNode;
-            bqp.getRLogger().log("WORKER_ACTIVE blockid=" + getId());
-            for (int i = 0; i < jobsPerNode; i++) {
+            this.activeWorkers += concurrency;
+            totalActiveWorkers += concurrency;
+            bqp.getRLogger().log("WORKER_ACTIVE blockid=" + getId() + " id=" + workerID + " node=" + workerHostname + " cores=" + concurrency);
+            for (int i = 0; i < concurrency; i++) {
                 //this id scheme works out because the sid is based on the
                 //number of cpus already added (i.e. cpus.size()).
                 Cpu cpu = new Cpu(wid + i, n);

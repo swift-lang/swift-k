@@ -13,6 +13,7 @@ import java.net.URI;
 import java.util.Map;
 
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
+import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.coaster.service.ResourceUpdateCommand;
 import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.ChannelManager;
@@ -23,10 +24,9 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
     
     private int currentWorkers;
 
-    public PassiveQueueProcessor(Settings settings, URI callbackURI) {
-        super(settings);
+    public PassiveQueueProcessor(LocalTCPService localService, URI callbackURI) {
+        super(localService, null);
         setName("Passive Queue Processor");
-        setSettings(settings);
         this.callbackURI = callbackURI;
     }
 
@@ -58,9 +58,9 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
     
     @Override
     public String registrationReceived(String blockID, String workerID, String workerHostname,
-            ChannelContext channelContext, Map<String, String> options) {
+            CoasterChannel channel, Map<String, String> options) {
         
-        String r = getBlock(blockID).workerStarted(workerID, workerHostname, channelContext);
+        String r = getBlock(blockID).workerStarted(workerID, workerHostname, channel, options);
         
         if (clientIsConnected()) {
             ResourceUpdateCommand wsc;
@@ -70,9 +70,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
                     String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
             }
             try {
-                CoasterChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
                 wsc.executeAsync(channel);
-                ChannelManager.getManager().releaseChannel(channel);
             }
             catch (Exception e) {
                 logger.info("Failed to send worker status update to client", e);
@@ -90,6 +88,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
             b = blocks.get(id);
             if (b == null) {
                 b = new Block(id, 1, TimeInterval.FOREVER, this);
+                getLocalService().registerBlock(b, this);
                 b.setStartTime(Time.now());
                 b.setRunning(true);
                 blocks.put(id, b);
@@ -104,7 +103,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
         synchronized(this) {
             currentWorkers--;
             wsc = new ResourceUpdateCommand("job-capacity", 
-                String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
+                String.valueOf(node.getConcurrency()));
             if (node.getBlock().getNodes().isEmpty()) {
                 getBlocks().remove(node.getBlock().getId());
             }

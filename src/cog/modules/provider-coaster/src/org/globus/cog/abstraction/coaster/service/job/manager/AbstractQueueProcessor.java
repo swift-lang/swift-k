@@ -12,16 +12,23 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.interfaces.Task;
 
 public abstract class AbstractQueueProcessor extends Thread implements QueueProcessor {
     private final BlockingQueue<AssociatedTask> q;
     private boolean shutdownFlag;
     private boolean wrap;
+    private final LocalTCPService localService;
 
-    public AbstractQueueProcessor(String name) {
+    public AbstractQueueProcessor(String name, LocalTCPService localService) {
         super(name);
+        this.localService = localService;
         q = new LinkedBlockingQueue<AssociatedTask>();
+    }
+
+    public LocalTCPService getLocalService() {
+        return localService;
     }
 
     public void enqueue(Task t) {

@@ -9,6 +9,7 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
@@ -25,8 +26,8 @@ import org.globus.cog.coaster.channels.ChannelContext;
 public class LocalQueueProcessor extends AbstractQueueProcessor {
     private TaskHandler taskHandler;
 
-    public LocalQueueProcessor() {
-        super("Local Queue Processor");
+    public LocalQueueProcessor(LocalTCPService localService) {
+        super("Local Queue Processor", localService);
         this.taskHandler = new ExecutionTaskHandler();
     }
 

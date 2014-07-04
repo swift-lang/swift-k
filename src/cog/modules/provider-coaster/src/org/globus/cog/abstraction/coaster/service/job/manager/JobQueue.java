@@ -11,27 +11,33 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.net.URI;
 import java.util.Collection;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
-import org.globus.cog.abstraction.coaster.service.RegistrationManager;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.channels.ChannelContext;
 
-public class JobQueue implements RegistrationManager {
+public class JobQueue {
     public static final Logger logger = Logger.getLogger(JobQueue.class);
 
+    private static int sid;
+    private String id;
     private QueueProcessor local, coaster;
     private final Settings settings;
     private final LocalTCPService localService;
     private ChannelContext clientChannelContext;
     private String defaultQueueProcessor;
+    private CoasterService service;
 
-    public JobQueue(LocalTCPService localService) {
+    public JobQueue(CoasterService service, LocalTCPService localService) {
+        synchronized(JobQueue.class) {
+            id = String.valueOf(sid++);
+        }
         settings = new Settings();
+        this.service = service;
         this.localService = localService;
         Collection<URI> addrs = settings.getLocalContacts(localService.getPort());
         if (addrs == null) {
@@ -43,7 +49,7 @@ public class JobQueue implements RegistrationManager {
     }
 
     public void start() {
-        local = new LocalQueueProcessor();
+        local = new LocalQueueProcessor(localService);
         local.start();
     }
 
@@ -96,13 +102,13 @@ public class JobQueue implements RegistrationManager {
 
     private QueueProcessor newQueueProcessor(String name) {
         if (name.equals("local")) {
-            return new LocalQueueProcessor();
+            return new LocalQueueProcessor(localService);
         }
         else if (name.equals("block")) {
-            return new BlockQueueProcessor(settings);
+            return new BlockQueueProcessor(localService, settings);
         }
         else if (name.equals("passive")) {
-            return new PassiveQueueProcessor(settings, localService.getContact());
+            return service.getPassiveQueueProcessor();
         }
         else {
             throw new IllegalArgumentException("No such queue processor: " + name);
@@ -130,23 +136,15 @@ public class JobQueue implements RegistrationManager {
         }
     }
 
-    public String nextId(String id) {
-        return ((RegistrationManager) coaster).nextId(id);
-    }
-
-    public String registrationReceived(String blockID,
-                                       String workerID,
-                                       String workerHostname,
-                                       ChannelContext channelContext,
-                                       Map<String, String> options) {
-        RegistrationManager manager = ((RegistrationManager) coaster);
-        return manager.registrationReceived(blockID, workerID,
-                                            workerHostname,
-                                            channelContext,
-                                            options);
-    }
-
     public QueueProcessor getCoasterQueueProcessor() {
         return coaster;
+    }
+
+    public LocalTCPService getLocalService() {
+        return localService;
+    }
+    
+    public String getId() {
+        return id;
     }
 }

@@ -26,19 +26,22 @@ public class WorkerShellHandler extends RequestHandler implements Callback {
     public static final String NAME = WorkerShellCommand.NAME;
 
     public void requestComplete() throws ProtocolException {
-        String workerId = getInDataAsString(0);
+        String id = getInDataAsString(0);
         String command = getInDataAsString(1);
-        WorkerShellCommand wsc = new WorkerShellCommand(workerId, command) {
+        WorkerShellCommand wsc = new WorkerShellCommand(id, command) {
             @Override
             public void handleSignal(byte[] data) {
                 forwardSignal(data);
             }
         };
-        BlockQueueProcessor bqp = (BlockQueueProcessor) ((CoasterService) getChannel().getChannelContext().
-                getService()).getJobQueue().getCoasterQueueProcessor();
+        CoasterService service = (CoasterService) getChannel().getChannelContext().getService();
+        int sep = id.indexOf(':');
+        String blockID = id.substring(0, sep);
+        String workerID = id.substring(sep + 1);
+        BlockQueueProcessor bqp = service.getLocalService().getQueueProcessor(blockID);
         try {
             ChannelManager manager = ChannelManager.getManager();
-            CoasterChannel worker = bqp.getWorkerChannel(workerId);
+            CoasterChannel worker = bqp.getWorkerChannel(blockID, workerID);
             if (worker == null) {
                 sendReply("Error: worker not found");
             }

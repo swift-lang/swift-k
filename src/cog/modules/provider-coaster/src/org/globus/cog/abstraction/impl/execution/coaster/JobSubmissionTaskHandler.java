@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -21,14 +20,9 @@ import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.coaster.service.local.LocalService;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
-import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
-import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
-import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
-import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
-import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -56,26 +50,29 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         configuring = new HashSet<Object>();
     }
 
-    private static boolean checkConfigured(CoasterChannel channel) throws InterruptedException {
-        Object key = channel.getChannelContext();
-        synchronized (configuring) {
-            while (configuring.contains(key)) {
-                configuring.wait(100);
+    private static String checkConfigured(CoasterChannel channel, Task task) throws InterruptedException {
+        Service s = task.getService(0);
+        synchronized (s) {
+            while (s.getAttribute("coaster:configuring") != null) {
+                s.wait(100);
             }
-            boolean c = configured.contains(key);
-            if (!c) {
-                configuring.add(key);
+            String configId = (String) s.getAttribute("coaster:configid");
+            if (configId == null) {
+                s.setAttribute("coaster:configuring", Boolean.TRUE);
             }
-            return c;
+            else {
+                task.setAttribute("coaster:configid", configId);
+            }
+            return configId;
         }
     }
 
-    private static void setConfigured(CoasterChannel channel) {
-        Object key = channel.getChannelContext();
-        synchronized (configuring) {
-            configuring.remove(key);
-            configured.add(key);
-            configuring.notifyAll();
+    private static void setConfigured(CoasterChannel channel, Task task, String configId) {
+        Service s = task.getService(0);
+        synchronized (s) {
+            s.removeAttribute("coaster:configuring");
+            s.setAttribute("coaster:configid", configId);
+            s.notifyAll();
         }
     }
 
@@ -103,8 +100,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         task.setStatus(Status.SUBMITTING);
         try {
             CoasterChannel channel = getChannel(task);
-            configureService(channel, task);
-            submitJob(channel, task);
+            String configId = configureService(channel, task);
+            submitJob(channel, task, configId);
         }
         catch (Exception e) {
             throw new TaskSubmissionException("Could not submit job", e);
@@ -125,11 +122,13 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         return ChannelManager.getManager().reserveChannel(url, cred, LocalRequestManager.INSTANCE);
     }
 
-    private void configureService(CoasterChannel channel, Task task) throws InterruptedException,
+    private String configureService(CoasterChannel channel, Task task) throws InterruptedException,
             ProtocolException, IOException {
-        if (!checkConfigured(channel)) {
+        String configId = checkConfigured(channel, task);
+        if (configId == null) {
             ServiceConfigurationCommand scc = new ServiceConfigurationCommand(task);
-            scc.execute(channel);
+            byte[] reply = scc.execute(channel);
+            configId = new String(reply);
             
             Object rt = task.getService(0).getAttribute("resource-tracker");
             if (rt != null) {
@@ -143,12 +142,13 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                         + " does not implement " + CoasterResourceTracker.class);
                 }
             }
-            setConfigured(channel);
+            setConfigured(channel, task, configId);
         }
+        return configId;
     }
 
-    private void submitJob(CoasterChannel channel, Task task) throws ProtocolException {
-        jsc = new SubmitJobCommand(task);
+    private void submitJob(CoasterChannel channel, Task task, String configId) throws ProtocolException {
+        jsc = new SubmitJobCommand(task, configId);
         jsc.executeAsync(channel, this);
     }
     
@@ -368,81 +368,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
         else {
             throw new IllegalArgumentException("Invalid valid for " + name + ": " + v + "; must be an integer.");
-        }
-    }
-
-    private static Task submitTask() throws Exception {
-        Task t = new TaskImpl();
-        t.setType(Task.JOB_SUBMISSION);
-        JobSpecification js = new JobSpecificationImpl();
-        js.setExecutable("/bin/date");
-        int base = (int) (rnd.nextDouble() * 20) + 5;
-        //js.addArgument(String.valueOf(base + (int) (rnd.nextDouble() * base)));
-        js.setAttribute("maxwalltime", "00:00:" + String.valueOf(base * 2));
-        js.setAttribute("slots", "2");
-        js.setAttribute("lowOverallocation", "6");
-        js.setAttribute("nodeGranularity", "1");
-        js.setAttribute("maxNodes", "2");
-        js.setRedirected(true);
-        //js.setAttribute("remoteMonitorEnabled", "true");
-        t.setSpecification(js);
-        ExecutionService s = new ExecutionServiceImpl();
-        // s.setServiceContact(new ServiceContactImpl("localhost"));
-        // s.setServiceContact(new
-        // ServiceContactImpl("tp-grid1.ci.uchicago.edu"));
-        // s.setServiceContact(new
-        // ServiceContactImpl("tg-grid1.uc.teragrid.org"));
-        s.setServiceContact(new ServiceContactImpl("localhost"));
-        s.setProvider("coaster");
-        s.setJobManager("local:local");
-        // s.setJobManager("gt2:pbs");
-        s.setSecurityContext(new SecurityContextImpl());
-        t.setService(0, s);
-        // JobSubmissionTaskHandler th = new JobSubmissionTaskHandler(
-        // AbstractionFactory.newExecutionTaskHandler("local"));
-        JobSubmissionTaskHandler th = new JobSubmissionTaskHandler();
-        th.setAutostart(true);
-        th.submit(t);
-        return t;
-    }
-
-    private static Random rnd;
-
-    public static void main(String[] args) {
-        try {
-        	rnd = new Random();
-        	rnd.setSeed(10L);
-            long s = System.currentTimeMillis();
-            Task[] ts = new Task[1];
-            for (int i = 0; i < ts.length; i++) {
-                ts[i] = submitTask();
-                if (i % 1 == 0) {
-                    System.err.println((i + 1) + " submitted");
-                }
-            }
-            for (int i = 0; i < ts.length; i++) {
-                ts[i].waitFor();
-                if (ts[i].getStatus().getStatusCode() == Status.FAILED) {
-                    System.err.println("Job failed");
-                    System.err.println(ts[i].getStatus().getMessage());
-                    if (ts[i].getStatus().getException() != null) {
-                        ts[i].getStatus().getException().printStackTrace();
-                    }
-                }
-                else {
-                    System.out.println(ts[i].getStdOutput());
-                }
-                if (i % 100 == 0 && i > 0) {
-                    System.err.println(i + " done");
-                }
-            }
-            System.err.println("All " + ts.length + " jobs done");
-            System.err.println("Total time: " + (System.currentTimeMillis() - s));
-            System.exit(0);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
         }
     }
 }

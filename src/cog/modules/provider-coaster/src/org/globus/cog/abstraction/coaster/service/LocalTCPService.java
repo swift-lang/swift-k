@@ -23,13 +23,14 @@ import java.nio.channels.SocketChannel;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.Block;
+import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.coaster.ConnectionHandler;
 import org.globus.cog.coaster.RequestManager;
 import org.globus.cog.coaster.Service;
 import org.globus.cog.coaster.ServiceContext;
 import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.ChannelException;
-import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.channels.TCPChannel;
 import org.globus.common.CoGProperties;
@@ -40,7 +41,6 @@ public class LocalTCPService implements Registering, Service, Runnable {
 
     public static final int TCP_BUFSZ = 32768;
 
-    private RegistrationManager registrationManager;
     private final TCPBufferManager buffMan;
 
     private ServerSocketChannel channel;
@@ -52,6 +52,8 @@ public class LocalTCPService implements Registering, Service, Runnable {
     private Thread serverThread;
     
     private URI contact;
+    private BlockRegistry blockRegistry;
+    private Map<String, CoasterChannel> workerChannels;
 
     public LocalTCPService(RequestManager rm) throws IOException {
         this(rm, 0);
@@ -61,6 +63,7 @@ public class LocalTCPService implements Registering, Service, Runnable {
         setRequestManager(rm);
         buffMan = new TCPBufferManager();
         this.port = port;
+        this.blockRegistry = new BlockRegistry();
     }
 
     public String registrationReceived(String blockid, String url, 
@@ -71,23 +74,26 @@ public class LocalTCPService implements Registering, Service, Runnable {
         }
         ChannelContext cc = channel.getChannelContext();
         cc.getChannelID().setLocalID(blockid);
-        String wid = registrationManager.nextId(blockid);
+        String wid = blockRegistry.nextId(blockid);
         cc.getChannelID().setRemoteID(wid);
-        ChannelManager.getManager().registerChannel(cc.getChannelID(), channel);
-        registrationManager.registrationReceived(blockid, wid, url, cc, options);
+        blockRegistry.registrationReceived(blockid, wid, url, channel, options);
         return wid;
+    }
+    
+    public void registerBlock(Block block, BlockQueueProcessor bqp) {
+        blockRegistry.addBlock(block.getId(), bqp);
+    }
+    
+    public void unregisterBlock(Block block) {
+        blockRegistry.removeBlock(block.getId());
+    }
+    
+    public BlockQueueProcessor getQueueProcessor(String blockId) {
+        return blockRegistry.getQueueProcessor(blockId);
     }
 
     public void unregister(String id) {
         throw new UnsupportedOperationException();
-    }
-
-    public RegistrationManager getRegistrationManager() {
-        return registrationManager;
-    }
-
-    public void setRegistrationManager(RegistrationManager workerManager) {
-        this.registrationManager = workerManager;
     }
     
     protected void setRequestManager(RequestManager requestManager) {

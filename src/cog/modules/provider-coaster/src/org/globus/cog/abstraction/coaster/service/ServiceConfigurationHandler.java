@@ -12,6 +12,7 @@ package org.globus.cog.abstraction.coaster.service;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceConfigurationCommand;
 import org.globus.cog.coaster.ProtocolException;
@@ -23,8 +24,9 @@ public class ServiceConfigurationHandler extends RequestHandler {
     public static final String NAME = ServiceConfigurationCommand.NAME;
 
     public void requestComplete() throws ProtocolException {
-        Settings settings =
-                ((CoasterService) getChannel().getChannelContext().getService()).getJobQueue().getSettings();
+        CoasterService service = (CoasterService) getChannel().getChannelContext().getService();
+        JobQueue q = service.createJobQueue();
+        Settings settings = q.getSettings();
 
         try {
             List<byte[]> l = getInDataChunks();
@@ -36,7 +38,7 @@ public class ServiceConfigurationHandler extends RequestHandler {
                 }
             }
             logger.debug(settings);
-            sendReply("OK");
+            sendReply(q.getId());
         }
         catch (Exception e) {
             logger.warn("Failed to set configuration", e);

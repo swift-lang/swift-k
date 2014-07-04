@@ -18,6 +18,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -28,6 +30,8 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
+import org.globus.cog.abstraction.coaster.service.job.manager.PassiveQueueProcessor;
+import org.globus.cog.abstraction.coaster.service.job.manager.QueueProcessor;
 import org.globus.cog.abstraction.coaster.service.local.JobStatusHandler;
 import org.globus.cog.abstraction.coaster.service.local.RegistrationHandler;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
@@ -60,7 +64,7 @@ public class CoasterService extends GSSService {
     public static final RequestManager COASTER_REQUEST_MANAGER = new CoasterRequestManager();
 
     private String registrationURL, id, defaultQP;
-    private JobQueue jobQueue;
+    private Map<String, JobQueue> queues;
     private LocalTCPService localService;
     private Exception exceptionAtStop;
     private boolean done;
@@ -69,6 +73,7 @@ public class CoasterService extends GSSService {
     private boolean local;
     private CoasterChannel channelToClient;
     private boolean ignoreIdleTime;
+    private PassiveQueueProcessor passiveQP;
 
     public CoasterService() throws IOException {
         this(true);
@@ -96,6 +101,7 @@ public class CoasterService extends GSSService {
         addLocalHook();
         this.registrationURL = registrationURL;
         this.id = id;
+        queues = new HashMap<String, JobQueue>();
         setAuthorization(new SelfAuthorization());
         initializeLocalService();
         setPollingIntervals();
@@ -169,6 +175,16 @@ public class CoasterService extends GSSService {
             }
         }
     }
+    
+    public JobQueue createJobQueue() {
+        JobQueue q = new JobQueue(this, localService);
+        q.start();
+        if (defaultQP != null) {
+            q.ensureQueueProcessorInitialized(defaultQP);
+        }
+        addJobQueue(q);
+        return q;
+    }
 
     @Override
     public void start() {
@@ -176,12 +192,6 @@ public class CoasterService extends GSSService {
         try {
             if (localService == null) {
                 throw new IllegalStateException("Local service not initialized");
-            }
-            jobQueue = new JobQueue(localService);
-            jobQueue.start();
-            localService.setRegistrationManager(jobQueue);
-            if (defaultQP != null) {
-                jobQueue.ensureQueueProcessorInitialized(defaultQP);
             }
             logger.info("Started local service: "
                         + localService.getContact());
@@ -234,8 +244,8 @@ public class CoasterService extends GSSService {
     }
 
     private void stop(Exception exception) {
-        if (jobQueue != null) {
-            jobQueue.shutdown();
+        for (JobQueue q : queues.values()) {
+            q.shutdown();
         }
         synchronized (this) {
             this.exceptionAtStop = exception;
@@ -315,7 +325,9 @@ public class CoasterService extends GSSService {
             startShutdownWatchdog();
             unregister();
             super.shutdown();
-            jobQueue.shutdown();
+            for (JobQueue q : queues.values()) {
+                q.shutdown();
+            }
         }
         finally {
             done = true;
@@ -393,9 +405,17 @@ public class CoasterService extends GSSService {
             watchdogs.schedule(w, delay, delay);
         }
     }
+    
+    protected void addJobQueue(JobQueue q) {
+        synchronized(queues) {
+            queues.put(q.getId(), q);
+        }
+    }
 
-    public JobQueue getJobQueue() {
-        return jobQueue;
+    public JobQueue getJobQueue(String id) {
+        synchronized(queues) {
+            return queues.get(id);
+        }
     }
 
     public boolean getIgnoreIdleTime() {
@@ -518,5 +538,16 @@ public class CoasterService extends GSSService {
 
     public void setDefaultQP(String defaultQP) {
         this.defaultQP = defaultQP;
+    }
+    
+    public Map<String, JobQueue> getQueues() {
+        return queues;
+    }
+
+    public synchronized QueueProcessor getPassiveQueueProcessor() {
+        if (passiveQP == null) {
+            passiveQP = new PassiveQueueProcessor(localService, localService.getContact());
+        }
+        return passiveQP;
     }
 }

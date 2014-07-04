@@ -18,18 +18,16 @@ import java.util.TreeMap;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
+import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.coaster.service.RegistrationManager;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.channels.ChannelContext;
-import org.globus.cog.coaster.channels.ChannelException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
-public class BlockQueueProcessor
-extends AbstractQueueProcessor
-implements RegistrationManager, Runnable {
+public class BlockQueueProcessor extends AbstractQueueProcessor implements RegistrationManager, Runnable {
     public static final Logger logger = Logger.getLogger(BlockQueueProcessor.class);
 
     private Settings settings;
@@ -105,8 +103,8 @@ implements RegistrationManager, Runnable {
     	return sid++;
     }
 
-    public BlockQueueProcessor(Settings settings) {
-        super("Block Queue Processor");
+    public BlockQueueProcessor(LocalTCPService localService, Settings settings) {
+        super("Block Queue Processor", localService);
         this.settings = settings;
         holding = new SortedJobSet();
         blocks = new TreeMap<String, Block>();
@@ -575,6 +573,7 @@ implements RegistrationManager, Runnable {
 
                 // create the actual block
                 Block b = new Block(width, TimeInterval.fromSeconds(h), this);
+                getLocalService().registerBlock(b, this);
                 if (logger.isInfoEnabled()) {
                     logger.info("index: " + index + ", last: " + last + ", holding.size(): " + holding.size());
                 }
@@ -815,6 +814,7 @@ implements RegistrationManager, Runnable {
         synchronized (blocks) {
             blocks.remove(block.getId());
         }
+        getLocalService().unregisterBlock(block);
     }
 
     public Settings getSettings() {
@@ -835,14 +835,9 @@ implements RegistrationManager, Runnable {
         }
     }
 
-    public String registrationReceived(String blockID,
-                                       String workerID,
-                                       String workerHostname,
-                                       ChannelContext channelContext,
-                                       Map<String, String> options) {
-        return getBlock(blockID).workerStarted(workerID,
-                                               workerHostname,
-                                               channelContext);
+    public String registrationReceived(String blockID, String workerID, String workerHostname,
+            CoasterChannel channel, Map<String, String> options) {
+        return getBlock(blockID).workerStarted(workerID, workerHostname, channel, options);
     }
 
     public String nextId(String id) {
@@ -904,21 +899,12 @@ implements RegistrationManager, Runnable {
     /**
        Get the KarajanChannel for the worker with given id
      */
-    public CoasterChannel getWorkerChannel(String id) {
-        int sep = id.indexOf(':');
-        String blockID = id.substring(0, sep);
-        String workerID = id.substring(sep + 1);
+    public CoasterChannel getWorkerChannel(String blockID, String workerID) {        
         Block b = getBlock(blockID);
         if (b != null) {
             Node n = b.findNode(workerID);
             if (n != null) {
-                try {
-                    return n.getChannel();
-                }
-                catch (ChannelException e) {
-                    logger.info("Cannot get node channel", e);
-                    return null;
-                }
+                return n.getChannel();
             }
         }
         return null;

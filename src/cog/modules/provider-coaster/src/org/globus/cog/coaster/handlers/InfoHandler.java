@@ -12,6 +12,7 @@ package org.globus.cog.coaster.handlers;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.globus.cog.abstraction.coaster.service.CoasterService;
@@ -19,6 +20,7 @@ import org.globus.cog.abstraction.coaster.service.job.manager.Block;
 import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.abstraction.coaster.service.job.manager.Cpu;
 import org.globus.cog.abstraction.coaster.service.job.manager.Job;
+import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
 import org.globus.cog.abstraction.coaster.service.job.manager.Node;
 import org.globus.cog.abstraction.coaster.service.job.manager.Time;
 import org.globus.cog.abstraction.coaster.service.job.manager.TimeInterval;
@@ -33,12 +35,14 @@ public class InfoHandler extends RequestHandler {
 	    String type = getInDataAsString(0);
 	    String opts = getInDataAsString(1);
 	    
-	    BlockQueueProcessor bqp = (BlockQueueProcessor) ((CoasterService) getChannel().getChannelContext().
-                getService()).getJobQueue().getCoasterQueueProcessor();
-		
+	    Map<String, Block> blocks = new HashMap<String, Block>();
+        CoasterService s = (CoasterService) getChannel().getChannelContext().getService();
+        for (Map.Entry<String, JobQueue> e : s.getQueues().entrySet()) {
+            blocks.putAll(((BlockQueueProcessor) e.getValue().getCoasterQueueProcessor()).getBlocks());
+        }
+        
 	    if (type.equals("workers")) {
-	        Map<String, Block> blocks = bqp.getBlocks();
-            addOutData("           ID    Cores     Running");
+	        addOutData("           ID    Cores     Running");
             for (Block b : blocks.values()) {
                 for (Node n : b.getNodes()) {
                     addOutData(formatWorkerStatusLine(n));
@@ -47,7 +51,6 @@ public class InfoHandler extends RequestHandler {
             sendReply();
 	    }
 	    else if (type.equals("jobs")) {
-	        Map<String, Block> blocks = bqp.getBlocks();
 	        addOutData("          ID          Worker            Executable           Start Time     Walltime");
 	        for (Block b : blocks.values()) {
                 for (Node n : b.getNodes()) {
@@ -62,7 +65,6 @@ public class InfoHandler extends RequestHandler {
 	        sendReply();
 	    }
 	    else if (type.equals("blocks")) {
-	        Map<String, Block> blocks = bqp.getBlocks();
 	        addOutData("    ID    State    Workers           Start Time    Walltime");
 	        for (Block b : blocks.values()) {
 	            addOutData(formatBlockStatusLine(b));

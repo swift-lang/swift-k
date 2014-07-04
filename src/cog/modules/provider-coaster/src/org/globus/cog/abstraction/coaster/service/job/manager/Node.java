@@ -14,32 +14,31 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.coaster.channels.ChannelContext;
-import org.globus.cog.coaster.channels.ChannelException;
 import org.globus.cog.coaster.channels.ChannelListener;
 import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
-import org.globus.cog.coaster.commands.ShutdownCommand;
 import org.globus.cog.coaster.commands.Command.Callback;
+import org.globus.cog.coaster.commands.ShutdownCommand;
 
 public class Node implements Callback, ChannelListener {
     public static final Logger logger = Logger.getLogger(Node.class);
 
-    private final int id;
+    private final int id, concurrency;
     private final List<Cpu> cpus;
     private Block block;
-    private final ChannelContext channelContext;
-    private CoasterChannel channel;
+    private final CoasterChannel channel;
     private boolean shutdown;
     private final String hostname;
 
     public Node(int id, Block block, String workerHostname,
-                ChannelContext channelContext) {
+                CoasterChannel channel, int concurrency) {
         this.id = id;
         this.block = block;
         this.hostname = workerHostname;
-        this.channelContext = channelContext;
+        this.channel = channel;
+        channel.getChannelContext().addChannelListener(this);
+        this.concurrency = concurrency;
         Settings settings = block.getAllocationProcessor().getSettings();
         cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
 
@@ -49,21 +48,14 @@ public class Node implements Callback, ChannelListener {
     }
 
     @Deprecated
-    public Node(int id, Block block, ChannelContext channelContext) {
+    public Node(int id, Block block, CoasterChannel channel) {
         this.id = id;
         this.block = block;
         this.hostname = null;
-        this.channelContext = channelContext;
+        this.concurrency = 1;
+        this.channel = channel;
         Settings settings = block.getAllocationProcessor().getSettings();
         cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
-    }
-
-    @Deprecated
-    public Node(int id, int jobsPerNode, ChannelContext channelContext) {
-    	this.id = id;
-    	this.hostname = null;
-    	this.channelContext = channelContext;
-    	cpus = new ArrayList<Cpu>(jobsPerNode);
     }
 
     public void add(Cpu cpu) {
@@ -103,19 +95,9 @@ public class Node implements Callback, ChannelListener {
 
     public void replyReceived(Command cmd) {
         logger.info(this + " shut down successfully");
-        try {
-        	getChannel().close();
-            channel.close();
-            ChannelManager.getManager().removeChannel(channelContext);
-            block.getAllocationProcessor().getRLogger().log("WORKER_SHUTDOWN blockid=" + block.getId());
-        }
-        catch (ChannelException e) {
-            logger.warn(this + " failed to remove channel after shutdown");
-        }        
-    }
-
-    public ChannelContext getChannelContext() {
-        return channelContext;
+       	getChannel().close();
+        channel.close();
+        block.getAllocationProcessor().getRLogger().log("WORKER_SHUTDOWN blockid=" + block.getId() + " id=" + Block.IDF.format(id));
     }
 
     public String getHostname() {
@@ -131,12 +113,7 @@ public class Node implements Callback, ChannelListener {
         return cpus;
     }
 
-    public synchronized CoasterChannel getChannel() throws ChannelException {
-        if (channel == null) {
-            channel = ChannelManager.getManager().reserveChannel(channelContext);
-            ChannelManager.getManager().reserveLongTerm(channel);
-            channel.getChannelContext().addChannelListener(this);
-        }
+    public synchronized CoasterChannel getChannel() {
         return channel;
     }
     
@@ -147,26 +124,19 @@ public class Node implements Callback, ChannelListener {
         for (Cpu cpu : cpus) {
             cpu.taskFailed("Connection to worker lost", e);
         }
-        try {
-            // the current breed of workers won't try to re-establish a connection, so
-            // consider the channel lost for good (and lose the reference to it).
-            // even if the workers do re-establish the connection, since the current
-            // strategy is to fail the jobs they were running when the connection was lost,
-            // treating them as entirely new workers should be just peachy 
-            ChannelManager.getManager().removeChannel(channelContext);
-        }
-        catch (ChannelException ee) {
-            logger.warn("Failed to remove channel", ee);
-        }
         Settings settings = block.getAllocationProcessor().getSettings();
         Block block = getBlock();
         block.removeNode(this);
         Block.totalActiveWorkers -= settings.getJobsPerNode();
         Block.totalFailedWorkers += settings.getJobsPerNode();
-        block.getAllocationProcessor().getRLogger().log("WORKER_LOST blockid=" + block.getId());
+        block.getAllocationProcessor().getRLogger().log("WORKER_LOST blockid=" + block.getId() + " id=" + Block.IDF.format(id));
     }
 
     public int getId() {
         return id;
+    }
+
+    public int getConcurrency() {
+        return concurrency;
     }
 }
