@@ -27,7 +27,12 @@ public class DuplicateMappingChecker {
     private final Map<PhysicalFormat, Entry> map;
     
     public DuplicateMappingChecker(VDL2Config conf) {
-        enabled = !"off".equals(conf.getProperty(VDL2ConfigProperties.DM_CHECKER));
+    	if (conf == null) {
+    		enabled = true;
+    	}
+    	else {
+    	    enabled = !"off".equals(conf.getProperty(VDL2ConfigProperties.DM_CHECKER));
+    	}
         map = new HashMap<PhysicalFormat, Entry>();
     }
     
