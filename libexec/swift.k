@@ -87,58 +87,12 @@ namespace(swift) {
 		 * all the data in memory until the workflow is done
 		 */
 	export(mainp,
-		CBFFunction(channel(graph), channel(cleanup)) {
+		CBFFunction(channel(cleanup)) {
 			parallel(
-				if(configProperty("pgraph") != "false") {
-					generateProvenanceGraph(graph)
-				}
 				to(cleanup, unique(for(c, cleanup, c)))
 			)
 		}
-	)
-	
-	graphStuff := function(tr, stagein, stageout, err, args = null) {
-		if (configProperty("pgraph") != "false") {
-			errprops := if(err, ",color=lightsalmon", ",color=lightsteelblue1")
-			tp := currentThread()
-			to (graph) {
-				concat(str:quote(tp), " [label=", str:quote(tr), "{errprops}]")
-			}
-			for (si, stagein) {
-				si := basename(si)
-				to(graph) {
-					concat(str:quote(si), " [shape=parallelogram]")
-					concat(str:quote(si), " -> ", str:quote(tp))
-				}
-			}
-			for (pv, stageout) {
-				(path, var) := each(pv)
-				file := fileName(getField(var, path=path))
-				file := basename(file)
-				label := niceName(var, path = path)
-				to(graph) {
-					concat(str:quote(file), " [shape=parallelogram,label=", str:quote(label), "]")
-					concat(str:quote(tp), " -> ", str:quote(file))
-				}
-			}
-		}
-	}
-	
-	generateProvenanceGraph := function(gdata) {
-		pgraph := configProperty("pgraph")
-		gname := if(pgraph == "true", "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.dot", pgraph)
-		file:write(gname) {
-			"digraph SwiftProvenance \{\n",
-			"	graph [", configProperty("pgraph.graph.options"), "];\n",
-			"	node [", configProperty("pgraph.node.options"), "];\n",
-
-			for(i, gdata) {
-				"	", i, "\n"
-			}
-			"}\n"
-		}
-		log(LOG:INFO, "Provenance graph saved in ", gname)
-	}
+	)	
 	
 	export(execute,
 		function(
@@ -223,7 +177,6 @@ namespace(swift) {
 							log(LOG:INFO, exception)
 							echo(exception)
 							mark(stageout, true, mapping=false)
-							graphStuff(tr, stagein, stageout, true, maybe(args=arguments))
 						}
 					}
 				}
@@ -245,7 +198,6 @@ namespace(swift) {
 					log(LOG:INFO, exception)
 				}
 				mark(stageout, true, mapping=merr)
-				graphStuff(tr, stagein, stageout, true, maybe(args=arguments))
 			}
 		}
 	)

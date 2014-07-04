@@ -480,72 +480,48 @@ fi
 if [ ! -x "$EXEC" ]; then
 	fail 254 "The executable $EXEC does not have the executable bit set"
 fi
-if [ "$KICKSTART" == "" ]; then
 
-    TIMEARGS=(-o swiftapp.resources -f APP_RESOURCES=real_secs:%e,kernel_secs:%S,user_secs:%U,percent_cpu:%P,max_rss:%M,avg_rss:%t,avg_tot_vm:%K,avg_priv_data:%D,avg_priv_stack:%p,avg_shared_text:%X,page_size:%Z,major_pgfaults:%F,minor_pgfaults:%R,swaps:%W,invol_context_switches:%c,vol_waits:%w,fs_reads:%I,fs_writes:%O,sock_recv:%r,sock_send:%s,signals:%k,exit_status:%x)
+TIMEARGS=(-o swiftapp.resources -f APP_RESOURCES=real_secs:%e,kernel_secs:%S,user_secs:%U,percent_cpu:%P,max_rss:%M,avg_rss:%t,avg_tot_vm:%K,avg_priv_data:%D,avg_priv_stack:%p,avg_shared_text:%X,page_size:%Z,major_pgfaults:%F,minor_pgfaults:%R,swaps:%W,invol_context_switches:%c,vol_waits:%w,fs_reads:%I,fs_writes:%O,sock_recv:%r,sock_send:%s,signals:%k,exit_status:%x)
 
-    if [[ "$OSTYPE" == *darwin* ]]; then
-        TIMECMD=
-        TIMEARGS=
-    elif [ -x /usr/bin/time ]; then
-        TIMECMD="/usr/bin/time"
-    elif [ -x $HOME/swift.time ]; then
-        TIMECMD="$HOME/swift.time"
-    else
-        TIMECMD=""
-	TIMEARGS=""
-    fi
-	if [ "$STDIN" == "" ]; then
-		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
-			genScripts
-		fi
-                
-                if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
-                   "$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
-                else
-                   "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
-                fi
-	else
-		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
-			genScripts
-		fi
-        	
-		if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
-               		"$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
-       	 	else         
-           		"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
-        	fi  
-	fi
-
-    TIME_EC=$?
-    if [ "_$TIMECMD" != _ ]; then
-		log "$(cat swiftapp.resources)"
-    fi
-    sh -c "exit $TIME_EC"
-	checkError $? "Application $EXEC failed with an exit code of $?"
+if [[ "$OSTYPE" == *darwin* ]]; then
+    TIMECMD=
+    TIMEARGS=
+elif [ -x /usr/bin/time ]; then
+    TIMECMD="/usr/bin/time"
+elif [ -x $HOME/swift.time ]; then
+    TIMECMD="$HOME/swift.time"
 else
-	if [ ! -f "$KICKSTART" ]; then
-		log "Kickstart executable ($KICKSTART) not found"
-		fail 254 "The Kickstart executable ($KICKSTART) was not found"
-	elif [ ! -x "$KICKSTART" ]; then
-		log "Kickstart executable ($KICKSTART) is not executable"
-		fail 254 "The Kickstart executable ($KICKSTART) does not have the executable bit set"
-	else
-		mkdir -p $WFDIR/kickstart/$JOBDIR
-		log "Using Kickstart ($KICKSTART)"
-		if [ "$STDIN" == "" ]; then
-			"$KICKSTART" -H -o "$STDOUT" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>>"$STDERR"
-		else
-			"$KICKSTART" -H -o "$STDOUT" -i "$STDIN" -e "$STDERR" "$EXEC" "$@" 1>kickstart.xml 2>>"$STDERR"
-		fi
-		export APPEXIT=$?
-		mv -f kickstart.xml "$WFDIR/kickstart/$JOBDIR/$ID-kickstart.xml" 2>&1 >& "$INFO"
-		checkError 254 "Failed to copy Kickstart record to shared directory"
-		if [ "$APPEXIT" != "0" ]; then
-			fail $APPEXIT "Application $EXEC failed with an exit code of $APPEXIT"
-		fi
-	fi
+    TIMECMD=""
+TIMEARGS=""
 fi
+if [ "$STDIN" == "" ]; then
+	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+		genScripts
+	fi
+            
+            if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
+               "$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+            else
+               "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+            fi
+else
+	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+		genScripts
+	fi
+    	
+	if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
+           		"$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+   	 	else         
+       		"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+    	fi  
+fi
+
+TIME_EC=$?
+if [ "_$TIMECMD" != _ ]; then
+	log "$(cat swiftapp.resources)"
+fi
+sh -c "exit $TIME_EC"
+checkError $? "Application $EXEC failed with an exit code of $?"
 
 if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
 	if [ "$COLLECT" != "" ]; then

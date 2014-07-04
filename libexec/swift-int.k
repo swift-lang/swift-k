@@ -85,7 +85,6 @@ namespace(swift) {
 			dir:make(SHARED_DIR, host = rhost)
 			transfer(siteProfile(rhost, "wrapperScript"), srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
 			transfer("_swiftseq", srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
-			dir:make(dircat(RUN_DIR, "kickstart"), host=rhost)
 
 			statusMode := configProperty("status.mode", host=rhost)
 			if (statusMode == "files") {
