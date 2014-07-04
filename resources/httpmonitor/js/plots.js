@@ -230,13 +230,9 @@ function setSize(selector, w, h) {
 	$(selector).height(h + "px");
 }
 
-$(document).ready(function() {
-	initialize();
-});
-
-function initialize() {
+function initializePlots() {
 	$("body").append('\
-		<ul id="plot-popup" class="popup-menu" style="position: absolute">\
+		<ul id="plot-popup" class="popup-menu" style="position: absolute; left: 0px; top: -300px;">\
 			<li><a href="#" id="plot-menu-item-color">Color...</a></li>\
 			<li><a href="#" id="plot-menu-item-remove-series">Remove Series</a></li>\
 		</ul>\
@@ -267,11 +263,11 @@ function initialize() {
 }
 
 function hide(id) {
-	$(id).css("visibility", "hidden");
+	$(id).css("visibility", "hidden").css("display", "none");
 }
 
 function show(id) {
-	$(id).css("visibility", "");
+	$(id).css("visibility", "").css("display", "block");
 }
 
 function showPopup(selector, x, y, selectCB, hideCB) {
@@ -629,6 +625,7 @@ function seriesDataCB(seriesKey, rdata, error) {
 			}
 		}
 		catch (err) {
+			stopUpdates(seriesKey);
 			console.error(err);
 		}
 	}
@@ -707,6 +704,12 @@ function resizePlotsContainer() {
 				h = hi;
 			}
 		}
+	}
+	
+	console.log($("#tabs").width());
+	console.log($("#tabs").height());
+	if (w < $("#tabs").width() && h < $("#tabs").height()) {
+		return;
 	}
 	
 	if (w < MIN_AREA_WIDTH) {
@@ -826,3 +829,4 @@ function loadLayout() {
 		document.inhibitLayoutSaving = false;
 	}
 }
+

@@ -79,6 +79,8 @@ AsyncRequest.prototype.callbackWrapper = function(stuff, error) {
 		//Are no longer being monitored
 		//window.alert("Callback failed to process error message\n" + err + "\n" + err2);
 		console.log(this.url + " error: " + err2);
+		console.log(err2.stack);
+		noty({text: this.url + " error: " + err2});
 		stopUpdates(this.context); 
 	}
 }
@@ -91,7 +93,16 @@ AsyncRequest.prototype.replyTimeout = function() {
 
 AsyncRequest.prototype.send = function() {
 	try {
-		
+		var index = this.url.indexOf("#");
+		if (index != -1) {
+			var index2 = this.url.indexOf("?", index);
+			if (index2 == -1) {
+				this.url = this.url.substring(0, index);
+			}
+			else {
+				this.url = this.url.substring(0, index) + this.url.substring(index2);
+			}
+		}
 		this.ro.open('get', this.url);
 		var ar = this;
 		this.ro.onreadystatechange = function() {
@@ -131,6 +142,7 @@ function setupUpdates(initial, delay) {
 	self.delay = delay;
 	self.setTimeout(tick, initial);
 	self.dynamicUpdates = new Array();
+	self.tabUpdates = {};
 }
 
 function tick() {
@@ -140,7 +152,10 @@ function tick() {
 			if (context.done) {
 				self.dynamicUpdates.splice(i, 1);
 			}
-			else{
+			else if (context.paused) {
+				i++;
+			}
+			else {
 				var request = new AsyncRequest(context);
 				
 				request.send();
@@ -155,14 +170,44 @@ function tick() {
 }
 
 function registerUpdate(id, url, callback, paramFn) {
-	self.dynamicUpdates.push({id: id, url: url, callback: callback, once: false, done: false, paramFn: paramFn});
+	var context = {id: id, url: url, callback: callback, once: false, done: false, paused: false, paramFn: paramFn};
+	var request = new AsyncRequest(context);
+	request.send();
+	self.dynamicUpdates.push(context);
 }
 
 function asyncRequest(id, url, callback) {
-	self.dynamicUpdates.push({id: id, url: url, callback: callback, once: true, done: false});
+	var context = {id: id, url: url, callback: callback, once: true, done: false, paused: false};
+	var request = new AsyncRequest(context);
+	request.send();
+}
+
+function pauseUpdates(id) {
+	setUpdatesPaused(id, true);
+}
+
+function resumeUpdates(id) {
+	setUpdatesPaused(id, false);
+}
+
+function setUpdatesPaused(id, value) {
+	for (var i in self.dynamicUpdates) {
+		if (self.dynamicUpdates[i].id == id) {
+			self.dynamicUpdates[i].paused = value;
+		}
+	}
 }
 
 function stopUpdates(context) {
 	console.log("Stopping updates for " + context.id);
 	context.done = true;
+}
+
+function stopUpdatesByID(id) {
+	for (var i in self.dynamicUpdates) {
+		if (self.dynamicUpdates[i].id == id) {
+			self.dynamicUpdates[i].done = true;
+			console.log("Stopping updates for " + id);
+		}
+	}
 }
