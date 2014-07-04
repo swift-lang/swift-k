@@ -124,11 +124,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         if (logger.isDebugEnabled()) {
             logger.debug("Submitting task " + task);
         }
-        else if (logger.isInfoEnabled()) {
+        else if (logger.isDebugEnabled()) {
             Specification spec = task.getSpecification();
             if (spec instanceof JobSpecification) {
                 JobSpecification jobspec = (JobSpecification) spec;
-                logger.info("Submit: " +
+                logger.debug("Submit: " +
                     "in: " + jobspec.getDirectory() +
                     " command: " + jobspec.getExecutable() +
                     " " + jobspec.getArguments());
