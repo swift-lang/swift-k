@@ -7,18 +7,18 @@ run_coaster_job_LDADD = libcoasterclient.la
 lib_LTLIBRARIES = libcoasterclient.la
 
 
-if SWIG
+#if SWIG
 
-SWIG_SRC = CoasterSWIG_wrap.cxx CoasterSWIG.cpp
+#SWIG_SRC = CoasterSWIG_wrap.cxx CoasterSWIG.cpp
 
-CoasterSWIG_wrap.cxx: CoasterSWIG.h
-	swig -c++ -importall $<
-	sed -i s/Coaster_Init/_Coasterclient_Init/ $@
+#CoasterSWIG_wrap.cxx: CoasterSWIG.h
+#	swig -c++ -importall $<
+#	sed -i s/Coaster_Init/_Coasterclient_Init/ $@
 
-clean-local: 
-	rm -f CoasterSWIG_wrap.cxx
+#clean-local: 
+#	rm -f CoasterSWIG_wrap.cxx
 
-endif
+#endif
 
 libcoasterclient_la_SOURCES = \
 	$(SWIG_SRC) \

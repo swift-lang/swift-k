@@ -129,17 +129,18 @@ void CoasterClient::stop() {
 	started = false;
 }
 
-void CoasterClient::setOptions(Settings& s) {
+std::string CoasterClient::setOptions(Settings& s) {
 	LogInfo << "Setting options: " << s << endl;
 	ServiceConfigurationCommand scc(s);
 	scc.execute(channel);
+	return scc.getConfigId();
 }
 
-void CoasterClient::submit(Job& job) {
+void CoasterClient::submit(Job& job, std::string* configId) {
 	{ Lock::Scoped l(lock);
 		jobs[job.getIdentity()] = &job;
 	}
-	JobSubmitCommand* sjc = new JobSubmitCommand(&job);
+	JobSubmitCommand* sjc = new JobSubmitCommand(&job, configId);
 	sjc->send(channel, this);
 }
 

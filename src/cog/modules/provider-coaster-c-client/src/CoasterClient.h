@@ -67,7 +67,7 @@ class CoasterClient: public CommandCallback {
 		void stop();
 		
 		// TODO: how long does this hold a reference to settings?
-		void setOptions(Settings& settings);
+		std::string* setOptions(Settings& settings);
 
 		/*
 		 * Submit a job.  The job should have been filled in with

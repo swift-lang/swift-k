@@ -226,7 +226,7 @@ int runJob() {
 		s.set(*skey, pair.value);
 	}
 
-	client.setOptions(s);
+	std::string* configId = client.setOptions(s);
 
 	Job j(executable);
 
@@ -258,7 +258,7 @@ int runJob() {
 		j.setStderrLocation(*str);
 	}
 
-	client.submit(j);
+	client.submit(j, configId);
 
 	client.waitForJob(j);
 
