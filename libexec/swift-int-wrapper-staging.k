@@ -68,9 +68,9 @@ namespace(swift) {
 		log(LOG:INFO, "START dir={dir} host={host}")
 		if(vdl:configProperty("sitedir.keep") == "false") {
 			task:execute(
-				vdl:siteprofile(host, "swift:cleanupCommand"),
+				vdl:siteprofile(host, "cleanupCommand"),
 				arguments = list(
-					siteProfile(host, "swift:cleanupCommandOptions"),
+					siteProfile(host, "cleanupCommandOptions"),
 					dir
 				)
 				host=host, batch=true, TCProfile(host)
@@ -196,9 +196,9 @@ namespace(swift) {
 				if (wrapperMode == "files") {
 					swift:execute(
 						progress, 
-						siteProfile(rhost, "swift:wrapperInterpreter"),
+						siteProfile(rhost, "wrapperInterpreter"),
 						list(
-							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
+							siteProfile(rhost, "wrapperInterpreterOptions"),
 							"_swiftwrap.wrapperstaging",
 							jobid,
 							"-urlprefix", URL_PREFIX,
@@ -217,9 +217,9 @@ namespace(swift) {
 				}
 				if (wrapperMode == "args") {
 					swift:execute(
-						siteProfile(rhost, "swift:wrapperInterpreter"),
+						siteProfile(rhost, "wrapperInterpreter"),
 						list(
-							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
+							siteProfile(rhost, "wrapperInterpreterOptions"),
 							"_swiftwrap.wrapperstaging",
 							jobid,
 							"-urlprefix", URL_PREFIX,

@@ -83,7 +83,7 @@ namespace(swift) {
 			log(LOG:INFO, "START host={rhost} - Initializing shared directory")
 
 			dir:make(SHARED_DIR, host = rhost)
-			transfer(siteProfile(rhost, "swift:wrapperScript"), srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
+			transfer(siteProfile(rhost, "wrapperScript"), srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
 			transfer("_swiftseq", srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
 			dir:make(dircat(RUN_DIR, "kickstart"), host=rhost)
 
@@ -139,8 +139,8 @@ namespace(swift) {
 				host=host, batch=true, TCProfile(host))
 		}
 		if (swift:configProperty("sitedir.keep") == "false") {
-			task:execute(siteProfile(host, "swift:cleanupCommand"),
-				list(siteProfile(host, "swift:cleanupCommandOptions"), dir)
+			task:execute(siteProfile(host, "cleanupCommand"),
+				list(siteProfile(host, "cleanupCommandOptions"), dir)
 				host=host, batch=true, TCProfile(host))
 		}
 		log(LOG:INFO, "END dir={dir} host={host}")
@@ -398,10 +398,10 @@ namespace(swift) {
 				if (wrapperMode == "files") {
 					swift:execute(
 						progress,
-						siteProfile(rhost, "swift:wrapperInterpreter"),
+						siteProfile(rhost, "wrapperInterpreter"),
 						list(
-							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
-							dircat("shared", siteProfile(rhost, "swift:wrapperScript"), os=os),
+							siteProfile(rhost, "wrapperInterpreterOptions"),
+							dircat("shared", siteProfile(rhost, "wrapperScript"), os=os),
 							jobid, "-p", jobdir
 						)
 						directory = RUN_DIR
@@ -416,10 +416,10 @@ namespace(swift) {
 				else if (wrapperMode == "args") {
 					swift:execute(
 						progress,
-						siteProfile(rhost, "swift:wrapperInterpreter"),
+						siteProfile(rhost, "wrapperInterpreter"),
 						list(
-							siteProfile(rhost, "swift:wrapperInterpreterOptions"),
-							dircat("shared", siteProfile(rhost, "swift:wrapperScript"), os=os),
+							siteProfile(rhost, "wrapperInterpreterOptions"),
+							dircat("shared", siteProfile(rhost, "wrapperScript"), os=os),
 							jobid,
 							"-jobdir", jobdir,
 							"-scratch", try(siteProfile(rhost, "scratch"), "")
