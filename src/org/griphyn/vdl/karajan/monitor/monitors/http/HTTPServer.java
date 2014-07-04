@@ -69,6 +69,7 @@ public class HTTPServer implements Runnable {
         stateKeys.put("/summary.state", new SummaryDataBuilder(state));
         stateKeys.put("/plotSeriesInfo.state", new PlotInfoBuilder(state));
         stateKeys.put("/plotData.state", new PlotDataBuilder(state));
+        stateKeys.put("/browser.state", new BrowserDataBuilder(state));
     }
 
     public void start() throws IOException {
@@ -181,7 +182,19 @@ public class HTTPServer implements Runnable {
                     for (SelectionKey key : keys) { 
                         if (key.isValid()) {
                             ConnectionState s = channels.get(key.channel());
-                            s.process(key);
+                            boolean ok = false;
+                            if (s != null) {
+                                try {
+                                    s.process(key);
+                                    ok = true;
+                                }
+                                catch (Exception e) {
+                                }
+                            }
+                            if (!ok) {
+                                channels.remove(key.channel());
+                                key.cancel();
+                            }
                         }
                     }
                     skeys.clear();

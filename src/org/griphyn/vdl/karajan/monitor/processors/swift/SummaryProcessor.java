@@ -41,8 +41,30 @@ public class SummaryProcessor extends AbstractMessageProcessor {
 	public void processMessage(SystemState state, Object message, Object details) {
 		String msg = String.valueOf(message);
 		if(msg.contains("CrtHeap")) {
-		   return;
+		    processJVMInfo(state, msg);
 		}
+		else {
+		    processTaskInfo(state, msg);
+		}
+	}
+	
+	private void processJVMInfo(SystemState state, String msg) {
+	    String[] els = msg.split(",\\s");
+	    for (String el : els) {
+	        String[] kv = el.split(": ");
+	        if ("HeapMax".equals(kv[0])) {
+	            state.setMaxHeap(Long.parseLong(kv[1]));
+	        }
+	        else if ("UsedHeap".equals(kv[0])) {
+	            state.setUsedHeap(Long.parseLong(kv[1]));
+	        }
+	        else if ("JVMThreads".equals(kv[0])) {
+	            state.setCurrentThreads(Integer.parseInt(kv[1]));
+	        }
+	    }
+	}
+	
+	private void processTaskInfo(SystemState state, String msg) {
 		SummaryItem s = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
 		String[] pairs = msg.split("  ");
 		for (ApplicationState key : SummaryItem.STATES) {

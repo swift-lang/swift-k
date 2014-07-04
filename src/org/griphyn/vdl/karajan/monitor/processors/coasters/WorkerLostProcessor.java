@@ -31,9 +31,11 @@ public class WorkerLostProcessor extends AbstractRemoteLogProcessor {
         try {
             p.skip("blockid=");
             String blockId = p.word();
+            p.skip("id=");
+            String workerId = p.word();
             
             CoasterStatusItem item = (CoasterStatusItem) state.getItemByID(CoasterStatusItem.ID, StatefulItemClass.MISC);
-            item.workerLost(blockId);
+            item.workerLost(blockId, workerId);
         }
         catch (Exception e) {
             e.printStackTrace();

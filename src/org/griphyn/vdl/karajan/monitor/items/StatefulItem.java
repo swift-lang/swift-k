@@ -23,6 +23,10 @@ package org.griphyn.vdl.karajan.monitor.items;
 import java.util.Collection;
 
 public interface StatefulItem {
+    public interface Listener {
+        void itemUpdated(StatefulItem item);
+    }
+    
     StatefulItem getParent();
 	void setParent(StatefulItem parent);
 	
@@ -33,4 +37,6 @@ public interface StatefulItem {
 	StatefulItemClass getItemClass();
 	
 	String getID();
+	
+    void addListener(Listener l);
 }

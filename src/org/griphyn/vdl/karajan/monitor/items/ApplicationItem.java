@@ -22,7 +22,7 @@ package org.griphyn.vdl.karajan.monitor.items;
 
 
 public class ApplicationItem extends AbstractStatefulItem {
-	private String name, arguments, host;
+	private String name, arguments, host, workerId;
 	private long startTime, currentStateTime;
 	/**
 	 * The state of the app. Currently swift does not log app state transitions
@@ -95,6 +95,14 @@ public class ApplicationItem extends AbstractStatefulItem {
 
     public ApplicationState getState() {
         return state;
+    }
+
+    public String getWorkerId() {
+        return workerId;
+    }
+
+    public void setWorkerId(String workerId) {
+        this.workerId = workerId;
     }
 
     public String toString() {

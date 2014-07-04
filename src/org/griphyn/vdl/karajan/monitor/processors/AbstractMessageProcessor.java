@@ -17,7 +17,8 @@ public abstract class AbstractMessageProcessor implements LogMessageProcessor {
     
     @Override
     public String getSupportedSourceName() {
-        return getSupportedSource().getName();
+        String name = getSupportedSource().getName();
+        return name.substring(name.lastIndexOf('.') + 1);
     }
 
     @Override

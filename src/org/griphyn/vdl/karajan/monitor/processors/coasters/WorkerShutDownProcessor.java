@@ -31,9 +31,11 @@ public class WorkerShutDownProcessor extends AbstractRemoteLogProcessor {
         try {
             p.skip("blockid=");
             String blockId = p.word();
+            p.skip("id=");
+            String workerId = p.word();
             
             CoasterStatusItem item = (CoasterStatusItem) state.getItemByID(CoasterStatusItem.ID, StatefulItemClass.MISC);
-            item.workerShutDown(blockId);
+            item.workerShutDown(blockId, workerId);
         }
         catch (Exception e) {
             e.printStackTrace();

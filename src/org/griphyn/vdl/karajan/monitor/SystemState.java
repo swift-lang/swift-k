@@ -24,11 +24,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TimerTask;
+import java.util.TreeSet;
 
 import k.rt.Stack;
 
-import org.griphyn.vdl.karajan.monitor.common.GlobalTimer;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
@@ -39,11 +40,13 @@ public class SystemState {
 	private Map<StatefulItemClass, StatefulItemClassSet<? extends StatefulItem>> classes;
     private Set<SystemStateListener> listeners;
     private Map<String, Stats> stats;
-    private int total, completed, completedPreviously;
-    private long start, currentTime;
+    private int total, completed, completedPreviously, currentThreads, retries;
+    private long start, currentTime, usedHeap, maxHeap;
     private Stack stack;
     private String projectName;
     private final Runtime runtime;
+    private SortedSet<TimerTaskEntry> tasks;
+    private boolean replicationEnabled, resumed;
     
     private static final Unit BYTES = new Unit.P2("B");
 
@@ -54,7 +57,8 @@ public class SystemState {
         stats = new HashMap<String, Stats>();
         runtime = Runtime.getRuntime();
         addItem(new SummaryItem());
-        GlobalTimer.getTimer().schedule(new TimerTask() {
+        tasks = new TreeSet<TimerTaskEntry>();
+        schedule(new TimerTask() {
             public void run() {
                 update();
             }
@@ -177,7 +181,7 @@ public class SystemState {
     }
     
     public String getCurrentHeapFormatted() {
-        return BYTES.format(getCurrentHeap());
+        return BYTES.format(getUsedHeap());
     }
     
     public String getElapsedTimeFormatted() {
@@ -248,11 +252,51 @@ public class SystemState {
 
     
     public long getMaxHeap() {
-        return runtime.maxMemory();
+        return maxHeap;
     }
     
-    public long getCurrentHeap() {
-        return runtime.totalMemory() - runtime.freeMemory();
+    public long getUsedHeap() {
+        return usedHeap;
+    }
+
+    public int getCurrentThreads() {
+        return currentThreads;
+    }
+
+    public void setCurrentThreads(int currentThreads) {
+        this.currentThreads = currentThreads;
+    }
+
+    public void setUsedHeap(long usedHeap) {
+        this.usedHeap = usedHeap;
+    }
+
+    public void setMaxHeap(long maxHeap) {
+        this.maxHeap = maxHeap;
+    }
+
+    public int getRetries() {
+        return retries;
+    }
+
+    public void setRetries(int retries) {
+        this.retries = retries;
+    }
+
+    public boolean getReplicationEnabled() {
+        return replicationEnabled;
+    }
+
+    public void setReplicationEnabled(boolean replicationEnabled) {
+        this.replicationEnabled = replicationEnabled;
+    }
+
+    public boolean getResumed() {
+        return resumed;
+    }
+
+    public void setResumed(boolean resumed) {
+        this.resumed = resumed;
     }
 
     public long getCurrentTime() {
@@ -261,5 +305,64 @@ public class SystemState {
 
     public void setCurrentTime(long currentTime) {
         this.currentTime = currentTime;
+        if (!tasks.isEmpty()) {
+            TimerTaskEntry e = tasks.first();
+            while (e.nextTime < currentTime) {
+                tasks.remove(e);
+                
+                if (e.nextTime < MAX_INITIAL) {
+                    e.nextTime = currentTime + e.nextTime;
+                }
+                else {
+                    try {
+                        e.task.run();
+                    }
+                    catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    e.nextTime = e.nextTime + e.delay;
+                }
+                tasks.add(e);
+                e = tasks.first();
+            }
+        }
+    }
+    
+    private static class TimerTaskEntry implements Comparable<TimerTaskEntry> {
+        public long nextTime;
+        public long delay;
+        public TimerTask task;
+        
+        public TimerTaskEntry(TimerTask task, long nextTime, long delay) {
+            this.task = task;
+            this.nextTime = nextTime;
+            this.delay = delay;
+        }
+
+        @Override
+        public int compareTo(TimerTaskEntry o) {
+            long diff = nextTime - o.nextTime;
+            if (diff == 0) {
+                return System.identityHashCode(this) - System.identityHashCode(o);
+            }
+            else {
+                if (diff < 0) {
+                    return -1;
+                }
+                else {
+                    return 1;
+                }
+            }
+        }
+    }
+    
+    private static final long MAX_INITIAL = 1000000;
+    
+    public void schedule(TimerTask task, long initial, long repeat) {
+        if (initial > MAX_INITIAL) {
+            throw new IllegalArgumentException("Initial delay too large");
+        }
+        TimerTaskEntry e = new TimerTaskEntry(task, currentTime + initial, repeat);
+        tasks.add(e);
     }
 }

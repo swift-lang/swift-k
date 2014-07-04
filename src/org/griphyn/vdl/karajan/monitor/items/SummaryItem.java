@@ -20,7 +20,6 @@
  */
 package org.griphyn.vdl.karajan.monitor.items;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -77,23 +76,11 @@ public class SummaryItem extends AbstractStatefulItem {
     }
 	
 	public int getCount(String key, SystemState state) {
-	    if (state.getStack() != null) {
-	        // TODO Must get these from log
-	        return -1;
-	    }
-	    else {
-	        return getCount(key);
-	    }
+        return getCount(key);
 	}
 	
 	public synchronized Map<String, Integer> getCounts(SystemState state) {
-	    if (state.getStack() != null) {
-	        // TODO Must get these from log
-            return Collections.emptyMap();
-	    }
-	    else {
-	        return new HashMap<String, Integer>(counts);
-	    }
+        return new HashMap<String, Integer>(counts);
 	}
 	
 	public synchronized void setCount(String key, int value) {

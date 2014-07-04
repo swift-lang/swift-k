@@ -33,8 +33,8 @@ public class CoasterStatusItem extends AbstractStatefulItem {
         return StatefulItemClass.MISC;
     }
     
-    public synchronized void newBlock(String id, int cores, int coresPerWorker) {
-        Block b = new Block(id, cores, coresPerWorker);
+    public synchronized void newBlock(String id, int cores, int coresPerWorker, int walltime) {
+        Block b = new Block(id, cores, coresPerWorker, walltime);
         blocks.put(id, b);
         queuedBlocks++;
         requestedCores += cores;
@@ -69,25 +69,31 @@ public class CoasterStatusItem extends AbstractStatefulItem {
         doneBlocks++;
     }
     
-    public synchronized void workerActive(String blockId) {
+    public synchronized void workerActive(String blockId, String workerId, String node, int cores, long now) {
         Block b = getBlock(blockId);
-        b.activeCores += b.coresPerWorker;
-        activeCores += b.coresPerWorker;
-        requestedCores -= b.coresPerWorker;
+        activeCores += cores;
+        requestedCores -= cores;
+        b.addWorker(workerId, node, cores, now);
     }
     
-    public synchronized void workerLost(String blockId) {
+    public synchronized void workerLost(String blockId, String workerId) {
         Block b = getBlock(blockId);
-        b.activeCores -= b.coresPerWorker;
-        activeCores -= b.coresPerWorker;
-        failedCores += b.coresPerWorker;
+        Worker w = b.getWorker(workerId);
+        int cores = w.cores;
+        activeCores -= cores;
+        failedCores += cores;
+        b.activeCores -= cores;
+        w.state = WorkerState.FAILED;
     }
 
-    public synchronized void workerShutDown(String blockId) {
+    public synchronized void workerShutDown(String blockId, String workerId) {
         Block b = getBlock(blockId);
-        b.activeCores -= b.coresPerWorker;
-        activeCores -= b.coresPerWorker;
-        doneCores += b.coresPerWorker;
+        Worker w = b.getWorker(workerId);
+        int cores = w.cores;
+        activeCores -= cores;
+        failedCores += cores;
+        b.activeCores -= cores;
+        w.state = WorkerState.FAILED;
     }
     
     private Block getBlock(String blockId) {
@@ -148,17 +154,53 @@ public class CoasterStatusItem extends AbstractStatefulItem {
         QUEUED, ACTIVE, FAILED, DONE
     }
     
+    public enum WorkerState {
+        ACTIVE, FAILED, DONE
+    }
+    
+    public static class Worker {
+        public String node;
+        public int cores;
+        public WorkerState state;
+        
+        public Worker(String node, int cores) {
+            this.node = node;
+            this.cores = cores;
+        }
+    }
+    
     public static class Block {
         public BlockState state;
         public final String id;
         public final int cores, coresPerWorker;
         public int activeCores;
+        public int walltime;
+        public long startTime;
+        public Map<String, Worker> workers;
         
-        public Block(String id, int cores, int coresPerWorker) {
+        public Block(String id, int cores, int coresPerWorker, int walltime) {
             this.id = id;
             this.cores = cores;
             this.coresPerWorker = coresPerWorker;
             this.state = BlockState.QUEUED;
+            this.walltime = walltime;
+        }
+
+        public Worker getWorker(String workerId) {
+            return workers.get(workerId);
+        }
+
+        public void addWorker(String workerId, String node, int cores, long now) {
+            if (workers == null) {
+                workers = new HashMap<String, Worker>();
+            }
+            Worker w = new Worker(node, cores);
+            w.state = WorkerState.ACTIVE;
+            workers.put(workerId, w);
+            activeCores += cores;
+            if (startTime == 0) {
+                startTime = now;
+            }
         }
     }
 }

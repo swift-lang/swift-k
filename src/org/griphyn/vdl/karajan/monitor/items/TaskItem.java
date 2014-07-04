@@ -25,6 +25,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class TaskItem extends AbstractStatefulItem {
 	private Task task;
 	private int status, type;
+	private String workerId;
 	
 	public TaskItem(String id, Task task) {
 		super(id);
@@ -76,4 +77,12 @@ public class TaskItem extends AbstractStatefulItem {
 	public int getStatus() {
 		return status;
 	}
+
+    public String getWorkerId() {
+        return workerId;
+    }
+
+    public void setWorkerId(String workerdId) {
+        this.workerId = workerdId;
+    }
 }

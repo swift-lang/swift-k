@@ -55,7 +55,7 @@ public class DataSampler extends AbstractStatefulItem {
         this.listeners = new ArrayList<Listener>();
         initializeData();
         
-        GlobalTimer.getTimer().schedule(new TimerTask() {
+        state.schedule(new TimerTask() {
             @Override
             public void run() {
                 sample();
@@ -90,9 +90,9 @@ public class DataSampler extends AbstractStatefulItem {
         
         addSeries("Java Virtual Machine", 
             new Series<Long>("jvm/heapUsed", "JVM Heap Used", BYTES, 
-                new ReflectionSampler<Long>(state, "getCurrentHeap")),
+                new ReflectionSampler<Long>(state, "getUsedHeap")),
             new Series<Integer>("jvm/activeThreads", "JVM Active Threads", COUNT,
-                new ReflectionSampler<Integer>(Thread.class, "activeCount")));
+                new ReflectionSampler<Integer>(state, "getCurrentThreads")));
         
         
         CoasterStatusItem coaster = (CoasterStatusItem) state.getItemByID(CoasterStatusItem.ID, StatefulItemClass.MISC);
@@ -151,7 +151,7 @@ public class DataSampler extends AbstractStatefulItem {
     }
 
     protected void sample() {
-        long now = (System.currentTimeMillis() / 1000);
+        long now = state.getCurrentTime() / 1000;
         if (offset + count != now) {
             if (offset < 0) {
                 offset = now;

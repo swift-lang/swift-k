@@ -40,15 +40,18 @@ import org.griphyn.vdl.karajan.monitor.processors.coasters.BlockDoneProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.coasters.BlockFailedProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.coasters.BlockRequestedProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.coasters.RemoteLogProcessorDispatcher;
-import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerLostProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerShutDownProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerActiveProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerLostProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerProbeProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerShutDownProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.karajan.ExecutionContextProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.karajan.SchedulerInfoProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.karajan.TaskProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.AppEndProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.AppFailureProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.AppStartProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.AppThreadProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.ConfigurationProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.ForeachItEndProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.ForeachItStartProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.JobProcessor;
@@ -92,11 +95,13 @@ public class MonitorAppender implements Appender {
     	updater.addProcessor(new JobProcessor());
     	updater.addProcessor(new SchedulerInfoProcessor());
     	updater.addProcessor(new ExecutionContextProcessor());
+    	updater.addProcessor(new ConfigurationProcessor());
     	
     	addFilteredProcessors(updater, SwiftProcessorDispatcher.class, 
     	    new AppStartProcessor(),
     	    new AppEndProcessor(),
     	    new AppThreadProcessor(),
+    	    new AppFailureProcessor(),
     	    new ProcedureStartProcessor(),
     	    new ProcedureEndProcessor(),
     	    new ForeachItStartProcessor(),
@@ -110,7 +115,8 @@ public class MonitorAppender implements Appender {
     	    new BlockFailedProcessor(),
     	    new WorkerActiveProcessor(),
     	    new WorkerLostProcessor(),
-    	    new WorkerShutDownProcessor());
+    	    new WorkerShutDownProcessor(),
+    	    new WorkerProbeProcessor());
     }
 
 	private void addFilteredProcessors(StateUpdater updater, 
@@ -148,6 +154,7 @@ public class MonitorAppender implements Appender {
 
 	public void doAppend(LoggingEvent event) {
         try {
+            state.setCurrentTime(event.getTimeStamp());
         	updater.logEvent(event.getLevel(), event.getLogger().getName(),
         			event.getMessage(), event.getThrowableInformation());
         }

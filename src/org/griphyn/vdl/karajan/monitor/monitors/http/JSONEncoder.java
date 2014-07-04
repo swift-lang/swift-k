@@ -9,6 +9,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -42,11 +43,28 @@ public class JSONEncoder {
     }
     
     public void write(String value) {
-        sb.append('"');
-        sb.append(value);
-        sb.append('"');
+        if (value == null) {
+            sb.append("null");
+        }
+        else {
+            sb.append('"');
+            escape(sb, value);
+            sb.append('"');
+        }
     }
     
+    private void escape(StringBuilder sb, String value) {
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '"':
+                    sb.append('\\');
+                default:
+                    sb.append(c);
+            }
+        }
+    }
+
     public void write(boolean value) {
         sb.append(value);
     }
@@ -73,13 +91,16 @@ public class JSONEncoder {
         else if (value instanceof Long) {
             write(((Long) value).longValue());
         }
-        else if (value instanceof List) {
-            writeArray((List<?>) value);
+        else if (value instanceof Collection) {
+            writeArray((Collection<?>) value);
         }
         else if (value instanceof Map) {
             @SuppressWarnings("unchecked")
             Map<? extends Object, ? extends Object> m = (Map<? extends Object, ? extends Object>) value;
             writeMap(m);
+        }
+        else if (value instanceof int[]) {
+            writeArray((int[]) value);
         }
         else {
             write(value.toString());
@@ -239,7 +260,7 @@ public class JSONEncoder {
         }
     }
     
-    public void writeArray(List<?> a) {
+    public void writeArray(Collection<?> a) {
         beginArray();
         for (Object v : a) {
             writeArrayItem(v);

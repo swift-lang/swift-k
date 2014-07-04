@@ -31,9 +31,15 @@ public class WorkerActiveProcessor extends AbstractRemoteLogProcessor {
         try {
             p.skip("blockid=");
             String blockId = p.word();
+            p.skip("id=");
+            String workerId = p.word();
+            p.skip("node=");
+            String node = p.word();
+            p.skip("cores=");
+            int cores = Integer.parseInt(p.word());
             
             CoasterStatusItem item = (CoasterStatusItem) state.getItemByID(CoasterStatusItem.ID, StatefulItemClass.MISC);
-            item.workerActive(blockId);
+            item.workerActive(blockId, workerId, node, cores, state.getCurrentTime());
         }
         catch (Exception e) {
             e.printStackTrace();

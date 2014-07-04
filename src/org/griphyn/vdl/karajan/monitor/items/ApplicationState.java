@@ -13,9 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum ApplicationState {
+    //0
     INITIALIZING("Initializing"), SELECTING_SITE("Selecting site", "Sel. site"), STAGE_IN("Stage in"),
+    //3
     SUBMITTING("Submitting"), SUBMITTED("Submitted"), ACTIVE("Active"), STAGE_OUT("Stage out"),
-    FAILED("Failed"), REPLICATING("Replicating"), FINISHED_IN_PREVIOUS_RUN("Finished in previous run", "Finished in prev. run", false), 
+    //7
+    FAILED("Failed"), REPLICATING("Replicating", "Replicating", false), 
+    FINISHED_IN_PREVIOUS_RUN("Finished in previous run", "Finished in prev. run", false),
+    //10
     FINISHED_SUCCESSFULLY("Finished successfully");
     
     private String name, shortName;
@@ -70,5 +75,9 @@ public enum ApplicationState {
         }
         
         return enabledValues;
+    }
+
+    public boolean isTerminal() {
+        return this == FAILED || this == FINISHED_SUCCESSFULLY || this == FINISHED_IN_PREVIOUS_RUN;
     }
 }

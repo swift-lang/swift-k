@@ -20,10 +20,15 @@
  */
 package org.griphyn.vdl.karajan.monitor.processors.swift;
 
+import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.lib.Execute;
 import org.griphyn.vdl.karajan.monitor.processors.karajan.TaskProcessor;
 
 public class JobProcessor extends TaskProcessor {
+    
+    public Level getSupportedLevel() {
+        return Level.INFO;
+    }
 
 	public Class<?> getSupportedSource() {
 		return Execute.class;

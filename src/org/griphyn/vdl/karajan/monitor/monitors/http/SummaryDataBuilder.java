@@ -36,7 +36,7 @@ public class SummaryDataBuilder extends StateDataBuilder {
         e.writeMapItem("completed", state.getCompleted());
         e.writeMapItem("maxHeap", state.getMaxHeap());
         e.writeMapItem("maxHeapFormatted", state.getMaxHeapFormatted());
-        e.writeMapItem("crtHeap", state.getCurrentHeap());
+        e.writeMapItem("crtHeap", state.getUsedHeap());
         e.writeMapItem("crtHeapFormatted", state.getCurrentHeapFormatted());
         e.writeMapItem("timeLeftFormatted", state.getEstimatedTimeLeftFormatted());
         e.writeMapItem("elapsedTimeFormatetd", state.getElapsedTimeFormatted());

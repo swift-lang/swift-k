@@ -76,4 +76,9 @@ public abstract class AbstractStatefulItem implements StatefulItem {
 	public String getID() {
 		return id;
 	}
+
+    @Override
+    public void addListener(Listener l) {
+        // not implemented by default
+    }
 }

@@ -20,7 +20,7 @@ public class RemoteLogProcessorDispatcher extends FilteringProcessorDispatcher {
 
     @Override
     public String getSupportedSourceName() {
-        return RemoteLogHandler.class.getName();
+        return RemoteLogHandler.class.getSimpleName();
     }
 
     @Override

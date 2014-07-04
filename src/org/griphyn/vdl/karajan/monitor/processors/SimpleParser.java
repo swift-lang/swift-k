@@ -49,6 +49,25 @@ public class SimpleParser {
 		crt = index + tok.length();
 	}
 	
+	public void markMatchedTo(char m, char pair) throws ParsingException {
+	    int level = 1;
+	    for (int i = crt; i < str.length(); i++) {
+	        char c = str.charAt(i);
+	        if (c == m) {
+	            level--;
+	            if (level == 0) {
+	                tokEnd = i;
+	                return;
+	            }
+	        }
+	        if (c == pair) {
+	            level++;
+	        }
+	    }
+        throw new ParsingException("Could not find \"" + m + "\" in \"" + remaining()
+                    + "\". String is \"" + str + "\".");
+    }
+	
 	public void skipTo(String tok) throws ParsingException {
         int index = str.indexOf(tok, crt);
         if (index == -1) {

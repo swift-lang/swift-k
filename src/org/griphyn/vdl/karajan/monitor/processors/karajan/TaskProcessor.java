@@ -21,6 +21,9 @@
 package org.griphyn.vdl.karajan.monitor.processors.karajan;
 
 import org.apache.log4j.Level;
+import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
+import org.globus.cog.abstraction.impl.common.task.TaskImpl;
+import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.griphyn.vdl.karajan.monitor.SystemState;
@@ -100,6 +103,42 @@ public class TaskProcessor extends AbstractMessageProcessor {
                         }
                     }
                 }
+                else if (p.matchAndSkip("JOB_TASK ")) {
+                    p.skip("jobid=");
+                    String jobid = p.word();
+                    p.skip("taskid=");
+                    id = p.word();
+                    p.skip("exec=");
+                    String exec = p.word();
+                    p.skip("dir=");
+                    String dir = p.word();
+                    p.skip("args=");
+                    String args = p.remaining();
+                    
+                    ti = new TaskItem(id, Task.JOB_SUBMISSION);
+                    Task t = new TaskImpl();
+                    t.setType(Task.JOB_SUBMISSION);
+                    JobSpecification spec = new JobSpecificationImpl();
+                    spec.setExecutable(exec);
+                    spec.setArguments(args);
+                    spec.setDirectory(dir);
+                    t.setSpecification(spec);
+                    ti.setTask(t);
+                    updateParent(state, id, ti);
+                    state.addItem(ti);
+                }
+                else if (p.matchAndSkip("TASK_STATUS_CHANGE ")) {
+                    p.skip("taskid=");
+                    id = p.word();
+                    p.skip("status=");
+                    taskState = Integer.parseInt(p.word());
+                    ti = (TaskItem) state.getItemByID(id, StatefulItemClass.TASK);
+                    if (p.matchAndSkip("workerid=")) {
+                        ti.setWorkerId(p.word());
+                    }
+                    ti.setStatus(taskState);
+                    state.itemUpdated(ti);
+                }
                 else if (p.matchAndSkip("Task(")) {
                     p.skip("type=");
                     p.beginToken();
@@ -117,6 +156,7 @@ public class TaskProcessor extends AbstractMessageProcessor {
                     }
                     else {
                         ti = new TaskItem(id, taskType);
+                        updateParent(state, id, ti);
                         state.addItem(ti);
                     }
                 }
@@ -125,6 +165,23 @@ public class TaskProcessor extends AbstractMessageProcessor {
                 e.printStackTrace();
             }
         }
+        if (ti != null && ti.getParent() != null && taskState != 0) {
+            ApplicationItem app = (ApplicationItem) ti.getParent();
+            switch (taskState) {
+                case Status.SUBMITTING:
+                case Status.SUBMITTED:
+                case Status.ACTIVE:
+                case Status.STAGE_IN:
+                case Status.STAGE_OUT:
+                    app.setState(getAppStateFromTaskState(taskState), state.getCurrentTime());
+                    app.setWorkerId(ti.getWorkerId());
+                    state.itemUpdated(app);
+                    break;
+            }
+        }
+    }
+
+    private void updateParent(SystemState state, String id, TaskItem ti) {
         if (ti != null && id != null && ti.getParent() == null) {
             int bi = id.indexOf(':');
             int li = id.lastIndexOf('-');
@@ -138,20 +195,22 @@ public class TaskProcessor extends AbstractMessageProcessor {
                 bridge.addChild(ti);
             }
         }
-        if (ti != null && ti.getParent() != null && taskState != 0) {
-            ApplicationItem app = (ApplicationItem) ti.getParent();
-            if (taskState == Status.SUBMITTING) {
-                app.setState(ApplicationState.SUBMITTING, state.getCurrentTime());
-                state.itemUpdated(app);
-            }
-            else if (taskState == Status.SUBMITTED) {
-                app.setState(ApplicationState.SUBMITTED, state.getCurrentTime());
-                state.itemUpdated(app);
-            }
-            else if (taskState == Status.ACTIVE) {
-                app.setState(ApplicationState.ACTIVE, state.getCurrentTime());
-                state.itemUpdated(app);
-            }
+    }
+
+    private ApplicationState getAppStateFromTaskState(int taskState) {
+        switch (taskState) {
+            case Status.SUBMITTING:
+                return ApplicationState.SUBMITTING;
+            case Status.SUBMITTED:
+                return ApplicationState.SUBMITTED;
+            case Status.ACTIVE:
+                return ApplicationState.ACTIVE;
+            case Status.STAGE_IN:
+                return ApplicationState.STAGE_IN;
+            case Status.STAGE_OUT:
+                return ApplicationState.STAGE_OUT;
+            default:
+                return ApplicationState.INITIALIZING;
         }
     }
 

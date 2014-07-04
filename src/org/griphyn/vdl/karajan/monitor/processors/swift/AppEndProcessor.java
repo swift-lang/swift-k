@@ -22,6 +22,8 @@ package org.griphyn.vdl.karajan.monitor.processors.swift;
 
 import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
+import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.processors.SimpleParser;
@@ -29,21 +31,23 @@ import org.griphyn.vdl.karajan.monitor.processors.SimpleParser;
 public class AppEndProcessor extends AbstractSwiftProcessor {
 
     public Level getSupportedLevel() {
-        return Level.DEBUG;
+        return Level.INFO;
     }
 
     @Override
     public String getMessageHeader() {
-        return "JOB_END";
+        return "END_SUCCESS";
     }
 
     public void processMessage(SystemState state, SimpleParser p, Object details) {
         try {
-            p.skip("jobid=");
-            String id = p.word();
+            p.skip("thread=");
+            String threadid = p.word();
 
-            StatefulItem app = state.getItemByID(id,
-                StatefulItemClass.APPLICATION);
+            StatefulItem thread = state.getItemByID(threadid, StatefulItemClass.BRIDGE);
+            ApplicationItem app = (ApplicationItem) thread.getParent();
+            app.setState(ApplicationState.FINISHED_SUCCESSFULLY, state.getCurrentTime());
+            state.itemUpdated(app);
             state.removeItem(app);
             state.getStats("apps").remove();
         }
