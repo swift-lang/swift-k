@@ -52,41 +52,9 @@ namespace(swift) {
 		}
 	)
 
-	export(mapping,
-		function(descriptor, ...) {
-			mapping=map(map:entry("swift#descriptor", descriptor), each(...))
-		}
-	)
+	export(mapping, def("org.griphyn.vdl.karajan.lib.Mapping$Cons"))
+	export(parameter, def("org.griphyn.vdl.karajan.lib.Mapping$Parameter"))
 
-	export(parameter,
-		function(name, value) {
-			map:entry(name, value)
-		}
-	)
-
-	export(stdout,
-		function(file) {
-			stdout = file
-		}
-	)
-	
-	export(stdin,
-		function(file) {
-			stdin = file
-		}
-	)
-
-	export(stderr,
-		function(file) {
-			stderr = file
-		}
-	)
-
-	export(tr,
-		function(name) {
-			tr = name
-		}
-	)
 
 	export(attributes,
 	    function(attrs) {
