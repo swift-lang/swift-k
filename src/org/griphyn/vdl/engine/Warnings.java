@@ -22,7 +22,8 @@ public class Warnings {
     public static enum Type {
         DEPRECATION, 
         SHADOWING, 
-        DATAFLOW
+        DATAFLOW,
+        SITE
     }
     
     private static Set<String> warnings = new HashSet<String>();
@@ -31,6 +32,7 @@ public class Warnings {
     static {
         enabledWarnings.add(Type.DEPRECATION);
         enabledWarnings.add(Type.DATAFLOW);
+        enabledWarnings.add(Type.SITE);
     }
     
     public static void warn(Type type, XmlObject obj, String msg) {
