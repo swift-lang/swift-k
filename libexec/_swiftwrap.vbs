@@ -184,9 +184,6 @@ INF=getOptArg()
 expectArg("of")
 OUTF=getOptArg()
 
-expectArg("k")
-KICKSTART=getOptArg()
-
 expectArg("cdmfile")
 'ignored, but read if specified
 CDMFILE=getOptArg()
