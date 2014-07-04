@@ -1,3 +1,0 @@
-arbat.mcs.anl.gov	5243	gt2
-wiggum.mcs.anl.gov	5243	gt2
-plussed.mcs.anl.gov	2119	gt3.2.0
