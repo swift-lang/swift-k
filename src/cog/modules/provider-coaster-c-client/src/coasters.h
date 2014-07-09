@@ -313,6 +313,8 @@ coaster_job_get_outstreams(const coaster_job *job,
  * Ownership of the job is shared between the caller and
  * the client until the job has completed, or the client
  * shuts down.
+ *
+ * config: required, must be non-null
  */
 coaster_rc
 coaster_submit(coaster_client *client, const coaster_config_id *config,

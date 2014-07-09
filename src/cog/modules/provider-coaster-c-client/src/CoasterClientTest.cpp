@@ -35,8 +35,8 @@ int main(void) {
 		j2.addArgument("testing");
 		j2.addArgument("1, 2, 3");
 
-		client.submit(j1, &configId);
-		client.submit(j2, &configId);
+		client.submit(j1, configId);
+		client.submit(j2, configId);
 
 		client.waitForJob(j1);
 		client.waitForJob(j2);

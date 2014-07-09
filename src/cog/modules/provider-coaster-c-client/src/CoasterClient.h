@@ -75,9 +75,9 @@ class CoasterClient: public CommandCallback {
 		 * with the caller, but this client will retain a reference
 		 * to the job until done jobs are purged.
                  *
-                 * configId: if non-null, uses specific server-side config
+                 * configId: service-side config to use
 		 */
-		void submit(Job& job, const std::string* configId);
+		void submit(Job& job, const std::string& configId);
 
 		/*
 		 * Wait for job to be done.  Upon completion no actions

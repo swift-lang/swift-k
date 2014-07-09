@@ -140,7 +140,7 @@ string CoasterClient::setOptions(Settings& s) {
 	return *id;
 }
 
-void CoasterClient::submit(Job& job, const std::string* configId) {
+void CoasterClient::submit(Job& job, const std::string& configId) {
 	{ Lock::Scoped l(lock);
 		jobs[job.getIdentity()] = &job;
 	}

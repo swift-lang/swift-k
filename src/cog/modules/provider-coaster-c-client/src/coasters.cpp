@@ -103,7 +103,7 @@ coaster_rc coaster_client_stop(coaster_client *client)
   try {
     client->client.stop();
     client->loop.stop();
-    
+
     delete client;
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
@@ -118,7 +118,7 @@ coaster_rc coaster_settings_create(coaster_settings **settings)
   try {
     *settings = new Settings();
     COASTER_CHECK_MALLOC(*settings);
- 
+
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
@@ -139,7 +139,7 @@ coaster_settings_parse(coaster_settings *settings,
   COASTER_CONDITION(str != NULL, COASTER_ERROR_INVALID,
                     "Null Coaster settings string");
   string key, value; // Storage for current key and value
-  
+
   bool in_key = true; // Either in key or value
   bool in_quotes = false;
   bool in_escape = false;
@@ -174,9 +174,9 @@ coaster_settings_parse(coaster_settings *settings,
       } else if (c == separator) {
         COASTER_CONDITION(!in_key, COASTER_ERROR_INVALID,
                   "',' not allowed in unquoted Coaster settings key");
-        
-        settings_emit(settings, key, value);          
-        
+
+        settings_emit(settings, key, value);
+
         in_key = true;
       } else {
         curr.push_back(c);
@@ -207,7 +207,7 @@ settings_emit(coaster_settings *settings, string &key, string &value) {
     string old_value;
     settings->get(key, old_value);
     LogWarn << "Overwrote previous Coaster settings value for "
-                "key: \"" << key << "\".  Old value: \"" << 
+                "key: \"" << key << "\".  Old value: \"" <<
                 old_value << "\", New value: \"" <<
                 value << "\"." << endl;
   }
@@ -222,7 +222,7 @@ coaster_settings_set(coaster_settings *settings,
           const char *key, size_t key_len,
           const char *value, size_t value_len) COASTER_THROWS_NOTHING {
   try {
-    settings->set(key, key_len, value, value_len); 
+    settings->set(key, key_len, value, value_len);
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
@@ -259,7 +259,7 @@ coaster_settings_keys(coaster_settings *settings,
     // Use malloc so C client code can free
     *keys = (const char**)malloc(sizeof((*keys)[0]) * (*count));
     COASTER_CHECK_MALLOC(*keys);
-    
+
     if (key_lens != NULL) {
       *key_lens = (size_t *)malloc(sizeof((*key_lens)[0]) * (*count));
       if (!(*key_lens)) {
@@ -267,7 +267,7 @@ coaster_settings_keys(coaster_settings *settings,
         COASTER_CHECK_MALLOC(*key_lens);
       }
     }
-    
+
     int pos = 0;
     for(std::map<string, string>::iterator iter = map.begin();
         iter != map.end(); ++iter) {
@@ -331,7 +331,7 @@ coaster_job_create(const char *executable, size_t executable_len,
   try {
     assert(executable != NULL);
     Job *j = new Job(string(executable, executable_len));
-   
+
     for (int i = 0; i < argc; i++)
     {
       assert(argv[i] != NULL);
@@ -390,7 +390,7 @@ coaster_job_set_redirects(coaster_job *job,
   if (job == NULL) {
     return coaster_return_error(COASTER_ERROR_INVALID, "invalid arg");
   }
-  
+
   try {
     // job expects to get ownership of references, so use new
     if (stdin_loc != NULL) {
@@ -419,7 +419,7 @@ coaster_job_set_directory(coaster_job *job, const char *dir, size_t dir_len)
   if (job == NULL) {
     return coaster_return_error(COASTER_ERROR_INVALID, "");
   }
-  
+
   try {
     if (dir != NULL) {
       job->setDirectory(*new string(dir, dir_len));
@@ -440,7 +440,7 @@ coaster_job_set_envs(coaster_job *job, int nvars,
   if (job == NULL) {
     return coaster_return_error(COASTER_ERROR_INVALID, "invalid arg");
   }
-  
+
   try {
     for (int i = 0; i < nvars; i++)
     {
@@ -469,11 +469,11 @@ coaster_rc
 coaster_job_set_attrs(coaster_job *job, int nattrs,
         const char **names, size_t *name_lens,
         const char **values, size_t *value_lens) COASTER_THROWS_NOTHING {
- 
+
   if (job == NULL) {
     return coaster_return_error(COASTER_ERROR_INVALID, "invalid job");
   }
-  
+
   try {
     for (int i = 0; i < nattrs; i++)
     {
@@ -498,11 +498,11 @@ coaster_rc
 coaster_job_add_cleanups(coaster_job *job, int ncleanups,
         const char **cleanups, size_t *cleanup_lens)
         COASTER_THROWS_NOTHING {
- 
+
   if (job == NULL) {
     return coaster_return_error(COASTER_ERROR_INVALID, "invalid job");
   }
-  
+
   try {
     for (int i = 0; i < ncleanups; i++) {
       const char *cleanup = cleanups[i];
@@ -529,14 +529,14 @@ coaster_job_add_stages(coaster_job *job,
   if (job == NULL) {
     return coaster_return_error(COASTER_ERROR_INVALID, "invalid job");
   }
-  
+
   try {
     for (int i = 0; i < nstageins; i++) {
       coaster_stage_entry *s = &stageins[i];
       job->addStageIn(string(s->src, s->src_len),
                       string(s->dst, s->dst_len), s->mode);
     }
-    
+
     for (int i = 0; i < nstageouts; i++) {
       coaster_stage_entry *s = &stageouts[i];
       job->addStageOut(string(s->src, s->src_len),
@@ -566,7 +566,7 @@ coaster_job_status_code(const coaster_job *job, coaster_job_status *code)
     return coaster_return_error(COASTER_ERROR_INVALID,
                                 "invalid or unsubmitted job");
   }
-  
+
   *code = status->getStatusCode();
   return COASTER_SUCCESS;
 }
@@ -605,8 +605,15 @@ coaster_job_get_outstreams(const coaster_job *job,
 coaster_rc
 coaster_submit(coaster_client *client, const coaster_config_id *config,
                coaster_job *job) COASTER_THROWS_NOTHING {
+  if (client == NULL) {
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid client");
+  }
+  if (config == NULL) {
+    return coaster_return_error(COASTER_ERROR_INVALID, "invalid config");
+  }
+
   try {
-    client->client.submit(*job, config);
+    client->client.submit(*job, *config);
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
@@ -622,12 +629,12 @@ coaster_check_jobs(coaster_client *client, bool wait, int maxjobs,
   if (client == NULL) {
     return coaster_return_error(COASTER_ERROR_INVALID, "invalid client");
   }
-  
+
   try {
     if (wait) {
       client->client.waitForAnyJob();
     }
-    
+
     int n = client->client.getAndPurgeDoneJobs(maxjobs, jobs);
 
     *njobs = n;
@@ -689,7 +696,7 @@ static void set_err_info(const string& msg) {
   if (prev != NULL) {
     cleanup_err_key(prev);
   }
-  
+
   coaster_err_info *err_info = new coaster_err_info(msg);
   pthread_setspecific(err_key, static_cast<void*>(err_info));
 }
@@ -699,7 +706,7 @@ static void clear_err_info(void) {
   if (prev != NULL) {
     cleanup_err_key(prev);
   }
-  
+
   pthread_setspecific(err_key, NULL);
 }
 
@@ -708,7 +715,7 @@ static void clear_err_info(void) {
  */
 static coaster_rc coaster_return_error(coaster_rc code,
                                     const string& msg) {
-  set_err_info(msg);  
+  set_err_info(msg);
   return code;
 }
 
@@ -738,7 +745,7 @@ static coaster_rc exception_rc(const std::exception &ex) {
 }
 
 coaster_rc coaster_set_log_threshold(coaster_log_level threshold) {
-  
+
   Logger::singleton().setThreshold(threshold);
 
   return COASTER_SUCCESS;

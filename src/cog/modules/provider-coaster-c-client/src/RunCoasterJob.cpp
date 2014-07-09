@@ -258,7 +258,7 @@ int runJob() {
 		j.setStderrLocation(*str);
 	}
 
-	client.submit(j, &configId);
+	client.submit(j, configId);
 
 	client.waitForJob(j);
 

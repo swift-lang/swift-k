@@ -13,11 +13,10 @@ class JobSubmitCommand: public Command {
 	private:
 		Job* job;
 		std::string ss;
-                bool haveConfigId;
 		std::string configId;
 	public:
 		static std::string NAME;
-		JobSubmitCommand(Job* job, const std::string* configId);
+		JobSubmitCommand(Job* job, const std::string& configId);
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
 		Job* getJob();
 		std::string getRemoteId();

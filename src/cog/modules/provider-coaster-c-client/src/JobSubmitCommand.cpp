@@ -19,15 +19,9 @@ void add(string& ss, const char* key, const char* value, int n);
 
 string JobSubmitCommand::NAME("SUBMITJOB");
 
-JobSubmitCommand::JobSubmitCommand(Job* pjob, const std::string* pconfigId): Command(&NAME) {
+JobSubmitCommand::JobSubmitCommand(Job* pjob, const std::string& pconfigId): Command(&NAME) {
 	job = pjob;
-	if (pconfigId != NULL) {
-		haveConfigId = true;
-		configId = *pconfigId;
-	}
-	else {
-		haveConfigId = false;
-	}
+	configId = pconfigId;
 }
 
 void JobSubmitCommand::send(CoasterChannel* channel, CommandCallback* cb) {
@@ -51,9 +45,7 @@ string JobSubmitCommand::getRemoteId() {
 void JobSubmitCommand::serialize() {
 	stringstream idSS;
 	idSS << job->getIdentity();
-	if (haveConfigId) {
-		add(ss, "configid", configId);
-	}
+	add(ss, "configid", configId);
 	add(ss, "identity", idSS.str());
 	add(ss, "executable", job->getExecutable());
 	add(ss, "directory", job->getDirectory());
