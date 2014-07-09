@@ -139,6 +139,8 @@ namespace(swift) {
 	export(unwrapClosedList, def("org.griphyn.vdl.karajan.lib.UnwrapClosedList"))
 	
 	export(siteCatalog, def("org.griphyn.vdl.karajan.lib.SiteCatalog"))
+	
+	export(getURLPrefix, def("org.griphyn.vdl.karajan.lib.GetURLPrefix"))
 }
 
 namespace(cdm) {

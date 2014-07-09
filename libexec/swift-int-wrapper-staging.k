@@ -2,28 +2,17 @@ import(sys)
 import(task)
 import('swift-lib')
 
+URL_PREFIX := getURLPrefix()
 
-getURLPrefix := def("org.griphyn.vdl.karajan.lib.GetURLPrefix")
+WRAPPER_LOG_ALWAYS_TRANSFER := configProperty("alwaysTransferWrapperLog")
+SWIFT:SCRIPT_NAME := contextAttribute("SWIFT:SCRIPT_NAME")
+SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
+SWIFT:HOME := contextAttribute("SWIFT:HOME")
+SITEDIR_KEEP := configProperty("keepSiteDir")
 
-URL_PREFIX := getURLPrefix() 
 
-WRAPPERLOG_ALWAYS_TRANSFER := vdl:configProperty("wrapperlog.always.transfer")
-SITEDIR_KEEP := vdl:configProperty("sitedir.keep")
-
-
-namespace(swift) {
+namespace(wrapperStaging) {
 	
-	checkJobStatus := function(jobdir, jobid, tr) {
-		log(LOG:DEBUG, "START jobid={jobid}")
-		try {
-			file:remove("{jobdir}/_swift.success")
-			log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
-		}
-		else {
-			throw(checkErrorFile(jobdir, jobid))
-		}
-	}
-		
 	checkErrorFile := function(jobdir, jobid) {
 		if (file:exists("{jobdir}/_swift.error")) {
 			log(LOG:INFO, "FAILURE jobid={jobid} - Failure file found")
@@ -36,6 +25,17 @@ namespace(swift) {
 			throw("No status file was found")
 		}
 	}
+	
+	checkJobStatus := function(jobdir, jobid, tr) {
+		log(LOG:DEBUG, "START jobid={jobid}")
+		try {
+			file:remove("{jobdir}/_swift.success")
+			log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
+		}
+		else {
+			throw(checkErrorFile(jobdir, jobid))
+		}
+	}
 
 	initSharedDir := function(progress, rhost) {
 		once(list(rhost, "shared")) {
@@ -43,9 +43,9 @@ namespace(swift) {
 
 			log(LOG:INFO, "START host={rhost} - Initializing shared directory")
 
-			wfdir := "{VDL:SCRIPTNAME}-{VDL:RUNID}"
+			wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
 			dir:make(wfdir, host=rhost)
-			transfer(srcdir="{swift.home}/libexec/", srcfile="_swiftwrap.wrapperstaging", destdir=wfdir, desthost=rhost)
+			transfer(srcdir="{SWIFT:HOME}/libexec/", srcfile="_swiftwrap.wrapperstaging", destdir=wfdir, desthost=rhost)
 
 			wfdir
 			to(cleanup, list(wfdir, rhost))
@@ -64,47 +64,13 @@ namespace(swift) {
 		ddir
 	}
 
-	cleanup := function(dir, host) {
-		log(LOG:INFO, "START dir={dir} host={host}")
-		if(vdl:configProperty("sitedir.keep") == "false") {
-			task:execute(
-				vdl:siteprofile(host, "cleanupCommand"),
-				arguments = list(
-					siteProfile(host, "cleanupCommandOptions"),
-					dir
-				)
-				host=host, batch=true, TCProfile(host)
-			)
-			log(LOG:INFO, "END dir={dir} host={host}")
-		}
-	}
+	stageWrapperParams := function(jobid, jobdir, wrapfile, dir, host) {
+		log(LOG:INFO, "START jobid={jobid} - staging in wrapper params"),
+		(provider, srchost, destdir, filename, srcdir) := splitFileURL(wrapfile, dir, destdir="parameters/{jobdir}")
 
-	cleanups := function(cleanup) {
-		log(LOG:INFO, "START cleanups={cleanup}")
-		parallelFor(i, cleanup) {
-			(dir, host) := each(i)
-			try {
-				vdl:cleanup(dir, host)
-			}
-			else catch(exception) {
-				log(LOG:DEBUG, "EXCEPTION - Exception caught while cleaning up", exception)
-				to(warnings, exception("Cleanup on {host} failed", exception))
-			}
-		}
-		log(LOG:INFO, "END cleanups={cleanup}")
-	}
-
-	stageWrapperParams := function(jobid, wrapfile, dir, host) {
-		log(LOG:INFO, "START jobid={jobid} - staging in wrapper params")
-		provider := provider(wrapfile)
-		srchost := hostname(wrapfile)
-		srcdir := vdl:dirname(wrapfile)
-		destdir := dir
-		filename := basename(wrapfile)
-
-		cacheOn(list(destdir, host)
+		cache(list(destdir, host)) {
 			dir:make(destdir, host=host, provider=provider)
-		)
+		}
 
 		log(LOG:INFO, "END jobid={jobid}")
 	}
@@ -129,9 +95,8 @@ namespace(swift) {
 		
 
 	export(execute2,
-		function(rhost, progress, tr, stagein, stageout,
-			replicationGroup, replicationChannel,
-			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
+		function(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
+			stagein, stageout, replicationGroup, replicationChannel) {
 
 			ddir := initDDir()
 			wfdir := try {
@@ -146,10 +111,10 @@ namespace(swift) {
 			
 			jobdir := concat(ddir, "/jobs/", substring(uid, from=0, to=1), "/{jobid}/")
 
-			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread={#thread} host={rhost} replicationGroup={replicationGroup}")
+			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 
-			statusMode := configProperty("status.mode", host = rhost)
-			wrapperMode := configProperty("wrapper.parameter.mode", host = rhost)
+			statusMode := configProperty("statusMode", host = rhost)
+			wrapperMode := configProperty("wrapperParameterMode", host = rhost)
 
 			wrapfile := "{jobdir}/_paramfile"
 
@@ -163,22 +128,22 @@ namespace(swift) {
 			scratch := siteProfile(rhost, "scratch")
 
 			if(wrapperMode == "files") {
-				file:write(wrapfile,
-					"-e ",vdl:executable(tr, rhost),
+				file:write(wrapfile) {
+					"-e ", executable(tr, rhost),
 					"\n-out ", stdout,
 					"\n-err ", stderr,
 					"\n-i ", if (stdin != null, getFieldValue(stdin)),
 					"\n-d ", str:join(remoteFileDirs, "|"),
 					"\n-if ", str:join(remoteFileNames(inFiles), "|"),
 					"\n-of ", str:join(remoteFileNames(outFiles), "|"),
-					"\n-wt", WRAPPERLOG_ALWAYS_TRANSFER,
+					"\n-wt", WRAPPER_LOG_ALWAYS_TRANSFER,
 					"\n-sk", SITEDIR_KEEP,
 					"\n-cdmfile ", cdm:file(),
 					"\n-status ", statusMode,
 					for(a, arguments) {
 						"\n-a ", a
 					}
-				)
+				}
 			}
 			
 
@@ -186,7 +151,7 @@ namespace(swift) {
 
 			try {
 				if (wrapperMode == "files") {
-					stageWrapperParams(jobid, wrapfile, wfdir, rhost)
+					stageWrapperParams(jobid, jobdir, wrapfile, wfdir, rhost)
 				}
 
 				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), " host={rhost}")
@@ -225,14 +190,14 @@ namespace(swift) {
 							"-urlprefix", URL_PREFIX,
 							"-jobdir", jobdir,
 							"-scratch", scratch,
-							"-e", vdl:executable(tr, rhost),
+							"-e", executable(tr, rhost),
 							"-out", stdout,
 							"-err", stderr,
 							"-i", if (stdin != null, getFieldValue(stdin)),
 							"-d", str:join(remoteFileDirs, "|"),
 							"-if", str:join(remoteFileNames(inFiles), "|"),
 							"-of", str:join(remoteFileNames(outFiles), "|"),
-							"-wt", WRAPPERLOG_ALWAYS_TRANSFER,
+							"-wt", WRAPPER_LOG_ALWAYS_TRANSFER,
 							"-sk", SITEDIR_KEEP,
 							"-cdmfile", cdm:file(),
 							"-status", statusMode,
@@ -265,7 +230,7 @@ namespace(swift) {
 
 
 				setProgress(progress, "Stage out")
-				doRestartlog(stageout)
+				doRestartLog(stageout)
 				
 				log(LOG:DEBUG, "JOB_END jobid={jobid}")
 			}
@@ -292,7 +257,7 @@ namespace(swift) {
 								"Exception in {tr}:",
 								if (arguments != null, "\n    Arguments: {arguments}")
 								"\n    Host: {rhost}",
-								"\n    Directory: {tmpdir}",
+								"\n    Directory: {jobdir}",
 								"{outs}",
 							)
 							exception

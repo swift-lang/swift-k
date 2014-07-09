@@ -11,31 +11,24 @@ SWIFT:HOME := contextAttribute("SWIFT:HOME")
 SWIFT:DEBUG_DIR_PREFIX := contextAttribute("SWIFT:DEBUG_DIR_PREFIX")
 
 WRAPPER_TRANSFER_MODE :=
-	if (configProperty("wrapperlog.always.transfer") == "true", 
+	if (configProperty("alwaysTransferWrapperLog"), 
 		STAGING_MODE:IF_PRESENT, STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
 
-pinOption := configProperty("provider.staging.pin.swiftfiles")
+pinOption := configProperty("providerStagingPinSwiftFiles")
 
-PIN := if(pinOption == "true", "pinned:", "")
-PROVENANCE_GRAPH_ENABLED := (configProperty("pgraph") != "false")
-CLEANUP_ENABLED := (configProperty("sitedir.keep") != "true")
+PIN := if(pinOption, "pinned:", "")
+CLEANUP_ENABLED := !configProperty("keepSiteDir")
 
 DEBUG_DIR := "{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
 CDM_FILE := cdm:file()
 
-namespace(swift) {
+namespace(providerStaging) {
 		
 	fileSizes := function(files) {
 		math:sum(
 			for(f, files, file:size(f))
 		)
 	}
-
-	export(cleanups,
-		function(cleanup) {
-			log(LOG:INFO, "START cleanups={cleanup}")
-		}
-	)
 
 	readErrorFiles := function(dir, jobid, stdout, stderr) {
 		concat(
@@ -59,9 +52,8 @@ namespace(swift) {
 	}
 	
 	export(execute2,
-		function(rhost, progress, tr, stagein, stageout,
-			replicationGroup, replicationChannel,
-			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
+		function(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
+			stagein, stageout, replicationGroup, replicationChannel) {
 
 			uid := UID()
 			jobdir := substring(uid, 0, to=1)

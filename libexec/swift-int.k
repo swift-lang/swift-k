@@ -14,11 +14,13 @@ RUN_DIR := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
 SHARED_DIR := dircat(RUN_DIR, "shared")
 DEBUG_DIR := "{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
 
+WRAPPER_LOG_ALWAYS_TRANSFER := configProperty("alwaysTransferWrapperLog")
+
 if (!file:exists(DEBUG_DIR)) {
 	task:dir:make(DEBUG_DIR)
 }
 
-namespace(swift) {
+namespace(swiftStaging) {
 
 	rmdir := function(dir, host) {
 		parallelFor(entry, file:list(dir, host=host)) {
@@ -86,12 +88,12 @@ namespace(swift) {
 			transfer(siteProfile(rhost, "wrapperScript"), srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
 			transfer("_swiftseq", srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
 
-			statusMode := configProperty("status.mode", host=rhost)
+			statusMode := configProperty("statusMode", host=rhost)
 			if (statusMode == "files") {
 				dir:make(dircat(RUN_DIR, "status"), host=rhost)
 			}
 
-			wrapperMode := configProperty("wrapper.parameter.mode", host=rhost)
+			wrapperMode := configProperty("wrapperParameterMode", host=rhost)
 			if (wrapperMode == "files") {
 				dir:make(dircat(RUN_DIR, "parameters"), host=rhost)
 			}
@@ -119,30 +121,6 @@ namespace(swift) {
 			}
 		}
 		log(LOG:INFO, "END jobid={jobid} - Done initializing directory structure")
-	}
-
-	cleanup := function(dir, host) {
-		log(LOG:INFO, "START dir={dir} host={host}")
-		cdmfile := cdm:file()
-		log(LOG:DEBUG, "cdmfile {cdmfile}")
-		if (cdmfile != "" & cdm:get("GATHER_DIR") != "UNSET") {
-			log(LOG:INFO, "submitting cdm_cleanup.sh to {dir}")
-			task:transfer("cdm_cleanup.sh",
-				srcdir="{SWIFT:HOME}/libexec",
-				desthost=host, destdir=dir)
-			task:transfer("cdm_lib.sh",
-				srcdir="{SWIFT:HOME}/libexec",
-				desthost=host, destdir=dir)
-		        log(LOG:INFO, "execute: cdm_cleanup.sh")
-			task:execute("/bin/bash", list("{dir}/cdm_cleanup.sh", cdm:get("GATHER_DIR"), cdm:get("GATHER_TARGET"), UID())
-				host=host, batch=true, TCProfile(host))
-		}
-		if (swift:configProperty("sitedir.keep") == "false") {
-			task:execute(siteProfile(host, "cleanupCommand"),
-				list(siteProfile(host, "cleanupCommandOptions"), dir)
-				host=host, batch=true, TCProfile(host))
-		}
-		log(LOG:INFO, "END dir={dir} host={host}")
 	}
 
 	cleanupFiles := function(files, host) {
@@ -313,28 +291,10 @@ namespace(swift) {
 		}
 		recfile
 	}
-	
-	export(cleanups,
-		function(cleanup) {
-			log(LOG:INFO, "START cleanups={cleanup}")
-			parallelFor(i, cleanup) {
-				(dir, host) := each(i)
-				try {
-					cleanup(dir, host)
-				}
-				else catch(exception) {
-					log(LOG:DEBUG, "EXCEPTION - Exception caught while cleaning up", exception)
-					to(warnings, exception("Cleanup on {host} failed", exception))
-				}
-			}
-			log(LOG:INFO, "END cleanups={cleanup}")
-		}
-	)
 
 	export(execute2,
-		function(rhost, progress, tr, stagein, stageout,
-			replicationGroup, replicationChannel,
-			arguments = [], stdin = null, stdout = null, stderr = null, attributes = null) {
+		function(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
+			stagein, stageout, replicationGroup, replicationChannel) {
 
 			try {
 				initSharedDir(progress, rhost)
@@ -349,8 +309,8 @@ namespace(swift) {
 
 			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 
-			statusMode := configProperty("status.mode",host=rhost)
-			wrapperMode := configProperty("wrapper.parameter.mode",host=rhost)
+			statusMode := configProperty("statusMode", host=rhost)
+			wrapperMode := configProperty("wrapperParameterMode", host=rhost)
 
 			wrapfile := "{DEBUG_DIR}/param-{jobid}"
 
@@ -469,7 +429,7 @@ namespace(swift) {
 					doStageoutCollect(jobid, SHARED_DIR, rhost, outFiles)
 				}
 				
-				if (configProperty("wrapperlog.always.transfer") == "true") {
+				if (WRAPPER_LOG_ALWAYS_TRANSFER) {
 					discard(transferWrapperLog(rhost, jobid, jobdir))
 				}
 				

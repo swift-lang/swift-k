@@ -5,30 +5,66 @@ import('swift-operators', export = true)
 import('swift-lib', export = true)
 import('swift-xs', export = true)
 
+import('swift-int')
+import('swift-int-staging')
+import('swift-int-wrapper-staging')
+
 SWIFT:SCRIPT_NAME := contextAttribute("SWIFT:SCRIPT_NAME")
 SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
 SWIFT:HOME := contextAttribute("SWIFT:HOME")
+SITEDIR_KEEP := configProperty("keepSiteDir")
 
-namespace(swift) {
-
-	pstaging := (configProperty("use.provider.staging") == "true")
-	wstaging := (configProperty("use.wrapper.staging") == "true")
-	
-	impl := if (pstaging, "swift-int-staging.k", if (wstaging, "swift-int-wrapper-staging.k", "swift-int.k"))
-	
-	import(file = impl)
-	
-	import(java)
-
+namespace(swift) {	
 	export(stageIn, def("org.griphyn.vdl.karajan.lib.Stagein"))
 	export(stageOut, def("org.griphyn.vdl.karajan.lib.Stageout"))
 
 	export(parameterLog,
 		function(direction, variable, id) {
-			if (configProperty("provenance.log") == "true") {
+			if (configProperty("logProvenance")) {
 				thread := currentThread()
 				log("info", "PARAM thread={thread} direction={direction} variable={variable} provenanceid={id}")
 			}
+		}
+	)
+	
+	cleanup := function(dir, host) {
+		log(LOG:INFO, "START dir={dir} host={host}")
+		cdmfile := cdm:file()
+		log(LOG:DEBUG, "cdmfile {cdmfile}")
+		if (cdmfile != "" & cdm:get("GATHER_DIR") != "UNSET") {
+			log(LOG:INFO, "submitting cdm_cleanup.sh to {dir}")
+			task:transfer("cdm_cleanup.sh",
+				srcdir="{SWIFT:HOME}/libexec",
+				desthost=host, destdir=dir)
+			task:transfer("cdm_lib.sh",
+				srcdir="{SWIFT:HOME}/libexec",
+				desthost=host, destdir=dir)
+		        log(LOG:INFO, "execute: cdm_cleanup.sh")
+			task:execute("/bin/bash", list("{dir}/cdm_cleanup.sh", cdm:get("GATHER_DIR"), cdm:get("GATHER_TARGET"), UID())
+				host=host, batch=true, TCProfile(host))
+		}
+		if (!SITEDIR_KEEP) {
+			task:execute(siteProfile(host, "cleanupCommand"),
+				list(siteProfile(host, "cleanupCommandOptions"), dir)
+				host=host, batch=true, TCProfile(host))
+		}
+		log(LOG:INFO, "END dir={dir} host={host}")
+	}
+	
+	export(cleanups,
+		function(cleanup) {
+			log(LOG:INFO, "START cleanups={cleanup}")
+			parallelFor(i, cleanup) {
+				(dir, host) := each(i)
+				try {
+					cleanup(dir, host)
+				}
+				else catch(exception) {
+					log(LOG:DEBUG, "EXCEPTION - Exception caught while cleaning up", exception)
+					to(warnings, exception("Cleanup on {host} failed", exception))
+				}
+			}
+			log(LOG:INFO, "END cleanups={cleanup}")
 		}
 	)
 	
@@ -92,7 +128,26 @@ namespace(swift) {
 				to(cleanup, unique(for(c, cleanup, c)))
 			)
 		}
-	)	
+	)
+	
+	executeSelect := function(rhost, progress, tr, arguments, attributes,
+		stdin, stdout, stderr, stagein, stageout, replicationGroup, replicationChannel) {
+		
+		staging := configProperty("staging", host = rhost)
+		
+		if (staging == "swift") {
+			swiftStaging:execute2(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+				stagein, stageout, replicationGroup, replicationChannel)
+		}
+		else if (staging == "provider") {
+			providerStaging:execute2(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+				stagein, stageout, replicationGroup, replicationChannel)
+		}
+		else {
+			wrapperStaging:execute2(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+				stagein, stageout, replicationGroup, replicationChannel)
+		}
+	}
 	
 	export(execute,
 		function(
@@ -113,8 +168,8 @@ namespace(swift) {
 					try {
 						throttled {
 							setProgress(progress, "Selecting site")
-							collectList := restartOnError(number(swift:configProperty("execution.retries"))) {
-								if (swift:configProperty("replication.enabled") == "true") {
+							collectList := restartOnError(swift:configProperty("executionRetries")) {
+								if (swift:configProperty("replicationEnabled")) {
 									replicationChannel := channel:new()
 									//trigger the first job
 									discard(append(replicationChannel, true)) 
@@ -122,10 +177,11 @@ namespace(swift) {
 									parallelFor(i, replicationChannel) {
 										try {
 											allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
-												execute2(
+												executeSelect(
 													rhost, progress, 
-													tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
-													stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
+													tr, if(arguments != null, unwrapClosedList(arguments), []),
+													attributes,
+													stdin, stdout, stderr, 
 													stagein, stageout, replicationGroup, replicationChannel
 												)
 											}
@@ -143,10 +199,11 @@ namespace(swift) {
 								else {
 									try {
 										allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
-											execute2(
+											executeSelect(
 												rhost, progress, 
-												tr, if(arguments != null, arguments = unwrapClosedList(arguments)),
-												stdin=stdin, stdout=stdout, stderr=stderr, attributes=attributes,
+												tr, if(arguments != null, unwrapClosedList(arguments), []),
+												attributes,
+												stdin, stdout, stderr, 
 												stagein, stageout, null, null
 											)
 										}
@@ -169,7 +226,7 @@ namespace(swift) {
 					else catch(exception) {
 						log(LOG:INFO, "END_FAILURE thread=", currentThread(), " tr={tr}")
 						setProgress(progress, "Failed")
-						if(swift:configProperty("lazy.errors") == "false") {
+						if(!swift:configProperty("lazyErrors")) {
 							throw(exception)
 						}
 						else {
