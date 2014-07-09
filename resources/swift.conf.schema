@@ -1,0 +1,323 @@
+
+app."*" {
+	_doc:
+		""" Defines an application global to all sites. The '*' symbol stands for
+		the name of the application, as would appear in a swift script. The string 
+		ALL could be used to provide settings that apply to all	applications."""
+		
+	executable {
+		_type: "?String"
+		_doc: 
+			""" Specifies the executable of an application. Can either be an absolute 
+			path or and executable name that must be in the system PATH on the target
+			site or the symbol "*", in which case Swift will attempt to run an 
+			executable with the same name as the application"""   
+	}
+	
+	options {
+		_type: "?Object"
+		_doc:
+			""" Allows the definition of arbitrary application options. The meaning
+			of these options is largely dependent on the mechanism used to execute
+			the application. """
+	}
+	
+	jobType: "?String", jobQueue: "?String", jobProject: "?String"
+	maxWallTime: "?Time"
+	
+	env."*": "String"
+}
+
+
+site."*" {
+	OS: "?OS"
+	maxParallelTasks {
+		_type: "?StrictlyPositiveInt"
+		_default: 2
+	}
+	
+	initialParallelTasks { 
+		_type: "?StrictlyPositiveInt"
+		_default: 2
+	}
+	
+	delayBase {
+		_type: "?Float"
+	}
+	
+	maxSubmitRate {
+		_type: "?PositiveFloat"
+	}
+
+	staging {
+		_type: "?Choice[swift, provider, wrapper]"
+		_default: "swift"
+	}
+	
+	stagingMethod {
+		_type: "?String"
+		_default: "proxy"
+	}
+	
+	filesystem {
+		type: "String"
+		URL {
+			_type: "?String"
+			_default: null
+		}
+	}
+	
+	execution {
+		type: "String"
+		URL: "?String"
+		jobManager: "?String"
+		# Coasters
+		maxJobs: "?StrictlyPositiveInt"
+		nodeGranularity: "?StrictlyPositiveInt"
+		tasksPerNode: "?StrictlyPositiveInt"
+		allocationStepSize: "?Interval[0.0, 1.0]"
+		lowOverallocation: "?StrictlyPositiveInt"
+		highOverallocation: "?StrictlyPositiveInt"
+		overallocationDecayFactor: "?PositiveFloat"
+		spread: "?Interval[0.0, 1.0]"
+		exponentialSpread: "?Int"
+		reserve: "?Seconds"
+		maxNodesPerJob: "?StrictlyPositiveInt"
+		maxJobTime: "?Time"
+		userHomeOverride: "?String"
+		internalHostName: "?String"
+		jobQueue: "?String"
+		jobProject: "?String"
+		workerLoggingLevel: "?Choice[ERROR, WARN, INFO, DEBUG, TRACE]"
+		workerLoggingDirectory: "?String"
+		softImage: "?String"
+		options: "?Object"
+	}
+	
+	workDirectory: "String"
+	app."*": {
+		executable: "?String"
+	
+		options: "?Object"
+		jobType: "?String", jobQueue: "?String", jobProject: "?String"
+		maxWallTime: "?Time"
+	
+		env."*": "String"
+	}
+	
+	wrapperInterpreter: "?String"
+	wrapperInterpreterOptions: "?StringList"
+	wrapperScript: "?String"
+	cleanupCommand: "?String"
+	cleanupCommandOptions: "?StringList"
+	
+	# Global properties that can also be used for individual sites
+	wrapperParameterMode: "?Choice[args, files]"
+	keepSiteDir: "?Boolean"
+	statusMode: "?Choice[files, provider]"
+	
+}
+
+sites {
+	_type: "StringList"
+	_doc:
+		"""Selects a list of sites to run on. The sites in question must have been defined
+		using the site.* properties. To get a list of sites defined in the current 
+		configuration, start swift with the -sitelist command line option"""
+}
+
+staging {
+	_type: "?Choice[swift, provider, wrapper]"
+	_default: "swift"
+}
+
+lazyErrors {
+	_type: "?Boolean"
+	_default: false
+	_doc: 
+		"""Use a lazy mode to deal with errors. When set to 'true' Swift will proceed with the
+		execution until no more data can be derived because of errors in dependent steps. If 
+		set to 'false', an error will cause the execution to immediately stop"""
+}
+
+executionRetries {
+	_type: "?PositiveInt"
+	_default: 0
+}
+
+cachingAlgorithm {
+	_type: "?Choice[LRU]"
+	_default: "LRU"
+}
+
+jobSubmitThrottle {
+	_type: "?Throttle"
+	_default: 4
+}
+
+hostJobSubmitThrottle {
+	_type: "?Throttle"
+	_default: 2
+}
+
+fileTransfersThrottle {
+	_type: "?Throttle"
+	_default: 4
+}
+
+fileOperationsThrottle {
+	_type: "?Throttle"
+	_default: 8
+}
+
+siteScoreThrottlingFactor {
+	_type: "?PositiveFloat"
+	_default: 0.2
+}
+
+keepSiteDir {
+	_type: "?Boolean"
+	_default: false
+	_doc:
+		"""If set to true, it prevents the removal of remote site run directories
+		 after execution has completed."""
+}
+
+logProvenance {
+	_type: "?Boolean"
+	_default: false
+	_doc:
+		"""If set to true, will record provenance information in the log file."""
+}
+
+replicationEnabled {
+	_type: "?Boolean"
+	_default: false
+}
+
+replicationMinQueueTime {
+	_type: "?StrictlyPositiveInt"
+	_default: 60
+}
+
+replicationLimit {
+	_type: "?StrictlyPositiveInt"
+	_default: 3
+}
+
+statusMode {
+	_type: "?Choice[files, provider]"
+	_default: "files"
+}
+
+wrapperParameterMode {
+	_type: "?Choice[args, files]"
+	_default: "args"
+}
+
+wrapperInvocationMode {
+	_type: "?Choice[absolute, relative]"
+	_default: "absolute"
+}
+
+CDMBroadcastMode {
+	_type: "?String"
+	_default: "file"
+}
+
+providerStagingPinSwiftFiles {
+	_type: "?Boolean"
+	_default: false
+}
+
+tickerDateFormat {
+	_type: "?String"
+	_default: ""
+}
+
+tickerPrefix {
+	_type: "?String"
+	_default: "Progress: "
+}
+
+tickerEnabled {
+	_type: "?Boolean"
+	_default: true
+}
+
+fileGCEnabled {
+	_type: "?Boolean"
+	_default: true
+	_doc:
+		"""Allows disabling the file garbage collector. If set to false, files mapped by 
+		collectable mappers (such as the concurrent mapper) will not be deleted when their 
+		swift variables go out of scope."""
+}
+
+mappingCheckerEnabled {
+	_type: "?Boolean"
+	_default: true
+	_doc:
+		"""Controls the run-time duplicate mapping checker (which indetifies mapping 
+		conflicts). When enabled, a record of all mapped data is kept, so this comes at the 
+		expense of a slight memory leak. If set 'false', the mapping checker is disabled. 
+		Enabled by default."""
+}
+
+hostName {
+	_type: "?String"
+	_default: null
+	_doc: 
+		"""Can be used to specify a publicly reacheable DNS name or IP address for this 
+		machine which is generally used for Globus callbacks. Normally this should be 
+		auto-detected, but if you do not have a public DNS name, you may want to set this."""
+}
+
+TCPPortRange {
+	_type: "?PortRange"
+	_default: null
+	_doc:
+		"""A TCP port range can be specified to restrict the ports on which certain callback 
+		services are started. This is likely needed if your submit host is behind a firewall, 
+		in which case the firewall should be configured to allow incoming connections on 
+		ports in this range."""
+}
+
+alwaysTransferWrapperLog {
+	_type: "?Boolean"
+	_default: false
+	_doc:
+		"""Controls when wrapper logs are transfered back to the submit host. If set to 
+		"false", Swift will only transfer a wrapper log for a given job when that job fails.
+		If set to "true", Swift will transfer wrapper logs whether a job fails or not."""
+}
+
+tracingEnabled {
+	_type: "?Boolean"
+	_default: false
+	_doc:
+		"""Enables execution tracing. If set to "true", operations within Swift such as 
+		iterations, invocations, assignments, and declarations, as well as data dependencies 
+		will be logged. This comes at a cost in performance. It is therefore disabled by 
+		default."""
+}
+
+wrapperStagingLocalServer {
+	_type: "?String"
+	_default: "file://"
+}
+
+maxForeachThreads {
+	_type: "?StrictlyPositiveInt"
+	_default: 16384
+	_doc_disabled:
+		"""Limits the number of concurrent iterations that each foreach statement
+		can have at one time. This conserves memory for swift programs that
+		have large numbers of iterations (which would otherwise all be executed
+		in parallel)."""
+}
+
+maxThreads {
+	_type: "?StrictlyPositiveInt"
+	_default: 1000000
+}
