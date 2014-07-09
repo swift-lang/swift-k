@@ -129,14 +129,18 @@ void CoasterClient::stop() {
 	started = false;
 }
 
-std::string CoasterClient::setOptions(Settings& s) {
+string CoasterClient::setOptions(Settings& s) {
 	LogInfo << "Setting options: " << s << endl;
 	ServiceConfigurationCommand scc(s);
 	scc.execute(channel);
-	return scc.getConfigId();
+	string *id = scc.getConfigId();
+	if (id == NULL) {
+		throw CoasterError("Did not get expected response for config");
+	}
+	return *id;
 }
 
-void CoasterClient::submit(Job& job, std::string* configId) {
+void CoasterClient::submit(Job& job, const std::string* configId) {
 	{ Lock::Scoped l(lock);
 		jobs[job.getIdentity()] = &job;
 	}

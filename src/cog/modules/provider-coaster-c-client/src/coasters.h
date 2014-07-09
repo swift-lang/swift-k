@@ -29,6 +29,10 @@
 #define COASTERS_H_
 
 #ifdef __cplusplus
+#include <string>
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -55,10 +59,12 @@ namespace Coaster {
 }
 
 typedef class Coaster::Settings coaster_settings;
+typedef std::string coaster_config_id;
 typedef class Coaster::Job coaster_job;
 #else
 // Treat these types as opaque pointer to unimplemented struct for C
 typedef struct coaster_settings_opaque_ coaster_settings;
+typedef struct coaster_config_id_opaque_ coaster_config_id;
 typedef struct coaster_job_opaque_ coaster_job;
 #endif
 
@@ -177,11 +183,17 @@ coaster_settings_keys(coaster_settings *settings,
  * Apply settings to started coasters client.
  * TODO: currently it isn't safe to free settings until client is shut
  *       down
+ *
+ * config: set to identifer for this service config, must be freed with
+ *     coaster_free_config_id
  */
 coaster_rc
 coaster_apply_settings(coaster_client *client,
-                                  coaster_settings *settings)
+        coaster_settings *settings, coaster_config_id **config)
                                   COASTER_THROWS_NOTHING;
+
+coaster_rc
+coaster_config_id_free(coaster_config_id *config) COASTER_THROWS_NOTHING;
 
 /*
  * Create a new coasters job for later submission.
@@ -303,8 +315,8 @@ coaster_job_get_outstreams(const coaster_job *job,
  * shuts down.
  */
 coaster_rc
-coaster_submit(coaster_client *client, coaster_job *job)
-                COASTER_THROWS_NOTHING;
+coaster_submit(coaster_client *client, const coaster_config_id *config,
+               coaster_job *job) COASTER_THROWS_NOTHING;
 
 /*
  * Check for completion of jobs.

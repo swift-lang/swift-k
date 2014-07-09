@@ -67,15 +67,17 @@ class CoasterClient: public CommandCallback {
 		void stop();
 		
 		// TODO: how long does this hold a reference to settings?
-		std::string* setOptions(Settings& settings);
+		std::string setOptions(Settings& settings);
 
 		/*
 		 * Submit a job.  The job should have been filled in with
 		 * all properties.  The ownership of the job object stays
 		 * with the caller, but this client will retain a reference
 		 * to the job until done jobs are purged.
+                 *
+                 * configId: if non-null, uses specific server-side config
 		 */
-		void submit(Job& job);
+		void submit(Job& job, const std::string* configId);
 
 		/*
 		 * Wait for job to be done.  Upon completion no actions

@@ -299,20 +299,28 @@ coaster_settings_free(coaster_settings *settings)
  */
 coaster_rc
 coaster_apply_settings(coaster_client *client,
-                                  coaster_settings *settings)
+        coaster_settings *settings, coaster_config_id **config)
                                   COASTER_THROWS_NOTHING {
-  if (settings == NULL || client == NULL) {
+  if (settings == NULL || client == NULL || config == NULL) {
     return coaster_return_error(COASTER_ERROR_INVALID, "invalid arg");
   }
 
   try {
-    client->client.setOptions(*settings);
+    string *configId = new string;
+    *configId = client->client.setOptions(*settings);
+    *config = configId;
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
   } catch (const std::exception& ex) {
     return exception_rc(ex);
   }
+}
+
+coaster_rc
+coaster_config_id_free(coaster_config_id *config) COASTER_THROWS_NOTHING {
+  delete config;
+  return COASTER_SUCCESS;
 }
 
 coaster_rc
@@ -595,10 +603,10 @@ coaster_job_get_outstreams(const coaster_job *job,
 }
 
 coaster_rc
-coaster_submit(coaster_client *client, coaster_job *job)
-                COASTER_THROWS_NOTHING {
+coaster_submit(coaster_client *client, const coaster_config_id *config,
+               coaster_job *job) COASTER_THROWS_NOTHING {
   try {
-    client->client.submit(*job);
+    client->client.submit(*job, config);
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);

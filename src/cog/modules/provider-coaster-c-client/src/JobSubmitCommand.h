@@ -13,7 +13,8 @@ class JobSubmitCommand: public Command {
 	private:
 		Job* job;
 		std::string ss;
-		std::string* configId;
+                bool haveConfigId;
+		std::string configId;
 	public:
 		static std::string NAME;
 		JobSubmitCommand(Job* job, const std::string* configId);

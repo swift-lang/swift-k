@@ -28,15 +28,15 @@ int main(void) {
 		s.set(Settings::Key::MAX_NODES, "1");
 		s.set(Settings::Key::JOBS_PER_NODE, "2");
 
-		std::string* configId = client.setOptions(s);
+		std::string configId = client.setOptions(s);
 
 		Job j1("/bin/date");
 		Job j2("/bin/echo");
 		j2.addArgument("testing");
 		j2.addArgument("1, 2, 3");
 
-		client.submit(j1, configId);
-		client.submit(j2, configId);
+		client.submit(j1, &configId);
+		client.submit(j2, &configId);
 
 		client.waitForJob(j1);
 		client.waitForJob(j2);
