@@ -14,4 +14,7 @@ GROUPLIST=( # Site testing test-group
             $TESTDIR/sites/bridled \
           )
 
+GROUPLIST=( $TESTDIR/sites/communicado \
+            $TESTDIR/sites/bridled \
+          )
 checkvars WORK

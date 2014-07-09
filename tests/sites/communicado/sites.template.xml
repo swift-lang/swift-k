@@ -10,7 +10,7 @@
     <profile namespace="globus" key="maxWalltime">01:05:00</profile>
     <profile namespace="karajan" key="jobThrottle">0.0799</profile>
     <profile namespace="karajan" key="initialScore">10000</profile>
-    <profile namespace="globus" key="userHomeOverride">/home/{env.USER}/swiftwork</profile>
     <workdirectory>/home/{env.USER}/swiftwork</workdirectory>
   </pool>
+
 </config>

@@ -85,7 +85,7 @@ foreach site, i in sites {
         (out[i], err[i], log[i]) = remote_mcs     (wrapper, swift_package);
 	case 4:
         tracef("Skipping Frisbee on MCS (Will fail due to BUG:1030)\n");
-		//(out[i], err[i], log[i]) = remote_frisbee (wrapper, swift_package);
+		(out[i], err[i], log[i]) = remote_frisbee (wrapper, swift_package);
 	case 5:
         tracef("Calling Blues\n");
     	(out[i], err[i], log[i]) = remote_blues   (wrapper, swift_package);

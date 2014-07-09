@@ -35,3 +35,5 @@ then
    export GLOBUS_HOSTNAME=swift.rcc.uchicago.edu
    export GLOBUS_TCP_PORT_RANGE=50000,51000
 fi;
+
+export PATH=$PWD/tutorial/app:$PATH

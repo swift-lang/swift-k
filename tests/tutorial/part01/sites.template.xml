@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
+
+<pool handle="local">
+<filesystem provider="local"/>
+<profile namespace="karajan" key="jobThrottle">0.03</profile>
+<workdirectory>/tmp/yadunand/swiftwork</workdirectory>
+<execution provider="coaster" jobmanager="local:local"/>
+<profile namespace="globus" key="jobsPerNode">4</profile>
+<profile namespace="karajan" key="initialScore">10000</profile>
+</pool>
+
+</config>
