@@ -9,7 +9,6 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +24,7 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Types;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class Tracer {
     public static final Logger logger = Logger.getLogger("TRACE");
@@ -34,12 +33,7 @@ public class Tracer {
     private ThreadLocal<String> thread = new ThreadLocal<String>();
     
     static {
-        try {
-            globalTracingEnabled = VDL2Config.getConfig().isTracingEnabled();
-        }
-        catch (IOException e) {
-            globalTracingEnabled = false;
-        }
+        globalTracingEnabled = SwiftConfig.getDefault().isTracingEnabled();
         NAME_MAPPINGS = new HashMap<String, String>();
         NAME_MAPPINGS.put("assignment", "ASSIGN");
         NAME_MAPPINGS.put("iterate", "ITERATE");

@@ -20,7 +20,6 @@
  */
 package org.griphyn.vdl.karajan;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,15 +33,16 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.scheduler.TaskTransformer;
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.Contact;
-import org.griphyn.vdl.util.VDL2Config;
+import org.globus.swift.catalog.site.SwiftContact;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class VDSTaskTransformer implements TaskTransformer {
 	public static final Logger logger = Logger.getLogger(VDSTaskTransformer.class);
 
 	private TaskTransformer impl;
 
-	public VDSTaskTransformer() {
-		this.impl = new SwiftTransformer();
+	public VDSTaskTransformer(SwiftConfig config) {
+		this.impl = new SwiftTransformer(config);
 	}
 
 	public void transformTask(Task task, Contact[] contacts, Service[] services) {
@@ -50,8 +50,13 @@ public class VDSTaskTransformer implements TaskTransformer {
 	}
 
 	public static abstract class AbstractTransformer implements TaskTransformer {
+		private SwiftConfig config;
 
-		public void transformTask(Task task, Contact[] contacts, Service[] services) {
+        public AbstractTransformer(SwiftConfig config) {
+		    this.config = config;
+        }
+
+        public void transformTask(Task task, Contact[] contacts, Service[] services) {
 			if (task.getType() == Task.JOB_SUBMISSION) {
 				applyJobWorkDirectory(task, contacts);
 			}
@@ -117,7 +122,7 @@ public class VDSTaskTransformer implements TaskTransformer {
 		private void applyJobWorkDirectory(Task task, Contact[] contacts) {
 			JobSpecification spec = (JobSpecification) task.getSpecification();
 			String dir = spec.getDirectory();
-			BoundContact bc = (BoundContact) contacts[0];
+			SwiftContact bc = (SwiftContact) contacts[0];
 			String workdir = (String) bc.getProperty("workdir");
             
             if (workdir==null){
@@ -141,24 +146,24 @@ public class VDSTaskTransformer implements TaskTransformer {
 			// undergo this substitution...
 			String executable = l.get(0);
 
-			try {
-				VDL2Config config = VDL2Config.getConfig();
+			String mode = (String) bc.getProperty(SwiftConfig.Key.WRAPPER_INVOCATION_MODE.propName);
+			if (mode == null) {
+			    mode = config.getWrapperInvocationMode();
+			}
+			if (mode.equals("absolute")
+			        && (executable.endsWith("shared/_swiftwrap")
+			        || executable.endsWith("shared/_swiftseq"))) {
 
-				if (config.getProperty("wrapper.invocation.mode", bc).equals("absolute")
-				        && (executable.endsWith("shared/_swiftwrap")
-				        || executable.endsWith("shared/_swiftseq"))) {
-
-				    String s  = spec.getDirectory() + "/" + executable;
-				    l.set(0, s);
-				}
-			} 
-			catch(IOException ioe) {
-				throw new RuntimeException("Could not determine wrapper invocation mode", ioe);
+			    String s  = spec.getDirectory() + "/" + executable;
+			    l.set(0, s);
 			}
 		}
 
 	}
 
 	public static class SwiftTransformer extends AbstractTransformer {
+        public SwiftTransformer(SwiftConfig config) {
+            super(config);
+        }
 	}
 }

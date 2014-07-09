@@ -28,22 +28,11 @@ import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class Operators {
 	
-	public static final boolean PROVENANCE_ENABLED;
-	
-	static {
-		boolean v;
-		try {
-		    v = VDL2Config.getConfig().getProvenanceLog();
-		}
-		catch (Exception e) {
-			v = false;
-		}
-		PROVENANCE_ENABLED = v;
-	}
+	public static final boolean PROVENANCE_ENABLED = SwiftConfig.getDefault().isProvenanceEnabled();
 
 	public static final Logger provenanceLogger = Logger.getLogger("org.globus.swift.provenance.operators");
 

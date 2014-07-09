@@ -10,25 +10,46 @@
 package org.griphyn.vdl.util;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public abstract class ConfigPropertyType {
-    public static final ConfigPropertyType BOOLEAN = choices("true", "false");
-    public static final ConfigPropertyType ONOFF = choices("on", "off");
-    public static final ConfigPropertyType STRING = new CPTString();
-    public static final ConfigPropertyType INT = new Int();
-    public static final ConfigPropertyType FLOAT = new CPTFloat();
-    public static final ConfigPropertyType FILE = new CPTFile();
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
+import org.globus.swift.catalog.types.Arch;
+import org.globus.swift.catalog.types.Os;
+
+public abstract class ConfigPropertyType<T> {
+    public static final ConfigPropertyType<Boolean> BOOLEAN = new CPTBoolean();
+    public static final ConfigPropertyType<String> STRING = new CPTString();
+    public static final ConfigPropertyType<Integer> INT = new Int();
+    public static final ConfigPropertyType<Object> THROTTLE = new Throttle();
+    public static final ConfigPropertyType<String> PORT_RANGE = new PortRange();
+    public static final ConfigPropertyType<Integer> STRICTLY_POSITIVE_INT = new SPInt();
+    public static final ConfigPropertyType<Integer> POSITIVE_INT = new PInt();
+    public static final ConfigPropertyType<Double> POSITIVE_FLOAT = new PFloat();
+    public static final ConfigPropertyType<Double> FLOAT = new CPTFloat();
+    public static final ConfigPropertyType<String> FILE = new CPTFile();
+    public static final ConfigPropertyType<String> TIME = new CPTTime();
+    public static final ConfigPropertyType<Object> OBJECT = new CPTObject();
+    public static final ConfigPropertyType<Object> STRING_LIST = new StringList();
+    public static final ConfigPropertyType<String> OS = new CPTOS();
     
-    public static ConfigPropertyType choices(String... values) {
+    public static ConfigPropertyType<String> choices(String... values) {
         return new Choices(values);
     }
     
-    public abstract void checkValue(String propName, String value, String source);
+    @SuppressWarnings("unchecked")
+    public Object check(String propName, Object value, String source) {
+        return checkValue(propName, (T) value, source);
+    }
     
+    public abstract Object checkValue(String propName, T value, String source);
+    
+    public abstract ConfigPropertyType<?> getBaseType();
+        
     private static String pp(Collection<String> c) {
         StringBuilder sb = new StringBuilder();
         Iterator<String> i = c.iterator();
@@ -43,8 +64,8 @@ public abstract class ConfigPropertyType {
         return sb.toString();
     }
     
-    private static class Choices extends ConfigPropertyType {
-        private SortedSet<String> choices;
+    public static class Choices extends ConfigPropertyType<String> {
+        protected SortedSet<String> choices;
         
         public Choices(String... values) {
             choices = new TreeSet<String>();
@@ -54,55 +75,343 @@ public abstract class ConfigPropertyType {
         }
 
         @Override
-        public void checkValue(String propName, String value, String source) {
+        public Object checkValue(String propName, String value, String source) {
             if (!choices.contains(value)) {
                 throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Valid values are: " + pp(choices));
             }
+            return value;
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return STRING;
+        }
+
+        @Override
+        public String toString() {
+            return "one of " + choices;
         }
     }
     
-    private static class CPTString extends ConfigPropertyType {
+    private static class CPTOS extends Choices {
+        public CPTOS() {
+            super();
+            int ix = 0;
+            for (Arch a : Arch.values()) {
+                for (Os o : Os.values()) {
+                    choices.add(a + "::" + o);
+                }
+            }
+        }
+    }
+    
+    private static class CPTString extends ConfigPropertyType<String> {
         @Override
-        public void checkValue(String propName, String value, String source) {
+        public Object checkValue(String propName, String value, String source) {
             // all values accepted
+            return value;
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return STRING;
+        }
+        
+        @Override
+        public String toString() {
+            return "string";
         }
     }
     
-    private static class Int extends ConfigPropertyType {
+    private static class Int extends ConfigPropertyType<Integer> {
         @Override
-        public void checkValue(String propName, String value, String source) {
-            try {
-                Integer.parseInt(value);
-            }
-            catch (NumberFormatException e) {
+        public Object checkValue(String propName, Integer value, String source) {
+            return value;
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return INT;
+        }
+        
+        @Override
+        public String toString() {
+            return "integer";
+        }
+    }
+    
+    private static class CPTBoolean extends ConfigPropertyType<Boolean> {
+        @Override
+        public Object checkValue(String propName, Boolean value, String source) {
+            return value;
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return BOOLEAN;
+        }
+        
+        @Override
+        public String toString() {
+            return "boolean";
+        }
+    }
+    
+    private static class SPInt extends ConfigPropertyType<Integer> {
+        @Override
+        public Object checkValue(String propName, Integer value, String source) {
+            if (value <= 0) {
                 throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
-                    propName + "'. Must be an integer");
+                propName + "'. Must be a " + toString());
             }
+            return value;
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return INT;
+        }
+        
+        @Override
+        public String toString() {
+            return "strictly positive integer";
         }
     }
     
-    private static class CPTFloat extends ConfigPropertyType {
+    private static class PInt extends ConfigPropertyType<Integer> {
         @Override
-        public void checkValue(String propName, String value, String source) {
-            try {
-                Double.parseDouble(value);
-            }
-            catch (NumberFormatException e) {
+        public Object checkValue(String propName, Integer value, String source) {
+            if (value < 0) {
                 throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
-                    propName + "'. Must be a floating point number.");
+                propName + "'. Must be a " + toString());
             }
+            return value;
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return INT;
+        }
+        
+        @Override
+        public String toString() {
+            return "positive integer";
+        }
+    }
+
+    
+    private static class Throttle extends ConfigPropertyType<Object> {
+        @Override
+        public Object checkValue(String propName, Object value, String source) {
+            if ("off".equals(value)) {
+                return Integer.MAX_VALUE;
+            }
+            else if (value instanceof Integer) {
+                Integer i = (Integer) value;
+                if (i > 0) {
+                    return i;
+                }
+            }
+            throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                propName + "'. Must be an " + toString());
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return INT;
+        }
+        
+        @Override
+        public String toString() {
+            return "integer greater than zero or \"off\"";
         }
     }
     
-    private static class CPTFile extends ConfigPropertyType {
+    private static class PFloat extends ConfigPropertyType<Double> {
         @Override
-        public void checkValue(String propName, String value, String source) {
+        public Object checkValue(String propName, Double value, String source) {
+            if (value < 0) {
+                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                propName + "'. Must be a " + toString());
+            }
+            return value;
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return FLOAT;
+        }
+        
+        @Override
+        public String toString() {
+            return "positive number";
+        }
+    }
+    
+    private static class CPTFloat extends ConfigPropertyType<Double> {
+        @Override
+        public Object checkValue(String propName, Double value, String source) {
+            return value;
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return FLOAT;
+        }
+    }
+    
+    public static class Interval extends ConfigPropertyType<Double> {
+        private double l, h;
+        
+        public Interval(double l, double h) {
+            this.l = l;
+            this.h = h;
+        }
+        
+        @Override
+        public Object checkValue(String propName, Double value, String source) {
+            if (value < l || value > h) {
+                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                    propName + "'. Must be a " + toString());
+            }
+            return value;
+        }
+        
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return FLOAT;
+        }
+
+        @Override
+        public String toString() {
+            return "floating point number in the interval [" + l + ", " + h + "]";
+        }
+    }
+    
+    private static class CPTTime extends ConfigPropertyType<String> {
+        @Override
+        public Object checkValue(String propName, String value, String source) {
+            try {
+                WallTime.timeToSeconds(value);
+            }
+            catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(source + ":\n\tInvalid time value '" + value + "' for property '" + 
+                    propName + "'. Mist be a " + toString());
+            }
+            return value;
+        }
+        
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return STRING;
+        }
+        
+        @Override
+        public String toString() {
+            return "string in one of the formats MM, HH:MM, or HH:MM:SS";
+        }
+    }
+    
+    private static class PortRange extends ConfigPropertyType<String> {
+        @Override
+        public Object checkValue(String propName, String value, String source) {
+            String[] els = value.split(",\\s*");
+            if (els.length == 2) {
+                try {
+                    Integer.parseInt(els[0]);
+                    Integer.parseInt(els[1]);
+                    return value;
+                }
+                catch (NumberFormatException e) {
+                }
+            }
+            throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                    propName + "'. Must be a " + toString());
+        }
+        
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return STRING;
+        }
+        
+        @Override
+        public String toString() {
+            return "port range in the format 'port1, port2'";
+        }
+    }
+    
+    private static class CPTFile extends ConfigPropertyType<String> {
+        @Override
+        public Object checkValue(String propName, String value, String source) {
             File f = new File(value);
             if (!f.exists()) {
                 throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. File does not exist.");
             }
+            return value;
+        }
+                
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return STRING;
+        }
+
+        @Override
+        public String toString() {
+            return "file path";
+        }
+    }
+    
+    private static class CPTObject extends ConfigPropertyType<Object> {
+        @Override
+        public Object checkValue(String propName, Object value, String source) {
+            return value;
+        }
+        
+        
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return OBJECT;
+        }
+        
+        @Override
+        public String toString() {
+            return "object";
+        }
+    }
+    
+    private static class StringList extends ConfigPropertyType<Object> {
+        @Override
+        public Object checkValue(String propName, Object value, String source) {
+            if (value instanceof List) {
+                List<?> l = (List<?>) value;
+                boolean allStrings = true;
+                for (Object o : l) {
+                    if (!(o instanceof String)) {
+                        allStrings = false;
+                    }
+                }
+                if (allStrings) {
+                    return value;
+                }
+            }
+            else if (value instanceof String) {
+                // also allow comma separated strings in a string
+                return Arrays.asList(((String) value).split(",\\s*"));
+            }
+            throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                    propName + "'. Must be a " + toString());
+        }
+        
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return OBJECT;
+        }
+        
+        @Override
+        public String toString() {
+            return "list of strings";
         }
     }
 }

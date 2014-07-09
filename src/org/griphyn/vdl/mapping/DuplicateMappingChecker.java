@@ -16,8 +16,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
-import org.griphyn.vdl.util.VDL2Config;
-import org.griphyn.vdl.util.VDL2ConfigProperties;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class DuplicateMappingChecker {
     public static final Logger logger = Logger.getLogger(DuplicateMappingChecker.class);
@@ -26,13 +25,8 @@ public class DuplicateMappingChecker {
     
     private final Map<PhysicalFormat, Entry> map;
     
-    public DuplicateMappingChecker(VDL2Config conf) {
-    	if (conf == null) {
-    		enabled = true;
-    	}
-    	else {
-    	    enabled = !"off".equals(conf.getProperty(VDL2ConfigProperties.DM_CHECKER));
-    	}
+    public DuplicateMappingChecker(SwiftConfig conf) {
+        enabled = conf.isMappingCheckerEnabled();
         map = new HashMap<PhysicalFormat, Entry>();
     }
     

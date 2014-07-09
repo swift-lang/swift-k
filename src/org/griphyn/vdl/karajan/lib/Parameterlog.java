@@ -20,6 +20,7 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import k.rt.Context;
 import k.rt.Stack;
 import k.thr.LWThread;
 
@@ -29,11 +30,10 @@ import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.karajan.functions.ConfigProperty;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class Parameterlog extends InternalFunction {
     public static final Logger logger = Logger.getLogger(Parameterlog.class);
@@ -48,12 +48,12 @@ public class Parameterlog extends InternalFunction {
     }
 
     private Boolean enabled;
-    private VarRef<VDL2Config> config;
+    private VarRef<Context> context;
     
     @Override
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
-        config = scope.getVarRef("SWIFT_CONFIG");
+        context = scope.getVarRef("#context");
         return super.compileBody(w, argScope, scope);
     }
 
@@ -65,7 +65,9 @@ public class Parameterlog extends InternalFunction {
         boolean run;
         synchronized(this) {
             if (enabled == null) {
-                enabled = "true".equals(ConfigProperty.getProperty("provenance.log", true, config.getValue(stack)));
+                Context ctx = this.context.getValue(stack);
+                SwiftConfig config = (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
+                enabled = config.isProvenanceEnabled();
             }
             run = enabled;
         }

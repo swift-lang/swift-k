@@ -18,7 +18,6 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Map;
@@ -45,24 +44,13 @@ import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Types;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class Misc {
 
 	private static final Logger logger = Logger.getLogger(Misc.class);
 	
-	public static final boolean PROVENANCE_ENABLED;
-	
-	static {
-		boolean v;
-		try {
-            v = VDL2Config.getConfig().getProvenanceLog();
-        }
-        catch (IOException e) {
-            v = false;
-        }
-        PROVENANCE_ENABLED = v;
-	}
+	public static final boolean PROVENANCE_ENABLED = SwiftConfig.getDefault().isProvenanceEnabled();
 
 	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
 	

@@ -33,10 +33,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-import org.globus.swift.data.policy.Policy;
 import org.globus.swift.data.policy.Broadcast;
+import org.globus.swift.data.policy.Policy;
 import org.globus.swift.data.util.LineReader;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 /**
  * Manages CDM policies for files based on pattern matching.
@@ -103,21 +103,19 @@ public class Director {
     /**
        Read in the user-supplied CDM policy file.
     */
-    public static void load(File file) throws IOException {
+    public static void load(File file, SwiftConfig config) throws IOException {
         logger.debug("CDM file: " + file);
         Director.policyFile = file;
         List<String> list = LineReader.read(file);
         for (String s : list)
             addLine(s);
-        init();
+        init(config);
     }
 
-    static void init() throws IOException
-    {
-        VDL2Config config = VDL2Config.getConfig();
-        
-        broadcastMode = config.getProperty("cdm.broadcast.mode");
-        logfile = config.getProperty("logfile");
+    static void init(SwiftConfig config) throws IOException
+    {        
+        broadcastMode = config.getStringProperty("cdm.broadcast.mode");
+        logfile = config.getStringProperty("logfile");
         
         if (broadcastMode.equals("file")) 
             broadcasted.put("LOCAL_FILE", new HashSet<String>());
@@ -313,7 +311,7 @@ public class Director {
                 logger.debug("Policy file does not exist: " +
                     args[1]);
             }
-            load(policyFile);
+            load(policyFile, SwiftConfig.getDefault());
             Policy policy = lookup(name);
             logger.debug(name + ": " + policy);
         } catch (Exception e) {

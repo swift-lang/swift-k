@@ -20,7 +20,6 @@
  */
 package org.griphyn.vdl.mapping.nodes;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -44,7 +43,7 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 
 
@@ -79,11 +78,7 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     
     public static boolean provenance = false;
     static {
-        try {
-        	provenance = VDL2Config.getConfig().getProvenanceLog();
-        }
-        catch (IOException e) {
-        }
+       	provenance = SwiftConfig.getDefault().isProvenanceEnabled();
     }
     
     protected Field field;

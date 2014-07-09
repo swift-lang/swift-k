@@ -52,6 +52,7 @@ import org.globus.cog.karajan.util.Contact;
 import org.globus.cog.karajan.util.ContactSet;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.swift.catalog.site.SwiftContact;
+import org.griphyn.vdl.util.SwiftConfig;
 
 
 public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements CoasterResourceTracker {
@@ -78,7 +79,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 		serviceContactMapping = new HashMap<Service, BoundContact>();
 	}
 
-	public static final String PROP_TC_FILE = "transformationCatalogFile";
+	public static final String PROP_CONFIG = "config";
 	public static final String PROP_CLUSTERING_ENABLED = "clusteringEnabled";
 	public static final String PROP_CLUSTERING_QUEUE_DELAY = "clusteringQueueDelay";
 	public static final String PROP_CLUSTERING_MIN_TIME = "clusteringMinTime";
@@ -88,15 +89,15 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 	public synchronized String[] getPropertyNames() {
 		if (propertyNames == null) {
 			propertyNames = AbstractScheduler.combineNames(super.getPropertyNames(),
-					new String[] { PROP_TC_FILE });
+					new String[] { PROP_CONFIG });
 		}
 		return propertyNames;
 	}
 
 	public void setProperty(String name, Object value) {
-		if (PROP_TC_FILE.equals(name)) {
+		if (PROP_CONFIG.equals(name)) {
 			this.setConstraintChecker(new SwiftSiteChecker());
-			this.addTaskTransformer(new VDSTaskTransformer());
+			this.addTaskTransformer(new VDSTaskTransformer((SwiftConfig) value));
 		}
 		else if (PROP_CLUSTERING_QUEUE_DELAY.equals(name)) {
 			clusteringQueueDelay = TypeUtil.toInt(value);

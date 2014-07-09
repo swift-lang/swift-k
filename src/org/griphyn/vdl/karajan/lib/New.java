@@ -59,9 +59,7 @@ public class New extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(New.class);
 	
 	private static final Mapper NULL_MAPPER = new NullMapper();
-	
-	private static DuplicateMappingChecker staticDMC = new DuplicateMappingChecker(null);
-	
+		
 	private ArgRef<Field> field;
 	private ArgRef<GenericMappingParamSet> mapping;
 	private ArgRef<Object> value;

@@ -49,4 +49,11 @@ public class SwiftContactSet extends ContactSet {
         }
         return app;
     }
+
+    public Map<String, Application> getApplications() {
+        if (apps == null) {
+            apps = new HashMap<String, Application>();
+        }
+        return apps;
+    }
 }

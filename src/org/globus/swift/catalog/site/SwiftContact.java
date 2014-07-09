@@ -55,16 +55,31 @@ public class SwiftContact extends BoundContact {
     public void setSiteCatalog(SwiftContactSet siteCatalog) {
         this.siteCatalog = siteCatalog;
     }
+    
+    /**
+     * Get an application with the specified tr. Only this site
+     * is searched. Returns <code>null</code> if not found.
+     */
+    public Application getApplication(String tr) {
+        if (apps == null) {
+            return null;
+        }
+        else {
+            return apps.get(tr);
+        }
+    }
 
+    /**
+     * Find apps by searching in the following order:
+     * <ol>
+     *  <li>host:tr</li>
+     *  <li>host:*</li>
+     *  <li>pool:tr</li>
+     *  <li>pool:*</li>
+     * </ol>
+     */
     public Application findApplication(String tr) {
-        /*
-         * Find apps in the following order:
-         * host:tr
-         * host:*
-         * pool:tr
-         * pool:*
-         */
-        
+
         Application app = null;
         if (apps != null) {
             app = apps.get(tr);

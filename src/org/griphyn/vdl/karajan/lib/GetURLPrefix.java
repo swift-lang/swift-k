@@ -27,8 +27,7 @@ import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
-import org.griphyn.vdl.karajan.functions.ConfigProperty;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class GetURLPrefix extends AbstractSingleValuedFunction {
     private VarRef<Context> context;
@@ -49,8 +48,8 @@ public class GetURLPrefix extends AbstractSingleValuedFunction {
     @Override
     public Object function(Stack stack) {
         Context ctx = this.context.getValue(stack);
-        String localServerBase = ConfigProperty.getProperty("wrapper.staging.local.server", 
-            (VDL2Config) ctx.getAttribute("SWIFT:CONFIG"));
+        SwiftConfig config = (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
+        String localServerBase = config.getWrapperStagingLocalServer();
         String cwd = this.cwd.getValue(stack);
         
         if (cwd.endsWith("/.")) {

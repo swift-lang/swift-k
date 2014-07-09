@@ -17,7 +17,6 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -56,24 +55,12 @@ import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public abstract class SwiftFunction extends AbstractFunction {
 	public static final Logger logger = Logger.getLogger(SwiftFunction.class);
 	
-	public static final boolean PROVENANCE_ENABLED;
-    
-    static {
-        boolean v;
-        try {
-            v = VDL2Config.getConfig().getProvenanceLog();
-        }
-        catch (IOException e) {
-            v = false;
-        }
-        PROVENANCE_ENABLED = v;
-    }
-
+	public static final boolean PROVENANCE_ENABLED = SwiftConfig.getDefault().isProvenanceEnabled();
 
 	private VarRef<Context> context;
 	

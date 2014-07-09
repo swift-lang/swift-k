@@ -76,7 +76,10 @@ public class ProcessBulkErrors extends AbstractFunction {
 		VDL2ErrorTranslator translator = VDL2ErrorTranslator.getDefault();
 
 		Map<String, Integer> count = new HashMap<String, Integer>();
-		for (ExecutionException ex : l) {	
+		for (ExecutionException ex : l) {
+		    if (ex == null) {
+		        continue;
+		    }
 			if (ex.getCause() instanceof ConcurrentModificationException) {
 				ex.printStackTrace();
 			}

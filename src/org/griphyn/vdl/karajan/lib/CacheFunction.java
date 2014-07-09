@@ -26,14 +26,12 @@ import k.rt.Stack;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.karajan.functions.ConfigProperty;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCacheFactory;
-import org.griphyn.vdl.util.VDL2Config;
-import org.griphyn.vdl.util.VDL2ConfigProperties;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public abstract class CacheFunction extends InternalFunction {
 	public static final String CACHE_FILES_TO_REMOVE = "cacheFilesToRemove";
@@ -62,8 +60,8 @@ public abstract class CacheFunction extends InternalFunction {
         synchronized(ctx) {
             VDLFileCache cache = (VDLFileCache) ctx.getAttribute("SWIFT:FILE_CACHE");
             if (cache == null) {
-                cache = VDLFileCacheFactory.newInstance(ConfigProperty.getProperty(
-                    VDL2ConfigProperties.CACHING_ALGORITHM, (VDL2Config) ctx.getAttribute("SWIFT:CONFIG")));
+                SwiftConfig conf = (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
+                cache = VDLFileCacheFactory.newInstance(conf.getCachingAlgorithm());
                 ctx.setAttribute("SWIFT:FILE_CACHE", cache);
             }
             return cache;

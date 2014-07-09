@@ -17,7 +17,6 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 
 import k.rt.Context;
-import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
 
@@ -42,25 +40,14 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 /** this is an icky class that does too much with globals, but is for
 proof of concept. */
 
 public class RuntimeStats {
 
-    public static final boolean TICKER_DISABLED;
-    
-    static{
-        boolean disabled;
-        try{
-            disabled = "true".equalsIgnoreCase(VDL2Config.getConfig().getProperty("ticker.disable"));
-        }
-        catch (Exception e) {
-            disabled = false;
-        }
-        TICKER_DISABLED = disabled;
-    }
+    public static final boolean TICKER_DISABLED = !SwiftConfig.getDefault().isTickerEnabled();
     
 	public static final String TICKER = "SWIFT_TICKER";
 
@@ -105,13 +92,7 @@ public class RuntimeStats {
             t.start();
             context.getValue(thr.getStack()).setAttribute(TICKER, t);
             // Allow user to reformat output date
-            String format;
-            try {
-                format = VDL2Config.getDefaultConfig().getTickerDateFormat();
-            } 
-            catch (IOException e) {
-                throw new ExecutionException(this, e);
-            }
+            String format = SwiftConfig.getDefault().getTickerDateFormat();
             if (format != null && format.length() > 0) {
                 formatter = new SimpleDateFormat(format);
             }
@@ -253,17 +234,11 @@ public class RuntimeStats {
 		public ProgressTicker() {
 			super("Progress ticker");
 			states = new HashSet<ProgressState>();
-			try {
-				if ("true".equalsIgnoreCase(VDL2Config.getConfig().getProperty("ticker.disable"))) {
-					logger.info("Ticker disabled in configuration file");
-					disabled = true;
-				}
-				tickerPrefix = 
-					VDL2Config.getConfig().getTickerPrefix();
+			if (!SwiftConfig.getDefault().isTickerEnabled()) {
+				logger.info("Ticker disabled in configuration file");
+				disabled = true;
 			}
-			catch (IOException e) {
-				logger.debug("Could not read swift properties", e);
-			}
+			tickerPrefix =SwiftConfig.getDefault().getTickerPrefix();
 			start = System.currentTimeMillis();
 		}
 		

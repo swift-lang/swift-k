@@ -52,7 +52,7 @@ import org.globus.cog.karajan.scheduler.Scheduler;
 import org.griphyn.vdl.karajan.lib.RuntimeStats.ProgressState;
 import org.griphyn.vdl.karajan.lib.replication.CanceledReplicaException;
 import org.griphyn.vdl.karajan.lib.replication.ReplicationManager;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class Execute extends GridExec {
 	public static final Logger logger = Logger.getLogger(Execute.class);
@@ -66,6 +66,7 @@ public class Execute extends GridExec {
 	private VarRef<Context> context;
 	
 	private boolean replicationEnabled;
+	private SwiftConfig config;
 	
 	@Override
     protected Signature getSignature() {
@@ -103,8 +104,8 @@ public class Execute extends GridExec {
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
         context = scope.getVarRef("#context");
-        VDL2Config config = (VDL2Config) context.getValue().getAttribute("SWIFT:CONFIG");
-        replicationEnabled = "true".equals(config.getProperty("replication.enabled"));
+        config = (SwiftConfig) context.getValue().getAttribute("SWIFT:CONFIG");
+        replicationEnabled = config.isReplicationEnabled();
     }
 
     @Override
@@ -232,7 +233,7 @@ public class Execute extends GridExec {
 		synchronized (ctx) {
 			ReplicationManager rm = (ReplicationManager) ctx.getAttribute("#replicationManager");
 			if (rm == null) {
-				rm = new ReplicationManager(getScheduler(stack));
+				rm = new ReplicationManager(getScheduler(stack), config);
 				ctx.setAttribute("#replicationManager", rm);
 			}
 			return rm;

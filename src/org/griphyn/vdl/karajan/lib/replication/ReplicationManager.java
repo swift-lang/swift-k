@@ -29,7 +29,7 @@ import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.scheduler.Scheduler;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class ReplicationManager {
     public static final Logger logger = Logger
@@ -52,19 +52,15 @@ public class ReplicationManager {
     private ReplicationGroups replicationGroups;
     private Scheduler scheduler;
 
-    public ReplicationManager(Scheduler scheduler) {
+    public ReplicationManager(Scheduler scheduler, SwiftConfig config) {
         this.replicationGroups = new ReplicationGroups(scheduler);
         this.scheduler = scheduler;
         queued = new HashMap<Task, Date>();
         running = new HashMap<Task, Date>();
         try {
-            minQueueTime = Integer.parseInt(VDL2Config.getConfig().getProperty(
-                    "replication.min.queue.time"));
-            enabled = Boolean.valueOf(
-                    VDL2Config.getConfig().getProperty("replication.enabled"))
-                    .booleanValue();
-            limit = Integer.parseInt(VDL2Config.getConfig().getProperty(
-                    "replication.limit"));
+            minQueueTime = config.getReplicationMinQueueTime();
+            enabled = config.isReplicationEnabled();
+            limit = config.getReplicationLimit();
         }
         catch (Exception e) {
             logger.warn(

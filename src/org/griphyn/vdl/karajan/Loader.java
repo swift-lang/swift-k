@@ -35,9 +35,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,9 +69,8 @@ import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.IncorrectInvocationException;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
 import org.griphyn.vdl.util.LazyFileAppender;
-import org.griphyn.vdl.util.VDL2Config;
-import org.griphyn.vdl.util.VDL2ConfigProperties;
-import org.griphyn.vdl.util.VDL2ConfigProperties.PropInfo;
+import org.griphyn.vdl.util.SwiftConfig;
+import org.griphyn.vdl.util.SwiftConfigSchema;
 
 public class Loader extends org.globus.cog.karajan.Loader {
     private static final Logger logger = Logger.getLogger(Loader.class);
@@ -78,18 +79,37 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_VERSION = "version";
     public static final String ARG_RESUME = "resume";
     public static final String ARG_INSTANCE_CONFIG = "config";
+    public static final String ARG_SITELIST = "sitelist";
+    public static final String ARG_SITES_FILE = "sites.file";
+    public static final String ARG_TC_FILE = "tc.file";
     public static final String ARG_DRYRUN = "dryrun";
     public static final String ARG_VERBOSE = "verbose";
     public static final String ARG_DEBUG = "debug";
     public static final String ARG_LOGFILE = "logfile";
-    public static final String ARG_CDMFILE = "cdm.file";
+    public static final String ARG_CDMFILE = "cdmfile";
     public static final String ARG_RUNID = "runid";
     public static final String ARG_UI = "ui";
     public static final String ARG_RECOMPILE = "recompile";
-    public static final String ARG_REDUCED_LOGGING = "reduced.logging";
-    public static final String ARG_MINIMAL_LOGGING = "minimal.logging";
-    public static final String ARG_PAUSE_ON_START = "pause.on.start";
+    public static final String ARG_REDUCED_LOGGING = "reducedLogging";
+    public static final String ARG_MINIMAL_LOGGING = "minimalLogging";
+    public static final String ARG_PAUSE_ON_START = "pauseOnStart";
     public static final String ARG_EXECUTE = "e";
+    
+    public static final List<String> CMD_LINE_OPTIONS;
+    
+    static {
+        CMD_LINE_OPTIONS = new ArrayList<String>();
+        CMD_LINE_OPTIONS.add("hostName");
+        CMD_LINE_OPTIONS.add("TCPPortRange");
+        CMD_LINE_OPTIONS.add("lazyErrors");
+        CMD_LINE_OPTIONS.add("keepSiteDir");
+        CMD_LINE_OPTIONS.add("alwaysTransferWrapperLog");
+        CMD_LINE_OPTIONS.add("logProvenance");
+        CMD_LINE_OPTIONS.add("fileGCEnabled");
+        CMD_LINE_OPTIONS.add("mappingCheckerEnabled");
+        CMD_LINE_OPTIONS.add("tracingEnabled");
+        CMD_LINE_OPTIONS.add("maxForeachThreads");
+    }
 
     public static String buildVersion;
 
@@ -120,18 +140,19 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 source = null;
             }
        
-            VDL2Config config = loadConfig(ap);
-            addCommandLineProperties(config, ap);
-            config.validateProperties();
-            setupLogging(ap, projectName, runID);
+            SwiftConfig config = loadConfig(ap, getCommandLineProperties(ap));
+            if (ap.isPresent(ARG_SITELIST)) {
+                printSiteList(config);
+                System.exit(0);
+            }
+            setupLogging(ap, config, projectName, runID);
             logBasicInfo(argv, runID, config);
-            debugSitesText(config);
-            debugTCText(config);
+            debugConfigText(config);
             
-            boolean provenanceEnabled = VDL2Config.getConfig().getProvenanceLog();
+            boolean provenanceEnabled = config.isProvenanceEnabled();
             
             if (ap.isPresent(ARG_CDMFILE)) {
-                loadCDM(ap);
+                loadCDM(ap, config);
             }
             
             WrapperNode tree = null;
@@ -235,7 +256,14 @@ public class Loader extends org.globus.cog.karajan.Loader {
         System.exit(runerror ? 2 : 0);
     }
 
-    private static void logBasicInfo(String[] argv, String runID, VDL2Config conf) {
+    private static void printSiteList(SwiftConfig config) {
+        System.out.println("Available sites: ");
+        for (String name : config.getDefinedSiteNames()) {
+            System.out.println("\t" + name);
+        }
+    }
+
+    private static void logBasicInfo(String[] argv, String runID, SwiftConfig conf) {
         String version = loadVersion();
         System.out.println(version);
         System.out.println("RunID: " + runID);
@@ -277,6 +305,18 @@ public class Loader extends org.globus.cog.karajan.Loader {
             if (ap.isPresent(ARG_VERSION)) {
                 System.out.println(loadVersion());
                 System.exit(0);
+            }
+            if (ap.isPresent(ARG_SITES_FILE)) {
+                System.err.println("Swift does not use site files any more.\n" +
+                		"Please use the swift-convert-config tool to update your " +
+                		"sites file to a swift configuration file.");
+                System.exit(1);
+            }
+            if (ap.isPresent(ARG_TC_FILE)) {
+                System.err.println("Swift does not use TC files any more.\n" +
+                        "Please use the swift-convert-config tool to update your " +
+                        "sites.xml and tc.data to a Swift configuration file.");
+                System.exit(1);
             }
             if (!ap.hasValue(ArgumentParser.DEFAULT) && !ap.isPresent(ARG_EXECUTE)) {
                 System.out.println(loadVersion());
@@ -328,13 +368,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
         System.err.print("For usage information:  swift -help\n\n");
     }
     
-    static void loadCDM(ArgumentParser ap) {
+    static void loadCDM(ArgumentParser ap, SwiftConfig config) {
         String cdmString = null;
         try { 
             cdmString = ap.getStringValue(ARG_CDMFILE);
             File cdmFile = new File(cdmString);
             debugText("CDM FILE", cdmFile);
-            Director.load(cdmFile);
+            Director.load(cdmFile, config);
         }
         catch (IOException e) { 
             logger.debug("Detailed exception:", e);
@@ -496,18 +536,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
     }
 
-    static void debugSitesText(VDL2Config config) {
-		String poolFile = config.getPoolFile();
-		logger.info("SITES_FILE " + poolFile);
-		debugText("SITES", new File(poolFile));
+    static void debugConfigText(SwiftConfig config) {
+		logger.info("SWIFT_CONF \n" + config);
     }
-    
-    static void debugTCText(VDL2Config config) {
-        String tcFile = config.getTCFile();
-        logger.info("TC_FILE " + tcFile);
-        debugText("TC", new File(tcFile));
-    }
-
     
     /**
      * The build ID is a UID that gets generated with each build. It is
@@ -530,29 +561,30 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
     }
 
-    private static VDL2Config loadConfig(ArgumentParser ap) throws IOException {
-        VDL2Config conf;
+    private static SwiftConfig loadConfig(ArgumentParser ap, Map<String, Object> cmdLine) throws IOException {
+        SwiftConfig conf;
         if (ap.hasValue(ARG_INSTANCE_CONFIG)) {
             String configFile = ap.getStringValue(ARG_INSTANCE_CONFIG);
-            conf = VDL2Config.getConfig(configFile);
+            conf = SwiftConfig.load(configFile, cmdLine);
+            SwiftConfig.setDefault(conf);
         }
         else {
-            conf = (VDL2Config) VDL2Config.getConfig().clone();
+            conf = (SwiftConfig) SwiftConfig.load().clone();
         }
         return conf;
     }
 
-    private static void addCommandLineProperties(VDL2Config config,
-            ArgumentParser ap) {
-        config.setCurrentFile("<command line>");
-        Map<String, PropInfo> desc = VDL2ConfigProperties.getPropertyDescriptions();
-        for (Map.Entry<String, PropInfo> e : desc.entrySet()) {
+    private static Map<String, Object> getCommandLineProperties(ArgumentParser ap) {
+        Map<String, Object> cmdConf = new HashMap<String, Object>();
+        Map<String, SwiftConfigSchema.Info> desc = SwiftConfig.SCHEMA.getPropertyDescriptions();
+        for (Map.Entry<String, SwiftConfigSchema.Info> e : desc.entrySet()) {
             String name = e.getKey();
             if (ap.isPresent(name)) {
             	String value = ap.getStringValue(name);
-            	config.setProperty(name, value);
+            	cmdConf.put(name, value);
             }
         }
+        return cmdConf;
     }
 
     private static ArgumentParser buildArgumentParser() {
@@ -574,6 +606,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
         ap.addFlag(ARG_DRYRUN,
             "Runs the SwiftScript program without submitting any jobs (can be used to get a graph)");
+        ap.addHiddenFlag(ARG_SITES_FILE);
+        ap.addHiddenFlag(ARG_TC_FILE);
 
         ap.addOption(ARG_RESUME, "Resumes the execution using a log file",
             "file", ArgumentParser.OPTIONAL);
@@ -583,6 +617,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             "If individual command line arguments are used for properties, they will override " + 
             "the contents of this file.", "file",
             ArgumentParser.OPTIONAL);
+        ap.addFlag(ARG_SITELIST, "Prints a list of sites available in the swift configuration");
         ap.addFlag(ARG_VERBOSE,
             "Increases the level of output that Swift produces on the console to include more detail " + 
             "about the execution");
@@ -621,10 +656,10 @@ public class Loader extends org.globus.cog.karajan.Loader {
         ap.addOption(ARG_EXECUTE, "Runs the swift script code contained in <string>", 
             "string", ArgumentParser.OPTIONAL);
 
-        Map<String, PropInfo> desc = VDL2ConfigProperties.getPropertyDescriptions();
-        for (Map.Entry<String, PropInfo> e : desc.entrySet()) {
-            PropInfo pi = e.getValue();
-            ap.addOption(e.getKey(), pi.desc, pi.validValues,
+        Map<String, SwiftConfigSchema.Info> desc = SwiftConfig.SCHEMA.getPropertyDescriptions();
+        for (Map.Entry<String, SwiftConfigSchema.Info> e : desc.entrySet()) {
+            SwiftConfigSchema.Info pi = e.getValue();
+            ap.addOption(e.getKey(), pi.doc, pi.type.toString(),
                 ArgumentParser.OPTIONAL);
         }
         return ap;
@@ -632,7 +667,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     private static MonitorAppender ma;
 
-    protected static void setupLogging(ArgumentParser ap, String projectName,
+    protected static String setupLogging(ArgumentParser ap, SwiftConfig config, String projectName,
             String runID) throws IOException {
         String logfile;
         if (ap.isPresent(ARG_LOGFILE)) {
@@ -641,9 +676,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
         else {
             logfile = projectName + "-" + runID + ".log";
         }
-
-        VDL2Config config = VDL2Config.getConfig();
-        config.put("logfile", logfile);
+        
+        config.setProperty("logfile", logfile);
         
         File f = new File(logfile);
 
@@ -698,6 +732,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             Logger.getLogger(New.class).setLevel(Level.WARN);
             Logger.getLogger("org.globus.cog.karajan.workflow.service").setLevel(Level.WARN);
         }
+        return logfile;
     }
 
     

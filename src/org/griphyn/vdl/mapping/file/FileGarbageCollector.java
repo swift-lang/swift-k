@@ -17,7 +17,6 @@
 
 package org.griphyn.vdl.mapping.file;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -27,8 +26,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.PhysicalFormat;
-import org.griphyn.vdl.util.VDL2Config;
-import org.griphyn.vdl.util.VDL2ConfigProperties;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class FileGarbageCollector implements Runnable {
     public static final Logger logger = Logger.getLogger(FileGarbageCollector.class);
@@ -52,13 +50,7 @@ public class FileGarbageCollector implements Runnable {
         queue = new LinkedList<PhysicalFormat>();
         usageCount = new HashMap<PhysicalFormat, Integer>();
         persistent = new HashSet<PhysicalFormat>();
-        try {
-            enabled = !"false".equals(VDL2Config.getConfig().getProperty(VDL2ConfigProperties.FILE_GC_ENABLED));
-        }
-        catch (IOException e) {
-            //enabled by default
-            enabled = true;
-        }
+        enabled = SwiftConfig.getDefault().isFileGCEnabled();
         if (enabled) {
             thread = new Thread(this, "File Garbage Collector");
             thread.setDaemon(true);

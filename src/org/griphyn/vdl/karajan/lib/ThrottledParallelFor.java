@@ -17,7 +17,6 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -41,8 +40,7 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.UParallelFor;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class ThrottledParallelFor extends UParallelFor {
 	public static final Logger logger = Logger
@@ -229,13 +227,7 @@ public class ThrottledParallelFor extends UParallelFor {
 	
 	private int getMaxThreads() {
 	    if (maxThreadCount < 0) {
-            try {
-                maxThreadCount = TypeUtil.toInt(VDL2Config.getConfig()
-                        .getProperty("foreach.max.threads", String.valueOf(DEFAULT_MAX_THREADS)));
-            }
-            catch (IOException e) {
-                maxThreadCount = DEFAULT_MAX_THREADS;
-            }
+            maxThreadCount = SwiftConfig.getDefault().getForeachMaxThreads();
         }
 	    return maxThreadCount;
 	}

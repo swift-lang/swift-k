@@ -42,7 +42,7 @@ public class Application {
         env.put(name, value);
     }
 
-    public void addProperty(String name, String value) {
+    public void addProperty(String name, Object value) {
         if (properties == null) {
             properties = new HashMap<String, Object>();
         }

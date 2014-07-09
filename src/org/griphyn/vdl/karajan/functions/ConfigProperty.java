@@ -20,8 +20,6 @@
  */
 package org.griphyn.vdl.karajan.functions;
 
-import java.io.IOException;
-
 import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
@@ -39,7 +37,7 @@ import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.util.BoundContact;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class ConfigProperty extends InternalFunction {
     private ArgRef<String> name;
@@ -47,7 +45,7 @@ public class ConfigProperty extends InternalFunction {
     private ArgRef<BoundContact> host;
     private ChannelRef<Object> cr_vargs;
     
-    private VDL2Config instanceConfig;
+    private SwiftConfig instanceConfig;
     private VarRef<Context> context;
     
     
@@ -68,9 +66,12 @@ public class ConfigProperty extends InternalFunction {
         context = scope.getVarRef("#context");
         Context ctx = context.getValue();
         Var.Channel r = scope.parent.lookupChannel("...");
+        if (this.name.isStatic()) {
+            checkProperty(this.name.getValue());
+        }
         if (this.name.isStatic() && this.instance.isStatic() && this.host.isStatic() 
         		&& ctx != null && this.host.getValue() == null) {
-        	String value = getProperty(this.name.getValue(), this.instance.getValue(), getInstanceConfig(ctx));
+        	Object value = getProperty(this.name.getValue(), this.instance.getValue(), getInstanceConfig(ctx));
         	if (r.append(value)) {
         		return null;
         	}
@@ -108,44 +109,45 @@ public class ConfigProperty extends InternalFunction {
         cr_vargs.append(stack, getProperty(name, instance, getInstanceConfig(stack)));
     }
 
-    private synchronized VDL2Config getInstanceConfig(Stack stack) {
+    private synchronized SwiftConfig getInstanceConfig(Stack stack) {
         if (instanceConfig == null) {
             Context ctx = this.context.getValue(stack);
-            instanceConfig = (VDL2Config) ctx.getAttribute("SWIFT:CONFIG");
+            instanceConfig = (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
         }
         return instanceConfig;
     }
     
-    private synchronized VDL2Config getInstanceConfig(Context ctx) {
-    	return (VDL2Config) ctx.getAttribute("SWIFT:CONFIG");
+    private synchronized SwiftConfig getInstanceConfig(Context ctx) {
+    	return (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
     }
 
-    public static String getProperty(String name, VDL2Config instanceConfig) {
+    public static Object getProperty(String name, SwiftConfig instanceConfig) {
         return getProperty(name, true, instanceConfig);
     }
 
-    public static String getProperty(String name, boolean instance, VDL2Config instanceConfig) {
-        try {
-            VDL2Config conf;
-            String prop;
-            if (!instance) {
-                conf = VDL2Config.getConfig();
-                prop = conf.getProperty(name);
-            }
-            else {
-                conf = instanceConfig;
-                prop = conf.getProperty(name);
-            }
-            if (prop == null) {
-                throw new ExecutionException("Swift config property \"" + name + "\" not found in "
-                        + conf);
-            }
-            else {
-                return prop;
-            }
+    public static Object getProperty(String name, boolean instance, SwiftConfig instanceConfig) {
+        SwiftConfig conf;
+        Object prop;
+        if (!instance) {
+            conf = SwiftConfig.getDefault();
+            prop = conf.getProperty(name);
         }
-        catch (IOException e) {
-            throw new ExecutionException("Failed to load Swift configuration", e);
+        else {
+            conf = instanceConfig;
+            prop = conf.getProperty(name);
+        }
+        if (prop == null) {
+            throw new ExecutionException("Swift config property \"" + name + "\" not found in "
+                    + conf.getFileName());
+        }
+        else {
+            return prop;
+        }
+    }
+    
+    private void checkProperty(String name) throws CompilationException {
+        if (!SwiftConfig.SCHEMA.propertyExists(name)) {
+            throw new CompilationException(this, "Unknown configuration property: " + name);
         }
     }
 }

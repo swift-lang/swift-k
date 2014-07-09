@@ -20,7 +20,6 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.io.IOException;
 import java.util.LinkedList;
 
 import k.rt.ConditionalYield;
@@ -29,8 +28,7 @@ import k.thr.LWThread;
 import k.thr.Yield;
 
 import org.globus.cog.karajan.compiled.nodes.Sequential;
-import org.globus.cog.karajan.util.TypeUtil;
-import org.griphyn.vdl.util.VDL2Config;
+import org.griphyn.vdl.util.SwiftConfig;
 
 public class Throttled extends Sequential {
     public static final int DEFAULT_MAX_THREADS = 1000000;
@@ -39,13 +37,7 @@ public class Throttled extends Sequential {
     private int maxThreadCount, current;
     
     public Throttled() {
-        try {
-            maxThreadCount = TypeUtil.toInt(VDL2Config.getConfig()
-                            .getProperty("max.threads", String.valueOf(DEFAULT_MAX_THREADS)));
-        }
-        catch (IOException e) {
-            maxThreadCount = DEFAULT_MAX_THREADS;
-        }
+        maxThreadCount = (Integer) SwiftConfig.getDefault().getProperty("maxThreads", DEFAULT_MAX_THREADS);
         current = 0;
         waiting = new LinkedList<FutureObject>();
     }

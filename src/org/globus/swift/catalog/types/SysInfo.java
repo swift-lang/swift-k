@@ -77,8 +77,8 @@ public class SysInfo{
      * @param glibc String
      */
     public SysInfo(String arch, String os, String osversion, String glibc) {
-        this.arch = (arch == null) ? Arch.INTEL32 : Arch.fromString(arch);
-        this.os = (os == null) ? Os.LINUX : Os.fromString(os);
+        this.arch = (arch == null) ? Arch.INTEL32 : Arch.valueOf(arch);
+        this.os = (os == null) ? Os.LINUX : Os.valueOf(os);
         this.osversion = (osversion == null || osversion.equals("") ) ?
                           null:
                           osversion;
@@ -92,9 +92,9 @@ public class SysInfo{
         if (system != null) {
             String s1[] = system.split("::", 2);
             if (s1.length == 2) {
-                arch = Arch.fromString(s1[0]);
+                arch = Arch.valueOf(s1[0]);
                 String s2[] = s1[1].split(":", 3);
-                os = Os.fromString(s2[0]);
+                os = Os.valueOf(s2[0]);
                 for (int i = 1; i < s2.length; i++) {
                     if (i == 1) {
                         osversion = s2[i];

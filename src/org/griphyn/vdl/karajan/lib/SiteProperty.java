@@ -54,6 +54,8 @@ public class SiteProperty extends SwiftFunction {
 		return getSingle(bc, name.getValue(stack), _default.getValue(stack));
 	}
 	
+	public static final Os DEFAULT_OS = Os.LINUX;
+	
 	public static final String SWIFT_WRAPPER_INTERPRETER = "wrapperInterpreter";
 	public static final String SWIFT_WRAPPER_INTERPRETER_OPTIONS = "wrapperInterpreterOptions";
 	public static final String SWIFT_WRAPPER_SCRIPT = "wrapperScript";
@@ -141,9 +143,9 @@ public class SiteProperty extends SwiftFunction {
     }
     
     private Os getOS(SwiftContact bc) {
-    	Object o = bc.getProperty("sysinfo");
+    	Object o = bc.getProperty("OS");
     	if (o == null) {
-    		return Os.LINUX;
+    		return DEFAULT_OS;
     	}
     	else {
     		return SysInfo.fromString(o.toString()).getOs();
