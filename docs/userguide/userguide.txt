@@ -11,7 +11,7 @@ include::gettingStarted[]
 
 include::language[]
 
-include::configuration[]
+include::configuration.new[]
 
 include::debugging[]
 
