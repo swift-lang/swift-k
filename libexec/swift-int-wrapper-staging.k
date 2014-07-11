@@ -100,7 +100,7 @@ namespace(wrapperStaging) {
 
 			ddir := initDDir()
 			wfdir := try {
-				initSharedDir(rhost)
+				initSharedDir(progress, rhost)
 			}
 			else catch(exception) {
 				throw(exception("Could not initialize shared directory on {rhost}", exception))
