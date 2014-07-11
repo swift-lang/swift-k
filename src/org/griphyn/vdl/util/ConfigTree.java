@@ -119,9 +119,6 @@ public class ConfigTree<T> {
         }
 
         public void getLeafPaths(List<String> l, String partial) {
-            if (value != null) {
-                l.add(partial);
-            }
             if (nodes != null) {
                 for (Map.Entry<String, Node<T>> e : nodes.entrySet()) {
                     if (partial == null) {
@@ -132,25 +129,18 @@ public class ConfigTree<T> {
                     }
                 }
             }
+            else {
+                l.add(partial);
+            }
         }
         
         public void expandWildcards(List<String> l, String k, String wildcard, String partial) {
-            if (value != null) {
-                if (partial == null) {
-                    l.add(k);
+            if (nodes == null || nodes.isEmpty()) {
+                if (k.isEmpty()) {
+                    l.add(partial);
                 }
                 else {
-                    l.add(partial + "." + k);
-                }
-            }
-            if (nodes == null || nodes.isEmpty()) {
-                if (rest(k).isEmpty()) {
-                    if (partial == null) {
-                        l.add(k);
-                    }
-                    else {
-                        l.add(partial + "." + k);
-                    }
+                    throw new IllegalArgumentException("No such path: " + partial + "." + k);
                 }
                 return;
             }
@@ -176,7 +166,7 @@ public class ConfigTree<T> {
                         // x.* is allowed to not be there
                         return;
                     }
-                    if (partial == null) {
+                    if (partial == null || k.equals("")) {
                         l.add(k);
                     }
                     else {

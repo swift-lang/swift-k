@@ -97,7 +97,7 @@ public class SwiftConfigSchema {
     }
 
     private String stripDoc(String doc) {
-        return doc.replaceAll("[\\t\\n]+", "");
+        return doc.replaceAll("[\\t\\n]+", " ");
     }
 
     private ConfigPropertyType<?> getTypeInstance(String type, ConfigValue value) {
@@ -192,8 +192,7 @@ public class SwiftConfigSchema {
             if (notFound != null) {
                 findMissing(key, confTree, i, validated);
                 ConfigOrigin loc = info.get(key).loc;
-                throw new SwiftConfigException(conf.origin(), "missing property '" + notFound + 
-                    "' defined in " + loc.filename() + ":" + loc.lineNumber());
+                throw new SwiftConfigException(conf.origin(), "missing mandatory property '" + notFound + "'");
             }
         }
         return validated;
@@ -201,6 +200,7 @@ public class SwiftConfigSchema {
 
     private String findMissing(String key, ConfigTree<Boolean> confTree, Info i, ConfigTree<Object> validated) {
         List<String> found = confTree.expandWildcards(key, STAR);
+
         for (String f : found) {
             if (!confTree.hasKey(f)) {
                 if (i.optional) {
@@ -208,12 +208,33 @@ public class SwiftConfigSchema {
                         validated.put(f, i.value);
                     }
                 }
-                else {
+                else if (!parentsAreOptional(key, confTree)) {
                     return f;
                 }
             }
         }
         return null;
+    }
+
+    private boolean parentsAreOptional(String k, ConfigTree<Boolean> confTree) {
+        while (!k.isEmpty()) {
+            k = parent(k);
+            Info i = info.get(k);
+            if (i != null && !i.optional && !confTree.hasKey(k)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String parent(String k) {
+        int ix = k.lastIndexOf('.');
+        if (ix == -1) {
+            return "";
+        }
+        else {
+            return k.substring(0, ix);
+        }
     }
 
     private void setValue(Map<String, Object> validated, Config conf, String k) {
@@ -235,7 +256,7 @@ public class SwiftConfigSchema {
                 if (t.getBaseType() != ConfigPropertyType.STRING && t.getBaseType() != ConfigPropertyType.OBJECT) {
                     throw invalidValue(value, k, v, t.getBaseType());
                 }
-                return t.check(k, value.unwrapped(), null);
+                return t.check(k, value.unwrapped(), value.origin());
             case NUMBER:
                 if (t.getBaseType() != ConfigPropertyType.INT && t.getBaseType() != ConfigPropertyType.FLOAT) {
                     throw invalidValue(value, k, v, t.getBaseType());
@@ -253,12 +274,21 @@ public class SwiftConfigSchema {
                 }
                 return value.unwrapped();
             default:
-                return t.check(k, v, null);
+                return t.check(k, v, value.origin());
         }
     }
 
     private SwiftConfigException invalidValue(ConfigValue value, String k, Object v, ConfigPropertyType<?> t) {
-        return new SwiftConfigException(value.origin(), "invalid value '" + v + "' for property '" + k + "'. Expected a " + t);
+        switch (t.toString().charAt(0)) {
+            case 'a':
+            case 'e':
+            case 'i':
+            case 'o':
+            case 'u':
+                return new SwiftConfigException(value.origin(), "invalid value '" + v + "' for property '" + k + "'. Expected an " + t);
+            default:
+                return new SwiftConfigException(value.origin(), "invalid value '" + v + "' for property '" + k + "'. Expected a " + t);
+        }
     }
     
     public synchronized Map<String, Info> getPropertyDescriptions() {

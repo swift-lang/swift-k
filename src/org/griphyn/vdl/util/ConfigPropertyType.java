@@ -21,6 +21,8 @@ import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.swift.catalog.types.Arch;
 import org.globus.swift.catalog.types.Os;
 
+import com.typesafe.config.ConfigOrigin;
+
 public abstract class ConfigPropertyType<T> {
     public static final ConfigPropertyType<Boolean> BOOLEAN = new CPTBoolean();
     public static final ConfigPropertyType<String> STRING = new CPTString();
@@ -42,11 +44,11 @@ public abstract class ConfigPropertyType<T> {
     }
     
     @SuppressWarnings("unchecked")
-    public Object check(String propName, Object value, String source) {
-        return checkValue(propName, (T) value, source);
+    public Object check(String propName, Object value, ConfigOrigin loc) {
+        return checkValue(propName, (T) value, loc);
     }
     
-    public abstract Object checkValue(String propName, T value, String source);
+    public abstract Object checkValue(String propName, T value, ConfigOrigin loc);
     
     public abstract ConfigPropertyType<?> getBaseType();
         
@@ -75,9 +77,9 @@ public abstract class ConfigPropertyType<T> {
         }
 
         @Override
-        public Object checkValue(String propName, String value, String source) {
+        public Object checkValue(String propName, String value, ConfigOrigin loc) {
             if (!choices.contains(value)) {
-                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Valid values are: " + pp(choices));
             }
             return value;
@@ -108,7 +110,7 @@ public abstract class ConfigPropertyType<T> {
     
     private static class CPTString extends ConfigPropertyType<String> {
         @Override
-        public Object checkValue(String propName, String value, String source) {
+        public Object checkValue(String propName, String value, ConfigOrigin loc) {
             // all values accepted
             return value;
         }
@@ -126,7 +128,7 @@ public abstract class ConfigPropertyType<T> {
     
     private static class Int extends ConfigPropertyType<Integer> {
         @Override
-        public Object checkValue(String propName, Integer value, String source) {
+        public Object checkValue(String propName, Integer value, ConfigOrigin loc) {
             return value;
         }
 
@@ -143,7 +145,7 @@ public abstract class ConfigPropertyType<T> {
     
     private static class CPTBoolean extends ConfigPropertyType<Boolean> {
         @Override
-        public Object checkValue(String propName, Boolean value, String source) {
+        public Object checkValue(String propName, Boolean value, ConfigOrigin loc) {
             return value;
         }
 
@@ -160,9 +162,9 @@ public abstract class ConfigPropertyType<T> {
     
     private static class SPInt extends ConfigPropertyType<Integer> {
         @Override
-        public Object checkValue(String propName, Integer value, String source) {
+        public Object checkValue(String propName, Integer value, ConfigOrigin loc) {
             if (value <= 0) {
-                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be a " + toString());
             }
             return value;
@@ -181,9 +183,9 @@ public abstract class ConfigPropertyType<T> {
     
     private static class PInt extends ConfigPropertyType<Integer> {
         @Override
-        public Object checkValue(String propName, Integer value, String source) {
+        public Object checkValue(String propName, Integer value, ConfigOrigin loc) {
             if (value < 0) {
-                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be a " + toString());
             }
             return value;
@@ -203,7 +205,7 @@ public abstract class ConfigPropertyType<T> {
     
     private static class Throttle extends ConfigPropertyType<Object> {
         @Override
-        public Object checkValue(String propName, Object value, String source) {
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
             if ("off".equals(value)) {
                 return Integer.MAX_VALUE;
             }
@@ -213,7 +215,7 @@ public abstract class ConfigPropertyType<T> {
                     return i;
                 }
             }
-            throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+            throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be an " + toString());
         }
 
@@ -230,9 +232,9 @@ public abstract class ConfigPropertyType<T> {
     
     private static class PFloat extends ConfigPropertyType<Double> {
         @Override
-        public Object checkValue(String propName, Double value, String source) {
+        public Object checkValue(String propName, Double value, ConfigOrigin loc) {
             if (value < 0) {
-                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be a " + toString());
             }
             return value;
@@ -251,7 +253,7 @@ public abstract class ConfigPropertyType<T> {
     
     private static class CPTFloat extends ConfigPropertyType<Double> {
         @Override
-        public Object checkValue(String propName, Double value, String source) {
+        public Object checkValue(String propName, Double value, ConfigOrigin loc) {
             return value;
         }
 
@@ -270,9 +272,9 @@ public abstract class ConfigPropertyType<T> {
         }
         
         @Override
-        public Object checkValue(String propName, Double value, String source) {
+        public Object checkValue(String propName, Double value, ConfigOrigin loc) {
             if (value < l || value > h) {
-                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Must be a " + toString());
             }
             return value;
@@ -291,12 +293,12 @@ public abstract class ConfigPropertyType<T> {
     
     private static class CPTTime extends ConfigPropertyType<String> {
         @Override
-        public Object checkValue(String propName, String value, String source) {
+        public Object checkValue(String propName, String value, ConfigOrigin loc) {
             try {
                 WallTime.timeToSeconds(value);
             }
             catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException(source + ":\n\tInvalid time value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid time value '" + value + "' for property '" + 
                     propName + "'. Mist be a " + toString());
             }
             return value;
@@ -315,7 +317,7 @@ public abstract class ConfigPropertyType<T> {
     
     private static class PortRange extends ConfigPropertyType<String> {
         @Override
-        public Object checkValue(String propName, String value, String source) {
+        public Object checkValue(String propName, String value, ConfigOrigin loc) {
             String[] els = value.split(",\\s*");
             if (els.length == 2) {
                 try {
@@ -326,7 +328,7 @@ public abstract class ConfigPropertyType<T> {
                 catch (NumberFormatException e) {
                 }
             }
-            throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+            throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Must be a " + toString());
         }
         
@@ -343,10 +345,10 @@ public abstract class ConfigPropertyType<T> {
     
     private static class CPTFile extends ConfigPropertyType<String> {
         @Override
-        public Object checkValue(String propName, String value, String source) {
+        public Object checkValue(String propName, String value, ConfigOrigin loc) {
             File f = new File(value);
             if (!f.exists()) {
-                throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. File does not exist.");
             }
             return value;
@@ -365,7 +367,7 @@ public abstract class ConfigPropertyType<T> {
     
     private static class CPTObject extends ConfigPropertyType<Object> {
         @Override
-        public Object checkValue(String propName, Object value, String source) {
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
             return value;
         }
         
@@ -383,7 +385,7 @@ public abstract class ConfigPropertyType<T> {
     
     private static class StringList extends ConfigPropertyType<Object> {
         @Override
-        public Object checkValue(String propName, Object value, String source) {
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
             if (value instanceof List) {
                 List<?> l = (List<?>) value;
                 boolean allStrings = true;
@@ -400,7 +402,7 @@ public abstract class ConfigPropertyType<T> {
                 // also allow comma separated strings in a string
                 return Arrays.asList(((String) value).split(",\\s*"));
             }
-            throw new IllegalArgumentException(source + ":\n\tInvalid value '" + value + "' for property '" + 
+            throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Must be a " + toString());
         }
         
@@ -413,5 +415,9 @@ public abstract class ConfigPropertyType<T> {
         public String toString() {
             return "list of strings";
         }
+    }
+    
+    private static String location(ConfigOrigin loc) {
+        return loc.filename() + ":" + loc.lineNumber();
     }
 }

@@ -65,7 +65,9 @@ public class SwiftConfig implements Cloneable {
         WRAPPER_STAGING_LOCAL_SERVER("wrapperStagingLocalServer"), 
         REPLICATION_MIN_QUEUE_TIME("replicationMinQueueTime"), 
         REPLICATION_LIMIT("replicationLimit"), 
-        WRAPPER_INVOCATION_MODE("wrapperInvocationMode");
+        WRAPPER_INVOCATION_MODE("wrapperInvocationMode"), 
+        CDM_BROADCAST_MODE("CDMBroadcastMode"), 
+        CMD_LOG_FILE("CDMLogFile");
         
         public String propName;
         private Key(String propName) {
@@ -419,6 +421,28 @@ public class SwiftConfig implements Cloneable {
                 else if (ctype.equals("app")) {
                     apps(sc, c);
                 }
+                else if (ctype.equals("staging")) {
+                    String staging = getString(c);
+                    if (staging.equals("swift") || staging.equals("wrapper")) {
+                        sc.setProperty("staging", staging);
+                    }
+                    else if (staging.equals("local")) {
+                        sc.setProperty("staging", "provider");
+                        sc.setProperty("stagingMethod", "file");
+                    }
+                    else if (staging.equals("service-local")) {
+                        sc.setProperty("staging", "provider");
+                        sc.setProperty("stagingMethod", "file");
+                    }
+                    else if (staging.equals("proxy")) {
+                        sc.setProperty("staging", "provider");
+                        sc.setProperty("stagingMethod", "proxy");
+                    }
+                    else if (staging.equals("shared-fs")) {
+                        sc.setProperty("staging", "provider");
+                        sc.setProperty("stagingMethod", "sfs");
+                    }
+                }
                 else if (ctype.equals("options")) {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> opt = (Map<String, Object>) getObject(c, "options");
@@ -628,5 +652,13 @@ public class SwiftConfig implements Cloneable {
 
     public boolean isMappingCheckerEnabled() {
         return (Boolean) get(Key.DM_CHECKER);
+    }
+
+    public String getCDMBroadcastMode() {
+        return (String) get(Key.CDM_BROADCAST_MODE);
+    }
+
+    public String getCDMLogFile() {
+        return (String) get(Key.CMD_LOG_FILE);
     }
 }

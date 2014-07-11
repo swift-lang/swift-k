@@ -99,6 +99,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     
     static {
         CMD_LINE_OPTIONS = new ArrayList<String>();
+        CMD_LINE_OPTIONS.add("sites");
         CMD_LINE_OPTIONS.add("hostName");
         CMD_LINE_OPTIONS.add("TCPPortRange");
         CMD_LINE_OPTIONS.add("lazyErrors");
@@ -657,9 +658,15 @@ public class Loader extends org.globus.cog.karajan.Loader {
             "string", ArgumentParser.OPTIONAL);
 
         Map<String, SwiftConfigSchema.Info> desc = SwiftConfig.SCHEMA.getPropertyDescriptions();
-        for (Map.Entry<String, SwiftConfigSchema.Info> e : desc.entrySet()) {
-            SwiftConfigSchema.Info pi = e.getValue();
-            ap.addOption(e.getKey(), pi.doc, pi.type.toString(),
+        for (String opt : CMD_LINE_OPTIONS) {
+            if (!SwiftConfig.SCHEMA.isNameValid(opt)) {
+                throw new RuntimeException("Invalid property: " + opt);
+            }
+            SwiftConfigSchema.Info pi = desc.get(opt);
+            if (pi == null) {
+                throw new RuntimeException("No info for property '" + opt + "'");
+            }
+            ap.addOption(opt, pi.doc, pi.type.toString(),
                 ArgumentParser.OPTIONAL);
         }
         return ap;
