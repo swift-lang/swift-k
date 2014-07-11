@@ -20,6 +20,9 @@ app."*" {
 			""" Allows the definition of arbitrary application options. The meaning
 			of these options is largely dependent on the mechanism used to execute
 			the application. """
+		jobType: "?String"
+		count: "?StrictlyPositiveInt"
+		"*": "?Object" 
 	}
 	
 	jobType: "?String", jobQueue: "?String", jobProject: "?String"
@@ -50,56 +53,61 @@ site."*" {
 	}
 
 	staging {
-		_type: "?Choice[swift, provider, wrapper]"
+		_type: "?Choice[swift, wrapper, local, service-local, shared-fs, proxy]"
 		_default: "swift"
 	}
-	
-	stagingMethod {
-		_type: "?String"
-		_default: "proxy"
-	}
-	
+		
 	filesystem {
+		_type: "?Object"
 		type: "String"
 		URL {
 			_type: "?String"
 			_default: null
 		}
+		options: "?Object"
 	}
 	
 	execution {
 		type: "String"
 		URL: "?String"
 		jobManager: "?String"
-		# Coasters
-		maxJobs: "?StrictlyPositiveInt"
-		nodeGranularity: "?StrictlyPositiveInt"
-		tasksPerNode: "?StrictlyPositiveInt"
-		allocationStepSize: "?Interval[0.0, 1.0]"
-		lowOverallocation: "?StrictlyPositiveInt"
-		highOverallocation: "?StrictlyPositiveInt"
-		overallocationDecayFactor: "?PositiveFloat"
-		spread: "?Interval[0.0, 1.0]"
-		exponentialSpread: "?Int"
-		reserve: "?Seconds"
-		maxNodesPerJob: "?StrictlyPositiveInt"
-		maxJobTime: "?Time"
-		userHomeOverride: "?String"
-		internalHostName: "?String"
-		jobQueue: "?String"
-		jobProject: "?String"
-		workerLoggingLevel: "?Choice[ERROR, WARN, INFO, DEBUG, TRACE]"
-		workerLoggingDirectory: "?String"
-		softImage: "?String"
-		options: "?Object"
+		options {
+			# Coasters
+			maxJobs: "?StrictlyPositiveInt"
+			nodeGranularity: "?StrictlyPositiveInt"
+			tasksPerNode: "?StrictlyPositiveInt"
+			allocationStepSize: "?Interval[0.0, 1.0]"
+			lowOverallocation: "?StrictlyPositiveInt"
+			highOverallocation: "?StrictlyPositiveInt"
+			overallocationDecayFactor: "?PositiveFloat"
+			spread: "?Interval[0.0, 1.0]"
+			exponentialSpread: "?Int"
+			reserve: "?Seconds"
+			maxNodesPerJob: "?StrictlyPositiveInt"
+			maxJobTime: "?Time"
+			userHomeOverride: "?String"
+			internalHostName: "?String"
+			jobQueue: "?String"
+			jobProject: "?String"
+			workerLoggingLevel: "?Choice[ERROR, WARN, INFO, DEBUG, TRACE]"
+			workerLoggingDirectory: "?String"
+			softImage: "?String"
+			"*": "?Object"
+		}
 	}
 	
 	workDirectory: "String"
+	scratch: "?String"
+	
 	app."*": {
 		executable: "?String"
 	
-		options: "?Object"
-		jobType: "?String", jobQueue: "?String", jobProject: "?String"
+		options {
+			jobType: "?String"
+			count: "?StrictlyPositiveInt"
+			"*": "?Object" 
+		}
+		jobQueue: "?String", jobProject: "?String"
 		maxWallTime: "?Time"
 	
 		env."*": "String"
@@ -115,7 +123,6 @@ site."*" {
 	wrapperParameterMode: "?Choice[args, files]"
 	keepSiteDir: "?Boolean"
 	statusMode: "?Choice[files, provider]"
-	
 }
 
 sites {
@@ -127,7 +134,7 @@ sites {
 }
 
 staging {
-	_type: "?Choice[swift, provider, wrapper]"
+	_type: "?Choice[swift, wrapper, local, service-local, shared-fs, proxy]"
 	_default: "swift"
 }
 
@@ -143,6 +150,10 @@ lazyErrors {
 executionRetries {
 	_type: "?PositiveInt"
 	_default: 0
+	_doc:
+		"""The number of time an application invocation will be retried if it fails until Swift 
+		finally gives up and declares it failed. The total number of attempts will be 1 + 
+		executionRetries."""
 }
 
 cachingAlgorithm {
@@ -153,21 +164,42 @@ cachingAlgorithm {
 jobSubmitThrottle {
 	_type: "?Throttle"
 	_default: 4
+	_doc:
+		"""Limits the number of jobs that can concurrently be in the process of being 
+		submitted, that is in the "Submitting" state. This is the state where the job
+		information is being communicated to a remote service. Certain execution 
+		mechanisms may become inefficient if too many jobs are being submitted 
+		concurrently and there are no benefits to parallelizing	submission beyond a 
+		certain point. Please not that this does not apply to the number of jobs that 
+		can be active concurrently."""
 }
 
 hostJobSubmitThrottle {
 	_type: "?Throttle"
 	_default: 2
+	_doc:
+		"""Like jobSubmitThrottle, except it applies to each individual site."""
 }
 
 fileTransfersThrottle {
 	_type: "?Throttle"
 	_default: 4
+	_doc: 
+		"""Limits the number of concurrent file transfers when file staging is set to 
+		"swift". Arbitrarily increasing file transfer parallelism leads to little
+		benefits as the throughput approaches the maximum avaiable network bandwidth.
+		Instead it can lead to an increase in latencies which may increase the chances
+		of triggering timeouts."""
 }
 
 fileOperationsThrottle {
 	_type: "?Throttle"
 	_default: 8
+	_doc:
+		"""Limits the number of concurrent file operations that can be active at a given
+		time when file staging is set to "swift". File operations are defined to be all
+		remote operations on a filesystem that exclude file transfers. Examples are: 
+		listing the contents of a directory, creating a directory, removing a file, etc."""
 }
 
 siteScoreThrottlingFactor {
@@ -180,29 +212,40 @@ keepSiteDir {
 	_default: false
 	_doc:
 		"""If set to true, it prevents the removal of remote site run directories
-		 after execution has completed."""
+		after execution has completed."""
 }
 
 logProvenance {
 	_type: "?Boolean"
 	_default: false
 	_doc:
-		"""If set to true, will record provenance information in the log file."""
+		"""If set to true, Swift will record provenance information in the log file."""
 }
 
 replicationEnabled {
 	_type: "?Boolean"
 	_default: false
+	_doc:
+		"""If enabled, jobs that are queued longer than a certain amount of time will 
+		have a duplicate version re-submitted. This process will continue until a 
+		maximum pre-set number of such replicas is queued. When one of the replicas 
+		becomes active, all other replicas are canceled. This mechanism can potentially 
+		prevent a single overloaded site from completely blocking a run."""		
 }
 
 replicationMinQueueTime {
 	_type: "?StrictlyPositiveInt"
 	_default: 60
+	_doc:
+		"""When replication is enabled, this is the amount of time that a job needs to
+		be queued until a new replica is created."""
 }
 
 replicationLimit {
 	_type: "?StrictlyPositiveInt"
 	_default: 3
+	_doc:
+		"""The maximum number of replicas allowed for a given application instance."""
 }
 
 statusMode {
@@ -225,6 +268,11 @@ CDMBroadcastMode {
 	_default: "file"
 }
 
+CDMLogFile {
+	_type: "?String"
+	_default: "cdm.log"
+}
+
 providerStagingPinSwiftFiles {
 	_type: "?Boolean"
 	_default: false
@@ -232,26 +280,35 @@ providerStagingPinSwiftFiles {
 
 tickerDateFormat {
 	_type: "?String"
-	_default: ""
+	_default: null
+	_doc:
+		"""Specifies the date/time format to use for the time stamp of each ticker
+		line. It must conform to Java's SimpleDataFormat syntax."""
+		
 }
 
 tickerPrefix {
 	_type: "?String"
 	_default: "Progress: "
+	_doc:
+		"""Specifies a string to prefix to each ticker line output"""
 }
 
 tickerEnabled {
 	_type: "?Boolean"
 	_default: true
+	_doc:
+		"""Controls the output ticker, which regularly prints information about the counts
+		of application states on the Swift's process standard output"""
 }
 
 fileGCEnabled {
 	_type: "?Boolean"
 	_default: true
 	_doc:
-		"""Allows disabling the file garbage collector. If set to false, files mapped by 
+		"""Controls the file garbage collector. If set to false, files mapped by 
 		collectable mappers (such as the concurrent mapper) will not be deleted when their 
-		swift variables go out of scope."""
+		Swift variables go out of scope."""
 }
 
 mappingCheckerEnabled {
@@ -269,7 +326,7 @@ hostName {
 	_default: null
 	_doc: 
 		"""Can be used to specify a publicly reacheable DNS name or IP address for this 
-		machine which is generally used for Globus callbacks. Normally this should be 
+		machine which is generally used for Globus or Coaster callbacks. Normally this should be 
 		auto-detected, but if you do not have a public DNS name, you may want to set this."""
 }
 
@@ -305,12 +362,15 @@ tracingEnabled {
 wrapperStagingLocalServer {
 	_type: "?String"
 	_default: "file://"
+	_doc:
+		"""When file staging is set to "wrapper", this indicates the default URL
+		scheme that is prefixed to local files."""
 }
 
 maxForeachThreads {
 	_type: "?StrictlyPositiveInt"
 	_default: 16384
-	_doc_disabled:
+	_doc:
 		"""Limits the number of concurrent iterations that each foreach statement
 		can have at one time. This conserves memory for swift programs that
 		have large numbers of iterations (which would otherwise all be executed
