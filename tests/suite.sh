@@ -986,8 +986,8 @@ group_fs_data() {
 
 # Generate swift.properties
 group_swift_properties() {
-  if [ -f $GROUP/swift.properties ]; then
-    cp -v $GROUP/swift.properties .
+  if [ -f $GROUP/swift.conf ]; then
+    cp -v $GROUP/swift.conf .
     [ $? != 0 ] && crash "Could not copy swift.properties!"
   fi
 }

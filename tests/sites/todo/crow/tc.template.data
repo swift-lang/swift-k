@@ -1,7 +1,0 @@
-crow 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
-crow 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
-crow 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
-crow 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
-crow 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
-crow 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
-crow	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX

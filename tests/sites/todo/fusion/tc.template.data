@@ -1,7 +1,0 @@
-fusion 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
-fusion 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
-fusion 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
-fusion 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
-fusion 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
-fusion 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
-fusion	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX

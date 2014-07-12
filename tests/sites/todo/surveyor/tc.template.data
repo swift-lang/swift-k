@@ -1,7 +1,0 @@
-surveyor 	echo 		/bin/echo	INSTALLED	INTEL32::LINUX
-surveyor 	cat 		/bin/cat	INSTALLED	INTEL32::LINUX
-surveyor 	ls 		/bin/ls		INSTALLED	INTEL32::LINUX
-surveyor 	grep 		/bin/grep	INSTALLED	INTEL32::LINUX
-surveyor 	sort 		/bin/sort	INSTALLED	INTEL32::LINUX
-surveyor 	paste 		/bin/paste	INSTALLED	INTEL32::LINUX
-surveyor	wc		/usr/bin/wc	INSTALLED	INTEL32::LINUX
