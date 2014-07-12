@@ -26,6 +26,8 @@ public class ArgumentParser {
 
 	public static final String DEFAULT = null;
 
+    public static final int HIDDEN = 4;
+
 	private Map<String, String> options;
 
 	private Map<String, String> aliases;
@@ -66,6 +68,10 @@ public class ArgumentParser {
 	public void addFlag(String name) {
 		addOption(name, FLAG + OPTIONAL);
 	}
+	
+	public void addHiddenFlag(String name) {
+        addOption(name, FLAG + OPTIONAL + HIDDEN);
+    }
 
 	public void addOption(String name, String detail, String argName, int type) {
 		if (options.containsKey(name)) {
@@ -129,7 +135,7 @@ public class ArgumentParser {
 
 	public int getIntValue(String name) throws NumberFormatException {
 		try {
-			return new Integer(getStringValue(name)).intValue();
+			return Integer.parseInt(getStringValue(name));
 		}
 		catch (Exception e) {
 			throw new NumberFormatException("Invalid numeric value: " + getStringValue(name));
@@ -144,6 +150,24 @@ public class ArgumentParser {
 			return defaultValue;
 		}
 	}
+	
+	public double getFloatValue(String name) throws NumberFormatException {
+        try {
+            return Double.parseDouble(getStringValue(name));
+        }
+        catch (Exception e) {
+            throw new NumberFormatException("Invalid float value: " + getStringValue(name));
+        }
+    }
+
+    public double getFloatValue(String name, double defaultValue) throws NumberFormatException {
+        if (hasValue(name)) {
+            return getFloatValue(name);
+        }
+        else {
+            return defaultValue;
+        }
+    }
 
 	public boolean isPresent(String name) {
 		return flags.contains(name);
@@ -166,6 +190,10 @@ public class ArgumentParser {
 	protected boolean isOptional(String name) {
 		return hasOption(name, OPTIONAL);
 	}
+	
+	protected boolean isHidden(String name) {
+        return hasOption(name, HIDDEN);
+    }
 
 	protected boolean isFlag(String name) {
 		return hasOption(name, FLAG);
@@ -248,11 +276,24 @@ public class ArgumentParser {
 		System.out.println("Usage:");
 		if (options.containsKey(DEFAULT)) {
 			if (arguments != null) {
-				System.out.println("  " + executableName + " <options> " + getArgumentName(DEFAULT)
-						+ " <arguments>");
+			    if (isOptional(DEFAULT)) {
+			        System.out.println("  " + executableName + " <options> [" + 
+			                getArgumentName(DEFAULT) + " <arguments>]");
+			    }
+			    else {
+			        System.out.println("  " + executableName + " <options> " + 
+                            getArgumentName(DEFAULT) + " <arguments>");
+			    }
 			}
 			else {
-				System.out.println("  " + executableName + " <options> " + getArgumentName(DEFAULT));
+			    if (isOptional(DEFAULT)) {
+			        System.out.println("  " + executableName + " <options> [" + 
+			                getArgumentName(DEFAULT) + "]");
+			    }
+			    else {
+			        System.out.println("  " + executableName + " <options> " + 
+                            getArgumentName(DEFAULT));
+			    }
 			}
 		}
 		else {
@@ -263,6 +304,9 @@ public class ArgumentParser {
 			String fullName = "";
 			if (name == DEFAULT) {
 				continue;
+			}
+			if (isHidden(name)) {
+			    continue;
 			}
 			if (isOptional(name)) {
 				fullName += "[";
