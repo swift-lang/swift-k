@@ -93,7 +93,7 @@ while [ $# -gt 0 ]; do
     -v)
       VERBOSE=1
       shift;;
-    -l)
+    -r)
       COLORIZE=1
       shift;;
     *)
