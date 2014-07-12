@@ -77,7 +77,7 @@ if(@run_directories) {
 
 
 # Verify Swift is found in PATH
-my $swift_etc_directory = dirname(dirname($0)) . "/etc";
+my $swift_etc_directory = dirname($0) . "/../etc";
 if( ! -d $swift_etc_directory ) { &swiftquit("Unable to find a valid Swift installation"); }
 
 $run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
@@ -88,9 +88,15 @@ push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
 push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
 push(@new_swift_args, "-runid " . basename($run_directory));
 push(@new_swift_args, "-Ddebug.dir.prefix=" . basename($run_directory) . "/");  
-push(@new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
+push(@new_swift_args, "-logfile $run_directory/swift.log");
 
 $ENV{RUNDIRECTORY} = "$run_directory";
+
+while( @ARGV ) {
+   my $option = shift;
+   push( @new_swift_args, $option );
+}
+
 
 foreach my $arg( @new_swift_args ) {
    print "$arg ";
