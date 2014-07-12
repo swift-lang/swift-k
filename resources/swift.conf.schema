@@ -295,9 +295,9 @@ CDMBroadcastMode {
 	_default: "file"
 }
 
-CDMLogFile {
+CDMFile {
 	_type: "?String"
-	_default: "cdm.log"
+	_default: "fs.data"
 }
 
 providerStagingPinSwiftFiles {
