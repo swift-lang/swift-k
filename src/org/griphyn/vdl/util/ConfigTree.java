@@ -203,10 +203,10 @@ public class ConfigTree<T> {
         }
         
         private void toString(StringBuilder sb, int level, String k) {
-            for (int i = 0; i < level; i++) {
-                sb.append('\t');
-            }
             if (nodes == null || nodes.isEmpty()) {
+                for (int i = 0; i < level; i++) {
+                    sb.append('\t');
+                }
                 if (value != null) {
                     sb.append(k);
                     sb.append(": ");
@@ -224,13 +224,16 @@ public class ConfigTree<T> {
             else if (nodes.size() == 1) {
                 String key = nodes.keySet().iterator().next();
                 if (k == null) {
-                    nodes.values().iterator().next().toString(sb, 0, key);
+                    nodes.values().iterator().next().toString(sb, level, key);
                 }
                 else {
-                    nodes.values().iterator().next().toString(sb, 0, k + "." + key);
+                    nodes.values().iterator().next().toString(sb, level, k + "." + key);
                 }
             }
             else {
+                for (int i = 0; i < level; i++) {
+                    sb.append('\t');
+                }
                 if (k != null) {
                     sb.append(k);
                     sb.append(' ');
@@ -244,6 +247,18 @@ public class ConfigTree<T> {
                 }
                 sb.append("}\n");
             }
+        }
+
+        public List<String> getLeafPaths() {
+            List<String> l = new ArrayList<String>();
+            getLeafPaths(l, null);
+            return l;
+        }
+        
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            toString(sb, 0, null);
+            return sb.toString();
         }
     }
     
@@ -274,9 +289,7 @@ public class ConfigTree<T> {
     }
 
     public List<String> getLeafPaths() {
-        List<String> l = new ArrayList<String>();
-        root.getLeafPaths(l, null);
-        return l;
+        return root.getLeafPaths();
     }
 
     /**

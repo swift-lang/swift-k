@@ -153,55 +153,101 @@ public class ConvertConfig {
                     }
                     if (e.getKey().type == Service.EXECUTION) {
                         ExecutionService es = (ExecutionService) e.getValue();
-                        ps.println("\texecution {");
-                        ps.println("\t\ttype: \"" + provider + "\"");
+                        beginObject(1, "site.*.execution", ps);
+                        writeValue(2, "site.*.execution.type", provider, ps);
                         if (es.getServiceContact() != null) {
-                            ps.println("\t\tURL: \"" + es.getServiceContact().getContact() + "\"");
+                            writeValue(2, "site.*.execution.URL", es.getServiceContact().getContact(), ps);
                         }
                         if (es.getJobManager() != null) {
-                            ps.println("\t\tjobManager: \"" + es.getJobManager() + "\"");
+                            writeValue(2, "site.*.execution.jobManager", es.getJobManager(), ps);
                         }
                         if (provider.equals("coaster")) {
                             hasCoasterService = true;
                             generateCoasterServiceAttributes(bc, ps);
                         }
-                        ps.println("\t}");
+                        endObject(1, ps);
                         if (!provider.equals("coaster")) {
                             generateServiceAttributes(es, ps);
                         }
                     }
                     else if (e.getKey().type == Service.FILE_OPERATION) {
                         hasFileService = true;
-                        ps.println("\tfilesystem {");
-                        ps.println("\t\ttype: \"" + provider + "\"");
+                        beginObject(1, "site.*.filesystem", ps);
+                        writeValue(2, "site.*.filesystem.type", provider, ps);
                         if (e.getValue().getServiceContact() != null) {
-                            ps.println("\t\tURL: \"" + e.getValue().getServiceContact().getContact() + "\"");
+                            writeValue(2, "site.*.filesystem.URL", e.getValue().getServiceContact().getContact(), ps);
                         }
-                        ps.println("\t}");
+                        endObject(1, ps);
                     }
                 }
                 if (!hasFileService) {
-                    ps.println("\tstaging: \"provider\"");
+                    writeValue(1, "site.*.staging", "proxy", ps);
                 }
                 if (bc.hasProperty("workdir")) {
-                    ps.println("\tworkDirectory: \"" + bc.getProperty("workdir") + "\"");
+                    writeValue(1, "site.*.workDirectory", bc.getProperty("workdir"), ps);
                 }
                 if (bc.hasProperty("scratch")) {
-                    ps.println("\tscratch: \"" + bc.getProperty("scratch") + "\"");
+                    writeValue(1, "site.*.scratch", bc.getProperty("scratch"), ps);
                 }
                 generateSiteAttributes(bc.getProperties(), ps);
                 if (tc != null) {
-                    generateAppInfo(bc.getName(), tc, hasCoasterService, 1, ps);
+                    generateAppInfo("site.*.", bc.getName(), tc, hasCoasterService, 1, ps);
+                }
+                else {
+                    if (bc.hasProperty("globus:maxwalltime")) {
+                        ps.println("\tapp.ALL {");
+                        writeValue(2, "site.*.app.*.maxWallTime", bc.getProperty("globus:maxwalltime"), ps);
+                        ps.println("\t}");
+                    }
                 }
                 ps.println("}\n");
             }
         }
         if (tc != null) {
-            generateAppInfo("*", tc, false, 0, ps);
+            generateAppInfo("", "*", tc, false, 0, ps);
         }
     }
     
-    private void generateAppInfo(String host, TransformationCatalog tc, boolean hasCoasterService, int level, PrintStream ps) {
+    private void writeValue(int level, String key, Object value, PrintStream ps) {
+        if (!SwiftConfig.SCHEMA.isNameValid(key)) {
+            throw new IllegalArgumentException("Invalid property: " + key);
+        }
+        SwiftConfigSchema.Info i = SwiftConfig.SCHEMA.getInfo(key);
+        if (i == null) {
+            SwiftConfig.SCHEMA.getInfo(key);
+            throw new IllegalArgumentException("No type information found for: " + key);
+        }
+        i.type.check(key, value, i.loc);
+        tabs(level, ps);
+        ps.print(last(key));
+        ps.print(": ");
+        if (value instanceof String) {
+            ps.println("\"" + value + "\"");
+        }
+        else {
+            ps.println(value);
+        }
+    }
+
+    private void endObject(int level, PrintStream ps) {
+        tabs(level, ps);
+        ps.println("}");
+    }
+
+    private void beginObject(int level, String key, PrintStream ps) {
+        if (!SwiftConfig.SCHEMA.isNameValid(key)) {
+            throw new IllegalArgumentException("Invalid property: " + key);
+        }
+        tabs(level, ps);
+        ps.print(last(key));
+        ps.println(" {");
+    }
+
+    private String last(String key) {
+        return key.substring(key.lastIndexOf('.') + 1);
+    }
+
+    private void generateAppInfo(String prefix, String host, TransformationCatalog tc, boolean hasCoasterService, int level, PrintStream ps) {
         try {
             for (TCEntry e : tc.getTC()) {
                 if (e.getResourceId().equals(host)) {
@@ -213,10 +259,10 @@ public class ConvertConfig {
                         tabs(level, ps);
                         ps.println("app." + e.getLogicalName() + " {");
                     }
-                    tabs(level + 1, ps);
-                    ps.println("executable: " + e.getPhysicalTransformation());
+                    
+                    writeValue(level + 1, prefix + "app.*.executable", e.getPhysicalTransformation(), ps);
                     if (e.getProfiles() != null) {
-                        generateAppProfiles(e, hasCoasterService, level, ps);
+                        generateAppProfiles(prefix + "app.*.", e, hasCoasterService, level, ps);
                     }
                     tabs(level, ps);
                     ps.println("}\n");
@@ -228,27 +274,25 @@ public class ConvertConfig {
         }
     }
 
-    private void generateAppProfiles(TCEntry e, boolean hasCoasterService, int level, PrintStream ps) {
+    private void generateAppProfiles(String prefix, TCEntry e, boolean hasCoasterService, int level, PrintStream ps) {
         StringBuilder options = new StringBuilder();
         for (Profile p : e.getProfiles()) {
             if (p.getProfileKey().startsWith("env.")) {
                 tabs(level, ps);
                 ps.println(p.getProfileKey() + ": \"" + p.getProfileValue() + "\"");
             }
-            else if (p.getProfileKey().equals("maxwalltime")) {
-                tabs(level, ps);
-                ps.println("maxWallTime: \"" + p.getProfileValue() + "\"");
+            else if (p.getProfileKey().equalsIgnoreCase("maxwalltime")) {
+                writeValue(level, prefix + "maxWallTime", p.getProfileValue(), ps);
             }
-            else if (p.getProfileKey().equals("queue")) {
+            else if (p.getProfileKey().equalsIgnoreCase("queue")) {
                 if (!hasCoasterService) {
-                    tabs(level, ps);
-                    ps.println("jobQueue: \"" + p.getProfileValue() + "\"");
+                    writeValue(level, prefix + "jobQueue", p.getProfileValue(), ps);
                 }
             }
-            else if (p.getProfileKey().equals("project")) {
+            else if (p.getProfileKey().equalsIgnoreCase("project")) {
                 if (!hasCoasterService) {
                     tabs(level, ps);
-                    ps.println("jobProject: \"" + p.getProfileValue() + "\"");
+                    writeValue(level, prefix + "jobProject", p.getProfileValue(), ps);
                 }
             }
             else {
@@ -277,22 +321,22 @@ public class ConvertConfig {
 
     private void generateSiteAttributes(Map<String, Object> properties, PrintStream ps) {
         if (properties.containsKey("sysinfo")) {
-            ps.println("\tOS: \"" + properties.get("sysinfo") + "\"");
+            writeValue(1, "site.*.OS", properties.get("sysinfo"), ps);
         }
-        if (properties.containsKey("delayBase")) {
-            ps.println("\tdelayBase: " + properties.get("delayBase"));
+        if (properties.containsKey("delaybase")) {
+            writeValue(1, "site.*.delayBase", properties.get("delaybase"), ps);
         }
-        if (properties.containsKey("initialScore")) {
+        if (properties.containsKey("initialscore")) {
             double jobThrottle = 2;
-            if (properties.containsKey("jobThrottle")) {
-                jobThrottle = TypeUtil.toDouble(properties.get("jobThrottle"));
+            if (properties.containsKey("jobthrottle")) {
+                jobThrottle = TypeUtil.toDouble(properties.get("jobthrottle"));
             }
-            double initialScore = TypeUtil.toDouble(properties.get("initialScore"));
-            ps.println("\tmaxParallelTasks: " + (int) (jobThrottle * WeightedHost.T + 1));
-            ps.println("\tinitialParallelTasks: " + (int) (jobThrottle * WeightedHost.computeTScore(initialScore) + 1));
+            double initialScore = TypeUtil.toDouble(properties.get("initialscore"));
+            writeValue(1, "site.*.maxParallelTasks", (int) (jobThrottle * WeightedHost.T + 1), ps);
+            writeValue(1, "site.*.initialParallelTasks", (int) (jobThrottle * WeightedHost.computeTScore(initialScore) + 1), ps);
         }
-        if (properties.containsKey("maxSubmitRate")) {
-            ps.println("\tmaxSubmitRate: " + properties.get("maxSubmitRate"));
+        if (properties.containsKey("maxsubmitrate")) {
+            writeValue(1, "site.*.maxSubmitRate", properties.get("maxubmitrate"), ps);
         }
     }
 
@@ -348,11 +392,11 @@ public class ConvertConfig {
         attr(coasterAttrs, "workerManager", AttrType.STRING);
         attr(coasterAttrs, "softImage", AttrType.STRING);
         attr(coasterAttrs, "jobsPerNode", "tasksPerNode", AttrType.INT);
+        attr(coasterAttrs, "ppn", "jobOptions.ppn", AttrType.INT);
         
         serviceAttrs = new HashMap<String, Attr>();
         attr(serviceAttrs, "queue", "jobQueue", AttrType.STRING);
         attr(serviceAttrs, "project", "jobProject", AttrType.STRING);
-        attr(serviceAttrs, "maxtime", "jobMaxTime", AttrType.STRING);
         attr(serviceAttrs, "jobType", "jobType", AttrType.STRING);
                 
         props = new HashMap<String, Attr>();
@@ -414,20 +458,47 @@ public class ConvertConfig {
     }
 
     private void generateCoasterServiceAttributes(BoundContact bc, PrintStream ps) {
+        ps.println("\t\toptions {");
         for (String attr : bc.getProperties().keySet()) {
             Attr a = coasterAttrs.get(attr.toLowerCase());
             if (a != null) {
-                ps.print("\t\t" + a.name + ": ");
+                ps.print("\t\t\t" + a.name + ": ");
                 printValue(a.type, bc.getProperty(attr), ps);
             }
+            else if (attr.equalsIgnoreCase("globus:providerAttributes")) {
+                providerAttributes((String) bc.getProperty(attr), ps);
+            }
+            else if (attr.equalsIgnoreCase("globus:maxWallTime")) {
+                // handled somewhere else
+            }
             else {
-                if (attr.startsWith("globus.")) {
-                    throw new RuntimeException("Unrecognize profile: '" + attr + "'");
+                if (attr.startsWith("globus:")) {
+                    ps.println("\t\t\t# Option ignored: " + attr + " = " + bc.getProperty(attr));
                 }
             }
         }
+        ps.println("\t\t}");
     }
     
+    private void providerAttributes(String val, PrintStream ps) {
+        ps.println("\t\t\tjobOptions {");
+        String[] tokens = val.split("[;\n]");
+        for (String token : tokens) {
+            token = token.trim();
+            if (token.length() > 0) {
+                String[] t2 = token.split("=", 2);
+                if (t2.length == 1) {
+                    ps.println("\t\t\t\t" + t2[0] + ": true");
+                }
+                else {
+                    ps.println("\t\t\t\t" + t2[0] + ": \"" + t2[1] + "\"");
+                }
+            }
+        }
+        
+        ps.println("\t\t\t}");
+    }
+
     private void printValue(AttrType type, Object value, PrintStream ps) {
         switch (type) {
             case INT:
@@ -672,10 +743,10 @@ public class ConvertConfig {
             throw new IllegalArgumentException("No value for profile " + ns + ":" + key);
         }
         if (ns.equals("karajan")) {
-            bc.setProperty(key, value);
+            bc.setProperty(key.toLowerCase(), value);
         }
         else {
-            bc.setProperty(ns + ":" + key, value);
+            bc.setProperty(ns + ":" + key.toLowerCase(), value);
         }
     }
 

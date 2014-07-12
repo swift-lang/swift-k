@@ -22,7 +22,7 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValue;
 
 public class SwiftConfigSchema {
-    private static final String STAR = "\"*\"";
+    private static final String STAR = "*";
     
     public static class Info {
         public ConfigPropertyType<?> type;
@@ -30,6 +30,10 @@ public class SwiftConfigSchema {
         public boolean optional;
         public String doc;
         public ConfigOrigin loc;
+        
+        public String toString() {
+            return String.valueOf(type);
+        }
     }
     
     private Config schema;
@@ -47,13 +51,14 @@ public class SwiftConfigSchema {
         info = new ConfigTree<Info>();
         for (Map.Entry<String, ConfigValue> e : schema.entrySet()) {
             String k = e.getKey();
+            String nk = k.replace("\"*\"", "*");
             String type = null;
             Object defaultValue = null;
             String doc = null;
             ConfigOrigin loc = null;
             if (k.endsWith(".\"_type\"")) {
                 type = schema.getString(k);
-                k = k.substring(0, k.lastIndexOf('.'));
+                nk = nk.substring(0, nk.lastIndexOf('.'));
                 loc = e.getValue().origin();
             }
             else if (k.indexOf(".\"_") == -1){
@@ -62,20 +67,20 @@ public class SwiftConfigSchema {
             }
             else if (k.endsWith(".\"_default\"")){
                 defaultValue = e.getValue().unwrapped();
-                k = k.substring(0, k.lastIndexOf('.'));
+                nk = nk.substring(0, nk.lastIndexOf('.'));
             }
             else if (k.endsWith(".\"_doc\"")){
                 doc = stripDoc((String) e.getValue().unwrapped());
-                k = k.substring(0, k.lastIndexOf('.'));
+                nk = nk.substring(0, nk.lastIndexOf('.'));
             }
             else if (k.indexOf(".\"_") != -1) {
                 continue;
             }
-            Info i = info.get(k);
+            Info i = info.get(nk);
             if (i == null) {
                 i = new Info();
-                info.put(k, i);
-                validNames.add(k);
+                info.put(nk, i);
+                setValid(nk);
             }
             if (type != null) {
                 if (type.startsWith("?")) {
@@ -93,6 +98,13 @@ public class SwiftConfigSchema {
             if (loc != null) {
                 i.loc = loc;
             }
+        }
+    }
+
+    private void setValid(String k) {
+        validNames.add(k);
+        if (!k.isEmpty()) {
+            setValid(parent(k));
         }
     }
 
@@ -314,5 +326,9 @@ public class SwiftConfigSchema {
 
     public Collection<String> listProperties() {
         return validNames;
+    }
+
+    public Info getInfo(String key) {
+        return info.get(key);
     }
 }

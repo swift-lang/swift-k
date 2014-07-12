@@ -49,6 +49,8 @@ public class SwiftConfig implements Cloneable {
     public static final Logger logger = Logger.getLogger(SwiftConfig.class);
     
     public static final boolean CHECK_DYNAMIC_NAMES = true;
+    public static final boolean BUILD_CHECK = true;
+    
     public static final List<String> DEFAULT_LOCATIONS;
     
     public enum Key {
@@ -85,9 +87,9 @@ public class SwiftConfig implements Cloneable {
         }
         String swiftHome = System.getProperty("swift.home");
         if (swiftHome == null) {
-            swiftHome = System.getenv("SWIFT_HOME");
+            swiftHome = System.getProperty("swift.home");
             if (swiftHome == null) {
-                throw new IllegalStateException("SWIFT_HOME is not set");
+                throw new IllegalStateException("swift.home is not set");
             }
         }
         
@@ -248,6 +250,9 @@ public class SwiftConfig implements Cloneable {
     private void build(ConfigTree<Object> tree) {
         this.tree = tree;
         List<String> sites = null;
+        if (BUILD_CHECK) {
+            checkKey("sites");
+        }
         for (Map.Entry<String, ConfigTree.Node<Object>> e : tree.entrySet()) {
             if (e.getKey().equals("site")) {
                 for (Map.Entry<String, ConfigTree.Node<Object>> f : e.getValue().entrySet()) {
@@ -275,6 +280,17 @@ public class SwiftConfig implements Cloneable {
         
         for (String leaf : tree.getLeafPaths()) {
             flat.put(leaf, tree.get(leaf));
+        }
+    }
+
+    /**
+     * Checks if a key is present in the schema. This is used when building
+     * a config from a file to prevent looking for keys that are not allowed
+     * by the schema.
+     */
+    private void checkKey(String key) {
+        if (!SCHEMA.isNameValid(key)) {
+            throw new IllegalArgumentException("No such property in schema: " + key);
         }
     }
 
@@ -350,6 +366,13 @@ public class SwiftConfig implements Cloneable {
         Application app = new Application();
         app.setName(name);
         
+        if (BUILD_CHECK) {
+            checkKey("app.*.executable");
+            checkKey("app.*.options");
+            checkKey("app.*.env");
+            checkKey("app.*.options.jobProject");
+            checkKey("app.*.options.jobQueue");
+        }
         for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
             String k = e.getKey();
             ConfigTree.Node<Object> c = e.getValue();
@@ -358,17 +381,18 @@ public class SwiftConfig implements Cloneable {
                 app.setExecutable(getString(c));
             }
             else if (k.equals("options")) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> opt = (Map<String, Object>) getObject(c, "options");
-                for (Map.Entry<String, Object> f : opt.entrySet()) {
-                    app.addProperty(f.getKey(), f.getValue());
+                
+                for (String key : c.getLeafPaths()) {
+                    if (key.equals("jobProject")) {
+                        app.addProperty("project", c.get(key));
+                    }
+                    else if (key.equals("jobQueue")) {
+                        app.addProperty("queue", c.get(key));
+                    }
+                    else {
+                        app.addProperty(key, c.get(key));
+                    }
                 }
-            }
-            else if (k.equals("jobQueue")) {
-                app.addProperty("queue", getString(c));
-            }
-            else if (k.equals("jobProject")) {
-                app.addProperty("project", getString(c));
             }
             else if (k.equals("env")) {
                 List<KVPair> envs = envs(c);
@@ -397,10 +421,19 @@ public class SwiftConfig implements Cloneable {
         try {
             SwiftContact sc = new SwiftContact(name);
     
+            if (BUILD_CHECK) {
+                checkKey("site.*.OS");
+                checkKey("site.*.execution");
+                checkKey("site.*.filesystem");
+                checkKey("site.*.workDirectory");
+                checkKey("site.*.scratch");
+                checkKey("site.*.app");
+                checkKey("site.*.staging");
+            }
+            
             if (n.hasKey("OS")) {
                 sc.setProperty("sysinfo", getString(n, "OS"));
-            }
-                    
+            }        
             
             for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
                 String ctype = e.getKey();
@@ -422,33 +455,7 @@ public class SwiftConfig implements Cloneable {
                     apps(sc, c);
                 }
                 else if (ctype.equals("staging")) {
-                    String staging = getString(c);
-                    if (staging.equals("swift") || staging.equals("wrapper")) {
-                        sc.setProperty("staging", staging);
-                    }
-                    else if (staging.equals("local")) {
-                        sc.setProperty("staging", "provider");
-                        sc.setProperty("stagingMethod", "file");
-                    }
-                    else if (staging.equals("service-local")) {
-                        sc.setProperty("staging", "provider");
-                        sc.setProperty("stagingMethod", "file");
-                    }
-                    else if (staging.equals("proxy")) {
-                        sc.setProperty("staging", "provider");
-                        sc.setProperty("stagingMethod", "proxy");
-                    }
-                    else if (staging.equals("shared-fs")) {
-                        sc.setProperty("staging", "provider");
-                        sc.setProperty("stagingMethod", "sfs");
-                    }
-                }
-                else if (ctype.equals("options")) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> opt = (Map<String, Object>) getObject(c, "options");
-                    for (Map.Entry<String, Object> f : opt.entrySet()) {
-                        sc.setProperty(f.getKey(), f.getValue());
-                    }
+                    staging(sc, c);
                 }
                 else {
                     sc.setProperty(ctype, getObject(c));
@@ -461,22 +468,99 @@ public class SwiftConfig implements Cloneable {
         }
     }
     
+    private void staging(SwiftContact sc, Node<Object> n) {
+        String staging = getString(n);
+        if (BUILD_CHECK) {
+            checkValue("site.*.staging", 
+                "swift", "wrapper", "local", "service-local", "proxy", "shared-fs");
+        }
+        if (staging.equals("swift") || staging.equals("wrapper")) {
+            sc.setProperty("staging", staging);
+        }
+        else if (staging.equals("local")) {
+            sc.setProperty("staging", "provider");
+            sc.setProperty("stagingMethod", "file");
+        }
+        else if (staging.equals("service-local")) {
+            sc.setProperty("staging", "provider");
+            sc.setProperty("stagingMethod", "file");
+        }
+        else if (staging.equals("proxy")) {
+            sc.setProperty("staging", "provider");
+            sc.setProperty("stagingMethod", "proxy");
+        }
+        else if (staging.equals("shared-fs")) {
+            sc.setProperty("staging", "provider");
+            sc.setProperty("stagingMethod", "sfs");
+        }
+    }
+
+    private void checkValue(String key, String... values) {
+        SwiftConfigSchema.Info i = SCHEMA.getInfo(key);
+        if (i == null) {
+            throw new IllegalArgumentException("No type information found for: " + key);
+        }
+        for (String v : values) {
+            i.type.check(key, v, i.loc);
+        }
+    }
+
     private Service filesystem(Node<Object> c) throws InvalidProviderException, ProviderMethodException {        
         Service s = new ServiceImpl();
         s.setType(Service.FILE_OPERATION);
-        service(c, s);
+        fileService(c, s);
         return s;
     }
+    
+    private void fileService(Node<Object> n, Service s) throws InvalidProviderException, ProviderMethodException {
+        String provider = null;
+        String url = null;
+        if (BUILD_CHECK) {
+            checkKey("site.*.filesystem.type");
+            checkKey("site.*.filesystem.URL");
+            checkKey("site.*.filesystem.options");
+        }
+        for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
+            String k = e.getKey();
+            ConfigTree.Node<Object> c = e.getValue();
+            
+            if (k.equals("type")) {
+                provider = getString(c);
+            }
+            else if (k.equals("URL")) {
+                url = getString(c);
+            }
+            else if (k.equals("options")) {
+                for (Map.Entry<String, ConfigTree.Node<Object>> f : e.getValue().entrySet()) {
+                    s.setAttribute(f.getKey(), getObject(f.getValue()));
+                }
+            }
+        }
+        
+        s.setProvider(provider);
+        if (url != null) {
+            ServiceContact contact = new ServiceContactImpl(url);
+            s.setServiceContact(contact);
+            s.setSecurityContext(AbstractionFactory.newSecurityContext(provider, contact));
+        }
+    }
+
 
     private Service execution(ConfigTree.Node<Object> n) throws InvalidProviderException, ProviderMethodException {
         ExecutionService s = new ExecutionServiceImpl();
-        service(n, s);                        
+        execService(n, s);
         return s;
     }
 
-    private void service(Node<Object> n, Service s) throws InvalidProviderException, ProviderMethodException {
+    private void execService(Node<Object> n, Service s) throws InvalidProviderException, ProviderMethodException {
         String provider = null;
         String url = null;
+        if (BUILD_CHECK) {
+            checkKey("site.*.execution.type");
+            checkKey("site.*.execution.URL");
+            checkKey("site.*.execution.jobManager");
+            checkKey("site.*.execution.options");
+        }
         for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
             String k = e.getKey();
             ConfigTree.Node<Object> c = e.getValue();
@@ -490,7 +574,36 @@ public class SwiftConfig implements Cloneable {
             else if (k.equals("jobManager")) {
                 ((ExecutionService) s).setJobManager(getString(c));
             }
-            else if (k.equals("jobProject")) {
+            else if (k.equals("options")) {
+                execOptions((ExecutionService) s, c);
+            }
+            
+        }
+        
+        s.setProvider(provider);
+        if (url != null) {
+            ServiceContact contact = new ServiceContactImpl(url);
+            s.setServiceContact(contact);
+            s.setSecurityContext(AbstractionFactory.newSecurityContext(provider, contact));
+        }
+    }
+
+    private void execOptions(ExecutionService s, Node<Object> n) {
+        if (BUILD_CHECK) {
+            checkKey("site.*.execution.options.jobProject");
+            checkKey("site.*.execution.options.maxJobs");
+            checkKey("site.*.execution.options.maxJobTime");
+            checkKey("site.*.execution.options.maxNodesPerJob");
+            checkKey("site.*.execution.options.jobQueue");
+            checkKey("site.*.execution.options.jobOptions");
+        }
+        
+        for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
+            String k = e.getKey();
+            ConfigTree.Node<Object> c = e.getValue();
+            
+            
+            if (k.equals("jobProject")) {
                 s.setAttribute("project", getObject(c));
             }
             else if (k.equals("maxJobs")) {
@@ -505,16 +618,17 @@ public class SwiftConfig implements Cloneable {
             else if (k.equals("jobQueue")) {
                 s.setAttribute("queue", getObject(c));
             }
+            else if (k.equals("tasksPerNode")) {
+                s.setAttribute("jobsPerNode", getObject(c));
+            }
+            else if (k.equals("jobOptions")) {
+                for (String key : c.getLeafPaths()) {
+                    s.setAttribute(key, c.get(key));
+                }
+            }
             else {
                 s.setAttribute(k, getObject(c));
             }
-        }
-        
-        s.setProvider(provider);
-        if (url != null) {
-            ServiceContact contact = new ServiceContactImpl(url);
-            s.setServiceContact(contact);
-            s.setSecurityContext(AbstractionFactory.newSecurityContext(provider, contact));
         }
     }
 
