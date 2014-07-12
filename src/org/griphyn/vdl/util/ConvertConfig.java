@@ -823,7 +823,7 @@ public class ConvertConfig {
                 ps = new PrintStream(new FileOutputStream(ap.getStringValue("out")));
             }
             cc.run(ap.getStringValue("sites.file", null), 
-                ap.getStringValue("tc.file", null), ap.getStringValue("config", null), System.out);
+                ap.getStringValue("tc.file", null), ap.getStringValue("config", null), ps);
             System.exit(0);
         }
         catch (Exception e) {
