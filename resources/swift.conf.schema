@@ -14,19 +14,28 @@ app."*" {
 			executable with the same name as the application"""   
 	}
 	
+	maxWallTime: "?Time"
+	
 	options {
 		_type: "?Object"
 		_doc:
 			""" Allows the definition of arbitrary application options. The meaning
 			of these options is largely dependent on the mechanism used to execute
 			the application. """
+		# known things
 		jobType: "?String"
+		jobQueue: "?String"
+		jobProject: "?String"
 		count: "?StrictlyPositiveInt"
+		# some specific provider stuff
+		pbs.aprun: "?Boolean"
+		pbs.mpp: "?Boolean"
+		depth: "?StrictlyPositiveInt"
+		ppn: "?StrictlyPositiveInt"
+		pbs.properties: "?String"
+		condor: "?Object"
 		"*": "?Object" 
-	}
-	
-	jobType: "?String", jobQueue: "?String", jobProject: "?String"
-	maxWallTime: "?Time"
+	}	
 	
 	env."*": "String"
 }
@@ -92,7 +101,16 @@ site."*" {
 			workerLoggingLevel: "?Choice[ERROR, WARN, INFO, DEBUG, TRACE]"
 			workerLoggingDirectory: "?String"
 			softImage: "?String"
-			"*": "?Object"
+			jobOptions {
+				"*": "?Object"
+				# known things
+				pbs.aprun: "?Boolean"
+				pbs.mpp: "?Boolean"
+				depth: "?StrictlyPositiveInt"
+				ppn: "?StrictlyPositiveInt"
+				pbs.properties: "?String"
+				condor: "?Object"
+			}
 		}
 	}
 	
@@ -101,14 +119,23 @@ site."*" {
 	
 	app."*": {
 		executable: "?String"
-	
-		options {
-			jobType: "?String"
-			count: "?StrictlyPositiveInt"
-			"*": "?Object" 
-		}
-		jobQueue: "?String", jobProject: "?String"
 		maxWallTime: "?Time"
+		
+		options {
+			# known things
+			jobType: "?String"
+			jobQueue: "?String"
+			jobProject: "?String"
+			count: "?StrictlyPositiveInt"
+			# some specific provider stuff
+			pbs.aprun: "?Boolean"
+			pbs.mpp: "?Boolean"
+			depth: "?StrictlyPositiveInt"
+			ppn: "?StrictlyPositiveInt"
+			pbs.properties: "?String"
+			condor: "?Object"
+			"*": "?Object"
+		}
 	
 		env."*": "String"
 	}
