@@ -11,331 +11,14 @@ use Cwd;
 
 Getopt::Long::Configure("pass_through");
 
-my %properties = ();		# Hash storing all swift properties
-my @property_files = ();	# List of swift property files to be read
 my $option_tcfile;		# Value of -tc.file option
 my $option_sitesfile;		# Value of -sites.file option
-my $option_siteslist;		# Value of -sites option, comma separated
-my $option_config;		# Value of -config option
-my $option_listconfig; 		# List configuration files used, values, then exit
-my $option_properties;          # Use a swift.properties specified in the command line
 my $option_help;                # Print help
 my $option_version;             # Print version number
-my @sites;			# List of sites from -sites in array
 my $run_directory;		# Run directory to be created, run.NNNN
 my @new_swift_args;		# New command line arguments
 my @original_swift_args;	# Original arguments
 
-# List of allowable site properties and their xml namespace
-my %site_aliases = (
-   'allocationstepsize'        => 'globus.allocationStepSize',
-   'condor'                    => 'globus.condor',
-   'delaybase'                 => 'karajan.delayBase',
-   'filesystem'                => 'filesystem',
-   'highoverallocation'        => 'globus.highOverallocation',
-   'initialscore'              => 'karajan.initialScore',
-   'internalhostname'          => 'globus.internalhostname',
-   'jobgranularity'            => 'globus.nodeGranularity',
-   'jobmanager'                => 'jobmanager',
-   'jobproject'                => 'globus.project',
-   'jobqueue'                  => 'globus.queue',
-   'jobtype'                   => 'globus.jobType',
-   'jobwalltime'               => 'globus.maxtime',
-   'jobwalltimereserve'        => 'globus.reserve',
-   'lowoverallocation'         => 'globus.lowOverallocation',
-   'maxjobs'                   => 'globus.slots',
-   'maxnodesperjob'            => 'globus.maxNodes',
-   'maxsubmitrate'             => 'karajan.maxSubmitRate',
-   'overallocationdecayfactor' => 'globus.overallocationDecayFactor',
-   'pe'                        => 'globus.pe',
-   'providerattributes'        => 'globus.providerAttributes',
-   'remotemonitorenabled'      => 'globus.remoteMonitorEnabled',
-   'slurm'                     => 'globus.slurm',
-   'stagingmethod'             => 'swift.stagingMethod',
-   'taskdir'                   => 'globus.scratch',
-   'tasksperworker'            => 'globus.jobsPerNode',
-   'taskthrottle'              => 'karajan.jobThrottle',
-   'taskwalltime'              => 'globus.maxwalltime',
-   'userhomeoverride'	       => 'globus.userHomeOverride',
-   'workdir'                   => 'workdir',
-   'workerloglevel'            => 'globus.workerlogginglevel',
-   'workerlogdirectory'        => 'globus.workerloggingdirectory',
-   'workermanager'             => 'globus.workerManager',
-);
-
-# List of allowable swift properties and aliases
-my %property_aliases = (
-   'caching.algorithm'               => 'caching.algorithm',
-   'clustering.enabled'              => 'clustering.enabled',
-   'clustering.min.time'             => 'clustering.min.time',
-   'clustering.queue.delay'          => 'clustering.queue.delay',
-   'config.rundirs'                  => 'config.rundirs',
-   'execution.retries'               => 'execution.retries',
-   'file.gc.enabled'                 => 'file.gc.enabled',
-   'foreach.max.threads'             => 'foreach.max.threads',
-   'kickstart.enabled'               => 'kickstart.enabled',
-   'kickstart.always.transfer'       => 'kickstart.always.transfer',
-   'lazy.errors'                     => 'lazy.errors',
-   'pgraph'                          => 'pgraph',                 
-   'pgraph.graph.options'            => 'pgraph.graph.options',
-   'pgraph.node.options'             => 'pgraph.node.options',
-   'provenance.log'                  => 'provenance.log',
-   'provider.staging.pin.swiftfiles' => 'provider.staging.pin.swiftfiles',
-   'replication.enabled'             => 'replication.enabled',
-   'replication.min.queue.time'      => 'replication.min.queue.time',
-   'replication.limit'               => 'replication.limit',
-   'sitedir.keep'                    => 'sitedir.keep',
-   'sites.file'                      => 'sites.file',
-   'status.mode'                     => 'status.mode',
-   'swift.home'                      => 'swift.home',
-   'tc.file'                         => 'tc.file',
-   'tcp.port.range'                  => 'tcp.port.range',
-   'throttle.file.operations'        => 'throttle.file.operations',
-   'throttle.host.submit'            => 'throttle.host.submit',
-   'throttle.score.job.factor'       => 'throttle.score.job.factor',
-   'throttle.submit'                 => 'throttle.submit',
-   'throttle.transfers'              => 'throttle.transfers',
-   'ticker.date.format'              => 'ticker.date.format',
-   'ticker.disable'                  => 'ticker.disable',
-   'ticker.prefix'                   => 'ticker.prefix',
-   'tracing.enabled'                 => 'tracing.enabled',
-   'use.wrapper.staging'             => 'use.wrapper.staging',
-   'use.provider.staging'            => 'use.provider.staging',
-   'wrapper.invocation.mode'         => 'wrapper.invocation.mode',
-   'wrapper.parameter.mode'          => 'wrapper.parameter.mode',
-   'wrapperlog.always.transfer'      => 'wrapperlog.always.transfer',
-);
-
-# Verify a property file exists and add it to the search path
-sub add_property_file {
-   my $property_file = $_[0];
-   if( -e "$property_file" ) {
-      push( @property_files, $property_file );
-   }
-}
-
-# Create a string with a single pool entry
-sub create_pool_entry {
-   my $site = $_[0];
-   my $pool = "\n<pool handle=\"" . $site . "\">\n";
-   while( my( $key, $value ) = each( %properties ) ) {
-      if( $key =~ /^\s*site.$site\./ ) {
-         my $propxml = &property_to_xml( $key, $value );
-         if(defined($propxml)) {
-            $pool .= $propxml;
-         }
-      }
-   }
-   $pool .= "</pool>\n";
-   return $pool;
-}
-
-# Verify a string is in hh:mm:ss format
-sub verify_in_hhmmss {
-   my $parameter_name =  $_[0];
-   my $parameter_value = $_[1];
-   my $ccount = ($parameter_value =~ s/:/:/g);
-   if ($ccount != 2) {
-      swiftquit("Error: $parameter_name value $parameter_value is not in hh:mm:ss format");
-   }
-}
-
-# Convert hh:mm:ss to seconds
-sub hhmmss_to_seconds {
-   (my $hh, my $mm, my $ss) = split(':', $_[0]);
-   return ($hh*60*60)+($mm*60)+$ss;
-}
-
-# Convert int to job throttle format
-sub number_to_throttle {
-   my $input = $_[0];
-   if ( $input !~ /\d/) {  
-      swiftquit("Error: taskthrottle must be numeric");
-   }
-   return ($input - 1) / 100;
-}  
-
-# Convert property to xml 
-sub property_to_xml {
-   my $key = $_[0];
-   my $value = $_[1];
-   my ($site, $sitename, $property) = split('\.', $key, 3);
-
-   # Check to make sure site definition is known, or throw an error
-   (my $propertyStart = $property) =~ s/\..*//;
-   if( !defined( $site_aliases{ $propertyStart } )) {
-      swiftquit("Error: Unknown property $key");
-   }
-
-   if( $property eq "jobwalltime" ) {
-      verify_in_hhmmss($key, $value);
-      $value = hhmmss_to_seconds($value); 
-   } 
-
-   elsif ( $property =~ m/^(slurm|condor)/ ) {
-      my ( $xmlnamespace, $xmlproperty ) = split(/\./, $site_aliases{ $propertyStart });
-      return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $property . "\">" . $value . "</profile>\n";
-   }
-
-   elsif ( $property eq "taskthrottle" ) {
-      $value = number_to_throttle($value);
-   }
-
-   elsif ( $property eq "taskwalltime" ) {
-      verify_in_hhmmss($key, $value);
-   }
-   
-   elsif ( $property eq "jobmanager" ) { 
-      my $ccount = ($value =~ s/:/:/g);
-      my $jobmanager = "";
-      my $jobmanagerURL = "";
-      my $provider = "";
-
-      # With no separators, assume local 
-      if( $ccount == 0 ) {
-         $jobmanager = "local:$value";
-         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\"/>\n";
-      }
-
-      # With one separator, use ssh-cl and assume hostname:type
-      elsif ( $ccount == 1) {
-         (my $first, my $second) = split(':', $value);
-         $jobmanager = "ssh-cl:$second";
-         $jobmanagerURL = "$first";
-         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
-      }
- 
-      # Other, in the format of proto:host:jobMgr
-      elsif ( $ccount == 2) {
-         (my $first, my $second, my $third) = split(':', $value);
-         $jobmanager="$first:$third";
-         $jobmanagerURL = "$second";
-         return "<execution provider=\"coaster\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
-      }
-
-      # Define a non-coaster protocol
-      elsif ( $ccount >= 3) {
-         (my $first, my $second, my $third, my $fourth) = split(':', $value, 4);
-         $provider=$first;
-         $jobmanager="$second:$third";
-         $jobmanagerURL="$fourth";
-         return "<execution provider=\"$provider\" jobmanager=\"" . $jobmanager . "\" url=\"" . $jobmanagerURL . "\"/>\n";
-      }
-   }
-
-   elsif ( $property eq "workdir" )       { return "<workdirectory>$value</workdirectory>\n"; }
-   elsif ( $property eq "taskdir" )       { return "<scratch>$value</scratch>\n"; }
-   elsif ( $property eq "filesystem" )    { return "<filesystem provider=\"" . $value . "\"/>\n"; }
-
-   my ( $xmlnamespace, $xmlproperty ) = split(/\./, $site_aliases{ $propertyStart });
-   if ( defined($xmlnamespace) && defined($xmlproperty)) {
-      return "<profile namespace=\"" . $xmlnamespace . "\" key=\"" . $xmlproperty . "\">" . $value . "</profile>\n"; 
-   } 
-}
-
-# Write apps to file in tc.data format
-sub write_apps {
-   my $app_filename = $_[0];
-   my $use_wildcard = 1;
-   open( APP_FILE, ">$run_directory/$app_filename" ) || &swiftquit("Unable to open $run_directory/$app_filename");
-
-   # Find app definitions
-   while( my( $key, $value ) = each( %properties ) ) {
-      if( $key =~ /^\s*app./ ) {
-         my ( $app, $site, $command ) = split(/\./, $key);
-
-         # Handle wildcards for site names
-         if ( $site eq "*" ) { 
-            $use_wildcard=0;
-            foreach my $nsite( @sites ) {
-               print APP_FILE "$nsite $command $value\n";
-            }
-         } 
-
-         # Handle apps for defined sites
-         elsif ( grep( /^$site$/, @sites ) ) {
-            $use_wildcard=0;
-            print APP_FILE "$site $command $value\n";
-         }
-      }
-   }
-
-   if ($use_wildcard) {
-      print APP_FILE "* * * INSTALLED INTEL32::LINUX null\n";
-   }
-
-   close(APP_FILE);
-   push( @new_swift_args, "-tc.file $run_directory/$app_filename" );
-}
-
-# Write properties to file
-sub write_properties {
-   my $property_filename = $_[0];
-   open( PROPERTY_FILE, ">$run_directory/$property_filename" ) || &swiftquit("Unable to open $run_directory/$property_filename");
-   while( my( $key, $value ) = each( %properties ) ) {
-      # Ignore properties that start with app. or site.
-      next if $key =~ /^\s*app\./;
-      next if $key =~ /^\s*site$/;
-      next if $key =~ /^\s*site\./;
-      if( !defined( $property_aliases{ $key } )) {
-         swiftquit("Error: Unknown property $key");
-      }
-      print PROPERTY_FILE "$property_aliases{$key}=$value\n";
-   }
-   push( @new_swift_args, "-config $run_directory/$property_filename" );
-}
-
-# Check if a site is defined
-sub site_is_defined {
-   my $site = $_[0];
-   my $isDefined=0;
-   while( my( $key, $value ) = each( %properties ) ) {
-     if( $key =~ m/^site\.$site\./i ) {
-        $isDefined=1;
-      }
-   }
-   return $isDefined;
-}
-
-# Check if a service is defined
-sub service_is_defined {
-   my $site = $_[0];
-   my $isDefined=0;
-   while( my( $key, $value ) = each( %properties ) ) {
-      if( $key =~ m/^service\.$site\./i ) {
-         $isDefined=1;
-      }
-   }
-   return $isDefined;
-}
-
-# Verify a service is running
-sub service_is_running {
-   my $site = $_[0];
-   my $service_is_running = 0;
-   my $service_directory = "$ENV{HOME}/.swift/service/$site";
-   if( -d "$service_directory" ) {
-      if ( -f "$service_directory/pid" ) {
-         my $pid = `cat $service_directory/pid`;
-         $service_is_running = kill 0, $pid;
-      }
-   }
-   return $service_is_running;
-}
-
-# Retrieve a service sites.xml
-sub retrieve_service_xml {
-   my $site = $_[0];
-   my $sitexmlfile = "$ENV{HOME}/.swift/service/$site/sites.xml";
-   my @xml;
-   open(SXML, $sitexmlfile) || &swiftquit("Unable to open $sitexmlfile: $!\n");
-   while(<SXML>) {
-      if(m/^<\?xml|^<config|config>$/i){ next; }
-         push(@xml, $_);
-   }
-   close(SXML);
-   return @xml;
-}
 
 # Print error, and prevent Swift from running
 sub swiftquit {
@@ -347,72 +30,6 @@ sub swiftquit {
    exit 1;
 } 
 
-# Write sites.xml to disk
-sub write_sites {
-   my $filename = $_[0];
-   open(SITES, ">$run_directory/$filename") || &swiftquit("Unable to open $run_directory/$filename");
-   print SITES "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-   print SITES "<config xmlns=\"http://www.ci.uchicago.edu/swift/SwiftSites\">\n";
-
-   if(defined ($properties{site}) && !defined($option_siteslist) ) { 
-      push(@sites, split(',', $properties{site}))
-   } 
-
-   foreach my $site(@sites) {
-      # XML from site definition
-      if ( &site_is_defined($site) ) {
-         print SITES &create_pool_entry($site);
-      }
-
-      # XML from service definition 
-      elsif ( &service_is_defined($site)) {
-         if( ! &service_is_running($site) ) {
-            &swiftquit("Service process for $site is not running");
-         }
-         print SITES &retrieve_service_xml($site);
-      }
-
-      # Can't find definition
-      else {
-         &swiftquit("Site $site is not defined");
-      }
-   }
-
-   print SITES "\n</config>\n";
-   close(SITES);
-   push(@new_swift_args, "-sites.file $run_directory/$filename");
-}
-
-# Format property definition and store in hash
-sub record_property {
-   my $property_input = $_[0];
-   chomp $property_input;
- 
-   # Ignore comments, remove leading whitespace, ignore empty lines
-   return if /^\s*#/ || /^(\s)*$/; 
-   $property_input =~ s/^\s+//;
-
-   my ($key, $value) = split('=', $property_input, 2);
-   if (!defined($value) || length($value) eq 0) {
-      swiftquit "Error: Missing value for property \"$property_input\"";
-   }
-
-   if( $key !~ m/^app\./) { $key = lc($key); }
-   $value =~ s/^\s+//g;
-
-   if($key eq "sites") { $key = "site"; }
-   $properties{ $key } = $value;
-}
-
-# Replace environment variables in properties
-sub env_replace {
-   foreach my $key (sort keys %properties) {
-      my $value = $properties{$key};
-      $value =~ s/\$(\w+)/$ENV{$1}/g;
-      $properties{$key} = $value;
-   }
-}
-
 # Getopt::Long can't accept dots in arguments, work around to make things easy
 foreach my $arg(@ARGV) {
    $arg =~ s/sites.file/sitesfile/g;
@@ -423,22 +40,27 @@ foreach my $arg(@ARGV) {
 @original_swift_args = @ARGV;
 GetOptionsFromArray(
            \@original_swift_args, 
-           'config=s'              => \$option_config,
            'help'                  => \$option_help,
-           'listconfig'      	   => \$option_listconfig,
-           'property|properties=s' => \$option_properties,
-           'site|sites=s'          => \$option_siteslist,
            'sitesfile=s'           => \$option_sitesfile,
            'tcfile=s'              => \$option_tcfile,
            'version'               => \$option_version,
 );
 
 # If -version or -help is specified, pass and exit
-if ( $option_help ) {
+if ($option_help) {
    print "-help\n";
    exit;
-} elsif ( $option_version ) {
+} 
+elsif ($option_version) {
    print "-version\n";
+   exit;
+}
+elsif ($option_sitesfile) {
+   print "-sites.file x\n";
+   exit;
+}
+elsif ($option_tcfile) {
+   print "-tc.file x\n";
    exit;
 }
 
@@ -446,110 +68,29 @@ if ( $option_help ) {
 my $run_number = 1;
 my @run_directories = <run[0-9][0-9][0-9]>;
 
+# TODO: there is no guarantee that directories will be listed in order!!
 if(@run_directories) {
    $run_number = $run_directories[-1];
    $run_number =~ s/run//g;
    $run_number++;
 }
 
-# Set @sites array from comma separated list of sites
-if(defined($option_siteslist)) {
-   @sites = split(',', $option_siteslist);
-}
 
 # Verify Swift is found in PATH
 my $swift_etc_directory = dirname(dirname($0)) . "/etc";
 if( ! -d $swift_etc_directory ) { &swiftquit("Unable to find a valid Swift installation"); }
 
-# Set the search order for properties
-&add_property_file("$swift_etc_directory/swift.properties");
-&add_property_file("$ENV{SWIFT_SITE_CONF}/swift.properties") if defined($ENV{SWIFT_SITE_CONF});
-&add_property_file("$ENV{HOME}/.swift/swift.properties");
-&add_property_file("swift.properties");
-if(defined($option_properties)) {
-   if(! -f $option_properties) {
-      swiftquit("Unable to find properties file $option_properties");
-   }
-   &add_property_file($option_properties);
-}
+$run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
+mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
 
-# Set property values
-foreach my $property_file(@property_files) {
-   open(PROPERTIES, $property_file) || &swiftquit("Unable to open $property_file");
-
-   while( <PROPERTIES> ) {
-      chomp;
-      next if /^\s*#/ || /^(\s)*$/; # Ignore blank lines and comments
-      s/^\s+//;                     # Remove leading whitespace
-      my @property_array=();
-
-      # Handle brackets 
-      if( /^site\.|^service\./ && /{/ ) { 
-         my $prefix = (split /\s+{/)[0];
-         while( <PROPERTIES> ) {
-            if( /^}/ ) { last; } 
-            $_ =~ s/^\s+|\s+$//g;
-            &record_property( $prefix . ".$_" );
-         }
-      }
-      else {
-         &record_property($_);
-      }
-   }
-}
-
-# If -listconfig is specified, print values and exit
-if( $option_listconfig ) {
-   print "\n";
-   foreach my $site(@property_files) {
-      print "Reading from: $site\n";
-   }
-   print "\nValues:\n";
-   foreach my $key (sort keys %properties) {
-      print "\t$key=$properties{$key}\n";
-   }
-   print "\n";
-   exit;
-}
-
-# Determine run directory situation
-if(!defined($properties{"config.rundirs"}) || $properties{"config.rundirs"} ne "false") {
-   $run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
-   if(!$option_listconfig) {
-      mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
-   }
-
-   @new_swift_args = ("-Dscript.dir=$run_directory/scripts");
-   push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
-   push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
-   push(@new_swift_args, "-runid " . basename($run_directory));
-   push(@new_swift_args, "-Ddebug.dir.prefix=" . basename($run_directory) . "/");  
-   push(@new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
-} else {
-   $run_directory = getcwd();
-}
+@new_swift_args = ("-Dscript.dir=$run_directory/scripts");
+push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
+push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
+push(@new_swift_args, "-runid " . basename($run_directory));
+push(@new_swift_args, "-Ddebug.dir.prefix=" . basename($run_directory) . "/");  
+push(@new_swift_args, sprintf( "-logfile $run_directory/run%03s.log", $run_number ));
 
 $ENV{RUNDIRECTORY} = "$run_directory";
-&env_replace();
-
-# Write swift configuration files
-&write_sites("sites.xml") if defined( $option_siteslist ) || defined($properties{site});
-&write_apps("apps")    if !defined( $option_tcfile ) && ( defined( $option_siteslist ) || defined($properties{site}));
-&write_properties("cf")   if !defined( $option_config );
-
-# Repair args with dots
-foreach my $arg(@ARGV) {
-   $arg =~ s/sitesfile/sites.file/g;
-   $arg =~ s/tcfile/tc.file/g;
-}
-
-# Make sure swiftrun arguments aren't sent back to swift
-while( @ARGV ) {
-   my $option = shift;
-   if ( $option eq "-site" || $option eq "-sites" || $option eq "-properties" || $option eq "-property") { shift; }
-   else { push( @new_swift_args, $option ); }
-}
-
 
 foreach my $arg( @new_swift_args ) {
    print "$arg ";

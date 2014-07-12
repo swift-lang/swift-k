@@ -152,14 +152,8 @@ if [ "$SWIFT_USAGE_STATS" = 1 ]; then
 fi
 
 # Swiftrun
-if [[ "$CMDLINE" == *-listconfig* ]]
-then
-   $SWIFT_HOME/bin/swiftrun $CMDLINE
-   exit 0
-else
-   CMDLINE="$( $SWIFT_HOME/bin/swiftrun $CMDLINE )"
-   for cmd in $CMDLINE
-   do
+CMDLINE="$( $SWIFT_HOME/bin/swiftrun $CMDLINE )"
+for cmd in $CMDLINE; do
       if [[ "$cmd" == *-Dscript.dir* ]] || [[ "$cmd" == *-Drestart.log.name* ]]; then
          OPTIONS="$OPTIONS $cmd"
          CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g )
@@ -172,8 +166,7 @@ else
          OPTIONS="$OPTIONS $cmd"
          CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g )
       fi
-   done
-fi
+done
 
 ### EXECUTE ############
 # Note: killing Swift may be briefly delayed due to Coasters shutdown
