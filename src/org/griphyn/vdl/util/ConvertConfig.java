@@ -191,12 +191,14 @@ public class ConvertConfig {
                 }
                 generateSiteAttributes(bc.getProperties(), ps);
                 if (tc != null) {
-                    generateAppInfo("site.*.", bc.getName(), tc, hasCoasterService, 1, ps);
+                    generateAppInfo("site.*.", bc.getName(), 
+                        (String) bc.getProperty("globus:maxwalltime"), tc, hasCoasterService, 1, ps);
                 }
                 else {
                     if (bc.hasProperty("globus:maxwalltime")) {
                         ps.println("\tapp.ALL {");
-                        writeValue(2, "site.*.app.*.maxWallTime", bc.getProperty("globus:maxwalltime"), ps);
+                        writeValue(2, "site.*.app.*.maxWallTime", 
+                            WallTime.normalize((String) bc.getProperty("globus:maxwalltime"), "hms"), ps);
                         ps.println("\t}");
                     }
                 }
@@ -204,7 +206,7 @@ public class ConvertConfig {
             }
         }
         if (tc != null) {
-            generateAppInfo("", "*", tc, false, 0, ps);
+            generateAppInfo("", "*", null, tc, false, 0, ps);
         }
     }
     
@@ -222,10 +224,35 @@ public class ConvertConfig {
         ps.print(last(key));
         ps.print(": ");
         if (value instanceof String) {
-            ps.println("\"" + value + "\"");
+            ps.println(checkSubst((String) value));
         }
         else {
             ps.println(value);
+        }
+    }
+
+    private String checkSubst(String str) {
+        int i1 = str.indexOf('{');
+        int i2 = str.indexOf('}', i1 + 1);
+        if (i1 != -1 && i2 != -1) {
+            StringBuilder sb = new StringBuilder();
+            // insert a dollar sign
+            if (i1 != 0) {
+                sb.append('"');
+                sb.append(str.subSequence(0, i1));
+                sb.append('"');
+            }
+            sb.append('$');
+            sb.append(str.substring(i1, i2 + 1));
+            if (i2 != str.length() - 1) {
+                sb.append('"');
+                sb.append(str.substring(i2 + 1));
+                sb.append('"');
+            }
+            return sb.toString();
+        }
+        else {
+            return "\"" + str + "\"";
         }
     }
 
@@ -247,7 +274,8 @@ public class ConvertConfig {
         return key.substring(key.lastIndexOf('.') + 1);
     }
 
-    private void generateAppInfo(String prefix, String host, TransformationCatalog tc, boolean hasCoasterService, int level, PrintStream ps) {
+    private void generateAppInfo(String prefix, String host, String maxWallTime, 
+            TransformationCatalog tc, boolean hasCoasterService, int level, PrintStream ps) {
         try {
             for (TCEntry e : tc.getTC()) {
                 if (e.getResourceId().equals(host)) {
@@ -263,6 +291,11 @@ public class ConvertConfig {
                     writeValue(level + 1, prefix + "app.*.executable", e.getPhysicalTransformation(), ps);
                     if (e.getProfiles() != null) {
                         generateAppProfiles(prefix + "app.*.", e, hasCoasterService, level, ps);
+                    }
+                    
+                    if (maxWallTime != null) {
+                        writeValue(level + 1, prefix + "app.*.maxWallTime", 
+                            WallTime.normalize(maxWallTime, "hms"), ps);
                     }
                     tabs(level, ps);
                     ps.println("}\n");
@@ -307,10 +340,9 @@ public class ConvertConfig {
         }
         if (options.length() != 0) {
             options.append("}");
-            tabs(level, ps);
-            ps.println("options: " + options.toString());
+            tabs(level + 1, ps);
+            ps.println("options " + options.toString());
         }
-        ps.println("\t}");
     }
 
     private void tabs(int count, PrintStream ps) {
@@ -507,7 +539,7 @@ public class ConvertConfig {
                 ps.println(value);
                 break;
             case STRING:
-                ps.println("\"" + value + "\"");
+                ps.println(checkSubst(String.valueOf(value)));
                 break;
             case TIME_FROM_SECONDS:
                 ps.println("\"" + WallTime.format("hms", TypeUtil.toInt(value)) + "\"");
