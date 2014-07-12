@@ -40,10 +40,6 @@ if [ ! -d "$SWIFT_HOME" ] ; then
     fi
 fi
 
-if [ -z "$SWIFT_SITE_CONF" ]; then
-   export SWIFT_SITE_CONF=$SWIFT_HOME/etc/templates
-fi
-
 OPTIONS="$OPTIONS -Djava.endorsed.dirs=$SWIFT_HOME/lib/endorsed"
 
 LOCALCLASSPATH=$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec
