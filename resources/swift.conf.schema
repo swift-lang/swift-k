@@ -62,7 +62,7 @@ site."*" {
 	}
 
 	staging {
-		_type: "?Choice[swift, wrapper, local, service-local, shared-fs, proxy]"
+		_type: "?Choice[swift, wrapper, local, service-local, shared-fs]"
 		_default: "swift"
 	}
 		
