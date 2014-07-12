@@ -148,7 +148,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
             setupLogging(ap, config, projectName, runID);
             logBasicInfo(argv, runID, config);
-            debugConfigText(config);
             
             boolean provenanceEnabled = config.isProvenanceEnabled();
             
@@ -277,7 +276,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             logger.info("CWD " + new File(".").getAbsolutePath());
         }
         if (logger.isDebugEnabled()) {
-            logger.debug("SWIFT_CONFIGURATION " + conf);
+            logger.debug("SWIFT_CONFIGURATION \n" + conf);
         }
     }
 
@@ -535,10 +534,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
             textLogger.debug("BEGIN " + name + ":\n" + source + "\n");
             textLogger.debug("END " + name + ":");
         }
-    }
-
-    static void debugConfigText(SwiftConfig config) {
-		logger.info("SWIFT_CONF \n" + config);
     }
     
     /**
