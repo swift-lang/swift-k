@@ -15,7 +15,7 @@ site.mysite {
 		URL: "my.site.org"
 		jobManager: "ssh:local"
 	}
-	staging: "proxy"
+	staging: "local"
 	
 	app.ALL {executable: "*"}
 }
@@ -96,8 +96,7 @@ content, whereas content between square brackets is optional:
 -----
 site.<name> {
     execution {...}
-    [staging: "swift" | "local" | "service-local" | "shared-fs" 
-              | "proxy" | "wrapper"]
+    [staging: "swift" | "local" | "service-local" | "shared-fs" | "wrapper"]
     [filesystem {...}]
 
     [<site options>]
@@ -141,10 +140,10 @@ Description
 |+local+              | no         | no            | -                | swift, local, wrapper                           | 
 Runs applications locally using a simple fork()-based mechanism
 
-|+coaster+            | yes        | yes           | none             | swift, wrapper, service-local, shared-fs, proxy | 
+|+coaster+            | yes        | yes           | none             | swift, wrapper, local, service-local, shared-fs | 
 Submits applications through an automatically-deployed Swift Coasters service
 
-|+coaster-persistent+ | yes        | yes           | none             | swift, wrapper, service-local, shared-fs, proxy | 
+|+coaster-persistent+ | yes        | yes           | none             | swift, wrapper, local, service-local, shared-fs | 
 Uses a manually deployed Swift Coasters service
 
 |+GRAM5+              | yes        | yes           | "fork"           | swift, wrapper                                  | 
@@ -217,8 +216,10 @@ description of each staging method is provided in the table below:
                     a head node path that is on a shared file system accessible by the 
                     compute nodes.
 | +wrapper+       | File staging is done by the Swift application wrapper
-| +local+         | Used by non-remote type execution mechanisms. It implements simple file 
-                    staging by copying files.
+| +local+         | Used to indicate that files should be staged in/out from/to the site
+                    on which Swift is running. In the case of Swift Coasters, the system
+                    proxies the tranfers between client side and compute nodes through the
+                    Coaster Service.
 | +service-local+ | This method instructs the execution mechanism provider to stage input and
                     output files from the remote site where the execution service is located.
                     For example, if a Coaster Service is started on the login node of a 
@@ -227,8 +228,6 @@ description of each staging method is provided in the table below:
 | +shared-fs+     | This method is used by Coasters to implement a simple staging mechanism in
                     which files are accessed using a shared filesystem that is accessible by 
                     compute nodes
-| +proxy+         | This method is also used by Coasters to stage files from/to the Swift 
-                    client side to compute nodes by proxying through the Coaster Service.
 |==============================================================================================
 
 
@@ -607,7 +606,7 @@ listing the contents of a directory, creating a directory, removing a file, etc.
 
 4+| *Global versions of site options*
 
-| +staging+      | +"swift", "local", "service-local", "shared-fs", "proxy", "wrapper"+ | +"swift"+ |
+| +staging+      | +"swift", "local", "service-local", "shared-fs", "wrapper"+ | +"swift"+ |
 See <<table-staging-methods,Staging Methods>>.
 | +keepSiteDir+  | +true, false+            | +false+       | 
 See <<table-site-options,Site Options>>.
