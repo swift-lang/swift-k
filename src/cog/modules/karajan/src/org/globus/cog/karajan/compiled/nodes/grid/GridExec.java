@@ -66,7 +66,7 @@ public class GridExec extends AbstractGridNode {
 	protected ArgRef<Boolean> failOnJobError;
 	protected ArgRef<Boolean> batch;
 	
-	protected ChannelRef<Map.Entry<String, String>> c_environment;
+	protected ArgRef<Map<String, String>> environment;
 	protected ChannelRef<List<?>> c_stagein;
 	protected ChannelRef<List<?>> c_stageout;
 	protected ChannelRef<String> c_cleanup;
@@ -96,7 +96,7 @@ public class GridExec extends AbstractGridNode {
 						optional("attributes", Collections.EMPTY_MAP),
 						optional("failOnJobError", true),
 						optional("batch", false),
-						channel("environment"),
+						optional("environment", null),
 						channel("stagein"),
 						channel("stageout"),
 						channel("cleanup")
@@ -244,10 +244,12 @@ public class GridExec extends AbstractGridNode {
 
 	protected void addEnvironment(Stack stack, JobSpecificationImpl js)
 			throws ExecutionException {
-		Channel<Map.Entry<String, String>> env = this.c_environment.get(stack);
-		for (Map.Entry<String, String> e : env) {
-			js.addEnvironmentVariable(e.getKey(), e.getValue());
-		}
+	    Map<String, String> env = this.environment.getValue(stack);
+	    if (env != null) {
+    		for (Map.Entry<String, String> e : env.entrySet()) {
+    			js.addEnvironmentVariable(e.getKey(), e.getValue());
+    		}
+	    }
 	}
 	
 	private static final EnumSet<Mode> DEFAULT_STAGEOUT_MODE = EnumSet.of(Mode.IF_PRESENT, Mode.ON_SUCCESS);
