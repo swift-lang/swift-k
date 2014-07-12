@@ -319,7 +319,7 @@ namespace(swiftStaging) {
 						
 			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout)
 
-			os := siteProfile(rhost, "SYSINFO:OS")
+			os := siteProfile(rhost, "OS")
 			
 			if (wrapperMode == "files") {
 				sys:file:write(wrapfile) {

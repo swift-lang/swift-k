@@ -123,7 +123,7 @@ namespace(wrapperStaging) {
 			
 			(localFileDirs, remoteFileDirs, inFiles, outFiles) := getStagingInfo(stagein, stageout)
 
-			os := siteProfile(rhost, "SYSINFO:OS")
+			os := siteProfile(rhost, "OS")
 			
 			scratch := siteProfile(rhost, "scratch")
 
