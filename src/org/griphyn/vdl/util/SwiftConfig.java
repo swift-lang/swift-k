@@ -159,7 +159,6 @@ public class SwiftConfig implements Cloneable {
     }
 
     public static SwiftConfig load(String fileName, Map<String, Object> override) {
-        logger.info("Loading swift configuration file: " + fileName);
         ConfigParseOptions opt = ConfigParseOptions.defaults();
         opt = opt.setIncluder(new IncluderWrapper(opt.getIncluder())).
             setSyntax(ConfigSyntax.CONF).setAllowMissing(false);
