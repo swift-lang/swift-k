@@ -561,7 +561,7 @@ process_exec() {
     PROG=$( echo $@ | sed 's/.*\( [^ ]*.swift\)/\1/' )
     PROG=$( basename $PROG )
   fi
-
+  
   echo -e "Executing: $PROG"
   echo -e "\nExecuting: $@\n" >> $LOG
 
@@ -833,6 +833,12 @@ swift_test_case() {
 
   CDM=
   [ -r fs.data ] && CDM="-cdm.file fs.data"
+  
+  if [ "$HASCONF" == "1" ]; then
+    CONF="-config ./swift.conf"
+  else
+  	CONF=
+  fi
 
   (( TESTCOUNT++ ))
 
@@ -844,7 +850,7 @@ swift_test_case() {
   TEST_SHOULD_FAIL=$(( ! $?  ))
 
   OUTPUT=$NAME.stdout
-  monitored_exec $TIMEOUT swift $CDM $SWIFTSCRIPT $ARGS
+  monitored_exec $TIMEOUT swift $CONF $CDM $SWIFTSCRIPT $ARGS
 
   TEST_SHOULD_FAIL=0
   if [ -x "$GROUP/$CHECKSCRIPT" ]; then
@@ -988,7 +994,10 @@ group_fs_data() {
 group_swift_properties() {
   if [ -f $GROUP/swift.conf ]; then
     cp -v $GROUP/swift.conf .
+    HASCONF=1
     [ $? != 0 ] && crash "Could not copy swift.properties!"
+  else
+  	HASCONF=0
   fi
 }
 
