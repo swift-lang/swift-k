@@ -55,14 +55,14 @@ public class WeightedHost implements Comparable<WeightedHost> {
 		if (score < MINWEIGHT)
 			score = MINWEIGHT;
 		this.score = new Double(score);
-		this.tscore = smooth(score);
+		this.tscore = computeTScore(score);
 	}
 
 	public static final double T = 100;
 	public static final double B = 2.0 * Math.log(T) / Math.PI;
 	public static final double C = 0.2;
 
-	public double smooth(double score) {
+	public static double computeTScore(double score) {
 		return Math.exp(B * Math.atan(C * score));
 	}
 
