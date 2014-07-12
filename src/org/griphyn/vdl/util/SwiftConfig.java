@@ -12,6 +12,7 @@ package org.griphyn.vdl.util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -164,8 +165,10 @@ public class SwiftConfig implements Cloneable {
         opt = opt.setIncluder(new IncluderWrapper(opt.getIncluder())).
             setSyntax(ConfigSyntax.CONF).setAllowMissing(false);
         Config conf = ConfigFactory.parseFile(new File(fileName), opt);
-        Config oconf = ConfigFactory.parseMap(override, "<command line>");
-        conf = oconf.withFallback(conf);
+        if (override != null) {
+            Config oconf = ConfigFactory.parseMap(override, "<command line>");
+            conf = oconf.withFallback(conf);
+        }
         conf = conf.resolveWith(getSubstitutions());
         ConfigTree<Object> out = SCHEMA.validate(conf);
         SwiftConfig sc = new SwiftConfig();
