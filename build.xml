@@ -65,7 +65,7 @@
 
 	<target name="etc">
 		<copy todir="${dist.dir}/etc">
-			<fileset dir="${cog.dir}/modules/${module.name}/etc"/>
+			<fileset dir="${cog.dir}/modules/${module.name}/etc" excludes="launcher-template*"/>
 		</copy>
 	</target>
 
@@ -287,6 +287,43 @@
         	</classpath>
         </java>
 	</target>
+	
+	<target name="swift.launcher">
+		<condition property="launcher.exists">
+			<and>
+				<available file="${dist.dir}/bin/${launcher-name}"/>
+				<available file="${dist.dir}/bin/${launcher-name}.bat"/>
+			</and>
+		</condition>
+		<antcall target="create.swift.launcher">
+			<param name="class-name" value="${class-name}"/>
+			<param name="launcher-name" value="${launcher-name}"/>
+		</antcall>
+	</target>
+    
+	<target name="create.swift.launcher" unless="launcher.exists">
+		<echo message="[${module.name}]: LAUNCHER ${launcher-name}"/>
+		<property name="umask" value=""/>
+		<filter token="class" value="${class-name}"/>
+		<filter token="jar" value="${jar.name}"/>
+		<filter token="umask" value="${umask}"/>
+
+		<copy file="${cog.dir}/modules/swift/etc/launcher-template"
+			tofile="${dist.dir}/bin/${launcher-name}"
+			filtering="true"/>
+		<copy file="${cog.dir}/modules/swift/etc/launcher-template.bat"
+			tofile="${dist.dir}/bin/${launcher-name}.bat"
+			filtering="true"/>
+		<chmod file="${dist.dir}/bin/${launcher-name}" perm="+x"/>
+		<!-- Just in case... -->
+		<fixcrlf srcdir="${dist.dir}/bin"
+			eol="lf"
+			includes="${launcher-name}" />
+		<fixcrlf srcdir="${dist.dir}/bin"
+			eol="crlf"
+			includes="${launcher-name}.bat" />
+	</target>
+
 
 	<!-- ================================================ -->
 	<!-- Compile                                          -->
