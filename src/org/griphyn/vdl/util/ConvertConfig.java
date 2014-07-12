@@ -119,7 +119,7 @@ public class ConvertConfig {
         }
         if (name.equals("use.provider.staging")) {
             if (TypeUtil.toBoolean(value)) {
-                ps.println("staging: \"provider\"");
+                ps.println("staging: \"local\"");
             }
             return;
         }
@@ -181,7 +181,7 @@ public class ConvertConfig {
                     }
                 }
                 if (!hasFileService) {
-                    writeValue(1, "site.*.staging", "proxy", ps);
+                    writeValue(1, "site.*.staging", "local", ps);
                 }
                 if (bc.hasProperty("workdir")) {
                     writeValue(1, "site.*.workDirectory", bc.getProperty("workdir"), ps);

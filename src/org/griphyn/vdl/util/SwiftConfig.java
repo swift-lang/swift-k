@@ -12,7 +12,6 @@ package org.griphyn.vdl.util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -475,27 +474,37 @@ public class SwiftConfig implements Cloneable {
         String staging = getString(n);
         if (BUILD_CHECK) {
             checkValue("site.*.staging", 
-                "swift", "wrapper", "local", "service-local", "proxy", "shared-fs");
+                "swift", "wrapper", "local", "service-local", "shared-fs");
         }
         if (staging.equals("swift") || staging.equals("wrapper")) {
             sc.setProperty("staging", staging);
         }
         else if (staging.equals("local")) {
             sc.setProperty("staging", "provider");
-            sc.setProperty("stagingMethod", "file");
+            if (isCoaster(sc)) {
+                sc.setProperty("stagingMethod", "proxy");
+            }
+            else {
+                sc.setProperty("stagingMethod", "file");
+            }
         }
         else if (staging.equals("service-local")) {
             sc.setProperty("staging", "provider");
             sc.setProperty("stagingMethod", "file");
         }
-        else if (staging.equals("proxy")) {
-            sc.setProperty("staging", "provider");
-            sc.setProperty("stagingMethod", "proxy");
-        }
         else if (staging.equals("shared-fs")) {
             sc.setProperty("staging", "provider");
             sc.setProperty("stagingMethod", "sfs");
         }
+    }
+
+    private boolean isCoaster(SwiftContact sc) {
+        for (Map.Entry<BoundContact.TypeProviderPair, Service> e : sc.getServices().entrySet()) {
+            if (e.getKey().provider != null && e.getKey().type == Service.EXECUTION) {
+                return e.getKey().provider.startsWith("coaster");
+            }
+        }
+        return false;
     }
 
     private void checkValue(String key, String... values) {
