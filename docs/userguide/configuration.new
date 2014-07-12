@@ -10,14 +10,14 @@ configuration file may look like this:
 include "${swift.home}/etc/swift.conf"
 
 site.mysite {
-	execution {
-		type: "coaster"
-		URL: "my.site.org"
-		jobManager: "ssh:local"
-	}
-	staging: "local"
-	
-	app.ALL {executable: "*"}
+    execution {
+        type: "coaster"
+        URL: "my.site.org"
+        jobManager: "ssh:local"
+    }
+    staging: "local"
+
+    app.ALL {executable: "*"}
 }
 
 # select sites to run on
@@ -76,6 +76,59 @@ include "${swift.home}/etc/sites/beagle.conf"
 include "${env.SWIFT_CONFIG_DIR}/glow.conf"
 -----
 
+Property Merging
+~~~~~~~~~~~~~~~~
+
+If two properties with the same name are present in a configuration file, they are either
+merged or the latter one overrides the earlier one. This depends on the type of property.
+Simple values are always overriden, while objects are merged. For example:
+
+-----
+key: 1
+key: 2
+# key is now 2
+
+object {
+    key1: 1
+}
+
+object {
+    key2: 2
+}
+
+# object is now { key1: 1, key2: 2}
+-----
+
+This can be used to define certain template files that contain most of the definitions for
+sites, and then include them in other files and override or add only certain aspects of 
+those sites. For example, the default +swift.conf+ includes a definition for a site named
++local+ that can be used to run things on the Swift client side. If you wanted to override 
+only the work directory, the following +swift.conf+ could be used:
+
+-----
+include "${swift.home}/etc/swift.conf"
+
+site.local {
+    # use existing definition for site.local, but override workDirectory
+    workDirectory: "/tmp"
+}
+-----
+
+If, on the other hand, you want to fully override the definition of +site.local+, you could
+set it to +null+ first and then provide your own definition:
+
+-----
+include "${swift.home}/etc/swift.conf"
+
+# forget previous definition of site.local
+site.local: null
+
+# define your own site.local
+site.local {
+    ...
+}
+-----
+
 Configuration File Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -98,6 +151,7 @@ site.<name> {
     execution {...}
     [staging: "swift" | "local" | "service-local" | "shared-fs" | "wrapper"]
     [filesystem {...}]
+    workDirectory: <path>
 
     [<site options>]
     [<application declarations>]
@@ -109,6 +163,18 @@ quoted:
 
 -----
 site."My-$pecial-$ite" {...}
+-----
+
+Once sites are declared, they must be explicitly enabled for Swift to use them. This
+can be achieved with the +sites+ option, which accepts either an array or a comma-separated
+list of site names
+
+-----
+sites: ["site1", "site2"]
+
+# alternatively:
+
+sites: "site1, site2"
 -----
 
 Execution Mechanism
@@ -478,11 +544,9 @@ the Swift run-time behaves. They are listed below:
 | Name           | Valid values             | Default value |
 Description
 
-| +sites+        | array of strings (i.e. +["site1", "site2"]+) | none |
+| +sites+        | array of strings (e.g. +["site1", "site2"]+) or CSV string (e.g. "site1, site2") | none |
 Selects, out of the set of all declared sites, a sub-set of sites to
-run applications on. This option can also be supplied on the Swift command line,
-in which case it shoud be a single string with comma-separated items 
-(e.g. +swift -sites site1,site2 ...+)
+run applications on.
 
 | +hostName+     | string                   | autodetected  |
 Can be used to specify a publicly reacheable DNS name or IP address for this 
