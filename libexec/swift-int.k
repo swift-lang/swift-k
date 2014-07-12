@@ -86,7 +86,6 @@ namespace(swiftStaging) {
 
 			dir:make(SHARED_DIR, host = rhost)
 			transfer(siteProfile(rhost, "wrapperScript"), srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
-			transfer("_swiftseq", srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
 
 			statusMode := configProperty("statusMode", host=rhost)
 			if (statusMode == "files") {
