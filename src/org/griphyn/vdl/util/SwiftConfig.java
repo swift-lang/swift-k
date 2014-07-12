@@ -69,7 +69,7 @@ public class SwiftConfig implements Cloneable {
         REPLICATION_LIMIT("replicationLimit"), 
         WRAPPER_INVOCATION_MODE("wrapperInvocationMode"), 
         CDM_BROADCAST_MODE("CDMBroadcastMode"), 
-        CMD_LOG_FILE("CDMLogFile");
+        CMD_FILE("CDMFile");
         
         public String propName;
         private Key(String propName) {
@@ -783,7 +783,7 @@ public class SwiftConfig implements Cloneable {
         return (String) get(Key.CDM_BROADCAST_MODE);
     }
 
-    public String getCDMLogFile() {
-        return (String) get(Key.CMD_LOG_FILE);
+    public String getCDMFile() {
+        return (String) get(Key.CMD_FILE);
     }
 }

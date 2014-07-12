@@ -110,6 +110,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         CMD_LINE_OPTIONS.add("mappingCheckerEnabled");
         CMD_LINE_OPTIONS.add("tracingEnabled");
         CMD_LINE_OPTIONS.add("maxForeachThreads");
+        CMD_LINE_OPTIONS.add("CDMFile");
     }
 
     public static String buildVersion;

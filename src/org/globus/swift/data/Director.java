@@ -115,7 +115,7 @@ public class Director {
     static void init(SwiftConfig config) throws IOException
     {        
         broadcastMode = config.getCDMBroadcastMode();
-        logfile = config.getCDMLogFile();
+        logfile = config.getCDMFile();
         
         if (broadcastMode.equals("file")) 
             broadcasted.put("LOCAL_FILE", new HashSet<String>());
