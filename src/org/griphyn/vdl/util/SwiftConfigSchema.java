@@ -231,6 +231,11 @@ public class SwiftConfigSchema {
     private boolean parentsAreOptional(String k, ConfigTree<Boolean> confTree) {
         while (!k.isEmpty()) {
             k = parent(k);
+            if (k.endsWith(".*")) {
+                // if you got to this point and expansion has been performed,
+                // the parents are not optional any more
+                return false;
+            }
             Info i = info.get(k);
             if (i != null && !i.optional && !confTree.hasKey(k)) {
                 return false;
