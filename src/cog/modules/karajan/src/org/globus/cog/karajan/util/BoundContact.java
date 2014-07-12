@@ -182,7 +182,7 @@ public class BoundContact extends Contact {
 		}
 	}
 
-	private static class TypeProviderPair {
+	public static class TypeProviderPair {
 		public final int type;
 
 		public final String provider;
