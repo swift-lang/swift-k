@@ -1,0 +1,102 @@
+#! /bin/sh 
+
+EXEC=@class@
+OPTIONS=
+
+CYGWIN=
+CPDELIM=":"
+HEAPMAX=
+
+@umask@
+
+if echo `uname` | grep -i "cygwin"; then
+    CYGWIN="yes"
+    CPDELIM=";"
+fi
+
+fixCommandLine() {
+
+    COMMANDLINE=
+
+    while [ "X$1" !=  "X" ] ; do
+        COMMANDLINE="${COMMANDLINE} '$1'"
+        shift
+    done
+
+    echo $COMMANDLINE
+}
+
+updateOptions() {
+ 
+    if [ "X$1" != "X" ] ; then
+	OPTIONS="$OPTIONS -D$2=$1"
+    fi
+
+}
+
+####### MAIN BODY ##########
+
+if [ ! -d "$SWIFT_HOME" ] ; then
+    SWIFT_HOME=$(cd $(dirname $0)/..; pwd)
+    if [ ! -f "$SWIFT_HOME/lib/@jar@" ] && [ ! -f "$SWIFT_HOME/lib/cog.jar" ] ; then
+		MY_PATH=`which $0`
+		SWIFT_HOME=`dirname $MY_PATH`"/.."
+		if [ ! -f "$SWIFT_HOME/lib/@jar@" ] && [ ! -f "$SWIFT_HOME/lib/cog.jar" ] ; then
+	    	echo "Error: SWIFT_HOME is not set, and all attempts at guessing it failed"
+	    	exit 1
+		fi
+    fi
+fi
+
+OPTIONS="$OPTIONS -Djava.endorsed.dirs=$COG_INSTALL_PATH/lib/endorsed"
+
+LOCALCLASSPATH=$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec
+for JAR in $SWIFT_HOME/lib/*.jar; do
+	LOCALCLASSPATH="$LOCALCLASSPATH$CPDELIM$JAR"
+done
+
+LOCALCLASSPATH=$LOCALCLASSPATH$CPDELIM$CLASSPATH
+
+CMDLINE=`fixCommandLine "$@"`
+
+### SETUP OTHER ENV VARIABLES ####
+
+USERID=`id | awk '{printf("%s\n", substr($1, 5, index($1, "(")-5 ) ) }'`
+
+if [ "X$GLOBUS_HOSTNAME" = "X" ] && [ "X$HOSTNAME" != "X" ]; then 
+	GLOBUS_HOSTNAME=$HOSTNAME  
+fi
+
+updateOptions "$USERID" "UID"
+updateOptions "$GLOBUS_INSTALL_PATH" "GLOBUS_INSTALL_PATH"
+updateOptions "$GLOBUS_DEPLOY_PATH" "GLOBUS_DEPLOY_PATH"
+updateOptions "$GLOBUS_TCP_PORT_RANGE" "GLOBUS_TCP_PORT_RANGE"
+updateOptions "$GLOBUS_TCP_SOURCE_PORT_RANGE" "GLOBUS_TCP_SOURCE_PORT_RANGE"
+updateOptions "$GLOBUS_UDP_SOURCE_PORT_RANGE" "GLOBUS_UDP_SOURCE_PORT_RANGE"
+updateOptions "$GLOBUS_HOSTNAME" "GLOBUS_HOSTNAME"
+updateOptions "$X509_USER_CERT" "X509_USER_CERT"
+updateOptions "$X509_USER_KEY" "X509_USER_KEY"
+updateOptions "$X509_CERT_DIR" "X509_CERT_DIR"
+updateOptions "$X509_USER_PROXY" "X509_USER_PROXY"
+updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
+updateOptions "$SWIFT_HOME" "swift.home"
+updateOptions "$SWIFT_USERHOME" "user.home"
+
+if [ "X$HEAPMAX" != "X" ]; then
+	OPTIONS="-Xmx$HEAPMAX $OPTIONS"
+fi
+
+### EXECUTE ############
+if test -n "$CYGWIN"; then
+    set CLASSPATHSAVE=$CLASSPATH
+    export CLASSPATH="$LOCALCLASSPATH"
+    eval java ${OPTIONS} ${COG_OPTS} ${EXEC} ${CMDLINE}
+    export CLASSPATH=$CLASSPATHSAVE
+else
+    eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE}
+fi
+return_code=$?
+
+exit $return_code
+
+
