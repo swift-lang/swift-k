@@ -1,6 +1,5 @@
 Configuration
 -------------
-
 Swift uses a single configuration file called swift.properties. The swift.properties 
 file is responsible for:
 
@@ -173,86 +172,101 @@ they do, and an example swift.properties entry.
 |================================
 |Property|Description|Example
 
-|condor|
-Pass parameters directly through to the submit script generated for the condor
+|condor
+|Pass parameters directly through to the submit script generated for the condor
 scheduler. For example, the setting "site.osgconnect.condor.+projectname=Swift"
 will generate the line "+projectname = Swift".
 |site.osgconnect.condor.+projectname=Swift
 
-|filesystem|
-Defines how files should be accessed
+|filesystem
+|Defines how files should be accessed
 |site.westmere.filesystem=local
 
-|jobGranularity|
-Specifies the granularity of a job, in nodes
+|jobGranularity
+|Specifies the granularity of a job, in nodes
 |site.westmere.jobGranularity=2
 
-|jobManager|
-Specifies how jobs will be launched. The supported job managers are 
+|jobManager
+|Specifies how jobs will be launched. The supported job managers are 
 "cobalt", "slurm", "condor", "pbs", "lsf", "local", and "sge". 
 |site.westmere.jobManager=slurm
 
-|jobProject|
-Set the project name for the job scheduler
+|jobProject
+|Set the project name for the job scheduler
 |site.westmere.project=myproject
 
-|jobQueue|
-Set the name of the scheduler queue to use.
+|jobQueue
+|Set the name of the scheduler queue to use.
 |site.westmere.jobQueue=westmere
 
-|jobWalltime|
-The maximum number amount of time allocated in a scheduler job, in hh:mm:ss
+|jobWalltime
+|The maximum number amount of time allocated in a scheduler job, in hh:mm:ss
 format.
 |site.westmere.jobWalltime=01:00:00
 
-|maxJobs|
-Maximum number of scheduler jobs to submit
+|maxJobs
+|Maximum number of scheduler jobs to submit
 |site.westmere.maxJobs=20
 
-|maxNodesPerJob|
-The maximum number of nodes to request per scheduler job.
+|maxNodesPerJob
+|The maximum number of nodes to request per scheduler job.
 |site.westmere.maxNodesPerJob=2
 
-|providerAttributes|
-Allows user to pass attributes through directly to scheduler submit script. Currently
+|pe
+|The parallel environment to use for SGE schedulers
+|site.sunhpc.pe=mpi
+
+|providerAttributes
+|Allows user to pass attributes through directly to scheduler submit script. Currently
 only implemented for sites that use PBS.
 |site.beagle.providerAttributes=pbs.aprun;pbs.mpp;depth=24
 
-|slurm|
-Pass parameters directly through to the submit script generated for the slurm
+|slurm
+|Pass parameters directly through to the submit script generated for the slurm
 scheduler. For example, the setting "site.midway.slurm.mail-user=username" generates
 the line "#SBATCH --mail-user=username".
+|site.midway.slurm.mail-user=username
 
-|taskDir|
-Tasks will be run from this directory. In the absence of a taskDir definition, 
+|stagingMethod
+|When provider staging is enabled, this option will specify the staging mechanism for
+use for each site. If set to 'file', staging is done from a filesystem accessible to 
+the coaster service (typically running on the head node). If set to 'proxy', staging 
+is done from a filesystem accessible to the client machine that swift is running on, 
+and is proxied through the coaster service. If set to 'sfs' (short for "shared filesystem"),
+staging is done by copying files to and from a filesystem accessible by the compute node 
+(such as an NFS or GPFS mount)
+|site.osg.stagingMethod=file
+
+|taskDir
+|Tasks will be run from this directory. In the absence of a taskDir definition, 
 Swift will run the task from workdir.
 |site.westmere.taskDir=/scratch/local/$USER/work
 
-|tasksPerWorker|
-The number of tasks that each worker can run simultaneously.
+|tasksPerWorker
+|The number of tasks that each worker can run simultaneously.
 |site.westmere.tasksPernode=12
 
-|taskThrottle|
-The maximum number of active tasks across all workers.
+|taskThrottle
+|The maximum number of active tasks across all workers.
 |site.westmere.taskThrottle=100
 
-|taskWalltime|
-The maximum amount of time a task may run, in hh:mm:ss.
+|taskWalltime
+|The maximum amount of time a task may run, in hh:mm:ss.
 |site.westmere.taskWalltime=01:00:00
 
-|site    |
-Name of site or sites to run on. This is the same as running with
+|site
+|Name of site or sites to run on. This is the same as running with
 swift -site <sitename>
 |site=westmere
 
-|userHomeOverride|
-Sets the Swift user home. This must be a shared filesystem. This defaults
+|userHomeOverride
+|Sets the Swift user home. This must be a shared filesystem. This defaults
 to $HOME. For clusters where $HOME is not accessible to the worker nodes,
 you may override the value to point to a shared directory that you own.
 |site.beagle.userHomeOverride=/lustre/beagle/username
 
-|workdir |
-The workdirectory element specifies where on the site files can be stored.
+|workdir
+|The workdirectory element specifies where on the site files can be stored.
 This directory must be available on all worker nodes that will be used for 
 execution. A shared cluster filesystem is appropriate for this. Note that 
 you need to specify absolute pathname for this field.
@@ -268,11 +282,11 @@ related properties:
 -----
 site.westmere.provider=local:slurm
 site.westmere.jobsPerNode=12
-site.westmere.maxWalltime=00:05:00
+site.westmere.taskWalltime=00:05:00
 site.westmere.queue=westmere
 site.westmere.initialScore=10000
 site.westmere.filesystem=local
-site.westmere.workdir=/scratch/midway/davidkelly999
+site.westmere.workdir=/scratch/midway/$USER
 -----
 
 However, you can also simplify this by grouping site properties together with
@@ -282,7 +296,7 @@ curly brackets.
 site.westmere {
    provider=local:slurm
    jobsPerNode=12
-   maxWalltime=00:05:00
+   taskWalltime=00:05:00
    queue=westmere
    initialScore=10000
    filesystem=local
@@ -319,15 +333,23 @@ Swift behavior can be configured through general Swift properties. Below is a li
 |true, false
 |true
 |By default, Swift will generate a run directory that contains logs, scheduler submit scripts,
-|debug directories, and other files associated with a particular Swift run. Setting this value
-|to false disables the creation of run directories and causes all logs and directories to be
-|created in the current working directory.
+debug directories, and other files associated with a particular Swift run. Setting this value
+to false disables the creation of run directories and causes all logs and directories to be
+created in the current working directory.
 
 |execution.retries
 |Positive integer
 |2
 |The number of time a job will be retried if it fails (giving a
  maximum of 1 + execution.retries attempts at execution)
+
+|file.gc.enabled
+|true, false
+|true
+|Files mapped by the concurrent mapper (i.e. when you don't
+ explicitly specify a mapper) are deleted when they are not
+ in use any more. This property can be used to prevent
+ files mapped by the concurrent mapper from being deleted.
 
 |foreach.max.threads
 |Positive integer
@@ -392,6 +414,13 @@ $ dot -ograph.png -Tpng graph1.dot
 |This property controls whether the log file will contain provenance
  information enabling this will increase the size of log files,
  sometimes significantly.
+
+|provider.staging.pin.swiftfiles
+|true, false
+|false
+|When provider staging is enabled and provider.staging.pin.swiftfiles
+ is set, cache some small files needed by Swift to avoid the cost
+ of staging more than once.
 
 |sitedir.keep
 |true, false
@@ -475,16 +504,42 @@ profile key in a site catalog entry.
  concurrent transfers can cause the network to be overloaded
  preventing various other signaling traffic from flowing properly.
 
+|ticker.date.format
+|String
+|
+|Describes how to format the ticker date output. The format of this string
+ is documented in the Java SimpleDateFormat class, at 
+ http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html
+
 |ticker.disable
 |true, false
 |false
 |When set to true, suppresses the output progress ticker that Swift
  sends to the console every few seconds during a run
 
+|ticker.prefix
+|String
+|Progress:
+|String to prepend to ticker output
+
+|tracing.enabled
+|true, false
+|true
+|Enables tracing of procedure invocations, assignments,
+ iteration constructs, as well as certain dataflow events
+ such as data intialization and waiting. This is done at 
+ a slight decrease in performance. Traces will be available
+ in the log file.
+
 |use.wrapper.staging
 |true, false
 |false
 |Determines if the Swift wrapper should do file staging.
+
+|use.provider.staging
+|true, false
+|false
+|If true, files will be staged by Swift over the network.
 
 |wrapper.invocation.mode
 |absolute, relative
@@ -539,4 +594,3 @@ to be in the runNNN directory, you may do something like this:
 -----
 workdir=$RUNDIRECTORY
 -----
-
