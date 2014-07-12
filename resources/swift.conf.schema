@@ -298,6 +298,8 @@ CDMBroadcastMode {
 CDMFile {
 	_type: "?String"
 	_default: "fs.data"
+	_doc: 
+		"""Specifies which Collective Data Management file to use"""
 }
 
 providerStagingPinSwiftFiles {
