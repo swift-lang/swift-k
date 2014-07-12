@@ -40,6 +40,9 @@ import org.ietf.jgss.GSSCredential;
 public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler implements Callback, ExtendedStatusListener {
     private static Logger logger = Logger.getLogger(JobSubmissionTaskHandler.class);
 
+    private static final String ATTR_CONFIGURING = "#coaster:configuring";
+    private static final String ATTR_CONFIG_ID = "#coaster:configid";
+    
     private static Set<Object> configured, configuring;
     
     private static Map<Service, TaskSubmissionException> checkedServices = 
@@ -53,15 +56,15 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private static String checkConfigured(CoasterChannel channel, Task task) throws InterruptedException {
         Service s = task.getService(0);
         synchronized (s) {
-            while (s.getAttribute("coaster:configuring") != null) {
+            while (s.getAttribute(ATTR_CONFIGURING) != null) {
                 s.wait(100);
             }
-            String configId = (String) s.getAttribute("coaster:configid");
+            String configId = (String) s.getAttribute(ATTR_CONFIG_ID);
             if (configId == null) {
-                s.setAttribute("coaster:configuring", Boolean.TRUE);
+                s.setAttribute(ATTR_CONFIGURING, Boolean.TRUE);
             }
             else {
-                task.setAttribute("coaster:configid", configId);
+                task.setAttribute(ATTR_CONFIG_ID, configId);
             }
             return configId;
         }
@@ -70,8 +73,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private static void setConfigured(CoasterChannel channel, Task task, String configId) {
         Service s = task.getService(0);
         synchronized (s) {
-            s.removeAttribute("coaster:configuring");
-            s.setAttribute("coaster:configid", configId);
+            s.removeAttribute(ATTR_CONFIGURING);
+            s.setAttribute(ATTR_CONFIG_ID, configId);
             s.notifyAll();
         }
     }

@@ -27,6 +27,9 @@ public class ServiceConfigurationCommand extends Command {
     }
     
     private void add(Service s, String attr) {
+        if (attr.startsWith("#")) {
+            return;
+        }
         Object value = s.getAttribute(attr);
         if (value != null) {
             addOutData(attr + "=" + value.toString());
