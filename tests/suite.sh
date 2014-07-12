@@ -832,7 +832,7 @@ swift_test_case() {
   fi
 
   CDM=
-  [ -r fs.data ] && CDM="-cdm.file fs.data"
+  [ -r fs.data ] && CDM="-CDMFile fs.data"
   
   if [ "$HASCONF" == "1" ]; then
     CONF="-config ./swift.conf"
