@@ -20,6 +20,7 @@
  */
 package org.griphyn.vdl.karajan;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,6 +52,9 @@ public class VDSTaskTransformer implements TaskTransformer {
 
 	public static abstract class AbstractTransformer implements TaskTransformer {
 		private SwiftConfig config;
+        private boolean initialized;
+        private String workdir;
+        private boolean absolute;
 
         public AbstractTransformer(SwiftConfig config) {
 		    this.config = config;
@@ -123,20 +127,27 @@ public class VDSTaskTransformer implements TaskTransformer {
 			JobSpecification spec = (JobSpecification) task.getSpecification();
 			String dir = spec.getDirectory();
 			SwiftContact bc = (SwiftContact) contacts[0];
-			String workdir = (String) bc.getProperty("workdir");
-            
-            if (workdir==null){
-                workdir=System.getProperty("user.dir");
-            }
+			
+			synchronized(this) {
+    			if (!initialized) {
+    			    workdir = (String) bc.getProperty("workdir");
+    			    if (workdir == null) {
+    			        workdir = ".";
+    			    }
+    			    String mode = (String) bc.getProperty(SwiftConfig.Key.WRAPPER_INVOCATION_MODE.propName);
+    			    if (mode == null) {
+    			        mode = config.getWrapperInvocationMode();
+    			    }
+    			    absolute = mode.equals("absolute") && new File(workdir).isAbsolute();
+    			}
+			}
 
 			if (dir == null || !dir.startsWith("/")) {
-				if (workdir != null) {
-					if (dir == null) {
-						spec.setDirectory(workdir);
-					}
-					else {
-						spec.setDirectory(workdir + '/' + dir);
-					}
+				if (dir == null) {
+					spec.setDirectory(workdir);
+				}
+				else {
+					spec.setDirectory(workdir + '/' + dir);
 				}
 			}
 			List<String> l =   spec.getArgumentsAsList();
@@ -146,14 +157,8 @@ public class VDSTaskTransformer implements TaskTransformer {
 			// undergo this substitution...
 			String executable = l.get(0);
 
-			String mode = (String) bc.getProperty(SwiftConfig.Key.WRAPPER_INVOCATION_MODE.propName);
-			if (mode == null) {
-			    mode = config.getWrapperInvocationMode();
-			}
-			if (mode.equals("absolute")
-			        && (executable.endsWith("shared/_swiftwrap")
-			        || executable.endsWith("shared/_swiftseq"))) {
-
+			
+			if (absolute && executable.endsWith("shared/_swiftwrap")) {
 			    String s  = spec.getDirectory() + "/" + executable;
 			    l.set(0, s);
 			}
