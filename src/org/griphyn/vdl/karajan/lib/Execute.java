@@ -139,14 +139,14 @@ public class Execute extends GridExec {
 	        logger.debug(task);
 	        logger.debug("Submitting task " + task);
 	    }
-	    String jobid = this.jobid.getValue(stack);
 	    if (logger.isInfoEnabled()) {
+	        String jobid = this.jobid.getValue(stack);
 	        JobSpecification spec = (JobSpecification) task.getSpecification();
-	        logger.info(buildTaskInfoString(task, spec));
+	        logger.info(buildTaskInfoString(task, jobid, spec));
 	    }
 	}
 
-	private String buildTaskInfoString(Task task, JobSpecification spec) {
+	private String buildTaskInfoString(Task task, String jobid, JobSpecification spec) {
         StringBuilder sb = new StringBuilder();
         sb.append("JOB_TASK jobid=");
         sb.append(jobid);
