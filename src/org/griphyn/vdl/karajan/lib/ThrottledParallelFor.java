@@ -288,7 +288,7 @@ public class ThrottledParallelFor extends UParallelFor {
 	        }
 	        catch (ConditionalYield y) {
 	            helper.resetItUpdated();
-	            y.getFuture().addListener(this);
+	            y.getFuture().addListener(this, y);
 	            throw new ConditionalYield(helper);
 	        }
 	    }
@@ -323,7 +323,7 @@ public class ThrottledParallelFor extends UParallelFor {
 	    private boolean itUpdated;
 
         @Override
-        public synchronized void addListener(FutureListener l) {
+        public synchronized void addListener(FutureListener l, ConditionalYield y) {
             if (itUpdated) {
                 l.futureUpdated(this);
             }

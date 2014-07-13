@@ -107,7 +107,7 @@ public class InitMapper implements Mapper, FutureListener {
             this.node = node;
             waitingMapperParam = mapper.getFirstOpenParameter();
             if (waitingMapperParam != null) {
-                waitingMapperParam.addListener(this);
+                waitingMapperParam.addListener(this, null);
                 if (variableTracer.isEnabled()) {
                     variableTracer.trace(node.getThread(), node.getLine(), node.getName() + " WAIT " 
                         + Tracer.getVarName(waitingMapperParam));

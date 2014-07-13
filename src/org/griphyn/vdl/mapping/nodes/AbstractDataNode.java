@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.ConditionalYield;
 import k.rt.FutureListener;
 import k.rt.FutureValue;
 
@@ -446,12 +447,8 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     public void addListener(DSHandleListener listener) {
         throw new UnsupportedOperationException();
     }
-    
-    public void addListener(FutureListener l) {
-        addListener(l, true);
-    }
-    
-    public void addListener(FutureListener l, boolean partialUpdates) {
+        
+    public void addListener(FutureListener l, ConditionalYield y) {
     	boolean closed;
     	WaitingThreadsMonitor.addThread(l, this);
     	synchronized(this) {

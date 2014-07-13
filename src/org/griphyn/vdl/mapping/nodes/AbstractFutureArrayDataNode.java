@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.ConditionalYield;
 import k.rt.FutureListener;
 
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
@@ -77,12 +78,12 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
     }
     
     @Override
-    public void addListener(FutureListener l, boolean partialUpdates) {
+    public void addListener(FutureListener l, ConditionalYield y) {
         boolean shouldNotify;
         WaitingThreadsMonitor.addThread(l, this);
         synchronized(this) {
             shouldNotify = addListener0(l);
-            if (keyList != null && partialUpdates) {
+            if (keyList != null && y.getSequence() != keyList.size()) {
                 shouldNotify = true;
             }
         }

@@ -46,7 +46,7 @@ public class OpenArrayEntries implements Iterable<List<?>> {
                             return false;
                         }
                         else {
-                            throw new ConditionalYield(source);
+                            throw new ConditionalYield(source, keyList.size());
                         }
                     }
                 }
@@ -64,7 +64,7 @@ public class OpenArrayEntries implements Iterable<List<?>> {
                             throw new NoSuchElementException();
                         }
                         else {
-                            throw new ConditionalYield(source);
+                            throw new ConditionalYield(source, keyList.size());
                         }
                     }
                 }
