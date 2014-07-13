@@ -990,14 +990,14 @@ group_fs_data() {
   fi
 }
 
-# Generate swift.properties
+# Generate swift.conf
 group_swift_properties() {
   if [ -f $GROUP/swift.conf ]; then
     cp -v $GROUP/swift.conf .
     HASCONF=1
-    [ $? != 0 ] && crash "Could not copy swift.properties!"
+    [ $? != 0 ] && crash "Could not copy swift.conf!"
   else
-  	HASCONF=0
+       HASCONF=0
   fi
 }
 
