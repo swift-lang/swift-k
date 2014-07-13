@@ -93,4 +93,9 @@ public class NullMapper implements Mapper {
     public Collection<AbsFile> getPattern(Path path, Type type) {
         return null;
     }
+
+    @Override
+    public String toString() {
+        return "<>";
+    }
 }
