@@ -10,5 +10,5 @@
 package k.rt;
 
 public interface Future {
-    void addListener(FutureListener l);
+    void addListener(FutureListener l, ConditionalYield y);
 }

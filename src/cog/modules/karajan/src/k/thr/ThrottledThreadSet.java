@@ -26,13 +26,13 @@ public class ThrottledThreadSet extends ThreadSet {
 		}
 
 		@Override
-		public void addListener(FutureListener l) {
+		public void addListener(FutureListener l, ConditionalYield y) {
 		    synchronized(ThrottledThreadSet.this) {
     		    if (canAdd()) {
     		        l.futureUpdated(this);
     		    }
     		    else {
-    		    	super.addListener(l);
+    		    	super.addListener(l, y);
     		    }
 		    }
 		}

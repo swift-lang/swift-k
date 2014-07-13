@@ -13,17 +13,29 @@ import k.thr.Yield;
 
 public class ConditionalYield extends Yield {
     private Future f;
+    private final int sequence;
 
     public ConditionalYield(Future f) {
         this.f = f;
+        this.sequence = -1;
+    }
+    
+    public ConditionalYield(Future f, int sequence) {
+        this.f = f;
+        this.sequence = sequence;
     }
     
     public ConditionalYield(int pstate, Future f) {
     	super(pstate);
         this.f = f;
+        this.sequence = -1;
     }
 
     public Future getFuture() {
         return f;
     }
+
+	public int getSequence() {
+		return sequence;
+	}
 }

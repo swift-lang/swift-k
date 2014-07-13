@@ -32,7 +32,7 @@ public class ChannelSplitter<T> implements FutureListener {
 		for (int i = 0; i < count; i++) {
 			out[i] = new FutureMemoryChannel<T>();
 		}
-		c.addListener(this);
+		c.addListener(this, null);
 	}
 	
 	public FutureMemoryChannel<T>[] getOuts() {

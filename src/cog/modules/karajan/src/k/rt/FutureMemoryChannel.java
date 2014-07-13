@@ -57,7 +57,7 @@ public class FutureMemoryChannel<T> extends MemoryChannel<T> implements FutureVa
             return super.get(index);
         }
         else {
-            throw new ConditionalYield(this);
+            throw new ConditionalYield(this, super.size());
         }
     }
     
@@ -80,7 +80,7 @@ public class FutureMemoryChannel<T> extends MemoryChannel<T> implements FutureVa
             return super.getAll();
         }
         else {
-            throw new ConditionalYield(this);
+            throw new ConditionalYield(this, super.size());
         }
     }
 
@@ -106,17 +106,17 @@ public class FutureMemoryChannel<T> extends MemoryChannel<T> implements FutureVa
             return super.size();
         }
         else {
-            throw new ConditionalYield(this);
+            throw new ConditionalYield(this, super.size());
         }
     }
 
     @Override
-    public synchronized void addListener(FutureListener l) {
+    public synchronized void addListener(FutureListener l, ConditionalYield y) {
         if (listeners == null) {
             listeners = new LinkedList<FutureListener>();
         }
         listeners.add(l);
-        if (closed) {
+        if (closed || (y != null && (y.getSequence() != super.size()))) {
             notifyListeners();
         }
     }

@@ -18,7 +18,7 @@ public abstract class AbstractFuture implements Future {
 	protected abstract boolean isClosed();
 	
 	@Override
-	public void addListener(FutureListener l) {
+	public void addListener(FutureListener l, ConditionalYield y) {
 		boolean closed;
 		synchronized(this) {
 			if (listeners == null) {

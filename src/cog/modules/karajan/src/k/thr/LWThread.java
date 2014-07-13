@@ -247,7 +247,7 @@ public class LWThread implements Runnable {
             	sleeping = setSleeping();
             }
             if (sleeping) {
-            	e.getFuture().addListener(new Listener());
+            	e.getFuture().addListener(new Listener(), e);
             }
         }
         catch (WaitYield e) {

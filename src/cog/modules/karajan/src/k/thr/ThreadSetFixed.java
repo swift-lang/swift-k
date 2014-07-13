@@ -95,7 +95,7 @@ public class ThreadSetFixed implements Future {
 	}
 
 	@Override
-	public synchronized void addListener(FutureListener l) {
+	public synchronized void addListener(FutureListener l, ConditionalYield y) {
 		if (listener != null) {
 			throw new IllegalThreadStateException("Multiple listeners");
 		}
