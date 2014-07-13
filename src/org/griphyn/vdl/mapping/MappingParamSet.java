@@ -38,9 +38,14 @@ public abstract class MappingParamSet {
     }
     
     protected void addParam(StringBuilder sb, String name, Object value) {
-        sb.append(", ");
+        if (sb.length() > 2 && sb.charAt(sb.length() - 2) == ';') {
+            // first param
+        }
+        else {
+            sb.append(", ");
+        }
         sb.append(name);
-        sb.append(" = ");
+        sb.append("=");
         sb.append(Tracer.unwrapHandle(value));
     }
     
