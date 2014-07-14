@@ -81,7 +81,7 @@ Property Merging
 
 If two properties with the same name are present in a configuration file, they are either
 merged or the latter one overrides the earlier one. This depends on the type of property.
-Simple values are always overriden, while objects are merged. For example:
+Simple values are always overridden, while objects are merged. For example:
 
 -----
 key: 1
