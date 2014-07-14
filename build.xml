@@ -353,7 +353,7 @@
 
 	<target name="cleanGenerated">
 		<delete includeEmptyDirs="true">
-			<fileset dir="src/org/griphyn/vdl/model/" includes="**/*.java"/>
+			<fileset dir="src/org/griphyn/vdl/model/" includes="**/*.java" erroronmissingdir="false" />
 		</delete>
 		<delete file="lib/vdldefinitions.jar"/>
 	</target>
