@@ -19,10 +19,10 @@
 		<fileset dir="${dist.dir}">
 			<include name="${extra.lib.dir}/*.jar"/>
 		</fileset>
-    	<fileset dir="${cog.dir}/modules/${module.name}/lib">
+    	<fileset dir="${cog.dir}/modules/${module.name}/lib" erroronmissingdir="false">
 			<include name="**/*.jar"/>
 		</fileset>
-		<fileset dir="${dist.dir}/lib">
+		<fileset dir="${dist.dir}/lib" erroronmissingdir="false">
 			<include name="*.jar"/>
 		</fileset>
 	</path>
@@ -34,7 +34,7 @@
 		<fileset dir="${cog.dir}/modules/${module.name}/lib">
 			<include name="**/*.jar"/>
 		</fileset>
-		<fileset dir="${dist.dir}/lib">
+		<fileset dir="${dist.dir}/lib" erroronmissingdir="false">
 			<include name="*.jar"/>
 		</fileset>
 		<pathelement location="${build.dir}"/>
@@ -215,6 +215,8 @@
     
 	<target name="compile">
 		<echo message="[${module.name}]: COMPILE"/>
+                <!-- Create if not present -->
+		<mkdir dir="src"/>
 		<mkdir dir="${build.dir}"/>
 		<javac  srcdir="src"
 			destdir="${build.dir}"
@@ -454,10 +456,10 @@
 		<!--copy library dependencies-->
 		<echo message="[${module.name}]: JARCOPY"/>
 		<copy todir="${dist.dir}/lib">
-			<fileset dir="lib" includes="${lib.deps}"/>
+			<fileset dir="lib" includes="${lib.deps}" erroronmissingdir="false"/>
 		</copy>
 		<copy todir="${dist.dir}/lib">
-			<fileset dir="${cog.dir}/lib" includes="${lib.deps}"/>
+			<fileset dir="${cog.dir}/lib" includes="${lib.deps}" erroronmissingdir="false"/>
 		</copy>
 		<!--copy runtime configuration files-->
 		<copy todir="${dist.dir}/etc">
