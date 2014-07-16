@@ -1,0 +1,10 @@
+# Specific patterns for Swift
+
+# Generated files
+/lib/vdldefinitions.jar
+/libexec/buildid.txt
+/libexec/version.txt
+
+# Generated directories
+/src/org/globus/swift/language/
+/src/org/globus/swift/parser/

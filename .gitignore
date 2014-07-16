@@ -1,0 +1,8 @@
+
+# Ignore build and dist directories
+/modules/*/build
+/modules/*/dist
+/dist
+
+# Ignore VIM swap files
+*.swp
