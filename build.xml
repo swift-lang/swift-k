@@ -1,228 +1,455 @@
-<project name="Java CoG Kit" default="dist" basedir=".">
+<!-- ===================================================================
+ This code is developed as part of the Java CoG Kit project
+ The terms of the license can be found at http://www.cogkit.org/license
+ This message may not be removed or altered.
+==================================================================== -->
 
-        <property name="cog.dir" value="${basedir}"/>
-        <property file="VERSION"/>
-        <property name="dist.dir" value="${cog.dir}/dist/cog-${cog.version}"/>
-        <property name="maven.dir" value="${dist.dir}/maven/"/>
-        <property name="build.dir" value="${cog.dir}/build"/>
-        <property name="jar.name"  value="cog.jar"/>
+<project name="Java CoG Kit" default="redist" basedir=".">
 
+	<property file="project.properties"/>
+	<property name="cog.dir"		value="${basedir}"/>
+	<property name="main.buildfile"	value="${cog.dir}/mbuild.xml"/>
 
-    <!-- ================================================== -->
-    <!-- maven                                              -->
-    <!-- ================================================== -->
-    <target name="maven">
-
-      <mkdir dir="${maven.dir}/cog-${cog.version}-common/jars"/>
-      <copy todir="${maven.dir}/cog-${cog.version}-common/jars">
-         <fileset dir="${dist.dir}/lib" 
-                  includes="*.jar"/>
-      </copy>
-
-    </target>        
-
-    <target name="maven.publish">
-
-<echo message="use
-scp -r dist/cog-4.0-alpha/maven/* laszewsk@cvs.cogkit.org:/www/www.cogkit.org/releases/v4/maven
-"/>
-
-    <!-- This does not work on cygwin -->
-    <echo message="This does not work on cygwin"/>
-    <exec executable="/cygdrive/c/usr/bin/scp -r ${maven.dir} laszewsk@cvs.cogkit.org:/www/www.cogkit.org/releases/maven"/>
-
-    </target>        
-
-    <!-- ================================================== -->
-    <!-- get all code from CVS                                              -->
-    <!-- ================================================== -->
-
-    <target name="get">
-    <mkdir dir="cogkit"/>
-    <cvs cvsRoot=":pserver:anonymous@cvs.cogkit.org/cvs/cogkit"
-         package="papers/bib"
-         dest="cogkit"
-    />
-    <cvs cvsRoot=":pserver:anonymous@cvs.cogkit.org/cvs/cogkit"
-         package="doc/manual"
-         dest="cogkit"
-    />
-    <cvs cvsRoot=":pserver:anonymous@cvs.cogkit.org/cvs/cogkit"
-         package="src/cog4"
-         dest="cogkit"
-    />
-    <cvs cvsRoot=":pserver:anonymous@cvs.cogkit.org/cvs/cogkit"
-         tag="jglobus-jgss" 
-         package="src/cog4"
-         dest="cogkit"
- 
-    />
-    </target>
-
-    <!-- ================================================== -->
-    <!-- Help                                               -->
-    <!-- ================================================== -->
-        
-    <target name="help">
-        <echo>
-        Directory: ${cog.dir}
-        </echo>
-        <concat>
-           <filelist dir="man" files="build.txt"/>
-        </concat>
-    </target>
+        <!-- set module name and dir here as workaround -->
+	<property name="module.name" 	value="swift"/>
+	<property name="module.dir" 	value="${cog.dir}/modules/${module.name}"/>
+	<property name="dist.dir" 		value="${cog.dir}/dist/${module.name}-${version}"/>
+	<property name="build.dir" 		value="${module.dir}/build"/>
 
 
-    <!-- ================================================== -->
-    <!-- Dist                                               -->
-    <!-- ================================================== -->
-        
-        <target name="dist">
-                <ant antfile="build.xml" target="dist" dir="modules/all"/>
-				<delete dir="${dist.dir}/bin/experimental"/>
-        </target>
-        
+	<!-- ================================================ -->
+	<!-- Help                                             -->
+	<!-- ================================================ -->
 
-    <!-- ================================================== -->
-    <!-- Clean                                              -->
-    <!-- ================================================== -->
-        
-        
-        <target name="clean">
-                <ant antfile="build.xml" target="clean" dir="modules/all"/>
-        </target>
-        
+	<target name="help">
+		<echo>
+	Available targets:
+		help:
+			prints out this help message
 
-    <!-- ================================================== -->
-    <!-- Clean All                                          -->
-    <!-- ================================================== -->
-        
-        <target name="cleanall" depends="clean">
-                <ant antfile="build.xml" target="clean" dir="modules/all"/>
-        </target>
+		dist:
+			creates a distribution directory of the 
+			${project} ${long.name}
+			
+		redist:
+			does a distclean and then a dist. This is the safest
+			way of building Swift.
 
+		jar:
+			creates a jar file for the ${project} ${long.name}
+			named ${jar.filename}
 
-    <!-- ================================================== -->
-    <!-- Distclean                                          -->
-    <!-- ================================================== -->
-        
-        <target name="distclean" depends="clean">
-                <ant antfile="build.xml" target="distclean" dir="modules/all"/>
-        </target>
+		javadoc:
+			creates the documentation
 
+		clean:
+			removes the compiled classes
 
-    <!-- ================================================== -->
-    <!-- Jar                                                -->
-    <!-- ================================================== -->
+		distclean:
+			deletes the distribution directory
 
-        <target name="jar">
-                <ant antfile="build.xml" target="jar" dir="modules/all"/>
-        </target>
+		all:
+			dist and javadoc
 
-        
-    <!-- ================================================== -->
-    <!-- Javadoc                                            -->
-    <!-- ================================================== -->
+		deploy.webstart:
+			deploys the module as a webstart application
 
-        <target name="javadoc">
-                <ant antfile="build.xml" target="javadoc" dir="modules/all"/>
-        </target>
+		dist.joint:
+			builds everything into one jar file. Should only
+			be used globally (from all)
 
-    <!-- ================================================== -->
-    <!-- pmd                                                -->
-    <!-- ================================================== -->
-
-        <target name="pmd">
-                <ant antfile="mbuild.xml" target="pmd.all" dir="."/>
-        </target>
+		fixeol:
+			change newlines to the unix standard.
+		</echo>
+	</target>
 
 
-    <!-- ================================================== -->
-    <!-- Deploy webstart for all modules                    -->
-    <!-- ================================================== -->
-        
-        <target name="deploy.webstart">
-                <ant antfile="build.xml" target="deploy.webstart" dir="modules/all"/>
-        </target>
+	<!-- ================================================ -->
+	<!-- Dist                                             -->
+	<!-- ================================================ -->
 
-        <target name="dist.joint">
-                <ant antfile="build.xml" target="dist.joint" dir="modules/all"/>
-        </target>
+	<target name="etc">
+		<copy todir="${dist.dir}/etc">
+			<fileset dir="${module.dir}/etc" excludes="launcher-template*"/>
+		</copy>
+	</target>
 
-    <!-- ================================================== -->
-    <!-- CHECKSTYLE                                         -->
-    <!-- ================================================== -->
+	<target name="dist" depends="generateVersion, antlr, compileSchema, compileParams">
+		<ant antfile="${main.buildfile}" target="dist"/>
+		<mkdir dir="${dist.dir}/libexec"/>
+		<copy todir="${dist.dir}/libexec">
+			<fileset dir="${module.dir}/libexec"/>
+		</copy>
+		<copy todir="${dist.dir}/bin">
+			<fileset dir="${module.dir}/bin"/>
+		</copy>
+		<copy todir="${dist.dir}/lib/perl">
+			<fileset dir="${module.dir}/lib/perl"/>
+		</copy>
 
-
-    <!-- This requires that you check out src/tools before -->
-    <!-- you can run this target!                          -->
-
-    <taskdef resource="checkstyletask.properties"
-         classpath="../tools/checkstyle-3.5/checkstyle-all-3.5.jar"/>
-
-    <target name="checkstyle"
-        description="Generates a report of code convention violations.">
-
-        <checkstyle config="../tools/checkstyle-3.5/sun_checks.xml"
-              failureProperty="checkstyle.failure"
-              failOnViolation="false">
-             <formatter type="xml" tofile="qualitycontrol/checkstyle_report.xml"/>
-             <fileset dir="modules" includes="**/*.java"/>
-        </checkstyle>
-
-        <style in="qualitycontrol/checkstyle_report.xml"
-               out="qualitycontrol/checkstyle_report.html" 
-               style="../tools/checkstyle-3.5/contrib/checkstyle-noframes.xsl"/>
-
-    </target>
+		<chmod perm="+x">
+			<fileset dir="${dist.dir}/bin">
+                                <include name="apptimes"/>
+                                <include name="foreachworker"/>
+				<include name="gensites"/>
+				<include name="moab-qdel"/>
+				<include name="moab-qstat"/>
+				<include name="moab-qsub"/>
+                                <include name="prop2scs.pl"/>
+				<include name="start-coaster-service"/>
+				<include name="stop-coaster-service"/>
+                                <include name="swiftlog"/>
+				<include name="swiftrun"/>
+				<include name="swift-plot-log"/>
+                                <include name="swift-service"/>
+				<include name="VDL2Karajan"/>
+				<include name="vdlc"/>
+			</fileset>
+		</chmod>
+		<chmod perm="+x">
+			<fileset dir="${dist.dir}/libexec/log-processing">
+				<include name="active-state-transitions"/>
+				<include name="add-runid-as-prefix"/>
+				<include name="affine-transform"/>
+				<include name="all-kickstarts-to-event"/>
+				<include name="all-logs-active-jobsubmissions-count-graph"/>
+				<include name="annotate-karatasks-with-execute2-id"/>
+				<include name="autospace-data"/>
+				<include name="cli-finished"/>
+				<include name="cli-version"/>
+				<include name="cluster-report"/>
+				<include name="cluster-stats"/>
+				<include name="colour-execute2"/>
+				<include name="colour-execute2-by-falkon"/>
+				<include name="colour-karatasks"/>
+				<include name="coloured-event-plot"/>
+				<include name="combine-execute-start-last-times"/>
+				<include name="combine-karajan-tasks-and-load-average"/>
+				<include name="combine-start-last-times"/>
+				<include name="combine-start-last-times-to-event"/>
+				<include name="compute-t-inf"/>
+				<include name="create-everylog-vs-versions-data"/>
+				<include name="duration-of-workflow"/>
+				<include name="error-summary"/>
+				<include name="event-duration-stats"/>
+				<include name="events-in-progress"/>
+				<include name="events-in-progress-*.pl"/>
+				<include name="everylog-durations-of-workflows"/>
+				<include name="everylog-to-event"/>
+				<include name="everylog-vs-versions"/>
+				<include name="execstages-plot"/>
+				<include name="execute2-status-from-log"/>
+				<include name="execute2-summary-from-log"/>
+				<include name="execution-summaries"/>
+				<include name="extract-activity-for-subthreads-of"/>
+				<include name="extract-activity-for-task"/>
+				<include name="extract-activity-for-thread"/>
+				<include name="extract-completed-time-for-run-id"/>
+				<include name="extract-end-time"/>
+				<include name="extract-execute-start-times"/>
+				<include name="extract-failed-time-for-run-id"/>
+				<include name="extract-jobid-karajanid-bindings"/>
+				<include name="extract-last-time-for-execute"/>
+				<include name="extract-start-time"/>
+				<include name="extract-start-times"/>
+				<include name="falkon-to-event"/>
+				<include name="generate-karatasks-event"/>
+				<include name="get-jobid-for-karajanid"/>
+				<include name="get-replicationid-for-execute2id"/>
+				<include name="get-site-for-run-id"/>
+				<include name="get-thread-for-run-id"/>
+				<include name="info-and-karajan-actives"/>
+				<include name="info-to-md5"/>
+				<include name="info-to-transitions"/>
+				<include name="info-to-zeroed-transitions"/>
+				<include name="iso-to-secs"/>
+				<include name="karatasks-only"/>
+				<include name="kickstarts-to-event"/>
+				<include name="kickstarts-to-plot"/>
+				<include name="last-times"/>
+				<include name="last-transition-line"/>
+				<include name="list-known-tasks"/>
+				<include name="list-known-threads"/>
+				<include name="log-to-*-transitions"/>
+				<include name="logs-for-all"/>
+				<include name="lookup-colour"/>
+				<include name="max-duration"/>
+				<include name="normalise-event-start-time"/>
+				<include name="normalise-event-start-time-to-any"/>
+				<include name="number-events"/>
+				<include name="number-sites-list"/>
+				<include name="overview-reports.sh"/>
+				<include name="per-site-execute2-durations"/>
+				<include name="plot-duration-histogram"/>
+				<include name="plot-everylogs"/>
+				<include name="queue-state-transitions"/>
+				<include name="retrycounts"/>
+				<include name="sec-to-utc"/>
+				<include name="sec-to-utc-day"/>
+				<include name="simple-event-plot"/>
+				<include name="sort-preserve"/>
+				<include name="split-start-times-shifted"/>
+				<include name="start-last-times-and-kickstart"/>
+				<include name="sum-tt1.pl"/>
+				<include name="swap-and-sort"/>
+				<include name="swap-and-sort-and-swap"/>
+				<include name="swift-standard-log-to-transition"/>
+				<include name="table-jobs-sites"/>
+				<include name="task-status-to-transitions"/>
+				<include name="tasks-in-cluster"/>
+				<include name="temporal-join"/>
+				<include name="tie-url-filenames"/>
+				<include name="times-for-all-tasks"/>
+				<include name="total-event-plot"/>
+				<include name="trail"/>
+				<include name="trail-freex"/>
+				<include name="transitions-to-cedps"/>
+				<include name="transitions-to-event"/>
+				<include name="tscore.sh"/>
+				<include name="weights.sh"/>
+				<include name="whole-workflow-event"/>
+				<include name="whole-workflow-time"/>
+			</fileset>
+		</chmod>
 	
+		<!--<delete file="${dist.dir}/lib/jaxrpc.jar" quiet="true"/>-->
+		<delete includeEmptyDirs="true">
+			<fileset dir="${dist.dir}/bin/examples"/>
+		</delete>
+		<delete>
+			<fileset dir="${dist.dir}/bin" 
+				includes="examples, cog-checkpoint*, cog-file-operation*, cog-register*"/>
+			<fileset dir="${dist.dir}/bin" 
+				includes="cog-task2xml*, globus-gass-server*, globus-personal-gatekeeper*"/>
+			<fileset dir="${dist.dir}/bin" 
+				includes="globus2jks*, grid-info-search*, cogrun*, globus-gass-server-shutdown*"/>
+		</delete>
+		<antcall target="remove-supporting" />
+		<copy todir="${dist.dir}/etc" 
+			file="${module.dir}/etc/karajan.properties" 
+			overwrite="true"/>
+		<copy todir="${dist.dir}/etc" 
+			file="${module.dir}/etc/log4j.properties" 
+			overwrite="true"/>
+		<copy todir="${dist.dir}/etc/templates">
+			<fileset dir="${module.dir}/etc/templates"/>
+		</copy>
+                <copy todir="${dist.dir}/etc/sites">
+                        <fileset dir="${module.dir}/etc/sites"/>
+                </copy>
+		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
+		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>
+		<chmod perm="+x" file="${dist.dir}/libexec/cdm_broadcast.sh"/>
+	</target>
+
+	<target name="antlr">
+		<java classname="antlr.Tool" fork="true" failonerror="true">
+			<arg value="-o"/>
+			<arg value="${module.dir}/src/org/globus/swift/parser"/>
+			<arg value="${module.dir}/resources/swiftscript.g"/>
+			<classpath>
+				<pathelement location="${module.dir}/lib/antlr-2.7.5.jar"/>
+				<pathelement location="${module.dir}/lib/stringtemplate.jar"/>
+			</classpath>
+		</java>
+	</target>
+
+	<target name="compileSchema">
+		<java classname="org.apache.xmlbeans.impl.tool.SchemaCompiler" fork="true" failonerror="true">
+			<arg value="-src"/><arg value="${module.dir}/src"/>
+			<arg value="-javasource"/><arg value="1.4"/>
+			<arg value="-out"/><arg value="${module.dir}/lib/vdldefinitions.jar"/>
+			<arg value="${module.dir}/resources/swiftscript.xsd"/>
+			<arg value="${module.dir}/resources/swiftscript.xsdconfig"/>
+			<classpath>
+				<pathelement location="${module.dir}/lib/xbean.jar"/>
+				<pathelement location="${module.dir}/lib/resolver.jar"/>
+				<pathelement location="${module.dir}/lib/jsr173_1.0_api.jar"/>
+			</classpath>
+		</java>
+	</target>
+	
+	<target name="compileParams">
+		<!-- Mapper parameters are java classes that are (mostly)  -->
+		<!-- generated from parameter files. This is done to avoid -->
+		<!-- costly hashtables attached to every single piece of   -->
+		<!-- swift root data. They could be written by hand (and   -->
+		<!-- some are), but it's a tedious process                 -->
+		
+		<!-- first compile the params compiler -->
+		<mkdir dir="${build.dir}"/>
+		<echo message="[swift] Compiling mapper params compiler"/>
+		<javac  srcdir="${module.dir}/src"
+			destdir="${build.dir}"
+			includes="**/MappingParamFileGenerator.java"
+			includeAntRuntime="false"/>
+        <!-- then compile the files themselves -->
+        <echo message="[swift] Generating mapping parameter classes"/>
+        <java classname="org.griphyn.vdl.mapping.file.MappingParamFileGenerator" fork="true" failonerror="true">
+        	<arg value="${module.dir}/src"/>
+        	<classpath>
+        		<pathelement location="${build.dir}"/>
+        	</classpath>
+        </java>
+	</target>
+	
+	<target name="swift.launcher">
+		<condition property="launcher.exists">
+			<and>
+				<available file="${dist.dir}/bin/${launcher-name}"/>
+				<available file="${dist.dir}/bin/${launcher-name}.bat"/>
+			</and>
+		</condition>
+		<antcall target="create.swift.launcher">
+			<param name="class-name" value="${class-name}"/>
+			<param name="launcher-name" value="${launcher-name}"/>
+		</antcall>
+	</target>
+    
+	<target name="create.swift.launcher" unless="launcher.exists">
+		<echo message="[${module.name}]: LAUNCHER ${launcher-name}"/>
+		<property name="umask" value=""/>
+		<filter token="class" value="${class-name}"/>
+		<filter token="jar" value="${jar.name}"/>
+		<filter token="umask" value="${umask}"/>
+
+		<copy file="${cog.dir}/modules/swift/etc/launcher-template"
+			tofile="${dist.dir}/bin/${launcher-name}"
+			filtering="true"/>
+		<copy file="${cog.dir}/modules/swift/etc/launcher-template.bat"
+			tofile="${dist.dir}/bin/${launcher-name}.bat"
+			filtering="true"/>
+		<chmod file="${dist.dir}/bin/${launcher-name}" perm="+x"/>
+		<!-- Just in case... -->
+		<fixcrlf srcdir="${dist.dir}/bin"
+			eol="lf"
+			includes="${launcher-name}" />
+		<fixcrlf srcdir="${dist.dir}/bin"
+			eol="crlf"
+			includes="${launcher-name}.bat" />
+	</target>
 
 
-    <!-- ================================================== -->
-    <!-- Clean the Code                                     -->
-    <!-- ================================================== -->
+	<!-- ================================================ -->
+	<!-- Compile                                          -->
+	<!-- ================================================ -->
 
-    <!-- 
+	<target name="compile">
+		<ant antfile="${main.buildfile}" target="compile"/>
+	</target>
+	
+	<!-- ================================================ -->
+	<!-- Clean                                            -->
+	<!-- ================================================ -->
 
-         THIS NEEDS AN ANT TARGET
+	<target name="clean" depends="cleanGenerated">
+		<ant antfile="${main.buildfile}" target="clean"/>
+	</target>
 
-         jacobe -cfg=../cleanup/jacobe-sun.cfg -overwrite src
 
-     -->
+	<!-- ================================================ -->
+	<!-- Distclean                                        -->
+	<!-- ================================================ -->
 
-     <target name="beautify-test">
-       <exec dir="." executable="jacobe">
-           <arg line="-cfg=../cleanup/jacobe-sun.cfg modules"/>
-       </exec>
-     </target>
+	<target name="distclean" depends="cleanGenerated">
+		<ant antfile="${main.buildfile}" target="distclean"/>
+	</target>
 
-     <target name="beautify-do">
-       <exec dir="." executable="jacobe">
-           <arg line="-cfg=../cleanup/jacobe-sun.cfg -overwrite modules"/>
-       </exec>
-     </target>
-         
-         <target name="eclipse.modules">
-                <property name="toolname" value="modules2eclipse.sh"/>
-                <antcall target="execute.tool"/>
-         </target>
-         
-         <target name="eclipse.all">
-                <property name="toolname" value="all2eclipse.sh"/>
-                <antcall target="execute.tool"/>
-         </target>
-         
-         <target name="eclipse.clean">
-                <property name="toolname" value="cleaneclipsedata.sh"/>
-                <antcall target="execute.tool"/>
-         </target>
-         
-         <target name="execute.tool">
-                <copy file="tools/${toolname}" tofile="./${toolname}"/>
-                <chmod file="./${toolname}" perm="+x"/>
-                <exec dir="." executable="${toolname}"/>
-                <delete file="./${toolname}"/>
-         </target>
+
+	<target name="cleanGenerated">
+		<delete includeEmptyDirs="true">
+			<fileset dir="${module.dir}/src/org/griphyn/vdl/model/" includes="**/*.java" erroronmissingdir="false" />
+		</delete>
+		<delete file="lib/vdldefinitions.jar"/>
+	</target>
+
+	<!-- ================================================ -->
+	<!-- Jar                                              -->
+	<!-- ================================================ -->
+
+	<target name="jar">
+		<ant antfile="${main.buildfile}" target="jar"/>
+	</target>
+
+
+
+	<!-- ================================================ -->
+	<!-- Javadoc                                          -->
+	<!-- ================================================ -->
+
+	<target name="javadoc">
+		<ant antfile="${main.buildfile}" target="javadoc"/>
+	</target>
+
+
+
+	<!-- ================================================ -->
+	<!-- PMD                                              -->
+	<!-- ================================================ -->
+
+	<target name="pmd">
+		<ant antfile="${main.buildfile}" target="pmd"/>
+	</target>
+
+	<!-- ================================================ -->
+	<!-- deploy.webstart                                  -->
+	<!-- ================================================ -->
+
+	<target name="deploy.webstart">
+		<ant antfile="${main.buildfile}" target="deploy.webstart"/>
+	</target>
+
+	<!-- ================================================ -->
+	<!-- replacelibs                                      -->
+	<!-- ================================================ -->
+
+	<target name="replacelibs">
+		<ant antfile="${main.buildfile}" target="replacelibs"/>
+	</target>
+
+	<!-- ================================================ -->
+	<!-- webstart.launchers                               -->
+	<!-- ================================================ -->
+
+	<target name="webstart.launchers">
+		<ant antfile="${main.buildfile}" target="webstart.launchers"/>
+	</target>
+
+	<!-- ================================================ -->
+	<!-- dist.joint                                       -->
+	<!-- ================================================ -->
+
+	<target name="dist.joint">
+		<ant antfile="${main.buildfile}" target="dist.all"/>
+	</target>
+	<!-- ================================================ -->
+	<!-- fixeol                                           -->
+	<!-- ================================================ -->
+
+	<target name="fixeol">
+		<ant antfile="${main.buildfile}" target="fixeol"/>
+	</target>
+
+
+	<target name="module.package">
+		<ant antfile="${main.buildfile}" target="module.package"/>
+	</target>
+
+	<target name="generateVersion">
+		<echo file="${module.dir}/libexec/version.txt">Swift </echo>
+		<exec os="Linux, Mac OS X" executable="${module.dir}/libexec/svn-revision" append="true" output="${module.dir}/libexec/version.txt"/>
+		<exec os="Linux, Mac OS X" executable="${module.dir}/libexec/generate-buildid" append="false" output="${module.dir}/libexec/buildid.txt"/>
+	</target>
+	
+	<target name="redist" depends="distclean, dist">
+	</target>
+
+       <target name="remove-supporting" if="no-supporting">
+ 		<delete>
+			<fileset dir="${dist.dir}/bin" 
+				includes="cog*, globus*, grid*"/>
+		</delete>
+        </target>
 
 </project>
 
