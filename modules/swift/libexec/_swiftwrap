@@ -1,0 +1,608 @@
+
+#!/bin/bash
+# this script must be invoked inside of bash, not plain sh
+# note that this script modifies $IFS
+
+# Toggle debugging output from debug()
+DEBUG=0
+
+infosection() {
+	echo >& "$INFO"
+	echo "_____________________________________________________________________________" >& "$INFO"
+	echo >& "$INFO"
+	echo "        $1" >& "$INFO"
+	echo "_____________________________________________________________________________" >& "$INFO"
+	echo >& "$INFO"
+}
+
+info() {
+	infosection "command line"
+	echo $COMMANDLINE 2>&1 >& "$INFO"
+	infosection "uname -a"
+	uname -a 2>&1 >& "$INFO"
+	infosection "id"
+	id 2>&1 >& "$INFO"
+	infosection "env"
+	env 2>&1 >& "$INFO"
+	infosection "df"
+	df 2>&1 >& "$INFO"
+        if [ -e "/proc/cpuinfo" ]; then
+		infosection "/proc/cpuinfo"
+		cat /proc/cpuinfo 2>&1 >& "$INFO"
+	fi
+	if [ -e "/proc/meminfo" ]; then
+		infosection "/proc/meminfo"
+		cat /proc/meminfo 2>&1 >& "$INFO"
+	fi
+	if [ -f "$STDOUT" ] ; then
+		infosection "stdout"
+		cat $STDOUT >& "$INFO"
+	fi
+	if [ -f "$STDERR" ] ; then
+		infosection "stderr"
+		cat $STDERR >& "$INFO"
+	fi
+}
+
+# lookup exact executable path for date to avoid going through the path
+# multiple times
+
+DATE_BIN=`which date`
+
+logstate() {
+	echo "Progress " `$DATE_BIN +"%Y-%m-%d %H:%M:%S.%N%z"` " $@" >& "$INFO"
+}
+
+log() {
+	echo "$@" >& "$INFO"
+}
+
+debug() {
+	[[ $DEBUG == 1 ]] && echo "$@" >& "$INFO"
+}
+
+moveMiscFilesFromScratch() {
+	if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
+		mkdir -p "$WFDIR/info/$JOBDIR"
+		mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
+	fi
+	
+	if [ "X$SCRATCH" != "X" ]; then
+		if [ -f "$DIR/$STDOUT" ] || [ -f "$DIR/$STDERR" ]; then
+			mkdir -p "$WFDIR/jobs/$JOBDIR/$ID"
+		fi 
+		if [ -f "$DIR/$STDOUT" ]; then
+			mv "$DIR/$STDOUT" "$WFDIR/jobs/$JOBDIR/$ID/$STDOUT"
+		fi
+		if [ -f "$DIR/$STDERR" ]; then
+			mv "$DIR/$STDERR" "$WFDIR/jobs/$JOBDIR/$ID/$STDERR"
+		fi
+	fi
+}
+
+fail() {
+	EC=$1
+	shift
+	
+	if [ "$STATUSMODE" != "files" ]; then
+		mkdir -p $WFDIR/status/$JOBDIR
+	fi
+	
+	echo $@ >"$WFDIR/status/$JOBDIR/${ID}-error"
+		
+	log $@
+	info
+	
+	closeinfo
+	
+	moveMiscFilesFromScratch
+		
+	if [ "$STATUSMODE" = "files" ]; then
+		exit 0
+	else
+		exit $EC
+	fi
+}
+
+checkError() {
+	if [ "$?" != "0" ]; then
+		fail $@
+	fi
+}
+
+checkEmpty() {
+	if [ "$1" == "" ]; then
+		shift
+		fail 254 $@
+	fi
+}
+
+checkparamfile() {
+	log "checking for paramfile"
+	if [ "$1" == "-p" ]; then
+		JOBDIR=$2
+		PARAMFILE=${WFDIR}/parameters/${JOBDIR}/param-${ID}
+	fi
+	log "paramfile is: $PARAMFILE"
+}
+
+getarg() {
+	NAME=$1
+	shift
+	VALUE=""
+	SHIFTCOUNT=0
+	if [ "$PARAMFILE" == "" ] && [ "$1" == "$NAME" ]; then
+		shift
+		let "SHIFTCOUNT=$SHIFTCOUNT+1"
+		while [ "${1:0:1}" != "-" ] && [ "$#" != "0" ]; do
+			VALUE="$VALUE $1"
+			shift
+			let "SHIFTCOUNT=$SHIFTCOUNT+1"
+		done
+		VALUE="${VALUE:1}"
+	elif [ "$PARAMFILE" != "" ] && grep -E "^$NAME " $PARAMFILE ; then
+		VALUE=$(grep -E "^$NAME " $PARAMFILE | cut -d ' ' -f 2-)
+	else
+		fail 254 "Missing $NAME argument"
+	fi
+}
+
+openinfo() {
+	exec 3<> $1
+	INFO=3
+}
+
+closeinfo() {
+	exec 3>&-
+}
+
+contains() {
+	ARRAY=$1
+	X=$2
+
+	for a in ${!ARRAY}
+	do
+		if [[ ${a} == ${X} ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+genScripts() {
+	echo "#!/bin/bash" > run.sh
+	echo -n "\"$EXEC\" " >> run.sh
+	for CMDARG in "${CMDARGS[@]}"; do
+    	echo -n "\"$CMDARG\" " >> run.sh
+	done
+	echo "1>>\"$STDOUT\" 2>>\"$STDERR\"" >> run.sh
+	chmod +x run.sh
+}
+
+cdm_local_output()
+{
+ 	L=$1
+
+	if [[ $CDM_FILE == "" ]]; then
+		return
+	fi
+
+ 	CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
+	if [[ $CDM_POLICY == "LOCAL" ]]; then
+		cdm_local_output_perform $L $CDM_POLICY
+	fi
+}
+
+cdm_local_output_perform()
+{
+	L=$1
+	TOOL=$2
+	REMOTE_DIR=$3
+	FLAGS=$3
+	log "Copying $REMOTE_DIR/$FILE to $JOBDIR/$FILE"
+	mkdir -p $REMOTE_DIR
+	checkError 254 "CDM[LOCAL]: mkdir -p $REMOTE_DIR failed!"
+	$TOOL $FLAGS $JOBDIR/$FILE $REMOTE_DIR/$FILE
+	checkError 254 "CDM[LOCAL]: Tool failed!"
+}
+
+cdm_gather()
+{
+	GATHER_OUTPUT=${*}
+	if [[ $CDM_FILE == "" ]]; then
+		return
+	fi
+	if [[ $GATHER_OUTPUT == "" ]]; then
+		return
+	fi
+
+	cdm_gather_action $GATHER_MAX $GATHER_OUTPUT
+}
+
+COMMANDLINE=$@
+
+# get the parent directory of the directory containing _swiftwrap, to use
+# as the run directory
+# this assumes that _swiftwrap is being executed from the top level of
+# the shared directory, and that shared directory is in the top level
+# of the workflow run directory
+WFDIR=$(dirname $(dirname $0))
+
+cd $WFDIR
+
+# make the WFDIR absolute
+WFDIR=$(pwd)
+PARAMFILE=
+
+openinfo "wrapper.log"
+ID=$1
+checkEmpty "$ID" "Missing job ID"
+
+shift
+
+checkparamfile "$@"
+
+# JOBDIR might have been assigned through the -p option, or might
+# be a parameter here
+if [ "$JOBDIR" == "" ] ; then
+	getarg "-jobdir" "$@"
+	JOBDIR=$VALUE
+	shift $SHIFTCOUNT
+fi
+
+getarg "-scratch" "$@"
+SCRATCH=$VALUE
+shift $SHIFTCOUNT
+
+if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
+	INFODIR=$SCRATCH
+else
+	INFODIR=$WFDIR/info/$JOBDIR
+fi
+checkEmpty "$JOBDIR" "Missing job directory prefix"
+mkdir -p $INFODIR
+closeinfo
+
+if [ -z $MPI_RANK ]; then
+	INFOFILE="$INFODIR/${ID}-info"
+else
+	# Rename info file for each rank
+	INFOFILE="$INFODIR/${ID}-${PMI_RANK}-info"
+	# Build list of per-rank info files
+	echo $INFOFILE >> $INFODIR/${ID}-info
+fi
+rm -f $INFOFILE
+openinfo "$INFOFILE"
+
+logstate "LOG_START"
+infosection "Wrapper (_swiftwrap)"
+
+getarg "-e" "$@"
+EXEC=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-out" "$@"
+STDOUT=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-err" "$@"
+STDERR=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-i" "$@"
+STDIN=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-d" "$@"
+DIRS=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-if" "$@"
+INF=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-of" "$@"
+OUTF=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-cf" "$@"
+COLLECT=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-cdmfile" "$@"
+CDM_FILE=
+if [ "X$VALUE" != "X" ]; then
+	CDM_FILE=shared/$VALUE
+fi
+shift $SHIFTCOUNT
+
+getarg "-status" "$@"
+STATUSMODE=$VALUE
+shift $SHIFTCOUNT
+
+declare -a CMDARGS
+if [ "$PARAMFILE" == "" ] && [ "$1" == "-a" ] ; then
+	shift
+	CMDARGS=("$@")
+elif [ "$PARAMFILE" != "" ] ; then
+	CMDARGS=()
+	FIRST=1
+	while read line ; do
+		if [ "$FIRST" == "1" ] ; then
+			CMDARGS=("$line")
+			FIRST=0
+		else
+			CMDARGS=("${CMDARGS[@]}" "$line")
+		fi
+	done < <(grep -E "^-a " $PARAMFILE | cut -d " " -f 2-)
+else
+	fail 254 "Missing arguments (-a option)"
+fi
+
+if [ "$STATUSMODE" = "files" ]; then
+	mkdir -p $WFDIR/status/$JOBDIR
+fi
+
+if [ "X$CDM_FILE" != "X" ]; then
+	logstate "SOURCE_CDM_LIB $WFDIR/shared/cdm_lib.sh"
+	source $WFDIR/shared/cdm_lib.sh
+	checkError 254 "Could not source: $WFDIR/shared/cdm_lib.sh"
+fi
+
+if [ "X$SCRATCH" != "X" ]; then
+	log "Job directory mode is: local copy"
+	DIR=$SCRATCH/$JOBDIR/$ID
+	COPYNOTLINK=1
+else
+	log "Job directory mode is: link on shared filesystem"
+	DIR=jobs/$JOBDIR/$ID
+	COPYNOTLINK=0
+fi
+
+PATH=$PATH:/bin:/usr/bin
+
+if [ "$PATHPREFIX" != "" ]; then
+	export PATH=$PATHPREFIX:$PATH
+fi
+
+if [ "$SWIFT_EXTRA_INFO" != "" ]; then
+	log "EXTRAINFO=$($SWIFT_EXTRA_INFO)"
+fi
+
+if [ "X${EXEC:0:1}" != "X/" ] ; then
+	export ORIGEXEC=$EXEC
+	export EXEC=$(which $EXEC)
+	if [ "X$EXEC" = "X" ] ; then
+		fail 254 "Cannot find executable $ORIGEXEC on site system path"
+	fi
+fi
+
+log "PID=$$"
+log "HOST=$HOST"
+log "PWD=$PWD"
+log "DIR=$DIR"
+log "EXEC=$EXEC"
+log "STDIN=$STDIN"
+log "STDOUT=$STDOUT"
+log "STDERR=$STDERR"
+log "DIRS=$DIRS"
+log "INF=$INF"
+log "OUTF=$OUTF"
+log "COLLECT=$COLLECT"
+log "CDM_FILE=$CDM_FILE"
+log "ARGS=$@"
+log "ARGC=$#"
+[ -n $MPI_RANK ] && log "MPI_RANK=$MPI_RANK" && log "PMI_RANK=$PMI_RANK"
+IFS="|"
+
+logstate "CREATE_JOBDIR"
+mkdir -p $DIR
+checkError 254 "Failed to create job directory $DIR"
+log "Created job directory: $DIR"
+
+if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
+
+	logstate "CREATE_INPUTDIR"
+	for D in $DIRS ; do
+		mkdir -p "$DIR/$D" 2>&1 >& "$INFO"
+		checkError 254 "Failed to create input directory $D"
+		log "Created output directory: $DIR/$D"
+	done
+	
+	logstate "LINK_INPUTS"
+	for L in $INF ; do
+	    CDM_POLICY="DEFAULT"
+		if [[ $CDM_FILE != "" ]]; then
+			CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
+		fi
+		if [[ $CDM_POLICY != "DEFAULT" && $CDM_POLICY != "EXTERNAL"* ]]; then
+			log "CDM_POLICY: $L -> $CDM_POLICY"
+			eval cdm_action $DIR "INPUT" $L $CDM_POLICY
+			continue
+		fi
+		if [ $COPYNOTLINK = 1 ]; then
+			cp "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			checkError 254 "Failed to copy input file $L"
+			log "Copied input: $WFDIR/shared/$L to $DIR/$L"
+		else
+			[ -f $WFDIR/shared/$L ]
+			checkError 254 "Could not locate input file: $L"
+			# if it's a link, be careful about creating
+			# long link chains because there is a rather low 
+			# limit to how long that chain can be
+			if [ -L $WFDIR/shared/$L ]; then
+				# this might be of questionable portability
+				cp -P "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			else
+				ln -s "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			fi
+			checkError 254 "Failed to link input file $L"
+			log "Linked input: $WFDIR/shared/$L to $DIR/$L"
+		fi
+	done
+	
+	if [[ $CDM_FILE != "" ]]; then
+	    logstate "LINK_CDM_OUTPUTS"
+	    SKIPPED_OUTPUT=()
+		GATHER_OUTPUT=()
+		for L in $OUTF ; do
+			CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
+			log "CDM_POLICY: $L -> $CDM_POLICY"
+			if [[ $CDM_POLICY != "DEFAULT" &&
+				  $CDM_POLICY != "BROADCAST"* ]]; then
+	    	    eval cdm_action $DIR "OUTPUT" $L $CDM_POLICY
+				SKIPPED_OUTPUT=( $SKIPPED_OUTPUT $L )
+			fi
+			if [ $CDM_POLICY == "GATHER" ]; then
+				GATHER_OUTPUT=( $GATHER_OUTPUT $L )
+			elif [ $CDM_POLICY == "LOCAL" ]; then
+				CDM_LOCAL_OUTPUT=( $CDM_LOCAL_OUTPUT $L )
+			fi
+		done
+	fi
+
+fi # PMI_RANK==0
+
+debug "Moving to jobdir: $DIR"
+cd $DIR
+if [ $? != 0 ]; then
+	log "PWD: $PWD"
+	log $( find . )
+	fail 254 "Could not cd to: $DIR"
+fi
+logstate "EXECUTE"
+
+debug "Command line: $EXEC ${CMDARGS[@]}"
+
+if [ ! -f "$EXEC" ]; then
+	fail 254 "The executable $EXEC does not exist"
+fi
+if [ ! -x "$EXEC" ]; then
+	fail 254 "The executable $EXEC does not have the executable bit set"
+fi
+
+TIMEARGS=(-o swiftapp.resources -f APP_RESOURCES=real_secs:%e,kernel_secs:%S,user_secs:%U,percent_cpu:%P,max_rss:%M,avg_rss:%t,avg_tot_vm:%K,avg_priv_data:%D,avg_priv_stack:%p,avg_shared_text:%X,page_size:%Z,major_pgfaults:%F,minor_pgfaults:%R,swaps:%W,invol_context_switches:%c,vol_waits:%w,fs_reads:%I,fs_writes:%O,sock_recv:%r,sock_send:%s,signals:%k,exit_status:%x)
+
+if [[ "$OSTYPE" == *darwin* ]]; then
+    TIMECMD=
+    TIMEARGS=
+elif [ -x /usr/bin/time ]; then
+    TIMECMD="/usr/bin/time"
+elif [ -x $HOME/swift.time ]; then
+    TIMECMD="$HOME/swift.time"
+else
+    TIMECMD=""
+TIMEARGS=""
+fi
+if [ "$STDIN" == "" ]; then
+	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+		genScripts
+	fi
+            
+            if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
+               "$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+            else
+               "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+            fi
+else
+	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+		genScripts
+	fi
+    	
+	if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
+           		"$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+   	 	else         
+       		"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+    	fi  
+fi
+
+TIME_EC=$?
+if [ "_$TIMECMD" != _ ]; then
+	log "$(cat swiftapp.resources)"
+fi
+sh -c "exit $TIME_EC"
+checkError $? "Application $EXEC failed with an exit code of $?"
+
+if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
+	if [ "$COLLECT" != "" ]; then
+		logstate "COLLECT"
+		log "Collect list is $COLLECT"
+		exec 4<> "$WFDIR/shared/${ID}-collect"
+		for O in "$COLLECT" ; do
+			log "Collecting $O"
+			ls -1 $O >&4
+			for OO in $O ; do
+				OODIR=`dirname "$OO"`
+				mv $OO "$WFDIR/shared/$OODIR" 2>&1 >& "$INFO"
+			done
+		done
+		exec 4>&-
+	fi
+fi
+
+log "Moving back to workflow directory $WFDIR"
+cd $WFDIR
+if [ $? != 0 ]; then
+	fail 254 "Could not cd to workflow directory: $WFDIR"
+fi
+
+logstate "EXECUTE_DONE"
+log "Job ran successfully"
+
+if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
+
+	MISSING=
+	for O in $OUTF ; do
+		if [ ! -f "$DIR/$O" ]; then
+			if [ "$MISSING" == "" ]; then
+				MISSING=$O
+			else
+				MISSING="$MISSING, $O"
+			fi
+		fi
+	done
+	if [ "$MISSING" != "" ]; then
+		log $( find . )
+		fail 254 "The following output files were not created by the application: $MISSING"
+	fi
+	
+	logstate "MOVING_OUTPUTS $OUTF"
+			
+	for O in $OUTF ; do
+		if ! contains SKIPPED_OUTPUT $O ; then
+			mv "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
+			checkError 254 "Failed to move output file $O to shared directory"
+		fi
+	done
+	
+	cdm_local_output $CDM_LOCAL_OUTPUT
+	cdm_gather $GATHER_OUTPUT
+	
+	logstate "RM_JOBDIR"
+	rm -rf "$DIR" 2>&1 >& "$INFO"
+	checkError 254 "Failed to remove job directory $DIR"
+	
+	if [ "$STATUSMODE" = "files" ]; then
+		logstate "TOUCH_SUCCESS"
+		touch $WFDIR/status/${JOBDIR}/${ID}-success
+	fi
+else
+	# Allow rank 0 to write output
+	sleep 1
+fi # MPI_RANK==0
+
+logstate "END"
+
+closeinfo
+
+moveMiscFilesFromScratch
+
+# ensure we exit with a 0 after a successful execution
+exit 0
+
+# Local Variables:
+# mode: sh
+# sh-basic-offset: 4
+# tab-width: 4
+# indent-tabs-mode: 1
+# End:

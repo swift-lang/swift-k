@@ -1,0 +1,22 @@
+#! /bin/sh
+
+nfiles=${1:-10}
+
+rm -rf input
+mkdir input
+cp ../data/t? input/
+( cd input
+  n=0
+  for h in $(seq -w 00 99); do
+    for v in $(seq -w 00 99); do
+      n=$((n+1))
+      if [ $n -gt $nfiles ]; then
+        break;
+      else
+        f=t$(echo $RANDOM | sed -e 's/.*\(.\)/\1/')
+        ln $f h${h}v${v}.rgb
+      fi
+    done
+  done
+  rm t?
+)

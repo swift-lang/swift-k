@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#usage: ./swiftoutput2plot <swift.outfile>
+
+OUTFILE=$1
+
+#extract start time
+TMPDATE=`grep -i progress $OUTFILE | head -n 1 | cut -f4-9 -d ' '`
+START_TIME=`date +%s -d "$TMPDATE"`
+
+#extract end time
+TMPDATE=`grep -i progress $OUTFILE | tail -n 1 | cut -f4-9 -d ' '`
+END_TIME=`date +%s -d "$TMPDATE"`
+
+#duration
+DIFFTIME=$((END_TIME - START_TIME))
+
+#extract active runs in a file
+grep -o -i "Active:[0-9]*" $OUTFILE | awk -F: '{print $2}' > active.txt
+
+#extract successful completions in a file
+grep -o -i "Successfully:[0-9]*" $OUTFILE | awk -F: '{print $2}' > cumulative.txt
+
+#prepare tics
+activelines=`wc -l active.txt | awk '{print $1}'`
+cumulines=`wc -l cumulative.txt | awk '{print $1}'`
+
+activelinespertic=`echo "scale=5 ; $DIFFTIME / $activelines" | bc`
+seq 0 $activelinespertic $DIFFTIME > activetics.txt
+
+cumulinespertic=`echo "scale=5 ; $DIFFTIME / $cumulines" | bc`
+seq 0 $cumulinespertic $DIFFTIME > cumultics.txt
+
+#final plot data
+paste activetics.txt active.txt > plot_active.txt
+paste cumultics.txt cumulative.txt > plot_cumulative.txt
+

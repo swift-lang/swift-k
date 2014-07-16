@@ -1,0 +1,166 @@
+Coasters
+--------
+
+Introduction
+~~~~~~~~~~~~
+Coasters are the Swift's implementation of the _pilot job abstraction_.
+
+In many applications, Swift performance can be greatly enhanced by the use of
+coasters. Coasters provide a low-overhead job submission and file transfer
+mechanism suited for the execution of jobs and the transfer of files for which
+other grid protocols such as GRAM and GridFTP are poorly suited.
+
+Benefits
+~~~~~~~~
+Much of the overhead associated with other grid protocols (such as
+authentication and authorization, and allocation of worker nodes by the site's
+local resource manager) is reduced, because that overhead is associated with
+the allocation of a coaster pilot or coaster worker, rather than with every
+Swift-level procedure invocation; potentially hundreds or thousands of
+Swift-level procedure invocations can be run through a single worker. Coasters
+can be configured for two purposes: job execution and file staging. In
+practice, the Swift script remains the same while working with coasters. A
+detailed description of coaster mechanism is explained in the next section.
+
+Mechanism
+~~~~~~~~~
+Coasters run at the task management layer logically under the Swift script. The
+jobs and data movement requirements resulting after the interpretation of a
+Swift script are handled by the coasters. The coaster mechanism submits a pilot
+job using some other execution mechanism such as GRAM, SGE or PBS scheduler,
+and for each worker node that will be used in a remote cluster, it submits a
+worker job, again using some other execution mechanism such as GRAM. Details on
+the design of the coaster mechanism can be found here:
+<http://wiki.cogkit.org/wiki/Coasters>. The pilot job manages file transfers
+and the dispatch of execution jobs to workers. 
+
+Coasters How-to
+~~~~~~~~~~~~~~~
+To use for job execution, specify a sites.xml execution element like this:
+
+----
+<execution provider="coaster" jobmanager="local:pbs" url="grid.myhost.org">
+----
+
+The jobmanager string contains more detail than with other providers. It
+contains either two or three colon separated fields: 1:the provider to
+be use to execute the coaster pilot job - this provider will submit from
+the Swift client side environment. Commonly this will be one of the GRAM
+providers; 2: the provider to be used to execute coaster worker jobs.
+This provider will be used to submit from the coaster pilot job
+environment, so a local scheduler provider can sometimes be used instead
+of GRAM. 3: optionally, the jobmanager to be used when submitting worker
+job using the provider specified in field 2.
+
+To use for file transfer, specify a sites.xml filesystem element like this:
+
+----
+<filesystem provider="coaster" url="gftp://grid.myhost.org" />
+----
+
+The url parameter should be a pseudo-URI formed with the URI scheme
+being the name of the provider to use to submit the coaster pilot job,
+and the hostname portion being the hostname to be used to execute the
+coaster pilot job. Note that this provider and hostname will be used for
+execution of a coaster pilot job, not for file transfer; so for example,
+a GRAM endpoint should be specified here rather than a GridFTP endpoint.
+
+Coasters are affected by the following profile settings, which are
+documented in the Globus namespace profile section:
+
+[options="header, autowidth"]
+|=================
+|Profile key|Brief description
+|slots|How many maximum LRM jobs/worker blocks are allowed
+|jobsPerNode|How many coaster workers to run per execution node
+|nodeGranularity|Each worker block uses a number of nodes that is a
+multiple of this number
+|lowOverallocation|How many times larger than the job walltime should a
+block's walltime be if all jobs are 1s long
+|highOverallocation|How many times larger than the job walltime should a
+block's walltime be if all jobs are infinitely long
+|overallocationDecayFactor|How quickly should the overallocation curve
+tend towards the highOverallocation as job walltimes get larger
+|spread|By how much should worker blocks vary in worker size
+|jobsPerNode|How many coaster workers to run per execution node
+|reserve|How many seconds to reserve in a block's walltime for
+starting/shutdown operations
+|maxnodes|The maximum number of nodes allowed in a block
+|maxtime|The maximum walltime allowed for a block, in integer seconds
+|remoteMonitorEnabled|If true, show a graphical display of the status of
+the coaster service
+|==================
+Coasters
+--------
+Coasters were introduced in Swift v0.6 as an experimental feature. In many
+applications, Swift performance can be greatly enhanced by the use of coasters.
+Coasters provide a low-overhead job submission and file transfer mechanism
+suited for the execution of short jobs (on the order of a few seconds). A
+detailed information on coasters can be found at
+http://www.ci.uchicago.edu/swift/guides/userguide.php#coasters.
+//**Include neat diagrams.**
+
+Following is a coasters setup case-study for a PBS underlying provider where sites.xml coaster settings were:
+
+[xml]
+source~~~~
+<execution provider="coaster" jobmanager="local:pbs"/>
+<profile namespace="globus" key="project">CI-CCR000013</profile>
+
+<!-- Note that the following is going to be defunct in the new version (0.93+) and replaced by
+"ProviderAttributes" key and may not work in the future Swift versions-->
+
+<!--<profile namespace="globus" key="ppn">24:cray:pack</profile>-->
+
+<profile namespace="globus" key="providerAttributes">
+pbs.aprun
+pbs.mpp=true
+</profile> 
+
+<profile namespace="globus" key="workersPerNode">24</profile>
+<profile namespace="globus" key="maxTime">100000</profile>
+
+<profile namespace="globus" key="lowOverallocation">100</profile>
+<profile namespace="globus" key="highOverallocation">100</profile>
+
+<profile namespace="globus" key="slots">20</profile>
+<profile namespace="globus" key="nodeGranularity">5</profile>
+<profile namespace="globus" key="maxNodes">5</profile>
+<profile namespace="karajan" key="jobThrottle">20.00</profile>
+<profile namespace="karajan" key="initialScore">10000</profile>
+source~~~~
+
+The following table briefly describes the elements of the coasters setup:
+[width="70%", cols="^3,10", options="header"]
+|=============================================================================================
+|profile key | brief description
+|slots |  How many maximum LRM jobs/worker blocks are allowed
+|workersPerNode | How many coaster workers to run per execution node
+|nodeGranularity | Each worker block uses a number of nodes that is a multiple of this number
+|lowOverallocation |  How many times larger than the job walltime should a block's walltime be if all jobs are 1s long
+|highOverallocation | How many times larger than the job walltime should a block's walltime be if all jobs are infinitely long
+|workersPerNode | How many coaster workers to run per execution node reserve How many seconds to reserve in a block's walltime for starting/shutdown operations
+|maxnodes |   The maximum number of nodes allowed in a block
+|maxtime | The maximum number of walltime allowed for a block coaster service
+|jobThrottle |the number of concurrent jobs allowed on a site
+|==============================================================================================
+
+Advanced User-Guide
+~~~~~~~~~~~~~~~~~~~
+
+//Coasters for advanced users. Getting your hands dirty.
+
+One of the main reason that one would initially deviate from coaster defaults
+into more complex pool entries is to force jobs to fit into some site-imposed
+constraint. For instance a typical submission to a fast PBS queue requires a
+user to request upto 3 nodes for under 1 hour. This setup could be achieved
+with a careful tuning of coaters parameters.
+
+Coasters configurations
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Coaster providers
+~~~~~~~~~~~~~~~~~
+
+Settings and examples for different coaster providers mechanisms.
+

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+BASE=0
+
+# order in this for-loop is the order data appears in plot, with
+# first appearing lowest
+for a in \
+   workflow.shifted \
+   start-last-times.shifted \
+   karajan-times.shifted \
+   kickstart-times.shifted \
+; do
+  B=$(basename $a .shifted)
+  echo $B;
+  affine-transform 0 $BASE 0 0 < ${B}.data > ${B}.shifted
+  cat ${B}.shifted | tail -n 1 | cut -f 2 -d ' ' > uiuid.tmp
+  read BASE < uiuid.tmp
+  BASE=$(( $BASE + 10 ))
+  echo new base is $BASE
+done
+

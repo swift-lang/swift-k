@@ -1,0 +1,11 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="i" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 2">
+   <variableReference>i</variableReference>
+   <function name="toint">
+     <function name="strcat">
+       <stringConstant>2</stringConstant><stringConstant>1</stringConstant></function></function>
+  </assign>
+</program>

@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# for every job which has an info file,
+# create two columns, one being the start time of the job according
+# to the info file and the other being the Active time according to
+# karajan
+
+
+# for each info file
+
+for infofn in $1/*-info; do
+
+#   get info id
+
+  jobid=$(echo $infofn | sed 's%^.*/\([^/]*\)-info$%\1%' )
+#  echo Processing info file for job $jobid in file $infofn >&2
+# Progress  2007-10-29 10:05:50+0000  RM_JOBDIR
+INFOSTART=$(grep -E '^Progress ' $infofn | sed "s/^Progress *\([^ ]* [^ ]*\) *\([^ ]*\).*/\1 $jobid \2/" | head -n 1 | iso-to-secs | cut -d ' ' -f 1)
+INFOEND=$(grep -E '^Progress ' $infofn | sed "s/^Progress *\([^ ]* [^ ]*\) *\([^ ]*\).*/\1 $jobid \2/" | tail -n 1 | iso-to-secs | cut -d ' ' -f 1)
+
+#   get karajan ID
+# execute2.event lines look like this:
+# 1223271839.650 0.782999992370605 touch-a7kvof0j JOB_END 0-0-4-1 localhost 97kvof0j
+
+threadid=$(grep -E "^.* .* $jobid .* .* .* .*$" execute2.event | sed 's/^.* .* .* .* \(.*\) .* .*$/\1/')
+
+#   get karajan Active timestamp for this
+#1223271840.424 0-0-4-1-1223271839341 Submitting FILE_OPERATION 
+
+KARASTART=$(grep JOB_SUBMISSION karatasks.transitions | grep Active | grep -E "^.* ${threadid}-.* .* .*" | cut -d ' ' -f 1)
+KARAEND=$(grep JOB_SUBMISSION karatasks.transitions | grep Completed | grep -E "^.* ${threadid}-.* .* .*" | cut -d ' ' -f 1)
+
+#   output
+
+DIFFSTART=$(echo $INFOSTART - $KARASTART | bc -l )
+DIFFEND=$(echo $INFOEND - $KARAEND | bc -l )
+
+echo $INFOSTART $KARASTART $DIFFSTART >> info-and-karajan-actives.3.data
+echo $INFOEND $KARAEND $DIFFEND >> info-and-karajan-actives.end.3.data
+
+
+done
+
+normalise-event-start-time < info-and-karajan-actives.3.data > info-and-karajan-actives.data
+normalise-event-start-time < info-and-karajan-actives.end.3.data > info-and-karajan-actives.end.data
+
+gnuplot ${SWIFT_PLOT_HOME}/info-and-karajan-actives.plot
+
+cat info-and-karajan-actives.data | cut -d ' ' -f 3 | sort -n | number-sites-list > info-and-karajan-actives.2.data
+cat info-and-karajan-actives.end.data | cut -d ' ' -f 3 | sort -n | number-sites-list > info-and-karajan-actives.end.2.data
+
+gnuplot ${SWIFT_PLOT_HOME}/info-and-karajan-actives.2.plot
+
+# force successful exit rather than passing along the gnuplot exit code
+exit 0

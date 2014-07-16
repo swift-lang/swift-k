@@ -1,0 +1,6 @@
+#!/bin/bash
+echo $@ > external-mapper-args.args
+echo "[0].l a.tmp"
+echo "[1].r b.tmp"
+echo "[2].l c.tmp"
+

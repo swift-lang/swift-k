@@ -1,0 +1,15 @@
+Bits
+----
+
+Named and optional parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to specifying parameters positionally, parameters can be
+named, and if desired a default value can be specified:
+
+.default.swift
+************** 
+----
+include::../../examples/tutorial/default.swift[]
+----
+**************

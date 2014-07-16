@@ -1,0 +1,739 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>Image</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>Header</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>Table</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>DiffStruct</typename>
+     		<typealias></typealias>
+     		<typestructure>
+     			    <member>
+     					<membername>cntr1</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>cntr2</membername>
+     					<membertype>int</membertype>
+     				</member>
+     			    <member>
+     					<membername>plus</membername>
+     					<membertype>Image</membertype>
+     				</member>
+     			    <member>
+     					<membername>minus</membername>
+     					<membertype>Image</membertype>
+     				</member>
+     			    <member>
+     					<membername>diff</membername>
+     					<membertype>Image</membertype>
+     				</member>
+     		</typestructure>
+     	</type>
+     	<type>
+     		<typename>TxtFile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>JPEG</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>   
+  </types>  
+  <procedure name="mProjectPP" src="line 17">
+
+      <output 
+    name="projectedImage" type="Image"
+
+     xsi:nil="true" />
+
+      <output 
+    name="projectedArea" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="rawImage" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="template" type="Header"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 18">
+        <executable>mProjectPP</executable>
+        <stringConstant>-X</stringConstant><function name="filename">
+          <variableReference>rawImage</variableReference></function><function name="filename">
+          <variableReference>projectedImage</variableReference></function><function name="filename">
+          <variableReference>template</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mProjectPPBatch" src="line 23">
+
+      <output 
+    name="projectedImages" type="Image[]"
+
+     xsi:nil="true" />
+
+      <output 
+    name="projectedAreas" type="Image[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="rawImages" type="Image[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="template" type="Header"
+
+     xsi:nil="true" />
+    <foreach var="img"  indexVar="i" src="line 24">
+    <in><variableReference>rawImages</variableReference></in>
+    <body><variable name="projImg" type="Image" isGlobal="false">
+        <mapping descriptor="regexp_mapper">
+          <param name="source"><function name="filename">
+            <variableReference>img</variableReference></function></param>
+          <param name="match"><stringConstant>.*\/(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>proj_\1</stringConstant></param>
+        </mapping>
+      </variable>
+      <variable name="areaImg" type="Image" isGlobal="false">
+        <mapping descriptor="regexp_mapper">
+          <param name="source"><function name="filename">
+            <variableReference>projImg</variableReference></function></param>
+          <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
+        </mapping>
+      </variable>
+      <call proc="mProjectPP" src="line 27">
+        <output><variableReference>projImg</variableReference></output>
+        <output><variableReference>areaImg</variableReference></output>
+        <input><variableReference>img</variableReference></input>
+        <input><variableReference>template</variableReference></input>
+      </call>
+      <assign src="line 29">
+       <arraySubscript>
+        <variableReference>projectedImages</variableReference>
+        <variableReference>i</variableReference>
+       </arraySubscript>
+       <variableReference>projImg</variableReference>
+      </assign>
+      <assign src="line 30">
+       <arraySubscript>
+        <variableReference>projectedAreas</variableReference>
+        <variableReference>i</variableReference>
+       </arraySubscript>
+       <variableReference>areaImg</variableReference>
+      </assign></body>
+    </foreach>
+  </procedure>
+  <procedure name="mOverlaps" src="line 34">
+
+      <output 
+    name="diffsTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="imagesTbl" type="Table"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 35">
+        <executable>mOverlaps</executable>
+        <function name="filename">
+          <variableReference>imagesTbl</variableReference></function><function name="filename">
+          <variableReference>diffsTbl</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mDiffFit" src="line 41">
+
+      <output 
+    name="diffImage" type="Image"
+
+     xsi:nil="true" />
+
+      <output 
+    name="statusFile" type="TxtFile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedImage1" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedArea1" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedImage2" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedArea2" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="template" type="Header"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 42">
+        <executable>mDiffFit</executable>
+        <stringConstant>-s</stringConstant><function name="filename">
+          <variableReference>statusFile</variableReference></function><function name="filename">
+          <variableReference>projectedImage1</variableReference></function><function name="filename">
+          <variableReference>projectedImage2</variableReference></function><function name="filename">
+          <variableReference>diffImage</variableReference></function><function name="filename">
+          <variableReference>template</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mDiffFitBatch" src="line 47">
+
+      <output 
+    name="diffImages" type="Image[]"
+
+     xsi:nil="true" />
+
+      <output 
+    name="statusFiles" type="TxtFile[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="diffsTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="template" type="Header"
+
+     xsi:nil="true" />
+    <variable name="diffs" type="DiffStruct[]" isGlobal="false">
+      <mapping descriptor="csv_mapper">
+        <param name="file"><function name="filename">
+          <variableReference>diffsTbl</variableReference></function></param>
+        <param name="skip"><integerConstant>1</integerConstant></param>
+        <param name="hdelim"><stringConstant> |</stringConstant></param>
+      </mapping>
+    </variable>
+    <foreach var="d"  indexVar="i" src="line 51">
+    <in><variableReference>diffs</variableReference></in>
+    <body><variable name="image1" type="Image" isGlobal="false" xsi:nil="true"/>
+      <assign src="line 53">
+       <variableReference>image1</variableReference>
+       <structureMember>
+         <variableReference>d</variableReference>
+         <memberName>plus</memberName>
+       </structureMember>
+      </assign>
+      <variable name="area1" type="Image" isGlobal="false">
+        <mapping descriptor="regexp_mapper">
+          <param name="source"><function name="filename">
+            <variableReference>image1</variableReference></function></param>
+          <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
+        </mapping>
+      </variable>
+      <variable name="image2" type="Image" isGlobal="false" xsi:nil="true"/>
+      <assign src="line 55">
+       <variableReference>image2</variableReference>
+       <structureMember>
+         <variableReference>d</variableReference>
+         <memberName>minus</memberName>
+       </structureMember>
+      </assign>
+      <variable name="area2" type="Image" isGlobal="false">
+        <mapping descriptor="regexp_mapper">
+          <param name="source"><function name="filename">
+            <variableReference>image2</variableReference></function></param>
+          <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
+        </mapping>
+      </variable>
+      <variable name="diffImg" type="Image" isGlobal="false">
+        <mapping descriptor="fixed_mapper">
+          <param name="file"><function name="filename">
+            <structureMember>
+              <variableReference>d</variableReference>
+              <memberName>diff</memberName>
+            </structureMember></function></param>
+        </mapping>
+      </variable>
+      <variable name="statusFile" type="TxtFile" isGlobal="false">
+        <mapping descriptor="regexp_mapper">
+          <param name="source"><function name="filename">
+            <variableReference>diffImg</variableReference></function></param>
+          <param name="match"><stringConstant>diff(.*)fits</stringConstant></param>
+          <param name="transform"><stringConstant>fit\1txt</stringConstant></param>
+        </mapping>
+      </variable>
+      <call proc="mDiffFit" src="line 59">
+        <output><variableReference>diffImg</variableReference></output>
+        <output><variableReference>statusFile</variableReference></output>
+        <input><variableReference>image1</variableReference></input>
+        <input><variableReference>area1</variableReference></input>
+        <input><variableReference>image2</variableReference></input>
+        <input><variableReference>area2</variableReference></input>
+        <input><variableReference>template</variableReference></input>
+      </call>
+      <assign src="line 61">
+       <arraySubscript>
+        <variableReference>diffImages</variableReference>
+        <variableReference>i</variableReference>
+       </arraySubscript>
+       <variableReference>diffImg</variableReference>
+      </assign>
+      <assign src="line 62">
+       <arraySubscript>
+        <variableReference>statusFiles</variableReference>
+        <variableReference>i</variableReference>
+       </arraySubscript>
+       <variableReference>statusFile</variableReference>
+      </assign></body>
+    </foreach>
+  </procedure>
+  <procedure name="mStatTbl" src="line 65">
+
+      <output 
+    name="statusFilesTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="diffsTbl" type="Table"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 66">
+        <executable>mStatTbl</executable>
+        <function name="filename">
+          <variableReference>diffsTbl</variableReference></function><function name="filename">
+          <variableReference>statusFilesTbl</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mConcatFit" src="line 71">
+
+      <output 
+    name="fitsTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="statusFilesTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="statusFiles" type="TxtFile[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="statusDir" type="string"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 72">
+        <executable>mConcatFit</executable>
+        <function name="filename">
+          <variableReference>statusFilesTbl</variableReference></function><function name="filename">
+          <variableReference>fitsTbl</variableReference></function><variableReference>statusDir</variableReference>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mBgModel" src="line 77">
+
+      <output 
+    name="correctionsTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedImagesTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="fitsTbl" type="Table"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 78">
+        <executable>mBgModel</executable>
+        <function name="filename">
+          <variableReference>projectedImagesTbl</variableReference></function><function name="filename">
+          <variableReference>fitsTbl</variableReference></function><function name="filename">
+          <variableReference>correctionsTbl</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mBackground" src="line 83">
+
+      <output 
+    name="correctedImage" type="Image"
+
+     xsi:nil="true" />
+
+      <output 
+    name="correctedArea" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedImage" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedArea" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedImagesTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="correctionsTbl" type="Table"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 84">
+        <executable>mBackground</executable>
+        <stringConstant>-t</stringConstant><function name="filename">
+          <variableReference>projectedImage</variableReference></function><function name="filename">
+          <variableReference>correctedImage</variableReference></function><function name="filename">
+          <variableReference>projectedImagesTbl</variableReference></function><function name="filename">
+          <variableReference>correctionsTbl</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mBackgroundBatch" src="line 89">
+
+      <output 
+    name="correctedImages" type="Image[]"
+
+     xsi:nil="true" />
+
+      <output 
+    name="correctedAreas" type="Image[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedImages" type="Image[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedAreas" type="Image[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="projectedImagesTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="correctionsTbl" type="Table"
+
+     xsi:nil="true" />
+    <foreach var="projImg"  indexVar="i" src="line 90">
+    <in><variableReference>projectedImages</variableReference></in>
+    <body><variable name="projArea" type="Image" isGlobal="false" xsi:nil="true"/>
+      <assign src="line 92">
+       <variableReference>projArea</variableReference>
+       <arraySubscript>
+        <variableReference>projectedAreas</variableReference>
+        <variableReference>i</variableReference>
+       </arraySubscript>
+      </assign>
+      <variable name="corrImg" type="Image" isGlobal="false">
+        <mapping descriptor="regexp_mapper">
+          <param name="source"><function name="filename">
+            <variableReference>projImg</variableReference></function></param>
+          <param name="match"><stringConstant>proj_(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>corr_\1</stringConstant></param>
+        </mapping>
+      </variable>
+      <variable name="corrArea" type="Image" isGlobal="false">
+        <mapping descriptor="regexp_mapper">
+          <param name="source"><function name="filename">
+            <variableReference>corrImg</variableReference></function></param>
+          <param name="match"><stringConstant>(.*)\.(.*)</stringConstant></param>
+          <param name="transform"><stringConstant>\1_area.\2</stringConstant></param>
+        </mapping>
+      </variable>
+      <call proc="mBackground" src="line 94">
+        <output><variableReference>corrImg</variableReference></output>
+        <output><variableReference>corrArea</variableReference></output>
+        <input><variableReference>projImg</variableReference></input>
+        <input><variableReference>projArea</variableReference></input>
+        <input><variableReference>projectedImagesTbl</variableReference></input>
+        <input><variableReference>correctionsTbl</variableReference></input>
+      </call>
+      <assign src="line 96">
+       <arraySubscript>
+        <variableReference>correctedImages</variableReference>
+        <variableReference>i</variableReference>
+       </arraySubscript>
+       <variableReference>corrImg</variableReference>
+      </assign>
+      <assign src="line 97">
+       <arraySubscript>
+        <variableReference>correctedAreas</variableReference>
+        <variableReference>i</variableReference>
+       </arraySubscript>
+       <variableReference>corrArea</variableReference>
+      </assign></body>
+    </foreach>
+  </procedure>
+  <procedure name="mImgtbl" src="line 100">
+
+      <output 
+    name="imagesTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="imageDir" type="string"
+
+     xsi:nil="true" />
+
+      <input 
+    name="images" type="Image[]"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 101">
+        <executable>mImgtbl</executable>
+        <variableReference>imageDir</variableReference><function name="filename">
+          <variableReference>imagesTbl</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mImgtbl_t" src="line 106">
+
+      <output 
+    name="newImagesTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="imageDir" type="string"
+
+     xsi:nil="true" />
+
+      <input 
+    name="images" type="Image[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="oldImagesTbl" type="Table"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 107">
+        <executable>mImgtbl</executable>
+        <variableReference>imageDir</variableReference><stringConstant>-t</stringConstant><function name="filename">
+          <variableReference>oldImagesTbl</variableReference></function><function name="filename">
+          <variableReference>newImagesTbl</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mAdd" src="line 112">
+
+      <output 
+    name="mosaic" type="Image"
+
+     xsi:nil="true" />
+
+      <output 
+    name="mosaicArea" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="imagesTbl" type="Table"
+
+     xsi:nil="true" />
+
+      <input 
+    name="template" type="Header"
+
+     xsi:nil="true" />
+
+      <input 
+    name="images" type="Image[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="imageAreas" type="Image[]"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 113">
+        <executable>mAdd</executable>
+        <stringConstant>-e</stringConstant><function name="filename">
+          <variableReference>imagesTbl</variableReference></function><function name="filename">
+          <variableReference>template</variableReference></function><function name="filename">
+          <variableReference>mosaic</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mShrink" src="line 118">
+
+      <output 
+    name="shrunkImage" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="image" type="Image"
+
+     xsi:nil="true" />
+
+      <input 
+    name="factor" type="float"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 119">
+        <executable>mShrink</executable>
+        <function name="filename">
+          <variableReference>image</variableReference></function><function name="filename">
+          <variableReference>shrunkImage</variableReference></function><variableReference>factor</variableReference>  </application>
+    </binding>
+  </procedure>
+  <procedure name="mJPEG" src="line 124">
+
+      <output 
+    name="jpeg" type="JPEG"
+
+     xsi:nil="true" />
+
+      <input 
+    name="image" type="Image"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 125">
+        <executable>mJPEG</executable>
+        <stringConstant>-ct</stringConstant><integerConstant>1</integerConstant><stringConstant>-gray</stringConstant><function name="filename">
+          <variableReference>image</variableReference></function><stringConstant>-1.5s</stringConstant><stringConstant>60s</stringConstant><stringConstant>gaussian</stringConstant><stringConstant>-out</stringConstant><function name="filename">
+          <variableReference>jpeg</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <variable name="rawImages" type="Image[]" isGlobal="false">
+    <mapping descriptor="dir_mapper">
+      <param name="location"><stringConstant>rawdir</stringConstant></param>
+      <param name="suffix"><stringConstant>.fits</stringConstant></param>
+    </mapping>
+  </variable>
+  <variable name="template" type="Header" isGlobal="false"><file name="template.hdr"/></variable>
+  <variable name="projectedImages" type="Image[]" isGlobal="false" xsi:nil="true"/>
+  <variable name="projectedAreas" type="Image[]" isGlobal="false" xsi:nil="true"/>
+  <call proc="mProjectPPBatch" src="line 141">
+    <output><variableReference>projectedImages</variableReference></output>
+    <output><variableReference>projectedAreas</variableReference></output>
+    <input><variableReference>rawImages</variableReference></input>
+    <input><variableReference>template</variableReference></input>
+  </call>
+  <variable name="projImgTbl" type="Table" isGlobal="false"><file name="projImg.tbl"/></variable>
+  <call proc="mImgtbl" src="line 145">
+    <output><variableReference>projImgTbl</variableReference></output>
+    <input><stringConstant>.</stringConstant></input>
+    <input><variableReference>projectedImages</variableReference></input>
+  </call>
+  <variable name="diffsTbl" type="Table" isGlobal="false"><file name="diffs.tbl"/></variable>
+  <call proc="mOverlaps" src="line 149">
+    <output><variableReference>diffsTbl</variableReference></output>
+    <input><variableReference>projImgTbl</variableReference></input>
+  </call>
+  <variable name="diffImgs" type="Image[]" isGlobal="false" xsi:nil="true"/>
+  <variable name="statusFiles" type="TxtFile[]" isGlobal="false" xsi:nil="true"/>
+  <call proc="mDiffFitBatch" src="line 153">
+    <output><variableReference>diffImgs</variableReference></output>
+    <output><variableReference>statusFiles</variableReference></output>
+    <input><variableReference>diffsTbl</variableReference></input>
+    <input><variableReference>template</variableReference></input>
+  </call>
+  <variable name="statusFilesTbl" type="Table" isGlobal="false"><file name="statfile.tbl"/></variable>
+  <call proc="mStatTbl" src="line 156">
+    <output><variableReference>statusFilesTbl</variableReference></output>
+    <input><variableReference>diffsTbl</variableReference></input>
+  </call>
+  <variable name="fitsTbl" type="Table" isGlobal="false"><file name="fits.tbl"/></variable>
+  <call proc="mConcatFit" src="line 160">
+    <output><variableReference>fitsTbl</variableReference></output>
+    <input><variableReference>statusFilesTbl</variableReference></input>
+    <input><variableReference>statusFiles</variableReference></input>
+    <input><stringConstant>.</stringConstant></input>
+  </call>
+  <variable name="correctionsTbl" type="Table" isGlobal="false"><file name="corrections.tbl"/></variable>
+  <call proc="mBgModel" src="line 164">
+    <output><variableReference>correctionsTbl</variableReference></output>
+    <input><variableReference>projImgTbl</variableReference></input>
+    <input><variableReference>fitsTbl</variableReference></input>
+  </call>
+  <variable name="correctedImages" type="Image[]" isGlobal="false" xsi:nil="true"/>
+  <variable name="correctedAreas" type="Image[]" isGlobal="false" xsi:nil="true"/>
+  <call proc="mBackgroundBatch" src="line 168">
+    <output><variableReference>correctedImages</variableReference></output>
+    <output><variableReference>correctedAreas</variableReference></output>
+    <input><variableReference>projectedImages</variableReference></input>
+    <input><variableReference>projectedAreas</variableReference></input>
+    <input><variableReference>projImgTbl</variableReference></input>
+    <input><variableReference>correctionsTbl</variableReference></input>
+  </call>
+  <variable name="corrImgTbl" type="Table" isGlobal="false"><file name="corrImg.tbl"/></variable>
+  <call proc="mImgtbl" src="line 172">
+    <output><variableReference>corrImgTbl</variableReference></output>
+    <input><stringConstant>.</stringConstant></input>
+    <input><variableReference>correctedImages</variableReference></input>
+  </call>
+  <variable name="mosaic" type="Image" isGlobal="false"><file name="mosaic.fits"/></variable>
+  <variable name="mosaicArea" type="Image" isGlobal="false"><file name="mosaic_area.fits"/></variable>
+  <call proc="mAdd" src="line 177">
+    <output><variableReference>mosaic</variableReference></output>
+    <output><variableReference>mosaicArea</variableReference></output>
+    <input><variableReference>corrImgTbl</variableReference></input>
+    <input><variableReference>template</variableReference></input>
+    <input><variableReference>correctedImages</variableReference></input>
+    <input><variableReference>correctedAreas</variableReference></input>
+  </call>
+  <variable name="smallMosaic" type="Image" isGlobal="false"><file name="smallMosaic.fits"/></variable>
+  <call proc="mShrink" src="line 181">
+    <output><variableReference>smallMosaic</variableReference></output>
+    <input><variableReference>mosaic</variableReference></input>
+    <input><floatConstant>3.0</floatConstant></input>
+  </call>
+  <variable name="jpeg" type="JPEG" isGlobal="false"><file name="mosaic.jpg"/></variable>
+  <call proc="mJPEG" src="line 185">
+    <output><variableReference>jpeg</variableReference></output>
+    <input><variableReference>smallMosaic</variableReference></input>
+  </call>
+</program>

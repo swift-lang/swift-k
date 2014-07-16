@@ -1,0 +1,282 @@
+Persistent Coasters
+-------------------
+Coasters is a protocol that Swift uses for scheduling jobs and transferring data. 
+In most configurations, coasters are used automatically when you run Swift. With
+persistent coasters, the coaster server runs outside of Swift. 
+
+This section describes a utility called start-coaster-service that allows you to 
+configure persistent coasters. 
+
+Example 1: Starting workers locally
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Below is the simplest example, where the coaster service is started, and workers are launched
+locally on the same machine.
+
+First, create a file called coaster-service.conf with the configuration below.
+
+.coaster-service.conf
+-----
+export WORKER_MODE=local
+export IPADDR=127.0.0.1
+export JOBSPERNODE=1
+export JOBTHROTTLE=0.0099
+export WORK=$HOME/swiftwork
+-----
+
+To start the coaster service and worker, run the command "start-coaster-service". Then run 
+Swift with the newly generated sites.xml file.
+
+-----
+$ start-coaster-service
+Start-coaster-service...
+Configuration: coaster-service.conf
+Service address: 127.0.0.1
+Starting coaster-service
+Service port: 51099
+Local port: 41764
+Generating sites.xml
+Starting worker on local machine
+
+$ swift -sites.file sites.xml -tc.file tc.data hostsnsleep.swift
+Swift trunk swift-r7153 cog-r3810
+RunID: 20131014-1807-q6h89eq3
+Progress:  time: Mon, 14 Oct 2013 18:07:13 +0000
+Passive queue processor initialized. Callback URI is http://128.135.112.73:41764
+Progress:  time: Mon, 14 Oct 2013 18:07:14 +0000  Active:1
+Final status: Mon, 14 Oct 2013 18:07:15 +0000  Finished successfully:1
+-----
+
+You can then run swift multiple times using the same coaster service. When you
+are finished and would like to shut down the coaster, run stop-coaster-service.
+-----
+$ stop-coaster-service
+Stop-coaster-service...
+Configuration: coaster-service.conf
+Ending coaster processes..
+Killing process 8579
+Done
+-----
+
+NOTE: When you define your apps/tc file, use the site name "persistent-coasters".
+
+Example 2: Starting workers remotely via SSH
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The start-coaster-service script can start workers on multiple remote machines.
+To do this, there are two main settings you need to define in your coaster-service.conf.
+The first is to set WORKER_MODE=ssh, and the second is set WORKER_HOSTS to the list of
+machines where workers should be started.
+
+.coaster-service.conf
+-----
+export WORKER_MODE=ssh
+export WORKER_USERNAME=yourusername
+export WORKER_HOSTS="host1.example.edu host2.example.edu"
+export WORKER_LOCATION="/homes/davidk/logs"
+export IPADDR=swift.rcc.uchicago.edu
+export JOBSPERNODE=1
+export JOBTHROTTLE=0.0099
+export WORK=/homes/davidk/swiftwork
+-----
+
+If there is no shared filesystem available between the remote machines and the local machine,
+you will need to enable coaster provider staging to transport files for you. Below is an example
+Swift configuration file to enable it:
+
+.cf
+-----
+wrapperlog.always.transfer=false
+sitedir.keep=false
+execution.retries=0
+lazy.errors=false
+status.mode=provider
+use.provider.staging=true
+provider.staging.pin.swiftfiles=false
+use.wrapper.staging=false
+-----
+
+Run start-coaster service to start coaster and workers. When you run Swift, reference the cf file to
+enable provider staging.
+-----
+$ start-coaster-service
+Start-coaster-service...
+Configuration: coaster-service.conf
+Service address: swift.rcc.uchicago.edu
+Starting coaster-service
+Service port: 41714
+Local port: 41685
+Generating sites.xml
+Starting worker on host1.example.edu
+Starting worker on host2.example.edu
+
+$ swift -sites.file sites.xml -tc.file tc.data -config cf hostsnsleep.swift
+Swift trunk swift-r7153 cog-r3810
+RunID: 20131014-1844-7flhik67
+Progress:  time: Mon, 14 Oct 2013 18:44:43 +0000
+Passive queue processor initialized. Callback URI is http://128.135.112.73:41685
+Progress:  time: Mon, 14 Oct 2013 18:44:44 +0000  Selecting site:4 Finished successfully:4
+Final status: Mon, 14 Oct 2013 18:44:45 +0000  Finished successfully:10
+-----
+
+NOTE: This requires that you are able to connect to the remote systems without 
+being prompted for a password/passphrase. This is usually done with SSH keys. Please
+refer to SSH documentation for more info.
+
+Example 3: Starting workers remotely via SSH, with multihop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This example is for a situation where you want to start a worker on nodes that you
+can't connect to directly. If you have to first connect to a login/gateway
+machine before you can ssh to your worker machine, this configuration is for you.
+
+The coaster-service.conf and cf files are the same as in Example 2.
+
+Assume that node.host.edu is the machine where you want to start your worker, and 
+that gateway.host.edu is the machine where you must log into first. Add the following
+to your $HOME/.ssh/config file:
+
+-----
+Host node.host.edu
+   Hostname node.host.edu
+   ProxyCommand ssh -A username@gateway.host.edu nc %h %p 2> /dev/null
+   ForwardAgent yes
+   User username
+-----
+
+This will allow you to SSH directly to node.host.edu. You can now add node.host.edu
+to WORKER_HOSTS.
+
+Example 4: Starting workers remotely via SSH, with tunneling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The coaster workers need to be able to make a connection back to the coaster
+service. If you are running Swift on a machine behind a firewall where the workers
+cannot connect, you can use SSH reverse tunneling to allow this connection to happen.
+
+To enable this, add the following line to your coaster-service.conf:
+-----
+export SSH_TUNNELING=yes
+-----
+
+Example 5: Starting workers remotely via SSH, hostnames in a file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The variable WORKER_HOSTS defines the list of hostnames where workers will be started.
+To set this to be the contents of a file, you can set WORKER_HOSTS as follows:
+
+.coaster-service.conf
+-----
+export WORKER_HOSTS=$( cat /path/to/hostlist.txt )
+-----
+
+
+Example 6: Starting workers via a scheduler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To start workers via some other script, such as a scheduler submit script,
+export WORKER_MODE=scheduler. Once the coaster service has been initialized,
+start-coaster-service will run whatever user defined command is defined in
+$SCHEDULER_COMMAND.
+
+The contents of SCHEDULER_COMMAND will vary greatly based on your needs and the
+system you are running on. However, all SCHEDULER_COMMANDs will need to run the same command exactly once
+on each worker node:
+-----
+$WORKER $WORKERURL logname $WORKER_LOG_DIR
+-----
+
+Here is an example that runs on a campus cluster using the Slurm scheduler:
+.coaster-service.conf
+-----
+export WORKER_MODE=scheduler
+export WORKER_LOG_DIR=/scratch/midway/$USER
+export IPADDR=10.50.181.1
+export JOBSPERNODE=1
+export JOBTHROTTLE=0.0099
+export WORK=$HOME/swiftwork
+export SCHEDULER_COMMAND="sbatch start-workers.submit"
+-----
+
+The SCHEDULER_COMMAND in this case submits a Slurm job script and starts the workers
+via the following commands:
+
+-----
+#!/bin/bash
+
+#SBATCH --job-name=start-workers
+#SBATCH --output=start-workers.stdout
+#SBATCH --error=start-workers.stderr
+#SBATCH --nodes=1
+#SBATCH --partition=westmere
+#SBATCH --time=00:10:00
+#SBATCH --ntasks-per-node=12
+#SBATCH --exclusive
+
+$WORKER $WORKERURL logname $WORKER_LOG_DIR
+-----
+
+List of all coaster-service.conf settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Below is a list of all settings that start-coaster-service knows about, along 
+with a brief description of what it does.
+
+The settings are defined in terms of bash variables. Below is an example of the format used
+-----
+export WORKER_LOGGING_LEVEL=DEBUG
+-----
+
+Below is a list of the options that coaster-service.conf recognizes and what they do.
+
+IPADDR
+^^^^^^
+Defines IP address where the coaster-service is running. Workers need to know the 
+IP address where to connect back to. Example: export IPADDR=192.168.2.12
+
+LOCAL_PORT
+^^^^^^^^^^
+Define a static local port number. If undefined, this is generated randomly. 
+Example: export LOCAL_PORT=50100
+
+LOG
+^^^
+LOG set the name of the local log file to be generated. This log file is the 
+standard output and standard error output of the coaster-service and other 
+commands that start-coaster-service runs. This file can get large at times. 
+To disable, set "export LOG=/dev/null". Default value: start-coaster-service.log
+
+SCHEDULER_COMMAND
+^^^^^^^^^^^^^^^^^
+In schedule mode, this defines the command to run via start-coaster-service that 
+will start workers via the scheduler. Example: export SCHEDULER_COMMAND="qsub 
+start-workers.submit".
+
+SERVICE_PORT
+^^^^^^^^^^^^
+Sets the coaster service port number. If undefined, this is generated randomly.
+Example: Export SERVICE_PORT=50200
+
+SSH_TUNNELING
+^^^^^^^^^^^^^
+When the machine you are running Swift on is behind a firewall that is blocking 
+workers from connecting back to it, add "export SSH_TUNNELING=yes". This will set up a 
+reverse tunnel to allow incoming connections. Default value: no.
+
+WORKER_HOSTS
+^^^^^^^^^^^^
+WORKER_HOSTS should contain the list of hostnames that start-coaster-service will 
+connect to start workers. This is only used when WORKER_MODE is ssh. Example: 
+export WORKER_HOST="host1 host2 host3".
+
+WORKER_LOCATION
+^^^^^^^^^^^^^^^
+In ssh mode, defines the directory on remote systems where the worker script 
+will be copied to. Example: export WORKER_LOCATION=/tmp
+
+WORKER_LOG_DIR
+^^^^^^^^^^^^^^
+In ssh mode, defines the directory on the remote systems where worker logs will 
+go. Example: export WORKER_LOG_DIR=/home/john/logs
+
+WORKER_LOGGING_LEVEL
+^^^^^^^^^^^^^^^^^^^^
+Defines the logging level of the worker script. Values can be "TRACE", "DEBUG", "INFO ",
+"WARN ", or "ERROR". Example: export WORKER_LOGGING_LEVEL=NONE.
+
+WORKER_USERNAME
+^^^^^^^^^^^^^^^
+In ssh mode, defines the username to use when connecting to each host defined in WORKER_HOSTS.

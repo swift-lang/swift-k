@@ -1,0 +1,36 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<hr />
+<h2>worker.sh info files</h2>
+<p>info file plots:</p>
+<p>info files:</p>
+<img src="info.png" alt="-"/>
+<p>info files sorted by start time:</p>
+<img src="info.sorted-start.png" alt="-"/>
+<p>info trails:</p>
+<img src="info-trails.png" alt="-"/>
+<p>info duration histogram:</p>
+<img src="info-duration-histogram.png" alt="-"/>
+<p>how wrapper.sh is spending its time:</p>
+<img src="info.zeroed-trailsx.png" alt="-"/>
+
+<p>total concurrent wrapper+application execution on worker nodes</p>
+
+<img src="info-total.png" alt="-"/>
+
+<hr />
+
+<p>Offsets between job submission Active events and start times reported
+by info.</p>
+<img src="info-and-karajan-actives.png" alt="-"/>
+<br/>
+<img src="info-and-karajan-actives.2.png" alt="-"/>
+
+<p>end</p>
+</body>
+</html>

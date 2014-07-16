@@ -1,0 +1,17 @@
+set terminal png
+set output 'execstages.png'
+
+set ylabel 'events in progress'
+
+set style arrow 1 nohead lt 1
+set style arrow 2 nohead lt 2 
+set style arrow 3 nohead lt 3 
+set border 0
+
+set xrange [0:MAXTIME]
+
+plot 'esp.execute2.tmp' with vector arrowstyle 1 title 'execute2', \
+     'esp.dostagein.tmp' with vector arrowstyle 2 title 'dostagein', \
+     'esp.dostageout.tmp' with vector arrowstyle 3 title 'dostageout'
+
+

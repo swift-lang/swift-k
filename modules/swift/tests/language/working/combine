@@ -1,0 +1,34 @@
+#!/bin/bash
+
+O=""
+I=""
+R=""
+
+while [ $# -gt 0 ]; do
+	echo $1
+  case $1 in
+  	-p)
+  		P=$2
+  		shift 2;;
+  	-i)
+  		shift
+  		while [ "${1:0:1}" != "-" ]; do
+  			I="$I $1"
+  			echo $1
+  			shift
+  		done
+		;;
+  	-o)
+  		O=$2
+  		shift 2;;
+  	*)
+  		R="$R$1"
+  		shift;;
+  esac
+done
+
+for J in $I; do
+	cat $J >> $O
+done
+
+echo $R >> $O

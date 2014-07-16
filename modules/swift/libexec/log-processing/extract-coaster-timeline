@@ -1,0 +1,30 @@
+#!/bin/bash
+
+LOG=$1
+
+grep "RemoteLogHandler BLOCK_.*" $LOG | iso-to-secs | normalise-event-start-time >coasters.tmp
+rm -f block-count-table.tmp
+rm -f coaster-block.data
+
+IFS=$'\n'
+REQUESTED=0
+RUNNING=0
+for LINE in $(cat coasters.tmp); do
+	TIME=`echo $LINE | sed 's/^\([^ ]*\) .*$/\1/' `
+	ID=`echo $LINE | sed 's/^.*id=\([^ ]*\)\(,.*$\|$\)/\1/'`
+	ADD=`echo $LINE | sed -n 's/^.*BLOCK_REQUESTED.*w=\([^ ]*\),.*$/\1/p'`
+	if [ "$ADD" != "" ]; then
+		REQUESTED=$(($REQUESTED + $ADD))
+		echo "$ID,$ADD" >> block-count-table.tmp
+	else
+		COUNT=`cat block-count-table.tmp | grep "$ID" | cut -d , -f 2`
+		if echo $LINE | grep "BLOCK_ACTIVE" >/dev/null; then
+			RUNNING=$(($RUNNING + $COUNT))
+		fi
+		if echo $LINE | grep "BLOCK_SHUTDOWN" >/dev/null; then
+			RUNNING=$(($RUNNING - $COUNT))
+			REQUESTED=$(($REQUESTED - $COUNT))
+		fi
+	fi
+	echo $TIME $REQUESTED $RUNNING >> coaster-blocks.data
+done

@@ -1,0 +1,60 @@
+Structure
+---------
+A specific file and directory structure is required for each document in order to ease the
+process of automation, conversion, and copying.
+
+Directories
+~~~~~~~~~~~
+Each subdirectory within docs/ should correspond to the name of the document.
+This name will also later be used in the URL used to point to the
+document.
+
+.Example Directory Names 
+-----
+docs/userguide
+docs/tutorial
+-----
+
+AsciiDoc File
+~~~~~~~~~~~~~
+Every document directory should contain one file with a .txt 
+extension. This .txt file is the AsciiDoc document that later gets converted
+to various formats.
+
+.Example AsciiDoc Documents
+-----
+docs/userguide/userguide.txt
+docs/tutorial/tutorial.txt
+-----
+
+Chapters
+~~~~~~~~
+Each document directory should contain individual chapters
+that make up the document. These chapters should not have any
+file extensions. 
+
+.Example Chapters
+-----
+docs/userguide/overview
+docs/userguide/language
+docs/userguide/mappers
+docs/userguide/commands
+-----
+
+Including Chapters in a Document
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The .txt file should then include the individual chapters 
+with the AsciiDoc include command.
+
+.userguide.txt
+-----
+\include::overview[]
+
+\include::language[]
+
+\include::mappers[]
+
+\include::commands[]
+-----
+
+WARNING: Be sure to include spaces between includes. Putting them together with no spaces can cause formatting/compilation errors.

@@ -1,0 +1,56 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<hr />
+
+<p>Breakdown of execute2 final statuses by site:
+(<a href="execute2.html">More information about execute2 events</a>)</p>
+
+include(`jobs-sites.html')
+
+<p>Number of execute2 jobs at once - this is basically the number of
+execution attempts that have been submitted to some batch system such
+as GRAM (so are either queued or executing)</p>
+<img src="execute2-total.png"/>
+
+<h2>execute2</h2>
+<p>execute2 tasks (<a href="execute2.event">text file of events</a>) - these are executions of programs. Sometimes (in the
+case of failure) there will be multiple execute2 tasks per execute task:</p>
+<img src="execute2.png" />
+<p>number of execute2 tasks at once:</p>
+<img src="execute2-total.png"/>
+<p>execute2 tasks, coloured by site</p>
+<img src="execute2-coloured.png" />
+<p>Breakdown of last known status for execute2s:</p>
+<pre>
+include(`execute2.lastsummary')
+</pre>
+<p>execute2 trails:</p>
+
+<img src="execute2-trails.png" />
+
+<p>Summary of execute2 transformation names that have been seen
+(eg are enqueued or have been run):</p>
+<pre>
+include(`trname-summary')
+</pre>
+
+<p>per-site execute2 duration statistics</p>
+<pre>
+include(`site-duration.txt')
+</pre>
+
+<p>Summary of execute2s/execute:
+</p>
+<pre>
+|number of executes | number of execute2s in each execute |
+include(`jobs.retrycount.summary')
+</pre>
+
+<hr />
+<p>end</p>
+</body>

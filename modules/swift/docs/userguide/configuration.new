@@ -1,0 +1,705 @@
+Configuration
+-------------
+
+Swift is mainly configured using a configuration file, typically called *swift.conf*.
+This file contains configuration properties and site descriptions. A simple 
+configuration file may look like this:
+
+-----
+# include default Swift configuration file
+include "${swift.home}/etc/swift.conf"
+
+site.mysite {
+    execution {
+        type: "coaster"
+        URL: "my.site.org"
+        jobManager: "ssh:local"
+    }
+    staging: "local"
+
+    app.ALL {executable: "*"}
+}
+
+# select sites to run on
+sites: [mysite]
+
+# other settings
+lazy.errors: false
+-----
+
+Configuration Syntax
+~~~~~~~~~~~~~~~~~~~~
+
+The Swift configuration files are expressed in a modified version of JSON. The main
+additions to JSON are:
+
+- Quotes around string values, in particular keys, are optional, unless the strings
+contain special characters (single/double quotes, square and curly braces, white space,
++$+, +:+, +=+, +,+, +`+, +^+, +?+, +!+, +@+, +*+, +\+), or if they
+represent other values: +true+, +false+, +null+, and numbers.
+- +=+ and +:+ can be used interchangeably to separate keys from values
+- +=+ (or +:+) is optional before an open bracket
+- Commas are optional as separators if there is a new line
+- +${...}+ expansion can be used to substitute environment variable values or Java
+  system properties. If the value of an environment variable is needed, it must be
+  prefixed with +env.+. For example +${env.PATH}+. Except for include directives, the
+  +${...}+ must not be inside double quotes for the substitution to work. The same 
+  outcome can be achieved using implicit string concatenation: +"/home/"${env.USER}"/bin"+
+ 
+Comments can be introduced by starting a line with a hash symbol (+#+) or using
+a double slash (+//+):
+
+-----
+# This is a comment
+// This is also a comment
+
+keepSitesDir: true # This is a comment following a valid property
+-----
+
+Include Directives
+~~~~~~~~~~~~~~~~~~
+
+Include directives can be used to include the contents of a Swift configuration file
+from another Swift configuration file. This is done using the literal +include+ followed
+by a quoted string containing the path to the target file. The path may contain 
+references to environment variables or system properties using the substitution
+syntax explained above. For example:
+
+-----
+# an absolute path name
+include "/home/joedoe/swift-config/site1.conf"
+
+# include a file from the Swift distribution package
+include "${swift.home}/etc/sites/beagle.conf"
+
+# include a file using an environment variable
+include "${env.SWIFT_CONFIG_DIR}/glow.conf"
+-----
+
+Property Merging
+~~~~~~~~~~~~~~~~
+
+If two properties with the same name are present in a configuration file, they are either
+merged or the latter one overrides the earlier one. This depends on the type of property.
+Simple values are always overridden, while objects are merged. For example:
+
+-----
+key: 1
+key: 2
+# key is now 2
+
+object {
+    key1: 1
+}
+
+object {
+    key2: 2
+}
+
+# object is now { key1: 1, key2: 2}
+-----
+
+This can be used to define certain template files that contain most of the definitions for
+sites, and then include them in other files and override or add only certain aspects of 
+those sites. For example, the default +swift.conf+ includes a definition for a site named
++local+ that can be used to run things on the Swift client side. If you wanted to override 
+only the work directory, the following +swift.conf+ could be used:
+
+-----
+include "${swift.home}/etc/swift.conf"
+
+site.local {
+    # use existing definition for site.local, but override workDirectory
+    workDirectory: "/tmp"
+}
+-----
+
+If, on the other hand, you want to fully override the definition of +site.local+, you could
+set it to +null+ first and then provide your own definition:
+
+-----
+include "${swift.home}/etc/swift.conf"
+
+# forget previous definition of site.local
+site.local: null
+
+# define your own site.local
+site.local {
+    ...
+}
+-----
+
+Configuration File Structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The contents of a Swift configuration file can be divided into a number of relevant
+sections:
+
+- site declarations
+- global application declarations
+- Swift configuration properties
+
+Site Delcarations
+^^^^^^^^^^^^^^^^^
+
+Swift site declarations are specified using the +site.<name>+ property, where text
+inside angle brackets is to be interpreted as a generic label for user-specified
+content, whereas content between square brackets is optional:
+
+-----
+site.<name> {
+    execution {...}
+    [staging: "swift" | "local" | "service-local" | "shared-fs" | "wrapper"]
+    [filesystem {...}]
+    workDirectory: <path>
+
+    [<site options>]
+    [<application declarations>]
+}
+-----
+
+A site name can be any string. If the string contains special characters, it must be 
+quoted:
+
+-----
+site."My-$pecial-$ite" {...}
+-----
+
+Once sites are declared, they must be explicitly enabled for Swift to use them. This
+can be achieved with the +sites+ option, which accepts either an array or a comma-separated
+list of site names
+
+-----
+sites: ["site1", "site2"]
+
+# alternatively:
+
+sites: "site1, site2"
+-----
+
+Execution Mechanism
++++++++++++++++++++
+
+The +execution+ property tells Swift how applications should be executed on a site:
+
+-----
+    execution {
+        type: <string>
+        [URL: <string>]
+        [jobManager: <string>]
+        
+        [<execution provider options>]
+    }
+-----
+
+The +type+ property is used to select one of the mechanisms for application execution
+that is known by Swift. A comprehensinve list of execution mechanisms can be found 
+in <<??, ??>>. A summary is shown below:
+
+[[table-execution-mechanisms]]
+.Swift Execution Mechanisms
+[options="header",cols="3,2,2,2,4,10"]
+|========================================================================================================================
+|Type                 |URL required|Uses jobManager|Default jobManager|Staging methods supported                        | 
+Description
+
+|+local+              | no         | no            | -                | swift, local, wrapper                           | 
+Runs applications locally using a simple fork()-based mechanism
+
+|+coaster+            | yes        | yes           | none             | swift, wrapper, local, service-local, shared-fs | 
+Submits applications through an automatically-deployed Swift Coasters service
+
+|+coaster-persistent+ | yes        | yes           | none             | swift, wrapper, local, service-local, shared-fs | 
+Uses a manually deployed Swift Coasters service
+
+|+GRAM5+              | yes        | yes           | "fork"           | swift, wrapper                                  | 
+Uses the <<http://toolkit.globus.org/toolkit/docs/latest-stable/gram5/user/#gram5User,GRAM: User's Guide>> component of 
+the Globus Toolkit.
+
+|+GT2+              4+|                                                                                                 | 
+An alias for 'GRAM5'
+
+|+SSH+                | yes        | no            | -                | swift, wrapper                                  | 
+Runs applications using a Java implementation of the 'SSH' protocol
+
+|+SSH-CL+             | yes        | no            | -                | swift, wrapper                                  | 
+Like 'SSH' except it uses the command-line 'ssh' tool.
+
+|+PBS+                | no         | no            | -                | swift, wrapper                                  | 
+Submits applications to a PBS or Torque resource manager
+
+|+Condor+             | no         | no            | -                | swift, wrapper                                  | 
+Submits applications using Condor
+
+|+SGE+                | no         | no            | -                | swift, wrapper                                  | 
+Uses the Sun Grid Engine
+
+|+SLURM+              | no         | no            | -                | swift, wrapper                                  | 
+Uses the SLURM local scheduler
+
+|+LSF+                | no         | no            | -                | swift, wrapper                                  | 
+Submits applications to Platform's Load Sharing Facility
+
+|========================================================================================================================
+
+The execution provider +options+ are options that specify finer details on how
+on application should be executed. They depend on the chosen mechanism and are detailed in
+<<??, ??>>. This is where Coasters options, such as +nodeGranularity+ or +softImage+, would
+be specified. Example:
+
+-----
+execution {
+    type: "coaster"
+    jobManager: "local:local"
+    options {
+        maxJobs: 1
+        tasksPerNode: 2
+        workerLoggingLevel: TRACE
+    }
+}
+-----
+
+A complete list of Swift Coasters options can be found in <<??,??>>
+
+Staging
++++++++
+
+The staging property instructs Swift how to handle application input and output files.
+The 'swift' and 'wrapper' staging methods are supported universally, but the 'swift' method
+requires the +filesystem+ property to be specified. If not specified, this option defaults to
+'swift'. Support for the other choices is dependent on the execution mechanism. This is 
+detailed in the <<table-execution-mechanisms,Execution Mechanisms Table>> above. A 
+description of each staging method is provided in the table below:
+
+[[table-staging-methods]]
+.Swift Staging Methods
+[options="header",cols="3, 10"]
+|=============================================================================================
+| Staging Method  | Description           
+| +swift+         | This method instructs Swift to use a filesystem provider to direct all 
+                    necessary staging operations from the Swift client-side to the cluster
+                    head node. If this method is used, the +workDirectory+ must point to
+                    a head node path that is on a shared file system accessible by the 
+                    compute nodes.
+| +wrapper+       | File staging is done by the Swift application wrapper
+| +local+         | Used to indicate that files should be staged in/out from/to the site
+                    on which Swift is running. In the case of Swift Coasters, the system
+                    proxies the tranfers between client side and compute nodes through the
+                    Coaster Service.
+| +service-local+ | This method instructs the execution mechanism provider to stage input and
+                    output files from the remote site where the execution service is located.
+                    For example, if a Coaster Service is started on the login node of a 
+                    cluster, the Coaster Service will perform the staging from a file system 
+                    on the login node to the compute node and back.
+| +shared-fs+     | This method is used by Coasters to implement a simple staging mechanism in
+                    which files are accessed using a shared filesystem that is accessible by 
+                    compute nodes
+|==============================================================================================
+
+
+File System
++++++++++++
+
+The file system properties are used with +staging: "swift"+ to tell Swift how to access remote
+file systems. Valid types are described below:
+
+[[table-filesystem-providers]]
+.Swift File System Providers
+[options="header",cols="3, 3, 10"]
+|==========================================================================
+| Type      | URL required | Description
+| +local+   | no           | Copies files locally on the Swift client side
+| +GSIFTP+  | yes          | Accesses a remote file system using GridFTP
+| +GridFTP+ | yes          | An alias for +GSIFTP+
+| +SSH+     | yes          | Uses the SCP protocol
+|==========================================================================
+
+
+
+Site Options
+++++++++++++
+
+Site options control various aspects of how Swift handles application execution on a site. 
+All options except +workDirectory+ are optional. They are listed in the following table:
+
+
+[[table-site-options]]
+.Site Options
+[options="header",cols="1, 1, 1, 10"]
+|=================================
+| Option          | Valid values   | Default value   | 
+Description
+| +OS+            | many           |"INTEL32::LINUX" | 
+Can be used to tell Swift the type of the operating system
+running on the remote site. By default, Swift assumes a 
+UNIX/Linux type OS. There is some limited support for 
+running under Windows, in which case this property must be
+set to one of +"INTEL32::WINDOWS"+ or +"INTEL64::WINDOWS"+
+
+| +workDirectory+ | path           | -               | 
+Points to a directory in which Swift can maintain a set of 
+files relevant to the execution of an application on the
+site. By default, applications will be executed on the
+compute nodes in a sub-directory of +workDirectory+, which
+implies that +workDirectory+ must be accessible from the
+compute nodes.
+
+| +scratch+       | path           | -               | 
+If specified, it instructs swift to run applications in 
+a directory different than +workDirectory+. Contrary to the
+requirement for +workDirectory+, +scratch+ can point to
+a file system local to compute nodes. This option is useful
+if applications do intensive I/O on temporary files created
+in their work directory, or if they access their input/output
+files in a non-linear fashion.
+
+| +keepSiteDir+   | +true, false+ | +false+          | 
+If set to +true+, site application directories (i.e. +workDirectory+)
+will not be cleaned up when Swift completes a run. This
+can be useful for debugging.
+
+| +statusMode+    | +"files", "provider"+ | +"files"+| 
+Controls whether application exit codes are handled by the
+execution mechanism or passed back to Swift by the Swift
+wrapper script through files. Traditionally, Globus GRAM 
+did not use to return application exit codes. This has 
+changed in Globus Toolkit 5.x. However, some local scheduler
+execution mechanisms, such as 'PBS', are still unable to
+return application exit codes. In such cases, it is necessary
+to pass the application exit codes back to Swift in files.
+This comes at a slight price in performance, since a file 
+needs to be created, written to, and transferred back to 
+Swift for each application invocation. It is however also
+the default, since it works in all cases.
+
+| +maxParallelTasks+ | integer     | 2               | 
+The maximum number of concurrent application invocations
+allowed on this site.
+
+| +initialParallelTasks+ | integer | 2               | 
+The limit on the number of concurrent application invocations 
+on this site when a Swift run is started. As invocations
+complete successfully, the number of concurrent invocations
+on the site is increased up to +maxParallelTasks+.
+|=================================
+
+Additional, less frequently used options, are as follows:
+
+[[table-site-options-obscure]]
+.Obscure options that you are unlikely to need to worry about
+[options="header",cols="1, 1, 1, 10"]
+|=================================
+| Option          | Valid values   | Default value   | 
+Description
+
+| +wrapperParameterMode+ | +"args", "files"+ | +"args"+ | 
+If set to +"files"+, Swift will, as much as possible, pass
+application arguments through files. The applications will
+be invoked normally, with their arguments in the +**argv+ 
+parameter to the +main()+ function. This can be useful if the
+execution mechanism has limitations on the size of command
+line arguments that can be passed through. An example of 
+execution mechanism exhibiting this problem is Condor.
+
+| +wrapperInterpreter+   | path    | +"/bin/bash"+ or +"cscript.exe"+ on Windows | 
+Points to the interpreter used to run the Swift application
+invocation wrapper
+
+| +wrapperScript+        | string  | +"_swiftwrap"+ or +"_swiftwrap.vbs"+ on Windows | 
+Points to the Swift application invocation wrapper. The file
+must exist in the 'libexec' directory in the Swift distribution
+
+| +wrapperInterpreterOptions+ | list of strings | +[]+ on UNIX/Linux or +["//Nologo"]+ on Windows | 
+Command line options to be passed to the wrapper interpreter
+
+| +cleanupCommand+       | string  | +"/bin/rm"+ or +"cmd.exe"+ on Windows | 
+A command to use for the cleaning of site directories (unless
++keepSiteDir+ is set to +true+) at the end of a run.
+
+| +cleanupCommandOptions+ | list of strings | +["-rf"]+ or +["/C", "del", "/Q"]+ on Windows | 
+Arguments to pass to the cleanup command when cleaning up site
+work directories
+
+| +delayBase+     | number         | 2.0             | 
+Swift keeps a quality indicator for each site it runs applications
+on. This is a number that gets increased for every successful
+application invocation, and decreased for every failure. It then
+uses this number in deciding which sites to run applications on
+(when multiple sites are defined). If this number becomes very
+low (a sign of repeated failures on a site), Swift implements 
+an exponential back-off that prevents jobs from being sent to a 
+site that continously fails them. +delayBase+ is the base for 
+that exponential back-off:
+           +delay = delayBase ^ (-score * 100)+
+           
+| +maxSubmitRate+ | positive number| -               | 
+Some combinations of site and execution mechanisms may become
+error prone if jobs are submitted too fast. This option can
+be used to limit the submission rate. If set to some number N,
+Swift will submit applications at a rate of at most N 
+per second.
+
+|=================================
+
+
+Application Declarations
+++++++++++++++++++++++++
+
+Applications can either be declared globally, outside of a site declaration,
+or specific to a site, inside a site declaration:
+
+------
+app.(<appName>|ALL) {
+    # global application
+    ...
+}
+
+site.<siteName> {
+    app.(<appName>|ALL) {
+        # site application
+        ...
+    }
+}
+------
+
+A special application name, +ALL+, can be used to declare options for all 
+applications. When Swift attempts to run an application named +X+, it will
+first look at site application declarations for +app.X+. If not found, it will
+check if a site application declaration exists for +app.ALL+. The search will
+continue with the global +app.X+ and then the global +all.ALL+ until a match
+is found. It is possible that a specific application will only be declared
+on a sub-set of all the sites and not globally. Swift will then only select
+a site where the application is declared and will not attempt to run the
+application on other sites.
+
+An application declaration takes the following form:
+
+-----
+app.<appName> {
+    executable: (<string>|"*")
+    [jobQueue: <string>]
+    [jobProject: <string>]
+    [maxWallTime: <time>]
+    [options: {...}]
+    <environment variables>
+}
+-----
+
+The +executable+ is mandatory, and it points to the actual location of the
+executable that implements the application. The special string +"*"+ can
+be used to indicate that the executable has the same name as the application
+name. This is useful in conjunction with +app.ALL+ to essentially declare
+that a site can be used to execute any application from a Swift script. If the
+executable is not an absolute path, it will be searched using the +PATH+ 
+envirnoment variable on the remote site. 
+
+Environment variables can be defined as follows:
+
+-----
+    env.<name>: <value>
+-----
+
+For example:
+
+-----
+    env.LD_LIBRARY_PATH: "/home/joedoe/lib"
+-----
+
+The remaining options are:
+
+[[table-site-options]]
+.Application Options
+[options="header",cols="3, 3, 10"]
+|====================================================================
+| Name         | Valid values  | 
+Description
+
+| +jobQueue+   | any           | 
+If the application is executed using a mechanism that submits to
+a queuing system, this option can be used to select a specific
+queue for the application
+
+| +jobProject+ | any           | 
+A queuing system project to associate the job with.
+
+| +maxWallTime+| +"mm"+ or +"hh:mm"+ or +"hh:mm:ss"+ | 
+The maximum amount of time that the application will take to execute
+on the site. Most application execution mechanisms will both require
+and enforce this value by terminating the application if it exceeds
+the specified time. The default value is 10 minutes.
+
+|====================================================================
+
+
+General Swift Options
++++++++++++++++++++++
+
+There are a number of configuration options that modify the way that
+the Swift run-time behaves. They are listed below:
+
+[[table-swift-options]]
+.General Swift Options
+[options="header",cols="3, 3, 3, 10"]
+|====================================================================
+| Name           | Valid values             | Default value |
+Description
+
+| +sites+        | array of strings (e.g. +["site1", "site2"]+) or CSV string (e.g. "site1, site2") | none |
+Selects, out of the set of all declared sites, a sub-set of sites to
+run applications on.
+
+| +hostName+     | string                   | autodetected  |
+Can be used to specify a publicly reacheable DNS name or IP address for this 
+machine which is generally used for Globus or Coaster callbacks. Normally this should be 
+auto-detected, but if you do not have a public DNS name, you may want to set this.
+
+| +TCPPortRange+ | +"lowPort, highPort"+    | none          |
+A TCP port range can be specified to restrict the ports on which certain callback 
+services are started. This is likely needed if your submit host is behind a firewall, 
+in which case the firewall should be configured to allow incoming connections on 
+ports in this range.
+
+| +lazyErrors+   | +true, false+            | +false+       |
+Use a lazy mode to deal with errors. When set to 'true' Swift will proceed with the
+execution until no more data can be derived because of errors in dependent steps. If 
+set to 'false', an error will cause the execution to immediately stop
+
+| +executionRetries+ | non-negative integer | +0+           |
+The number of time an application invocation will be retries if it fails until Swift 
+finally gives up and declares it failed. The total number of attempts will be ++1 + 
+executionRetries++.
+
+| +logProvenance+    | +true, false+        | +false+       |
+If set to +true+, Swift will record provenance information in the log file.
+
+| +alwaysTransferWrapperLog+ | +true, false+| +false+       |
+Controls when wrapper logs are transfered back to the submit host. If set to 
++false+, Swift will only transfer a wrapper log for a given job when that job fails.
+If set to +true+, Swift will transfer wrapper logs whether a job fails or not.
+
+| +fileGCEnabled+    | +true, false+        | +true+        |
+Controls the file garbage collector. If set to +false+, files mapped by 
+collectable mappers (such as the concurrent mapper) will not be deleted when their 
+Swift variables go out of scope.
+
+| +mappingCheckerEnabled+ | +true, false+   | +true+        |
+Controls the run-time duplicate mapping checker (which indetifies mapping 
+conflicts). When enabled, a record of all mapped data is kept, so this comes at the 
+expense of a slight memory leak. If set +false+, the mapping checker is disabled. 
+
+| +tracingEnabled+        | +true, false+   | +false+       |
+Enables execution tracing. If set to +true+, operations within Swift such as 
+iterations, invocations, assignments, and declarations, as well as data dependencies 
+will be logged. This comes at a cost in performance. It is therefore disabled by 
+default.
+
+| +maxForeachThreads+     | positive integer| +16384+       |
+Limits the number of concurrent iterations that each 'foreach' statement
+can have at one time. This conserves memory for swift programs that
+have large numbers of iterations (which would otherwise all be executed
+in parallel).
+
+4+| *Ticker*
+
+| +tickerEnabled+         | +true, false+   | +true+        |
+Controls the output ticker, which regularly prints information about the counts
+of application states on the Swift's process standard output
+
+| +tickerPrefix+          | string          | +"Progress: "+|
+Specifies a string to prefix to each ticker line output
+
+| +tickerDateFormat+      | string          | +"E, dd MMM yyyy HH:mm:ssZ"+|
+Specifies the date/time format to use for the time stamp of each ticker
+line. It must conform to Java's 
+<<http://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html,SimpleDateFormat>>
+syntax.
+
+4+| *CDM*
+| +CDMBroadcastMode+      | string          | +"file"+      |
+-
+| +CDMLogFile+            | string          | +"cdm.log"+   |
+-
+
+4+| *Replication*
+
+|+replicationEnabled+| +true, false+        | +false+       |
+If enabled, jobs that are queued longer than a certain amount of time will
+have a duplicate version re-submitted. This process will continue until a
+maximum pre-set number of such replicas is queued. When one of the replicas
+becomes active, all other replicas are canceled. This mechanism can potentially
+prevent a single overloaded site from completely blocking a run.
+
+|+replicationMinQueueTime+| seconds         | +60+          |
+When replication is enabled, this is the amount of time that a job needs to 
+be queued until a new replica is created.
+
+|+replicationLimit+       | +integer > 0+   | +3+           |
+The maximum number of replicas allowed for a given application instance.
+
+4+| *Wrapper Staging*
+|+wrapperStagingLocalServer+| string        | +"file://"+   |
+When file staging is set to +"wrapper"+, this indicates the default URL
+scheme that is prefixed to local files.
+
+4+| *Throttling*
+| +jobSubmitThrottle+     | +integer > 0+ or +"off"+ | +4+           |
+Limits the number of jobs that can concurrently be in the process of being 
+submitted, that is in the "Submitting" state. This is the state where the job
+information is being communicated to a remote service. Certain execution 
+mechanisms may become inefficient if too many jobs are being submitted 
+concurrently and there are no benefits to parallelizing	submission beyond a 
+certain point. Please not that this does not apply to the number of jobs that 
+can be active concurrently.
+
+| +hostJobSubmitThrottle+ | +integer > 0+ or +"off"+ | +2+           |
+Like +jobSubmitThrottle+, except it applies to each individual site.
+
+| +fileTransfersThrottle+ | +integer > 0+ or +"off"+ | +4+           |
+Limits the number of concurrent file transfers when file staging is set to 
++"swift"+. Arbitrarily increasing file transfer parallelism leads to little
+benefits as the throughput approaches the maximum avaiable network bandwidth.
+Instead it can lead to an increase in latencies which may increase the chances
+of triggering timeouts.
+
+| +fileOperationsThrottle+| +integer > 0+ or +"off"+ | +8+           |
+Limits the number of concurrent file operations that can be active at a given
+time when file staging is set to +"swift"+. File operations are defined to be all
+remote operations on a filesystem that exclude file transfers. Examples are: 
+listing the contents of a directory, creating a directory, removing a file, etc.
+
+
+4+| *Global versions of site options*
+
+| +staging+      | +"swift", "local", "service-local", "shared-fs", "wrapper"+ | +"swift"+ |
+See <<table-staging-methods,Staging Methods>>.
+| +keepSiteDir+  | +true, false+            | +false+       | 
+See <<table-site-options,Site Options>>.
+
+| +statusMode+   | +"files", "provider"+    | +"files"+     |
+See <<table-site-options,Site Options>>.
+
+| +wrapperParameterMode+ | +"args", "files"+| +"args"+      | 
+See <<table-site-options-obscure,Other Site Options>>.
+
+
+|====================================================================
+
+
+Run directories
+~~~~~~~~~~~~~~~
+When you run Swift, you will see a run directory get created. The run
+directory has the name of runNNN, where NNN starts at 000 and increments for
+every run.
+
+The run directories can be useful for debugging. They contain:
+.Run directory contents
+|======================
+|apps     |An apps generated from swift.properties
+|cf       |A configuration file generated from swift.properties
+|runNNN.log|The log file generated during the Swift run
+|scriptname-runNNN.d|Debug directory containing wrapper logs
+|scripts|Directory that contains scheduler scripts used for that run
+|sites.xml|A sites.xml generated from swift.properties
+|swift.out|The standard out and standard error generated by Swift
+|======================
+

@@ -1,0 +1,33 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xs:schema xmlns="http://www.griphyn.org/2006/08/vdl" targetNamespace="http://www.griphyn.org/2006/08/vdl">
+     <xs:simpleType name="file">
+       <xs:restriction base="string"/>
+     </xs:simpleType>
+    </xs:schema>
+  </types>
+  <procedure name="Pre_antchmbr">
+    <output name="t" type="file"/>
+    <input name="f" type="file[]"/>
+    <binding>
+      <application>
+        <executable>pre_ch</executable>
+      </application>
+    </binding>
+  </procedure>
+  <dataset name="files" type="file[]">
+    <mapping descriptor="simple_mapper">
+      <param name="pattern">&quot;*mol2&quot;</param>
+      <param name="location">&quot;/sandbox/ydeng/alamines/&quot;</param>
+    </mapping>
+  </dataset>
+  <dataset name="am1_file" type="file">
+    <file name="m001_am1"/>
+  </dataset>
+  <call proc="Pre_antchmbr">
+    <output>am1_file</output>
+    <input><function name="filename">files</function></input>
+  </call>
+</program>

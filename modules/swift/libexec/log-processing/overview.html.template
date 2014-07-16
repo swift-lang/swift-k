@@ -1,0 +1,14 @@
+<html>
+<head><title>benc's swift logfile repository</title></head>
+
+<body>
+<h1>benc's swift logfile repository</h1>
+
+<p>time vs swift version in use. log files from before version was
+reported appear as r1262 (the revision before this was introduced):</p>
+
+<img src="everylog-vs-versions.png" />
+
+</body>
+
+</html>

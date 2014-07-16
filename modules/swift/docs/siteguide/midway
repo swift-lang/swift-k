@@ -1,0 +1,116 @@
+Midway (x86 cluster)
+--------------------
+Midway is a cluster maintained by the Research Computing Center
+at the University of Chicago. Midway uses Slurm to handle job
+scheduling. For more details about Midway, and to request
+an account, visit http://rcc.uchicago.edu.
+
+Connecting to a login node
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Once you have access to Midway, connect to 
+a Midway login node.
+
+-----
+$ ssh userid@midway.rcc.uchicago.edu
+-----
+
+Loading Swift
+~~~~~~~~~~~~~
+Swift is available on Midway as a module. To load the
+Swift, run:
+
+-----
+$ module load swift
+-----
+
+Example sites.xml
+~~~~~~~~~~~~~~~~~
+Below is an example that uses two of the queues available
+on Midway, sandyb and westmere. Be sure to adjust walltime,
+work directory, and other options as needed.
+
+-----
+<config>
+  <pool handle="midway-sandyb">
+    <execution provider="coaster" jobmanager="local:slurm"/>
+    <profile namespace="globus" key="jobsPerNode">16</profile>
+    <profile namespace="globus" key="maxWalltime">00:05:00</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="queue">sandyb</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <filesystem provider="local"/>
+    <workdirectory>/scratch/midway/{env.USER}/work</workdirectory>
+  </pool>
+
+  <pool handle="midway-westmere">
+    <execution provider="coaster" jobmanager="local:slurm"/>
+    <profile namespace="globus" key="jobsPerNode">12</profile>
+    <profile namespace="globus" key="maxWalltime">00:05:00</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="queue">westmere</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <filesystem provider="local"/>
+    <workdirectory>/scratch/midway/{env.USER}/work</workdirectory>
+  </pool>
+</config>
+-----
+
+Example sites.xml for use with MPI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Below is an example sites.xml that is suitable for running with MPI.
+Jobtype must be set to single. The value you set for ppn
+will determine the number of cores/slots your application uses per node. 
+The value of count will set the number of nodes to request. The example
+below requests 2 nodes with 12 slots per node.
+
+-----
+<config>
+  <pool handle="midway-westmere">
+    <execution provider="coaster" jobmanager="local:slurm"/>
+    <profile namespace="globus" key="jobsPerNode">1</profile>
+    <profile namespace="globus" key="ppn">12</profile>
+    <profile namespace="globus" key="maxWalltime">_WALLTIME_</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="queue">westmere</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <profile namespace="globus" key="jobtype">single</profile>
+    <profile namespace="globus" key="count">2</profile>
+    <filesystem provider="local"/>
+    <workdirectory>/scratch/midway/{env.USER}/work</workdirectory>
+  </pool>
+</config>
+-----
+
+Defining non-standard Slurm options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A Slurm submit script has many settings and options. Swift knows about many of
+the basic Slurm settings, like how to define a project or a queue, but it does 
+not know about every setting. Swift provides a simple way to pass-thru your own
+settings into the Slurm submit script. 
+
+The general way to do this is:
+-----
+<profile namespace="globus" key="slurm.setting">value</profile>
+-----
+
+Here is one specific example. Slurm has the ability to notify users via email 
+when a job is done. To make this happen, the Slurm submit script that Swift
+generates needs a line that contains "--mail-type=END". The following line
+will make it happen.
+
+-----
+<profile namespace="globus" key="slurm.mail-type">END</profile>
+-----
+
+Any valid Slurm setting can be set in a similar way (see the sbatch man page
+for a list of all settings).
+
+Various tips for running MPI jobs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* You'll need to load an MPI module. Run "module load openmpi" to add to your path.
+* The app that Swift runs should be a wrapper script that invokes your
+  MPI application by running "mpiexec /path/to/yourMPIApp"
+

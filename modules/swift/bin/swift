@@ -1,0 +1,196 @@
+#!/bin/bash
+
+# Referenced environment variables (default values):
+# SWIFT_ASSERTS
+# SWIFT_HEAP_MAX (1024M)
+# SWIFT_USAGE_STATS
+
+EXEC=org.griphyn.vdl.karajan.Loader
+OPTIONS="-XX:+HeapDumpOnOutOfMemoryError"
+
+CYGWIN=
+CPDELIM=":"
+HEAPMAX=1024M
+SWIFTOUTLOG=""
+
+if echo `uname` | grep -i "cygwin"; then
+	CYGWIN="yes"
+    CPDELIM=";"
+fi
+
+updateOptions() {
+
+    if [ "X$1" != "X" ] ; then
+		OPTIONS="$OPTIONS -D$2=$1"
+    fi
+
+}
+
+####### MAIN BODY ##########
+
+if [ ! -d "$SWIFT_HOME" ] ; then
+    SWIFT_HOME=$(cd $(dirname $0)/..; pwd)
+    if [ ! -f "$SWIFT_HOME/lib/cog-swift-svn.jar" ] && [ ! -f "$SWIFT_HOME/lib/cog.jar" ] ; then
+		MY_PATH=`which $0`
+		SWIFT_HOME=`dirname $MY_PATH`"/.."
+		if [ ! -f "$SWIFT_HOME/lib/cog-swift-svn.jar" ] && [ ! -f "$SWIFT_HOME/lib/cog.jar" ] ; then
+	    	echo "Error: SWIFT_HOME is not set, and all attempts at guessing it failed"
+	    	exit 1
+		fi
+    fi
+fi
+
+OPTIONS="$OPTIONS -Djava.endorsed.dirs=$SWIFT_HOME/lib/endorsed"
+
+LOCALCLASSPATH=$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec
+for JAR in $SWIFT_HOME/lib/*.jar; do
+	LOCALCLASSPATH="$LOCALCLASSPATH$CPDELIM$JAR"
+done
+LOCALCLASSPATH=$LOCALCLASSPATH$CPDELIM$CLASSPATH
+
+CMDLINE="$@"
+
+### SETUP OTHER ENV VARIABLES ####
+
+USERID=`id | awk '{printf("%s\n", substr($1, 5, index($1, "(")-5 ) ) }'`
+
+if [ "X$GLOBUS_HOSTNAME" = "X" ] && [ "X$HOSTNAME" != "X" ]; then
+	GLOBUS_HOSTNAME=$HOSTNAME
+fi
+
+updateOptions "$USERID" "UID"
+updateOptions "$GLOBUS_INSTALL_PATH" "GLOBUS_INSTALL_PATH"
+updateOptions "$GLOBUS_DEPLOY_PATH" "GLOBUS_DEPLOY_PATH"
+updateOptions "$GLOBUS_TCP_PORT_RANGE" "GLOBUS_TCP_PORT_RANGE"
+updateOptions "$GLOBUS_TCP_SOURCE_PORT_RANGE" "GLOBUS_TCP_SOURCE_PORT_RANGE"
+updateOptions "$GLOBUS_UDP_SOURCE_PORT_RANGE" "GLOBUS_UDP_SOURCE_PORT_RANGE"
+updateOptions "$GLOBUS_HOSTNAME" "GLOBUS_HOSTNAME"
+updateOptions "$X509_USER_CERT" "X509_USER_CERT"
+updateOptions "$X509_USER_KEY" "X509_USER_KEY"
+updateOptions "$X509_CERT_DIR" "X509_CERT_DIR"
+updateOptions "$X509_USER_PROXY" "X509_USER_PROXY"
+updateOptions "$SWIFT_HOME" "COG_INSTALL_PATH"
+updateOptions "$SWIFT_HOME" "swift.home"
+updateOptions "$SWIFT_USERHOME" "user.home"
+
+#Use /dev/urandom instead of /dev/random for seeding RNGs
+#This will lower the randomness of the seed, but avoid
+#large delays if /dev/random does not have enough entropy collected
+updateOptions "file:///dev/urandom" "java.security.egd"
+
+if [ "X$SWIFT_HEAP_MAX" != "X" ]; then
+	HEAPMAX=$SWIFT_HEAP_MAX
+fi
+if [ "X$HEAPMAX" != "X" ]; then
+	OPTIONS="-Xmx$HEAPMAX $OPTIONS"
+fi
+
+if [ "X$SWIFT_ASSERTS" != "X" ]; then
+	OPTIONS="-ea $OPTIONS"
+fi
+
+# Anonymous usage statistics
+LISTENER="128.135.125.18"
+PORT="9999"
+
+if [ -z "$SWIFT_USAGE_STATS" ]; then
+    SWIFT_USAGE_STATS=1
+fi
+
+# To disable usage statistics, uncomment the line below
+#SWIFT_USAGE_STATS=0
+
+PATH=$PATH:/sbin
+IFCONFIG=`which ifconfig 2>&1`
+if [ -x "$IFCONFIG" ]; then
+    MAC=`$IFCONFIG 2>/dev/null |grep HWaddr`
+fi
+
+# Check if we are running on a mac, if so look for md5 and not md5sum
+if [ "`uname`" = "Darwin" ]; then
+	MD5SUM=`which md5 2>&1`
+	if [ ! -x "$MD5SUM" ]; then
+		echo "warning: unable to find md5"
+		SWIFT_USAGE_STATS=0
+	fi
+else
+	MD5SUM=`which md5sum 2>&1`
+	if [ ! -x "$MD5SUM" ]; then
+		echo "warning: unable to find md5sum"
+		SWIFT_USAGE_STATS=0
+	fi
+fi
+
+BASH="/bin/bash"
+if [ ! -x "$BASH" ]; then
+    BASH=`which bash 2>&1`
+    if [ ! -x "$BASH" ]; then
+        echo "warning: unable to find bash"
+        SWIFT_USAGE_STATS=0
+    fi
+fi
+
+if [ "$SWIFT_USAGE_STATS" = 1 ]; then
+    for var in "$@"
+    do
+        SCRIPT=`echo $var|grep -i .swift`
+        if [ -e "$SCRIPT" ]; then
+            SCRIPT=$var
+            SCRIPTID=`$MD5SUM $SCRIPT|cut -d ' ' -f1`
+            SCRIPTLENGTH=`wc -l $SCRIPT|cut -d ' ' -f1`
+        fi
+    done
+    HOSTNAME=`hostname`
+    USERID=`echo $USERID $HOSTNAME $MAC | $MD5SUM |cut -d ' ' -f1`
+    DATE=`date`
+    KEY=`echo $USERID $DATE $$ | $MD5SUM | cut -d ' ' -f1`
+    $BASH -c "echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH -1 0 > /dev/udp/$LISTENER/$PORT" > /dev/null 2>&1 &
+fi
+
+# Swiftrun
+CMDLINE="$( $SWIFT_HOME/bin/swiftrun $CMDLINE )"
+for cmd in $CMDLINE; do
+      if [[ "$cmd" == *-Dscript.dir* ]] || [[ "$cmd" == *-Drestart.log.name* ]]; then
+         OPTIONS="$OPTIONS $cmd"
+         CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g )
+      elif [[ "$cmd" == *--SWIFTRUNQUIT* ]]; then
+         exit 1
+      elif [[ "$cmd" == *-swiftoutlog=* ]]; then
+         SWIFTOUTLOG=$( echo $cmd | cut -d'=' -f2 )
+         CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g ) 
+      elif [[ "$cmd" == *-Ddebug.dir.prefix=* ]]; then
+         OPTIONS="$OPTIONS $cmd"
+         CMDLINE=$( echo $CMDLINE | sed s@$cmd@@g )
+      fi
+done
+
+### EXECUTE ############
+# Note: killing Swift may be briefly delayed due to Coasters shutdown
+return_code=0
+if test -n "$CYGWIN"; then
+    set CLASSPATHSAVE=$CLASSPATH
+    export CLASSPATH="$LOCALCLASSPATH"
+    eval java ${OPTIONS} ${COG_OPTS} ${EXEC} ${CMDLINE}
+    export CLASSPATH=$CLASSPATHSAVE
+else
+    if [ -n "$SWIFTOUTLOG" ] && [ -w "$( dirname $SWIFTOUTLOG )" ]; then
+       eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE} 2>&1 | tee $SWIFTOUTLOG
+       return_code=${PIPESTATUS[0]}
+    else
+       eval java ${OPTIONS} ${COG_OPTS} -classpath ${LOCALCLASSPATH} ${EXEC} ${CMDLINE}
+       return_code=$?
+   fi
+fi
+
+if [ "$SWIFT_USAGE_STATS" = 1 ]; then
+	$BASH -c "echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH $return_code 1 > /dev/udp/$LISTENER/$PORT" > /dev/null 2>&1 &
+fi
+
+rm *.swiftx *.kml > /dev/null 2>&1
+
+exit $return_code
+
+# Local Variables:
+# tab-width: 4
+# indent-tabs-mode: t
+# End:

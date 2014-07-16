@@ -1,0 +1,32 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<h2>kickstart</h2>
+<p>kickstart records.
+(<a href="kickstart.event">text file of events</a>)
+this shows applications which are actually running on a worker node, executing:</p>
+<img src="kickstart.png" alt="-"/>
+
+<p>kickstart records total - this represents how many worker nodes were
+actually executing applications at any time:</p>
+<img src="kickstart-total.png" alt="-"/>
+
+<p>kickstart records sorted by start time:</p>
+<img src="kickstart.sorted-start.png" alt="-"/>
+
+<p>kickstart stats:
+<pre>
+include(`kickstart.stats')
+</pre>
+</p>
+
+<p>cumulative histogram(?) of kickstart job durations</p>
+
+<img src="kickstart-duration-histogram.png" alt="-"/>
+
+<p>end</p>
+</body>

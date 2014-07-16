@@ -1,0 +1,4 @@
+FILE_OPERATION 1
+FILE_TRANSFER 2
+JOB_SUBMISSION 3
+unknown_karajan_task_type 4

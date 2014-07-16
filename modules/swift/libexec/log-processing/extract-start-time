@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Extract start time in unix time from original Swift log
+
+if [[ $LOG == "" ]] ; then
+  LOG=$1
+fi
+
+if [ "X$LOG" == "X" ] ; then
+  echo "extract-start-time: no LOG given!" 1>&2
+  exit 1
+fi
+
+start=$( head $LOG | iso-to-secs | cut -f 1 -d ' ' | sort -n | head -1 )
+
+echo $start

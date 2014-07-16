@@ -1,0 +1,14 @@
+Overview
+--------
+Swift is a data-flow oriented coarse grained scripting language that supports
+dataset typing and mapping, dataset iteration, conditional branching,
+and procedural composition.
+
+Swift programs (or workflows) are written in a language called
+Swift.
+
+Swift scripts are primarily concerned with processing (possibly large)
+collections of data files, by invoking programs to do that processing. Swift
+handles execution of such programs on remote sites by choosing sites, handling
+the staging of input and output files to and from the chosen sites and remote
+execution of programs.

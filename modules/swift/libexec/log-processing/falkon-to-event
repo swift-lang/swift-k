@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# takes a falkon taskperf log file and outputs events
+#//taskNum taskID workerID startTimeStamp execTimeStamp resultsQueueTimeStamp endTimeStamp waitQueueTime execTime resultsQueueTime totalTime exitCode
+#//0-time is1190835239261ms
+#1 urn:0-0-1190840467767 tg-v091.uc.teragrid.org:50101 5732504 5799842 5806115 5806143 67338 6273 28 73639 0
+starttime=$(grep '//0-time is' $1 | sed 's%//0-time is *\([0-9]*\)ms%\1%')
+echo start time is at $starttime >&2
+
+while read tasknum taskid workerid startts exects rqts endts wqt et rqr tt ec ; do
+if echo $tasknum | grep -e '^[0-9]*$' > /dev/null ; then
+  # echo process $tasknum
+  echo $(( ( $startts + $starttime ) / 1000 )) $(( $tt / 1000 )) $tasknum $taskid $workerid
+else
+  echo skip >&2
+fi
+
+done < $1
+

@@ -1,0 +1,4 @@
+rule .*201-output.txt  DIRECT _PWD_/201
+
+rule .*202-input.*.txt DIRECT _PWD_/202
+rule .*202-output.txt  DIRECT _PWD_/202

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# TODO join has certain sorting requirements on its two input files
+# that aren't addressed here. This doesn't cause a problem in the
+# single site case but is likely to cause a problem in the multi-site
+# case.
+
+#1190895062.980 72.5099999904633 goodmonkey-am3d9thi COMPLETED 0-0-8 soju.hawaga.org.uk
+
+#while read start duration jobid status thread site rest; do
+#  colour=$(lookup-colour sites-list.data $site)
+#  echo $start $duration $colour $jobid $status $site $rest
+#done < execute2.event > execute2.coloured-event
+
+sort -k 6 < execute2.event > e2colour.tmp
+
+join -1 6 -2 1 -o 1.1,1.2,2.2,1.3,1.4,1.5 e2colour.tmp sites-list.data.nm > tmp-colour-execute2-output
+
+sort -n tmp-colour-execute2-output > execute2.coloured-event
+

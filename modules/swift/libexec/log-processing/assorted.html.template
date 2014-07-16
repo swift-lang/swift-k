@@ -1,0 +1,38 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<h2>Assorted Swift library routines</h2>
+
+<p>Shared directory initialisation on remote sites:</p>
+<img src="initshareddir.png"/>
+
+<p>Per-job shared directory creation on remote sites:</p>
+<img src="createdirset.png"/>
+<br/>
+<img src="createdirset-total.png"/>
+
+<p>dostagein:</p>
+<img src="dostagein.png"/>
+<br/>
+<img src="dostagein-total.png"/>
+<p>dostagein duration histogram:</p>
+<img src="dostagein-duration-histogram.png" />
+<hr />
+
+<p>dostageout:</p>
+<img src="dostageout.png"/>
+<br/>
+<img src="dostageout-total.png"/>
+<p>dostageout sorted by start time</p>
+<img src="dostageout.sorted-start.png"/>
+
+<p>dostageout duration histogram:</p>
+<img src="dostageout-duration-histogram.png" />
+<hr />
+
+<p>end</p>
+</body>

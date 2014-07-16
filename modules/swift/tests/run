@@ -1,0 +1,8 @@
+cd language
+./run || exit 2
+
+cd ../language-behaviour
+./run || exit 3
+
+cd ../misc
+./run || exit 4

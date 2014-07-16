@@ -1,0 +1,18 @@
+
+ROADMAP
+
+start with data-0.txt
+
+run: "stomp data-0.txt" generates: run-0/ and run-0/stomp.out
+
+run: pg stomp.out generates: tarfile of pg-*.out files
+         (we can apply CDM to avoid data copies here)
+
+on each tarfile entry,
+run: sph tarfile pg-number.out generates: sph-number.out
+         the sph wrapper extracts the entry
+         (we can apply CDM to avoid the full tarfile transfer)
+
+run: gpg sph-*.out generates: data-1.txt
+
+repeat

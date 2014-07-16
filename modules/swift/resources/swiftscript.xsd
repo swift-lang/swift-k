@@ -1,0 +1,651 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
+           version="1.0"
+           targetNamespace="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+           xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ns="http://ci.uchicago.edu/swift/2009/02/swiftscript">
+  <xs:annotation>
+    <xs:documentation>The XML form of SwiftScript</xs:documentation>
+  </xs:annotation>
+
+  <xs:element name="program">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="imports"/>
+
+        <xs:element minOccurs="0" ref="types"/>
+
+        <xs:element maxOccurs="unbounded" minOccurs="0" name="procedure"
+                    type="Procedure"/>
+
+        <xs:sequence maxOccurs="unbounded" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>defines the workflow structure for the main
+            program</xs:documentation>
+          </xs:annotation>
+
+          <xs:group ref="ComponentGroup"/>
+        </xs:sequence>
+      </xs:sequence>
+
+      <xs:attribute name="targetNamespace" type="xs:anyURI">
+        <xs:annotation>
+          <xs:documentation>the target namespace for the definitions in the
+          program</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="types">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:annotation>
+          <xs:documentation>XML Schema definitions for types</xs:documentation>
+        </xs:annotation>
+        <xs:element name="type" maxOccurs="unbounded" minOccurs="0">
+         <xs:complexType>
+          <xs:sequence>
+	        <xs:element name="typename" type="xs:string" />
+			<xs:element name="typealias" type="xs:string" />
+	        <xs:element name="typestructure" type="TypeStructure" />
+	      </xs:sequence>
+         </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="imports">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="import" maxOccurs="unbounded" minOccurs="0" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="Procedure">
+    <xs:annotation>
+      <xs:documentation>a procedure defines the logical interface of a
+      process, and the workflow structure if it is a compound
+      procedure</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:sequence maxOccurs="unbounded" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>specifies the interface of the procedure, more
+          specifically, its inputs and outputs</xs:documentation>
+        </xs:annotation>
+
+        <xs:element maxOccurs="unbounded" minOccurs="0" name="output"
+                    type="FormalParameter" nillable="true">
+          <xs:annotation>
+            <xs:documentation>specify an output parameter of the procedure
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+
+        <xs:element maxOccurs="unbounded" minOccurs="0" name="input"
+                    type="FormalParameter" nillable="true">
+          <xs:annotation>
+            <xs:documentation>specifies an input parameter to the procedure
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+
+      <xs:choice>
+        <xs:annotation>
+          <xs:documentation>the body of a procedure can be either a
+          binding or a compound procedure</xs:documentation>
+        </xs:annotation>
+
+        <xs:element name="binding" type="Binding"/>
+
+        <xs:sequence maxOccurs="unbounded" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>defines the workflow structure if this is a
+            compound procedure</xs:documentation>
+          </xs:annotation>
+
+          <xs:group ref="ComponentGroup"/>
+        </xs:sequence>
+      </xs:choice>
+    </xs:sequence>
+
+    <xs:attribute name="name" type="xs:NCName">
+      <xs:annotation>
+        <xs:documentation>the name of the procedure</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="src" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="FormalParameter">
+    <xs:annotation>
+      <xs:documentation>defines a parameter, which has a name, a type, and an
+      optional default value</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element ref="abstractExpression"/>
+    </xs:sequence>
+
+    <xs:attribute name="name" type="xs:NCName" use="required"/>
+
+    <xs:attribute name="type" type="xs:QName" use="required"/>
+
+  </xs:complexType>
+
+  <xs:complexType name="Binding">
+    <xs:annotation>
+      <xs:documentation>specifies the binding of an atomic procedure to its
+      implementation, which can be either an application or in future
+      potentially a web service</xs:documentation>
+    </xs:annotation>
+
+    <xs:choice>
+      <xs:element name="application" type="ApplicationBinding"/>
+
+    </xs:choice>
+
+  </xs:complexType>
+
+  <xs:complexType name="ApplicationBinding">
+    <xs:annotation>
+      <xs:documentation>Defines a binding to an application</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element name="executable" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Specifies name of the
+          application</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <xs:element name="profile" type="Profile"
+                  minOccurs="0" maxOccurs="unbounded">
+      </xs:element>
+
+      <xs:sequence>
+
+        <xs:element minOccurs="0" name="stdin" type="UnlabelledUnaryOperator">
+          <xs:annotation>
+            <xs:documentation>Specifies redirection mapping for
+            stdin</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+
+        <xs:element minOccurs="0" name="stdout" type="UnlabelledUnaryOperator">
+          <xs:annotation>
+            <xs:documentation>Specifies redirection mapping for
+            stdout</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+
+        <xs:element minOccurs="0" name="stderr" type="UnlabelledUnaryOperator">
+          <xs:annotation>
+            <xs:documentation>Specifies redirection mapping for
+            stderr</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+
+        <xs:sequence maxOccurs="unbounded" minOccurs="0">
+          <xs:element ref="abstractExpression"/>
+        </xs:sequence>
+
+      </xs:sequence>
+    </xs:sequence>
+
+    <xs:attribute name="src" type="xs:string" />
+
+  </xs:complexType>
+
+  <xs:complexType name="Profile">
+    <xs:sequence>
+      <xs:element ref="abstractExpression" />
+      <xs:element ref="abstractExpression" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:group name="ArgumentGroup">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="function" type="Function"/>
+    </xs:sequence>
+  </xs:group>
+
+  <xs:complexType name="Function">
+    <xs:annotation>
+      <xs:documentation>A mapping function, the parameters to the function
+      itself can be text, reference and function.</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" ref="abstractExpression" />
+    </xs:sequence>
+
+    <xs:attribute name="name" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>name of the mapping function</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    
+    <xs:attribute name="src" type="xs:string" />
+  </xs:complexType>
+
+  <!--
+      This is an older idea about how to put profile settings in XML
+      It should not be accessible from SwiftScript any more. -Justin
+
+  <xs:complexType mixed="true" name="Profile">
+    <xs:annotation>
+      <xs:documentation>profile specifies configuration information pertaining
+      to the execution of the application or service. For instance,
+      environment variables, Globus config, etc... TODO tighten this typing</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence maxOccurs="unbounded" minOccurs="0">
+      <xs:group ref="ArgumentGroup"/>
+    </xs:sequence>
+
+    <xs:attribute name="namespace" type="xs:NMTOKEN">
+      <xs:annotation>
+        <xs:documentation>namespace here denotes a specific scope that the key
+        belongs to</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="key" type="xs:NMTOKEN" use="required"/>
+  </xs:complexType>
+  -->
+
+  <xs:complexType name="Array">
+    <xs:annotation>
+      <xs:documentation>defines an array which contains a sequence of
+      elements</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence maxOccurs="unbounded" minOccurs="0">
+      <xs:element ref="abstractExpression"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Range">
+
+    <xs:annotation>
+      <xs:documentation>defines a range, which is a set of values within an
+      inclusive range.</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element ref="abstractExpression" minOccurs="2" maxOccurs="3"/>
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:complexType name="Variable">
+    <xs:annotation>
+      <xs:documentation>defines a variable, which has the
+      dataset handle information, such as name, type, mapping descriptor and
+      mapping parameters.</xs:documentation>
+    </xs:annotation>
+
+    <xs:choice>
+      <xs:element name="file">
+        <xs:complexType>
+          <xs:annotation>
+            <xs:documentation>For specific cases where a dataset is mapped to
+            a file</xs:documentation>
+          </xs:annotation>
+
+          <xs:attribute name="name" type="xs:string"/>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="mapping">
+        <xs:complexType>
+          <xs:sequence maxOccurs="unbounded" minOccurs="0">
+            <xs:element name="param">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element ref="abstractExpression" />
+                </xs:sequence>
+                <xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+
+          <xs:attribute name="descriptor" type="xs:string" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+
+    <xs:attribute name="name" type="xs:NCName"/>
+
+    <xs:attribute name="type" type="xs:QName" use="required"/>
+
+    <xs:attribute name="isGlobal" type="xs:boolean"/>
+    
+    <xs:attribute name="src" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="ActualParameter">
+    <xs:annotation>
+      <xs:documentation>defines an actual parameter value that can be bound to
+      a formal parameter when calling a procedure</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element ref="abstractExpression" />
+    </xs:sequence>
+
+    <xs:attribute name="bind" type="xs:NMTOKEN" use="optional" />
+
+
+  </xs:complexType>
+
+  <xs:complexType name="Assign">
+    <xs:annotation>
+      <xs:documentation>assigns an expression to a variable reference
+      (l-value) - the first abstractExpression is the left, the second the right
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element ref="abstractExpression" minOccurs="2" maxOccurs="2" />
+    </xs:sequence>
+<!-- TODO can this move to a top level element? -->
+    <xs:attribute name="src" type="xs:string" />
+
+  </xs:complexType>
+
+  <xs:complexType name="Append">
+    <xs:annotation>
+      <xs:documentation>appends a value to an array
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element ref="abstractExpression" minOccurs="2" maxOccurs="2" />
+    </xs:sequence>
+    <xs:attribute name="src" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="Call">
+    <xs:annotation>
+      <xs:documentation>a call essentially defines a task to perform, it calls
+      a procedure with actual parameters</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" minOccurs="0" name="output"
+                  type="ActualParameter">
+        <xs:annotation>
+          <xs:documentation>specifies an expression for an output
+          parameter</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <xs:element maxOccurs="unbounded" minOccurs="0" name="input"
+                  type="ActualParameter">
+        <xs:annotation>
+          <xs:documentation>specifies a value or an expression for an input
+          parameter</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+
+    <xs:attribute name="proc" type="xs:QName" use="required">
+      <xs:annotation>
+        <xs:documentation>specifies the name of the procedure to
+        call</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="src" type="xs:string" />
+  </xs:complexType>
+
+  <xs:group name="ComponentGroup">
+    <xs:annotation>
+      <xs:documentation>defines the group of elements that can be specified in
+      a compound procedure</xs:documentation>
+    </xs:annotation>
+
+    <xs:choice>
+      <xs:element name="variable" type="Variable" nillable="true">
+        <xs:annotation>
+          <xs:documentation>defines an intermediate variable, so that it can
+          link the output of one node to the input of another
+          node</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <xs:element name="assign" type="Assign"/>
+
+      <xs:element name="append" type="Append"/>
+
+      <xs:element name="call" type="Call"/>
+
+      <xs:group ref="ControlGroup"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="Foreach">
+    <xs:annotation>
+      <xs:documentation>iterate over a set of items</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element name="in" type="UnlabelledUnaryOperator" />
+      <xs:element name="body">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+
+    <xs:attribute name="var" type="xs:NMTOKEN">
+      <xs:annotation>
+        <xs:documentation>the variable name to hold each
+        item</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="indexVar" type="xs:NMTOKEN">
+      <xs:annotation>
+        <xs:documentation>the variable name to hold the index
+        value</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="src" type="xs:string" />
+
+  </xs:complexType>
+
+  <xs:complexType name="Iterate">
+    <xs:sequence>
+      <xs:element name="body">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element ref="abstractExpression"/>
+   </xs:sequence>
+   <xs:attribute name="var" type="xs:NMTOKEN">
+     <xs:annotation>
+       <xs:documentation>the variable name to hold each
+       item</xs:documentation>
+     </xs:annotation>
+   </xs:attribute>
+   
+   <xs:attribute name="src" type="xs:string" />
+
+  </xs:complexType>
+
+  <xs:complexType name="If">
+    <xs:sequence>
+
+      <xs:element ref="abstractExpression"/>
+
+      <xs:element name="then">
+        <xs:complexType>
+          <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element minOccurs="0" name="else">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    
+    <xs:attribute name="src" type="xs:string" />
+
+  </xs:complexType>
+
+  <xs:complexType name="Switch">
+    <xs:annotation>
+      <xs:documentation>specifies conditional branches</xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element ref="abstractExpression" />
+      <xs:sequence maxOccurs="unbounded" minOccurs="0">
+        <xs:element name="case">
+          <xs:annotation>
+            <xs:documentation>each case specifies a branching condition and
+            the actions</xs:documentation>
+          </xs:annotation>
+
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element ref="abstractExpression" />
+              <xs:element name="statements">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:group maxOccurs="unbounded" minOccurs="0"
+                              ref="ComponentGroup"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+
+      <xs:element minOccurs="0" name="default">
+        <xs:annotation>
+          <xs:documentation>the default case, when none of the cases is
+          met</xs:documentation>
+        </xs:annotation>
+
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group maxOccurs="unbounded" minOccurs="0" ref="ComponentGroup"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+
+  </xs:complexType>
+
+  <xs:group name="ControlGroup">
+    <xs:annotation>
+      <xs:documentation>specifies the control patterns in the
+      workflow</xs:documentation>
+    </xs:annotation>
+
+    <xs:choice>
+      <xs:element name="foreach" type="Foreach"/>
+
+      <xs:element name="if" type="If"/>
+
+      <xs:element name="switch" type="Switch"/>
+
+      <xs:element name="iterate" type="Iterate"/>
+    </xs:choice>
+  </xs:group>
+
+<!-- this is the base expression that means nothing and should never
+be used directly... but other things should substitute for it.
+-->
+  <xs:element name="abstractExpression" abstract="true" />
+
+      <xs:element name="or" type="BinaryOperator" substitutionGroup="abstractExpression"/>
+
+      <xs:element name="and" type="BinaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="booleanConstant" type="xs:boolean" substitutionGroup="abstractExpression"/>
+      <xs:element name="integerConstant" type="xs:int" substitutionGroup="abstractExpression"/>
+<!-- TODO is this int or integer? (general question really about the
+space of integers in SwiftScript -->
+      <xs:element name="stringConstant" type="xs:string" substitutionGroup="abstractExpression"/>
+      <xs:element name="floatConstant" type="xs:float" substitutionGroup="abstractExpression"/>
+      <xs:element name="cond" type="LabelledBinaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="arith" type="LabelledBinaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="unaryNegation" type="UnlabelledUnaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="not" type="UnlabelledUnaryOperator" substitutionGroup="abstractExpression"/>
+<!-- TODO generalise unary operator to more than just plus/minus sign
+and it will absorb 'not' -->
+      <xs:element name="variableReference" type="xs:string" substitutionGroup="abstractExpression"/>
+      <xs:element name="arraySubscript" type="BinaryOperator" substitutionGroup="abstractExpression"/>
+      <xs:element name="structureMember" type="StructureMember" substitutionGroup="abstractExpression"/>
+      <xs:element name="array" type="Array" substitutionGroup="abstractExpression"/>
+      <xs:element name="range" type="Range" substitutionGroup="abstractExpression"/>
+      <xs:element name="function" type="Function" substitutionGroup="abstractExpression"/>
+      <xs:element name="call" type="Call" substitutionGroup="abstractExpression"/>
+
+  <xs:complexType name="BinaryOperator">
+    <xs:sequence>
+      <xs:element ref="abstractExpression" minOccurs="2" maxOccurs="2" />
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <xs:complexType name="LabelledBinaryOperator">
+    <xs:complexContent>
+      <xs:extension base="BinaryOperator">
+        <xs:attribute name="op" type="xs:string"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="UnlabelledUnaryOperator">
+    <xs:sequence>
+      <xs:element ref="abstractExpression" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="StructureMember">
+    <xs:sequence>
+      <xs:element ref="abstractExpression" />
+      <xs:element name="memberName" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TypeStructure">
+	<xs:sequence>
+		<xs:element maxOccurs="unbounded" minOccurs="0"
+		             type="TypeRow" name="member" />
+	</xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TypeRow">
+	<xs:sequence>
+		<xs:element name="membername" type="xs:string"/>
+		<xs:element name="membertype" type="xs:string"/>
+	</xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
+

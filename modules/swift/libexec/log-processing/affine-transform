@@ -1,0 +1,5 @@
+#!/bin/bash
+while read a b c d rest; do
+  echo $a $(( $b + $2 )) $c $d $rest
+
+done

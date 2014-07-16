@@ -1,0 +1,7 @@
+digraph VDL2provenance {
+	graph [splines="compound", rankdir="TB"];
+	node [color="seagreen", style="filled"];
+	"0" [label=echo]
+	"hello.txt" [shape=parallelogram,label=outfile]
+	"0" -> "hello.txt"
+}

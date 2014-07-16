@@ -1,0 +1,7 @@
+   <pool handle="localhost">
+      <execution provider="local" url="none"/>
+      <profile namespace="karajan" key="jobThrottle">_JOBTHROTTLE_</profile>
+      <profile namespace="karajan" key="initialScore">10000</profile>
+      <filesystem provider="local"/>
+      <workdirectory>{env.HOME}/swiftwork</workdirectory>
+   </pool>

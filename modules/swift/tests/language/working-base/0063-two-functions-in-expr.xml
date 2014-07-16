@@ -1,0 +1,14 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="i" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 2">
+   <variableReference>i</variableReference>
+   <arith op="+">
+     <function name="toint">
+       <stringConstant>1</stringConstant></function>
+     <function name="toint">
+       <stringConstant>2</stringConstant></function>
+   </arith>
+  </assign>
+</program>

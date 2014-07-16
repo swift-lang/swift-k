@@ -1,0 +1,18 @@
+Swift User Guide
+================
+
+:toc:
+:icons:
+:numbered:
+
+include::overview[]
+
+include::gettingStarted[]
+
+include::language[]
+
+include::configuration.new[]
+
+include::debugging[]
+
+link:http://swift-lang.org/docs/index.php[home]

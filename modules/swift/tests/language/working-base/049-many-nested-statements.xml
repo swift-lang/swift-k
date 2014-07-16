@@ -1,0 +1,7 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <variable name="a" type="int" xsi:nil="true"/>
+      <variable name="b" type="int" xsi:nil="true"/>
+        <variable name="c" type="int" xsi:nil="true"/>
+</program>

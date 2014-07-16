@@ -1,0 +1,35 @@
+#!/bin/bash
+
+export st=$(cat start-time.tmp)
+export et=$(cat end-time.tmp)
+
+echo ST = $st >&2
+echo ET = $et >&2
+
+#echo 0 1 $(( $et - $st )) 0 whole-workflow
+
+I=0
+
+while read a b; do
+c=$(extract-completed-time-for-run-id $a)
+if [ "X$c" == "X" ]; then 
+  # didn't complete
+  # look for fail instead
+  state=FAILED
+  c=$(extract-failed-time-for-run-id $a)
+else
+  state=COMPLETED
+fi
+
+site=$(get-site-for-run-id $a)
+echo SITE is $site >&2
+
+d=$(( $c - $b ))
+if [[ $d < 0 ]] ; then
+  echo skipping this as negative run time: $a >&2
+else
+  echo $(( $b - $st )) $I $(( $c - $b )) 0 $a $state $site
+fi
+I=$(( $I + 1 ))
+done < start-times.data
+

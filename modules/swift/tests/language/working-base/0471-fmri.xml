@@ -1,0 +1,366 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>voxelfile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>headerfile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>pgmfile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>imagefile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>warpfile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>volume</typename>
+     		<typealias></typealias>
+     		<typestructure>
+     			    <member>
+     					<membername>img</membername>
+     					<membertype>voxelfile</membertype>
+     				</member>
+     			    <member>
+     					<membername>hdr</membername>
+     					<membertype>headerfile</membertype>
+     				</member>
+     		</typestructure>
+     	</type>   
+  </types>  
+  <procedure name="align_warp" src="line 14">
+
+      <output 
+    name="warp" type="warpfile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="reference" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="subject" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="model" type="string"
+
+     xsi:nil="true" />
+
+      <input 
+    name="quick" type="string"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 15">
+        <executable>align_warp</executable>
+        <function name="filename">
+          <structureMember>
+            <variableReference>reference</variableReference>
+            <memberName>img</memberName>
+          </structureMember></function><function name="filename">
+          <structureMember>
+            <variableReference>subject</variableReference>
+            <memberName>img</memberName>
+          </structureMember></function><function name="filename">
+          <variableReference>warp</variableReference></function><stringConstant>-m </stringConstant><variableReference>model</variableReference><variableReference>quick</variableReference>  </application>
+    </binding>
+  </procedure>
+  <procedure name="reslice" src="line 20">
+
+      <output 
+    name="sliced" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="warp" type="warpfile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="subject" type="volume"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 22">
+        <executable>reslice</executable>
+        <function name="filename">
+          <variableReference>warp</variableReference></function><function name="filename">
+          <structureMember>
+            <variableReference>sliced</variableReference>
+            <memberName>img</memberName>
+          </structureMember></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="align_and_reslice" src="line 27">
+
+      <output 
+    name="sliced" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="reference" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="subject" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="model" type="string"
+
+     xsi:nil="true" />
+
+      <input 
+    name="quick" type="string"
+
+     xsi:nil="true" />
+    <variable name="warp" type="warpfile" isGlobal="false" xsi:nil="true"/>
+    <call proc="align_warp" src="line 29">
+      <output><variableReference>warp</variableReference></output>
+      <input><variableReference>reference</variableReference></input>
+      <input><variableReference>subject</variableReference></input>
+      <input><variableReference>model</variableReference></input>
+      <input><variableReference>quick</variableReference></input>
+    </call>
+    <call proc="reslice" src="line 30">
+      <output><variableReference>sliced</variableReference></output>
+      <input><variableReference>warp</variableReference></input>
+      <input><variableReference>subject</variableReference></input>
+    </call>
+  </procedure>
+  <procedure name="softmean" src="line 34">
+
+      <output 
+    name="atlas" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="sliced" type="volume[]"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 36">
+        <executable>softmean</executable>
+        <function name="filename">
+          <structureMember>
+            <variableReference>atlas</variableReference>
+            <memberName>img</memberName>
+          </structureMember></function><stringConstant>y</stringConstant><stringConstant>null</stringConstant><function name="filenames">
+          <structureMember>
+            <arraySubscript>
+             <variableReference>sliced</variableReference>
+             <stringConstant>*</stringConstant>
+            </arraySubscript>
+            <memberName>img</memberName>
+          </structureMember></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="slicer" src="line 42">
+
+      <output 
+    name="outslice" type="pgmfile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="input" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="axis" type="string"
+
+     xsi:nil="true" />
+
+      <input 
+    name="position" type="string"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 44">
+        <executable>slicer</executable>
+        <function name="filename">
+          <structureMember>
+            <variableReference>input</variableReference>
+            <memberName>img</memberName>
+          </structureMember></function><variableReference>axis</variableReference><variableReference>position</variableReference><function name="filename">
+          <variableReference>outslice</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="convert" src="line 49">
+
+      <output 
+    name="outimg" type="imagefile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="inpgm" type="pgmfile"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 51">
+        <executable>convert</executable>
+        <function name="filename">
+          <variableReference>inpgm</variableReference></function><function name="filename">
+          <variableReference>outimg</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <procedure name="slice_to_jpeg" src="line 56">
+
+      <output 
+    name="outimg" type="imagefile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="inp" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="axis" type="string"
+
+     xsi:nil="true" />
+
+      <input 
+    name="position" type="string"
+
+     xsi:nil="true" />
+    <variable name="outslice" type="pgmfile" isGlobal="false" xsi:nil="true"/>
+    <call proc="slicer" src="line 59">
+      <output><variableReference>outslice</variableReference></output>
+      <input><variableReference>inp</variableReference></input>
+      <input><variableReference>axis</variableReference></input>
+      <input><variableReference>position</variableReference></input>
+    </call>
+    <call proc="convert" src="line 60">
+      <output><variableReference>outimg</variableReference></output>
+      <input><variableReference>outslice</variableReference></input>
+    </call>
+  </procedure>
+  <procedure name="all_align_reslices" src="line 63">
+
+      <output 
+    name="s" type="volume[]"
+
+     xsi:nil="true" />
+
+      <input 
+    name="reference" type="volume"
+
+     xsi:nil="true" />
+
+      <input 
+    name="subjects" type="volume[]"
+
+     xsi:nil="true" />
+    <foreach var="subject"  indexVar="i" src="line 65">
+    <in><variableReference>subjects</variableReference></in>
+    <body><call proc="align_and_reslice" src="line 66">
+        <output><arraySubscript>
+         <variableReference>s</variableReference>
+         <variableReference>i</variableReference>
+        </arraySubscript></output>
+        <input><variableReference>reference</variableReference></input>
+        <input><arraySubscript>
+         <variableReference>subjects</variableReference>
+         <variableReference>i</variableReference>
+        </arraySubscript></input>
+        <input><stringConstant>12</stringConstant></input>
+        <input><stringConstant>-q</stringConstant></input>
+      </call></body>
+    </foreach>
+  </procedure>
+  <variable name="references" type="volume[]" isGlobal="false">
+    <mapping descriptor="csv_mapper">
+      <param name="file"><stringConstant>reference.csv</stringConstant></param>
+    </mapping>
+  </variable>
+  <variable name="reference" type="volume" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 75">
+   <variableReference>reference</variableReference>
+   <arraySubscript>
+    <variableReference>references</variableReference>
+    <integerConstant>0</integerConstant>
+   </arraySubscript>
+  </assign>
+  <variable name="subjects" type="volume[]" isGlobal="false">
+    <mapping descriptor="csv_mapper">
+      <param name="file"><stringConstant>subjects.csv</stringConstant></param>
+    </mapping>
+  </variable>
+  <variable name="slices" type="volume[]" isGlobal="false">
+    <mapping descriptor="csv_mapper">
+      <param name="file"><stringConstant>slices.csv</stringConstant></param>
+    </mapping>
+  </variable>
+  <call proc="all_align_reslices" src="line 78">
+    <output><variableReference>slices</variableReference></output>
+    <input><variableReference>reference</variableReference></input>
+    <input><variableReference>subjects</variableReference></input>
+  </call>
+  <variable name="atlas" type="volume" isGlobal="false">
+    <mapping descriptor="simple_mapper">
+      <param name="prefix"><stringConstant>atlas</stringConstant></param>
+    </mapping>
+  </variable>
+  <call proc="softmean" src="line 81">
+    <output><variableReference>atlas</variableReference></output>
+    <input><variableReference>slices</variableReference></input>
+  </call>
+  <variable name="directions" type="string[]" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 85">
+   <variableReference>directions</variableReference>
+
+     <array>
+       <stringConstant>x</stringConstant><stringConstant>y</stringConstant><stringConstant>z</stringConstant>
+     </array>
+
+  </assign>
+  <foreach var="direction"  src="line 85">
+  <in><variableReference>directions</variableReference></in>
+  <body><variable name="o" type="imagefile" isGlobal="false">
+      <mapping descriptor="single_file_mapper">
+        <param name="file"><function name="strcat">
+          <stringConstant>atlas-</stringConstant><variableReference>direction</variableReference><stringConstant>.jpeg</stringConstant></function></param>
+      </mapping>
+    </variable>
+    <variable name="option" type="string" isGlobal="false" xsi:nil="true"/>
+    <assign src="line 88">
+     <variableReference>option</variableReference>
+     <function name="strcat">
+       <stringConstant>-</stringConstant><variableReference>direction</variableReference></function>
+    </assign>
+    <call proc="slice_to_jpeg" src="line 88">
+      <output><variableReference>o</variableReference></output>
+      <input><variableReference>atlas</variableReference></input>
+      <input><variableReference>option</variableReference></input>
+      <input><stringConstant>.5</stringConstant></input>
+    </call></body>
+  </foreach>
+</program>

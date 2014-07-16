@@ -1,0 +1,26 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <procedure name="j" src="line 1">
+
+      <input 
+    name="bar" type="int"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 1">
+        <executable>echo</executable>
+      </application>
+    </binding>
+  </procedure>
+  <procedure name="foo" src="line 3">
+
+      <input 
+    name="bar" type="int"
+
+     xsi:nil="true" />
+    <call proc="j" src="line 3">
+      <input><variableReference>bar</variableReference></input>
+    </call>
+  </procedure>
+</program>

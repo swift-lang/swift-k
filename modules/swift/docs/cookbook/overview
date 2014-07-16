@@ -1,0 +1,11 @@
+Overview
+--------
+This cookbook covers recipes involving setting up and running Swift
+under various computational systems based on the application requirements and the
+underlying infrastructures. The Swift framework comprises of a scripting language
+and the Swift runtime system. For introductory material, consult the Swift
+tutorial found
+link:http://www.ci.uchicago.edu/swift/guides/trunk/tutorial/tutorial.html[here].
+
+WARNING: Note that the cookbook is under construction and the recipes presented here are not tested rigorously. 
+

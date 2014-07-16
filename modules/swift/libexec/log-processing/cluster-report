@@ -1,0 +1,27 @@
+#!/bin/bash
+
+echo cluster report
+
+echo last status summary:
+cat  karatasks.clusters.lastsummary
+echo ===
+
+echo clusters and counts of tasks in each
+while read clusterid foo finalstate rest; do
+
+NUMJOBS=$(tasks-in-cluster $clusterid $LOG | wc -l)
+
+grep $clusterid karatasks.clusters.event > tmp-cluster-report.1
+
+read start duration id state rest < tmp-cluster-report.1
+
+# 1193673452.082 1195.3220000267 cluster-97-1193672622412 Completed JOB_SUBMISSION
+
+SECSPERJOB=$(echo $duration / $NUMJOBS | bc -l)
+
+echo $clusterid: $NUMJOBS jobs took $duration seconds = $SECSPERJOB s/job
+
+done < karatasks.clusters.last
+
+
+echo end of cluster report

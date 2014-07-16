@@ -1,0 +1,36 @@
+<project name="Project dependencies" default="deps" basedir=".">
+	<!-- project dependencies -->
+	<target name="deps">
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="karajan"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-localscheduler"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-dcache"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-coaster"/>
+		</ant>
+		<antcall target="provider-deef"/>
+		<antcall target="provider-condor"/>
+		<antcall target="provider-wonky"/>
+	</target>
+	
+	<target name="provider-deef" if="with-provider-deef">
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-deef"/>
+		</ant>
+	</target>
+	<target name="provider-condor" if="with-provider-condor">
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-condor"/>
+		</ant>
+	</target>
+	<target name="provider-wonky" if="with-provider-wonky">
+		<ant antfile="${main.buildfile}" target="dep">
+			<property name="module" value="provider-wonky"/>
+		</ant>
+	</target>
+</project>

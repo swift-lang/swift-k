@@ -1,0 +1,13 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="f" type="float[]" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 2">
+   <variableReference>f</variableReference>
+
+     <array>
+       <floatConstant>1.0</floatConstant><floatConstant>2.0</floatConstant><floatConstant>3.0</floatConstant>
+     </array>
+
+  </assign>
+</program>

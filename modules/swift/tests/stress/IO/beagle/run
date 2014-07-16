@@ -1,0 +1,22 @@
+#! /bin/sh
+
+set -x
+export STRESS="S1"
+export COG_OPTS=-Dtcp.channel.log.io.performance=true
+#./stage_to_remote.setup.sh
+#ARGS=`cat stage_to_remote.args`
+#swift -config swift.properties -sites.file sites.template.xml -tc.file tc.template.data stage_to_remote.swift $ARGS
+
+
+#./stage_to_remote1.setup.sh
+#ARGS=`cat stage_to_remote1.args`
+#swift -config swift.properties -sites.file sites.template.xml -tc.file tc.template.data stage_to_remote1.swift $ARGS
+
+
+#./stage_from_remote.setup.sh
+#ARGS=`cat stage_from_remote.args`
+#swift -config swift.properties -sites.file sites.template.xml -tc.file tc.template.data stage_from_remote.swift $ARGS
+
+./stage_to_remote1x1.setup.sh
+ARGS=`cat stage_to_remote1x1.args`
+swift -config swift.properties -sites.file sites.template.xml -tc.file tc.template.data stage_to_remote1x1.swift $ARGS

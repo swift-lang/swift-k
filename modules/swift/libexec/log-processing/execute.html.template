@@ -1,0 +1,55 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<!-- (TODO indicate log file name here; indicate report generation
+time here; indicate version of swift that was used - if locally modified
+print a big red warning) -->
+
+<hr />
+<h2>Summary of execution</h2>
+<p>This plot shows the state of executions over time. When a SwiftScript
+program makes a procedure call, an execution will appear on this plot
+in START state. Over time, jobs should end up either in END_SUCCESS or
+END_FAILURE states.
+</p>
+<img src="execute-trails.png" />
+
+<p>Final status totals:</p>
+<pre>
+include(`execute.lastsummary')
+</pre>
+
+<h2>execute</h2>
+<p>Executions 
+(<a href="execute.event">text file of events</a>)
+(these are what appear as procedure invocations in SwiftScript
+and are rougly analogous to VDL1 derivations):</p>
+<img src="execute.png" />
+<p>The number of execute tasks in progress at once (for each time t, count the 
+number of event lines on the above graph that are drawn at time t):</p>
+<img src="execute-total.png"/>
+
+<p>Execute events ordered by start time</p>
+<img src="execute.sorted-start.png" />
+
+<p>Breakdown of last known status for execute:</p>
+<pre>
+include(`execute.lastsummary')
+</pre>
+
+<p>execute trails:</p>
+<img src="execute-trails.png" />
+
+<hr />
+<h2>general stats</h2>
+<p>Some execution counts:</p>
+<pre>
+include(`execution-counts.txt')
+</pre>
+
+<p>end</p>
+</body>

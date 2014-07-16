@@ -1,0 +1,105 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+use FindBin qw($Bin);
+use lib "$FindBin::Bin/../lib/perl";
+use File::Basename;
+use File::Path;
+use Getopt::Long qw(GetOptionsFromArray);
+use Cwd;
+
+Getopt::Long::Configure("pass_through");
+
+my $option_tcfile;		# Value of -tc.file option
+my $option_sitesfile;		# Value of -sites.file option
+my $option_help;                # Print help
+my $option_version;             # Print version number
+my $run_directory;		# Run directory to be created, run.NNNN
+my @new_swift_args;		# New command line arguments
+my @original_swift_args;	# Original arguments
+
+
+# Print error, and prevent Swift from running
+sub swiftquit {
+   print STDERR $_[0] . "\n";
+   print " --SWIFTRUNQUIT ";
+   if (defined($run_directory) && -d "$run_directory") { 
+      rmtree $run_directory || die "Failed to remove $run_directory: $!\n";
+   }
+   exit 1;
+} 
+
+# Getopt::Long can't accept dots in arguments, work around to make things easy
+foreach my $arg(@ARGV) {
+   $arg =~ s/sites.file/sitesfile/g;
+   $arg =~ s/tc.file/tcfile/g;
+}
+
+# Command line arguments we care about
+@original_swift_args = @ARGV;
+GetOptionsFromArray(
+           \@original_swift_args, 
+           'help'                  => \$option_help,
+           'sitesfile=s'           => \$option_sitesfile,
+           'tcfile=s'              => \$option_tcfile,
+           'version'               => \$option_version,
+);
+
+# If -version or -help is specified, pass and exit
+if ($option_help) {
+   print "-help\n";
+   exit;
+} 
+elsif ($option_version) {
+   print "-version\n";
+   exit;
+}
+elsif ($option_sitesfile) {
+   print "-sites.file x\n";
+   exit;
+}
+elsif ($option_tcfile) {
+   print "-tc.file x\n";
+   exit;
+}
+
+# Create/increment run directory
+my $run_number = 1;
+my @run_directories = <run[0-9][0-9][0-9]>;
+
+# TODO: there is no guarantee that directories will be listed in order!!
+if(@run_directories) {
+   $run_number = $run_directories[-1];
+   $run_number =~ s/run//g;
+   $run_number++;
+}
+
+
+# Verify Swift is found in PATH
+my $swift_etc_directory = dirname($0) . "/../etc";
+if( ! -d $swift_etc_directory ) { &swiftquit("Unable to find a valid Swift installation"); }
+
+$run_directory = getcwd() . "/" . sprintf "run%03s", $run_number;
+mkdir($run_directory) || &swiftquit("Unable to create run directory $run_directory");
+
+@new_swift_args = ("-Dscript.dir=$run_directory/scripts");
+push(@new_swift_args, "-Drestart.log.name=$run_directory/restart.log");
+push(@new_swift_args, "-swiftoutlog=$run_directory/swift.out");
+push(@new_swift_args, "-runid " . basename($run_directory));
+push(@new_swift_args, "-Ddebug.dir.prefix=" . basename($run_directory) . "/");  
+push(@new_swift_args, "-logfile $run_directory/swift.log");
+
+$ENV{RUNDIRECTORY} = "$run_directory";
+
+while( @ARGV ) {
+   my $option = shift;
+   push( @new_swift_args, $option );
+}
+
+
+foreach my $arg( @new_swift_args ) {
+   print "$arg ";
+}
+
+print "\n";

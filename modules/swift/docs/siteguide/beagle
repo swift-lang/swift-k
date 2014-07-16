@@ -1,0 +1,219 @@
+Beagle (Cray XE6)
+----------------
+
+Beagle is a Cray XE6 supercomputer at UChicago. It employs a batch-oriented
+computational model where-in a PBS schedular accepts user's jobs and queues
+them in the queueing system for execution.
+
+The computational model requires a user to prepare the submit files, track job
+submissions, chackpointing, managing input/output data and handling exceptional
+conditions manually.  Running Swift under Beagle can accomplish the above tasks
+with least manual user intervention and maximal oppurtunistic computation time
+on Beagle queues. In the following sections, we discuss more about specifics
+of running Swift on Beagle. A more detailed information about Swift and its
+workings can be found on Swift documentation page here:
+
+----
+http://swiftlang.org/docs/index.php
+----
+
+More information on Beagle can be found on UChicago Beagle website here:
+
+----
+http://beagle.ci.uchicago.edu
+----
+
+Requesting Access
+~~~~~~~~~~~~~~~~~
+
+If you do not already have a Computation Institute (CI) account, you can
+request one at https://www.ci.uchicago.edu/accounts/. This page will give you a
+list of resources you can request access to.
+
+If you already have an existing CI account, but do not have access to Beagle,
+send an email to support@ci.uchicago.edu to request access.
+
+Connecting to a login node
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Once you have account, you should be able to access a Beagle login
+node with the following command:
+
+-----
+ssh yourusername@login.beagle.ci.uchicago.edu
+-----
+
+Getting Started with Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Follow the steps outlined below to get started with Swift on Beagle:
+
+*step 1.* Load the Swift and Sun-java module on Beagle as follows: +module load swift sun-java+
+
+*step 2.* Create and change to a directory where your Swift related work will
+stay. (say, +mkdir swift-lab+, followed by, +cd swift-lab+)
+
+*step 3.* To get started with a simple example running +/bin/cat+ to read an
+input file +data.txt+ and write to an output file +f.nnn.out+, start with writing a simple swift source script as follows:
+
+-----
+type file;
+
+/* App definition */
+app (file o) cat (file i)
+{
+  cat @i stdout=@o;
+}
+
+file out[]<simple_mapper; location="outdir", prefix="f.",suffix=".out">;
+file data<"data.txt">;
+
+/* App invocation: n times */
+foreach j in [1:@toint(@arg("n","1"))] {
+  out[j] = cat(data);
+}
+-----
+
+*step 4.*  The next step is to create a sites file. An example sites file (sites.xml) is shown as follows:
+
+-----
+<config>
+  <pool handle="pbs">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <!-- replace with your project -->
+    <profile namespace="globus" key="project">CI-CCR000013</profile>
+
+    <profile namespace="globus" key="providerAttributes">
+                     pbs.aprun;pbs.mpp;depth=24</profile>
+
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="maxTime">1000</profile>
+    <profile namespace="globus" key="slots">1</profile>
+    <profile namespace="globus" key="nodeGranularity">1</profile>
+    <profile namespace="globus" key="maxNodes">1</profile>
+
+    <profile namespace="karajan" key="jobThrottle">.63</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+
+    <filesystem provider="local"/>
+    <!-- replace this with your home on lustre -->
+    <workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+  </pool>
+</config>
+-----
+
+*step 5.* In this step, we will see the config and tc files. The config file (cf) is as follows:
+
+-----
+wrapperlog.always.transfer=true
+sitedir.keep=true
+execution.retries=1
+lazy.errors=true
+use.provider.staging=true
+provider.staging.pin.swiftfiles=false
+foreach.max.threads=100
+provenance.log=false
+-----
+
+The tc file (tc) is as follows:
+
+-----
+pbs cat /bin/cat null null null
+-----
+
+More about config and tc file options can be found in the Swift link:http://swiftlang.org/docs/index.php[documentation].
+
+*step 6.* Run the example using following commandline:
+
+-----
+swift -config cf -tc.file tc -sites.file sites.xml catsn.swift -n=1
+-----
+
+You can further change the value of +-n+ to any arbitrary number to run that
+many number of concurrent +cat+
+
+*step 7.* Swift will show a status message as "done" after the job has completed its run in the queue. Check the output in the generated +outdir+ directory (+ls outdir+)
+
+----
+Swift 0.93RC5 swift-r5285 cog-r3322
+
+RunID: 20111218-0246-6ai8g7f0
+Progress:  time: Sun, 18 Dec 2011 02:46:33 +0000
+Progress:  time: Sun, 18 Dec 2011 02:46:42 +0000  Active:1
+Final status:  time: Sun, 18 Dec 2011 02:46:43 +0000  Finished successfully:1
+----
+
+Larger Runs on Beagle
+~~~~~~~~~~~~~~~~~~~~~
+A key factor in scaling up Swift runs on Beagle is to setup the sites.xml parameters.
+The following sites.xml parameters must be set to scale that is intended for a large run:
+
+ * *maxTime* : The expected walltime for completion of your run. This parameter is accepted in seconds.
+ * *slots* : This parameter specifies the maximum number of pbs jobs/blocks that the coaster scheduler will have running at any given time. On Beagle, this number will determine how many qsubs swift will submit for your run. Typical values range between 40 and 60 for large runs.
+ * *nodeGranularity* : Determines the number of nodes per job. It restricts the number of nodes in a job to a multiple of this value. The total number of workers will then be a multiple of jobsPerNode * nodeGranularity. For Beagle, jobsPerNode value is 24 corresponding to its 24 cores per node.
+ * *maxNodes* : Determines the maximum number of nodes a job must pack into its qsub. This parameter determines the largest single job that your run will submit.
+ * *jobThrottle* : A factor that determines the number of tasks dispatched simultaneously. The intended number of simultaneous tasks must match the number of cores targeted. The number of tasks is calculated from the jobThrottle factor is as follows:
+
+----
+Number of Tasks = (JobThrottle x 100) + 1
+----
+
+Following is an example sites.xml for a 50 slots run with each slot occupying 4 nodes (thus, a 200 node run):
+
+-----
+<config>
+  <pool handle="pbs">
+    <execution provider="coaster" jobmanager="local:pbs"/>
+    <profile namespace="globus" key="project">CI-CCR000013</profile>
+
+    <profile namespace="globus" key="ppn">24:cray:pack</profile>
+
+    <!-- For swift 0.93
+    <profile namespace="globus" key="ppn">pbs.aprun;pbs.mpp;depth=24</profile>
+    -->
+
+    <profile namespace="globus" key="jobsPerNode">24</profile>
+    <profile namespace="globus" key="maxTime">50000</profile>
+    <profile namespace="globus" key="slots">50</profile>
+    <profile namespace="globus" key="nodeGranularity">4</profile>
+    <profile namespace="globus" key="maxNodes">4</profile>
+
+    <profile namespace="karajan" key="jobThrottle">48.00</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+
+    <filesystem provider="local"/>
+    <workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+  </pool>
+</config>
+-----
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+In this section we will discuss some of the common issues and remedies while using Swift on Beagle. The origin of these issues can be Swift or the Beagle's configuration, state and user configuration among other factors. We try to identify maximum known issues and address them here:
+
+* Command not found: Swift is installed on Beagle as a module. If you see the following error message:
+
+-----
+If 'swift' is not a typo you can run the following command to lookup the package that contains the binary:
+    command-not-found swift
+-bash: swift: command not found
+-----
+
+The most likely cause is the module is not loaded. Do the following to load the Swift module:
+
+-----
+$ module load swift sun-java
+Swift version swift-0.93 loaded
+sun-java version jdk1.7.0_02 loaded
+-----
+
+* Failed to transfer wrapperlog for job cat-nmobtbkk and/or Job failed with an exit code of 254. Check the <workdirectory> element on the sites.xml file.
+
+-----
+<workdirectory >/home/ketan/swift.workdir</workdirectory>
+-----
+
+It is likely that it is set to a path where the compute nodes can not write, e.g. your /home directory. The remedy for this error is to set your workdirectory to the /lustre path where swift could write from compute nodes.
+
+----
+<workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+----

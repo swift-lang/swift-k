@@ -1,0 +1,263 @@
+Swift Test Suite Usage Notes
+=============================
+:Author Initials: swift-devel
+:website: http://www.ci.uchicago.edu/swift/main/
+
+The script will (optionally) checkout Swift, run several tests in a
+subdirectory called *run-_DATE_*, and generate useful HTML output and
+*tests.log*.  Tests are grouped into test *GROUPs*.
+
+.Usage:
+******************************************
+ suite.sh <options>* <GROUPLISTFILE|GROUP>
+******************************************
+
+1. Primary Usage Mode
+---------------------
+.Options:
+[width="30%",cols="s,15",options="header"]
+|==============================================
+|Options  |  Output
+|-a       |  Do not run ant dist.
+|-c       |  Do not remove dist (clean)
+|-f       |  Generate plain text output file.
+|-h       |  This table.
+|-k <N>   |  Skip first N tests.
+|-n <N>   |  Run N tests and quit.
+|-p       |  Do not build the package.
+|-s       |  Do not do a fresh svn checkout.
+|-t       |  Tree mode (alias: -a,-c,-g,-p,-s)
+|-x       |  Do not continue after a failure.
+|-v       |  Verbose (set -x, HTML comments).
+|-o output|  Location for cog and output.
+|<GROUP>  |  GROUP argument.
+|==============================================
+Assuming your code is in *_/tmp/cog_*, where you
+have the conventional *_cog/modules/swift_* configuration,
+and you have done an *ant dist*, you can run
+*********************************************************
+ suite.sh -t -o /tmp $PWD/groups/group-all-local.sh
+*********************************************************
+or *cd* into */tmp* and run
+**************************************************************
+ suite.sh -t cog/modules/swift/tests/groups/group-all-local.sh
+**************************************************************
+The *-t* option is "Tree mode"- as in, "test my existing source tree"
+
+Run *suite.sh -h* for quick help
+When something goes wrong, find and check *tests.log* or use *-v*
+
+The script generates by default an HTML report, use *-f* to change
+the output to plain text.
+
+2. Swift Location
+-----------------
+The *TOPDIR* (*PWD* by default) is set with the *-o* option. Code is checked out into this directory or must already exist there.
+The variables *COG_VERSION* and *SWIFT_VERSION* must be set for code checkout.
+
+.e.g.
+*********************************************************************
+ COG_VERSION=branches/4.1.8, SWIFT_VERSION=branches/release-0.92
+*********************************************************************
+
+Swift is compiled and installed in its source tree.
+The run is executed in *RUNDIR* (*TOPDIR/RUNDIRBASE*)
+The build test is started in *TOPDIR*.
+Everything for a Swift test is written in its *RUNDIR*
+The temporary output always goes to *OUTPUT* (*TOPDIR/exec.out*)
+
+3. Helper Scripts
+-----------------
+Each *.swift* test may be accompanied by a:
+
+- *.setup.sh*
+- *.check.sh*
+- *.clean.sh*
+- *.timeout specifier.*
+
+The scripts may setup and inspect files in *RUNDIR*
+including *exec.out* which must be accessed in *stdout.txt*
+because the currently running tested process writes to
+*exec.out*; *stdout.txt* is a copy.
+
+The *GROUP* scripts can read the *GROUP* variable. The timeout number in the *\*.timeout* file overrides the default timeout.
+
+4. Test Structure
+-----------------
+
+Tests are *GROUPed* into directories. Each *GROUP* directory has:
+
+1. a list of *.swift* tests (plus *.sh* scripts).
+2. optionally a *sites.template.xml*.
+3. optionally a *tc.template.data*.
+4. optionally a *fs.template.data*.
+5. optionally a *swift.properties*.
+6. optionally a *title.txt*.
+7. preferably a *README.txt*.
+8. optionally a *.timeout*.
+
+****************************************************************************************************
+Template files are lightly processed by *sed* before use. Missing files will be pulled from *_swift/etc_*
+****************************************************************************************************
+
+5. What Tests are Run
+---------------------
+Each *.swift* file is a test; *suite.sh* launches all tests in each *GROUP* in the *GROUPLIST*.
+
+The *GROUPLIST* is obtained from the *GROUPARG*.
+
+1. The *GROUPARG* can be an external script in the groups/ subdirectory by the name of *GROUPLISTFILE*.
+The *GROUPLISTFILE*:
+
+ a. sets the array.
+ b. checks any variables needed by *_make_sites_sed()_*.
+
+2. Or, the *GROUPARG* can just be a directory name that is the name of the singleton *GROUP*.
+
+*OUTPUT* is the stdout of the current test *stdout.txt* retains _stdout_ from the previous test (for *.clean.sh*)
+*output_*
+*
+*.txt* is the HTML-linked permanent output from a test.
+
+*******************************************
+All timeouts in this script are in seconds
+*******************************************
+
+6. PID Tree
+-----------
+Background processes are used so that hung Swift jobs can be killed
+These are the background processes (*PIDs* are tracked)
+
+- suite.sh
+ a.  monitor()
+ b.  sleep
+- process_exec()
+ a. bin/swift
+ b. java
+
+*PID* management is now pretty good, but you may want to check *ps*
+from time to time and keep *xload* running.
+Note that Coasters may temporarily prevent Swift from exiting upon
+receiving a signal
+
+(*cf. CoasterService.addLocalHook()*).
+
+7. Failure Cases
+----------------
+Some cases are designed to cause Swift to crash.  These
+SwiftScripts contain the token *_THIS-SCRIPT-SHOULD-FAIL_* somewhere.
+
+The response of *suite.sh* to the exit code of these Swift
+executions is reversed.
+
+Additionally, some tests may be in a known state of disrepair.  These
+SwiftScripts contain the token *_SKIP-THIS-TEST_* somewhere, which will
+cause the test suite to skip that test.
+
+8. Schedulers
+-------------
+Environment must contain *PROJECT*, *QUEUE*, and *WORK*.
+These variables will be incorporated into the *sites.xml*
+via:
+
+*make_sites_sed()* -> *group_sites_xml()*
+
+Note that some schedulers restrict your choice of *RUNDIR*
+
+9. Naming
+---------
+Site-specific test groups are in _providers/_.
+These are named:
+
+_providers/<provider description>/_
+
+or:
+
+_providers/<provider description>/<site>_
+
+.E.g.,
+***********************************
+ providers/local-pbs/PADS
+***********************************
+
+10. Adding Tests to Existing Groups
+-----------------------------------
+Simply add a *.swift* file to a *GROUP* directory.
+That script will be launched when the *GROUP* is tested.
+Optionally, you may add helper scripts (see above) to setup,
+check, and clean up after tests.
+
+The helper scripts are launched from the *RUNDIR* and have access
+to files in *RUNDIR* and environment variables from *suite.sh*
+such as *$GROUP*. Thus, you can:
+
+.Bring in input files:
+*********************************************************
+ cp $GROUP/input-file.txt .
+*********************************************************
+
+.Check output:
+*********************************************************
+ grep TEXT1 exec.out
+ grep TEXT2 output-file.txt
+*********************************************************
+
+.Clean up (optional):
+*********************************************************
+ rm output-file.txt
+*********************************************************
+
+The results are added to the HTML output, etc., automatically.
+The prefix number on each test is simply for sorting
+
+.E.g.,
+******************
+ ls *.swift
+******************
+
+11. Adding Test Groups
+----------------------
+If no existing group has the sites, tc, etc. that you need to test,
+you will need to add a test group.  Simply create a new directory.
+Add files from *TEST STRUCTURE* if necessary; missing files will be
+filled in with defaults.
+
+12. Improving This Test Suite
+-----------------------------
+This is a work in progress. Here are some things you can do:
+
+- Run it!  Report problems to swift-devel.
+- Fix broken tests.
+- Break down test *GROUPs* into smaller, meaningful *GROUPs* ; it would be good to limit *GROUP* sizes to 20 or so tests.
+- Current work has focused on the HTML and stdout output, which is intended to be high-level and clean.
+
+***********************************************************************************
+Using -v results in extremely verbose output.
+Some happy medium could be achieved by improving the use of the *LOG* (*tests.log*).
+************************************************************************************
+
+13. Problems
+------------
+If you have a problem:
+
+- Use *-v* to get the *set -x* output.
+- Use *ps -H* to get the *PID* tree.
+
+14. Warnings
+------------
+- *suite.sh* uses *shopt*.
+
+15. Additional Notes
+---------------------
+- *run-suite.sh*:
+ a. Wrapper for *suite.sh*.
+ b. Env variables set may be customized by user.
+
+- *meta.sh*:
+ a. Wrapper for *run-suite.sh*.
+ b. used to execute _run-suite/suite.sh_ from a remote site using *ssh*.
+
+.Example usage:
+*********************************************************************************************
+ meta.sh login.pads.ci.uchicago.edu /home/skenny/swift_runs/tests sites/pads-pbs-coasters.sh
+*********************************************************************************************

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# give the path to info directory as parameter
+
+for infofn in $1/*-info; do
+  jobid=$(echo $infofn | sed 's%^.*/\([^/]*\)-info$%\1%' )
+  echo Processing info file for job $jobid in file $infofn >&2
+  jobbase=$(echo $jobid | sed 's/^\(.*\)-........$/\1/')
+# Progress  2007-10-29 10:05:50+0000  RM_JOBDIR
+  grep -E '^Progress ' $infofn | sed "s/^Progress *\([^ ]* [^ ]*\) *\([^ ]*\).*/\1 $jobid \2 $jobbase/"
+done | iso-to-secs | swap-and-sort-and-swap

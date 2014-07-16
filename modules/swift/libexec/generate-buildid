@@ -1,0 +1,11 @@
+#!/bin/bash
+
+UUIDGEN=$(which uuidgen)
+
+if [ -x "$UUIDGEN" ]; then
+  $UUIDGEN
+else
+ # poormans uuidgen
+ echo $(date +%s) $PPID $HOSTNAME
+fi
+

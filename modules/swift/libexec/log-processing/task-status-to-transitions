@@ -1,0 +1,16 @@
+#!/bin/bash
+
+
+while read timems id state; do
+
+# 1206317040.336 touch-vgbev7qi ASSOCIATED 0-1 localhost
+
+ if [ "$timems" = "//time_ms" ]; then
+   true # nop
+ else
+
+  timesec=$(echo $timems / 1000 | bc -l)
+
+  echo $timesec $id $state $annotation
+fi
+done

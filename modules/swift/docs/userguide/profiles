@@ -1,0 +1,296 @@
+== Profiles
+
+Profiles influence the behaviour of Swift when running an +app+ task.
+They are configuration parameters than can be specified for
+sites, for transformation catalog entries, or on a task-by-task as a dynamic
+profile.
+
+Profile entries for a site are specified in the site catalog. Profile
+entries for specific procedures are specified in the transformation
+catalog.  Profile entries for a given task are specified in the +app+
+definition as a dynamic profile.
+
+Karajan namespace
+~~~~~~~~~~~~~~~~~
+maxSubmitRate limits the maximum rate of job submission, in jobs per
+second. For example:
+
+----
+<profile namespace="karajan" key="maxSubmitRate">0.2</profile>
+----
+
+will limit job submission to 0.2 jobs per second (or equivalently, one
+job every five seconds).
+
+jobThrottle allows the job throttle factor (see Swift property
+throttle.score.job.factor to be
+set per site.
+
+initialScore allows the initial score for rate limiting and site
+selection to be set to a value other than 0.
+
+delayBase controls how much a site will be delayed when it performs
+poorly. With each reduction in a sites score by 1, the delay between
+execution attempts will increase by a factor of delayBase.
+
+status.mode allows the status.mode property to be set per-site instead
+of for an entire run. See the Swift configuration properties section for
+more information. (since Swift 0.8)
+
+swift namespace
+~~~~~~~~~~~~~~~
+
+storagesize
+
+    limits the amount of space that will be used on the remote site for temporary
+    files. When more than that amount of space is used, the remote temporary file
+    cache will be cleared using the algorithm specified in the caching.algorithm
+    property.
+
+wrapperInterpreter 
+
+    The wrapper interpreter indicates the command (executable) to be used to run
+    the Swift wrapper script. The default is "/bin/bash" on Unix sites and
+    "cscript.exe" on Windows sites.
+
+wrapperInterpreterOptions
+
+    Allows specifying additional options to the executable used to run the Swift
+    wrapper. The defaults are no options on Unix sites and "Nologo" on Windows
+    sites.
+
+wrapperScript
+
+    Specifies the name of the wrapper script to be used on a site. The defaults are
+    "_swiftwrap" on Unix sites and "_swiftwrap.vbs" on Windows sites. If you
+    specify a custom wrapper script, it must be present in the "libexec" directory
+    of the Swift installation.
+
+cleanupCommand
+
+    Indicates the command to be run at the end of a Swift run to clean up the run
+    directories on a remote site. Defaults are "/bin/rm" on Unix sites and
+    "cmd.exe" on Windows sites
+
+cleanupCommandOptions
+
+    Specifies the options to be passed to the cleanup command above. The options
+    are passed in the argument list to the cleanup command.  After the options, the
+    last argument is the directory to be deleted. The default on Unix sites is
+    "-rf". The default on Windows sites is ["/C", "del", "/Q"].
+
+
+Globus namespace
+~~~~~~~~~~~~~~~~
+maxwalltime specifies a walltime limit for each job, in minutes.
+
+The following formats are recognized:
+
+    * Minutes
+    * Hours:Minutes
+    * Hours:Minutes:Seconds
+
+Example:
+----
+localhost echo /bin/echo INSTALLED INTEL32::LINUX GLOBUS::maxwalltime="00:20:00"
+----
+
+When replication is enabled (see replication), then walltime will also be
+enforced at the Swift client side: when a job has been active for more than
+twice the maxwalltime, Swift will kill the job and regard it as failed.
+
+When clustering is used, maxwalltime will be used to select which jobs will be
+clustered together. More information on this is available in the clustering
+section.
+
+When coasters as used, maxwalltime influences the default coaster worker
+maxwalltime, and which jobs will be sent to which workers. More information on
+this is available in the coasters section.
+
+queue is used by the PBS, GRAM2 and GRAM4 providers. This profile entry
+specifies which queue jobs will be submitted to. The valid queue names are
+site-specific.
+
+host_types specifies the types of host that are permissible for a job to run
+on. The valid values are site-specific. This profile entry is used by the GRAM2
+and GRAM4 providers.
+
+condor_requirements allows a requirements string to be specified when
+Condor is used as an LRM behind GRAM2. Example:
+
+----
+<profile namespace="globus" key="condor_requirements">Arch == "X86_64" || Arch="INTEL"</profile>
+----
+
+slots
+
+    When using coasters, this parameter specifies the maximum number of jobs/blocks
+    that the coaster scheduler will have running at any given time. The default is
+    20.
+
+jobsPerNode
+
+    This parameter determines how many coaster workers are started one each compute
+    node. The default value is 1.
+
+nodeGranularity
+
+    When allocating a coaster worker block, this parameter restricts the number of
+    nodes in a block to a multiple of this value.  The total number of workers will
+    then be a multiple of workersPerNode * nodeGranularity. The default value is 1.
+
+allocationStepSize
+
+    Each time the coaster block scheduler computes a schedule, it will attempt to
+    allocate a number of slots from the number of available slots (limited using
+    the above slots profile). This parameter specifies the maximum fraction of
+    slots that are allocated in one schedule. Default is 0.1.
+
+lowOverallocation
+
+    Overallocation is a function of the walltime of a job which determines how
+    long (time-wise) a worker job will be. For example, if a number of 10s jobs
+    are submitted to the coaster service, and the overallocation for 10s jobs
+    is 10, the coaster scheduler will attempt to start worker jobs that have a
+    walltime of 100s. The overallocation is controlled by manipulating the
+    end-points of an overallocation function. The low endpoint, specified by
+    this parameter, is the overallocation for a 1s job. The high endpoint is
+    the overallocation for a (theoretical) job of infinite length. The
+    overallocation for job sizes in the [1s, +inf) interval is determined using
+    an exponential decay function:
+    
+    overallocation(walltime) = walltime * (lowOverallocation -
+    highOverallocation) * exp(-walltime * overallocationDecayFactor) +
+    highOverallocation
+
+    The default value of lowOverallocation is 10.
+
+highOverallocation
+
+    The high overallocation endpoint (as described above). Default: 1
+
+overallocationDecayFactor
+
+    The decay factor for the overallocation curve. Default 0.001 (1e-3).
+
+spread
+
+    When a large number of jobs is submitted to coaster service, the work is
+    divided into blocks. This parameter allows a rough control of the relative
+    sizes of those blocks. A value of 0 indicates that all work should be divided
+    equally between the blocks (and blocks will therefore have equal sizes). A
+    value of 1 indicates the largest possible spread. The existence of the spread
+    parameter is based on the assumption that smaller overall jobs will generally
+    spend less time in the queue than larger jobs. By submitting blocks of
+    different sizes, submitted jobs may be finished quicker by smaller blocks.
+    Default: 0.9.
+
+reserve
+
+    Reserve time is a time in the allocation of a worker that sits
+    at the end of the worker time and is useable only for critical
+    operations. For example, a job will not be submitted to a worker if it
+    overlaps its reserve time, but a job that (due to inaccurate walltime
+    specification) runs into the reserve time will not be killed (note that
+    once the worker exceeds its walltime, the queuing system will kill the
+    job anyway). Default 10 (s).
+
+maxnodes
+
+    Determines the maximum number of nodes that can be allocated
+    in one coaster block. Default: unlimited.
+
+maxtime
+
+    Indicates the maximum walltime, in seconds, that a coaster
+    block can have.
+    Default: unlimited.
+
+remoteMonitorEnabled
+
+    If set to "true", the client side will get a Swing window showing, graphically,
+    the state of the coaster scheduler (blocks, jobs, etc.). Default: false
+
+internalhostname
+
+    If the head node has multiple network interfaces,
+    only one of which is visible from the worker nodes. The choice of
+    which interface is the one that worker nodes can connect to is a
+    matter of the particular cluster. This must be set in the your
+    sites file to clarify to the workers which exact interface on the
+    head node they are to try to connect to.
+
+env namespace
+~~~~~~~~~~~~~
+
+Profile keys set in the env namespace will be set in the unix
+environment of the executed job. Some environment variables influence
+the worker-side behaviour of Swift:
+
+PATHPREFIX
+
+    set in env namespace profiles. This path is prefixed onto the start of the
+    PATH when jobs are executed. It can be more useful than setting the PATH
+    environment variable directly, because setting PATH will cause the
+    execution site's default path to be lost.
+
+SWIFT_JOBDIR_PATH 
+
+    set in env namespace profiles. If set, then Swift will use the path
+    specified here as a worker-node local temporary directory to copy input
+    files to before running a job. If unset, Swift will keep input files on the
+    site-shared filesystem. In some cases, copying to a worker-node local
+    directory can be much faster than having applications access the
+    site-shared filesystem directly.
+
+SWIFT_EXTRA_INFO 
+
+    set in env namespace profiles. If set, then Swift will execute the command
+    specified in SWIFT_EXTRA_INFO on execution sites immediately before each
+    application execution, and will record the stdout of that command in the
+    wrapper info log file for that job. This is intended to allow software
+    version and other arbitrary information about the remote site to be
+    gathered and returned to the submit side.  (since Swift 0.9)
+
+SWIFT_GEN_SCRIPTS 
+
+    set in the env namespace profiles. This variable just needs to be set, it
+    doesn't matter what it is set to. If set, then Swift will keep the script
+    that was used to execute the job in the job directory.  The script will be
+    called run.sh and will have the command line that Swift tried to execute
+    with.
+
+=== Dynamic profiles
+
+To set a profile setting based on the value of a Swift variable, you
+must use dynamic profiles.  This allows you to set profile settings in
+the +globus+ namespace.
+
+----
+app (file o) c(file i, int p)
+{
+  profile "mpi.processes" = 2+p;
+  profile "mpi.ppn" = 1;
+
+  my_mpi_program @i @o;
+}
+----
+
+This would be equivalent to the sites file settings:
+
+----
+<profile namespace="globus" key="mpi.processes">4</profile>
+<profile namespace="globus" key="mpi.ppn">1</profile>
+----
+
+except, of course, the number of MPI processes may not be dynamically
+set by the value of Swift variable +p+ in the sites file.
+
+Additional beneficial use cases of dynamic profiles may be to set the
++maxwalltime+ or +queue+ profile settings.
+
+=== Profile debugging
+
+Swift profiles, generally speaking, are converted into Java CoG
+"attributes", which are attached to each CoG task.  Thus, when reading
+the log or debugging, look for messages regarding "attributes".

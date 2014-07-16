@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cat /tmp/swift-plot-log-e5V3P7SAMTe1MHLN/karatasks.JOB_SUBMISSION.eip | cut -f 1,2 -d ' ' | sed 's/\.[0-9]*//' > /tmp/karaseq
+
+cat /Users/benc/work/logs/scale/benc-uptime.log  | cut -d ' ' -f 1,12 | sed 's/,//' > /tmp/loadavgseq
+
+./temporal-join /tmp/karaseq /tmp/loadavgseq

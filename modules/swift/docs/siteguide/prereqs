@@ -1,0 +1,8 @@
+Prerequisites
+-------------
+
+This guide assumes that you have already downloaded and installed Swift.
+It assumes that Swift is in your PATH and that you have a working
+version of Sun Java 1.5+. For more information on downloading and
+installing Swift, see the
+http://www.ci.uchicago.edu/swift/guides/release-0.93/quickstart/quickstart.html[Swift Quickstart Guide].

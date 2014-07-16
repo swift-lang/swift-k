@@ -1,0 +1,3 @@
+@suppressUnusedWarning
+@extends AbstractFileMapperParams
+Integer padding = 4

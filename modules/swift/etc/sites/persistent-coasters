@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
+  <pool handle="persistent-coasters">
+    <execution provider="coaster-persistent" url="_SERVICEURL_" jobmanager="local:local"/>
+    <profile namespace="globus" key="workerManager">passive</profile>
+    <profile namespace="globus" key="jobsPerNode">_JOBSPERNODE_</profile>
+    <profile key="jobThrottle" namespace="karajan">_JOBTHROTTLE_</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <filesystem provider="local" url="none" />
+    <workdirectory>_WORK_</workdirectory>
+  </pool>
+</config>

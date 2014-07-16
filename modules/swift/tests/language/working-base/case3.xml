@@ -1,0 +1,95 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <procedure name="fn" src="line 2">
+
+      <output 
+    name="f" type="int"
+
+     xsi:nil="true" />
+
+      <input 
+    name="i" type="int"
+
+     xsi:nil="true" />
+    <assign src="line 2">
+     <variableReference>f</variableReference>
+     <variableReference>i</variableReference>
+    </assign>
+  </procedure>
+  <procedure name="f" src="line 4">
+
+      <input 
+    name="i" type="int"
+
+     xsi:nil="true" />
+    <variable name="f" type="int" isGlobal="false" xsi:nil="true"/>
+    <assign src="line 4">
+     <variableReference>f</variableReference>
+     <variableReference>i</variableReference>
+    </assign>
+  </procedure>
+  <variable name="d" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 7">
+   <variableReference>d</variableReference>
+   <integerConstant>99</integerConstant>
+  </assign>
+  <variable name="g" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="j" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="t" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="uuu" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="e" type="int" isGlobal="false" xsi:nil="true"/>
+  <variable name="s" type="string" isGlobal="false" xsi:nil="true"/>
+  <switch>
+    <variableReference>d</variableReference>
+    <case>
+      <integerConstant>1</integerConstant>
+      <statements>
+      </statements>
+    </case>
+    <case>
+      <integerConstant>9</integerConstant>
+      <statements>
+      </statements>
+    </case>
+    <case>
+      <integerConstant>3</integerConstant>
+      <statements>
+      <call proc="f" src="line 15">
+        <input><variableReference>g</variableReference></input>
+      </call>
+      </statements>
+    </case>
+    <case>
+      <integerConstant>5</integerConstant>
+      <statements>
+      <assign src="line 18">
+       <variableReference>j</variableReference>
+       <integerConstant>7</integerConstant>
+      </assign>
+      <call proc="fn" src="line 18">
+        <output><variableReference>uuu</variableReference></output>
+        <input><arith op="+">
+          <arith op="+">
+            <arith op="+">
+              <variableReference>t</variableReference>
+              <integerConstant>7</integerConstant>
+            </arith>
+            <variableReference>e</variableReference>
+          </arith>
+          <arith op="*">
+            <integerConstant>3</integerConstant>
+            <integerConstant>2</integerConstant>
+          </arith>
+        </arith></input>
+      </call>
+      </statements>
+    </case>
+    <default>
+      <assign src="line 21">
+       <variableReference>s</variableReference>
+       <stringConstant>the default</stringConstant>
+      </assign>
+    </default>
+  </switch>
+</program>

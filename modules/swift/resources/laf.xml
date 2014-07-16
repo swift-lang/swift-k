@@ -1,0 +1,95 @@
+<synth>
+  <object id="painter" class="org.griphyn.vdl.karajan.monitor.monitors.swing.MSynthPainter" />
+  
+  <style id="compact">
+    <font name="SansSerif" size="12"/>
+    <state>
+      <color value="GRAY" type="BACKGROUND"/>
+      <color value="BLACK" type="FOREGROUND"/>
+    </state>
+    <insets top="2" bottom="2" left="4" right="4"/>
+    <painter idref="painter" /> 
+  </style>
+  
+  <style id="spaced">
+    <font name="SansSerif" size="12"/>
+    <state>
+      <color value="GRAY" type="BACKGROUND"/>
+      <color value="BLACK" type="FOREGROUND"/>
+    </state>
+    <insets top="2" bottom="0" left="8" right="8"/>
+    <painter idref="painter" /> 
+  </style>
+  
+  <style id="noinsets">
+  	<font name="SansSerif" size="12"/>
+    <state>
+      <color value="GRAY" type="BACKGROUND"/>
+      <color value="BLACK" type="FOREGROUND"/>
+    </state>
+    <insets top="0" bottom="0" left="0" right="0"/>
+    <painter idref="painter" />
+  </style>
+  
+  <style id="window">
+  	<font name="SansSerif" size="12"/>
+    <state>
+      <color value="GRAY" type="BACKGROUND"/>
+      <color value="BLACK" type="FOREGROUND"/>
+    </state>
+    <insets top="16" bottom="16" left="16" right="16"/>
+    <painter idref="painter" />
+  </style>
+  
+  <style id="table">
+  	<property key="Table.rendererUseUIBorder" type="boolean" value="true"/>
+  	<property key="Table.rendererUseTableColors" type="boolean" value="false"/>
+  	<object id="TableGridColor" class="java.awt.Color">
+  		<int>0</int>
+  		<int>0</int>
+  		<int>0</int>
+  		<int>255</int>
+  	</object>
+  	<property key="Table.gridColor" type="idref" value="TableGridColor"/>
+    <state>
+      <color value="#303030" type="BACKGROUND"/>
+      <color value="WHITE" type="FOREGROUND"/>
+    </state>
+    <insets top="16" bottom="16" left="16" right="16"/>
+    <painter idref="painter" />
+  </style>
+  
+  <style id="scroll">
+  	<font name="SansSerif" size="12"/>
+  	<property key="ScrollBar.thumbHeight" type="integer" value="12"/>
+    <state>
+      <color value="GRAY" type="BACKGROUND"/>
+      <color value="BLACK" type="FOREGROUND"/>
+    </state>
+    <insets top="0" bottom="0" left="0" right="0"/>
+    <painter idref="painter" />
+  </style>
+  
+  <style id="button">
+    <state>
+      <painter idref="painter" />
+   </state>
+   <state value="MOUSE_OVER">
+      <painter idref="painter" />
+   </state>
+   <state value="PRESSED">
+      <painter idref="painter" />
+   </state>
+   <property key="Button.margin" type="insets" value="0 0 0 0"/>
+</style>
+
+
+   
+  <bind style="compact" type="region" key=".*"/>
+  <bind style="spaced" type="region" key=".*Tab.*"/>
+  <bind style="noinsets" type="region" key=".*Progress.*"/>
+  <bind style="window" type="region" key=".*TabbedPane"/>
+  <bind style="table" type="region" key="Table"/>
+  <bind style="scroll" type="region" key=".*ScrollBar"/>
+  <bind style="button" type="region" key="Button"/>
+</synth>

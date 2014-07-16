@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($ARGV[0]);
+
+# print 2007-06-12T14:32:15.145455Z 
+
+printf("%d-%02d-%02d", $year+1900, $mon+1, $mday);
+printf("T%02d:%02d:%02d.000Z", $hour, $min, $sec);
+

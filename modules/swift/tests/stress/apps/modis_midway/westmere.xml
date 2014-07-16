@@ -1,0 +1,19 @@
+<config>
+
+  <pool handle="midway">
+    <execution provider="coaster" jobmanager="local:slurm"/>
+    <profile namespace="globus" key="queue">westmere</profile>
+    <profile namespace="globus" key="jobsPerNode">12</profile>
+    <profile namespace="globus" key="maxWalltime">00:05:00</profile>
+    <profile namespace="globus" key="maxTime">3600</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="slots">4</profile>
+    <profile namespace="globus" key="maxNodes">1</profile>
+    <profile namespace="globus" key="nodeGranularity">1</profile>
+    <profile namespace="karajan" key="jobThrottle">.48</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>/tmp/{env.USER}</workdirectory>
+  </pool>
+
+</config>

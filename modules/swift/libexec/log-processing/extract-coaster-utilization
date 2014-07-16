@@ -1,0 +1,27 @@
+#!/bin/bash
+
+LOG=$1
+
+rm -f block-utilization.data
+
+IFS=$'\n'
+for LINE in $(cat coasters.tmp); do
+	TIME=`echo $LINE | sed 's/^\([^ ]*\) .*$/\1/' `
+	ID=`echo $LINE | sed 's/^.*id=\([^ ]*\)\(,.*$\|$\)/\1/'`
+	WALLTIME=`echo $LINE | sed -n 's/^.*BLOCK_REQUESTED.*h=\([^ ]*\)$/\1/p'`
+	if [ "$WALLTIME" != "" ]; then
+		echo "$ID,$WALLTIME" >> block-walltime-hash.tmp
+		echo "$ID,$TIME" >> block-start-time-hash.tmp
+	else
+		if echo $LINE | grep "BLOCK_ACTIVE" >/dev/null; then
+			COUNT=`cat block-count-table.tmp | grep "$ID" | cut -d , -f 2`
+			WALLTIME=`cat block-walltime-table.tmp | grep "$ID" | cut -d , -f 2`
+			STARTTIME=`cat block-start-time-table.tmp | grep "$ID" | cut -d , -f 2`
+			QTIME=`perl -e "print $TIME - $STARTTIME"`
+			SIZE=$(($WALLTIME * $COUNT))
+			echo "$SIZE $QTIME" >> coaster-qwait-size-dist.data
+			echo "$WALLTIME $QTIME" >> coaster-qwait-wtime-dist.data
+			echo "$COUNT $QTIME" >> coaster-qwait-count-dist.data
+		fi
+	fi
+done

@@ -1,0 +1,228 @@
+#!/bin/bash 
+
+# Report a problem and exit
+crash()
+{
+   MSG=$1
+   echo ${MSG} >&2
+   exit 1
+}
+
+# Display usage message
+usage()
+{
+    echo "Usage: $(basename $0) [OPTION]..." >&2
+    echo "Options:" >&2
+    echo "-conf <CONFIG FILE>\
+           Coasters service configuration file (default: coaster-service.conf)" >&2
+}
+
+# Report a problem, then usage, then exit
+usage_crash()
+{
+   MSG=$1
+   echo ${MSG} >&2
+   echo
+   usage
+   exit 1
+}
+
+# Wait for a file to be created, up to given amount of time
+wait_for_file()
+{
+   FILE=$1
+   TIME=$2
+   count=0
+   while [ ! -s "$FILE" ]; do
+      sleep 1
+      (( count += 1 ))
+      if [ $count -ge $TIME ]; then
+         crash "Timed out waiting for coaster port file $FILE"
+      fi
+   done
+}
+
+# Run command, log, and wait for completion
+run_command()
+{
+   command="$@"
+   echo "Running $command" >> $LOG
+   $command >> $LOG 2>&1
+}
+
+# Log and run command in background
+run_command_bg()
+{
+   command="$@"
+   echo "Running $command" >> $LOG
+   $command >> $LOG 2>&1 &
+   echo $! >> $PID_FILE
+}
+
+# Start SSH workers
+start-workers-ssh()
+{
+   waitpids=""
+
+   for MACHINE in $WORKER_HOSTS
+   do
+      # Enable ssh tunneling if needed
+      if [ "$SSH_TUNNELING" == "yes" ]; then
+         run_command_bg ssh -N -T -R *:$LOCAL_PORT:localhost:$LOCAL_PORT "$WORKER_USERNAME@$MACHINE"
+      fi
+
+      # Connect directly
+      echo Starting worker on $MACHINE
+      (
+        run_command ssh $WORKER_USERNAME@$MACHINE "mkdir -p $WORKER_LOCATION && mkdir -p $WORKER_LOG_DIR" ;
+        run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION ;
+        run_command ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL nohup $WORKER_LOCATION/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR &> /dev/null &"
+      ) &
+      waitpids="$waitpids $!"
+   done
+   wait $waitpids
+   return 0
+}
+
+# Start local workers
+start-workers-local()
+{
+   echo Starting worker on local machine
+   run_command_bg $WORKER $WORKERURL LOCAL $WORKER_LOG_DIR
+   return 0
+}
+
+# Start condor workers
+start-workers-scheduler()
+{
+   echo Starting workers
+   run_command $SCHEDULER_COMMAND
+}
+
+# Parse command line arguments
+while [ $# -gt 0 ]; do
+   case $1 in
+      -conf) CMDLN_CONF=$2; shift 2;;
+      *) echo "Do not recognize command line option: $1" 1>&2; usage; exit 1;;
+   esac
+done
+
+# Determine the location of needed files
+export SWIFT_BIN="$( cd "$( dirname "$0" )" && pwd )"
+export WORKER="$SWIFT_BIN/worker.pl"
+export PID_FILE="$HOME/.swift/.coaster-service-pids"
+export COASTER_SERVICE="$SWIFT_BIN/coaster-service"
+export LOG="start-coaster-service.log"
+mkdir -p "$HOME/.swift" || crash "Unable to create $HOME/.swift"
+
+# Import settings
+if [ -f "$CMDLN_CONF" ]; then
+   CONFIG_FILE=$CMDLN_CONF
+elif [ -f "coaster-service.conf" ]; then
+   CONFIG_FILE="coaster-service.conf"
+else
+   usage_crash "Cannot find coaster-service.conf!"
+fi
+
+echo "Start-coaster-service..."
+echo "Configuration: $CONFIG_FILE"
+source $CONFIG_FILE
+
+# Determine IP address to which workers should connect
+if [ -z "$IPADDR" ]; then
+   if [ "$SSH_TUNNELING" == "yes" ]; then
+      IPADDR=localhost
+   elif [ -n "$GLOBUS_HOSTNAME" ]; then
+      IPADDR=$GLOBUS_HOSTNAME
+   else
+      crash "Unable to determine IP address"
+   fi
+fi
+
+echo Service address: $IPADDR
+
+# Verify worker script is there
+if [ ! -x "$WORKER" ]; then
+   crash "Error: Unable to find worker $WORKER!"
+fi
+
+# Verify we can find coaster service
+if [ ! -x "$COASTER_SERVICE" ]; then
+   crash "Unable to find $COASTER_SERVICE!"
+fi
+
+# Create files for storing port info, if needed
+if [ -z "$LOCAL_PORT" ]; then
+   LOCAL_PORT_FILE=$( mktemp )
+fi
+
+if [ -z "$SERVICE_PORT" ]; then
+   SERVICE_PORT_FILE=$( mktemp )
+fi
+
+# Check values in configuration file to determine how we should start coaster-service
+echo Starting coaster-service
+if [ -z "$SERVICE_PORT" ] && [ -z "$LOCAL_PORT" ]; then
+   run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE -localportfile $LOCAL_PORT_FILE -passive 
+elif [ -n "$SERVICE_PORT" ] && [ -z "$LOCAL_PORT" ]; then
+   run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localportfile $LOCAL_PORT_FILE -passive 
+elif [ -z "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
+   run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE --localport $LOCAL_PORT -passive
+elif [ -n  "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
+   run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localport $LOCAL_PORT -passive
+fi
+
+# If waiting on port files to be created, wait for files to be created, but no longer
+if [ -z "$SERVICE_PORT" ]; then
+   wait_for_file $SERVICE_PORT_FILE 60
+fi
+
+if [ -z "$LOCAL_PORT" ]; then
+   wait_for_file $LOCAL_PORT_FILE 60
+fi
+
+# Determine SERVICE_PORT
+if [ -z "$SERVICE_PORT" ]; then
+   if [ ! -f "$SERVICE_PORT_FILE" ]; then
+      crash "Unable to determine SERVICE_PORT!"
+   fi
+   SERVICE_PORT=$( cat $SERVICE_PORT_FILE )
+   rm $SERVICE_PORT_FILE
+fi
+
+# Determine LOCAL_PORT
+if [ -z "$LOCAL_PORT" ]; then
+   if [ ! -f "$LOCAL_PORT_FILE" ]; then
+      crash "Unable to determine LOCAL_PORT!"
+   fi
+   LOCAL_PORT=$( cat $LOCAL_PORT_FILE )
+   rm $LOCAL_PORT_FILE
+fi
+
+echo Service port: $SERVICE_PORT
+echo Local port: $LOCAL_PORT
+
+# Generate sites.xml
+export SERVICEURL="http://$IPADDR:$SERVICE_PORT"
+export EXECUTIONURL="$SERVICEURL"
+export WORKERURL="http://$IPADDR:$LOCAL_PORT"
+
+echo Generating sites.xml
+if [ -f "gensites.template" ]; then
+   $SWIFT_BIN/gensites $( cat gensites.template ) -p $CONFIG_FILE > sites.xml
+else
+   $SWIFT_BIN/gensites persistent-coasters -p $CONFIG_FILE > sites.xml
+fi
+
+# Start workers
+case $WORKER_MODE in
+   ssh) start-workers-ssh;;
+   local) start-workers-local;;
+   scheduler) start-workers-scheduler;;
+   *) crash "Unknown WORKER_MODE";;
+esac
+
+# Local Variables:
+# tab-width: 3
+# sh-basic-offset: 3
+# End:

@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# this will take a log file and produce a set of state transition
+# events for every execute2 entity
+
+# grep filters down to mostly relevant lines first - this is quick
+# reduces the more expensive later processing
+
+# then convert timestamps
+
+# then change relevant lines to transition format
+
+# then filter out unchanged lines because they're irrelevant
+grep ' INFO  swift ' | grep thread | grep -v provenanceid | \
+grep -v ARRAYRANGE | iso-to-secs | grep -E '^[^ ]+ +[^ ]+ +swift ' | \
+sed 's/\([^ ]*\) INFO  swift Exception in .*://' | \
+sed 's/\([^ ]*\) INFO  swift \([^ =]*\) \([^ =]*\) .*thread=\([^ ]*\).*$/\1 \4 \2.\3/' | \
+sed 's/\([^ ]*\) INFO  swift \([^ ]*\) .*thread=\([^ ]*\).*tr=\([^ ]*\).*$/\1 \3 \2 \4/' | \
+sed 's/\([^ ]*\) INFO  swift \([^ ]*\) .*thread=\([^ ]*\).*$/\1 \3 \2/' | \
+grep -E '^[^$]'
+
+
+
+# force a successful exit, rather than using the exit codes from pipeline
+# components above (most probably grep?)
+
+exit 0
+
+#sed 's/^\([^ ]*\) [^ ]+ +vdl:execute \([^ ]*\) thread=\([^ ]*\).*/\1 \3 \2/'
+
+# | \
+#sed 's/^\([^ ]*\) DEBUG vdl:execute2 \([^ ]*\) application exception: \(.*\)$/\1 \2 FAILED \3/' | \
+#sed 's/^\([^ ]*\) INFO  vdl:execute2 Completed job \([^ ]*\) \([^ ]*\) .* on [^ ]*$/\1 \2 EXECCOMPLETED/' | \
+#sed 's/^\([^ ]*\) INFO  vdl:execute2 Creating temporary directory .*\/\([^\/]*\) on .*$/\1 \2 CREATETEMPDIR/' | \
+#sed 's/^\([^ ]*\) DEBUG vdl:execute2 Job \([^ ]*\) thread \([0-9\-]*\) host \([^ ]*\) starting$/\1 \2 START \3 \4/' | \
+#sed 's/^\([^ ]*\) DEBUG vdl:execute2 Job \([^ ]*\) thread \([0-9\-]*\) site \([^ ]*\) starting$/\1 \2 START \3 \4/' | \
+#sed 's/^\([^ ]*\) DEBUG vdl:execute2 Job \([^ ]*\) staging in$/\1 \2 STAGEIN/' | \
+#sed 's/^\([^ ]*\) DEBUG vdl:execute2 Job \([^ ]*\) staging out$/\1 \2 STAGEOUT/' | \
+#sed 's/^\([^ ]*\) DEBUG vdl:execute2 Job \([^ ]*\) staging out finished$/\1 \2 STAGEOUTCOMPLETED/' | \
+#sed 's/^\([^ ]*\) DEBUG vdl:execute2 Job \([^ ]*\) all finished/\1 \2 COMPLETED/' | \
+#sed 's/^\([^ ]*\) DEBUG vdl:execute2 Job \([^ ]*\) initializing shared directory/\1 \2 INITSHARED/' | \
+#sed 's/^\([^ ]*\) DEBUG vdl:execute2 Job \([^ ]*\) checking job status/\1 \2 CHECKSTATUS/'
+
+
+# vdl:execute2 Job goodmonkey-k3jm6thi checking job status
+
+# 193400424.180 DEBUG vdl:execute2 Job badmonkey-uglllrhi initializing shared directory
+# 1193400458.567 DEBUG vdl:execute2 Job goodmonkey-sglllrhi all finished
+
+# 1193400660.191 DEBUG vdl:execute2 Job badmonkey-0hlllrhi staging in
+
+# 1193392187 DEBUG vdl:execute2 Job badmonkey-ymu1grhi thread 0-2-1 host uc.teragrid.org starting
+# lines like this have no job ID explictly - should do that?
+# 1193365177 INFO  vdl:execute2 Creating temporary directory sid-wf1-20070925-2057-a2fj0gs2/cwtsmall-08u9xqhi on GRASE-GENESEO-ROCKS
+
+
+# 1193364896 INFO  vdl:execute2 Completed job cwtsmall-15u9xqhi cwtsmall with arguments [scripts/runWaveletsAvg.R, 124, SI] on AGLT2
+
+# 1193369347 DEBUG vdl:execute2 cwtsmall-28u9xqhi application exception: Failed to link input file scripts/runWaveletsAvg.R
+
+
+# RUNNING state is somewhat strange - its a particular point in the
+# create shared / stage in step that probably should go away (or be
+# renamed) but 
+
+#78069 INFO  vdl:execute2 Running job convert-u2lmshhi convert with arguments [outslice-39993286-15a2-4d59-8072-26f7d8ddf610-2-0-0, atlas-x.jpeg] in fmri-20070920-1408-558q5sx2/convert-u2lmshhi on localhost
+

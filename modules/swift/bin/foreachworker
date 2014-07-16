@@ -1,0 +1,24 @@
+#!/bin/bash
+
+SERVICE=$1
+COMMAND=$2
+
+# Verify usage
+if [ -z "$SERVICE" ] || [ -z "$COMMAND" ]; then
+   echo "Usage: $0 service_name command"
+   exit 1
+fi
+
+# Verify service is running, and get file containing URL
+URL_FILE="$HOME/.swift/service/$SERVICE/service.url"
+if [ ! -f "$URL_FILE" ]; then
+   echo "Unable to find service $SERVICE"
+   exit 1
+fi
+
+WORKERS=$( coaster-client $( cat $URL_FILE ) list workers | sed 1d | awk '{print $1}' )
+for worker in $WORKERS
+do
+   echo Running command $COMMAND on worker $worker
+   coaster-client $( cat $URL_FILE ) runcmd $worker $COMMAND > ${worker}.command.log 2>&1
+done

@@ -1,0 +1,172 @@
+#!/usr/bin/perl
+
+use strict;
+
+use Pod::Usage;
+use Getopt::Long;
+use File::Temp qw/ tempfile tempdir mktemp /;
+
+my $opt_help = 0;
+my $opt_vo = 'engage';
+my $opt_engage_verified = 0;
+my $opt_gt4 = 0;
+my $opt_condorg = 0;
+my $opt_out = '&STDOUT';
+
+Getopt::Long::Configure('bundling');
+GetOptions(
+    "help"                   => \$opt_help,
+    "vo=s"                   => \$opt_vo,
+    "engage-verified"        => \$opt_engage_verified,
+    "gt4"                    => \$opt_gt4,
+    "condor-g"               => \$opt_condorg,
+    "out=s"                  => \$opt_out,
+) or pod2usage(1);
+
+if ($opt_help) {
+    pod2usage(1);
+}
+
+if ($opt_engage_verified && $opt_vo ne "engage") {
+    die("You can not specify a vo when using --engage-verified\n");
+}
+
+# make sure condor_status is in the path
+my $out = `which condor_status 2>/dev/null`;
+if ($out eq "") {
+    die("This tool depends on condor_status.\n" .
+        "Please make sure condor_status in your path.\n");
+}
+
+my %ads;
+my %tmp;
+my $cmd = "condor_status -any -long -constraint" .
+          " 'StringlistIMember(\"VO:$opt_vo\";GlueCEAccessControlBaseRule)'" .
+          #" -pool osg-ress-1.fnal.gov";
+          " -pool engage-submit.renci.org";
+# if we want the engage verified sites, ignore opt_vo and query against 
+# engage central collector
+if ($opt_engage_verified) {
+    $cmd = "condor_status -any -long -constraint" .
+           " 'SiteVerified==TRUE'" .
+           # " -pool engage-central.renci.org"
+            " -pool engage-submit.renci.org";
+}
+open(STATUS, "$cmd|");
+while(<STATUS>) {
+    chomp;
+    if ($_ eq "") {
+        if ($tmp{'GlueSiteName'} ne "") {
+            my %copy = %tmp;
+            $ads{$tmp{'GlueSiteName'} . "_" . $tmp{'GlueClusterUniqueID'}} = \%copy;
+            undef %tmp;
+        }
+    }
+    else {
+        my ($key, $value) = split(/ = /, $_, 2);
+        $value =~ s/^"|"$//g; # remove quotes from Condor strings
+        $tmp{$key} = $value;
+    }
+}
+close(STATUS);
+
+# lowercase vo
+my $lc_vo = lc($opt_vo);
+
+open(FH, ">$opt_out") or die("Unable to open $opt_out");
+print FH "<config>\n";
+foreach my $siteid (sort keys %ads) {
+    my $contact = $ads{$siteid}->{'GlueCEInfoContactString'};
+    my $host = $contact;
+    $host =~ s/[:\/].*//;
+    my $jm = $contact;
+    $jm =~ s/.*jobmanager-//;
+    if ($jm eq "pbs") {
+        $jm = "PBS";
+    }
+    elsif ($jm eq "lsf") {
+        $jm = "LSF";
+    }
+    elsif ($jm eq "sge") {
+        $jm = "SGE";
+    }
+    elsif ($jm eq "condor") {
+        $jm = "Condor";
+    }
+    my $workdir = $ads{$siteid}->{'GlueCEInfoDataDir'};
+    print FH "\n";
+    print FH "  <!-- $siteid -->\n";
+    print FH "  <pool handle=\"$siteid\" >\n";
+    print FH "    <gridftp  url=\"gsiftp://$host/\" />\n";
+    if ($opt_condorg) {
+        print FH "    <execution provider=\"condor\" />\n";
+        print FH "    <profile namespace=\"globus\" key=\"jobType\">grid</profile>\n";
+        if($opt_gt4) {
+            die("swift-osg-ress-site-catalog cannot generate Condor-G + GRAM4 sites files");
+        }
+        print FH "    <profile namespace=\"globus\" key=\"gridResource\">gt2 $contact</profile>\n";
+    }
+    elsif ($opt_gt4) {
+        print FH "    <execution provider=\"gt4\" jobmanager=\"$jm\" url=\"$host:9443\" />\n";
+    }
+    else {
+        print FH "    <jobmanager universe=\"vanilla\" url=\"$contact\" major=\"2\" />\n";
+    }
+    print FH "    <workdirectory >$workdir/$lc_vo/tmp/$host</workdirectory>\n";
+    print FH "  </pool>\n";
+}
+print FH "\n</config>\n";
+close(FH);
+
+exit(0);
+
+__END__
+
+=head1 NAME
+
+swift-osg-ress-site-catalog - converts ReSS data to Swift site catalog
+
+=head1 SYNOPSIS
+
+swift-osg-ress-site-catalog [options]
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--help>
+
+Show this help message
+
+=item B<--vo=[name]>
+
+Set what VO to query ReSS for
+
+=item B<--engage-verified>
+
+Only retrieve sites verified by the Engagement VO site verification tests
+This can not be used together with --vo, as the query will only work for
+sites advertising support for the Engagement VO.
+
+This option means information will be retrieved from the Engagement collector
+instead of the top-level ReSS collector.
+
+=item B<--out=[filename]>
+
+Write to [filename] instead of stdout
+
+=item B<--condor-g>
+
+Generates sites files which will submit jobs using a local Condor-G
+installation rather than through direct GRAM2 submission.
+
+=back
+
+=head1 DESCRIPTION
+
+B<swift-osg-ress-site-catalog> converts ReSS data to Swift site catalog
+
+=cut
+
+
+

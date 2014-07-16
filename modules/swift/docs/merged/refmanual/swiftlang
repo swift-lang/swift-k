@@ -1,0 +1,486 @@
+
+== Swift Language Reference Manual
+This reference manual semi-formally outlines the Swift language conventions
+
+== Support
+
+An overview of Swift may be found at:
+
+http://www.ci.uchicago.edu/swift/guides/trunk/userguide/userguide.html
+
+The Swift user discussion mailing list is found here:
+
+https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user
+
+== Usage
+
+Swift code is conventionally written in +\*.swift+ files.
+After writing the Swift program
++program.swift+, run:
+
+----
+swift -sites.file <sites.xml> -config <cf> -tc.file <tc.data> <program.swift>
+----
+
+Swift accepts many commandline arguments. Following are the most frequently used:
+
++-config <file>+ :: Indicates the Swift configuration file to be used for this
+run. Properties in this configuration file will override the default
+properties. If individual command line arguments are used for properties, they
+will override the contents of this file.
+
++-sites.file <file>+ :: Points to the location of the sites.xml file
+
++-tc.file <file>+ :: Points to the location of the tc.data file
+
++-resume <file>+ :: Resumes the execution using a log file
+
+== Program Structure
+
+Swift programs are composed of declaration of and calls to _composite_
+functions.  These share syntax with C-like languages.  The following is a
+complete Swift program:
+
+----
+tracef("%s: %i\n", "The answer is", 42);
+----
+
+== Comments
+
+Swift supports C/C++ comments:
+
+----
+# This is a comment
+// This is a comment
+/* This is a
+comment */
+/** Also a
+comment */
+----
+
+== Dataflow Evaluation
+
+Swift expressions are evaluated in _dataflow_ order:
+
+----
+int z1,z2;
+int y;
+int x = f(y);
+y = g(2);
+z1 = h(x,y,1);
+z2 = h(x,y,2);
+int output = r(z1,z2);
+----
+
+This allows code to execute as concurrently as possible, limited
+only by data availability.  In this example, +g()+ runs first, because it
+is dependent only on a literal.  When +y+ is set, +f()+ runs, setting
++x+.  Then, two invocations of +h()+ execute.  Finally, +z1+ and +z2+
+are set, allowing +r()+ to run.
+
+Variables may be assigned only once. Multiple assignment is typically
+detected at compile time, although in some cases it will result in a
+run time error. Unassigned variables that are inputs to functions
+will lead to a stall in progress.
+
+== Composite functions
+
+Swift code is written in composite functions.
+
+----
+[(<output list>)] function_name [(<input list>)]
+{
+  statement;
+  statement;
+  ...
+}
+----
+
+An example of a Swift composite function is shown below:
+
+----
+(Station _stat) get_site(int _run_id) {
+    StationFile file<"/tmp/site_tmp">;
+    file = getsite_file(_run_id);
+    _stat = readData(file);
+}
+----
+
+== App functions
+Swift app functions are used to integrate external apps into Swift and made
+callable as Swift functions.  App functions have the form:
+
+----
+[(<output list>)] app function_name [(<input list>)]
+{
+  statement;
+}
+----
+
+An example of an app function definition is as follows:
+
+----
+(RuptureFile _rup) app getrupture_file(int _run_id) {
+    getrupture _run_id stdout=@filename(_rup);
+}
+----
+
+Note that an app function may have only one commandline statement while a
+composite function may have multiple statements.
+
+An empty input or output list may be omitted or written as +()+.
+
+The output list may have more than one entry.  Thus, assignments
+may be written as:
+----
+x1, x2 = f(i1, i2);
+// or equivalently:
+(x1, x2) = f(i1, i2);
+----
+
+=== Swift keywords
+
+Following is a list of Swift keywords:
+
+----
+    app type float int boolean string
+    global foreach if else iterate
+    switch case default file while import
+----
+
+== Types
+
+Swift provides a similar range of primitive types to many other programming
+languages. Files are a primitive type in Swift, unlike in many other languages,
+and have a number of special characteristics that merit special mention. Two
+basic kinds of data structure are provided: arrays and structs.
+
+=== Primitive Types
+
+Swift has the conventional types:
+
++string+:: A complete string (not an array of characters).
++int+:: A 64-bit integer.
++float+:: A 64-bit (double-precision) floating point number.
++boolean+:: A boolean (true/false).
++file+:: A file (see Section Files).
+
+Literals for these types use conventional syntax:
+
+* +int+ literals are written as decimal numbers, e.g. +-1234+
+* +float+ literals are written as decimal numbers with a decimal point,
+    e.g +5493.352+ or +1.0+.
+    The literals +NaN+ and +inf+ may be used.  In some contexts +int+
+    literals are promoted automatically to +float+.
+* +boolean+ literals
+* +string+ literals are enclosed in double quotes, with a range of escape
+    sequences supported:
+** \\ for a single backslash
+** \" for a quote
+** \n for newline
+** \t for tab
+** \a
+** \b
+** \f
+** \r
+** \v
+** hexadecimal escape codes, e.g. \xf2
+
+The literals +true+ and +false+ may be used for boolean.
+
+----
+int four = 2+2;
+string s = "hello ";
+string hw = s + "world";
+----
+
+=== Files
+
+A file is a first-class entity in Swift that in many ways can be treated
+as any other variable. The main difference is that a file can be
+*mapped* to path in a filesystem. Assigning to a mapped file variable
+results in a file being created in the file system at the specified path.
+File variables can also be initialized with data from a pre-existing
+file using the +input_file+ function. File paths are relative to the
+working directory.
+
+For example, if +/home/user/in.txt+ is a file with some data in it,
+the following Swift program will copy the file to +/home/user/out.txt+.
+----
+  type file;
+  
+  app (file o) cp_app(file i){
+      cp @i @o;
+  }
+
+  file x <"/home/user/in.txt">;
+  file y <"/home/user/out.txt">;
+
+  y = cp_app(x); 
+----
+
+=== Arrays
+
+Arrays are declared with empty square brackets:
+
+----
+int A[];
+----
+
+Arrays are indexed using square brackets.
+
+Each array index can only be assigned to once.
+
+Arrays may be used as inputs or outputs of functions.
+
+Arrays are part of Swift dataflow semantics. An array is closed
+when all possible insertions to it are complete.
+
+----
+int A[];
+
+foreach i in [1:10] {
+  A[i] = i;
+  tracef("Element %i is %i\n", i, A[i]);
+}
+----
+
+Array literals may be expressed with list syntax:
+----
+int C[] = [4,5,6];
+----
+
+=== Structs
+
+In Swift, structs are defined with the +type+ keyword.  They define
+a new type.
+
+----
+type person
+{
+  string name;
+  int age;
+  int events[];
+}
+----
+
+Structs are accessed with the +.+ syntax:
+
+----
+person p;
+p.name = "Abe";
+p.age = 90;
+----
+
+=== Defining new types
+
+New types can be defined with +type+, which creates a new type that is a
+specialization of an existing type.  That is, it is a distinct type that is not
+interchangeable.  
+
+----
+type messagefile;
+----
+
+== Control structures
+
+Swift provides control structures that may be placed as statements
+inside a composite function.
+
+=== Conditionals
+
+==== If statement
+
+If statements have the form:
+
+----
+if (<condition>)
+{
+  statement;
+  ...
+}
+else
+{
+  statement;
+  ...
+}
+----
+
+As required by dataflow processing, progress blocks on the availability
+of the condition value.
+
+==== Switch statement
+
+----
+int a = 20;
+switch (a)
+{
+  case 1:
+    int c;
+    c = a + a;
+    b = a + 1;
+  case 20:
+    b = 1;
+  case 2000:
+    b = 2;
+  default:
+    b = 2102 + 2420;
+}
+tracef("b: %i\n", b);
+----
+
+=== Iteration
+
+Iteration in parallel is performed with the +foreach+ and +iterate+ statement.
+
+==== Foreach loop
+
+The +foreach+ loop allows for parallel iteration over an array:
+
+----
+foreach value[, index] in [expression]{
+    statement;
+    statement;
+    ...
+}
+----
+
+The +index+ and +value+ variables are automatically declared.  The
++index+ variable may be omitted from the syntax.
+
+A special case of the foreach loop occurs when combined with the
+array range operator. This is the idiomatic way to iterate over
+a range of integer values in Swift. The Swift compiler has special
+handling for this case that avoids constructing an array.
+
+----
+foreach i in [start:stop:step] {
+    ...
+}
+----
+
+Examples of +foreach+ loop are as follows:
+
+----
+string A[];
+foreach value, index in A
+{
+  tracef("A[%i] = %s\n", index, value);
+}
+----
+
+----
+trace(" First five odd numbers");
+foreach idx in [1:10:2]{
+    tracef("%i\n",idx);
+}
+----
+
+==== Iterate loop
+
+The +iterate+ loop allows for sequential iteration.
+
+----
+iterate months {
+  tracef("%i\n", months);
+ } until (months==12);
+----
+
+The general form is:
+----
+iterate var
+{
+  statement;
+  ...
+} until (expression);
+----
+
+*Performance Tip:* use the +foreach+ loop instead of +iterate+ if your
+loop iterations are independent and can be executed in parallel.
+
+== Operators
+
+The following binary arithmetic operators on numbers are defined:
+
++&#43;+ (plus), +-+ (minus), +\*+ (times), +/+ (divide),
++%/+ (integer divide), +%%+ (modulus), +**+ (power)
+
++&&+ (boolean and), +||+ (boolean or),
++==+ (equals), +!=+ (not equals), +>+ (greater than), +<+ (less than),
++>=+ (greater than or equal to), +<=+ (less than or equal to)
+
+The following unary operators are defined:
+
++-+ (negate), +!+ (boolean not)
+
+String concatenation is also performed with +&#43;+ (plus).
++==+ and +!=+ may also be used on strings.
+
+== Defining Apps 
+
+In typical Swift applications, the computationally intensive parts of the
+application are not written in the Swift language.  Rather,
+the work is done by _app functions_ that are _composed_ together with
+Swift code. The builtin functions mentioned above are implemented as extension
+functions in Tcl.
+
+=== App functions
+
+App functions are functions that are implemented as command-line
+programs. These command-line programs can be brought into a Swift
+program as functions with typed inputs and outputs.
+
+An app function definition comprises:
+
+* The standard components of a Swift function declaration: input and
+    output arguments and the function name.  Note that the output
+    variable types are restricted to individual +file+#s#.
+* The command line, which comprises an initial string which is the
+    executable to run, and then a series of arguments which are
+    the command-line arguments to pass to the program.
+
+App arguments can be:
+
+* Literals such as numbers or strings.
+* File variables (passed as file paths).
+* Other variables, which are converted to string arguments.
+    Arrays (including multi-dimensional arrays) are expanded to
+    multiple arguments.
+* Arbitrary expressions surrounded by parentheses.
+
+Standard input, output and error can be redirected to files.
+
+Join files together:
+----
+type file;
+
+app (file out) cat (file inputs[]) {
+  "/bin/cat" inputs @stdout=out
+}
+
+main {
+  file joined <"joined.txt"> = cat(glob("*.txt"));
+}
+----
+
+Sleep an arbitrary amount of time:
+
+----
+app (void signal) sleep (int secs) {
+  "/bin/sleep" secs
+}
+
+  foreach time in [1:5] {
+    void signal = sleep(time);
+    // Wait on output signal so that trace occurs after sleep
+    wait(signal) {
+      trace("Slept " + fromint(time));
+    }
+  }
+----
+
+////
+Local Variables:
+mode: doc
+End:
+////

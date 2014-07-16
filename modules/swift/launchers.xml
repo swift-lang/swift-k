@@ -1,0 +1,26 @@
+<project name="Launchers" default="create" basedir=".">
+	<target name="create">
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="VDLx2Karajan"/>
+			<property name="class-name" value="org.griphyn.vdl.engine.Karajan"/>
+		</ant>
+		<ant antfile="${main.buildfile}" target="launcher">
+			<property name="launcher-name" value="VDLt2VDLx"/>
+			<property name="class-name" value="org.griphyn.vdl.toolkit.VDLt2VDLx"/>
+		</ant>
+		<ant antfile="build.xml" target="swift.launcher">
+			<property name="launcher-name" value="swift-log-info"/>
+			<property name="class-name" value="org.griphyn.vdl.karajan.monitor.monitors.http.SwiftLogInfo"/>
+		</ant>
+		<ant antfile="build.xml" target="swift.launcher">
+			<property name="launcher-name" value="swift-convert-config"/>
+			<property name="class-name" value="org.griphyn.vdl.util.ConvertConfig"/>
+		</ant>
+		<ant antfile="build.xml" target="swift.launcher">
+			<property name="launcher-name" value="swift-config-info"/>
+			<property name="class-name" value="org.griphyn.vdl.util.SwiftConfigInfo"/>
+		</ant>
+	</target>
+	<target name="webstart">
+	</target>
+</project>

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+hereversion() {
+  if [ -d ".svn" ] && [ -x "$(which svn)" ]; then
+    R=$(svn info 2>/dev/null | grep '^Revision' | sed "s/Revision: /$1-r/")
+    M=$(svn status 2>/dev/null | grep --invert-match '^\?' > /dev/null && echo "($1 modified locally)")
+  elif [ -d ".git" ] && [ -x "$(which git)" ]; then
+    R=$(git svn info | grep '^Revision' | sed "s/Revision: /$1-r/")
+    if git status --porcelain | grep 'M ' >/dev/null ; then
+      M="($1 modified locally)"
+    fi 
+  else
+    R="$1-unknown"
+  fi
+  echo $R $M
+}
+
+# Determine Swift revision
+RELEASE=$(cat libexec/release.txt)
+
+SWIFTVER=$(hereversion swift)
+
+cd ../..
+
+COGVER=$(hereversion cog)
+
+echo $RELEASE $SWIFTVER $COGVER
+

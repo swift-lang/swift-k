@@ -1,0 +1,6 @@
+#!/bin/bash
+
+VERSION=$(grep 'Swift v' $1 | sed 's/.*Swift [^ ]* r\([0-9]*\).*/\1/')
+
+echo $VERSION
+

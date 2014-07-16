@@ -1,0 +1,59 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>file</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>   
+  </types>  
+  <procedure name="ls" src="line 6">
+
+      <output 
+    name="f" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="s" type="string"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 7">
+        <executable>ls</executable>
+        <stdout><function name="filename">
+          <variableReference>f</variableReference></function></stdout><variableReference>s</variableReference>  </application>
+    </binding>
+  </procedure>
+  <procedure name="wc" src="line 12">
+
+      <output 
+    name="c" type="file"
+
+     xsi:nil="true" />
+
+      <input 
+    name="f" type="file"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 13">
+        <executable>wc</executable>
+        <stdin><function name="filename">
+          <variableReference>f</variableReference></function></stdin><stdout><function name="filename">
+          <variableReference>c</variableReference></function></stdout>  </application>
+    </binding>
+  </procedure>
+  <variable name="list" type="file" isGlobal="false" xsi:nil="true"/>
+  <variable name="count" type="file" isGlobal="false" xsi:nil="true"/>
+  <call proc="ls" src="line 19">
+    <output><variableReference>list</variableReference></output>
+    <input><stringConstant>*.txt</stringConstant></input>
+  </call>
+  <call proc="wc" src="line 20">
+    <output><variableReference>count</variableReference></output>
+    <input><variableReference>list</variableReference></input>
+  </call>
+</program>

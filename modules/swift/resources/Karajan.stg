@@ -1,0 +1,532 @@
+group Karajan;
+
+// TODO can move progress ticker start into vdl:mains so karajan files
+// are smaller
+
+program(types,procedures,declarations,statements,constants,buildversion,cleanups) ::= <<
+// CACHE ID $buildversion$
+import(sys)
+import(scheduler)
+import(rlog)
+import(swift)
+
+$if(types)$
+types(
+	xs:schema(
+    	$types;separator="\n"$
+    )
+)
+$endif$
+$typeConstants;separator="\n"$
+$constants;separator="\n"$
+$declarations;separator="\n"$
+$procedures;separator="\n"$
+$if(statements)$
+
+restartLog(name = k:concat(contextAttribute("SWIFT:SCRIPT_NAME"), "-", contextAttribute("SWIFT:RUN_ID"))) {
+	swift:mains(
+		swift:startProgressTicker()
+		swift:mainp(
+			$parallel(statements=statements)$
+		)
+		swift:stopProgressTicker()
+	)
+}
+$endif$
+
+$cleanups:swift_cleandataset();separator="\n"$
+swift:cleanDataset(shutdown=true)
+>>
+
+typeDef(name,type,members,sourcelocation) ::= <<
+$if(type)$
+	xs:element("$name$", "$type$") 
+$else$
+	$if(!members)$
+		xs:simpleType("$name$", xs:restriction("string"))
+	$else$
+		xs:complexType("$name$",
+			xs:sequence(
+				$members;separator="\n"$
+			)
+ 	    )
+	$endif$
+$endif$
+>>
+
+memberdefinition(type,name,sourcelocation) ::= <<
+	xs:element("$name$", "$type$")
+>>
+
+procedure(name, outputs, inputs, stageins, stageouts, arguments, optargs, binding, declarations, statements, config, line, initWaitCounts, cleanups, closes) ::= <<
+
+$name$ := function($if(optargs)$$proc_oargs(args=optargs)$$if(arguments)$, $endif$$endif$$if(arguments)$$proc_args(args=arguments)$$endif$) {
+	$swift_log_inputs(inputs)$
+	$swift_log_outputs(outputs)$
+$if(binding)$
+	$swift_execute(outputs=outputs,inputs=inputs,stageins=stageins,stageouts=stageouts,application=binding.application, name=name,line=line)$
+$else$
+	$compound(outputs=outputs, inputs=inputs, declarations=declarations, statements=statements, name=name, initWaitCounts=initWaitCounts, cleanups=cleanups)$
+$endif$
+}
+>>
+
+swift_log_inputs(params) ::= <<
+$params:log_param("input");separator="\n"$
+>>
+swift_log_outputs(params) ::= <<
+$params:log_param("output");separator="\n"$
+>>
+
+compound(outputs, inputs, declarations, statements, config, name, initWaitCounts, cleanups) ::= <<
+swift:unitStart("COMPOUND", name="$name$", outputs="$outputs:list();separator=","$")
+$if(initWaitCounts)$
+$initWaitCounts;separator="\n"$
+$endif$
+$declarations;separator="\n"$
+$if(statements)$
+$parallel(statements=statements)$
+$endif$
+
+$outputs:swift_closedataset();separator="\n"$
+
+$cleanups:swift_cleandataset();separator="\n"$
+swift:unitEnd("COMPOUND", name="$name$")
+>>
+
+proc_args(args) ::= <<
+$args:arg_name();separator=", "$
+>>
+
+arg_name() ::= <<
+$it.name$
+>>
+
+proc_oargs(args) ::= <<
+$args:proc_optarg()$
+>>
+
+proc_optarg() ::= <<
+$it.name$=$if(it.default)$$it.default$$else$null$endif$
+>>
+
+swift_execute(outputs,inputs,stageins,stageouts,attributes,application,name,line) ::= <<
+swift:unitStart("PROCEDURE", name="$name$", line=$line$, outputs="$outputs:list();separator=","$")
+swift:execute(
+	"$application.exec$"
+	$attributes$
+	$stageins:swift_stagein();separator="\n"$
+	$stageouts:swift_stageout();separator="\n"$
+	$swift_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
+)
+$outputs:swift_closedataset();separator="\n"$
+swift:unitEnd("PROCEDURE", name="$name$", line=$line$)
+>>
+
+log_param(dir) ::= <<
+parameterLog("$dir$", "$it.name$", swift:getDatasetProvenanceID($it.name$))
+>>
+
+swift_stagein() ::= <<
+swift:stageIn($it.name$)
+>>
+
+swift_stageout(outputs) ::= <<
+swift:stageOut($it.name$)
+>>
+
+swift_closedataset() ::= <<
+swift:closeDataset($it.name$)
+>>
+
+swift_cleandataset() ::= <<
+swift:cleanDataset($it$)
+>>
+
+list() ::= <<$it.name$>>
+
+swift_arguments(attributes,arguments,stdin,stdout,stderr) ::= <<
+$attributes$
+swift:arguments(
+	$arguments;separator=", "$
+)
+
+$if (stdin)$
+stdin = $stdin$
+$endif$
+
+$if (stdout)$
+stdout = $stdout$
+$endif$
+
+$if (stderr)$
+stderr = $stderr$
+$endif$
+>>
+
+swift_attributes(entries) ::= <<
+swift:attributes(
+	map:map(
+		$entries;separator="\n"$
+	)
+)
+>>
+
+map_entry(key,value) ::= <<
+	map:entry(swift:getFieldValue($key$), swift:getFieldValue($value$))
+>>
+
+parallel(statements) ::= <<
+$if(rest(statements))$
+uparallel(
+	$statements;separator="\n"$
+)
+$else$
+$statements$
+$endif$
+>>
+
+
+// the 'function' template outputs a karajan code fragment
+// that calls a function in the 'swiftscript' namespace.
+
+function(name, args, datatype, line) ::= <<
+swiftscript:$name$(
+	$if(args)$$args;separator=", "$$endif$
+)
+>>
+
+iterate(declarations, statements, cond, var, refs, cleanups, trace, line) ::= <<
+swift:while($var$$if(trace)$, _traceline=$line$$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$) {
+	if (!swift:getFieldValue($cond$)) {
+		$sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
+		next(swiftop:inc($var$))
+	}
+}
+>>
+
+foreach(var, in, indexVar, indexVarField, declarations, statements, line, refs, selfClose, cleanups) ::= <<
+swift:tParallelFor(\$, _traceline=$line$$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
+$! The iterator !$
+	getArrayIterator($in$)) {
+	(\$\$, $var$) := each(\$)
+$if(indexVar)$
+	$indexVar$ := swift:new($indexVarField$, value=\$\$)
+$endif$
+
+	swift:unitStart("FOREACH_IT", line=$line$) 
+	$declarations;separator="\n"$
+$if(statements)$
+	$parallel(statements=statements)$
+	$cleanups:swift_cleandataset();separator="\n"$
+$endif$
+
+	swift:unitEnd("FOREACH_IT", line=$line$)
+}
+>>
+
+// need to log inputs and outputs at the calling stage here because
+// they are not
+// $outputs:vdl_log_output();separator="\n"$
+
+callInternal(func, outputs, inputs, line, serialize, partialClose) ::= <<
+sequential(
+	swift:unitStart("INTERNALPROC", name="$func$", outputs="$outputs:list();separator=","$")
+	$func$(
+		$if(!serialize)$parallel($endif$
+    	$outputs:callInternal_log_output();separator="\n"$
+    	$inputs:callInternal_log_input();separator="\n"$
+  		$if(!serialize)$)$endif$
+	)
+	$if(partialClose)$$partialClose;separator="\n"$$endif$
+	swift:unitEnd("INTERNALPROC", name="$func$")
+)
+>>
+
+callInternal_log_input() ::= <<
+sequential(
+	swift:parameterLog("input", "TODO_name_or_pos", swift:getDatasetProvenanceID($it$))
+	$it$
+)
+>>
+
+callInternal_log_output() ::= <<
+sequential(
+	swift:parameterLog("output", "TODO_name_or_pos", swift:getDatasetProvenanceID($it$))
+	$it$
+)
+>>
+
+callUserDefined(func, outputs, inputs, line, serialize, partialClose) ::= <<
+$if(partialClose)$
+sequential(
+$endif$
+$func$(
+	$if(!serialize)$parallel($endif$
+	$outputs;separator=", "$
+	$inputs;separator=", "$
+	$if(!serialize)$)$endif$
+)
+$if(partialClose)$
+$partialClose;separator="\n"$
+)
+$endif$
+>>
+
+call_arg(bind, expr, datatype) ::= <<
+$if(bind)$
+$bind$ = $expr$
+$else$
+$expr$
+$endif$
+>>
+
+globalConstant(name, expr, datatype) ::= <<
+$name$ := $expr$
+>>
+
+variable(name, type, field, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line) ::= <<
+$name$ := 
+	$if(mapping)$
+	swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+		$swift_mapping(mapping=mapping, file=file)$
+	)
+	$else$
+		$if(file)$
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+				$swift_mapping(mapping=mapping, file=file)$
+			)
+		$else$
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$)
+		$endif$
+	$endif$
+$variable_log()$
+>>
+
+variable_log() ::= <<
+	swift:parameterLog("intermediate", "$name$", swift:getDatasetProvenanceID($name$))
+>>
+
+swift_mapping(mapping, file) ::= <<
+$if(file)$
+swift:mapping("SingleFileMapper", swift:parameter("file", "$file.name$") $if(file.params)$$file.params;separator="\n"$$endif$)
+$else$
+swift:mapping("$mapping.descriptor$", $mapping.params;separator="\n"$)
+$endif$
+>>
+
+swift_parameter(name,expr) ::= <<
+swift:parameter("$name$", $expr$)
+>>
+
+assign(var, value, line, partialClose) ::= <<
+$if(partialClose)$
+sequential(
+$endif$
+swift:setFieldValue($if(line)$_traceline=$line$$endif$
+	$var$
+	$value$
+)
+$if(partialClose)$
+$partialClose$)
+$endif$
+>>
+
+append(array, value, partialClose) ::= <<
+$if(partialClose)$
+sequential(
+$endif$
+swift:appendArray(
+	$array$
+	$value$
+)
+$if(partialClose)$
+$partialClose$)
+$endif$
+>>
+
+callexpr(call, datatype, field, prefix, mapping) ::= <<
+sequential(
+	swift.callintermediate := swift:new($field$$if(mapping)$,
+		swift:mapping("concurrent_mapper",
+			swift:parameter("prefix", "_callintermediate-$prefix$")
+		)
+	$endif$)
+	$call$
+	swift.callintermediate
+)
+>>
+
+array(elements, datatype) ::= <<
+swift:createArray(
+	list(
+		$elements;separator="\n"$
+	)
+)
+>>
+
+range(from, to, step, datatype) ::= <<
+sequential(
+	tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$)
+	tmp
+	$range_log(from=from, to=to, step=step, out="tmp")$
+)
+>>
+
+range_log(from, to, step, out) ::= <<
+	swift:log(LOG:INFO, k:concat("ARRAYRANGE thread=", currentThread(), " array=", getDatasetProvenanceID($out$),
+		" from=", getDatasetProvenanceID($from$), "to=", getDatasetProvenanceID($to$),
+		$if(step)$"step=", getDatasetProvenanceID($step$)$else$"step=none"$endif$))
+>>
+
+if(condition,vthen,velse,line,trace) ::= <<
+if (swift:getFieldValue($condition$)) {
+	swift:unitStart("CONDITION_BLOCK")
+	$vthen$
+}
+$if(velse)$
+else {
+	swift:unitStart("CONDITION_BLOCK")
+	$velse$
+}
+$endif$
+>>
+
+sub_comp(declarations, statements, cleanups, preClose) ::= <<
+$if(preClose)$
+$preClose;separator="\n"$
+$endif$
+$declarations;separator="\n"$
+$if(statements)$
+$parallel(statements=statements)$
+$cleanups:swift_cleandataset();separator="\n"$
+$endif$
+>>
+
+switch(condition,cases,sdefault) ::= <<
+sequential(
+	swc := $condition$
+$cases:{case |
+	if (swift:getFieldValue(swiftop:eq(swc, $case.value$))) {
+		$sub_comp(declarations=case.declarations, statements=case.statements)$
+	}
+	$if(rest(cases))$else$else$$if(sdefault)$else$endif$$endif$
+}$
+$if(sdefault)$
+    {
+      $sdefault$
+    }
+$endif$
+)
+>>
+
+// TODO can optimise this like we do with parallel statements so that
+// the wrapping layer disappers in the (perhaps common?) case of a
+// single layer.
+sequential(statements) ::= <<
+$if(rest(statements))$
+sequential(
+   	$statements;separator="\n"$
+)
+$else$
+$statements$
+$endif$
+>>
+
+
+partialclose(var, count) ::= <<
+swift:partialCloseDataset($var$$if(count)$, count=$count$$endif$)
+>>
+
+setWaitCount(name, waitCount) ::= <<
+swift:setWaitCount($name$$if(waitCount)$, count=$waitCount$$endif$)
+
+>>
+
+unitStart(type, outputs) ::= <<
+swift:unitStart("$type$", outputs="$outputs$")
+>>
+
+unitEnd(type) ::= <<
+  swift:unitEnd("$type$")
+>>
+
+operator ::= [
+  "+":"swiftop:sum",
+  "-":"swiftop:subtraction",
+  "*":"swiftop:product",
+  "/":"swiftop:fquotient",
+  "%/":"swiftop:iquotient",
+  "%%":"swiftop:remainder",
+  "&lt;=":"swiftop:le",
+  "&gt;=":"swiftop:ge",
+  "&gt;":"swiftop:gt",
+  "&lt;":"swiftop:lt",
+  "<=":"swiftop:le",
+  ">=":"swiftop:ge",
+  ">":"swiftop:gt",
+  "<":"swiftop:lt",
+  "==":"swiftop:eq",
+  "!=":"swiftop:ne",
+  "&amp;&amp;":"swiftop:and",
+  "||":"swiftop:or"
+]
+
+unaryNegation(exp, datatype) ::= <<
+swiftop:product(swift:new(swift.field.temp.int, value = -1), $exp$)
+>>
+
+binaryop(op,left,right,datatype) ::= <<
+$operator.(op)$($left$, $right$)
+>>
+
+not(exp, datatype) ::= <<
+swiftop:not($exp$)
+>>
+
+id(var, datatype) ::= <<
+$var$
+>>
+
+extractarrayelement(parent, arraychild, datatype) ::= <<
+swift:getFieldSubscript($parent$, $arraychild$)
+>>
+
+extractstructelement(parent, memberchild, datatype) ::= <<
+getField($parent$, "$memberchild$")
+>>
+
+slicearray(parent, memberchild, datatype) ::= <<
+sequential(
+	slice := swift:sliceArray($parent$, "$memberchild$", "$datatype$")
+ 	$logSliceArray(memberchild=memberchild, array=parent, slice=slice)$
+ 	slice
+)
+>>
+
+logSliceArray(memberchild, array, slice) ::= <<
+	swift:log(LOG:DEBUG, k:concat("SLICEARRAY thread=", currentThread(), " slice=", swift:getDatasetProvenanceID($slice$),
+		" member=$member$ array=", swift:getDatasetProvenanceID($array$))
+>>
+
+
+iConst(value, datatype) ::= <<
+swift:new(swift.field.const.int, value=$value$)
+>>
+
+fConst(value, datatype) ::= <<
+swift:new(swift.field.const.float, value=$value$)
+>>
+
+bConst(value, datatype) ::= <<
+swift:new(swift.field.const.boolean, value=$value$)
+>>
+
+sConst(value, datatype) ::= <<
+swift:new(swift.field.const.string, value="$value$")
+>>
+
+fieldConst(name, id, type) ::= <<
+$name$ := swift:field("$id$", "$type$")
+>>
+

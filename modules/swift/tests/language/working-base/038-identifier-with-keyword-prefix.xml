@@ -1,0 +1,9 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="fork" type="int" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 2">
+   <variableReference>fork</variableReference>
+   <integerConstant>3</integerConstant>
+  </assign>
+</program>

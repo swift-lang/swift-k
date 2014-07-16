@@ -1,0 +1,16 @@
+Introduction
+------------
+This is an introductory tutorial describing the use of Swift and its programming
+language SwiftScript. It is intended to introduce new users to the basics of Swift.
+It is structured as a series of simple exercises/examples which you can
+try for yourself as you read along.
+
+For information on getting an installation of Swift running, consult the
+http://www.ci.uchicago.edu/swift/guides/quickstartguide.php[Swift Quickstart Guide]. We advise you to install the latest stable release of Swift. 
+Return to this document when you have successfully run the test SwiftScript program mentioned there. 
+
+There is also a 
+sys::[../print_link.sh userguide]
+which contains a more detailed reference material on topics covered in this manual. All
+of the programs included in this tutorial can be found in your Swift
+distribution in the examples/tutorial directory.

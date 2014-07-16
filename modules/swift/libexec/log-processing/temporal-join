@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# reads a file of rows (t,a) from $1
+# for each row, finds 'closest' row in $2 (t,b) and then
+# outputs (a,b)
+# $2 must be in increasing-time order
+
+cat $1 | while read t a ; do
+
+  bestb=NONE
+  while read s b ; do
+    if [ $s -lt $t ] ; then
+      bestb=$b
+    fi
+  done   < $2
+
+  echo $a $bestb $t
+
+done

@@ -1,0 +1,12 @@
+
+set terminal png
+set output 'tmp-trail.png'
+
+set key outside below
+set ylabel 'total events'
+set xlabel 'realtime / s'
+
+set xrange [0:]
+
+
+plot \

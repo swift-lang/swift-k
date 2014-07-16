@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="**/.svn/" kind="src" path="src"/>
+	<classpathentry excluding="**/.svn/**" kind="src" path="libexec"/>
+	<classpathentry excluding="**/.svn/**" kind="src" path="resources"/>
+	<classpathentry excluding="**/.svn/**" kind="src" path="etc"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/karajan"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/abstraction"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jglobus"/>
+	<classpathentry kind="lib" path="lib/antlr-2.7.5.jar"/>
+	<classpathentry kind="lib" path="lib/jsr173_1.0_api.jar"/>
+	<classpathentry kind="lib" path="lib/resolver.jar"/>
+	<classpathentry kind="lib" path="lib/stringtemplate.jar" sourcepath="/home/mike/work/sources/stringtemplate-2.2/src"/>
+	<classpathentry kind="lib" path="lib/vdldefinitions.jar"/>
+	<classpathentry kind="lib" path="lib/xbean_xpath.jar"/>
+	<classpathentry kind="lib" path="lib/xbean.jar"/>
+	<classpathentry kind="lib" path="lib/jug-lgpl-2.0.0.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/util"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/abstraction-provider-coaster"/>
+	<classpathentry kind="lib" path="lib/jline-0.9.94.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+        <classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/abstraction-provider-local"/>
+	<classpathentry kind="output" path=".build"/>
+</classpath>

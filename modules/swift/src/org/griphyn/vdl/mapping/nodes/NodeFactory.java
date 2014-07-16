@@ -1,0 +1,99 @@
+//----------------------------------------------------------------------
+//This code is developed as part of the Java CoG Kit project
+//The terms of the license can be found at http://www.cogkit.org/license
+//This message may not be removed or altered.
+//----------------------------------------------------------------------
+
+/*
+ * Created on Mar 28, 2014
+ */
+package org.griphyn.vdl.mapping.nodes;
+
+import java.util.List;
+
+import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.DuplicateMappingChecker;
+import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.type.Field;
+import org.griphyn.vdl.type.Type;
+
+
+public class NodeFactory {
+    public static AbstractDataNode newNode(Field f, RootHandle root, AbstractDataNode parent) {
+        AbstractDataNode n;
+        Type t = f.getType();
+        if (t.isPrimitive()) {
+            n = new FuturePrimitiveDataNode(f, root, parent);
+        }
+        else if (!t.isComposite()) {
+            n = new FutureMappedSingleDataNode(f, root, parent);
+        }
+        else if (t.isArray()) {
+            n = new FutureArrayDataNode(f, root, parent);
+        }
+        else {
+            n = new FutureStructDataNode(f, root, parent);
+        }
+        n.initialize();
+        return n;
+    }
+    
+    public static AbstractDataNode newNode(Field f, RootHandle root, AbstractDataNode parent, Object value) {
+        AbstractDataNode n;
+        Type t = f.getType();
+        if (t.isPrimitive()) {
+            return new ClosedPrimitiveDataNode(f, root, parent, value);
+        }
+        else {
+            throw new IllegalArgumentException();
+        }
+    }
+    
+    public static AbstractDataNode newRoot(Field f, Object value) {
+        Type t = f.getType();
+        if (t.isPrimitive()) {
+            return new RootClosedPrimitiveDataNode(f, value);
+        }
+        else if (t.isArray() && t.itemType().isPrimitive()){
+            return new RootClosedArrayDataNode(f, (List<?>) value, null);
+        }
+        else {
+        	throw new IllegalArgumentException();
+        }
+    }
+    
+    public static AbstractDataNode newRoot(Field f, DependentException e) {
+        Type t = f.getType();
+        if (t.isPrimitive()) {
+            return new RootClosedPrimitiveDataNode(f, e);
+        }
+        else {
+            throw new IllegalArgumentException();
+        }
+    }
+    
+    public static RootHandle newOpenRoot(Field f, DuplicateMappingChecker dmc) {
+        Type t = f.getType();
+        if (t.isPrimitive()) {
+            return new RootFuturePrimitiveDataNode(f);
+        }
+        else if (t.isArray()) {
+            return new RootFutureArrayDataNode(f, dmc);
+        }
+        else if (t.isComposite()) {
+            return new RootFutureStructDataNode(f, dmc);
+        }
+        else {
+            return new RootFutureMappedSingleDataNode(f, dmc);
+        }
+    }
+    
+    public static AbstractDataNode newRoot(Type type, Object value) {
+        if (type.isPrimitive()) {
+            return new RootClosedPrimitiveDataNode(Field.Factory.getImmutableField("?", type), value);
+        }
+        else {
+            throw new IllegalArgumentException();
+        }
+    }
+}

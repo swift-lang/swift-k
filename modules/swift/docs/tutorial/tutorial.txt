@@ -1,0 +1,20 @@
+A Swift Tutorial
+================
+
+:toc:
+:icons:
+:website: http://www.ci.uchicago.edu/swift/guides/tutorial.php
+:numbered:
+
+include::introduction[]
+
+include::hello_world[]
+
+include::language_features[]
+
+include::runtime_features[]
+
+include::bits[]
+
+link:http://www.ci.uchicago.edu/swift/docs/index.php[home]
+

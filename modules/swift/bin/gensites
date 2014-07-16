@@ -1,0 +1,220 @@
+#!/bin/bash 
+
+# crash: Report a problem and exit
+crash()
+{
+    MSG=$1
+    echo ${MSG}  >&2
+    exit 1
+}
+
+# get_value: Return the right hand side of an equals
+# statment in swift.properties format: #site sitename option=value
+get_value()
+{
+   for last; do true; done
+   eval echo $last |cut -d'=' -f2
+}
+
+# get_variable: Return the left hand side of an equals
+# statement in swift.properties format: #site sitename option=value
+get_variable()
+{
+   for last; do true; done
+   eval echo $last | cut -d'=' -f1
+}
+
+# Verify an argument is not null
+verify_not_null()
+{
+   argname=$1; shift
+   if [ _$1 != _ ]; then
+      return 0;
+   else
+      echo $0: value for $argname can not be null
+      exit 1
+   fi
+}
+
+# Print usage information and exit
+usage()
+{
+   cat << END
+
+   usage: gensites template [-p properties.file] [-L template_directory] [-h] [-T] [-l]
+   
+   template		 Name of template to use
+   -p properties.file	 Specify a swift.properties to use
+   -L template_directory Specify a non-standard template directory
+   -T			 List all templates available
+   -h			 Help / usage information
+   -l                    List the contents of a specific template
+
+   Examples:
+
+   Create a site configuration file for sites.xml using swift.properties in current directory
+   	$ gensites pads > sites.xml
+
+   Use a specific properties file for a site
+        $ gensites -p sites.properties pads > sites.xml
+
+   Specify a non-standard directory where templates are located
+   	$ gensites -L template.dir pads > sites.xml
+
+
+END
+exit 0;
+}
+
+
+# Parse command line arguments
+while [ $# -gt 0 ]
+do
+   case "$1" in
+      -p) PROPERTIES_FILE=$2; verify_not_null properties_file $PROPERTIES_FILE; shift ;;
+      -L) TEMPLATE_DIRECTORY=$2; verify_not_null template_directory $TEMPLATE_DIRECTORY; shift ;;
+      -l) LIST_SPECIFIC_TEMPLATE=1 ;;
+      -T) LIST_TEMPLATES=1 ;;
+      -n) NEW_TEMPLATE_NAME=$2; verify_not_null new_template_name $NEW_TEMPLATE_NAME; shift ;;
+      -h|-help|-?) usage ;;
+       *) TEMPLATE=$1 ;;
+   esac
+   shift
+done
+
+# Determine SWIFT_HOME
+if [ -z "$SWIFT_HOME" ]; then
+   SWIFT_BIN_DIR="$( cd "$( dirname "$0" )" && pwd )"
+   if [ ! -d "$SWIFT_HOME" ]; then
+      SWIFT_HOME="$( cd $SWIFT_BIN_DIR/../etc/sites  && pwd )" 
+   fi
+ 
+   # Can't find swift path, give up
+   if [ ! -d "$SWIFT_HOME" ]; then
+      crash "Unable to determine SWIFT_HOME. Please set manually."
+   fi            
+fi
+
+# List all templates
+if [ ! -z "$LIST_TEMPLATES" ]; then
+   # Templates in etc/sites
+   for file in `ls -1 $SWIFT_HOME/* 2>/dev/null`
+   do
+	basename $file
+   done
+   # Templates in .swift/sites
+   for file in `ls -1 $HOME/.swift/sites/* 2>/dev/null`
+   do
+       basename $file
+   done
+   exit 0
+fi
+
+# Require template name to be specified by user
+if [ -z "$TEMPLATE" ]; then
+   crash "Not specified: TEMPLATE"
+fi
+
+# Use custom template directory if asked
+if [ -d "$TEMPLATE_DIRECTORY" ]; then
+   TEMPLATE_PATH="$TEMPLATE_DIRECTORY/$TEMPLATE"
+fi
+
+# Locate template
+if [ ! -f "$TEMPLATE_PATH" ]; then
+   if [ -f "$TEMPLATE" ]; then
+      TEMPLATE_PATH=$TEMPLATE
+   elif [ -f "$HOME/.swift/sites/$TEMPLATE" ]; then
+      TEMPLATE_PATH=$HOME/.swift/sites/$TEMPLATE
+   elif [ -f "$PWD/conf/$TEMPLATE" ]; then
+      TEMPLATE_PATH=$PWD/conf/$TEMPLATE
+   elif [ -f "$SWIFT_HOME/$TEMPLATE" ]; then
+      TEMPLATE_PATH=$SWIFT_HOME/$TEMPLATE
+   fi
+   if [ ! -f "$TEMPLATE_PATH" ]; then
+      crash "Cannot find template for $TEMPLATE"
+   fi
+fi
+
+# List a specific template
+if [ ! -z "$LIST_SPECIFIC_TEMPLATE" ]; then
+   cat $TEMPLATE_PATH
+   exit 0
+fi
+
+# Ensure a properties file exists
+if [ -z "$PROPERTIES_FILE" ]; then
+   if [ -f "./swift.properties" ]; then
+      PROPERTIES_FILE="./swift.properties"
+   elif [ -f "$HOME/.swift/swift.properties" ]; then
+      PROPERTIES_FILE="$HOME/.swift/swift.properties"
+   fi
+fi
+
+# Setup for creating a TC file
+HOSTS=`grep -i "pool handle" $TEMPLATE_PATH|grep -v "^[[:space:]]*#"|cut -d'"' -f2`
+
+# Parse values into variables for later sed processing
+if [ -f "$PROPERTIES_FILE" ]; then
+   while read line
+   do
+      case "$line" in
+         "#site $TEMPLATE "*)
+            var=$( get_variable $line | tr '[a-z]' '[A-Z]' )
+            val=$( get_value $line )
+            eval $( echo $var )=$val
+            ;;
+         '#app'*)
+            if [ `echo $line | wc -w` == 2 ]; then
+               for HOST in $HOSTS
+               do
+                  NAME=`echo $line |cut -d'=' -f1|awk '{print $2}'`
+                  COMMAND=`echo $line |cut -d'=' -f2`
+                  COMMAND=`eval echo $COMMAND`
+                  COMMAND_DIRNAME=$(dirname $COMMAND)
+                  if [ -d "$COMMAND_DIRNAME" ]; then
+                     COMMAND_PATH=$(cd $COMMAND_DIRNAME; pwd)/$(basename $COMMAND)
+                     echo $HOST $NAME $COMMAND_PATH null null null >> tc.data
+                  else
+                     echo $HOST $NAME $COMMAND null null null >> tc.data
+                  fi
+              done
+           fi
+
+           if [ `echo $line |wc -w` == 3 ]; then
+              for HOST in $HOSTS
+              do
+                 if [ $HOST == `echo $line|awk '{print $2}'` ]; then
+                    NAME=`echo $line|awk '{print $3}'|cut -d'=' -f1`
+                    COMMAND=`echo $line|awk '{print $3}'|cut -d'=' -f2`
+                    COMMAND=`eval echo $COMMAND`
+                    COMMAND_PATH=$(cd $(dirname $COMMAND); pwd)/$(basename $COMMAND)
+                    eval echo $HOST $NAME $COMMAND_PATH  null null null >> tc.data
+                 fi
+               done
+            fi
+         ;;
+      esac
+   done < $PROPERTIES_FILE
+fi
+
+# Replace values
+VALUES_TO_REPLACE=$( sed -n 's/.*_\(.*\)_.*/\1/p' $TEMPLATE_PATH )
+SED_COMMAND="sed "
+for value in $VALUES_TO_REPLACE
+do
+   if [ -z "${!value}" ]; then
+      crash "$value not defined"
+   fi
+   SED_COMMAND+="-e s@"\_$value\_"@${!value}@g "
+done
+if [ -n "$NEW_TEMPLATE_NAME" ]; then
+   SED_COMMAND+=" -e s@\"$HOSTS\"@\"$NEW_TEMPLATE_NAME\"@g "
+fi
+
+len=$( echo $SED_COMMAND |wc -w )
+if [ $len -gt 1 ]; then
+   $SED_COMMAND $TEMPLATE_PATH
+else
+   cat $TEMPLATE_PATH
+fi

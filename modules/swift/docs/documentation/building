@@ -1,0 +1,27 @@
+Building Documentation Manually
+-------------------------------
+Before committing anything to SVN, it is a good idea manually
+build the documentation for testing purposes. 
+
+Prerequisites
+~~~~~~~~~~~~~
+There are several prerequisites for building documentation:
+
+* asciidoc and a2x (http://www.methods.co.nz/asciidoc)
+* dblatex (http://dblatex.sourceforge.net)
+* source-highlight (http://www.gnu.org/software/src-highlite)
+* For Mac OSX users only: coreutils (installation via macports recommended)
+
+For CI users, compiled versions of these packages can be found in ~davidk.
+
+build_docs.sh
+~~~~~~~~~~~~~
+
+The script to build the documentation is docs/build_docs.sh. This script 
+will convert the documents into HTML and PDF, and then copy the
+files to a given output directory.
+
+.Usage
+-----
+./build_docs.sh /path/to/copy/output
+-----

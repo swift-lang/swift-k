@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# attempts to list every known thread ID from the log file
+grep 'DEBUG TaskImpl' log | sed 's/.*urn:\(.*\)-[0123456789]*).*/\1/' | sort | uniq

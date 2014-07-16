@@ -1,0 +1,5 @@
+Overview
+--------
+This guide provides a brief overview of how Swift Document Generation works. It
+should explain the structure of a docs directory, how to manually build documentation,
+and explain how document automation works.

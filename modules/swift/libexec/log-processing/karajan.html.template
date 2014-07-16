@@ -1,0 +1,121 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<!-- (TODO indicate log file name here; indicate report generation
+time here; indicate version of swift that was used - if locally modified
+print a big red warning) -->
+
+<hr />
+<p>Number of karajan level job submissions that are 'Active' - this means
+that the underlying execution layer (such as GRAM) has reported that the
+job is actually executing</p>
+<img src="karatasks.JOB_SUBMISSION.Active-total.png" />
+
+<hr />
+<h2>karajan tasks</h2>
+<p>just karajan task start/end
+(<a href="karatasks.event">text file of events</a>):</p>
+<img src="karatasks.png" />
+
+<p>karajan tasks, coloured by type:</p>
+<img src="karatasks-coloured.png" />
+
+<p>karajan tasks, coloured by type and sorted by start time:</p>
+<img src="karatasks-coloured-sorted.png" />
+
+<p>Total karajan tasks in progress at any time:</p>
+<img src="karatasks-total.png" />
+
+<p>Counts for each task type:</p>
+
+<pre>
+include(`karatasks-type-counts.txt')
+</pre>
+
+<p>Breakdown of last known status for karajan tasks:</p>
+<pre>
+include(`karatasks.lastsummary')
+</pre>
+
+<p>karajan FILE_TRANSFER tasks</p>
+<img src="karatasks.FILE_TRANSFER.sorted-start.png" />
+<br/>
+<img src="karatasks.FILE_TRANSFER-total.png" />
+<br/>
+<pre>
+include(`karatasks.FILE_TRANSFER.stats')
+</pre>
+
+<p>karatasks FILE_TRANSFER trails:</p>
+<img src="karatasks.FILE_TRANSFER-trails.png" />
+
+<p>karajan FILE_OPERATION tasks</p>
+<img src="karatasks.FILE_OPERATION.sorted-start.png" />
+<br/>
+<img src="karatasks.FILE_OPERATION-total.png" />
+<br/>
+<pre>
+include(`karatasks.FILE_OPERATION.stats')
+</pre>
+<p>karatasks FILE_OPERATION trails:</p>
+<img src="karatasks.FILE_OPERATION-trails.png" />
+<p>karajan JOB_SUBMISSION tasks</p>
+<img src="karatasks.JOB_SUBMISSION.sorted-start.png" />
+<br/>
+<img src="karatasks.JOB_SUBMISSION-total.png" />
+<br/>
+<pre>
+include(`karatasks.JOB_SUBMISSION.stats')
+</pre>
+<p>karatasks JOB_SUBMISSION trails:</p>
+<img src="karatasks.JOB_SUBMISSION-trails.png" />
+
+<p>Number of karajan level job submissions that are 'Submitted' - this means
+that the underlying execution layer (such as GRAM) has reported that the
+job is submitted for execution, but not executing (queued).</p>
+<img src="karatasks.JOB_SUBMISSION.Queue-total.png" />
+
+<p>karajan queued JOB_SUBMISSION tasks</p>
+<img src="karatasks.JOB_SUBMISSION.Queue.sorted-start.png" />
+
+<p>karajan queued JOB_SUBMISSION cumulative duration</p>
+<img src="karatasks.JOB_SUBMISSION.Queue-duration-histogram.png" />
+
+<pre>
+include(`karatasks.JOB_SUBMISSION.Queue.stats')
+</pre>
+<hr />
+
+<p>Number of tasks in Active state</p>
+<img src="karatasks.JOB_SUBMISSION.Active-total.png" />
+
+<p>karajan active JOB_SUBMISSION tasks</p>
+<img src="karatasks.JOB_SUBMISSION.Active.sorted-start.png" />
+
+<p>karajan active JOB_SUBMISSION cumulative duration</p>
+<img src="karatasks.JOB_SUBMISSION.Active-duration-histogram.png" />
+
+<pre>
+include(`karatasks.JOB_SUBMISSION.Active.stats')
+</pre>
+<hr />
+
+<hr />
+<h2>job clusters</h2>
+1. <img src="karatasks.clusters.png" alt="-"/>
+<br />
+2. <img src="karatasks.clusters-total.png" alt="-"/>
+<br />
+3. <img src="karatasks.clusters.sorted-start.png" alt="-"/>
+<br />
+4. <img src="karatasks.clusters-duration-histogram.png" alt="-"/>
+<br />
+5. <img src="cluster-jobcount-histogram.png" alt="-"/>
+<hr />
+
+<p>end</p>
+</body>

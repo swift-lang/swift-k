@@ -1,0 +1,113 @@
+#!/bin/bash
+
+#Some of the space-and-quotes output files break checkouts on Windows
+./generate-odd-files
+
+# make up a tc.data file
+
+cp $(dirname $(which swift))/../etc/tc.data ./tc.data
+
+if [ "X$SWIFT_TEST_PARAMS" = "X" ] ; then
+  SWIFT_TEST_PARAMS="-tc.file ./tc.data"
+fi
+
+./generate-tc.data
+
+if [ "X$1" == "X" ]; then
+  TESTS=*.swift
+elif [ "$1" == "-r" ]; then
+	RESUME="y"
+	TESTS=*.swift
+	echo Resuming previous test run
+elif [ "$1" == "-s" ]; then
+  SUB="y"
+  shift
+  TESTS="$@"
+elif [ "$1" == "-d" ]; then
+	export COG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,address=9999,server=y,suspend=y"
+	shift
+	TESTS="$@"
+else
+  TESTS="$@"
+fi
+
+if [ "$SUB" == "y" ]; then
+	echo Removing files from previous runs for test $1
+	rm -rf $1*.out $1*.xml $1*.kml $1*.dot $1*.log $1*.rlog $1*.d
+elif [ "$RESUME" != "y" ]; then
+	echo Removing files from previous runs
+	rm -rf *.out *.xml *.kml *.dot *.log *.rlog *.d _concurrent
+fi
+
+for testfn in $TESTS; do
+
+  export t=$(basename $testfn .swift)
+  export EXPECTEDS="$t.*.expected"
+
+  if [ "$RESUME" == "y" ]; then
+  	echo Skipping test $t
+  else
+	echo Running test $t at $(date)
+	swift ${SWIFT_TEST_PARAMS} ${t}.swift
+	if [ "$?" -ne "0" ]; then echo "SWIFT RETURN CODE NON-ZERO - test $testfn"; exit 1; fi
+	echo expecting $EXPECTEDS
+  fi
+
+  for e in $EXPECTEDS; do
+
+    if [ -f "$e" ]; then
+
+	  if [ "$RESUME" != "y" ]; then
+	      echo checking $e
+	  fi
+      out=$(basename "$e" .expected)
+
+      diff -q "${out}" "${e}"
+      if [ "$?" -ne "0" ]; then 
+      	if [ "$RESUME" == "y" ]; then
+      		RESUME="n"
+      		$0 -s $t
+      		if [ "$?" -ne "0" ]; then
+      			exit $?
+      		fi
+      	else
+	      	echo "OUTPUT DIFFERS - test $testfn"
+	      	exit 1
+	    fi
+      fi
+
+    else
+      echo "No expected output files specified for this test case - not checking output."
+    fi
+
+  done
+
+  if [ "$SWIFT_TEST_EXCEPTIONS" == "no" ]; then
+    echo Skipping exception test due to test configuration
+  else
+    grep --quiet "	at " ${t}-*.log
+    if [ "$?" == "0" ]; then
+      echo EXCEPTIONS - stacktrace-like log lines found in output for ${t}
+      exit 2
+    fi
+  fi
+
+  # check that all execute and execute2 IDs are unique
+  swift-plot-log ${t}-*.log execute.transitions compound.transitions internalproc.transitions
+  if [ "$( cat compound.transitions execute.transitions internalproc.transitions | grep ' START ' | cut -d ' ' -f 2 | sort | uniq -d)" != "" ]; then
+    echo EXECUTE AND COMPOUND AND INTERNALPROC IDS NOT UNIQUE
+    exit 3
+  fi
+
+  echo "Test passed at $(date)"
+  if [ "$SUB" == "" ]; then
+  	echo ----------===========================----------
+  fi
+done
+
+if [ "$SUB" == "" ]; then
+	echo All language behaviour tests passed
+fi
+
+exit 0
+

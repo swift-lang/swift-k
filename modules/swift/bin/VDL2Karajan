@@ -1,0 +1,24 @@
+#!/bin/sh
+
+MYPATH=`dirname $0`
+
+if [ "$1" = "" ]; then
+	echo "Usage:"
+	echo "	vdlc <name>.[dtm|xml]"
+	echo
+	exit 1
+fi
+
+if [ "`basename $1 .swift`" = "$1" ]; then
+	if [ "`basename $1 .xml`" = "$1" ]; then
+		echo Unknown file type: $1 
+		exit
+	else
+		NAME=`basename $1 .xml`
+		$MYPATH/VDLx2Karajan "$NAME.xml" >"${NAME}.kml"
+	fi
+else
+	NAME=`basename $1 .swift`
+	$MYPATH/VDLt2VDLx <$1 >"$NAME.xml" && \
+	$MYPATH/VDLx2Karajan "$NAME.xml" >"${NAME}.kml"
+fi

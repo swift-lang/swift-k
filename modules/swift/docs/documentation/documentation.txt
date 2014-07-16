@@ -1,0 +1,13 @@
+Swift Document Generation
+=========================
+
+include::overview[]
+
+include::structure[]
+
+include::building[]
+
+include::automation[]
+
+link:http://www.ci.uchicago.edu/swift/docs/index.php[home]
+

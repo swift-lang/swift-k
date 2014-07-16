@@ -1,0 +1,12 @@
+
+  <pool handle="local-coasters">
+    <filesystem provider="local" />
+    <execution provider="coaster" jobmanager="local:local"/>
+    <profile namespace="karajan"  key="jobthrottle">0</profile>
+    <profile namespace="karajan"  key="initialScore">10000</profile>
+    <profile namespace="globus"   key="maxTime">1000</profile>
+    <profile namespace="globus"   key="nodeGranularity">1</profile>
+    <workdirectory>_WORK_</workdirectory>
+    <scratch>_SCRATCH_</scratch>
+  </pool>
+

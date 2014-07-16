@@ -1,0 +1,86 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <types>
+     	<type>
+     		<typename>messagefile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>
+     	<type>
+     		<typename>countfile</typename>
+     		<typealias>string</typealias>
+     		<typestructure></typestructure>
+     	</type>   
+  </types>  
+  <procedure name="countwords" src="line 4">
+
+      <output 
+    name="t" type="countfile"
+
+     xsi:nil="true" />
+
+      <input 
+    name="f" type="messagefile"
+
+     xsi:nil="true" />
+    <binding>
+      <application src="line 5">
+        <executable>wc</executable>
+        <stdout><function name="filename">
+          <variableReference>t</variableReference></function></stdout><stringConstant>-w</stringConstant><function name="filename">
+          <variableReference>f</variableReference></function>  </application>
+    </binding>
+  </procedure>
+  <variable name="inputNames" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 11">
+   <variableReference>inputNames</variableReference>
+   <stringConstant>one.txt two.txt three.txt</stringConstant>
+  </assign>
+  <variable name="outputNames" type="string" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 13">
+   <variableReference>outputNames</variableReference>
+   <stringConstant>one.count two.count three.count</stringConstant>
+  </assign>
+  <variable name="inputfiles" type="messagefile[]" isGlobal="false">
+    <mapping descriptor="array_mapper">
+      <param name="files"><variableReference>inputNames</variableReference></param>
+    </mapping>
+  </variable>
+  <variable name="outputfiles" type="countfile[]" isGlobal="false">
+    <mapping descriptor="array_mapper">
+      <param name="files"><variableReference>outputNames</variableReference></param>
+    </mapping>
+  </variable>
+  <call proc="countwords" src="line 16">
+    <output><arraySubscript>
+     <variableReference>outputfiles</variableReference>
+     <integerConstant>0</integerConstant>
+    </arraySubscript></output>
+    <input><arraySubscript>
+     <variableReference>inputfiles</variableReference>
+     <integerConstant>0</integerConstant>
+    </arraySubscript></input>
+  </call>
+  <call proc="countwords" src="line 17">
+    <output><arraySubscript>
+     <variableReference>outputfiles</variableReference>
+     <integerConstant>1</integerConstant>
+    </arraySubscript></output>
+    <input><arraySubscript>
+     <variableReference>inputfiles</variableReference>
+     <integerConstant>1</integerConstant>
+    </arraySubscript></input>
+  </call>
+  <call proc="countwords" src="line 18">
+    <output><arraySubscript>
+     <variableReference>outputfiles</variableReference>
+     <integerConstant>2</integerConstant>
+    </arraySubscript></output>
+    <input><arraySubscript>
+     <variableReference>inputfiles</variableReference>
+     <integerConstant>2</integerConstant>
+    </arraySubscript></input>
+  </call>
+</program>

@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# 12 0 153 0 badmonkey-1s8uqkhi FAILED
+# 12 1 139 0 goodmonkey-0s8uqkhi COMPLETED
+
+ST=$(cat start-time.tmp)
+
+I=3
+
+while read start ignore duration ignoremore jobid state; do
+  echo job $jobid >&2
+# output the job line
+  echo $start $I $duration 0 execute2 $jobid $state
+  I=$(( $I + 1 ))
+
+# echo kickstart if its there
+  a=everylog/${jobid}-kickstart.xml
+  if [ -f $a ]; then
+    echo kickstart record exists >&2
+    START=$(grep "<mainjob " $a | sed 's/^.*start="\([^"]*\)".*$/\1/' | iso-to-secs)
+    DURATION=$(grep "<mainjob " $a | sed 's/^.*duration="\([^"]*\)".*$/\1/')
+
+    echo $(( $START - $ST )) $I $DURATION 0 $a
+
+  else
+    echo no kickstart record >&2
+  fi
+
+# increment whether we put kickstart in or not
+  I=$(( $I + 2 ))
+
+  # blank row
+  I=$(( $I + 1 ))
+  SM=$start
+
+done < start-last-times.data
+
+echo $SM $I 0 0 nudgeaxis

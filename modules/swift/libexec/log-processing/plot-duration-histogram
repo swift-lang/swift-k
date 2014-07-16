@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cat $1 | sed 's/^[^ ]* \([^ ]*\) .*$/\1/'  > duration-histogram.tmp
+
+gnuplot ${SWIFT_PLOT_HOME}/duration-histogram.plot
+
+cp duration-histogram.png $2

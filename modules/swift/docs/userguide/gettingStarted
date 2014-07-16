@@ -1,0 +1,27 @@
+Getting Started
+---------------
+This section will provide links and information to new
+Swift users about how to get started using Swift.
+
+Quickstart
+~~~~~~~~~~
+This section provides the basic steps for downloading and installing Swift.
+
+* Swift requires that a recent version of Oracle Java is installed. More information about installing Java can be found at http://www.oracle.com/technetwork/java.
+* Download Swift 0.95 at http://swiftlang.org/packages/swift-0.95.tar.gz.
+* Extract by running "tar xfz swift-0.95.tar.gz"
+* Add Swift to $PATH by running "export PATH=$PATH:/path/to/swift-0.95/bin"
+* Verify swift is working by running "swift -version"
+
+Tutorials
+~~~~~~~~~
+There are a few tutorials available for specific clusters and
+supercomputers.
+
+http://swift-lang.org/tutorials/cloud/tutorial.html[Swift on Clouds and Ad Hoc collections of workstations]
+
+http://swift-lang.org/tutorials/osgconnect/tutorial.html[Swift on OSG Connect]
+
+http://swiftlang.org/tutorials/cray/tutorial.html[Swift on Crays]
+
+http://swiftlang.org/tutorials/midway/tutorial.html[Swift on RCC Midway Cluster at UChicago / Slurm]

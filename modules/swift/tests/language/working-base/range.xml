@@ -1,0 +1,21 @@
+<program xmlns="http://ci.uchicago.edu/swift/2009/02/swiftscript"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="nums" type="int[]" isGlobal="false" xsi:nil="true"/>
+  <assign src="line 3">
+   <variableReference>nums</variableReference>
+
+     <range>
+       <integerConstant>0</integerConstant>
+       <integerConstant>20</integerConstant>
+       <integerConstant>2</integerConstant>
+     </range>
+
+  </assign>
+  <foreach var="num"  src="line 3">
+  <in><variableReference>nums</variableReference></in>
+  <body><call proc="trace" src="line 4">
+      <input><variableReference>num</variableReference></input>
+    </call></body>
+  </foreach>
+</program>

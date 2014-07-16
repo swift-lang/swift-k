@@ -1,0 +1,160 @@
+Debugging
+---------
+
+Retries
+~~~~~~~
+If an application procedure execution fails, Swift will attempt that
+execution again repeatedly until it succeeds, up until the limit defined
+in the execution.retries configuration property.
+
+Site selection will occur for retried jobs in the same way that it
+happens for new jobs. Retried jobs may run on the same site or may run
+on a different site.
+
+If the retry limit execution.retries is reached for an application
+procedure, then that application procedure will fail. This will cause
+the entire run to fail - either immediately (if the lazy.errors
+property is false) or after all other possible work has been attempted
+(if the lazy.errors property is true).
+
+With or without lazy errors, each app is re-tried <execution.retries>
+times before it is considered failed for good. An app that has failed
+but still has retries left will appear as "Failed but can retry".
+
+Without lazy errors, once the first (time-wise) app has run out of
+retries, the whole run is stopped and the error reported.
+
+With lazy errors, if an app fails after all retries, its outputs are
+marked as failed. All apps that depend on failed outputs will also fail
+and their outputs marked as failed. All apps that have non-failed
+outputs will continue to run normally until everything that can proceed
+completes. 
+
+For example, if you have:
+
+----
+foreach x in [1:1024] {
+   app(x);
+}
+----
+
+If the first started app fails, all the other ones can still
+continue, and if they don't otherwise fail, the run will only terminate
+when all 1023 of them will complete.
+
+So basically the idea behind lazy errors is to run EVERYTHING that can
+safely be run before stopping.
+
+Some types of errors (such as internal swift errors happening in an app
+thread) will still stop the run immediately even in lazy errors mode.
+But we all know there are no such things as internal swift errors :)
+
+Restarts
+~~~~~~~~
+If a run fails, Swift can resume the program from the point of failure.
+When a run fails, a restart log file will be left behind in the run directory 
+called restart.log. This restart log can then be passed to a subsequent Swift 
+invocation using the -resume parameter. Swift will resume execution, avoiding 
+execution of invocations that have previously completed successfully. The Swift
+source file and input data files should not be modified between runs.
+
+Normally, if the run completes successfully, the restart log file is deleted. 
+If however the workflow fails, swift can use the restart log file to continue 
+execution from a point before the failure occurred. In order to restart from a 
+restart log file, the -resume logfile argument can be used after the
+Swift script file name. Example:
+
+----
+$ swift -resume runNNN/restart.log example.swift.
+----
+
+Monitoring Swift
+~~~~~~~~~~~~~~~
+
+Swift runs can be monitored for progress and resource usage. There are three basic monitors available: Swing, TUI, and http.
+
+HTTP Monitor
+^^^^^^^^^^^^
+The HTTP monitor will allow for the monitoring of Swift via a web browser. To start the HTTP monitor, run Swift with the +-ui http:<port>+
+command line option. For example:
+
+-----
+swift -ui http:8000 modis.swift
+-----
+image:HTTP-monitor.jpg[]
+
+This will create a server running on port 8000 on the machine where Swift is running. Point your web browser to http://<ip_address>:8000 to view
+progress.
+
+
+Swing Monitor
+^^^^^^^^^^^^^
+
+The Swing monitor displays information via a Java gui/X window. To start the Swing monitor, run Swift with the
++-ui Swing+ command line option. For example:
+
+-----
+swift -ui Swing modis.swift
+-----
+image:Swing-monitor.jpg[]
+
+This will produce a gui/X window consisting of the following tabs:
+
+* Summary
+* Graphs
+* Applications
+* Tasks
+* Gantt Chart
+
+TUI Monitor
+^^^^^^^^^^^
+The TUI (textual user interface) monitor is one option for monitoring Swift on the console using a curses-like
+library.
+
+The progress of a Swift run can be monitored using the +-ui TUI+ option. For example:
+
+----
+swift -ui TUI modis.swift
+----
+image:TUI-monitor.jpg[]
+
+This will produce a textual user interface with multiple tabs, each showing the following features of the current Swift run:
+
+* A summary view showing task status
+* An apps tab 
+* A jobs tab 
+* A transfer tab 
+* A scheduler tab 
+* A Task statistics tab 
+* A customized tab called 'Ben's View'
+
+Navigation between these tabs can be done using the function keys f2 through f8. 
+
+Log analysis
+~~~~~~~~~~~~
+Swift logs can contain a lot of information. Swift includes a utility called "swiftlog" that 
+analyzes the log and prints a nicely formatted summary of all tasks of a given run.
+
+.swiftlog usage
+------
+$ swiftlog run027
+Task 1
+	App name = cat
+	Command line arguments = data.txt data2.txt
+	Host = westmere
+	Start time = 17:09:59,607+0000
+	Stop time = 17:10:22,962+0000
+	Work directory = catsn-run027/jobs/r/cat-r6pxt6kl
+	Staged in files = file://localhost/data.txt file://localhost/data2.txt
+	Staged out files = catsn.0004.outcatsn.0004.err 
+
+Task 2
+	App name = cat
+	Command line arguments = data.txt data2.txt
+	Host = westmere
+	Start time = 17:09:59,607+0000
+	Stop time = 17:10:22,965+0000
+	Work directory = catsn-run027/jobs/q/cat-q6pxt6kl
+	Staged in files = file://localhost/data.txt file://localhost/data2.txt
+	Staged out files = catsn.0010.outcatsn.0010.err 
+-----

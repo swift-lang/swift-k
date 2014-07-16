@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# given a list of channels in filename $1 and a label in $2,
+# find the row of $1 that is exactly $2 and output that number
+# otherwise output the last row number
+
+I=1
+while read token ; do
+echo $token $I
+I=$(( $I + 1 ))
+done

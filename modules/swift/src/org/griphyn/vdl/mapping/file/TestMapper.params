@@ -1,0 +1,4 @@
+String file
+Boolean temp = false
+Boolean remappable = false
+Boolean static_ = true

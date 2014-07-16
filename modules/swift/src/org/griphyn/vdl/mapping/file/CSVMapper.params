@@ -1,0 +1,6 @@
+@import org.griphyn.vdl.mapping.DSHandle
+DSHandle file = null
+Boolean header = true
+Integer skip = 0
+String hdelim = null
+String delim  = " \t,"

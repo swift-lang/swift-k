@@ -1,0 +1,32 @@
+#!/usr/bin/python
+
+import sys
+import subprocess
+import getpass
+
+jobs = sys.argv[2:len(sys.argv)]
+
+username = getpass.getuser()
+p = subprocess.Popen(['showq', '-w', 'user='+username], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+out, err = p.communicate()
+out_list = out.rstrip().split('\n')
+
+for o in out_list:
+    try:
+        words = o.split()
+        jobid = words[0].rstrip()
+        jobstatus = words[2].rstrip()
+
+        if jobid in jobs:
+           if jobstatus in ["Idle", "Deferred", "BatchHold", "SystemHold", "UserHold", "Deferred", "Migrated", "Staging", "Starting"]:
+               jobstatus = "Q"
+           elif jobstatus in ["Running"]:
+               jobstatus = "R"
+           elif jobstatus == ["Completed", "Vacated"]:
+               jobstatus = "C"
+           else:
+              continue
+           print "Job Id: " + jobid
+           print "\tjob_state = " + jobstatus + "\n"
+    except:
+        continue

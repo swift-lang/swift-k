@@ -1,0 +1,310 @@
+#header {
+	background-color: #172B17;
+	/*background-image: url(../images/graphics/h_backgrnd.gif);*/
+	background-image: url(../images/graphics/h_backgrnd2.gif);
+	background-repeat: repeat-x;
+	width: 100%;
+	background-position: center;
+}
+body {
+	margin: 0px auto;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	background: #fff no-repeat center top;
+}
+
+body#home a.home, 
+body#downloads a.downloads, 
+body#about a.about, 
+body#docs a.docs, 
+body#apps a.apps, 
+body#support a.support{
+	background-color: #666;
+	color:#FFFFFF;
+}
+
+
+a:link {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	color: #3366cc;
+	text-decoration: none;
+}
+a:visited {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	color: #3366cc;
+	text-decoration: none;
+}
+a:hover {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	color: #0099cc;
+	text-decoration: underline;
+}
+
+pre, pre *, div.dp-highlighter * {
+	font-family: Consolas, Andale Mono, monospaced;
+}
+
+/************* MENU ************/
+
+#nav {
+font-family: Arial, Helvetica, sans-serif;
+	width: 100%;
+	font-size: 12px;
+	font-weight: normal;
+	margin: 0px auto;
+	padding: 0px 0px 0px 0px;
+	background-color: #000000;
+	border-bottom: #ccc 2px solid;
+}
+
+#nav ul {
+width: 100%s;
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+	text-align: center;
+	letter-spacing: 1px;
+}
+
+#nav li {
+	display: inline;
+}
+
+#nav a {
+font-size: 12px;
+	padding-right: 6px;
+	padding-left: 6px;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: #FFFFFF;
+}
+
+#nav a:hover {
+	background-color: #666;
+}
+#page {
+	width: 850px;
+	margin: 0px 0px 40px 0px;
+	padding: 20px 0px 0px 0px;
+	border-top: thin #000 solid;
+	color: #333;
+}
+.image {
+  background-color: #eee;
+  margin:10px auto;
+  padding:3px;
+  border: 1px solid #ccc;
+  width: 419px;
+
+}
+.highlight{
+	border: 1px #ccc solid;
+	padding:5px;
+	background-color: #FCFAFA;
+	font-size: 11px;
+	margin-left:10px;
+}
+
+pre.programlisting {
+	padding: 10pt;
+	background: #FCFAFA;
+	border: 1px #ccc solid;
+	white-space: normal;
+}
+
+pre.shell, pre.screen {
+	padding: 10pt;
+	background: #FCFAFA;
+	border: 1px #ccc solid;
+	white-space: pre;
+}
+
+.mailinglists		{ width: 85%; margin: 0 0 0 35px; font-size:10px; }
+.mailinglists td	{ padding: 5px 5px; line-height: 16px;}
+.mailinglists th	{ font-size: 12px; text-align: left; color:#000; padding: 7px; letter-spacing: 1px; font-family:"Trebuchet MS", Arial, sans-serif;}
+
+#content {
+	float: left;
+	width: 100%;
+	padding: 0px 10px 70px 5px;
+	margin-bottom: 20px;
+	margin-top: 10px;
+}
+
+
+#content p{
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 17px;
+	color: #333333;
+	padding: 5px 30px 0px 30px;
+	
+	margin: 0px 0px 8px 0px;
+}
+
+#content ul{
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 17px;
+}
+
+#content li{
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 17px;
+	list-style:circle;
+	margin: 10px 10px 10px 35px;
+}
+
+h1 {
+	margin: 0px;
+	font-size: 16px;
+	font-weight: bold;
+	color: #172B17;
+	letter-spacing: 1px;
+	padding-top: 0px;
+	padding-right: 5px;
+	padding-bottom: 5px;
+	padding-left: 10px;
+	font-family:"Trebuchet MS", Arial, sans-serif;
+	
+}
+h2 {
+	margin: 0px;
+	font-size: 14px;
+	font-weight: bold;
+	color: #CC0000;
+	letter-spacing: 1px;
+	padding-top: 5px;
+	padding-right: 5px;
+	padding-bottom: 5px;
+	padding-left: 20px;
+	font-family:"Trebuchet MS", Arial, sans-serif;
+	
+}
+h3 {
+	margin: 0px;
+	font-size: 13px;
+	font-weight: bold;
+	color: #333;
+	letter-spacing: 1px;
+	padding-top: 5px;
+	padding-right: 5px;
+	padding-bottom: 5px;
+	padding-left: 20px;
+	font-family:"Trebuchet MS", Arial, sans-serif;
+	
+}
+h4 {
+	margin: 0px;
+	font-size: 12px;
+	font-weight: bold;
+	color: #666;
+	letter-spacing: 1px;
+	padding-top: 5px;
+	padding-right: 5px;
+	padding-bottom: 5px;
+	padding-left: 20px;
+	font-family:"Trebuchet MS", Arial, sans-serif;
+	text-transform: uppercase;
+	
+}
+h5 {
+	margin: 0px;
+	font-size: 12px;
+	font-weight: bold;
+	color: #666;
+	letter-spacing: 1px;
+	padding-top: 5px;
+	padding-right: 5px;
+	padding-bottom: 5px;
+	padding-left: 20px;
+	font-family:"Trebuchet MS", Arial, sans-serif;
+	text-transform: uppercase;
+	
+}
+#container {
+	background-color: #FFFFFF;
+	font-size: 10px;
+	font-weight: normal;
+	border: 1px #ccc solid;
+	width: 850px;
+	background-repeat: no-repeat;
+	background-position: center;
+	margin-top: 3px;
+	margin-right: auto;
+	margin-bottom: 0px;
+	margin-left: auto;		
+}
+/************* FOOTER ************/
+
+#footer {
+	clear: both;
+	width: 100%;
+	margin: 0px;
+	border-top: 1px solid #ddd;
+	border-bottom: 25px #FFF solid;
+	background-color: #FFF;
+	text-align: center;
+	padding: 0px;
+	color: #999;
+}
+
+#footer a:link {
+	font-size: 9px;
+	font-weight: normal;
+	color: #3366cc;
+	text-decoration: none;
+}
+#footer a:visited {
+	font-size: 9px;
+	color: #3366cc;
+	text-decoration: none;
+}
+ #footer a:hover {
+ 	font-size: 9px;
+	color: #0099cc;
+	text-decoration: underline;
+}
+
+/********* DOCBOOK STUFF ********/
+
+.article {
+	margin: 3px 20px;
+	font-size: 10px;
+}
+
+.article p {
+	margin: 2px 25px;
+}
+
+/* Syntax highlighting stuff */
+
+div.dp-highlighter {
+	background: #FCFAFA;
+	border: 1px #ccc solid;
+	white-space: normal;
+	margin: 10px;
+}
+
+span.comment {
+	color: #505050;
+}
+
+span.keyword {
+	color: #202080;
+	font-weight: bold;
+}
+
+span.string {
+	color: #209020;
+}
+
+span.function {
+	color: #800040;
+}

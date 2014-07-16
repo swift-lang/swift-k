@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# crash: Report a problem and exit
+crash()
+{
+   MSG=$1
+   echo ${MSG} >&2
+   exit 1
+}
+
+# Display usage message
+usage()
+{
+    echo "Usage: $(basename $0) [OPTION]..." >&2
+    echo "Options:" >&2
+    echo "-conf <CONFIG FILE>\
+           Coasters service configuration file (default: coaster-service.conf)" >&2
+}
+
+# Report a problem, then usage, then exit
+usage_crash()
+{
+   MSG=$1
+   echo ${MSG} >&2
+   echo
+   usage
+   exit 1
+}
+
+# Location of required files
+PID_FILE="$HOME/.swift/.coaster-service-pids"
+SWIFTVM_INSTANCES="$HOME/.swift/.swiftvm_instances"
+RUN_DIR=$PWD
+
+# Command line options
+while [ $# -gt 0 ]; do
+   case $1 in
+      -conf) CMDLN_CONF=$2; shift 2;; 
+      *) echo "Do not recognize command line option: $1" 1>&2; usage; exit 1;; 
+   esac
+done
+
+# Import settings
+if [ -f "$CMDLN_CONF" ]; then
+   CONFIG_FILE=$CMDLN_CONF
+elif [ -f "$RUN_DIR/coaster-service.conf" ]; then
+   CONFIG_FILE="$RUN_DIR/coaster-service.conf"
+elif [ -f "$HOME/.swift/coaster-service.conf" ]; then
+   CONFIG_FILE="$HOME/.swift/coaster-service.conf"
+elif [ -f "$(dirname $(readlink -f $0))/../etc/coaster-service.conf" ]; then
+   CONFIG_FILE="$(dirname $(readlink -f $0))/../etc/coaster-service.conf"
+else
+   usage_crash "Cannot find coaster-service.conf!"
+fi
+source "$CONFIG_FILE"
+
+echo "Stop-coaster-service..."
+echo "Configuration: $CONFIG_FILE"
+echo Ending coaster processes..
+
+if [ -f "$PID_FILE" ]; then
+   for pid in `cat $PID_FILE`
+   do
+      #echo "$pid"
+      for i in `ps -ef| awk '$3 == '$pid' { print $2 }'`
+      do
+         echo "Killing process $i"
+         kill $i > /dev/null 2>&1
+      done
+      kill $pid > /dev/null 2>&1
+   done
+   rm $PID_FILE > /dev/null 2>&1
+fi
+
+if [ "$WORKER_MODE" == "futuregrid" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+   for INSTANCE in `cat $SWIFTVM_INSTANCES`
+   do
+      $SWIFTVMBOOT_DIR/futuregrid/ve/bin/cloudinitd terminate $INSTANCE
+   done
+   rm $SWIFTVM_INSTANCES > /dev/null 2>&1
+fi
+
+if [ "$WORKER_MODE" == "gp" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+   for INSTANCE in `cat $SWIFTVM_INSTANCES`
+   do
+      echo Stopping ec2 instance $INSTANCE...
+      $SWIFTVMBOOT_DIR/bin/gp-instance-terminate $INSTANCE | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"
+
+  done
+  rm $SWIFTVM_INSTANCES > /dev/null 2>&1
+fi
+
+if [ "$WORKER_MODE" == "ec2" ] && [ -f "$SWIFTVM_INSTANCES" ]; then
+   export EC2_HOME="$SWIFTVMBOOT_DIR/ec2"
+   export EC2_PRIVATE_KEY="$EC2_KEYFILE"
+   export EC2_CERT="$EC2_CERTFILE"
+   INSTANCES_AS_STRING=$( cat $SWIFTVM_INSTANCES | tr "\\n" " ")
+   $SWIFTVMBOOT_DIR/ec2/bin/ec2-terminate-instances $INSTANCES_AS_STRING
+   if [ -f "$HOME/.swift/.swiftvm_instances" ]; then
+      rm $HOME/.swift/.swiftvm_instances
+   fi
+fi
+
+if [ "$WORKER_MODE" == "condor" ] || [ "$WORKER_MODE" == "gwms" ]; then
+   if [ -n "$WORKER_RELAY_HOST" ]; then
+      ssh $WORKER_USERNAME@$WORKER_RELAY_HOST "condor_rm $WORKER_USERNAME"    
+   else
+     condor_rm $WORKER_USERNAME
+   fi
+fi
+
+if [ -f "$HOME/.swift/machines" ]; then
+   rm "$HOME/.swift/machines"
+fi
+
+popd > /dev/null 2>&1
+echo Done

@@ -1,0 +1,16 @@
+body {
+	font-family: Sans;
+	font-size: 12px;
+}
+
+.plot {
+	background-color: #ffffff;
+}
+
+.bordered {
+	border: 2px solid black;
+}
+
+.mlabel {
+	background-color: #ffffff;
+}

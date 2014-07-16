@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# given an event input file, will produce an output file with a scalar
+# value at each data point indicating how many events were in-progress
+# at that time
+
+#echo EIP $(date) start first loop >&2
+events-in-progress-first-loop.pl > events-in-progress.tmp
+
+#echo EIP $(date) start sort  >&2
+sort -n < events-in-progress.tmp > events-in-progress2.tmp
+
+# events-in-progress2.tmp will now hold a sorted list of starts and
+# ends (disconnected from each other)
+
+# so now run through this file accumulating (or unaccumulating...)
+
+#echo EIP $(date) start second loop  >&2
+
+events-in-progress-second-loop.pl < events-in-progress2.tmp > events-in-progress3.tmp
+
+# now pass through this list, converting it into vectors
+
+#echo EIP $(date) start third loop  >&2
+events-in-progress-third-loop.pl < events-in-progress3.tmp
+
+
+#echo EIP $(date) done  >&2
+

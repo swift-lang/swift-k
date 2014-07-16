@@ -1,0 +1,18 @@
+group Karajan-np;
+
+swift_log_inputs(params) ::= <<>>
+swift_log_outputs(params) ::= <<>>
+
+callInternal_log_input() ::= <<$it$>>
+
+callInternal_log_output() ::= <<$it$>>
+
+variable_log() ::= << >>
+
+range(from, to, step, datatype) ::= <<swift:range($from$, $to$$if(step)$, step = $step$$endif$)>>
+
+slicearray(parent, memberchild, datatype) ::= <<
+	swift:sliceArray($parent$, "$memberchild$", "$datatype$")
+>>
+
+cs() ::= << >>

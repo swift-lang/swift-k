@@ -1,0 +1,14 @@
+#!/bin/sh
+for a in clusters no-retries dryrun typecheck path-prefix restart restart2 restart3 restart4 restart5 restart-iterate workernode-local \
+ordering-extern-notlazy restart-extern ordering-extern \
+external-mapper-args extract-int-delayed asserts \
+relative-wrapper arg arg-mode \
+; do
+ ./${a}.sh
+ R=$?
+ echo test $a ended with return value $R
+ if [ "$R" != "0" ] ; then
+   exit $R
+ fi
+done
+echo All misc. tests passed ok

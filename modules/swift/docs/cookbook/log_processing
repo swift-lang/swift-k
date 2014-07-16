@@ -1,0 +1,113 @@
+Log Processing
+---------------
+
+To properly generate log plots, you must enable VDL/Karajan logging. Make sure
+log4j.properties contains:
+----
+log4j.logger.swift=DEBUG
+log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Cpu=DEBUG
+----
+
+Make a basic load plot from Coasters Cpu log lines
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.Generate the log (may set log4j.logger.swift=INFO for this one)
+(assuming the log is titled swift-run.log)
+
+.Convert the log times to Unix time
+
+----
+./iso-to-secs < swift-run.log > swift-run.time
+----
+
+.Make the start time file (this contains the earliest timestamp)
+
+----
+make LOG=swift-run.log start-time.tmp
+----
+
+or 
+
+----
+extract-start-time swift-run.log > start-time.tmp
+----
+
+.Normalize the transition times
+
+----
+./normalise-event-start-time < swift-run.time > swift-run.norm
+----
+
+.Build up a load data file:
+
+----
+./cpu-job-load.pl < swift-run.norm > load.data
+----
+
+.Plot with the JFreeChart-based plotter in usertools/plotter:
+
+----
+lines.zsh load.cfg load.eps load.data
+----
+
+Make a basic job completion plot from Coasters Cpu log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.Same as above, but, build up a completed data file:
+
+----
+./cpu-job-completed.pl < swift-run.norm > completed.data
+----
+
+.Plot with the JFreeChart-based plotter in usertools/plotter:
+
+----
+lines.zsh completed.cfg completed.eps completed.data
+----
+
+Make a basic Block allocation plot from Coasters Block log lines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Same as above, but:
+
+.Build up a block allocation data file:
+
+----
+./block-level.pl < swift-run.norm > blocks.data
+----
+
+.Plot with the JFreeChart-based plotter in usertools/plotter:
+
+----
+lines.zsh blocks.{cfg,eps,data}
+----
+
+Problem Reporting
+~~~~~~~~~~~~~~~~~
+When reporting problems to swift-user@ci.uchicago.edu, attach the
+following files and information:
+ 
+. tc.data and sites.xml (or whatever you named these files)
+
+. your .swift source file and any .swift files it imports
+
+. any external mapper scripts called by your .swift script
+
+. all text from standard output and standard error produced by running the
+swift command
+
+. The .log file from this run. It will be named swiftscript.uniqueID.log
+
+. where "swiftscript" is the name of your *.swift script source file, and
+uniqueID is a long unique id which starts with the date and time you ran the
+swift command.
+
+. The swift command line you invoked
+
+. Any swift.properties entries you over-rode ($HOME/.swift/swift.properties,
+-config.file argument properties file, any changes to etc/swift.proerties from
+your swift distribution)
+
+. Which swift distribution you are running (release; svn revisions; other
+local changes you mave have made or included) 
+

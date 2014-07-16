@@ -1,0 +1,11 @@
+#! /bin/sh
+
+set -x
+export STRESS="S1"
+
+export GLOBUS_HOSTNAME=swift.rcc.uchicago.edu
+./stage_to_remote1x1.setup.sh
+. stage_to_remote1x1.source.sh
+
+ARGS=`cat stage_to_remote1x1.args`
+swift -config cf -sites.file sites.template.xml -tc.file tc.template.data stage_to_remote1x1.swift $ARGS

@@ -1,0 +1,15 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <dataset name="img1" type="Image">
+    <mapping descriptor="image_mapper">
+      <param name="location">&quot;/home/archive/images/image1.jpg&quot;</param>
+    </mapping>
+  </dataset>
+  <dataset name="img2" type="Image">
+    <mapping descriptor="simple_mapper">
+      <param name="prefix"><function name="filename">img1</function></param>
+      <param name="suffix">&quot;.2&quot;</param>
+    </mapping>
+  </dataset>
+</program>

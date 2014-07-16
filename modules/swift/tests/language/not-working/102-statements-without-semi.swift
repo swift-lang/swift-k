@@ -1,0 +1,1 @@
+echo(greeting) echo(greeting)

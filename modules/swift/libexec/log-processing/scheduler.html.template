@@ -1,0 +1,17 @@
+<html>
+<head><title>Swift log analysis</title></head>
+
+<body><h1>Swift log analysis</h1>
+
+include(`toolbar.html.template')
+
+<hr />
+<h2>scheduler scores</h2>
+<p>Scheduler host scores:</p>
+<img src="weights.png" />
+
+<p>Scheduler load information (tscores):</p>
+<img src="tscores.png" />
+
+<p>end</p>
+</body>

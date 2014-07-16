@@ -1,0 +1,2 @@
+grep -e "urn:$1-[0123456789]*)" log | sed 's/^\([^ ]*\) .*type=\([^,]*\),.*setting status to \(.*\)$/\1 \2 \3/'
+#grep -e "urn:$1-[0123456789]*)" log

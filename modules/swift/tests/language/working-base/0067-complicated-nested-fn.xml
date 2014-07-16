@@ -1,0 +1,5 @@
+<program xmlns="http://www.griphyn.org/2006/08/vdl"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <variable name="i" type="int"><function name="foo"><function name="abc">3, <function name="q">e</function>, <function name="filename">l</function>, <function name="filename">s</function>, <function name="filename">t</function>, <function name="xyz">9 + 3 * <function name="f">y</function></function>, <function name="baz">2</function></function>, 8</function></variable>
+</program>
