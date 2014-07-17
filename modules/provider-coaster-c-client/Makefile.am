@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src 
 EXTRA_DIST = autogen.sh
 LIBS = -pthread $(LIBS)
-include_HEADERS = src/coasters.h src/coaster-defs.h \
+include_HEADERS = src/coaster.h src/coaster-defs.h \
             src/Buffer.h src/ChannelCallback.h \
             src/ChannelConfigurationCommand.h src/ClientHandlerFactory.h \
             src/CoasterChannel.h src/CoasterClient.h \

@@ -19,7 +19,7 @@
 namespace Coaster {
 
 /*
-  Job represents a single Job that is to be submitted to coasters.
+  Job represents a single Job that is to be submitted to coaster service.
   The Job object is created and has its parameters set before submission.
   Once submitted, its status is updated to reflect its progress.
  */

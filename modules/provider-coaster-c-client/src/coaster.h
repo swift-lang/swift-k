@@ -15,18 +15,18 @@
  */
 
 /*
- * coasters.h
+ * coaster.h
  *
  * Created: Jun 18, 2014
  *    Author: Tim Armstrong
  *
- * Pure C interface for Coasters.  This aims to expose a subset of the
+ * Pure C interface for Coaster client.  This aims to expose a subset of the
  * C++ API's functionality that is sufficient to support all common use
- * cases for submitting jobs through Coasters.
+ * cases for submitting jobs through Coaster services.
  */
 
-#ifndef COASTERS_H_
-#define COASTERS_H_
+#ifndef COASTER_H__H_
+#define COASTER_H__H_
 
 #ifdef __cplusplus
 #include <string>
@@ -101,10 +101,10 @@ typedef struct {
 #endif
 
 /*
- * Start a new coasters client.
+ * Start a new coaster client.
  * NOTE: don't support multiple clients per loop with this interface
  *
- * service_url[_len]: coasters service URL string with string length
+ * service_url[_len]: coaster service URL string with string length
  * client: output for new client
  */
 coaster_rc
@@ -112,7 +112,7 @@ coaster_client_start(const char *service_url, size_t service_url_len,
                     coaster_client **client) COASTER_THROWS_NOTHING;
 
 /*
- * Stop coasters client and free all memory.
+ * Stop coaster client and free all memory.
  *
  * After calling this the client is invalid and should not be used as
  * an argument to any more Coaster C API function calls.
@@ -130,7 +130,7 @@ coaster_settings_create(coaster_settings **settings)
                     COASTER_THROWS_NOTHING;
 
 /*
- * Free memory associated with coasters settings
+ * Free memory associated with coaster settings
  */
 void
 coaster_settings_free(coaster_settings *settings)
@@ -180,7 +180,7 @@ coaster_settings_keys(coaster_settings *settings,
                                 COASTER_THROWS_NOTHING;
 
 /*
- * Apply settings to started coasters client.
+ * Apply settings to started coaster client.
  * TODO: currently it isn't safe to free settings until client is shut
  *       down
  *
@@ -196,13 +196,13 @@ coaster_rc
 coaster_config_id_free(coaster_config_id *config) COASTER_THROWS_NOTHING;
 
 /*
- * Create a new coasters job for later submission.
+ * Create a new coaster job for later submission.
  * Some standard arguments can be specified now, or left as NULL to be
  * initialized later.
  *
  * executable: must be provided, name of executable
  * argc/argv: command line arguments
- * job_manager: Name of Coasters job manager to use (can be NULL)
+ * job_manager: Name of Coaster job manager to use (can be NULL)
  * job: output, filled with pointer to new job
  */
 coaster_rc
@@ -212,7 +212,7 @@ coaster_job_create(const char *executable, size_t executable_len,
                   coaster_job **job) COASTER_THROWS_NOTHING;
 
 /*
- * Free a coasters job
+ * Free a coaster job
  */
 coaster_rc
 coaster_job_free(coaster_job *job) COASTER_THROWS_NOTHING;
@@ -283,7 +283,7 @@ coaster_job_add_stages(coaster_job *job,
 
 /*
  * Get local job ID.  The job ID is a locally unique identifier for
- * a coasters job that is assigned when the job is created.
+ * a coaster job that is assigned when the job is created.
  */
 coaster_job_id 
 coaster_job_get_id(const coaster_job *job) COASTER_THROWS_NOTHING;
@@ -308,7 +308,7 @@ coaster_job_get_outstreams(const coaster_job *job,
                 COASTER_THROWS_NOTHING;
 
 /*
- * Submit a coasters job through a coasters client.
+ * Submit a coaster job through a coaster client.
  * A job can only be submitted once!
  * Ownership of the job is shared between the caller and
  * the client until the job has completed, or the client
@@ -343,7 +343,7 @@ const char *coaster_rc_string(coaster_rc code);
  * thread.
  * returns: error message, NULL if no information available.  The
  *          returned string is valid until the next call by this thread
- *          to a coasters API function.
+ *          to a coaster API function.
  */
 const char *coaster_last_err_info(void);
 
@@ -352,4 +352,4 @@ coaster_rc coaster_set_log_threshold(coaster_log_level threshold);
 #ifdef __cplusplus
 } // extern "C"
 #endif
-#endif // COASTERS_H_
+#endif // COASTER_H__H_

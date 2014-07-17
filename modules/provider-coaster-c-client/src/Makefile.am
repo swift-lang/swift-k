@@ -22,7 +22,7 @@ lib_LTLIBRARIES = libcoasterclient.la
 
 libcoasterclient_la_SOURCES = \
 	$(SWIG_SRC) \
-        coasters.cpp coasters.h coaster-defs.h \
+        coaster.cpp coaster.h coaster-defs.h \
 	Lock.h Lock.cpp \
 	ConditionVariable.h ConditionVariable.cpp \
 	CommandCallback.h \

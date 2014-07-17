@@ -21,7 +21,7 @@
  *    Author: Tim Armstrong
  */
 
-#include "coasters.h"
+#include "coaster.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -295,7 +295,7 @@ coaster_settings_free(coaster_settings *settings)
 }
 
 /*
- * Apply settings to started coasters client.
+ * Apply settings to started coaster client.
  */
 coaster_rc
 coaster_apply_settings(coaster_client *client,
