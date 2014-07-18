@@ -1,6 +1,6 @@
 <project name="Java CoG Kit" default="dist" basedir=".">
 
-	<property file="${cog.dir}/etc/build.properties"/>
+	<property file="${cog.dir}/etc/build/build.properties"/>
 	<property file="${cog.dir}/etc/cog/VERSION"/>
 	
 	<property name="jar.name" value="cog-${module.name}-${version}.jar"/>
@@ -818,7 +818,7 @@ endlauncher: ${launcher-name}
             
 		<antcall target="app.set.params"/>
 		<!-- I could find no other way to do the following -->
-		<ant antfile="${cog.dir}/mbuild.xml" target="replacelibs">
+		<ant antfile="${cog.dir}/etc/build/mbuild.xml" target="replacelibs">
 			<property name="target.file" value="${launcher.file}"/>
 			<property name="toplevel" value="true"/>
 		</ant>

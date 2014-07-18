@@ -8,7 +8,7 @@
 
 	<property file="project.properties"/>
 	<property name="cog.dir"		value="${basedir}"/>
-	<property name="main.buildfile"	value="${cog.dir}/mbuild.xml"/>
+	<property name="main.buildfile"	value="${cog.dir}/etc/build/mbuild.xml"/>
 
         <!-- set module name and dir here as workaround -->
 	<property name="module.name" 	value="swift"/>

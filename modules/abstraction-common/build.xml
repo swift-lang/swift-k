@@ -8,7 +8,7 @@
 
 	<property file="project.properties"/>
 	<property name="cog.dir"		value="${basedir}/../../"/>
-	<property name="main.buildfile"	value="${cog.dir}/mbuild.xml"/>
+	<property name="main.buildfile"	value="${cog.dir}/etc/build/mbuild.xml"/>
 	<property name="dist.dir" 		value="${cog.dir}/modules/${module.name}/dist/${module.name}-${version}"/>
 	<property name="build.dir" 		value="${cog.dir}/modules/${module.name}/build"/>
 
