@@ -588,7 +588,7 @@
         <antcall target="log4j.properties.update"/>
 		<!-- aggregate changelogs; the wrong place to be, but it works -->
 		<java classname="org.globus.cog.tools.ChangelogAggregator"
-			  classpath="${cog.dir}/tools">
+			  classpath="${cog.dir}/etc/tools">
 			  <arg value="${dist.dir}/CHANGES.txt"/>
 			  <arg value="${cog.dir}/modules/${module.name}/CHANGES.txt"/>
 			  <arg value="${module.name}"/>
