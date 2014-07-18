@@ -1,7 +1,7 @@
 <project name="Java CoG Kit" default="dist" basedir=".">
 
+	<property file="${cog.dir}/etc/build.properties"/>
 	<property file="${cog.dir}/etc/cog/VERSION"/>
-	<property file="${cog.dir}/build.properties"/>
 	
 	<property name="jar.name" value="cog-${module.name}-${version}.jar"/>
 	<property name="jar.file" value="${build.dir}/${jar.name}"/>
