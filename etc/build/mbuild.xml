@@ -218,9 +218,9 @@
 	<target name="compile">
 		<echo message="[${module.name}]: COMPILE"/>
                 <!-- Create if not present -->
-		<mkdir dir="src"/>
+		<mkdir dir="${module.dir}/src"/>
 		<mkdir dir="${build.dir}"/>
-		<javac  srcdir="src"
+		<javac  srcdir="${module.dir}/src"
 			destdir="${build.dir}"
 			includes="**/*.java"
 			excludes="${exclude.dirs}"
@@ -233,13 +233,13 @@
 			includeAntRuntime="false"/>
                 
 		<copy todir="${build.dir}" >
-			<fileset dir="src" includes="**/*.properties" />
+			<fileset dir="${module.dir}/src" includes="**/*.properties" />
 		</copy>
 		<copy todir="${build.dir}" >
-			<fileset dir="src" includes="images/**/*.*" />
+			<fileset dir="${module.dir}/src" includes="images/**/*.*" />
 		</copy>
 		<copy todir="${build.dir}" >
-			<fileset dir="src" includes="text/**/*.*" />
+			<fileset dir="${module.dir}/src" includes="text/**/*.*" />
 		</copy>
         <condition property="resources.exist">
             <available file="resources" type="dir"/>
