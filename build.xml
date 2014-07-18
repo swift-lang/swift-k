@@ -5,14 +5,16 @@
 ==================================================================== -->
 
 <project name="Java CoG Kit" default="redist" basedir=".">
-
-	<property file="project.properties"/>
-	<property name="cog.dir"		value="${basedir}"/>
+        <property name="cog.dir"		value="${basedir}"/>
 	<property name="main.buildfile"	value="${cog.dir}/etc/build/mbuild.xml"/>
 
         <!-- set module name and dir here as workaround -->
 	<property name="module.name" 	value="swift"/>
 	<property name="module.dir" 	value="${cog.dir}/modules/${module.name}"/>
+
+        <!-- Need to get version from properties -->
+	<property file="${module.dir}/project.properties"/>
+
 	<property name="dist.dir" 		value="${cog.dir}/dist/${module.name}-${version}"/>
 	<property name="build.dir" 		value="${module.dir}/build"/>
 
