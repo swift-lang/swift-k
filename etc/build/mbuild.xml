@@ -3,6 +3,8 @@
 	<property file="${cog.dir}/etc/build/build.properties"/>
 	<property file="${cog.dir}/etc/cog/VERSION"/>
 	
+        <property name="module.dir" value="${cog.dir}/modules/${module.name}"/>
+
 	<property name="jar.name" value="cog-${module.name}-${version}.jar"/>
 	<property name="jar.file" value="${build.dir}/${jar.name}"/>
 	<property name="force.java.version" value="1.5"/>
@@ -49,7 +51,7 @@
     
 	<target name="dependencies">
 		<antcall target="create.dependency.log"/>
-		<ant antfile="dependencies.xml">
+		<ant antfile="${module.dir}/dependencies.xml">
 			<property name="build.target" value="${build.target}"/>
 		</ant>
 		<condition property="toplevel.updated">
@@ -61,7 +63,7 @@
 	<target name="dependencies.joint">
 		<antcall target="create.dependency.log"/>
 		<!-- hackish, but it does the job -->
-		<copy file="dependencies.xml"
+		<copy file="${module.dir}/dependencies.xml"
 			tofile="dependencies-joint.xml" 
 			filtering="true"/>
         <replace file="dependencies-joint.xml" 
@@ -466,7 +468,7 @@
 			<fileset dir="etc" includes="**/*.*" excludes="MANIFEST.MF.*, *.module"/>
 		</copy>
 		<antcall target="jar"/>
-		<ant antfile="launchers.xml" target="create"/>
+		<ant antfile="${module.dir}/launchers.xml" target="create"/>
 		<antcall target="deploy.examples"/>
 	</target>
 	
@@ -513,7 +515,7 @@
 		<copy todir="${package.dir}/lib">
 			<fileset dir="${dist.dir}/lib" includes="${jar.name}"/>
 		</copy>
-		<ant antfile="launchers.xml" target="create">
+		<ant antfile="${module.dir}/launchers.xml" target="create">
 			<property name="dist.dir" value="${package.dir}"/>
 		</ant>
 		<antcall target="deploy.examples">
@@ -558,7 +560,7 @@
             <fileset dir="etc" includes="*.properties"/>
         </copy>
         <antcall target="compile.joint"/>
-		<ant antfile="launchers.xml" target="create"/>
+		<ant antfile="${module.dir}/launchers.xml" target="create"/>
     </target>
     
     <target name="dist.all">
@@ -739,7 +741,7 @@ project: ${project}
 long-name: ${long.name}
 version: ${version}
         </concat>
-        <ant antfile="launchers.xml" target="webstart"/>
+        <ant antfile="${module.dir}/launchers.xml" target="webstart"/>
         <concat destfile="${webstart.dir}/launcher-tree.txt" append="true">
 endmodule: ${module.name}
         </concat>
