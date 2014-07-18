@@ -450,7 +450,7 @@
 
 		<uptodate property="jar.uptodate" 
 			targetfile="${dist.dir}/lib/${jar.name}">
-			<srcfiles dir="${module.dir}/src" includes="**/*.*"/>
+			<srcfiles dir="${module.dir}/src" includes="**/*.*" erroronmissingdir="false"/>
 		</uptodate>
 		
 		<!--copy library dependencies-->
