@@ -1,0 +1,11 @@
+#!/bin/bash
+
+LOG=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/log
+CONF=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/configs
+
+if [[ "$1" != "" ]]
+then
+	echo "Stat'ing for $1 " >> $LOG
+    echo "python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --status $CONF --jobid $1" >> $LOG
+    python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --status $CONF --jobid $1 | tee -a $LOG
+fi

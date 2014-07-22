@@ -1,0 +1,10 @@
+#!/bin/bash
+
+LOG=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/log
+CONF=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/configs
+
+if [[ "$1" != "" ]]
+then
+    echo "Cancelling $1" >> $LOG
+    python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --cancel $CONF --jobid $1 | tee -a $LOG
+fi
