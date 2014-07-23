@@ -1,10 +1,33 @@
 #!/bin/bash
 
 LOG=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/log
-CONF=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/configs
+LOGGING=1 # Either 1 or 0
+log()
+{
+    [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
+}
+
+JOBID=$1
+CONF=/tmp/$JOBID
+EXITCODE=0
+
+# Check for the conf file for the job at /tmp/<jobid>
+if [ ! -f "$CONF" ]
+then
+    echo "ERROR: Could not find conf script at /tmp/$1" 1>&2
+    exit -1
+fi
 
 if [[ "$1" != "" ]]
 then
-    echo "Cancelling $1" >> $LOG
-    python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --cancel $CONF --jobid $1 | tee -a $LOG
+    log "Cancelling $JOBID"
+    python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --cancel $CONF --jobid $JOBID
+    EXITCODE=$?
+    if [[ "$EXITCODE" == "0" ]]
+    then
+        log "Done cancelling $JOBID"
+        rm $CONF
+    fi
 fi
+
+exit $EXITCODE

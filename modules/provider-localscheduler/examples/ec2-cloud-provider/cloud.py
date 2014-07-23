@@ -23,8 +23,8 @@ NODESTATES = { NodeState.RUNNING    : "RUNNING",
                NodeState.PENDING    : "PENDING",
                NodeState.UNKNOWN    : "UNKNOWN" }
 
-timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S');
-logging.basicConfig(filename='cloud_ec2'+timestamp+'.log', level=logging.INFO)
+#timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H');
+#logging.basicConfig(filename='cloud_ec2'+timestamp+'.log', level=logging.WARN)
 
 WORKER_USERDATA='''#!/bin/bash
 export JAVA=/usr/local/bin/jdk1.7.0_51/bin
@@ -35,50 +35,39 @@ mkdir -p /home/yadu/.globus/coasters
 '''
 
 def aws_create_security_group(driver, configs):
-    group_name = configs["SECURITY_GROUP"]
+    group_name = configs["ec2securitygroup"]
     current    = driver.ex_list_security_groups()
-    if group_name in current:
-        logging.info("Security group: %s is already present", group_name)
-    else:
-        logging.info("Creating new security group: %s", group_name)
+    if group_name not in current:
         res = driver.ex_create_security_group(name=group_name,description="Open all ports")
         if not driver.ex_authorize_security_group(group_name, 0, 65000, '0.0.0.0/0'):
-            logging.info("Authorizing ports for security group failed")
+            sys.stderr.write("Authorizing ports for security group failed \n")
         if not driver.ex_authorize_security_group(group_name, 0, 65000, '0.0.0.0/0', protocol='udp'):
-            logging.info("Authorizing ports for security group failed")
-        logging.debug("Security group: %s", str(res))
+            sys.stderr.write("Authorizing ports for security group failed \n")
 
 def check_keypair(driver, configs):
-    if "AWS_KEYPAIR_NAME" in configs and "AWS_KEYPAIR_FILE" in configs:
-        logging.debug("AWS_KEYPAIR_NAME : %s", configs['AWS_KEYPAIR_NAME'])
-        logging.debug("AWS_KEYPAIR_FILE : %s", configs['AWS_KEYPAIR_FILE'])
+    if "ec2keypairname" in configs and "ec2keypairfile" in configs:
         all_pairs = driver.list_key_pairs()
         for pair in all_pairs:
-            if pair.name == configs['AWS_KEYPAIR_NAME']:
-                logging.info("KEYPAIR exists, registered")
+            if pair.name == configs['ec2keypairname']:
                 return 0
 
-        logging.info("KEYPAIR does not exist. Creating keypair")
-        key_pair = driver.create_key_pair(name=configs['AWS_KEYPAIR_NAME'])
-        f = open(configs['AWS_KEYPAIR_FILE'], 'w')
+        key_pair = driver.create_key_pair(name=configs['ec2keypairname'])
+        f = open(configs['ec2keypairfile'], 'w')
         f.write(str(key_pair.private_key))
         f.close()
-        os.chmod(configs['AWS_KEYPAIR_FILE'], 0600)
-        logging.info("KEYPAIR created")
+        os.chmod(configs['ec2keypairfile'], 0600)
     else:
-        logging.error("AWS_KEYPAIR_NAME and/or AWS_KEYPAIR_FILE missing")
-        logging.error("Cannot proceed without AWS_KEYPAIR_NAME and AWS_KEYPAIR_FILE")
+        sys.stderr.write("ec2keypairname and/or ec2keypairfile missing\n")
+        sys.stderr.write("Cannot proceed without ec2keypairname and ec2keypairfile\n")
         exit(-1)
 
 def _read_conf(config_file):
     cfile = open(config_file, 'r').read()
     config = {}
     for line in cfile.split('\n'):
-
         # Checking if empty line or comment
         if line.startswith('#') or not line :
             continue
-
         temp = line.split('=')
         config[temp[0]] = temp[1].strip('\r')
     return config
@@ -90,31 +79,26 @@ def pretty_configs(configs):
 def read_configs(config_file):
     config = _read_conf(config_file)
 
-    if 'AWS_CREDENTIALS_FILE' in config :
-        config['AWS_CREDENTIALS_FILE'] =  os.path.expanduser(config['AWS_CREDENTIALS_FILE'])
-        config['AWS_CREDENTIALS_FILE'] =  os.path.expandvars(config['AWS_CREDENTIALS_FILE'])
+    if 'ec2credentialsfile' in config :
+        config['ec2credentialsfile'] =  os.path.expanduser(config['ec2credentialsfile'])
+        config['ec2credentialsfile'] =  os.path.expandvars(config['ec2credentialsfile'])
 
-        cred_lines    =  open(config['AWS_CREDENTIALS_FILE']).readlines()
+        cred_lines    =  open(config['ec2credentialsfile']).readlines()
         cred_details  =  cred_lines[1].split(',')
         credentials   = { 'AWS_Username'   : cred_details[0],
                           'AWSAccessKeyId' : cred_details[1],
                           'AWSSecretKey'   : cred_details[2] }
         config.update(credentials)
     else:
-        print "AWS_CREDENTIALS_FILE , Missing"
-        print "ERROR: Cannot proceed without access to AWS_CREDENTIALS_FILE"
+        print "ec2credentialsfile , Missing"
+        print "ERROR: Cannot proceed without access to ec2credentialsfile"
         exit(-1)
 
-    if 'AWS_KEYPAIR_FILE' in config:
-        config['AWS_KEYPAIR_FILE'] = os.path.expanduser(config['AWS_KEYPAIR_FILE'])
-        config['AWS_KEYPAIR_FILE'] = os.path.expandvars(config['AWS_KEYPAIR_FILE'])
     return config
 
 def node_status(driver, node_uuids):
-    logging.info("Checking status of : %s", str(node_uuids))
     nodes = driver.list_nodes()
     for node in nodes:
-        logging.info("INFO: Node status : %s",str(node))
         if node.uuid in node_uuids :
             if node.state == NodeState.RUNNING:
                 print node.uuid, "R"
@@ -127,25 +111,23 @@ def node_status(driver, node_uuids):
             elif node.state == NodeState.UNKNOWN:
                 print node.uuid, "Q" # This state could be wrong
             else:
-                logging.warn("Node state unknown/invalid %s", NODESTATE[node.state])
+                sys.stderr.write("Node state unknown/invalid " + str(NODESTATE[node.state]))
                 return -1
     return 0
 
 def node_start(driver, configs, WORKER_STRING):
-    # Setup userdata
-    userdata   = WORKER_USERDATA + WORKER_STRING.lstrip('"').rstrip('"')
-    logging.info("Worker userdata : %s", userdata)
 
-    size       = NodeSize(id=configs['WORKER_MACHINE_TYPE'], name="swift_worker",
+    userdata   = WORKER_USERDATA + WORKER_STRING.lstrip('"').rstrip('"')
+    size       = NodeSize(id=configs['ec2workertype'], name="swift_worker",
                           ram=None, disk=None, bandwidth=None, price=None, driver=driver)
-    image      = NodeImage(id=configs['WORKER_IMAGE'], name=None, driver=driver)
+    image      = NodeImage(id=configs['ec2workerimage'], name=None, driver=driver)
+
     node       = driver.create_node(name="swift_worker",
                                     image=image,
                                     size=size,
-                                    ex_keyname=configs['AWS_KEYPAIR_NAME'],
-                                    ex_securitygroup=configs['SECURITY_GROUP'],
+                                    ex_keyname=configs['ec2keypairname'],
+                                    ex_securitygroup=configs['ec2securitygroup'],
                                     ex_userdata=userdata )
-    logging.info("Worker node started : %s", str(node))
     print 'jobid={0}'.format(node.uuid)
 
 # node_names is a list
@@ -154,7 +136,7 @@ def node_terminate(driver, node_uuids):
     deleted_flag   = False
     for node in nodes:
         if node.uuid in node_uuids and node.state == NodeState.RUNNING :
-            logging.info("Terminating node : %s", str(node))
+            #logging.info("Terminating node : %s", str(node))
             code = driver.destroy_node(node)
             deleted_flag = True
     return deleted_flag
@@ -166,7 +148,6 @@ def init_checks(driver, configs):
 
 def init(conf_file):
     configs    = read_configs(conf_file)
-    #pretty_configs(configs)
     driver     = get_driver(Provider.EC2_US_WEST_OREGON) # was EC2
     ec2_driver = driver(configs['AWSAccessKeyId'], configs['AWSSecretKey'])
     return configs,ec2_driver

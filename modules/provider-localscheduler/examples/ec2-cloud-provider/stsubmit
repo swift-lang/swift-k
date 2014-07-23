@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 rm -f /tmp/stsubmit
 EXECUTABLE=
 DIR=
@@ -15,6 +14,13 @@ STDIN=
 STDOUT=
 STDERR=
 
+LOG=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/log
+
+SUBMIT_SCRIPT=$(mktemp)
+touch $SUBMIT_SCRIPT
+
+#SUBMIT_SCRIPT=$(mktemp)
+
 while read LINE; do
 	echo $LINE >>/tmp/stsubmit
 	case $LINE in
@@ -27,14 +33,18 @@ while read LINE; do
 		arg=*)
             if [[ ${LINE#arg=} == *cscript*pl ]]
             then
-                # We are replacing with a specific temporary worker script
+                # Replacing temporary worker script with a specific remote worker script
                 ARGS="$ARGS /usr/local/bin/swift-trunk/bin/worker.pl"
             else
                 ARGS="$ARGS ${LINE#arg=}"
             fi
 			;;
 		attr.*)
-			# ignore attributes
+            LINE2=${LINE#attr.}
+            if [[ $LINE2 == ec2* ]]
+            then
+			    echo $LINE2 >> $SUBMIT_SCRIPT
+            fi
 			;;
 		stdin.location=*)
 			STDINLOC=${LINE#stdin.location=}
@@ -88,18 +98,10 @@ if [ "$STDINLOC" != "" ]; then
 	STDIN="< $STDINLOC"
 fi
 
-LOG=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/log
-echo "Start" > $LOG
 CMD="$EXECUTABLE $ARGS $STDIN $STDOUT $STDERR"
-echo "CMD     : $CMD" >> $LOG
+echo "CMD   : $CMD" >> $LOG
 
-#SUBMIT_SCRIPT=$(mktemp)
-SUBMIT_SCRIPT=/tmp/submit_script_$RANDOM
-
-# TODO : Cleanup
-cat /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/configs > $SUBMIT_SCRIPT
 DIR=/tmp/
-# TODO : Fix me
 
 cat<<EOF >> $SUBMIT_SCRIPT
 CMD_STRING="mkdir $DIR; cd $DIR; $CMD"
@@ -109,8 +111,14 @@ cat $SUBMIT_SCRIPT >> $LOG
 
 echo "$PWD" >> $LOG
 echo "python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --submit $SUBMIT_SCRIPT" >> $LOG
-python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --submit $SUBMIT_SCRIPT  | tee -a $LOG
+JOBINFO=$(python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --submit $SUBMIT_SCRIPT)
+retcode="$?"
+echo $JOBINFO
+[[ "$retcode" != "0" ]] && exit retcode
 
-echo "ENV" >> $LOG
-env >> $LOG
+if [[ $JOBINFO == jobid\=* ]]
+then
+    cat $SUBMIT_SCRIPT > /tmp/${JOBINFO#jobid=}
+fi
+
 exit 0
