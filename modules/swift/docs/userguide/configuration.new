@@ -138,11 +138,11 @@ as described in the <<section-property-merging, Property Merging>> Section. The 
 . User Configuration (*[U]*): +${env.HOME}/.swift/swift.conf+ (if present)
 . Run Configiuration (*[R]*): +${env.PWD}/swift.conf+ (if present)
 
-In addition, a number of configuration properties can be overriden individually on the
+In addition, a number of configuration properties can be overridden individually on the
 Swift command line. For a list of such configuration properties, please use +swift -help+ 
 or refer to the <<??, Running Swift>> Section in this document.
 
-The run configuration can be overriden on the Swift command line using the +-config+ 
+The run configuration can be overridden on the Swift command line using the +-config+ 
 argument. If +-config+ is specified, Swift will not attempt to load +swift.conf+ from
 the current directory.
 
