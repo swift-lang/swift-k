@@ -85,10 +85,12 @@ public class CoasterService extends GSSService {
 
     public CoasterService(boolean secure, int port, InetAddress bindTo) throws IOException {
         super(secure, port, bindTo);
+        queues = new HashMap<String, JobQueue>();
     }
 
     public CoasterService(GSSCredential cred, int port, InetAddress bindTo) throws IOException {
         super(cred, port, bindTo);
+        queues = new HashMap<String, JobQueue>();
     }
 
     public CoasterService(String registrationURL, String id, boolean local)
@@ -118,7 +120,7 @@ public class CoasterService extends GSSService {
         try {
             String clsName = "org.globus.cog.abstraction.impl.scheduler." + p + ".Properties";
             Class<?> cls = CoasterService.class.getClassLoader().loadClass(clsName);
-            Method getProperties = cls.getMethod("getProperties", (Class<?>[]) null); 
+            Method getProperties = cls.getMethod("getProperties", (Class<?>[]) null);
             Object instance = getProperties.invoke(null, (Object[]) null);
             Method setPollInterval = cls.getMethod("setPollInterval", new Class<?>[] {int.class});
             setPollInterval.invoke(instance, new Object[] {t});
@@ -175,7 +177,7 @@ public class CoasterService extends GSSService {
             }
         }
     }
-    
+
     public JobQueue createJobQueue() {
         JobQueue q = new JobQueue(this, localService);
         q.start();
@@ -276,7 +278,7 @@ public class CoasterService extends GSSService {
                 long freeMemory = r.freeMemory();
                 long totalMemory = r.totalMemory();
                 long usedMemory = totalMemory - freeMemory;
-            
+
                 logger.info("HeapMax: " + maxHeap + ", CrtHeap: " + totalMemory + ", UsedHeap: " + usedMemory);
             }
         }
@@ -405,7 +407,7 @@ public class CoasterService extends GSSService {
             watchdogs.schedule(w, delay, delay);
         }
     }
-    
+
     protected void addJobQueue(JobQueue q) {
         synchronized(queues) {
             queues.put(q.getId(), q);
@@ -467,13 +469,13 @@ public class CoasterService extends GSSService {
         if (fa != null) {
             fa.setFile(Bootstrap.LOG_DIR + File.separator + makeLogFileName());
             fa.activateOptions();
-            
+
             AsyncAppender aa = new AsyncAppender();
             aa.addAppender(fa);
             replaceAppender(fa, aa);
         }
     }
-    
+
     private static String makeLogFileName() {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         return "coasters-" + df.format(new Date()) + ".log";
@@ -484,7 +486,7 @@ public class CoasterService extends GSSService {
         root.removeAppender(fa);
         root.addAppender(aa);
     }
-    
+
     @SuppressWarnings("rawtypes")
     protected static Appender getFileAppender() {
         Logger root = Logger.getRootLogger();
@@ -496,7 +498,7 @@ public class CoasterService extends GSSService {
             }
             if (a instanceof AsyncAppender) {
                 // likely this is running in a JVM in which
-                // the file appender has been replaced with 
+                // the file appender has been replaced with
                 // an async appender, so don't mess with things
                 return null;
             }
@@ -539,7 +541,7 @@ public class CoasterService extends GSSService {
     public void setDefaultQP(String defaultQP) {
         this.defaultQP = defaultQP;
     }
-    
+
     public Map<String, JobQueue> getQueues() {
         return queues;
     }
