@@ -6,9 +6,6 @@ This file contains configuration properties and site descriptions. A simple
 configuration file may look like this:
 
 -----
-# include default Swift configuration file
-include "${swift.home}/etc/swift.conf"
-
 site.mysite {
     execution {
         type: "coaster"
@@ -76,6 +73,7 @@ include "${swift.home}/etc/sites/beagle.conf"
 include "${env.SWIFT_CONFIG_DIR}/glow.conf"
 -----
 
+[[section-property-merging]]
 Property Merging
 ~~~~~~~~~~~~~~~~
 
@@ -101,12 +99,12 @@ object {
 
 This can be used to define certain template files that contain most of the definitions for
 sites, and then include them in other files and override or add only certain aspects of 
-those sites. For example, the default +swift.conf+ includes a definition for a site named
-+local+ that can be used to run things on the Swift client side. If you wanted to override 
+those sites. For example, assume +swift-local.conf+ includes a definition for a site named
++local+ that can be used to run applications on the Swift client side. If you wanted to override 
 only the work directory, the following +swift.conf+ could be used:
 
 -----
-include "${swift.home}/etc/swift.conf"
+include "swift-local.conf"
 
 site.local {
     # use existing definition for site.local, but override workDirectory
@@ -118,7 +116,7 @@ If, on the other hand, you want to fully override the definition of +site.local+
 set it to +null+ first and then provide your own definition:
 
 -----
-include "${swift.home}/etc/swift.conf"
+include "swift-local.conf"
 
 # forget previous definition of site.local
 site.local: null
@@ -128,6 +126,42 @@ site.local {
     ...
 }
 -----
+
+Configuration Search Path
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, Swift attempts to load multiple configuration files, merging them sequentially
+as described in the <<section-property-merging, Property Merging>> Section. The files are:
+
+. Distribution Configuration (*[D]*): +${swift.home}/etc/swift.conf+
+. Site Configuration (*[S]*): +${env.SWIFT_SITE_CONF}+ (if SWIFT_SITE_CONF is defined)
+. User Configuration (*[U]*): +${env.HOME}/.swift/swift.conf+ (if present)
+. Run Configiuration (*[R]*): +${env.PWD}/swift.conf+ (if present)
+
+In addition, a number of configuration properties can be overriden individually on the
+Swift command line. For a list of such configuration properties, please use +swift -help+ 
+or refer to the <<??, Running Swift>> Section in this document.
+
+The run configuration can be overriden on the Swift command line using the +-config+ 
+argument. If +-config+ is specified, Swift will not attempt to load +swift.conf+ from
+the current directory.
+
+The entire configuration search path can be replaced with a custom search path using
+the +-configpath+ command line argument. The value passed to +-configpath+ must be a
+list of paths pointing to various configuration files, separated by the standard
+operating system path separator (+':'+ on Linux and +';'+ on Windows). For example:
+
+-----
+swift -configpath /etc/swift/swift.conf:~/swift-configs/s1.conf:swift.conf
+-----
+
+If in doubt about what configuration files are being loaded or to troubleshoot 
+configuration issues, Swift can be started with the +-listconfig+ command line argument.
++-listconfig+ accepts to possible values:
+
+* +files+: will print a list of configuration files loaded by Swift
+* +full+: will print a list of configuration files loaded by Swift, as well as
+the final merged configuration.
 
 Configuration File Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -165,9 +199,12 @@ quoted:
 site."My-$pecial-$ite" {...}
 -----
 
+Site Selection
+^^^^^^^^^^^^^^
+
 Once sites are declared, they must be explicitly enabled for Swift to use them. This
 can be achieved with the +sites+ option, which accepts either an array or a comma-separated
-list of site names
+list of site names:
 
 -----
 sites: ["site1", "site2"]
@@ -175,6 +212,12 @@ sites: ["site1", "site2"]
 # alternatively:
 
 sites: "site1, site2"
+-----
+
+The +sites+ option can also be specified on the Swift command line:
+
+-----
+swift -sites site1,site2 script.swift
 -----
 
 Execution Mechanism
