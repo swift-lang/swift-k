@@ -78,7 +78,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_HELP = "help";
     public static final String ARG_VERSION = "version";
     public static final String ARG_RESUME = "resume";
-    public static final String ARG_INSTANCE_CONFIG = "config";
+    public static final String ARG_RUN_CONFIG = "config";
+    public static final String ARG_CONFIG_SEARCH_PATH = "configpath";
+    public static final String ARG_LIST_CONFIG = "listconfig";
     public static final String ARG_SITELIST = "sitelist";
     public static final String ARG_SITES_FILE = "sites.file";
     public static final String ARG_TC_FILE = "tc.file";
@@ -318,6 +320,23 @@ public class Loader extends org.globus.cog.karajan.Loader {
                         "Please use the swift-convert-config tool to update your " +
                         "sites.xml and tc.data to a Swift configuration file.");
                 System.exit(1);
+            }
+            if (ap.isPresent(ARG_LIST_CONFIG)) {
+                SwiftConfig config = loadConfig(ap, getCommandLineProperties(ap));
+                String val = ap.getStringValue(ARG_LIST_CONFIG);
+                if ("files".equals(val)) {
+                    System.out.println(config.toString(true, false));
+                    System.exit(0);
+                }
+                else if ("full".equals(val)) {
+                    System.out.println(config.toString(true, true));
+                    System.exit(0);
+                }
+                else {
+                    System.err.println("Invalid argument to -listconfig ('" + val + "'). " +
+                    		"Must be one of 'files' or 'full'");
+                    System.exit(1);
+                }
             }
             if (!ap.hasValue(ArgumentParser.DEFAULT) && !ap.isPresent(ARG_EXECUTE)) {
                 System.out.println(loadVersion());
@@ -560,15 +579,19 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
     private static SwiftConfig loadConfig(ArgumentParser ap, Map<String, Object> cmdLine) throws IOException {
         SwiftConfig conf;
-        if (ap.hasValue(ARG_INSTANCE_CONFIG)) {
-            String configFile = ap.getStringValue(ARG_INSTANCE_CONFIG);
-            conf = SwiftConfig.load(configFile, cmdLine);
-            SwiftConfig.setDefault(conf);
+        conf = SwiftConfig.load(ap.getStringValue(ARG_RUN_CONFIG), 
+            splitConfigSearchPath(ap.getStringValue(ARG_CONFIG_SEARCH_PATH)), cmdLine);
+        SwiftConfig.setDefault(conf);
+        return conf;
+    }
+
+    private static List<String> splitConfigSearchPath(String path) {
+        if (path == null) {
+            return null;
         }
         else {
-            conf = (SwiftConfig) SwiftConfig.load().clone();
+            return Arrays.asList(path.split(File.pathSeparator));
         }
-        return conf;
     }
 
     private static Map<String, Object> getCommandLineProperties(ArgumentParser ap) {
@@ -608,11 +631,23 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
         ap.addOption(ARG_RESUME, "Resumes the execution using a log file",
             "file", ArgumentParser.OPTIONAL);
-        ap.addOption(ARG_INSTANCE_CONFIG,
-            "Indicates the Swift configuration file to be used for this run." + 
-            " Properties in this configuration file will override the default properties. " + 
-            "If individual command line arguments are used for properties, they will override " + 
-            "the contents of this file.", "file",
+        ap.addOption(ARG_RUN_CONFIG,
+            "Indicates the run configuration file to be used for this run. If no custom " +
+            "configuration search path is specified, this will replace the default run " +
+            "configuration file ('./swift.conf') if it exists, or append to the configuration " +
+            "search path otherwise. If a search path is specified, the value of this argument " +
+            "will be appended to the search path.", "file",
+            ArgumentParser.OPTIONAL);
+        ap.addOption(ARG_CONFIG_SEARCH_PATH,
+            "Specifies a custom configuration search path. If supplied, the default configuration " +
+            "search path will be ignored and configurations will be loaded from files specified in " +
+            "the value of this argument. The files in the value must be separated using the " +
+            "operating system's path separator.", "file",
+            ArgumentParser.OPTIONAL);
+        ap.addOption(ARG_LIST_CONFIG,
+            "Lists details about the loaded configuration. 'files' lists only the configuration " +
+            "files used, while 'full' lists both the files and all the property values.", 
+            "files|full",
             ArgumentParser.OPTIONAL);
         ap.addFlag(ARG_SITELIST, "Prints a list of sites available in the swift configuration");
         ap.addFlag(ARG_VERBOSE,

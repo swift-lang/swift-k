@@ -24,15 +24,15 @@ import org.globus.swift.catalog.types.Os;
 import com.typesafe.config.ConfigOrigin;
 
 public abstract class ConfigPropertyType<T> {
-    public static final ConfigPropertyType<Boolean> BOOLEAN = new CPTBoolean();
+    public static final ConfigPropertyType<Object> BOOLEAN = new CPTBoolean();
     public static final ConfigPropertyType<String> STRING = new CPTString();
-    public static final ConfigPropertyType<Integer> INT = new Int();
+    public static final ConfigPropertyType<Object> INT = new Int();
     public static final ConfigPropertyType<Object> THROTTLE = new Throttle();
     public static final ConfigPropertyType<String> PORT_RANGE = new PortRange();
-    public static final ConfigPropertyType<Integer> STRICTLY_POSITIVE_INT = new SPInt();
-    public static final ConfigPropertyType<Integer> POSITIVE_INT = new PInt();
-    public static final ConfigPropertyType<Double> POSITIVE_FLOAT = new PFloat();
-    public static final ConfigPropertyType<Double> FLOAT = new CPTFloat();
+    public static final ConfigPropertyType<Object> STRICTLY_POSITIVE_INT = new SPInt();
+    public static final ConfigPropertyType<Object> POSITIVE_INT = new PInt();
+    public static final ConfigPropertyType<Object> POSITIVE_FLOAT = new PFloat();
+    public static final ConfigPropertyType<Object> FLOAT = new CPTFloat();
     public static final ConfigPropertyType<String> FILE = new CPTFile();
     public static final ConfigPropertyType<String> TIME = new CPTTime();
     public static final ConfigPropertyType<Object> OBJECT = new CPTObject();
@@ -51,6 +51,11 @@ public abstract class ConfigPropertyType<T> {
     public abstract Object checkValue(String propName, T value, ConfigOrigin loc);
     
     public abstract ConfigPropertyType<?> getBaseType();
+    
+    protected RuntimeException cannotConvert(ConfigOrigin loc, String propName, Object value, String toWhat) {
+        return new IllegalArgumentException(location(loc) + ":\n\tCannot convert value '" + value + "' for property '" + 
+                propName + "' to " + toWhat);
+    }
         
     private static String pp(Collection<String> c) {
         StringBuilder sb = new StringBuilder();
@@ -126,10 +131,23 @@ public abstract class ConfigPropertyType<T> {
         }
     }
     
-    private static class Int extends ConfigPropertyType<Integer> {
+    private static class Int extends ConfigPropertyType<Object> {
         @Override
-        public Object checkValue(String propName, Integer value, ConfigOrigin loc) {
-            return value;
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
+            if (value instanceof String) {
+                try {
+                    return Integer.parseInt((String) value);
+                }
+                catch (NumberFormatException e) {
+                    throw cannotConvert(loc, propName, value, "integer");
+                }
+            }
+            else if (value instanceof Integer) {
+                return value;
+            }
+            else {
+                throw cannotConvert(loc, propName, value, "integer");
+            }
         }
 
         @Override
@@ -143,10 +161,18 @@ public abstract class ConfigPropertyType<T> {
         }
     }
     
-    private static class CPTBoolean extends ConfigPropertyType<Boolean> {
+    private static class CPTBoolean extends ConfigPropertyType<Object> {
         @Override
-        public Object checkValue(String propName, Boolean value, ConfigOrigin loc) {
-            return value;
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
+            if (value instanceof String) {
+                return Boolean.valueOf((String) value);
+            }
+            else if (value instanceof Boolean) {
+                return value;
+            }
+            else {
+                throw cannotConvert(loc, propName, value, "boolean");
+            }
         }
 
         @Override
@@ -160,19 +186,15 @@ public abstract class ConfigPropertyType<T> {
         }
     }
     
-    private static class SPInt extends ConfigPropertyType<Integer> {
+    private static class SPInt extends Int {
         @Override
-        public Object checkValue(String propName, Integer value, ConfigOrigin loc) {
-            if (value <= 0) {
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
+            Integer ivalue = (Integer) super.checkValue(propName, value, loc);
+            if (ivalue <= 0) {
                 throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be a " + toString());
             }
-            return value;
-        }
-
-        @Override
-        public ConfigPropertyType<?> getBaseType() {
-            return INT;
+            return ivalue;
         }
         
         @Override
@@ -181,19 +203,15 @@ public abstract class ConfigPropertyType<T> {
         }
     }
     
-    private static class PInt extends ConfigPropertyType<Integer> {
+    private static class PInt extends Int {
         @Override
-        public Object checkValue(String propName, Integer value, ConfigOrigin loc) {
-            if (value < 0) {
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
+            Integer ivalue = (Integer) super.checkValue(propName, value, loc);
+            if (ivalue < 0) {
                 throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be a " + toString());
             }
-            return value;
-        }
-
-        @Override
-        public ConfigPropertyType<?> getBaseType() {
-            return INT;
+            return ivalue;
         }
         
         @Override
@@ -208,6 +226,14 @@ public abstract class ConfigPropertyType<T> {
         public Object checkValue(String propName, Object value, ConfigOrigin loc) {
             if ("off".equals(value)) {
                 return Integer.MAX_VALUE;
+            }
+            else if (value instanceof String) {
+                try {
+                    return Integer.parseInt((String) value);
+                }
+                catch (NumberFormatException e) {
+                    throw cannotConvert(loc, propName, value, "integer");
+                }
             }
             else if (value instanceof Integer) {
                 Integer i = (Integer) value;
@@ -230,19 +256,15 @@ public abstract class ConfigPropertyType<T> {
         }
     }
     
-    private static class PFloat extends ConfigPropertyType<Double> {
+    private static class PFloat extends CPTFloat {
         @Override
-        public Object checkValue(String propName, Double value, ConfigOrigin loc) {
-            if (value < 0) {
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
+            Double dvalue = (Double) super.checkValue(propName, value, loc);
+            if (dvalue < 0) {
                 throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be a " + toString());
             }
-            return value;
-        }
-
-        @Override
-        public ConfigPropertyType<?> getBaseType() {
-            return FLOAT;
+            return dvalue;
         }
         
         @Override
@@ -251,10 +273,23 @@ public abstract class ConfigPropertyType<T> {
         }
     }
     
-    private static class CPTFloat extends ConfigPropertyType<Double> {
+    private static class CPTFloat extends ConfigPropertyType<Object> {
         @Override
-        public Object checkValue(String propName, Double value, ConfigOrigin loc) {
-            return value;
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
+            if (value instanceof String) {
+                try {
+                    return Double.parseDouble((String) value);
+                }
+                catch (NumberFormatException e) {
+                    throw cannotConvert(loc, propName, value, "number");
+                }
+            }
+            else if (value instanceof Double) {
+                return value;
+            }
+            else {
+                throw cannotConvert(loc, propName, value, "number");
+            }
         }
 
         @Override
@@ -263,7 +298,7 @@ public abstract class ConfigPropertyType<T> {
         }
     }
     
-    public static class Interval extends ConfigPropertyType<Double> {
+    public static class Interval extends CPTFloat {
         private double l, h;
         
         public Interval(double l, double h) {
@@ -272,17 +307,13 @@ public abstract class ConfigPropertyType<T> {
         }
         
         @Override
-        public Object checkValue(String propName, Double value, ConfigOrigin loc) {
-            if (value < l || value > h) {
+        public Object checkValue(String propName, Object value, ConfigOrigin loc) {
+            Double dvalue = (Double) super.checkValue(propName, value, loc);
+            if (dvalue < l || dvalue > h) {
                 throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Must be a " + toString());
             }
-            return value;
-        }
-        
-        @Override
-        public ConfigPropertyType<?> getBaseType() {
-            return FLOAT;
+            return dvalue;
         }
 
         @Override

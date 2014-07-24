@@ -137,8 +137,7 @@ public class ConfigProperty extends InternalFunction {
             prop = conf.getProperty(name);
         }
         if (prop == null) {
-            throw new ExecutionException("Swift config property \"" + name + "\" not found in "
-                    + conf.getFileName());
+            throw new ExecutionException("Swift config property \"" + name + "\" not found");
         }
         else {
             return prop;

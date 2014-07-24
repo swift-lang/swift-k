@@ -10,12 +10,14 @@
 package org.griphyn.vdl.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class ConfigTree<T> {
     
@@ -49,7 +51,7 @@ public class ConfigTree<T> {
             }
         }
         
-        public Object get() {
+        public T get() {
             return value;
         }
         
@@ -202,32 +204,18 @@ public class ConfigTree<T> {
             }
         }
         
-        private void toString(StringBuilder sb, int level, String k) {
+        private void toString(StringBuilder sb, int level, String k, String full, boolean sort, ValueFormatter f) {
             if (nodes == null || nodes.isEmpty()) {
-                for (int i = 0; i < level; i++) {
-                    sb.append('\t');
-                }
-                if (value != null) {
-                    sb.append(k);
-                    sb.append(": ");
-                    if (value instanceof String) {
-                        sb.append('\"');
-                        sb.append(value);
-                        sb.append('\"');
-                    }
-                    else {
-                        sb.append(value);
-                    }
-                    sb.append('\n');
-                }
+                f.format(k, full, value, level, sb);
             }
             else if (nodes.size() == 1) {
                 String key = nodes.keySet().iterator().next();
                 if (k == null) {
-                    nodes.values().iterator().next().toString(sb, level, key);
+                    nodes.values().iterator().next().toString(sb, level, key, cat(full, key), sort, f);
                 }
                 else {
-                    nodes.values().iterator().next().toString(sb, level, k + "." + key);
+                    String nkey = cat(k, key);
+                    nodes.values().iterator().next().toString(sb, level, nkey, cat(full, key), sort, f);
                 }
             }
             else {
@@ -239,13 +227,29 @@ public class ConfigTree<T> {
                     sb.append(' ');
                 }
                 sb.append("{\n");
-                for (Map.Entry<String, Node<T>> e : nodes.entrySet()) {
-                    e.getValue().toString(sb, level + 1, e.getKey());
+                Collection<String> keys;
+                if (sort) {
+                    keys = new TreeSet<String>(nodes.keySet());
+                }
+                else {
+                    keys = nodes.keySet();
+                }
+                for (String key : keys) {
+                    nodes.get(key).toString(sb, level + 1, key, cat(full, key), sort, f);
                 }
                 for (int i = 0; i < level; i++) {
                     sb.append('\t');
                 }
                 sb.append("}\n");
+            }
+        }
+
+        private String cat(String full, String key) {
+            if (full == null) {
+                return key;
+            }
+            else {
+                return full + "." + key;
             }
         }
 
@@ -257,7 +261,7 @@ public class ConfigTree<T> {
         
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            toString(sb, 0, null);
+            toString(sb, 0, null, null, false, DEFAULT_VALUE_FORMATTER);
             return sb.toString();
         }
     }
@@ -315,8 +319,40 @@ public class ConfigTree<T> {
     }
     
     public String toString() {
+        return toString(false, DEFAULT_VALUE_FORMATTER);
+    }
+    
+    public String toString(boolean sort, ValueFormatter f) {
         StringBuilder sb = new StringBuilder();
-        root.toString(sb, 0, null);
+        root.toString(sb, 0, null, null, sort, f);
         return sb.toString();
     }
+    
+    public interface ValueFormatter {
+        void format(String key, String full, Object value, int indentationLevel, StringBuilder sb);
+    }
+    
+    public static class DefaultValueFormatter implements ValueFormatter {
+        @Override
+        public void format(String key, String full, Object value, int indentationLevel, StringBuilder sb) {
+            for (int i = 0; i < indentationLevel; i++) {
+                sb.append('\t');
+            }
+            if (value != null) {
+                sb.append(key);
+                sb.append(": ");
+                if (value instanceof String) {
+                    sb.append('\"');
+                    sb.append(value);
+                    sb.append('\"');
+                }
+                else {
+                    sb.append(value);
+                }
+                sb.append('\n');
+            }
+        }
+    }
+    
+    public static final ValueFormatter DEFAULT_VALUE_FORMATTER = new DefaultValueFormatter();
 }

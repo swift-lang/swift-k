@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.griphyn.vdl.util.SwiftConfig.ValueLocationPair;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigOrigin;
@@ -173,8 +175,8 @@ public class SwiftConfigSchema {
         return o.filename() + ":" + o.lineNumber();
     }
 
-    public ConfigTree<Object> validate(Config conf) {
-        ConfigTree<Object> validated = new ConfigTree<Object>();
+    public ConfigTree<ValueLocationPair> validate(Config conf) {
+        ConfigTree<ValueLocationPair> validated = new ConfigTree<ValueLocationPair>();
         
         // build a tree of the actual config so we can easily check them for missing properties
         ConfigTree<Boolean> confTree = new ConfigTree<Boolean>();
@@ -194,7 +196,7 @@ public class SwiftConfigSchema {
                 throw new IllegalStateException("Missing type for key " + k);
             }
             Object value = checkValue(k, e.getValue(), i.type);
-            validated.put(k, value);
+            validated.put(k, new ValueLocationPair(value, e.getValue().origin()));
         }
         
         // check for missing things
@@ -210,14 +212,14 @@ public class SwiftConfigSchema {
         return validated;
     }
 
-    private String findMissing(String key, ConfigTree<Boolean> confTree, Info i, ConfigTree<Object> validated) {
+    private String findMissing(String key, ConfigTree<Boolean> confTree, Info i, ConfigTree<ValueLocationPair> validated) {
         List<String> found = confTree.expandWildcards(key, STAR);
 
         for (String f : found) {
             if (!confTree.hasKey(f)) {
                 if (i.optional) {
                     if (i.value != null) {
-                        validated.put(f, i.value);
+                        validated.put(f, new ValueLocationPair(i.value, null));
                     }
                 }
                 else if (!parentsAreOptional(key, confTree)) {
@@ -237,8 +239,18 @@ public class SwiftConfigSchema {
                 return false;
             }
             Info i = info.get(k);
-            if (i != null && !i.optional && !confTree.hasKey(k)) {
-                return false;
+            if (i != null) {
+                if (i.optional) {
+                    if (confTree.hasKey(k)) {
+                        // continue checking parents
+                    }
+                    else {
+                        return true;
+                    }
+                }
+                else {
+                    return false;
+                }
             }
         }
         return true;
@@ -270,9 +282,7 @@ public class SwiftConfigSchema {
         Object v = value.unwrapped();
         switch (value.valueType()) {
             case STRING:
-                if (t.getBaseType() != ConfigPropertyType.STRING && t.getBaseType() != ConfigPropertyType.OBJECT) {
-                    throw invalidValue(value, k, v, t.getBaseType());
-                }
+                // allow auto-conversion from string
                 return t.check(k, value.unwrapped(), value.origin());
             case NUMBER:
                 if (t.getBaseType() != ConfigPropertyType.INT && t.getBaseType() != ConfigPropertyType.FLOAT) {

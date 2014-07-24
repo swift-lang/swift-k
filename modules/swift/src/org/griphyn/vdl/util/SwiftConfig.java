@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
@@ -40,6 +39,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigIncludeContext;
 import com.typesafe.config.ConfigIncluder;
 import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.ConfigValue;
@@ -51,7 +51,9 @@ public class SwiftConfig implements Cloneable {
     public static final boolean CHECK_DYNAMIC_NAMES = true;
     public static final boolean BUILD_CHECK = true;
     
-    public static final List<String> DEFAULT_LOCATIONS;
+    public static String DIST_CONF;
+    public static String SITE_CONF;
+    public static String USER_CONF;
     
     public enum Key {
         DM_CHECKER("mappingCheckerEnabled"),
@@ -81,10 +83,7 @@ public class SwiftConfig implements Cloneable {
     
     static {
         SCHEMA = new SwiftConfigSchema();
-        DEFAULT_LOCATIONS = new ArrayList<String>();
-        if (System.getenv("SWIFT_SITE_CONF") != null) {
-            DEFAULT_LOCATIONS.add(System.getenv("SWIFT_SITE_CONF"));
-        }
+        
         String swiftHome = System.getProperty("swift.home");
         if (swiftHome == null) {
             swiftHome = System.getProperty("swift.home");
@@ -93,11 +92,18 @@ public class SwiftConfig implements Cloneable {
             }
         }
         
-        DEFAULT_LOCATIONS.add(swiftHome + File.separator + 
-            "etc" + File.separator + "swift.conf");
+        DIST_CONF = makePath(swiftHome, "etc", "swift.conf");
+        
+        if (System.getenv("SWIFT_SITE_CONF") != null) {
+            SITE_CONF = System.getenv("SWIFT_SITE_CONF");
+        }
+        
+        File userConf = new File(makePath(System.getProperty("user.home"), ".swift", "swift.conf"));
+        if (userConf.exists()) {
+            USER_CONF = userConf.getAbsolutePath();
+        }
         
         // check keys against schema
-        
         for (Key k : Key.values()) {
             if (!SCHEMA.isNameValid(k.propName)) {
                 throw new IllegalArgumentException("Invalid property name for config key '" + k + "': " + k.propName);
@@ -115,11 +121,23 @@ public class SwiftConfig implements Cloneable {
         }
     }
     
+    public static class ValueLocationPair {
+        public final Object value;
+        public final ConfigOrigin loc;
+        
+        public ValueLocationPair(Object value, ConfigOrigin loc) {
+            this.value = value;
+            this.loc = loc;
+        }
+    }
+    
     private static class IncluderWrapper implements ConfigIncluder {
         private final ConfigIncluder d;
+        private final List<String> loadedFiles;
         
-        public IncluderWrapper(ConfigIncluder d) {
+        public IncluderWrapper(ConfigIncluder d, List<String> loadedFiles) {
             this.d = d;
+            this.loadedFiles = loadedFiles;
         }
 
         @Override
@@ -136,6 +154,7 @@ public class SwiftConfig implements Cloneable {
                 what = what.substring(0, b) + resolve(var) + what.substring(e + 1);
                 b = what.indexOf("${");
             }
+            loadedFiles.add(new File(what).getAbsolutePath());
             return ConfigFactory.parseFile(new File(what)).root();
         }
 
@@ -153,26 +172,117 @@ public class SwiftConfig implements Cloneable {
             return v;
         }
     }
-    
-    public static SwiftConfig load(String fileName) {
-        return load(fileName, null);
+
+    private static String makePath(String... els) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < els.length; i++) {
+            if (i != 0 && (sb.charAt(sb.length() - 1) != File.separatorChar)) {
+                sb.append(File.separator);
+            }
+            sb.append(els[i]);
+        }
+        return sb.toString();
     }
 
-    public static SwiftConfig load(String fileName, Map<String, Object> override) {
+    public static SwiftConfig load(String cmdLineConfig, List<String> configSearchPath, Map<String, Object> cmdLineOptions) {
+        List<String> loadedFiles = new ArrayList<String>();
+        List<String> loadedFileIndices = new ArrayList<String>();
+        
         ConfigParseOptions opt = ConfigParseOptions.defaults();
-        opt = opt.setIncluder(new IncluderWrapper(opt.getIncluder())).
+        opt = opt.setIncluder(new IncluderWrapper(opt.getIncluder(), loadedFiles)).
             setSyntax(ConfigSyntax.CONF).setAllowMissing(false);
-        Config conf = ConfigFactory.parseFile(new File(fileName), opt);
-        if (override != null) {
-            Config oconf = ConfigFactory.parseMap(override, "<command line>");
-            conf = oconf.withFallback(conf);
+        
+        Config conf;
+        
+        if (configSearchPath == null) {
+            conf = loadNormal(cmdLineConfig, opt, loadedFiles, loadedFileIndices);
         }
+        else {
+            conf = loadFromSearchPath(configSearchPath, cmdLineConfig, opt, 
+                loadedFiles, loadedFileIndices);
+        }
+        
+        if (cmdLineOptions != null) {
+            Config oconf = ConfigFactory.parseMap(cmdLineOptions, "<Command Line>");
+            conf = oconf.withFallback(conf);
+            loadedFiles.add("<Command Line>");
+            loadedFileIndices.add("C");
+        }
+        
         conf = conf.resolveWith(getSubstitutions());
-        ConfigTree<Object> out = SCHEMA.validate(conf);
-        SwiftConfig sc = new SwiftConfig();
-        sc.setFileName(fileName);
+        ConfigTree<ValueLocationPair> out = SCHEMA.validate(conf);
+        SwiftConfig sc = new SwiftConfig(loadedFiles, loadedFileIndices);
         sc.build(out);
         return sc;
+    }
+
+    private static Config loadFromSearchPath(List<String> configSearchPath, String cmdLineConfig,
+            ConfigParseOptions opt, List<String> loadedFiles, List<String> loadedFileIndices) {
+        Config conf = null;
+        
+        int index = 1;
+        for (String c : configSearchPath) {
+            conf = loadOne(c, conf, opt);
+            loadedFiles.add(c);
+            loadedFileIndices.add(String.valueOf(index++));
+        }
+        
+        if (cmdLineConfig != null) {
+            conf = loadOne(cmdLineConfig, conf, opt);
+            loadedFiles.add(cmdLineConfig);
+            loadedFileIndices.add("R");
+        }
+        
+        return conf;
+    }
+
+    private static Config loadNormal(String cmdLineConfig, ConfigParseOptions opt, 
+            List<String> loadedFiles, List<String> loadedFileIndices) {
+        Config conf;
+        
+        conf = loadOne(DIST_CONF, null, opt);
+        loadedFiles.add(DIST_CONF);
+        loadedFileIndices.add("D");
+        
+        if (SITE_CONF != null) {
+            conf = loadOne(SITE_CONF, conf, opt);
+            loadedFiles.add(SITE_CONF);
+            loadedFileIndices.add("S");
+        }
+        
+        if (USER_CONF != null) {
+            conf = loadOne(USER_CONF, conf, opt);
+            loadedFiles.add(USER_CONF);
+            loadedFileIndices.add("U");
+        }
+        
+        if (cmdLineConfig == null) {
+            File runConf = new File("swift.conf");
+            if (runConf.exists()) {
+                conf = loadOne(runConf.getPath(), conf, opt);
+                loadedFiles.add(runConf.getPath());
+                loadedFileIndices.add("R");
+            }
+        }
+        
+        if (cmdLineConfig != null) {
+            conf = loadOne(cmdLineConfig, conf, opt);
+            loadedFiles.add(cmdLineConfig);
+            loadedFileIndices.add("R");
+        }
+        
+        return conf;
+    }
+
+    private static Config loadOne(String fileName, Config conf, ConfigParseOptions opt) {
+        File f = new File(fileName);
+        Config nconf = ConfigFactory.parseFile(f, opt);
+        if (conf == null) {
+            return nconf;
+        }
+        else {
+            return nconf.withFallback(conf);
+        }
     }
 
     private static Config getSubstitutions() {
@@ -184,21 +294,12 @@ public class SwiftConfig implements Cloneable {
         
         return ConfigFactory.parseMap(m).withFallback(ConfigFactory.parseProperties(System.getProperties()));
     }
-
-    public static SwiftConfig load() {
-        for (String loc : DEFAULT_LOCATIONS) {
-            if (new File(loc).exists()) {
-                return load(loc);
-            }
-        }
-        throw new IllegalStateException("Could not find swift configuration file");
-    }
     
     private static SwiftConfig _default;
     
     public synchronized static SwiftConfig getDefault() {
         if (_default == null) {
-            _default = load();
+            throw new IllegalStateException("No default Swift configuration set");
         }
         return _default;
     }
@@ -209,14 +310,18 @@ public class SwiftConfig implements Cloneable {
         
     private SwiftContactSet definedSites;
     private SwiftContactSet sites;
-    private ConfigTree<Object> tree;
+    private ConfigTree<ValueLocationPair> tree;
     private Map<String, Object> flat;
     private String fileName;
+    private List<String> usedFiles;
+    private List<String> usedFileIndices;
     
-    public SwiftConfig() {
+    public SwiftConfig(List<String> usedFiles, List<String> usedFileIndices) {
         definedSites = new SwiftContactSet();
         sites = new SwiftContactSet();
         flat = new HashMap<String, Object>();
+        this.usedFiles = usedFiles; 
+        this.usedFileIndices = usedFileIndices;
     }
     
     public SwiftContactSet getSites() {
@@ -239,24 +344,16 @@ public class SwiftConfig implements Cloneable {
         flat.put(key, value);
     }
     
-    public String getFileName() {
-        return fileName;
-    }
-    
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
     @SuppressWarnings("unchecked")
-    private void build(ConfigTree<Object> tree) {
+    private void build(ConfigTree<ValueLocationPair> tree) {
         this.tree = tree;
         List<String> sites = null;
         if (BUILD_CHECK) {
             checkKey("sites");
         }
-        for (Map.Entry<String, ConfigTree.Node<Object>> e : tree.entrySet()) {
+        for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : tree.entrySet()) {
             if (e.getKey().equals("site")) {
-                for (Map.Entry<String, ConfigTree.Node<Object>> f : e.getValue().entrySet()) {
+                for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> f : e.getValue().entrySet()) {
                     site(definedSites, f.getKey(), f.getValue());
                 }
             }
@@ -280,7 +377,7 @@ public class SwiftConfig implements Cloneable {
         this.sites.getApplications().putAll(definedSites.getApplications());
         
         for (String leaf : tree.getLeafPaths()) {
-            flat.put(leaf, tree.get(leaf));
+            flat.put(leaf, tree.get(leaf).value);
         }
     }
 
@@ -295,16 +392,16 @@ public class SwiftConfig implements Cloneable {
         }
     }
 
-    private void apps(SwiftContact sc, ConfigTree.Node<Object> n) {
+    private void apps(SwiftContact sc, ConfigTree.Node<ValueLocationPair> n) {
         /*
          * app."*" {
          *   ...
          * }
          */
                 
-        for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
+        for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : n.entrySet()) {
             String k = e.getKey();
-            ConfigTree.Node<Object> c = e.getValue();
+            ConfigTree.Node<ValueLocationPair> c = e.getValue();
             
             if (e.getKey().equals("ALL")) {
                 sc.addApplication(app("*", e.getValue()));
@@ -351,7 +448,7 @@ public class SwiftConfig implements Cloneable {
         }
     }
     
-    private Application app(String name, ConfigTree.Node<Object> n) {
+    private Application app(String name, ConfigTree.Node<ValueLocationPair> n) {
         /*
          * app."*" {
          *  executable: "?String"
@@ -374,9 +471,9 @@ public class SwiftConfig implements Cloneable {
             checkKey("app.*.options.jobProject");
             checkKey("app.*.options.jobQueue");
         }
-        for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
+        for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : n.entrySet()) {
             String k = e.getKey();
-            ConfigTree.Node<Object> c = e.getValue();
+            ConfigTree.Node<ValueLocationPair> c = e.getValue();
             
             if (k.equals("executable")) {
                 app.setExecutable(getString(c));
@@ -410,15 +507,15 @@ public class SwiftConfig implements Cloneable {
     }
 
 
-    private List<KVPair> envs(Node<Object> n) {
+    private List<KVPair> envs(Node<ValueLocationPair> n) {
         List<KVPair> l = new ArrayList<KVPair>();
-        for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
+        for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : n.entrySet()) {
             l.add(new KVPair(e.getKey(), getString(e.getValue())));
         }
         return l;
     }
 
-    private void site(SwiftContactSet sites, String name, ConfigTree.Node<Object> n) {
+    private void site(SwiftContactSet sites, String name, ConfigTree.Node<ValueLocationPair> n) {
         try {
             SwiftContact sc = new SwiftContact(name);
     
@@ -436,9 +533,9 @@ public class SwiftConfig implements Cloneable {
                 sc.setProperty("sysinfo", getString(n, "OS"));
             }        
             
-            for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
+            for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : n.entrySet()) {
                 String ctype = e.getKey();
-                ConfigTree.Node<Object> c = e.getValue();
+                ConfigTree.Node<ValueLocationPair> c = e.getValue();
                 
                 if (ctype.equals("execution")) {
                     sc.addService(execution(c));
@@ -469,7 +566,7 @@ public class SwiftConfig implements Cloneable {
         }
     }
     
-    private void staging(SwiftContact sc, Node<Object> n) {
+    private void staging(SwiftContact sc, Node<ValueLocationPair> n) {
         String staging = getString(n);
         if (BUILD_CHECK) {
             checkValue("site.*.staging", 
@@ -516,14 +613,14 @@ public class SwiftConfig implements Cloneable {
         }
     }
 
-    private Service filesystem(Node<Object> c) throws InvalidProviderException, ProviderMethodException {        
+    private Service filesystem(Node<ValueLocationPair> c) throws InvalidProviderException, ProviderMethodException {        
         Service s = new ServiceImpl();
         s.setType(Service.FILE_OPERATION);
         fileService(c, s);
         return s;
     }
     
-    private void fileService(Node<Object> n, Service s) throws InvalidProviderException, ProviderMethodException {
+    private void fileService(Node<ValueLocationPair> n, Service s) throws InvalidProviderException, ProviderMethodException {
         String provider = null;
         String url = null;
         if (BUILD_CHECK) {
@@ -531,9 +628,9 @@ public class SwiftConfig implements Cloneable {
             checkKey("site.*.filesystem.URL");
             checkKey("site.*.filesystem.options");
         }
-        for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
+        for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : n.entrySet()) {
             String k = e.getKey();
-            ConfigTree.Node<Object> c = e.getValue();
+            ConfigTree.Node<ValueLocationPair> c = e.getValue();
             
             if (k.equals("type")) {
                 provider = getString(c);
@@ -542,7 +639,7 @@ public class SwiftConfig implements Cloneable {
                 url = getString(c);
             }
             else if (k.equals("options")) {
-                for (Map.Entry<String, ConfigTree.Node<Object>> f : e.getValue().entrySet()) {
+                for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> f : e.getValue().entrySet()) {
                     s.setAttribute(f.getKey(), getObject(f.getValue()));
                 }
             }
@@ -557,13 +654,13 @@ public class SwiftConfig implements Cloneable {
     }
 
 
-    private Service execution(ConfigTree.Node<Object> n) throws InvalidProviderException, ProviderMethodException {
+    private Service execution(ConfigTree.Node<ValueLocationPair> n) throws InvalidProviderException, ProviderMethodException {
         ExecutionService s = new ExecutionServiceImpl();
         execService(n, s);
         return s;
     }
 
-    private void execService(Node<Object> n, Service s) throws InvalidProviderException, ProviderMethodException {
+    private void execService(Node<ValueLocationPair> n, Service s) throws InvalidProviderException, ProviderMethodException {
         String provider = null;
         String url = null;
         if (BUILD_CHECK) {
@@ -572,9 +669,9 @@ public class SwiftConfig implements Cloneable {
             checkKey("site.*.execution.jobManager");
             checkKey("site.*.execution.options");
         }
-        for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
+        for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : n.entrySet()) {
             String k = e.getKey();
-            ConfigTree.Node<Object> c = e.getValue();
+            ConfigTree.Node<ValueLocationPair> c = e.getValue();
             
             if (k.equals("type")) {
                 provider = getString(c);
@@ -599,7 +696,7 @@ public class SwiftConfig implements Cloneable {
         }
     }
 
-    private void execOptions(ExecutionService s, Node<Object> n) {
+    private void execOptions(ExecutionService s, Node<ValueLocationPair> n) {
         if (BUILD_CHECK) {
             checkKey("site.*.execution.options.jobProject");
             checkKey("site.*.execution.options.maxJobs");
@@ -609,9 +706,9 @@ public class SwiftConfig implements Cloneable {
             checkKey("site.*.execution.options.jobOptions");
         }
         
-        for (Map.Entry<String, ConfigTree.Node<Object>> e : n.entrySet()) {
+        for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : n.entrySet()) {
             String k = e.getKey();
-            ConfigTree.Node<Object> c = e.getValue();
+            ConfigTree.Node<ValueLocationPair> c = e.getValue();
             
             
             if (k.equals("jobProject")) {
@@ -643,16 +740,16 @@ public class SwiftConfig implements Cloneable {
         }
     }
 
-    private String getString(Node<Object> c) {
-        return (String) c.get();
+    private String getString(Node<ValueLocationPair> c) {
+        return (String) c.get().value;
     }
 
-    private Object getObject(ConfigTree.Node<Object> c) {
-        return c.get();
+    private Object getObject(ConfigTree.Node<ValueLocationPair> c) {
+        return c.get().value;
     }
     
-    private String getString(ConfigTree.Node<Object> c, String key) {
-        return (String) c.get(key);
+    private String getString(ConfigTree.Node<ValueLocationPair> c, String key) {
+        return (String) c.get(key).value;
     }
     
     private Object getObject(ConfigTree.Node<Object> c, String key) {
@@ -671,23 +768,82 @@ public class SwiftConfig implements Cloneable {
     }
     
     public String toString() {
+        return toString(true, true);
+    }
+    
+    public String toString(boolean files, boolean values) {
         StringBuilder sb = new StringBuilder();
-        SortedSet<String> s = new TreeSet<String>(flat.keySet());
-        for (String k : s) {
-            sb.append(k);
+        if (files) {
+            for (int i = 0; i < usedFiles.size(); i++) {
+                sb.append("[" + usedFileIndices.get(i) + "] " + usedFiles.get(i) + "\n");
+            }
+        }
+        if (values) {
+            sb.append(tree.toString(true, new LocationFormatter(usedFiles, usedFileIndices, tree)));
+        }
+        return sb.toString();
+    }
+    
+    private static class LocationFormatter extends ConfigTree.DefaultValueFormatter {
+        private List<String> files, fileIndices;
+        private ConfigTree<ValueLocationPair> tree;
+        
+        public LocationFormatter(List<String> files, List<String> fileIndices, ConfigTree<ValueLocationPair> tree) {
+            this.files = files;
+            this.fileIndices = fileIndices;
+            this.tree = tree;
+        }
+
+        @Override
+        public void format(String key, String full, Object value, int indentationLevel, StringBuilder sb) {
+            ValueLocationPair p = tree.get(full);
+            if (p.loc == null) {
+                // properties with default values from the schema, so don't print those
+                return;
+            }
+            int start = sb.length();
+            for (int i = 0; i < indentationLevel; i++) {
+                sb.append("    ");
+            }
+            sb.append(key);
             sb.append(": ");
-            Object o = flat.get(k);
-            if (o instanceof String) {
-                sb.append('"');
-                sb.append(o);
-                sb.append('"');
+            
+            if (p.value instanceof String) {
+                sb.append("\"");
+            }
+            sb.append(p.value);
+            if (p.value instanceof String) {
+                sb.append("\"");
+            }
+            
+            int width = sb.length() - start;
+            
+            for (int i = 0; i < 60 - width; i++) {
+                sb.append(' ');
+            }
+            
+            sb.append("# [");
+            int index;
+            if (p.loc.filename() == null) {
+                // command line
+                index = files.size() - 1;
             }
             else {
-                sb.append(o);
+                index = files.indexOf(p.loc.filename());
+            }
+            if (index == -1) {
+                sb.append('?');
+            }
+            else {
+                sb.append(fileIndices.get(index));
+            }
+            sb.append("]");
+            if (p.loc.filename() != null) {
+                sb.append(" line ");
+                sb.append(p.loc.lineNumber());
             }
             sb.append('\n');
         }
-        return sb.toString();
     }
     
     private void check(String name) {
