@@ -480,10 +480,18 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
             Object initialParallelJobs = bc.getProperty("initialParallelTasks");
             if (maxParallelJobs != null) {
                 double max = parseAndCheck(maxParallelJobs, "maxParallelTasks", bc);
-                bc.setProperty("jobThrottle", WeightedHost.jobThrottleFromMaxParallelism(max));
+                double jobThrottle = WeightedHost.jobThrottleFromMaxParallelism(max);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(bc.getName() + ": jobThrottle = " + jobThrottle);
+                }
+                bc.setProperty("jobThrottle", jobThrottle);
                 if (initialParallelJobs != null) {
                     double initial = parseAndCheck(initialParallelJobs, "initialParallelTasks", bc);
-                    bc.setProperty("initialScore", WeightedHost.initialScoreFromInitialParallelism(initial, max));
+                    double initialScore = WeightedHost.initialScoreFromInitialParallelism(initial, max);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(bc.getName() + ": initialScore = " + initialScore);
+                    }
+                    bc.setProperty("initialScore", initialScore);
                 }
             }
             else if (initialParallelJobs != null) {
