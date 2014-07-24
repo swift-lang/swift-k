@@ -192,7 +192,9 @@ coaster_settings_parse(coaster_settings *settings,
   COASTER_CONDITION(!in_key, COASTER_ERROR_INVALID,
         "Key without value at end of Coaster settings");
 
-  settings_emit(settings, key, value);
+  if (!in_key) {
+    settings_emit(settings, key, value);
+  }
 
   return COASTER_SUCCESS;
 }
