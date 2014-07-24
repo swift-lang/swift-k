@@ -58,7 +58,7 @@ public class Settings {
      */
     private int slots = 20;
     private int jobsPerNode = 1;
-    
+
     /**
      * TODO: clarify what this does
      */
@@ -119,7 +119,7 @@ public class Settings {
     private SecurityContext securityContext;
 
     private boolean remoteMonitorEnabled;
-    
+
 	/**
 	 * Adjusts the metric used for block sizes.
 	 *
@@ -160,9 +160,9 @@ public class Settings {
     private String directory = null;
 
     private String useHashBang = null;
-    
+
     private String perfTraceWorker = "false";
-    
+
     private int perfTraceInterval = -1;
 
     private final Map<String, String> attributes;
@@ -320,22 +320,22 @@ public class Settings {
     public String getPerfTraceWorker() {
         return perfTraceWorker;
     }
-    
+
 
     public void setPerfTraceWorker(String perfTraceWorker) {
         this.perfTraceWorker = perfTraceWorker;
     }
-    
+
 
     public int getPerfTraceInterval() {
         return perfTraceInterval;
     }
-    
+
 
     public void setPerfTraceInterval(int perfTraceInterval) {
         this.perfTraceInterval = perfTraceInterval;
     }
-    
+
 
     /**
      * The following values are considered valid:
@@ -494,7 +494,7 @@ public class Settings {
     public String getCoresPerNode() {
         return coresPerNode;
     }
-    
+
     public void setCoresPerNode(String coresPerNode) {
         this.coresPerNode=coresPerNode;
     }
@@ -551,7 +551,7 @@ public class Settings {
     public void setUseHashBang(String uhb) {
         this.useHashBang = uhb;
     }
-    
+
     public void setAttribute(String name, String value) {
     	attributes.put(name, value);
     }
@@ -569,6 +569,11 @@ public class Settings {
         if (logger.isDebugEnabled()) {
             logger.debug("Setting " + name + " to " + value);
         }
+        if (name.length() == 0) {
+            throw new IllegalArgumentException("Empty string Settings key "
+                                            + "(value was \"" + value + "\"");
+        }
+
         boolean complete = false;
         Method[] methods = getClass().getMethods();
         String setterName = "set" +
