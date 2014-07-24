@@ -205,7 +205,7 @@ public class WeightedHost implements Comparable<WeightedHost> {
 	}
 
 	public static double jobThrottleFromMaxParallelism(double max) {
-		return max - 1;
+		return (max - 1) / T;
 	}
 
 	public static double initialScoreFromInitialParallelism(double initial, double max) {
@@ -213,14 +213,14 @@ public class WeightedHost implements Comparable<WeightedHost> {
 			throw new IllegalArgumentException("initialParallelJobs cannot be greater than maxParallelJobs");
         }
         // jobThrottle * tscore + 1 = initial
-        // (max - 1) * tscore + 1 = initial;
-        // tscore = (initial - 1) / (max - 1)
+        // (max - 1) * tscore / T + 1 = initial;
+        // tscore = T * (initial - 1) / (max - 1)
         double score;
         if (max == 1) {
             return 0;
         }
         else {
-            double tscore = (initial - 1) / (max - 1);
+            double tscore = T * (initial - 1) / (max - 1);
             // tscore = exp(B * Math.atan(C * score));
             // ln(tscore) = B * atan(C * score)
             // tan(ln(tscore) / B) = C * score
