@@ -33,6 +33,7 @@ void ServiceConfigurationCommand::serialize() {
 
 void ServiceConfigurationCommand::replyReceived() {
 	configId = getInData()->at(0)->str();
+	Command::replyReceived();
 }
 
 std::string* ServiceConfigurationCommand::getConfigId() {

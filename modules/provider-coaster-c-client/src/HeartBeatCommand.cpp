@@ -39,4 +39,5 @@ void HeartBeatCommand::replyReceived() {
 	long rectime = getInData()->at(0)->getLong(0);
 
 	LogInfo << "Latency for " << getChannel() << ": " << (rectime - sendtime) << endl;
+	Command::replyReceived();
 }
