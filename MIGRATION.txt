@@ -15,11 +15,12 @@ Stage 2: Repo Cleanup (IN PROGRESS)
   - Modification notice in head of CoG files (NOT STARTED)
   - Headers of Swift files (NOT STARTED)
 * Good-quality README for repository (IN PROGRESS)
+* Automatically merge commits from SVN to Github with cron script (DONE)
 
 Stage 3: Public Mirror (NOT STARTED)
 ====================================
 * Make Github repo public
-* Automatically merge commits from SVN to Github with cron script.
+* Link to repo from swift-lang.org
 
 Stage 4: Final Switch (NOT STARTED)
 ===================================
