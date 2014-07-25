@@ -86,11 +86,13 @@ public class CoasterService extends GSSService {
     public CoasterService(boolean secure, int port, InetAddress bindTo) throws IOException {
         super(secure, port, bindTo);
         queues = new HashMap<String, JobQueue>();
+        setPollingIntervals();
     }
 
     public CoasterService(GSSCredential cred, int port, InetAddress bindTo) throws IOException {
         super(cred, port, bindTo);
         queues = new HashMap<String, JobQueue>();
+        setPollingIntervals();
     }
 
     public CoasterService(String registrationURL, String id, boolean local)
