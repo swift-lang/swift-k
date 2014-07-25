@@ -14,6 +14,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.coaster.channels.ChannelContext;
 
 public abstract class AbstractQueueProcessor extends Thread implements QueueProcessor {
     private final BlockingQueue<AssociatedTask> q;
@@ -56,5 +57,19 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
 
     protected int queuedTaskCount() {
         return q.size();
+    }
+
+    @Override
+    public void setClientChannelContext(ChannelContext channelContext) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public synchronized void start() {
+        if (this.isAlive()) {
+            throw new RuntimeException(this.getName() + " already started");
+        }
+        super.start();
     }
 }
