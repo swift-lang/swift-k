@@ -20,8 +20,11 @@ import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class PassiveQueueProcessor extends BlockQueueProcessor {
+
+    private boolean started = false;
+
     private final URI callbackURI;
-    
+
     private int currentWorkers;
 
     public PassiveQueueProcessor(LocalTCPService localService, URI callbackURI) {
@@ -55,18 +58,18 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
     protected void removeIdleBlocks() {
         // no removing of idle blocks here
     }
-    
+
     @Override
     public String registrationReceived(String blockID, String workerID, String workerHostname,
             CoasterChannel channel, Map<String, String> options) {
-        
+
         String r = getBlock(blockID).workerStarted(workerID, workerHostname, channel, options);
-        
+
         if (clientIsConnected()) {
             ResourceUpdateCommand wsc;
             synchronized(this) {
                 currentWorkers++;
-                wsc = new ResourceUpdateCommand("job-capacity", 
+                wsc = new ResourceUpdateCommand("job-capacity",
                     String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
             }
             try {
@@ -76,7 +79,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
                 logger.info("Failed to send worker status update to client", e);
             }
         }
-        
+
         return r;
     }
 
@@ -102,7 +105,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
         ResourceUpdateCommand wsc;
         synchronized(this) {
             currentWorkers--;
-            wsc = new ResourceUpdateCommand("job-capacity", 
+            wsc = new ResourceUpdateCommand("job-capacity",
                 String.valueOf(node.getConcurrency()));
             if (node.getBlock().getNodes().isEmpty()) {
                 getBlocks().remove(node.getBlock().getId());
@@ -115,6 +118,15 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
         }
         catch (Exception e) {
             logger.warn("Failed to send worker status update to client", e);
+        }
+    }
+
+    @Override
+    public synchronized void start() {
+        // TODO: workaround for double start problem. Unsure if final solution.
+        if (!this.started) {
+            super.start();
+            this.started = true;
         }
     }
 }
