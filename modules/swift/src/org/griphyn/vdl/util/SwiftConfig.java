@@ -134,10 +134,13 @@ public class SwiftConfig implements Cloneable {
     private static class IncluderWrapper implements ConfigIncluder {
         private final ConfigIncluder d;
         private final List<String> loadedFiles;
+        private final List<String> loadedFileIndices;
+        private int index;
         
-        public IncluderWrapper(ConfigIncluder d, List<String> loadedFiles) {
+        public IncluderWrapper(ConfigIncluder d, List<String> loadedFiles, List<String> loadedFileIndices) {
             this.d = d;
             this.loadedFiles = loadedFiles;
+            this.loadedFileIndices = loadedFileIndices;
         }
 
         @Override
@@ -155,6 +158,7 @@ public class SwiftConfig implements Cloneable {
                 b = what.indexOf("${");
             }
             loadedFiles.add(new File(what).getAbsolutePath());
+            loadedFileIndices.add(String.valueOf(++index));
             return ConfigFactory.parseFile(new File(what)).root();
         }
 
@@ -189,7 +193,7 @@ public class SwiftConfig implements Cloneable {
         List<String> loadedFileIndices = new ArrayList<String>();
         
         ConfigParseOptions opt = ConfigParseOptions.defaults();
-        opt = opt.setIncluder(new IncluderWrapper(opt.getIncluder(), loadedFiles)).
+        opt = opt.setIncluder(new IncluderWrapper(opt.getIncluder(), loadedFiles, loadedFileIndices)).
             setSyntax(ConfigSyntax.CONF).setAllowMissing(false);
         
         Config conf;
