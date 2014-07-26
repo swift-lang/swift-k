@@ -29,6 +29,11 @@ public class OpenArrayEntries implements Iterable<List<?>> {
         this.array = array;
         this.source = source;
     }
+    
+    @Override
+    public String toString() {
+        return "OpenArrayEntries[" + keyList + "]";
+    }
 
     @Override
     public Iterator<List<?>> iterator() {
