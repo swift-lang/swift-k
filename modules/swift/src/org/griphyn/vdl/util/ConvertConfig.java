@@ -138,11 +138,15 @@ public class ConvertConfig {
     }
 
     private void generateConfig(ContactSet sites, TransformationCatalog tc, PrintStream ps) {
-        ps.println("include \"${swift.home}/etc/swift.conf\"");
         ps.println();
         
         if (sites != null) {
             for (BoundContact bc : sites.getContacts()) {
+                // the default swift.conf contains a site called local,
+                // so make sure it's overwritten
+                if ("local".equals(bc.getName())) {
+                    ps.println("site.local: null");
+                }
                 ps.println("site." + bc.getName() + " {");
                 boolean hasFileService = false;
                 boolean hasCoasterService = false;
