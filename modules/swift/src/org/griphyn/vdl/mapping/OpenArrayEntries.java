@@ -79,6 +79,11 @@ public class OpenArrayEntries implements Iterable<List<?>> {
             public void remove() {
                 throw new UnsupportedOperationException();
             }
+            
+            @Override
+            public String toString() {
+                return OpenArrayEntries.this + "[" + index + " / " + keyList.size() + "]";
+            }
         };
     }
 }
