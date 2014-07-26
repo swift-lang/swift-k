@@ -99,7 +99,9 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
                 return new ClosedArrayEntries(getArrayValue());
             }
             else {
-                keyList = new ArrayList<Comparable<?>>(getArrayValue().keySet());
+                if (keyList == null) {
+                    keyList = new ArrayList<Comparable<?>>(getArrayValue().keySet());
+                }
                 return new OpenArrayEntries(keyList, getArrayValue(), this);
             }
         }
