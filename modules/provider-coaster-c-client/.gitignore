@@ -1,0 +1,22 @@
+# Object files
+*.lo
+*.o
+*.la
+
+# Executables
+src/coaster-client-test
+src/run-coaster-job
+
+# Build system files
+Makefile
+Makefile.in
+aclocal.m4
+config
+config.log
+config.status
+configure
+libtool
+m4/libtool.m4
+.deps
+.libs
+autom4te.cache
