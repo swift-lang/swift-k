@@ -9,11 +9,11 @@ Stage 2: Repo Cleanup (IN PROGRESS)
 ===================================
 * Make Swift primary build target from root build file (DONE)
 * Cleanup root directory of repository (DONE)
-* Remove any defunct or unneeded CoG-related files (IN PROGRESS)
+* Remove any defunct or unneeded CoG-related files (DONE)
 * Licensing:
-  - License information in root of repo (NOT STARTED)
-  - Modification notice in head of CoG files (NOT STARTED)
-  - Headers of Swift files (NOT STARTED)
+  - License information in root of repo (DONE)
+  - Modification notice in head of CoG files (DONE)
+  - Headers of Swift java files (DONE)
 * Good-quality README for repository (IN PROGRESS)
 * Automatically merge commits from SVN to Github with cron script (DONE)
 
