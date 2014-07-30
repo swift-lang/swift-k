@@ -13,13 +13,17 @@ find $dir -type f | (
   while read file
   do
     if [[ $file =~ .*\.class ]] || \
-       [[ $file =~ .*\.jar ]] ||   \
-       [[ $file =~ .*\.lo ]] ||    \
-       [[ $file =~ .*\.o ]] ||     \
-       [[ $file =~ .*\.Plo ]] ||    \
-       [[ $file =~ .*\.Po ]] ||     \
-       [[ $file =~ .*\.la ]] ||       \
-       [[ $file =~ .*\.jpg ]] ||       \
+       [[ $file =~ .*\.jar ]] || \
+       [[ $file =~ .*\.lo ]] || \
+       [[ $file =~ .*\.o ]] || \
+       [[ $file =~ .*\.Plo ]] || \
+       [[ $file =~ .*\.Po ]] || \
+       [[ $file =~ .*\.la ]] || \
+       [[ $file =~ .*\.jpg ]] || \
+       [[ $file =~ .*\.png ]] || \
+       [[ $file =~ .*\.min.js ]] || \
+       [[ $file =~ .*\.params ]] || \
+       [[ $file =~ .*/\.settings/.* ]] || \
        [[ $file =~ .*/\.project ]]
     then
       # Compiled files dont need license
