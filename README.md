@@ -29,4 +29,4 @@ CoG Project
 ===========
 This distribution of Swift incorporates code developed as part of the
 CoG (Commodity Grid) project.  For information about the CoG project
-and its licensing, see COG-README.txt, COG-CHANGES.txt and COG-LICENSE.txt.
+see README.txt, CHANGES.txt and LICENSE.txt in etc/cog/.
