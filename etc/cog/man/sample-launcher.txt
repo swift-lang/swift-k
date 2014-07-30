@@ -1,6 +1,0 @@
-NAME
-    simple-launcher 
-
-BUGS
-java.lang.NoClassDefFoundError: org/globus/cog/example/Class
-Exception in thread "main" 
