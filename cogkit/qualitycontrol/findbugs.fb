@@ -1,0 +1,46 @@
+[Jar files]
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-axis.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-certmanagement-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-certrequest-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-core-common-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-core-examples-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-core-provider-gt2-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-core-provider-gt3_0_2-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-core-provider-gt3_2_0-1.2.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-core-provider-gt3_2_1-1.2.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-core-provider-local-1.2.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-core-provider-ssh-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-core-provider-webdav-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-grapheditor-0.45.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-gridfaces-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-jglobus-1.2.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-karajan-0.25.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-provider-clref-gt3_0_2.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-provider-clref-gt3_2_0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-provider-clref-gt3_2_1.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-resources-1.0.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-setup-0.9.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-tomcat.jar
+C:\cygwin\home\laszewsk\today\src\cog\dist\cog-4.0-alpha\lib\cog-util-0.91.jar
+[Source dirs]
+C:\cygwin\home\laszewsk\today\src\cog\modules\certmanagement\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\certrequest\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\core-common\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\core-examples\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\core-provider-gt2\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\core-provider-gt3_0_2\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\core-provider-gt3_2_0\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\core-provider-gt3_2_1\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\core-provider-local\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\core-provider-ssh\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\core-provider-webdav\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\grapheditor\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\gridant\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\gridfaces\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\karajan\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\monitor\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\portlets\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\setup\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\testing\src\org
+C:\cygwin\home\laszewsk\today\src\cog\modules\util\src\org
+[Aux classpath entries]
