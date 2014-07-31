@@ -4,18 +4,34 @@ See http://swift-lang.org for more information.
 Building
 ========
 Run `ant redist` to build Swift.  The compiled Swift distribution will
-be created under `dist/swift-<version>` (dist/swift-devel for the
+be created under `dist/swift-<version>` (dist/swift-svn for the
 development version).
 
 Repository Layout
 =================
-The source code is divided up into modules.  Each module lives in
-its own directory under `modules`, for example `modules/swift` or
-`modules/provider-coaster`.
+At the root of the repository are a number of subdirectories that contain
+the source code and supporting files for the Swift language.  The main
+directories are:
+
+* **bin**: Swift executables
+* **build**: working directory for temporary build files
+* **cogkit**: modules based on the Java CoG kit
+* **dist**: destination for final compiled distribution of Swift
+* **docs**: Swift documentation
+* **etc**: miscellaneous supporting files
+* **lib**: libraries required for Swift, particularly Java jars.
+* **libexec**: other libraries required for Swift, particularly Karajan
+      libraries and shell scripts 
+* **resources**: miscellaneous resources used in building Swift.
+* **src**: Java source code for Swift compiler and runtime.
+* **tests**: test suite for Swift
+
+Swift depends on a number of additional modules that reside in their own
+directories under `cogkit/modules`, for example `cogkit/modules/karajan` or
+`cogkit/modules/provider-coaster`.
 
 Some of the more interesting modules are:
 
-* **swift**: the Swift language compiler and standard library
 * **karajan**: the Karajan language, used as a compilation target for Swift.
 * **provider-coaster**: the Coaster service and Java client for lightweight
     execution of jobs on remote resources
@@ -23,11 +39,8 @@ Some of the more interesting modules are:
 * **provider-...**: other providers that support remote job execution on
     various computing resources
 
-
-
-
-CoG Project
-===========
+Java CoG Kit
+============
 This distribution of Swift incorporates code developed as part of the
-CoG (Commodity Grid) project.  For information about the CoG project
-see README.txt, CHANGES.txt and LICENSE.txt in etc/cog/.
+CoG (Commodity Grid) project.  For information about the Java CoG Kit
+see README.txt, CHANGES.txt and LICENSE.txt in cogkit.
