@@ -26,5 +26,9 @@ long with an additional notice if it has been modified for Swift.
 Apache log4j is distributed with Swift.  The log4j license is included at
 lib/log4j.LICENSE.
 
+The Spectrum Colorpicker license is included at etc/licenses/.
+
+Other library licenses are include in the lib/ directory as appropriate.
+
 Modules in the modules/ directory may include additional software and
 license information.

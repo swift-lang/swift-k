@@ -1,0 +1,925 @@
+<!--
+  Swift Parallel Scripting Language (http://swift-lang.org)
+  Code from Java CoG Kit Project (see notice below) with modifications.
+
+  Copyright 2005-2014 University of Chicago
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+ -->
+
+<!-- ===================================================================
+ This code is developed as part of the Java CoG Kit project
+ The terms of the license can be found at http://www.cogkit.org/license
+ This message may not be removed or altered.
+==================================================================== -->
+
+
+<project name="Java CoG Kit" default="dist" basedir=".">
+
+	<property file="${cog.dir}/build.properties"/>
+	<property file="${cog.dir}/VERSION"/>
+
+        <!-- Default module directory, can be overridden -->
+        <property name="module.dir" value="${cog.dir}/modules/${module.name}"/>
+
+	<property name="jar.name" value="cog-${module.name}-${version}.jar"/>
+	<property name="jar.file" value="${build.dir}/${jar.name}"/>
+	<property name="force.java.version" value="1.5"/>
+    
+	<property name="javadoc.files" value="*"/>
+	<property name="javadoc.index.dir" value="${dist.dir}/javadoc"/>
+	<property name="javadoc.dir" value="${javadoc.index.dir}/${module.name}"/>
+	<property name="extra.lib.dir" value="lib"/>
+	
+    
+  <property file="${cog.dir}/webstart.properties"/>
+
+	<path id="classpath">
+		<fileset dir="${dist.dir}">
+			<include name="${extra.lib.dir}/*.jar"/>
+		</fileset>
+    	<fileset dir="${module.dir}/lib" erroronmissingdir="false">
+			<include name="**/*.jar"/>
+		</fileset>
+		<fileset dir="${dist.dir}/lib" erroronmissingdir="false">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+
+	<path id="classpath.joint">
+		<fileset dir="${dist.dir}/${extra.lib.dir}">
+			<include name="*.jar"/>
+		</fileset>
+		<fileset dir="${module.dir}/lib">
+			<include name="**/*.jar"/>
+		</fileset>
+		<fileset dir="${dist.dir}/lib" erroronmissingdir="false">
+			<include name="*.jar"/>
+		</fileset>
+		<pathelement location="${build.dir}"/>
+	</path>
+    
+	<property name="toplevel" value="true"/>
+    
+  
+	<!-- ===================================================--> 
+	<!-- Internal target                                    -->
+	<!-- ================================================== -->
+    
+	<target name="dependencies">
+		<antcall target="create.dependency.log"/>
+		<ant antfile="${module.dir}/dependencies.xml">
+			<property name="build.target" value="${build.target}"/>
+		</ant>
+		<condition property="toplevel.updated">
+			<istrue value="${toplevel}"/>
+		</condition>
+		<antcall target="delete.dependency.log.1"/>
+	</target>
+    
+	<target name="dependencies.joint">
+		<antcall target="create.dependency.log"/>
+		<!-- hackish, but it does the job -->
+		<copy file="${module.dir}/dependencies.xml"
+			tofile="dependencies-joint.xml" 
+			filtering="true"/>
+        <replace file="dependencies-joint.xml" 
+             token="target=&quot;dep&quot;" 
+             value="target=&quot;dep.joint&quot;"/>
+        <ant antfile="dependencies-joint.xml">
+            <property name="build.target" 
+                  value="${build.target}"/>
+        </ant>
+        <delete file="dependencies-joint.xml"/>
+        <antcall target="delete.dependency.log"/>
+    </target>
+    
+    <target name="build.dependencies">
+        <antcall target="dependencies">
+            <param name="build.target" value="dist"/>
+        </antcall>
+    </target>
+        
+    <target name="build.dependencies.joint">
+        <antcall target="dependencies.joint">
+            <param name="build.target" value="dist.joint"/>
+        </antcall>
+    </target>
+
+	<target name="launcher">
+		<condition property="launcher.exists">
+			<and>
+				<available file="${dist.dir}/bin/${launcher-name}"/>
+				<available file="${dist.dir}/bin/${launcher-name}.bat"/>
+			</and>
+		</condition>
+		<antcall target="create.launcher">
+			<param name="class-name" value="${class-name}"/>
+			<param name="launcher-name" value="${launcher-name}"/>
+		</antcall>
+	</target>
+    
+	<target name="create.launcher" unless="launcher.exists">
+		<echo message="[${module.name}]: LAUNCHER ${launcher-name}"/>
+		<property name="umask" value=""/>
+		<filter token="class" value="${class-name}"/>
+		<filter token="jar" value="${jar.name}"/>
+		<filter token="umask" value="${umask}"/>
+
+		<copy file="${cog.dir}/etc/unix/launcher-template"
+			tofile="${dist.dir}/bin/${launcher-name}"
+			filtering="true"/>
+		<copy file="${cog.dir}/etc/windows/launcher-template"
+			tofile="${dist.dir}/bin/${launcher-name}.bat"
+			filtering="true"/>
+		<chmod file="${dist.dir}/bin/${launcher-name}" perm="+x"/>
+		<!-- Just in case... -->
+		<fixcrlf srcdir="${dist.dir}/bin"
+			eol="lf"
+			includes="${launcher-name}" />
+		<fixcrlf srcdir="${dist.dir}/bin"
+			eol="crlf"
+			includes="${launcher-name}.bat" />
+	</target>
+    
+    <target name="example.launcher">
+        <condition property="example.launcher.exists">
+            <and>
+                <available file="${dist.dir}/bin/examples/${launcher-dir}/${launcher-name}"/>
+                <available file="${dist.dir}/bin/examples/${launcher-dir}/${launcher-name}.bat"/>
+            </and>
+        </condition>
+        <antcall target="create.example.launcher">
+            <param name="class-name" value="${class-name}"/>
+            <param name="launcher-name" value="${launcher-name}"/>
+			<param name="launcher-dir" value="${launcher-dir}"/>
+        </antcall>
+    </target>
+    
+    <target name="create.example.launcher" unless="example.launcher.exists">
+		<echo message="[${module.name}]: EXAMPLE LAUNCHER ${launcher-dir}/${launcher-name}"/>
+		<filter token="class" value="${class-name}"/>
+		<filter token="jar" value="${jar.name}"/>
+		
+		<copy file="${cog.dir}/etc/unix/example-launcher-template"
+			tofile="${dist.dir}/bin/${launcher-dir}/${launcher-name}"
+			filtering="true"/>
+		<copy file="${cog.dir}/etc/windows/example-launcher-template"
+			tofile="${dist.dir}/bin/${launcher-dir}/${launcher-name}.bat"
+			filtering="true"/>
+		<chmod file="${dist.dir}/bin/${launcher-dir}/${launcher-name}" perm="+x"/>
+		<!-- Just in case... -->
+		<fixcrlf srcdir="${dist.dir}/bin/${launcher-dir}"
+			eol="crlf"
+			includes="${launcher-name}.bat" />
+	</target>
+    
+    <target name="dep">
+        <loadfile srcFile="${cog.dir}/dependency.log.${build.target}" property="dependency.log"/>
+        <condition property="module.is.built">
+            <contains string="${dependency.log}" substring="%${module}%"/>
+        </condition>
+        <antcall target="dep.1"/>
+    </target>
+    
+    <target name="dep.1" unless="module.is.built">
+        <echo message="::: dep ::: calling ${module}/build.xml with target ${build.target}" level="verbose"/>
+        <ant target="${build.target}" inheritAll="false" dir="${cog.dir}/modules/${module}">
+            <property name="dist.dir" value="${dist.dir}"/>
+            <property name="toplevel" value="false"/>
+        </ant>
+    </target>
+    
+    <target name="dep.joint">
+        <loadfile srcFile="${cog.dir}/dependency.log.${build.target}" property="dependency.log"/>
+        <condition property="module.is.built">
+            <contains string="${dependency.log}" substring="%${module}%"/>
+        </condition>
+        <antcall target="dep.joint.1"/>
+    </target>
+
+    <target name="dep.joint.1" unless="module.is.built">
+        <echo message="::: dep.joint ::: calling ${module}/build.xml with target ${build.target}"/>
+        <ant target="${build.target}" inheritAll="false" dir="${cog.dir}/modules/${module}">
+            <property name="dist.dir" value="${dist.dir}"/>
+            <property name="build.dir" value="${build.dir}"/>
+            <property name="toplevel" value="false"/>
+        </ant>
+    </target>
+    
+    <target name="create.dependency.log">
+        <condition property="toplevel.updated">
+            <istrue value="${toplevel}"/>
+        </condition>
+        <antcall target="delete.dependency.log.1"/>
+        <concat destfile="${cog.dir}/dependency.log.${build.target}" append="yes">
+%${module.name}%
+        </concat>
+    </target>
+    
+    <target name="delete.dependency.log">
+        <condition property="toplevel.updated">
+            <istrue value="${toplevel}"/>
+        </condition>
+        <antcall target="delete.dependency.log.1"/>
+    </target>
+    
+    <target name="delete.dependency.log.1" if="toplevel.updated">
+        <delete file="${cog.dir}/dependency.log.${build.target}"/>
+    </target>
+    
+  <!-- ===================================================--> 
+  <!-- Compile                                            -->
+  <!-- ================================================== -->
+    
+	<target name="compile">
+		<echo message="[${module.name}]: COMPILE"/>
+                <!-- Create if not present -->
+		<mkdir dir="${module.dir}/src"/>
+		<mkdir dir="${build.dir}"/>
+		<javac  srcdir="${module.dir}/src"
+			destdir="${build.dir}"
+			includes="**/*.java"
+			excludes="${exclude.dirs}"
+			classpathref="classpath"
+			debug="${debug}"
+			optimize="${optimize}"
+			deprecation="${deprecation}"
+			source="${force.java.version}"
+			target="${force.java.version}"
+			includeAntRuntime="false"/>
+                
+		<copy todir="${build.dir}" >
+			<fileset dir="${module.dir}/src" includes="**/*.properties" />
+		</copy>
+		<copy todir="${build.dir}" >
+			<fileset dir="${module.dir}/src" includes="images/**/*.*" />
+		</copy>
+		<copy todir="${build.dir}" >
+			<fileset dir="${module.dir}/src" includes="text/**/*.*" />
+		</copy>
+        <condition property="resources.exist">
+            <available file="resources" type="dir"/>
+        </condition>
+        <antcall target="copy.resources"/>
+  </target>     
+    
+  <target name="copy.resources" if="resources.exist">
+        <copy todir="${build.dir}">
+            <fileset dir="resources" includes="**/*.*"/>
+        </copy>
+		<antcall target="update.provider.props"/>
+  </target>
+  
+  <target name="update.provider.props" if="merge.extra.libs">
+  		<!-- maybe this is the wrong place to do this -->
+		<replace dir="${build.dir}"
+			token="sandbox=true"
+			value="sandbox=false"
+			includes="cog-provider.properties"/>
+		<replace dir="${build.dir}"
+			token="classloader.usesystem=false"
+			value="classloader.usesystem=true"
+			includes="cog-provider.properties"/>
+		<replace dir="${build.dir}"
+			token="#classloader.boot="
+			value="classloader.boot="
+			includes="cog-provider.properties"/>
+  </target>
+
+  <!-- ===================================================--> 
+  <!-- Compile also using the build.dir as classpath    -->
+  <!-- ================================================== -->
+    
+	<target name="compile.joint">
+    	<mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.dir}/etc.tmp"/>
+        <concat destfile="${build.dir}/etc.tmp/MANIFEST.MF">
+            <filelist dir="etc" files="MANIFEST.MF.head,MANIFEST.MF.tail"/>
+        </concat>
+        <echo message="[${module.name}]: COMPILE"/>
+		
+		<javac srcdir="src"
+			destdir="${build.dir}"
+			includes="**/*.java"
+			excludes="${exclude.dirs}"
+			classpathref="classpath.joint"
+			debug="${debug}"
+			optimize="${optimize}"
+			deprecation="${deprecation}"
+			source="1.4"
+			target="1.4"/>
+                
+		<copy todir="${build.dir}">
+			<fileset dir="src" includes="**/*.properties"/>
+		</copy>
+		<copy todir="${build.dir}">
+			<fileset dir="src" includes="images/**/*.*"/>
+	    </copy>
+		<copy todir="${build.dir}">
+			<fileset dir="src" includes="text/**/*.*"/>
+		</copy>
+		<copy todir="${build.dir}">
+		<fileset dir="" includes="resources/**/*.*"/>
+			<mapper type="glob" from="resources/*" to="*"/>
+		</copy>
+    </target>     
+
+  <!-- ===================================================--> 
+  <!-- Clean                                              -->
+  <!-- ================================================== -->
+    
+	<target name="clean">
+		<echo message="[${module.name}]: CLEAN"/>
+		<delete dir="${build.dir}"/>
+		<antcall target="clean.dependencies"/>
+	</target>
+    
+	<target name="clean.dependencies">
+		<antcall target="dependencies">
+			<param name="build.target" value="clean"/>
+		</antcall>
+	</target>
+
+  <!-- ===================================================--> 
+  <!-- Distclean                                          -->
+  <!-- ================================================== -->
+
+  <target name="distclean" depends="clean">
+    <echo message="[${module.name}]: DISTCLEAN"/>
+    <delete dir="${dist.dir}"/>
+  </target>
+
+  <!-- ===================================================--> 
+  <!-- Jar                                                -->
+  <!-- ================================================== -->
+    
+  <target name="delete.jar" unless="jar.uptodate">
+    <echo message="[${module.name}]: DELETE.JAR (${jar.name})"/>
+    <delete file="${dist.dir}/lib/${jar.name}"/>
+  </target>
+
+  <target name="jar" depends="delete.jar,compile" unless="no.jar"> 
+    <echo message="[${module.name}]: JAR (${jar.name})"/>
+    <mkdir dir="${build.dir}/etc.tmp"/>
+    <concat destfile="${build.dir}/etc.tmp/MANIFEST.MF">
+        <filelist dir="etc" files="MANIFEST.MF.head,MANIFEST.MF.tail"/>
+    </concat>
+    <jar jarfile="${dist.dir}/lib/${jar.name}" manifest="${build.dir}/etc.tmp/MANIFEST.MF" index="true">
+      <fileset dir="${build.dir}" includes="**/*.*" excludes="*.tmp, *.tmp/**, *.tmp/**/*.*"/>
+    </jar>
+  </target>
+
+  <target name="jar.joint" depends="delete.jar">
+    <echo message="Removing old ${dist.dir}/lib/${jar.name}"/>
+    <delete file="${dist.dir}/lib/${jar.name}"/>
+    <echo message="building ${dist.dir}/lib/${jar.name}"/>
+    <jar jarfile="${dist.dir}/lib/${jar.name}" manifest="${build.dir}/etc.tmp/MANIFEST.MF" index="true">
+      <fileset dir="${build.dir}" includes="**/*.*" excludes="*.tmp, *.tmp/**, *.tmp/**/*.*"/>
+    </jar>
+  </target>
+
+  <!-- ===================================================--> 
+  <!-- JavaDoc                                            -->
+  <!-- ================================================== -->
+
+  <target name="javadoc">
+    <condition property="toplevel.updated">
+        <istrue value="${toplevel}"/>
+    </condition>
+    <antcall target="create.javadoc.index"/>
+    <antcall target="dependencies">
+        <param name="build.target" value="javadoc"/>
+    </antcall>
+    <antcall target="do.javadoc"/>
+    <antcall target="add.to.javadoc.index"/>
+    <antcall target="finish.javadoc.index"/>
+  </target>
+        
+	<target name="do.javadoc" unless="no.javadoc">
+		<antcall target="do.javadoc.1"/>
+	</target>
+	
+  <target name="do.javadoc.1" unless="no.javadoc.compile">
+    <echo message="[${module.name}]: JAVADOC"/>
+    <mkdir dir="${javadoc.dir}"/>
+    <javadoc packagenames="${javadoc.files}"
+      classpathref="classpath"
+      sourcepath="src"
+      destdir="${javadoc.dir}"
+      private="false"
+      linksource="${javadoc.linksource}"
+      doctitle="The Java Commodity Grid Kit"
+      windowtitle="${long.name} API"
+      use="true">
+      <link href="http://java.sun.com/j2se/1.4.2/docs/api/"/>
+            <!-- is there an alterative? viable alternative? -->
+            <link href="../abstraction"/>
+            <link href="../util"/>
+            <link href="../grapheditor"/>
+            <link href="../karajan"/>
+            <link href="../setup"/>
+            <link href="../testing"/>
+            <link href="../jglobus"/>
+            <link href="../abstraction-common"/>
+    </javadoc>
+   </target>
+    
+   <target name="create.javadoc.index" if="toplevel.updated">
+      <antcall target="dist"/>
+      <delete dir="${javadoc.index.dir}" failonerror="false"/>
+      <copy file="${cog.dir}/etc/javadoc-index.html" 
+        tofile="${javadoc.index.dir}/index.html"/>
+   </target>
+    
+   <target name="finish.javadoc.index" if="toplevel.updated">
+      <replace file="${javadoc.index.dir}/index.html" token="@module@"/>
+   </target>
+    
+   <target name="add.to.javadoc.index" unless="no.javadoc">
+      <loadfile srcFile="${cog.dir}/etc/javadoc-module.html"
+          property="javadoc.item"/>
+      <replace file="${javadoc.index.dir}/index.html" 
+           token="@module@" value="${javadoc.item}"/>
+      <replace file="${javadoc.index.dir}/index.html">
+            <replacefilter token="@javadoc.dir@"
+                 value="${module.name}"/>
+            <replacefilter token="@name@" value="${long.name}"/>
+            <replacefilter token="@version@" value="${version}"/>
+      </replace>
+  </target>
+
+  <!-- ===================================================--> 
+  <!-- Dist                                               -->
+  <!-- ================================================== -->
+
+	<target name="dist">
+		<property name="build.target" value="dist"/>
+		<!-- create directories -->
+		<mkdir dir="${dist.dir}"/>
+		<mkdir dir="${dist.dir}/lib"/>
+		<mkdir dir="${dist.dir}/bin"/>
+		<mkdir dir="${dist.dir}/etc"/>
+		<!-- initialize/update log4j.properties -->
+		<antcall target="log4j.properties"/>
+		<!-- build dependencies -->
+		<antcall target="build.dependencies"/>
+        
+		<echo message="[${module.name}]: DIST"/>
+
+		<uptodate property="jar.uptodate" 
+			targetfile="${dist.dir}/lib/${jar.name}">
+			<srcfiles dir="${module.dir}/src" includes="**/*.*" erroronmissingdir="false"/>
+		</uptodate>
+		
+		<!--copy library dependencies-->
+		<echo message="[${module.name}]: JARCOPY"/>
+		<copy todir="${dist.dir}/lib">
+			<fileset dir="lib" includes="${lib.deps}" erroronmissingdir="false"/>
+		</copy>
+		<copy todir="${dist.dir}/lib">
+			<fileset dir="${cog.dir}/lib" includes="${lib.deps}" erroronmissingdir="false"/>
+		</copy>
+		<!--copy runtime configuration files-->
+		<copy todir="${dist.dir}/etc">
+			<fileset dir="etc" includes="**/*.*" excludes="MANIFEST.MF.*, *.module"/>
+		</copy>
+		<antcall target="jar"/>
+		<ant antfile="${module.dir}/launchers.xml" target="create"/>
+		<antcall target="deploy.examples"/>
+	</target>
+	
+	<target name="dist.extra.lib" depends="dist.extra.lib.notmerged,dist.extra.lib.merged"/>
+	
+	<target name="dist.extra.lib.merged" if="merge.extra.libs">
+		<copy todir="${dist.dir}/lib">
+			<fileset dir="${extra.lib.dir}" includes="*.*" excludes="WARNING.txt"/>
+		</copy>
+	</target>
+	
+	<target name="dist.extra.lib.notmerged" unless="merge.extra.libs">
+		<mkdir dir="${dist.dir}/${extra.lib.dir}"/>
+		<copy todir="${dist.dir}/${extra.lib.dir}">
+			<fileset dir="${extra.lib.dir}" includes="*.*"/>
+		</copy>
+	</target>
+    
+	<target name="module.package" depends="dist">
+		<property name="package.dir" value="${dist.dir}-package/cog-${cog.version}"/>	
+		<!-- create directories -->
+		<mkdir dir="${package.dir}"/>
+		<mkdir dir="${package.dir}/lib"/>
+		<mkdir dir="${package.dir}/bin"/>
+		<mkdir dir="${package.dir}/etc"/>
+        
+		<echo message="[${module.name}]: MODULE PACKAGE"/>
+
+		<!--copy library dependencies-->
+		<echo message="[${module.name}]: JARCOPY"/>
+		<copy todir="${package.dir}/lib">
+			<fileset dir="lib" includes="${lib.deps}"/>
+		</copy>
+		<antcall target="dist.extra.lib">
+			<param name="dist.dir" value="${package.dir}"/>
+		</antcall>
+		<copy todir="${package.dir}/lib">
+			<fileset dir="${cog.dir}/lib" includes="${lib.deps}"/>
+		</copy>
+		<!--copy runtime configuration files-->
+		<copy todir="${package.dir}/etc">
+			<fileset dir="etc" includes="*.properties"/>
+		</copy>
+		<copy todir="${package.dir}/lib">
+			<fileset dir="${dist.dir}/lib" includes="${jar.name}"/>
+		</copy>
+		<ant antfile="${module.dir}/launchers.xml" target="create">
+			<property name="dist.dir" value="${package.dir}"/>
+		</ant>
+		<antcall target="deploy.examples">
+			<param name="dist.dir" value="${package.dir}"/>
+		</antcall>
+	</target>
+    
+	<target name="deploy.examples">
+		<condition property="examples.exist">
+			<available file="examples"/>
+		</condition>
+		<antcall target="do.deploy.examples"/>
+	</target>
+    
+	<target name="do.deploy.examples" if="examples.exist">
+		<mkdir dir="${dist.dir}/examples/${module.name}"/>
+		<copy todir="${dist.dir}/examples/${module.name}">
+			<fileset dir="examples" includes="**/*.*"/>
+		</copy>
+	</target>
+
+  <!-- ===================================================--> 
+  <!-- A Dist which produces one cog jar (use carefully)  -->
+  <!-- ================================================== -->
+
+    <target name="dist.joint">
+        <!-- initialize/update log4j.properties -->
+        <antcall target="log4j.properties"/>
+
+        <antcall target="build.dependencies.joint"/>
+
+        <!--copy library dependencies-->
+        <echo message="[${module.name}]: JARCOPY"/>
+        <copy todir="${dist.dir}/lib">
+            <fileset dir="lib" includes="${lib.deps}"/>
+        </copy>
+        <copy todir="${dist.dir}/lib">
+            <fileset dir="${cog.dir}/lib" includes="${lib.deps}"/>
+        </copy>
+        <!--copy runtime configuration files-->
+        <copy todir="${dist.dir}/etc">
+            <fileset dir="etc" includes="*.properties"/>
+        </copy>
+        <antcall target="compile.joint"/>
+		<ant antfile="${module.dir}/launchers.xml" target="create"/>
+    </target>
+    
+    <target name="dist.all">
+        <echo message="Building all modules"/>
+        <property name="build.target" value="dist.joint"/>
+        <!-- create directories -->
+        <mkdir dir="${dist.dir}"/>
+        <mkdir dir="${dist.dir}/lib"/>
+        <mkdir dir="${dist.dir}/bin"/>
+        <mkdir dir="${dist.dir}/etc"/>
+        <!-- build dependencies -->
+        <antcall target="dist.joint"/>
+        <uptodate property="jar.uptodate" targetfile="${dist.dir}/lib/${jar.name}">
+            <srcfiles dir="${build.dir}" includes="**/*.*"/>
+        </uptodate>
+
+        <antcall target="jar.joint"/>
+    </target>
+    
+    <target name="log4j.properties">
+        <!-- though toplevel may be false, it doesn't seem to be evaluated properly in "if=" -->
+        <condition property="toplevel.updated">
+            <istrue value="${toplevel}"/>
+        </condition>
+        <antcall target="log4j.check.module"/>
+        <antcall target="log4j.properties.init"/>
+        <antcall target="log4j.properties.update"/>
+		<!-- aggregate changelogs; the wrong place to be, but it works -->
+		<java classname="org.globus.cog.tools.ChangelogAggregator"
+			  classpath="${cog.dir}/tools">
+			  <arg value="${dist.dir}/CHANGES.txt"/>
+			  <arg value="${module.dir}/CHANGES.txt"/>
+			  <arg value="${module.name}"/>
+		</java>
+    </target>
+    
+    <target name="log4j.check.module" unless="toplevel.updated">
+        <loadfile srcFile="${dist.dir}/etc/log4j.properties" property="log4jprops"/>
+        <condition property="module.present">
+            <contains string="${log4jprops}" substring="%${module.name}%"/>
+        </condition>
+    </target>
+    
+    <target name="log4j.properties.init" if="toplevel.updated">
+        <delete file="${dist.dir}/etc/log4j.properties" quiet="true"/>
+		<delete file="${dist.dir}/CHANGES.txt" quiet="true"/>
+        <copy file="${cog.dir}/etc/log4j.properties.root" tofile="${dist.dir}/etc/log4j.properties"/>
+    </target>
+    
+    <target name="log4j.properties.update" unless="module.present">
+        <concat destfile="${dist.dir}/etc/log4j.properties" append="true">
+# %${module.name}%
+        </concat>
+        <concat destfile="${dist.dir}/etc/log4j.properties" append="true">
+            <fileset dir="${module.dir}/etc" includes="log4j.properties.module"/>
+        </concat>
+    </target>
+        
+	<!-- ===================================================--> 
+	<!-- Fix EOL                                            -->
+	<!-- ===================================================-->
+    
+    <target name="fixeol">
+        <echo message="[${module.name}] FIXEOL"/>
+        <fixcrlf srcDir="${module.dir}" includes="src/**/*.java, src/**/*.txt"/>
+    </target>
+    
+	<!-- ===================================================--> 
+	<!-- PMD                                                -->
+	<!-- ================================================== -->
+
+	<target name="pmd">
+		<echo message="Running PMD on module ${module.name}"/>
+		<echo message="CoG Dir: ${cog.dir}"/>
+
+		<taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask">
+			<classpath>
+				<fileset dir="${cog.dir}/../tools/pmd-2.3/lib/">
+					<include name="*.jar"/>
+				</fileset>
+			</classpath>
+		</taskdef>
+		
+		<pmd printToConsole="true" shortFilenames="true">
+			<ruleset>rulesets/braces.xml</ruleset>
+			<ruleset>rulesets/design.xml</ruleset>
+			<ruleset>rulesets/strings.xml</ruleset>
+			<ruleset>rulesets/controversial.xml</ruleset>
+			<ruleset>rulesets/codesize.xml</ruleset>
+			<ruleset>rulesets/imports.xml</ruleset>
+			<ruleset>rulesets/unusedcode.xml</ruleset>
+			<ruleset>rulesets/strings.xml</ruleset>
+			<ruleset>rulesets/optimizations.xml</ruleset>
+
+            <formatter type="summaryhtml" toFile="pmd-report.html"/>
+            <fileset dir="${module.dir}/src">
+                <include name="**/*.java"/>
+            </fileset>
+        </pmd>
+	</target>
+    
+	<target name="pmd.all">
+		<echo message="Running PMD on all modules"/>
+		<echo message="CoG Dir: ${cog.dir}"/>
+		<taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask">
+			<classpath>
+				<fileset dir="${cog.dir}/../tools/pmd-2.3/lib/">					<include name="*.jar"/>
+				</fileset>
+			</classpath>
+		</taskdef>
+		
+		<pmd shortFilenames="true" printToConsole="true">
+			<ruleset>rulesets/braces.xml</ruleset>
+			<ruleset>rulesets/design.xml</ruleset>
+			<ruleset>rulesets/strings.xml</ruleset>
+			<ruleset>rulesets/controversial.xml</ruleset>
+			<ruleset>rulesets/codesize.xml</ruleset>
+			<ruleset>rulesets/imports.xml</ruleset>
+			<ruleset>rulesets/unusedcode.xml</ruleset>
+
+            <formatter type="html" toFile="pmd-report.html"/>
+            <fileset dir="${cog.dir}/modules">
+                <include name="**/*.java"/>
+            </fileset>
+        </pmd>
+	</target>
+    
+
+  <!-- ===================================================-->     
+  <!-- deploy.webstart                                    -->
+  <!-- ================================================== -->
+    
+    <target name="deploy.webstart" depends="dist">
+        <echo message="[${module.name}]: WEBSTART"/>
+        <delete quiet="true">
+            <fileset dir="${webstart.dir}" includes="*.*"/>
+        </delete>
+        <mkdir dir="${webstart.dir}"/>
+        
+        <condition property="key.exists">
+            <available file="${keystore}"/>
+        </condition>
+        
+        <antcall target="generate.key"/>
+        <echo message="[${module.name}]: SIGNJARS"/>
+        <copy todir="${webstart.dir}">
+            <fileset dir="${dist.dir}/lib" includes="*.jar"/>
+        </copy>
+        
+        <signjar alias="${signalias}" keystore="${keystore}" storetype="${storetype}" storepass="${storepass}" lazy="true">
+            <fileset dir="${webstart.dir}" includes="*.jar" excludes="jce-jdk*.jar"/>
+        </signjar>
+        
+        <filter token="CODEBASE" value="${codebase}"/>
+        <copy todir="${webstart.dir}" filtering="true">
+          <fileset dir="${cog.dir}/etc/webstart" includes="*.jnlp" excludes="template.jnlp"/>
+        </copy>
+
+        <delete file="${webstart.dir}/${webstart.index}"/>
+        <copy file="${cog.dir}/etc/webstart/index.html" tofile="${webstart.dir}/${webstart.index}"/>
+        <antcall target="webstart.launchers"/>
+        <replace file="${webstart.dir}/${webstart.index}" token="@WSAPPS@" value=""/>
+        <!-- remove duplicates -->
+        <replaceregexp 
+            file="${webstart.dir}/${webstart.index}" 
+            match="&lt;a\shref=&quot;([^\.]*)\.jnlp&quot;&gt;([^&lt;]*)&lt;/a&gt;(.*)(&lt;a\shref=&quot;\1\.jnlp&quot;&gt;\2&lt;/a&gt;)" 
+            replace="\4\3" 
+            flags="g"/>
+    </target>
+        
+    <target name="webstart.launchers">
+        <antcall target="dependencies">
+            <param name="build.target" value="webstart.launchers"/>
+        </antcall>
+        <concat destfile="${webstart.dir}/launcher-tree.txt" append="true">
+module: ${module.name}
+project: ${project}
+long-name: ${long.name}
+version: ${version}
+        </concat>
+        <ant antfile="${module.dir}/launchers.xml" target="webstart"/>
+        <concat destfile="${webstart.dir}/launcher-tree.txt" append="true">
+endmodule: ${module.name}
+        </concat>
+
+    </target>
+    
+    <target name="webstart.launcher">
+        <condition property="webstart.applet">
+            <equals arg1="${applet}" arg2="true"/>
+        </condition>
+        <concat destfile="${webstart.dir}/launcher-tree.txt" append="true">
+launcher: ${launcher-name}
+long-name: ${display-name}
+version: ${launcher-version} 
+jnlp: ${launcher-name}.jnlp
+endlauncher: ${launcher-name}
+        </concat>
+
+        <antcall target="webstart.launcher.applet"/>
+        <antcall target="webstart.launcher.application"/>
+    </target>
+    
+	<target name="webstart.launcher.applet" if="webstart.applet">
+		<echo message="[${module.name}]: JNLP ${launcher-name}"/>
+		<property name="launcher.file" value="${webstart.dir}/${launcher-name}.jnlp"/>
+		<delete file="${launcher.file}"/>
+		<filter token="LAUNCHER.NAME" value="${launcher-name}"/>
+		<filter token="MAIN.CLASS" value="${class-name}"/>
+		<filter token="MODULE.TITLE" value="${display-name}"/>
+		<filter token="MODULE.VENDOR" value="${project}"/>
+		<filter token="MODULE.DESCRIPTION" value="${display-name}"/>
+		<filter token="CODEBASE" value="${codebase}"/>
+		<filter token="WIDTH" value="${width}"/>
+		<filter token="HEIGHT" value="${height}"/>
+		<filter token="LAUNCHER.DESCRIPTION" value="${display-name}"/>
+
+		<copy file="${cog.dir}/etc/webstart/applet.jnlp"
+			tofile="${launcher.file}"
+			filtering="true"/>
+            
+		<antcall target="applet.set.params"/>
+		<!-- I could find no other way to do the following -->
+		<antcall target="replacelibs">
+			<param name="target.file" value="${launcher.file}"/>
+		</antcall>
+		<antcall target="jnlp"/>
+	</target>
+    
+    <target name="applet.set.params">
+        <antcall target="applet.set.params.supplied"/>
+        <antcall target="applet.set.params.default"/>
+    </target>
+    
+    <target name="applet.set.params.supplied" if="applet-params">
+        <replace file="${launcher.file}" token="@APPLET.PARAMS@" value="${applet-params}"/>
+    </target>
+    
+    <target name="applet.set.params.default" unless="applet-params">
+        <replace file="${launcher.file}" token="@APPLET.PARAMS@" value=""/>
+    </target>
+
+	<target name="webstart.launcher.application" unless="webstart.applet">
+		<echo message="[${module.name}]: JNLP ${launcher-name}"/>
+		<property name="launcher.file" value="${webstart.dir}/${launcher-name}.jnlp"/>
+		<delete file="${launcher.file}"/>
+		<filter token="LAUNCHER.NAME" value="${launcher-name}"/>
+		<filter token="MAIN.CLASS" value="${class-name}"/>
+		<filter token="MODULE.TITLE" value="${display-name}"/>
+		<filter token="MODULE.VENDOR" value="${project}"/>
+		<filter token="MODULE.DESCRIPTION" value="${display-name}"/>
+		<filter token="CODEBASE" value="${codebase}"/>
+    
+		<copy file="${cog.dir}/etc/webstart/template.jnlp"
+			tofile="${launcher.file}"
+			filtering="true"/>
+            
+		<antcall target="app.set.params"/>
+		<!-- I could find no other way to do the following -->
+		<ant antfile="${cog.dir}/mbuild.xml" target="replacelibs">
+			<property name="target.file" value="${launcher.file}"/>
+			<property name="toplevel" value="true"/>
+		</ant>
+		<antcall target="jnlp"/>
+	</target>
+    
+    <target name="jnlp">
+        <replace file="${launcher.file}" token="@JARS@" value=""/>
+        <replace 
+            file="${webstart.dir}/${webstart.index}" 
+            token="@WSAPPS@"
+            value="&lt;a href=&quot;${launcher-name}.jnlp&quot;&gt;${display-name}&lt;/a&gt;&lt;br&gt;@WSAPPS@"/>
+
+    
+        <!-- replace colons with spaces (careful about http://)-->
+        <replaceregexp file="${launcher.file}" match="([^h][^t][^t][^p]):+" replace="\1 " flags="g"/>
+        <!-- remove license files -->
+        <replaceregexp file="${launcher.file}" match="\s[^\s]*\.LICENSE" replace=" " flags="g"/>
+        <!-- basename -->
+        <replaceregexp file="${launcher.file}" match="\s[^\s]*/([^\s/]+\.jar)" replace=" \1 " flags="g"/>
+        <!-- remove duplicates -->
+        <replaceregexp file="${launcher.file}" match="\s([^\s]+\.jar)\s(.*)\s\1\s" replace=" \1 \2 " flags="g"/>
+        <!-- replace jar names with hrefs -->
+        <replaceregexp file="${launcher.file}" match="\s([^\s]+\.jar)" replace="&lt;jar href=&quot;\1&quot; download=&quot;lazy&quot;/&gt;" flags="g"/>
+        <!-- set main jar -->
+        <replaceregexp file="${launcher.file}" match="(${jar.name}&quot;)" replace="\1 main=&quot;true&quot;" flags="g"/>
+        <!-- use jnlp for jce -->
+        <replaceregexp file="${launcher.file}" match="&lt;jar href=&quot;(jce-jdk[^\.]*)\.jar&quot; [^/]*/&gt;" replace="&lt;extension name=&quot;none&quot; href=&quot;\1.jnlp&quot;/&gt;" flags="g"/>
+    </target>
+    
+    <target name="app.set.params">
+        <antcall target="app.set.params.supplied"/>
+        <antcall target="app.set.params.default"/>
+    </target>
+    
+    <target name="app.set.params.supplied" if="application-params">
+        <replace file="${launcher.file}" token="@APPLICATION.PARAMS@" value="${application-params}"/>
+    </target>
+    
+    <target name="app.set.params.default" unless="application-params">
+        <replace file="${launcher.file}" token="@APPLICATION.PARAMS@" value=""/>
+    </target>
+
+    
+    <target name="replacelibs">
+        <path id="jars">
+            <fileset dir="${cog.dir}/lib" includes="${lib.deps}"/>
+            <fileset dir="${module.dir}/lib" includes="${lib.deps}"/>
+        </path>
+        <property name="jarsp" refid="jars"/>
+        <replace file="${target.file}" token="@JARS@" value="${jarsp}:@JARS@"/>
+        <replace file="${target.file}" token="@JARS@" value="${jar.name}:@JARS@"/>
+        <antcall target="dependencies">
+            <param name="build.target" value="replacelibs"/>
+        </antcall>
+    </target>
+    
+    <target name="generate.key" unless="key.exists">
+        <echo message="Generating key pair..."/>
+        <delete file="${cert}"/>
+        <delete file="${keystore}"/>
+        <genkey alias="${signalias}" storepass="${storepass}" keystore="${keystore}" storetype="${storetype}">
+            <dname>
+                <param name="CN" value="${CN}"/>
+                <param name="OU" value="${OU}"/>
+                <param name="O"  value="${O}"/>
+                <param name="C"  value="${C}"/>
+            </dname>
+        </genkey>
+        
+        <exec dir="${user.home}" executable="keytool">
+            <arg line="-list -keystore ${keystore} -storepass ${storepass}"/>
+        </exec>
+    </target>
+</project>

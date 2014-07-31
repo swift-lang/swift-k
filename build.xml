@@ -24,17 +24,18 @@
 ==================================================================== -->
 
 <project name="Java CoG Kit" default="redist" basedir=".">
-        <property name="cog.dir"		value="${basedir}"/>
-	<property name="main.buildfile"	value="${cog.dir}/etc/build/mbuild.xml"/>
+	<property name="swift.root" 	value="${basedir}"/>
+        <property name="cog.dir"	value="${basedir}/cogkit"/>
+	<property name="main.buildfile"	value="${cog.dir}/mbuild.xml"/>
 
-        <!-- set module name and dir here as workaround -->
+        <!-- set module name and dir here to override values in mbuild.xml -->
 	<property name="module.name" 	value="swift"/>
-	<property name="module.dir" 	value="${cog.dir}/modules/${module.name}"/>
+	<property name="module.dir" 	value="${swift.root}"/>
 
         <!-- Need to get version from properties -->
 	<property file="${module.dir}/project.properties"/>
 
-	<property name="dist.dir" 		value="${cog.dir}/dist/${module.name}-${version}"/>
+	<property name="dist.dir" 		value="${module.dir}/dist/${module.name}-${version}"/>
 	<property name="build.dir" 		value="${module.dir}/build"/>
 
 
@@ -334,10 +335,10 @@
 		<filter token="jar" value="${jar.name}"/>
 		<filter token="umask" value="${umask}"/>
 
-		<copy file="${cog.dir}/modules/swift/etc/launcher-template"
+		<copy file="${module.dir}/etc/launcher-template"
 			tofile="${dist.dir}/bin/${launcher-name}"
 			filtering="true"/>
-		<copy file="${cog.dir}/modules/swift/etc/launcher-template.bat"
+		<copy file="${module.dir}/etc/launcher-template.bat"
 			tofile="${dist.dir}/bin/${launcher-name}.bat"
 			filtering="true"/>
 		<chmod file="${dist.dir}/bin/${launcher-name}" perm="+x"/>

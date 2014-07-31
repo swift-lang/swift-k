@@ -1,0 +1,184 @@
+<!--
+  Swift Parallel Scripting Language (http://swift-lang.org)
+  Code from Java CoG Kit Project (see notice below) with modifications.
+
+  Copyright 2005-2014 University of Chicago
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+ -->
+
+<!-- ===================================================================
+ This code is developed as part of the Java CoG Kit project
+ The terms of the license can be found at http://www.cogkit.org/license
+ This message may not be removed or altered.
+==================================================================== -->
+
+<project name="Java CoG Kit" default="dist" basedir=".">
+
+	<property file="project.properties"/>
+	<property name="cog.dir"		value="${basedir}/../../"/>
+	<property name="main.buildfile"	value="${cog.dir}/mbuild.xml"/>
+	<property name="dist.dir" 		value="${cog.dir}/modules/${module.name}/dist/${module.name}-${version}"/>
+	<property name="build.dir" 		value="${cog.dir}/modules/${module.name}/build"/>
+
+    <!-- ================================================ -->
+    <!-- Help                                             -->
+    <!-- ================================================ -->
+	
+    <target name="help">
+        <echo>
+			Available targets:
+            	help:
+		        prints out this help message
+					
+            	dist:
+			creates a distribution directory of the 
+			${project} ${long.name}
+					
+            	jar:
+			creates a jar file for the ${project} ${long.name}
+			named ${jar.filename}
+					
+            	javadoc:
+			creates the documentation
+					
+            	clean:
+			removes the compiled classes
+					
+            	distclean:
+			deletes the distribution directory
+
+		all:
+			dist and javadoc
+				
+		deploy.webstart:
+			deploys the module as a webstart application
+					
+		dist.joint:
+			builds everything into one jar file. Should only
+			be used globally (from all)
+
+                fixeol:
+                        change newlines to the unix standard  
+        </echo>
+    </target>
+
+
+    <!-- ================================================ -->
+    <!-- Dist                                             -->
+    <!-- ================================================ -->
+	
+	<target name="dist">
+		<ant antfile="${main.buildfile}" target="dist"/>
+	</target>
+
+
+    <!-- ================================================ -->
+    <!-- Compile                                          -->
+    <!-- ================================================ -->
+	
+	<target name="compile">
+		<ant antfile="${main.buildfile}" target="compile"/>
+	</target>
+
+    <!-- ================================================ -->
+    <!-- Clean                                            -->
+    <!-- ================================================ -->
+	
+	<target name="clean">
+		<ant antfile="${main.buildfile}" target="clean"/>
+	</target>
+
+
+    <!-- ================================================ -->
+    <!-- Distclean                                        -->
+    <!-- ================================================ -->
+	
+	<target name="distclean">
+		<ant antfile="${main.buildfile}" target="distclean"/>
+	</target>
+
+
+    <!-- ================================================ -->
+    <!-- Jar                                              -->
+    <!-- ================================================ -->
+
+	<target name="jar">
+		<ant antfile="${main.buildfile}" target="jar"/>
+	</target>
+
+
+
+    <!-- ================================================ -->
+    <!-- Javadoc                                          -->
+    <!-- ================================================ -->
+
+	<target name="javadoc">
+		<ant antfile="${main.buildfile}" target="javadoc"/>
+	</target>
+
+
+
+    <!-- ================================================ -->
+    <!-- PMD                                              -->
+    <!-- ================================================ -->
+
+	<target name="pmd">
+		<ant antfile="${main.buildfile}" target="pmd"/>
+	</target>
+
+    <!-- ================================================ -->
+    <!-- deploy.webstart                                  -->
+    <!-- ================================================ -->
+	
+	<target name="deploy.webstart">
+		<ant antfile="${main.buildfile}" target="deploy.webstart"/>
+	</target>
+
+    <!-- ================================================ -->
+    <!-- replacelibs                                      -->
+    <!-- ================================================ -->
+
+	<target name="replacelibs">
+		<ant antfile="${main.buildfile}" target="replacelibs"/>
+	</target>
+	
+    <!-- ================================================ -->
+    <!-- webstart.launchers                               -->
+    <!-- ================================================ -->
+
+	<target name="webstart.launchers">
+		<ant antfile="${main.buildfile}" target="webstart.launchers"/>
+	</target>
+	
+    <!-- ================================================ -->
+    <!-- dist.joint                                       -->
+    <!-- ================================================ -->
+
+	<target name="dist.joint">
+		<ant antfile="${main.buildfile}" target="dist.all"/>
+	</target>
+    <!-- ================================================ -->
+    <!-- fixeol                                           -->
+    <!-- ================================================ -->
+
+	<target name="fixeol">
+		<ant antfile="${main.buildfile}" target="fixeol"/>
+	</target>
+	
+	<target name="module.package">
+		<ant antfile="${main.buildfile}" target="module.package"/>
+	</target>
+</project>
+
+

@@ -1,8 +1,18 @@
 
 # Ignore build and dist directories
-/modules/*/build
-/modules/*/dist
+/build/
+/cogkit/modules/*/build
+/cogkit/modules/*/dist
 /dist
 
 # Ignore VIM swap files
 *.swp
+
+# Generated files
+/lib/vdldefinitions.jar
+/libexec/buildid.txt
+/libexec/version.txt
+
+# Generated directories
+/src/org/globus/swift/language/
+/src/org/globus/swift/parser/
