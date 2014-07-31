@@ -4,6 +4,8 @@
 /cogkit/modules/*/build
 /cogkit/modules/*/dist
 /dist
+/cogkit/dist
+
 
 # Ignore VIM swap files
 *.swp
