@@ -5,28 +5,16 @@
 			<property name="module" value="abstraction"/>
 		</ant>
 		<ant antfile="${main.buildfile}" target="dep">
-			<property name="module" value="resources"/>
-		</ant>
-		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="util"/>
 		</ant>
 		<ant antfile="${main.buildfile}" target="dep">
-			<property name="module" value="grapheditor"/>
-		</ant>
-		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="karajan"/>
-		</ant>
-		<ant antfile="${main.buildfile}" target="dep">
-			<property name="module" value="setup"/>
 		</ant>
 		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="certrequest"/>
 		</ant>
 		<ant antfile="${main.buildfile}" target="dep">
 			<property name="module" value="certmanagement"/>
-		</ant>
-		<ant antfile="${main.buildfile}" target="dep">
-			<property name="module" value="examples"/>
 		</ant>
 	</target>
 </project>
