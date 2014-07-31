@@ -11,6 +11,8 @@ JOBID=$1
 CONF=/tmp/$JOBID
 EXITCODE=0
 
+log "Received cancel directive for $JOBID"
+
 # Check for the conf file for the job at /tmp/<jobid>
 if [ ! -f "$CONF" ]
 then
@@ -27,6 +29,8 @@ then
     then
         log "Done cancelling $JOBID"
         rm $CONF
+    elif
+        log "Failed to cancel $JOBID: returned exitcode:$EXITCODE"
     fi
 fi
 
