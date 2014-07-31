@@ -36,6 +36,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,6 +158,29 @@ public class MappingParamFileGenerator {
     private static void writeFile(File nf, String pkg, List<Param> params, Map<String, Object> opts) throws IOException {
         String name = nf.getName().substring(0, nf.getName().lastIndexOf('.'));
         BufferedWriter bw = new BufferedWriter(new FileWriter(nf));
+
+        int year = Calendar.getInstance().get(Calendar.YEAR);
+
+        bw.write("/*\n");
+        bw.write(" * Swift Parallel Scripting Language (http://swift-lang.org)\n");
+        bw.write(" *\n");
+        bw.write(" * Copyright 2013-" + year + " University of Chicago\n");
+        bw.write(" *\n");
+        bw.write(" * Licensed under the Apache License, Version 2.0 (the \"License\");\n");
+        bw.write(" * you may not use this file except in compliance with the License.\n");
+        bw.write(" * You may obtain a copy of the License at\n");
+        bw.write(" *\n");
+        bw.write(" *  http://www.apache.org/licenses/LICENSE-2.0\n");
+        bw.write(" *\n");
+        bw.write(" * Unless required by applicable law or agreed to in writing, software\n");
+        bw.write(" * distributed under the License is distributed on an \"AS IS\" BASIS,\n");
+        bw.write(" * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n");
+        bw.write(" * See the License for the specific language governing permissions and\n");
+        bw.write(" * limitations under the License.\n");
+        bw.write(" */\n");
+        bw.write("\n");
+
+
         bw.write("package ");
         bw.write(pkg);
         bw.write(";\n\n");
