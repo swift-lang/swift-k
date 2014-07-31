@@ -1,0 +1,35 @@
+NAME
+    globus-gass-server [-version] [-help]
+
+DESCRIPTION
+    start the gass server	
+
+OPTIONS
+    -help | -usage
+		Displays usage
+    -version
+	        Dispalys the version
+    -s | -silent
+		Enable silent mode (Don't output server URL)
+    -r | -read
+		Enable read access to the local file system
+    -w | -write
+		Enable write access to the local file system
+    -o
+		Enable stdout redirection
+    -e
+		Enable stderr redirection
+    -c | -client-shutdown
+		Allow client to trigger shutdown the GASS server
+		See globus-gass-server-shutdown
+    -p <port> | -port <port>
+		Start the GASS server using the specified port
+    -i | -insecure
+		Start the GASS server without security
+    -n <options>
+		Disable <options>, which is a string consisting 
+		of one or many of the letters "crwoe"
+
+SEE ALSO
+
+    GassServer

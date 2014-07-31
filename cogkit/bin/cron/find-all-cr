@@ -1,0 +1,3 @@
+#! /bin/sh
+
+ find . -print -exec  ./bin/cron/find-cr {} \; 

@@ -1,0 +1,229 @@
+<project name="Java CoG Kit" default="dist" basedir=".">
+
+        <property name="cog.dir" value="${basedir}"/>
+        <property file="VERSION"/>
+        <property name="dist.dir" value="${cog.dir}/dist/cog-${cog.version}"/>
+        <property name="maven.dir" value="${dist.dir}/maven/"/>
+        <property name="build.dir" value="${cog.dir}/build"/>
+        <property name="jar.name"  value="cog.jar"/>
+
+
+    <!-- ================================================== -->
+    <!-- maven                                              -->
+    <!-- ================================================== -->
+    <target name="maven">
+
+      <mkdir dir="${maven.dir}/cog-${cog.version}-common/jars"/>
+      <copy todir="${maven.dir}/cog-${cog.version}-common/jars">
+         <fileset dir="${dist.dir}/lib" 
+                  includes="*.jar"/>
+      </copy>
+
+    </target>        
+
+    <target name="maven.publish">
+
+<echo message="use
+scp -r dist/cog-4.0-alpha/maven/* laszewsk@cvs.cogkit.org:/www/www.cogkit.org/releases/v4/maven
+"/>
+
+    <!-- This does not work on cygwin -->
+    <echo message="This does not work on cygwin"/>
+    <exec executable="/cygdrive/c/usr/bin/scp -r ${maven.dir} laszewsk@cvs.cogkit.org:/www/www.cogkit.org/releases/maven"/>
+
+    </target>        
+
+    <!-- ================================================== -->
+    <!-- get all code from CVS                                              -->
+    <!-- ================================================== -->
+
+    <target name="get">
+    <mkdir dir="cogkit"/>
+    <cvs cvsRoot=":pserver:anonymous@cvs.cogkit.org/cvs/cogkit"
+         package="papers/bib"
+         dest="cogkit"
+    />
+    <cvs cvsRoot=":pserver:anonymous@cvs.cogkit.org/cvs/cogkit"
+         package="doc/manual"
+         dest="cogkit"
+    />
+    <cvs cvsRoot=":pserver:anonymous@cvs.cogkit.org/cvs/cogkit"
+         package="src/cog4"
+         dest="cogkit"
+    />
+    <cvs cvsRoot=":pserver:anonymous@cvs.cogkit.org/cvs/cogkit"
+         tag="jglobus-jgss" 
+         package="src/cog4"
+         dest="cogkit"
+ 
+    />
+    </target>
+
+    <!-- ================================================== -->
+    <!-- Help                                               -->
+    <!-- ================================================== -->
+        
+    <target name="help">
+        <echo>
+        Directory: ${cog.dir}
+        </echo>
+        <concat>
+           <filelist dir="man" files="build.txt"/>
+        </concat>
+    </target>
+
+
+    <!-- ================================================== -->
+    <!-- Dist                                               -->
+    <!-- ================================================== -->
+        
+        <target name="dist">
+                <ant antfile="build.xml" target="dist" dir="modules/all"/>
+				<delete dir="${dist.dir}/bin/experimental"/>
+        </target>
+        
+
+    <!-- ================================================== -->
+    <!-- Clean                                              -->
+    <!-- ================================================== -->
+        
+        
+        <target name="clean">
+                <ant antfile="build.xml" target="clean" dir="modules/all"/>
+        </target>
+        
+
+    <!-- ================================================== -->
+    <!-- Clean All                                          -->
+    <!-- ================================================== -->
+        
+        <target name="cleanall" depends="clean">
+                <ant antfile="build.xml" target="clean" dir="modules/all"/>
+        </target>
+
+
+    <!-- ================================================== -->
+    <!-- Distclean                                          -->
+    <!-- ================================================== -->
+        
+        <target name="distclean" depends="clean">
+                <ant antfile="build.xml" target="distclean" dir="modules/all"/>
+        </target>
+
+
+    <!-- ================================================== -->
+    <!-- Jar                                                -->
+    <!-- ================================================== -->
+
+        <target name="jar">
+                <ant antfile="build.xml" target="jar" dir="modules/all"/>
+        </target>
+
+        
+    <!-- ================================================== -->
+    <!-- Javadoc                                            -->
+    <!-- ================================================== -->
+
+        <target name="javadoc">
+                <ant antfile="build.xml" target="javadoc" dir="modules/all"/>
+        </target>
+
+    <!-- ================================================== -->
+    <!-- pmd                                                -->
+    <!-- ================================================== -->
+
+        <target name="pmd">
+                <ant antfile="mbuild.xml" target="pmd.all" dir="."/>
+        </target>
+
+
+    <!-- ================================================== -->
+    <!-- Deploy webstart for all modules                    -->
+    <!-- ================================================== -->
+        
+        <target name="deploy.webstart">
+                <ant antfile="build.xml" target="deploy.webstart" dir="modules/all"/>
+        </target>
+
+        <target name="dist.joint">
+                <ant antfile="build.xml" target="dist.joint" dir="modules/all"/>
+        </target>
+
+    <!-- ================================================== -->
+    <!-- CHECKSTYLE                                         -->
+    <!-- ================================================== -->
+
+
+    <!-- This requires that you check out src/tools before -->
+    <!-- you can run this target!                          -->
+
+    <taskdef resource="checkstyletask.properties"
+         classpath="../tools/checkstyle-3.5/checkstyle-all-3.5.jar"/>
+
+    <target name="checkstyle"
+        description="Generates a report of code convention violations.">
+
+        <checkstyle config="../tools/checkstyle-3.5/sun_checks.xml"
+              failureProperty="checkstyle.failure"
+              failOnViolation="false">
+             <formatter type="xml" tofile="qualitycontrol/checkstyle_report.xml"/>
+             <fileset dir="modules" includes="**/*.java"/>
+        </checkstyle>
+
+        <style in="qualitycontrol/checkstyle_report.xml"
+               out="qualitycontrol/checkstyle_report.html" 
+               style="../tools/checkstyle-3.5/contrib/checkstyle-noframes.xsl"/>
+
+    </target>
+	
+
+
+    <!-- ================================================== -->
+    <!-- Clean the Code                                     -->
+    <!-- ================================================== -->
+
+    <!-- 
+
+         THIS NEEDS AN ANT TARGET
+
+         jacobe -cfg=../cleanup/jacobe-sun.cfg -overwrite src
+
+     -->
+
+     <target name="beautify-test">
+       <exec dir="." executable="jacobe">
+           <arg line="-cfg=../cleanup/jacobe-sun.cfg modules"/>
+       </exec>
+     </target>
+
+     <target name="beautify-do">
+       <exec dir="." executable="jacobe">
+           <arg line="-cfg=../cleanup/jacobe-sun.cfg -overwrite modules"/>
+       </exec>
+     </target>
+         
+         <target name="eclipse.modules">
+                <property name="toolname" value="modules2eclipse.sh"/>
+                <antcall target="execute.tool"/>
+         </target>
+         
+         <target name="eclipse.all">
+                <property name="toolname" value="all2eclipse.sh"/>
+                <antcall target="execute.tool"/>
+         </target>
+         
+         <target name="eclipse.clean">
+                <property name="toolname" value="cleaneclipsedata.sh"/>
+                <antcall target="execute.tool"/>
+         </target>
+         
+         <target name="execute.tool">
+                <copy file="tools/${toolname}" tofile="./${toolname}"/>
+                <chmod file="./${toolname}" perm="+x"/>
+                <exec dir="." executable="${toolname}"/>
+                <delete file="./${toolname}"/>
+         </target>
+
+</project>
+
+

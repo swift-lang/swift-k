@@ -1,0 +1,79 @@
+NAME
+    cogrun - Submits a task for remote Grid execution
+
+SYNOPSIS
+    cogrun -s hostname -p provider -e executable 
+            [-jm <jobmanager>][-args <arguments>] [-b] [-r] [-stdout <file>]
+            [-a <attributes>] [-env <env variables>] [-d <dir>][-c <checkpointfile>] [-stderr <file>] [-v] 
+    cogrun -help
+
+DESCRIPTION
+    This command submits a user-specified executable for remote
+    execution. The user can specify the service contact for the job
+    manager, the provider, the executable, and the optional
+    arguments. Several other optional parameters control the behavior
+    of the execution. The user can execute this job as a batch job,
+    whereby the job status will not be updated on the client side. The
+    user can also redirect the job output and error to a user-supplied
+    file, either on the remote machine or on the local machine. 
+
+OPTIONS
+    -name <taskName> | -n <taskName>
+      Task name
+
+    -service-contact <host> | -s <host>
+      Service contact of the remote job manager
+
+    -job-manager <jobmanager> | -jm <jobmanager>
+      Execution JobManager (fork, pbs, etc)execution environment,
+
+    -provider <provider> | -p <provider>
+      Provider; available providers: [gt2ft, gsiftp, file, gt4.0.0,
+    gt3.0.2, ssh, gt4ft, gridftp, local, gsiftp-old, http, gt3.2.1,
+    gt2, gt3.2.0, gridftp-old, ftp, webdav]
+
+    -executable <file> | -e <file>
+      Executable file. Should be available on the remote machine
+
+    -arguments <string> | -args <string>
+      Arguments. If more than one, use quotes 
+   
+    -environment <string> | -env <string>
+      Environment variables for the remote execution environment,
+      specified as "name=value[,name=value]"
+
+    -directory <string> | -d <string>
+      Target directory
+
+    -batch | -b
+      If present, the job is run in batch mode 
+
+    -redirected | -r
+      If present, the arguments to -stdout and -stderr refer to local 
+      files 
+
+    -stdout <file>
+      Indicates a file where the standard output of the job should be 
+      redirected 
+
+    -stderr <file>
+      Indicates a file where the standard error of the job should be 
+      redirected 
+    
+    -attributes <string> | -a <string>
+      Additional task specification attributes. Attributes can be
+      specified as "name=value[,name=value]"
+
+    -checkpoint <filename> | -c <fileName>
+      Checkpoint file name. The task will be checkpointed to this 
+      file once submitted 
+
+    -verbose | -v
+      If enabled, display information about what is being done 
+
+    -help | -h
+      Display usage 
+
+
+SEE ALSO
+    cog-file-transfer

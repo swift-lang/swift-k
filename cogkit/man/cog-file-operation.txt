@@ -1,0 +1,30 @@
+NAME
+    cog-file-operation - Performs operations on files hosted on remote 
+			 file servers
+
+SYNOPSIS
+    cog-file-operation -s hostname -p provider 
+    cog-file-operation -help
+
+DESCRIPTION
+    This command initiates a connection with a remote file server and 
+    allows the user to invoke operations on files hosted on that server. 
+    On execution, this commands enters a shell-based mode allowing the 
+    user to invoke file operations. 
+
+OPTIONS
+    -service-contact <host> | -s <host>
+      Service contact of the remote file server
+
+    -provider <provider> | -p <provider>
+      Provider; available providers: [gridftp, ftp, and webdav]
+
+    -verbose | -v
+      If enabled, display information about what is being done 
+
+    -help | -h
+      Display usage 
+
+
+SEE ALSO
+    cog-file-transfer, cog-job-submit
