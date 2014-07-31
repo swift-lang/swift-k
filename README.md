@@ -4,7 +4,8 @@ See http://swift-lang.org for more information.
 Building
 ========
 Run `ant redist` to build Swift.  The compiled Swift distribution will
-be created under `dist/swift-<version>`.
+be created under `dist/swift-<version>` (dist/swift-devel for the
+development version).
 
 Repository Layout
 =================
