@@ -35,7 +35,7 @@ directories are:
 * **etc**: miscellaneous supporting files
 * **lib**: libraries required for Swift, particularly Java jars.
 * **libexec**: other libraries required for Swift, particularly Karajan
-      libraries and shell scripts 
+      libraries and shell scripts
 * **resources**: miscellaneous resources used in building Swift.
 * **src**: Java source code for Swift compiler and runtime.
 * **tests**: test suite for Swift
@@ -55,6 +55,8 @@ Some of the more interesting modules are:
 
 Java CoG Kit
 ============
-This distribution of Swift incorporates code developed as part of the
+This distribution of Swift incorporates code originally developed by the
 CoG (Commodity Grid) project.  For information about the Java CoG Kit
-see README.txt, CHANGES.txt and LICENSE.txt in cogkit.
+see README.txt, CHANGES.txt and LICENSE.txt in `cogkit`, and
+http://www.cogkit.org/.  Thanks to Gregor von Laszweski and the rest
+of the CoG developers.
