@@ -19,7 +19,7 @@ limitations under the License.
 Other Software
 ==============
 Swift includes modified and unmodified source code from the Java CoG kit
-project.  The Java CoG kit license can be found at etc/cog/LICENSE.txt.
+project.  The Java CoG kit license can be found at cogkit/LICENSE.txt.
 CoG source and other files include the original CoG kit header notice,
 long with an additional notice if it has been modified for Swift.
 
