@@ -1,11 +1,25 @@
-This is the source code for the Swift parallel scripting language.
-See http://swift-lang.org for more information.
+Swift Parallel Scripting Language
+=================================
+See http://swift-lang.org for documentation, downloads, and general
+information about the Swift parallel scripting language.
+
+Official releases are available at http://swift-lang.org/downloads.
+
+This is the source code for the Swift/K implementation of the language.
+Swift/K focuses on robust distributed execution of tasks, particularly
+command-line programs operating on files, on varied compute resources
+including clouds and clusters.  The sibling Swift/T implementation
+(https://github.com/swift-lang/swift-t) focuses on high-performance
+computation on clusters and supercomputers.
 
 Building
 ========
 Run `ant redist` to build Swift.  The compiled Swift distribution will
 be created under `dist/swift-<version>` (dist/swift-svn for the
-development version).
+development version).  Copy this directory to your preferred
+location to install it. If you are unfamiliar with Swift, we suggest
+you start with the Swift tutorials to get yourself familiarized:
+http://swift-lang.org/docs/
 
 Repository Layout
 =================
