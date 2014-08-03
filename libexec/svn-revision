@@ -8,7 +8,7 @@ hereversion() {
     M=$(svn status 2>/dev/null | grep --invert-match '^\?' > /dev/null && echo "(modified locally)")
   elif git rev-parse --git-dir &> /dev/null ; then
     local git_sha1=$(git rev-parse HEAD)
-    local git_rev_desc="git-rev: ${git_sha1} $(git describe --all)"
+    local git_rev_desc="git-rev: ${git_sha1} $(git describe --all) $(git rev-list --count HEAD)"
     # Check if it's git svn
     if git svn info &> /dev/null ; then
       R=$(git svn info | grep '^Revision' | sed "s/Revision: /$1-r/")
