@@ -137,14 +137,6 @@ scp -r dist/cog-4.0-alpha/maven/* laszewsk@cvs.cogkit.org:/www/www.cogkit.org/re
         </target>
 
 
-    <!-- ================================================== -->
-    <!-- Deploy webstart for all modules                    -->
-    <!-- ================================================== -->
-        
-        <target name="deploy.webstart">
-                <ant antfile="build.xml" target="deploy.webstart" dir="modules/all"/>
-        </target>
-
         <target name="dist.joint">
                 <ant antfile="build.xml" target="dist.joint" dir="modules/all"/>
         </target>
