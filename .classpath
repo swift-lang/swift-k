@@ -19,7 +19,10 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/abstraction-provider-coaster"/>
 	<classpathentry kind="lib" path="lib/jline-0.9.94.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-        <classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/abstraction-provider-local"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j"/>
+	<classpathentry kind="lib" path="lib/config-1.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/jcommon-1.0.18.jar"/>
+	<classpathentry kind="lib" path="lib/jfreechart-1.0.15.jar"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
