@@ -14,12 +14,20 @@ STDIN=
 STDOUT=
 STDERR=
 
-LOG=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/log
+LOGGING=1 # Either 1 or 0
+RUNDIRS=$(echo run[0-9][0-9][0-9])
+RUNDIR=${RUNDIRS##*\ }
+LOG=$RUNDIR/scripts/log
+[[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
 
+log()
+{
+    [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
+}
+
+CLOUD_PY=$SWIFT_HOME/libexec/ec2-cloud-provider/cloud.py
 SUBMIT_SCRIPT=$(mktemp)
 touch $SUBMIT_SCRIPT
-
-#SUBMIT_SCRIPT=$(mktemp)
 
 while read LINE; do
 	echo $LINE >>/tmp/stsubmit
@@ -99,7 +107,7 @@ if [ "$STDINLOC" != "" ]; then
 fi
 
 CMD="$EXECUTABLE $ARGS $STDIN $STDOUT $STDERR"
-echo "CMD   : $CMD" >> $LOG
+log "CMD   : $CMD"
 
 DIR=/tmp/
 
@@ -109,11 +117,13 @@ EOF
 
 cat $SUBMIT_SCRIPT >> $LOG
 
-echo "$PWD" >> $LOG
-echo "python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --submit $SUBMIT_SCRIPT" >> $LOG
-JOBINFO=$(python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --submit $SUBMIT_SCRIPT)
+log "$PWD"
+log "python $CLOUD_PY --logfile $LOG --submit $SUBMIT_SCRIPT"
+
+JOBINFO=$(python $CLOUD_PY --logfile $LOG --submit $SUBMIT_SCRIPT)
 retcode="$?"
-echo $JOBINFO
+log "JOBINFO : $JOBINFO    RETCODE : $retcode"
+
 [[ "$retcode" != "0" ]] && exit retcode
 
 if [[ $JOBINFO == jobid\=* ]]

@@ -1,7 +1,14 @@
 #!/bin/bash
 
-LOG=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/log
 LOGGING=1 # Either 1 or 0
+
+RUNDIRS=$(echo run[0-9][0-9][0-9])
+RUNDIR=${RUNDIRS##*\ }
+LOG=$RUNDIR/scripts/log
+[[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
+
+CLOUD_PY=$SWIFT_HOME/libexec/ec2-cloud-provider/cloud.py
+
 log()
 {
     [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
@@ -22,15 +29,15 @@ fi
 
 if [[ "$1" != "" ]]
 then
-    log "Cancelling $JOBID"
-    python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --cancel $CONF --jobid $JOBID
+    log "Cancelling $JOBID " $(date +"%T")
+    python $CLOUD_PY --logfile $LOG --cancel $CONF --jobid $JOBID
     EXITCODE=$?
     if [[ "$EXITCODE" == "0" ]]
     then
-        log "Done cancelling $JOBID"
+        log "Done cancelling $JOBID" $(date +"%T")
         rm $CONF
-    elif
-        log "Failed to cancel $JOBID: returned exitcode:$EXITCODE"
+    else
+        log "Failed to cancel $JOBID: returned exitcode:$EXITCODE" $(date +"%T")
     fi
 fi
 

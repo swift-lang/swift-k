@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import errno
 import sys
 import random
 import logging
@@ -23,21 +24,23 @@ NODESTATES = { NodeState.RUNNING    : "RUNNING",
                NodeState.PENDING    : "PENDING",
                NodeState.UNKNOWN    : "UNKNOWN" }
 
-#timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H');
-#logging.basicConfig(filename='cloud_ec2'+timestamp+'.log', level=logging.WARN)
-
 WORKER_USERDATA='''#!/bin/bash
 export JAVA=/usr/local/bin/jdk1.7.0_51/bin
 export SWIFT=/usr/local/bin/swift-trunk/bin
 export PATH=$JAVA:$SWIFT:$PATH
 export WORKER_LOGGING_LEVEL=TRACE
-mkdir -p /home/yadu/.globus/coasters
 '''
 
 def aws_create_security_group(driver, configs):
+    """ Creates security group if not present.
+    Currently opens all tcp/udp ports in range 0, 65000 for all sources.
+    args   : driver instance, configs dictionary
+    returns: Nothing
+    """
     group_name = configs["ec2securitygroup"]
     current    = driver.ex_list_security_groups()
     if group_name not in current:
+        logging.debug("Security group absent, creating group" + str(configs["ec2securitygroup"]));
         res = driver.ex_create_security_group(name=group_name,description="Open all ports")
         if not driver.ex_authorize_security_group(group_name, 0, 65000, '0.0.0.0/0'):
             sys.stderr.write("Authorizing ports for security group failed \n")
@@ -45,6 +48,10 @@ def aws_create_security_group(driver, configs):
             sys.stderr.write("Authorizing ports for security group failed \n")
 
 def check_keypair(driver, configs):
+    """ Checks if valid keypairs exist, if not creates them
+    args   : driver instance, configs dictionary
+    returns: Nothing
+    """
     if "ec2keypairname" in configs and "ec2keypairfile" in configs:
         all_pairs = driver.list_key_pairs()
         for pair in all_pairs:
@@ -56,6 +63,7 @@ def check_keypair(driver, configs):
         f.write(str(key_pair.private_key))
         f.close()
         os.chmod(configs['ec2keypairfile'], 0600)
+
     else:
         sys.stderr.write("ec2keypairname and/or ec2keypairfile missing\n")
         sys.stderr.write("Cannot proceed without ec2keypairname and ec2keypairfile\n")
@@ -136,7 +144,7 @@ def node_terminate(driver, node_uuids):
     deleted_flag   = False
     for node in nodes:
         if node.uuid in node_uuids and node.state == NodeState.RUNNING :
-            #logging.info("Terminating node : %s", str(node))
+            logging.info("Terminating node : %s", str(node))
             code = driver.destroy_node(node)
             deleted_flag = True
     return deleted_flag
@@ -147,16 +155,27 @@ def init_checks(driver, configs):
     check_keypair(driver, configs)
 
 def init(conf_file):
+    logging.debug("conf_file: " + str(conf_file))
     configs    = read_configs(conf_file)
+
+    # Setting defaults for optional configs
+    if 'ec2securitygroup' not in configs :
+        logging.info("ec2SecurityGroup not set: Defaulting to swift-security-group")
+        configs['ec2securitygroup'] = "swift-security-group"
+
+    if "ec2keypairname" not in configs:
+        logging.info("ec2KeypairName not set: Defaulting to swift-keypaid")
+        configs['ec2keypairname'] = "swift-keypair"
+
+    # If $HOME/.ssh is not accessible check_keypair will throw errors
+    if "ec2keypairfile" not in configs:
+        keyfile = os.path.expandvars("$HOME/.ssh/" + configs['ec2keypairname'] + ".pem")
+        logging.info("ec2keypairfile not set: Defaulting to " + keyfile)
+        configs['ec2keypairfile'] = keyfile
+
     driver     = get_driver(Provider.EC2_US_WEST_OREGON) # was EC2
     ec2_driver = driver(configs['AWSAccessKeyId'], configs['AWSSecretKey'])
     return configs,ec2_driver
-
-# Main driver section
-#configs, driver = init()
-#args = sys.argv[1:]
-#print "All args : ",str(args)
-
 
 if __name__ == '__main__' :
     parser   = argparse.ArgumentParser()
@@ -165,9 +184,18 @@ if __name__ == '__main__' :
     mu_group.add_argument("-t", "--status", default=None ,  help='gets the status of the CMD_STRING in the configs for execution on a cloud resource')
     mu_group.add_argument("-c", "--cancel", default=None ,  help='cancels the jobs with jobids')
     parser.add_argument("-v", "--verbose", help="set level of verbosity, DEBUG, INFO, WARN")
+    parser.add_argument("-l", "--logfile", help="set path to logfile, defaults to /dev/null")
 
     parser.add_argument("-j", "--jobid", type=str, action='append')
     args   = parser.parse_args()
+
+    # Setting up logging
+    if args.logfile:
+        if not os.path.exists(os.path.dirname(args.logfile)):
+            os.makedirs(os.path.dirname(args.logfile))
+        logging.basicConfig(filename=args.logfile, level=logging.DEBUG)
+    else:
+        logging.basicConfig(filename='/dev/null', level=logging.DEBUG)
 
     config_file  = ( args.status or args.submit or args.cancel )
     configs, driver = init(config_file)

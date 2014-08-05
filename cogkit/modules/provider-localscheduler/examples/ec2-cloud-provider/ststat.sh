@@ -1,7 +1,14 @@
 #!/bin/bash
 
-LOG=/home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/log
 LOGGING=1 # Either 1 or 0
+
+RUNDIRS=$(echo run[0-9][0-9][0-9])
+RUNDIR=${RUNDIRS##*\ }
+LOG=$RUNDIR/scripts/log
+[[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
+
+CLOUD_PY=$SWIFT_HOME/libexec/ec2-cloud-provider/cloud.py
+
 log()
 {
     [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
@@ -20,5 +27,5 @@ fi
 if [[ "$1" != "" ]]
 then
 	log "Stat'ing for $1 PWD: $PWD"
-    python /home/yadu/src/swift-trunk/cog/modules/provider-localscheduler/examples/ec2-cloud-provider/cloud.py --status $CONF --jobid $JOBID | tee -a $LOG
+    python $CLOUD_PY --logfile $LOG --status $CONF --jobid $JOBID | tee -a $LOG
 fi
