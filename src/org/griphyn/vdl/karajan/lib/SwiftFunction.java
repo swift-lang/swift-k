@@ -17,10 +17,6 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import k.rt.Channel;
@@ -42,14 +38,9 @@ import org.griphyn.vdl.karajan.AssertFailedException;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
-import org.griphyn.vdl.mapping.GeneralizedFileFormat;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.PathComparator;
-import org.griphyn.vdl.mapping.PhysicalFormat;
-import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Field;
@@ -140,90 +131,6 @@ public abstract class SwiftFunction extends AbstractFunction {
 		}
 	}
 
-	public static final String[] EMPTY_STRING_ARRAY = new String[0];
-
-
-	public static String[] filename(DSHandle var) throws ExecutionException {
-		try {
-			if (var.getType().isArray()) {
-				return leavesFileNames(var);
-			}
-			else if(var.getType().getFields().size() > 0) {
-				return leavesFileNames(var);
-			}
-			else {
-				return new String[] { leafFileName(var) };
-			}
-		}
-		catch (DependentException e) {
-			return new String[0];
-		}
-        catch (HandleOpenException e) {
-            throw new ExecutionException("The current implementation should not throw this exception", e);
-        }
-	}
-
-	private static String[] leavesFileNames(DSHandle var) throws ExecutionException, HandleOpenException {
-	    RootHandle root = var.getRoot();
-	    Mapper mapper = root.getMapper();
-	    	            
-        if (mapper == null) {
-            throw new ExecutionException(var.getType() + " is not a mapped type");
-        }
-        
-		List<String> l = new ArrayList<String>();
-		try {
-			Collection<Path> fp = var.getFringePaths();
-			List<Path> src;
-			if (fp instanceof List) {
-				src = (List<Path>) fp;
-			}
-			else {
-				src = new ArrayList<Path>(fp);
-			}
-			Collections.sort(src, new PathComparator());
-			
-			for (Path p : src) {
-				l.add(leafFileName(var.getField(p), mapper));
-			}
-		}
-		catch (InvalidPathException e) {
-			throw new ExecutionException("DSHandle is lying about its fringe paths");
-		}
-		return l.toArray(EMPTY_STRING_ARRAY);
-	}
-	
-	private static String leafFileName(DSHandle var) {
-	    return leafFileName(var, var.getRoot().getMapper());
-	}
-	
-	private static String leafFileName(DSHandle var, Mapper mapper) {
-		if (Types.STRING.equals(var.getType())) {
-			return relativize(String.valueOf(var.getValue()));
-		}
-		else {
-			if (mapper == null) {
-				throw new ExecutionException("Cannot invoke filename() on data without a mapper: " + var);
-			}
-			PhysicalFormat f = mapper.map(var.getPathFromRoot());
-			if (f instanceof GeneralizedFileFormat) {
-				String filename = ((GeneralizedFileFormat) f).getURIAsString();
-				if (filename == null) {
-					throw new ExecutionException("Mapper did not provide a file name");
-				}
-				else {
-					return filename;
-				}
-			}
-			else if (f == null) {
-				throw new ExecutionException("Mapper failed to map " + var);
-			}
-			else {
-				throw new ExecutionException("Only file formats are supported for now");
-			}
-		}
-	}
-
 	protected Object pathOnly(Object f) {
 		if (f instanceof String[]) {
 			return pathOnly((String[]) f);
@@ -249,26 +156,6 @@ public abstract class SwiftFunction extends AbstractFunction {
 			p[i] = pathOnly(files[i]);
 		}
 		return p;
-	}
-
-	/**
-	 * Given an input of an array of strings, returns a single string with the
-	 * input strings separated by a space. If the 'relative' flag is set to
-	 * true, then each input string will be passed through the relativize
-	 * function.
-	 */
-	public static String argList(String[] s, boolean relative) {
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < s.length; i++) {
-			if (relative) {
-				s[i] = relativize(s[i]);
-			}
-			sb.append(s[i]);
-			if (i < s.length - 1) {
-				sb.append(' ');
-			}
-		}
-		return sb.toString();
 	}
 
 	/**

@@ -22,6 +22,9 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.FileNameExpander;
+import org.griphyn.vdl.karajan.FileNameExpander.MultiMode;
+import org.griphyn.vdl.karajan.FileNameExpander.Transform;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
@@ -42,8 +45,10 @@ public class FileName extends SwiftFunction {
         if (var.getType().isPrimitive()) {
             throw new ExecutionException(this, "Cannot invoke filename() on a primitive value (" + var + ")");
         }
-		String s = argList(filename(var), true);
-		DSHandle result = NodeFactory.newRoot(Field.GENERIC_STRING, s);
+        DSHandle result = NodeFactory.newRoot(Field.GENERIC_STRING, 
+            new FileNameExpander(var, MultiMode.SEPARATE, Transform.RELATIVE).toCombinedString()); 
+		// String s = argList(filename(var), true);
+		// DSHandle result = NodeFactory.newRoot(Field.GENERIC_STRING, s);
 		if (PROVENANCE_ENABLED) {
 		    int provid = SwiftFunction.nextProvenanceID();
 		    SwiftFunction.logProvenanceParameter(provid, var, "input");

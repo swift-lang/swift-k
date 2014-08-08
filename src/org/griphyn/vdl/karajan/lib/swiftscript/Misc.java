@@ -35,6 +35,7 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.util.TypeUtil;
+import org.griphyn.vdl.karajan.FileNameExpander;
 import org.griphyn.vdl.karajan.lib.StringCache;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
@@ -191,7 +192,7 @@ public class Misc {
         	    filename = SwiftFunction.unwrap(this, dn);
         	}
         	else {
-        	    filename = SwiftFunction.filename(dn)[0];
+        	    filename = new FileNameExpander(dn).getSingleLocalPath();
         	}
 
             AbsFile file = new AbsFile(filename);
@@ -703,7 +704,7 @@ public class Misc {
         @Override
         public Object function(Stack stack) {
             AbstractDataNode dn = file.getValue(stack);
-            String name = SwiftFunction.filename(dn)[0];
+            String name = new FileNameExpander(dn).getSingleLocalPath();
 
             String result = new AbsFile(name).getDirectory();
             DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, result);

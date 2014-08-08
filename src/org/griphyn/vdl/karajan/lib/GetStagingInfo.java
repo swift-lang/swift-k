@@ -117,6 +117,11 @@ public class GetStagingInfo extends SwiftFunction {
 
 
     private Set<AbsFile> addOne(AbsFile f, Info info, Set<AbsFile> files) {
+        String proto = f.getProtocol();
+        if ("direct".equals(proto)) {
+            // do not stage direct files
+            return files;
+        }
         String dir = f.getDirectory();
         if (dir != null) {
             if (info.remoteDirNames.isEmpty()) {

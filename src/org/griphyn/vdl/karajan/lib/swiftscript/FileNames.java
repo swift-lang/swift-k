@@ -20,12 +20,13 @@
  */
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
-import java.util.Arrays;
-
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.FileNameExpander;
+import org.griphyn.vdl.karajan.FileNameExpander.MultiMode;
+import org.griphyn.vdl.karajan.FileNameExpander.Transform;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
@@ -43,19 +44,18 @@ public class FileNames extends SwiftFunction {
     @Override
 	public Object function(Stack stack) {
         AbstractDataNode var = this.var.getValue(stack);
-		String[] f = filename(var);
-		for (int i = 0; i < f.length; i++) {
-		    f[i] = relativize(f[i]);
-		}
-		DSHandle returnArray = NodeFactory.newRoot(Field.GENERIC_STRING_ARRAY, Arrays.asList(f));
-		returnArray.closeShallow();
+		
+		DSHandle result = NodeFactory.newRoot(Field.GENERIC_STRING_ARRAY, 
+		    new FileNameExpander(var, MultiMode.SEPARATE, Transform.RELATIVE).toStringList());
+		// DSHandle returnArray = NodeFactory.newRoot(Field.GENERIC_STRING_ARRAY, Arrays.asList(f));
+		// returnArray.closeShallow();
 		
 		if (PROVENANCE_ENABLED) {
 		    int provid = SwiftFunction.nextProvenanceID();
 		    logProvenanceParameter(provid, var, "input");
-		    logProvenanceResult(provid, returnArray, "filenames");
+		    logProvenanceResult(provid, result, "filenames");
 		}
 
-		return returnArray;
+		return result;
 	}
 }

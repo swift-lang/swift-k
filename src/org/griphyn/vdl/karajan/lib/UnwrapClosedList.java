@@ -21,6 +21,7 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public class UnwrapClosedList extends SwiftFunction {
 
 	@Override
 	public Object function(Stack stack) {
-        List<AbstractDataNode> l = this.list.getValue(stack);
+        Collection<AbstractDataNode> l = this.list.getValue(stack);
 		
 		List<Object> r = new ArrayList<Object>(l.size());
 		

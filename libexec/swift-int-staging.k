@@ -67,7 +67,8 @@ namespace(providerStaging) {
 			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout)
 
 			try {
-				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), 
+				eargs := expandArguments(arguments, rhost)
+				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", eargs)), 
 					" tmpdir={tmpdir} host={rhost}")
 
 				setProgress(progress, "Submitting")
@@ -88,7 +89,7 @@ namespace(providerStaging) {
 						"-cf", str:join(remoteFileNames(outCollect), "|"),
 						"-cdmfile", CDM_FILE,
 						"-status", "provider"
-						"-a", if (arguments != null, each(arguments))
+						"-a", if (arguments != null, each(eargs))
 					)
 					directory = tmpdir
 					redirect = false
@@ -139,7 +140,9 @@ namespace(providerStaging) {
 					}
 					stageOut("wrapper.error", "{stagingMethod}://localhost/{DEBUG_DIR}/{jobid}.error", 
 						mode = STAGING_MODE:IF_PRESENT)
+						
 					appStageouts(jobid, outFiles, outCollect, stagingMethod)
+					
 					if (!isEmpty(outCollect)) {
 						stageOut("_collect", "{stagingMethod}://localhost/{DEBUG_DIR}/{jobid}.collect", 
 							mode = STAGING_MODE:ALWAYS)

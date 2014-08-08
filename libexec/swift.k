@@ -84,7 +84,7 @@ namespace(swift) {
 	
 	export(arguments,
 		function(...) {
-			arguments = expandArguments(each(...))
+			arguments = ...
 		}
 	)
 
