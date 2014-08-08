@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 
@@ -125,7 +126,7 @@ public class Settings {
     // this would cause bad things for jobsPerNode > 1024
     private int maxNodes = Integer.MAX_VALUE / 1024;
 
-    private int maxtime = Integer.MAX_VALUE;
+    private TimeInterval maxtime = TimeInterval.FOREVER;
 
     private final Set<URI> callbackURIs;
 
@@ -304,12 +305,12 @@ public class Settings {
         this.reserve = reserve;
     }
 
-    public int getMaxtime() {
+    public TimeInterval getMaxtime() {
         return maxtime;
     }
 
-    public void setMaxtime(int maxtime) {
-        this.maxtime = maxtime;
+    public void setMaxtime(String maxtime) {
+        this.maxtime = TimeInterval.fromSeconds(WallTime.timeToSeconds(maxtime));
     }
 
     public String getWorkerManager() {

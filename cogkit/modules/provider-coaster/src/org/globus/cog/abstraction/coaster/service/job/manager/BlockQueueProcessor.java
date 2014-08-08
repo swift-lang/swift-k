@@ -216,10 +216,10 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private boolean checkJob(Job job) {
-        if (job.getMaxWallTime().getSeconds() > settings.getMaxtime() - settings.getReserve().getSeconds()) {
-            job.fail("Job walltime > maxTime - reserve (" + 
+        if (job.getMaxWallTime().getSeconds() > settings.getMaxtime().getSeconds() - settings.getReserve().getSeconds()) {
+            job.fail("Task walltime > maxJobTime - reserve (" + 
                     WallTime.format("hms", job.getMaxWallTime().getSeconds()) + " > " + 
-                    WallTime.format("hms", settings.getMaxtime() - settings.getReserve().getSeconds()) + ")", null);
+                    WallTime.format("hms", settings.getMaxtime().getSeconds() - settings.getReserve().getSeconds()) + ")", null);
             return false;
         }
         else {
@@ -545,7 +545,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 // the maximum time is a hard limit, so for the maximum useable time
                 // the reserve needs to be subtracted
                 int maxt =
-                  settings.getMaxtime() - (int) settings.getReserve().getSeconds();
+                  (int) settings.getMaxtime().getSeconds() - (int) settings.getReserve().getSeconds();
                 // height must be a multiple of the overallocation of the
                 // largest job
                 // Is not h <= round(h, lastwalltime) ? -Justin
