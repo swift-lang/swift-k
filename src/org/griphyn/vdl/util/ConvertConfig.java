@@ -430,7 +430,7 @@ public class ConvertConfig {
         coasterAttrs = new HashMap<String, Attr>();
         attr(coasterAttrs, "queue", "jobQueue", AttrType.STRING);
         attr(coasterAttrs, "project", "jobProject", AttrType.STRING);
-        attr(coasterAttrs, "maxtime", "jobMaxTime", AttrType.TIME_FROM_SECONDS); 
+        attr(coasterAttrs, "maxtime", "maxJobTime", AttrType.TIME_FROM_SECONDS); 
         attr(coasterAttrs, "reserve", AttrType.STRING);
         attr(coasterAttrs, "lowOverallocation", AttrType.INT);
         attr(coasterAttrs, "highOverallocation", AttrType.INT);
