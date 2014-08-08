@@ -460,8 +460,13 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 	    if (cs == null || cs.getContacts() == null) {
 	        throw new IllegalArgumentException("No sites specified");
 	    }
+	    convertThrottleSettings(cs);
         super.setResources(cs);
-        for (BoundContact bc : cs.getContacts()) {
+        initializeWorkerTrackingThrottles(cs);
+    }
+	
+	private void initializeWorkerTrackingThrottles(ContactSet cs) {
+	    for (BoundContact bc : cs.getContacts()) {
             Service es = bc.getService(Service.EXECUTION, "coaster");
             if (es != null && "passive".equals(es.getAttribute("workerManager"))
                     && "true".equals(bc.getProperty("throttleTracksWorkers"))) {
@@ -474,8 +479,12 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
                     whs.changeThrottleOverride(whs.findHost(bc), 1);
                     serviceContactMapping.put(es, bc);
                 }
-            }
-            
+            }            
+        }
+    }
+
+    private void convertThrottleSettings(ContactSet cs) {
+	    for (BoundContact bc : cs.getContacts()) {       
             Object maxParallelJobs = bc.getProperty("maxParallelTasks");
             Object initialParallelJobs = bc.getProperty("initialParallelTasks");
             if (maxParallelJobs != null) {
@@ -499,8 +508,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
             }
         }
     }
-	
-	private double parseAndCheck(Object value, String name, BoundContact bc) {
+
+    private double parseAndCheck(Object value, String name, BoundContact bc) {
         double d = TypeUtil.toDouble(value);
         if (d < 1) {
             throw new IllegalArgumentException("Invalid " + name + " value (" + d + ") for site '" + 
