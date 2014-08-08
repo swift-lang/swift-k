@@ -38,11 +38,36 @@ public abstract class AbstractProperties extends java.util.Properties {
 	private static final long serialVersionUID = 1L;
 
 	public static final Logger logger = Logger.getLogger(AbstractProperties.class);
-    
+
     public static final String POLL_INTERVAL = "poll.interval";
-    
+
     public static final String DEBUG = "debug";
-    
+
+    private String resolve(String var) {
+        String v = null;
+        if (var.startsWith("env.")) {
+            v = System.getenv(var.substring(4));
+        }
+        else {
+            v = System.getProperty(var);
+        }
+        if (v == null) {
+            throw new IllegalArgumentException("No such system property or environment variable: '" + var + "'");
+        }
+        return v;
+    }
+
+    private String loadenv(String what) {
+        int b = what.indexOf("${");
+        while (b != -1) {
+            int e = what.indexOf("}", b);
+            String var = what.substring(b + 2, e);
+            what = what.substring(0, b) + resolve(var) + what.substring(e + 1);
+            b = what.indexOf("${");
+        }
+        return what;
+    }
+
     protected void load(String name) {
         setDefaults();
         InputStream is = getClass().getClassLoader().getResourceAsStream(name);
@@ -52,6 +77,11 @@ public abstract class AbstractProperties extends java.util.Properties {
         else {
             try {
                 super.load(is);
+                for (String key: super.stringPropertyNames()){
+                    String value = super.getProperty(key);
+                    String resolved = loadenv(value);
+                    super.setProperty(key, resolved);
+                }
             }
             catch (IOException e) {
             }

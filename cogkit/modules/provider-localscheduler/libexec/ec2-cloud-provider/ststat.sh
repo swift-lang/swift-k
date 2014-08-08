@@ -1,0 +1,1 @@
+../../examples/ec2-cloud-provider/ststat.sh

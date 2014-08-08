@@ -110,12 +110,26 @@ site."*" {
 				ppn: "?StrictlyPositiveInt"
 				pbs.properties: "?String"
 				condor: "?Object"
+
+                # Required ec2 configs :
                 ec2CredentialsFile: "?String"
+                ec2WorkerImage: "?String"
+                ec2WorkerType: "?String"
+                # Optional ec2 configs :
                 ec2SecurityGroup: "?String"
                 ec2KeypairName: "?String"
                 ec2KeypairFile: "?String"
-                ec2WorkerImage: "?String"
-                ec2WorkerType: "?String"
+
+                # Required gce configs
+                gceKeypairFile: "?String"
+                gceEmailAccount: "?String"
+                gceProjectId: "?String"
+                gceZone: "?String"
+                gceWorkerType: "?String"
+                gceWorkerImage: "?String"
+                # Optional gce configs
+                gceSecurityGroup: "?String"
+
 			}
 		}
 	}

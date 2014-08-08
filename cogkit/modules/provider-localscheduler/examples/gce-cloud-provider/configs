@@ -1,0 +1,12 @@
+gcesecuritygroup=swift_security_group1
+gceprojectid=mystic-pagoda-551
+#gceworkerimage=gs://swift-worker/f3bffd36e4584040596ee317e26d127950b32aff.image.tar.gz
+gceworkerimage=gs://swift-worker/8cdfa8723966ca128d02ac148c67cf46fcd65cd1.image.tar.gz
+
+gcekeypairfile=/home/yadu/.ssh/GCE_priv_key.pem
+gceemailaccount=791876389344-sot5mq0jc6j5hclbsmaguq6crh93mlj4@developer.gserviceaccount.com
+gcezone=us-central1-a
+gceworkertype=f1-micro
+
+CMD_STRING="mkdir /tmp/; cd /tmp/; /usr/bin/perl  /usr/local/bin/swift-trunk/bin/worker.pl http://128.135.250.235:52333 0723-5104050-000000 /tmp  1> /tmp/tmp.rpKzuc7Q8t 2> /tmp/tmp.PBo0UCznld"
+

@@ -28,7 +28,7 @@
  */
 package org.globus.cog.abstraction.impl.scheduler.shell;
 
-// import org.apache.log4j.Logger;
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 
 public class Properties extends AbstractProperties {
@@ -47,7 +47,7 @@ public class Properties extends AbstractProperties {
 		properties.put(NAME, name);
 		return properties;
 	}
-	
+
 	protected void setDefaults() {
 		setPollInterval(5);
 	}

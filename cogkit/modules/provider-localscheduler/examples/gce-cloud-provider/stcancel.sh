@@ -1,24 +1,21 @@
 #!/bin/bash
 
 LOGGING=1 # Either 1 or 0
-
 RUNDIRS=$(echo run[0-9][0-9][0-9])
 RUNDIR=${RUNDIRS##*\ }
 LOG=$RUNDIR/scripts/log
 [[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
 
-CLOUD_PY=$SWIFT_HOME/libexec/ec2-cloud-provider/cloud.py
+CLOUD_PY=$SWIFT_HOME/libexec/gce-cloud-provider/cloud.py
 
 log()
 {
-    [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
+    [[ "$LOGGING" == "1" ]] && echo $(date +"%H:%M:%S") $* >> $LOG
 }
 
 JOBID=$1
 CONF=/tmp/$JOBID
 EXITCODE=0
-
-log "Received cancel directive for $JOBID"
 
 # Check for the conf file for the job at /tmp/<jobid>
 if [ ! -f "$CONF" ]
@@ -29,15 +26,15 @@ fi
 
 if [[ "$1" != "" ]]
 then
-    log "Cancelling $JOBID " $(date +"%T")
-    python $CLOUD_PY --logfile $LOG --cancel $CONF --jobid $JOBID
+    log "Cancelling $JOBID"
+    python $CLOUD_PY --cancel $CONF --jobid $JOBID | tee -a $LOG
     EXITCODE=$?
     if [[ "$EXITCODE" == "0" ]]
     then
-        log "Done cancelling $JOBID" $(date +"%T")
+        log "Done cancelling $JOBID"
         rm $CONF
     else
-        log "Failed to cancel $JOBID: returned exitcode:$EXITCODE" $(date +"%T")
+        log "Failed to cancel $JOBID: returned exitcode:$EXITCODE"
     fi
 fi
 

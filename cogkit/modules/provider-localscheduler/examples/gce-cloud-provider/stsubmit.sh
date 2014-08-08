@@ -20,12 +20,7 @@ RUNDIR=${RUNDIRS##*\ }
 LOG=$RUNDIR/scripts/log
 [[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
 
-log()
-{
-    [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
-}
-
-CLOUD_PY=$SWIFT_HOME/libexec/ec2-cloud-provider/cloud.py
+CLOUD_PY=$SWIFT_HOME/libexec/gce-cloud-provider/cloud.py
 SUBMIT_SCRIPT=$(mktemp)
 touch $SUBMIT_SCRIPT
 
@@ -49,7 +44,7 @@ while read LINE; do
 			;;
 		attr.*)
             LINE2=${LINE#attr.}
-            if [[ $LINE2 == ec2* ]]
+            if [[ $LINE2 == gce* ]]
             then
 			    echo $LINE2 >> $SUBMIT_SCRIPT
             fi
@@ -107,7 +102,7 @@ if [ "$STDINLOC" != "" ]; then
 fi
 
 CMD="$EXECUTABLE $ARGS $STDIN $STDOUT $STDERR"
-log "CMD   : $CMD"
+echo "CMD   : $CMD" >> $LOG
 
 DIR=/tmp/
 
@@ -117,13 +112,11 @@ EOF
 
 cat $SUBMIT_SCRIPT >> $LOG
 
-log "$PWD"
-log "python $CLOUD_PY --logfile $LOG --submit $SUBMIT_SCRIPT"
-
-JOBINFO=$(python $CLOUD_PY --logfile $LOG --submit $SUBMIT_SCRIPT)
+echo "$PWD" >> $LOG
+echo "python $CLOUD_PY --submit $SUBMIT_SCRIPT" >> $LOG
+JOBINFO=$(python $CLOUD_PY --submit $SUBMIT_SCRIPT)
 retcode="$?"
-log "JOBINFO : $JOBINFO    RETCODE : $retcode"
-
+echo $JOBINFO
 [[ "$retcode" != "0" ]] && exit retcode
 
 if [[ $JOBINFO == jobid\=* ]]

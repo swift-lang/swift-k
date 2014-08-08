@@ -1,13 +1,12 @@
 #!/bin/bash
 
 LOGGING=1 # Either 1 or 0
-
 RUNDIRS=$(echo run[0-9][0-9][0-9])
 RUNDIR=${RUNDIRS##*\ }
 LOG=$RUNDIR/scripts/log
 [[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
 
-CLOUD_PY=$SWIFT_HOME/libexec/ec2-cloud-provider/cloud.py
+CLOUD_PY=$SWIFT_HOME/libexec/gce-cloud-provider/cloud.py
 
 log()
 {
@@ -27,5 +26,6 @@ fi
 if [[ "$1" != "" ]]
 then
 	log "Stat'ing for $1 PWD: $PWD"
-    python $CLOUD_PY --logfile $LOG --status $CONF --jobid $JOBID | tee -a $LOG
+    log "python $CLOUD_PY --status $CONF --jobid $JOBID "
+    python $CLOUD_PY --status $CONF --jobid $JOBID | tee -a $LOG
 fi
