@@ -277,6 +277,10 @@ int runJob() {
 		j.setStderrLocation(*str);
 	}
 
+        if (jobManager != NULL) {
+		j.setJobManager(jobManager);
+        }
+
 	client.submit(j, configId);
 
 	client.waitForJob(j);
