@@ -102,7 +102,7 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
         WaitingThreadsMonitor.addThread(l, this);
         synchronized(this) {
             shouldNotify = addListener0(l);
-            if (keyList != null && y.getSequence() != keyList.size()) {
+            if (keyList != null && y != null && y.getSequence() != keyList.size()) {
                 shouldNotify = true;
             }
         }
