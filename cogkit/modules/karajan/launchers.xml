@@ -1,11 +1,6 @@
 <project name="Launchers" default="create" basedir=".">
   <target name="create">
 	<ant antfile="${main.buildfile}" target="launcher">
-		<property name="launcher-name" value="cog-workflow-gui"/>
-		<property name="class-name" 
-                         value="org.globus.cog.karajan.viewer.KarajanFrame"/>
-	</ant>
-	<ant antfile="${main.buildfile}" target="launcher">
 		<property name="launcher-name" value="cog-workflow"/>
 		<property name="class-name" 
                           value="org.globus.cog.karajan.Loader"/>
@@ -14,14 +9,6 @@
 		<property name="launcher-name" value="cog-workflow-service"/>
 		<property name="class-name" 
                           value="org.globus.cog.karajan.workflow.service.Service"/>
-	</ant>
-  </target>
-  <target name="webstart">
-	<ant antfile="${main.buildfile}" target="webstart.launcher">
-		<property name="launcher-name" value="cog-workflow-gui"/>
-		<property name="class-name" 
-		          value="org.globus.cog.karajan.viewer.KarajanFrame"/>
-		<property name="display-name" value="Karajan GUI"/>
 	</ant>
   </target>
 </project>
