@@ -56,8 +56,6 @@ namespace(swift) {
 	export(createArray, def("org.griphyn.vdl.karajan.lib.CreateArray"))
 	/* used from VDL2 for arguments to apps and returns relative paths */
 	export(fileName, def("org.griphyn.vdl.karajan.lib.FileName"))
-	/* for internal use and does not force relative paths */
-	export(absFileName, def("org.griphyn.vdl.karajan.lib.AbsFileName"))
 
 	export(jobConstraints, def("org.griphyn.vdl.karajan.lib.JobConstraints"))
 	export(getField, def("org.griphyn.vdl.karajan.lib.GetField"))
