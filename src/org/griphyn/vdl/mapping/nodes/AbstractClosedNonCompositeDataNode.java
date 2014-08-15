@@ -30,6 +30,7 @@ package org.griphyn.vdl.mapping.nodes;
 
 import org.griphyn.vdl.mapping.DataDependentException;
 import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.type.Field;
 
 public abstract class AbstractClosedNonCompositeDataNode extends AbstractClosedDataNode {
@@ -47,7 +48,20 @@ public abstract class AbstractClosedNonCompositeDataNode extends AbstractClosedD
 
     @Override
     public synchronized Object getValue() {
+        checkDataException();
         return value;
+    }
+    
+    protected void checkDataException() {
+        if (value instanceof DependentException) {
+            throw (DependentException) value;
+        }
+    }
+
+    protected void checkMappingException() {
+        if (value instanceof MappingDependentException) {
+            throw (MappingDependentException) value;
+        }
     }
     
     @Override
