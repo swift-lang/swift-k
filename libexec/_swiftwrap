@@ -175,7 +175,7 @@ genScripts() {
 	for CMDARG in "${CMDARGS[@]}"; do
     	echo -n "\"$CMDARG\" " >> run.sh
 	done
-	echo "1>>\"$STDOUT\" 2>>\"$STDERR\"" >> run.sh
+	echo "1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
 	chmod +x run.sh
 }
 
@@ -500,9 +500,9 @@ if [ "$STDIN" == "" ]; then
 	fi
             
             if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
-               "$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+               "$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR"
             else
-               "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+               "$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR"
             fi
 else
 	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
@@ -510,9 +510,9 @@ else
 	fi
     	
 	if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
-           		"$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+           		"$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
    	 	else         
-       		"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+       		"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
     	fi  
 fi
 

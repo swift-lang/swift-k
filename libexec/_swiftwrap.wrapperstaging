@@ -241,7 +241,7 @@ genScripts() {
 	for CMDARG in "${CMDARGS[@]}"; do
     	echo -n "\"$CMDARG\" " >> run.sh
 	done
-	echo "1>>\"$STDOUT\" 2>>\"$STDERR\"" >> run.sh
+	echo "1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
 	chmod +x run.sh
 }
 
@@ -523,12 +523,12 @@ if [ "$STDIN" == "" ]; then
 	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 		genScripts
 	fi
-	"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR"
 else
 	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 		genScripts
 	fi
-	"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 fi
 checkError $? "Application $EXEC failed with an exit code of $?"
 

@@ -288,17 +288,17 @@ fi
 if [ "$STDIN" == "" ]; then
 	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 		echo "#!/bin/bash" > run.sh
-		echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>>\"$STDOUT\" 2>>\"$STDERR\"" >> run.sh
+		echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
 		chmod +x run.sh
 	fi
-	"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR"
+	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR"
 else
 	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 		echo "#!/bin/bash" > run.sh
-		echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>>\"$STDOUT\" 2>>\"$STDERR\" <\"$STDIN\"" >> run.sh
+		echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>\"$STDOUT\" 2>\"$STDERR\" <\"$STDIN\"" >> run.sh
 		chmod +x run.sh
 	fi
-	"$EXEC" "${CMDARGS[@]}" 1>>"$STDOUT" 2>>"$STDERR" <"$STDIN"
+	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 fi
 checkError $? "Application $EXEC failed with an exit code of $?" <$STDERR
 
