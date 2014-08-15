@@ -112,8 +112,22 @@ public class HangChecker extends TimerTask {
                     logger.warn(os.toString());
                     ps.close();
                     if (found) {
-                        System.err.println("Irrecoverable error found. Exiting.");
-                        System.exit(99);
+                        boolean debugging;
+                        try {
+                            debugging = java.lang.management.ManagementFactory.getRuntimeMXBean().
+                                getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+                        }
+                        catch (Exception e) {
+                            System.err.println("Error figuring out if debugging is enabled: " + e.getMessage());
+                            debugging = false;
+                        }
+                        if (debugging) {
+                            System.err.println("Things are being debugged. Skipping exit.");
+                        }
+                        else {
+                            System.err.println("Irrecoverable error found. Exiting.");
+                            System.exit(99);
+                        }
                     }
                 }
             }
