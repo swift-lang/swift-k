@@ -284,8 +284,13 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					submitUnbound(e);
 				}
 				catch (NoSuchResourceException ex) {
-				    failTask(e, "The application \"" + getTaskConstraints(e).getConstraint("tr")
-							+ "\" is not available in on any of the sites", ex);
+				    if (e.task instanceof ContactAllocationTask) {
+				    	failTask(e, "The application \"" + getTaskConstraints(e).getConstraint("tr")
+				    		+ "\" is not available in on any of the sites", ex);
+				    }
+				    else {
+				        failTask(e, ex.getMessage(), ex);
+				    }
 				}
 				catch (NoFreeResourceException ex) {
 					remove = false;
