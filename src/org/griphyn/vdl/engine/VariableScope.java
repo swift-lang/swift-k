@@ -55,6 +55,14 @@ public class VariableScope {
     public enum WriteType {
         FULL, PARTIAL
     }
+    
+    public enum AccessType {
+        LOCAL, GLOBAL
+    }
+    
+    public enum VariableOrigin {
+        USER, INTERNAL
+    }
 	
 	public static final Logger logger = Logger.getLogger(VariableScope.class);
 
@@ -102,14 +110,21 @@ public class VariableScope {
     private static class Variable {
         public final String name, type;
         public final XmlObject src;
-        public final boolean isGlobal;
+        public final AccessType accessType;
+        public final VariableOrigin origin;
         private XmlObject foreachSrc;
+        public boolean unused;
         
-        public Variable(String name, String type, boolean isGlobal, XmlObject src) {
+        public Variable(String name, String type, AccessType accessType, VariableOrigin origin, XmlObject src) {
             this.name = name;
             this.type = type;
             this.src = src;
-            this.isGlobal = isGlobal;
+            this.accessType = accessType;
+            this.origin = origin;
+        }
+
+        public boolean isGlobal() {
+            return accessType == AccessType.GLOBAL;
         }
     }
     
@@ -120,6 +135,7 @@ public class VariableScope {
         private XmlObject fullWritingLoc, foreachSourceVar;
         private List<XmlObject> partialWritingLoc;
         private List<XmlObject> fullReadingLoc;
+        private boolean partiallyRead;
         private int referenceCount;
         
         public VariableUsage(String name) {
@@ -162,8 +178,12 @@ public class VariableScope {
             fullReadingLoc.add(where);
         }
 
-        public boolean hasReaders() {
+        public boolean hasFullReaders() {
             return fullReadingLoc != null && fullReadingLoc.size() > 0;
+        }
+        
+        public boolean hasReaders() {
+            return partiallyRead || (fullReadingLoc != null && fullReadingLoc.size() > 0);
         }
 
         public XmlObject getForeachSourceVar() {
@@ -172,6 +192,10 @@ public class VariableScope {
 
         public void setForeachSourceVar(XmlObject foreachSourceVar) {
             this.foreachSourceVar = foreachSourceVar;
+        }
+
+        public void addPartialReadingStatement(XmlObject where) {
+            this.partiallyRead = true;
         }
     }
 
@@ -228,8 +252,9 @@ public class VariableScope {
 	    declaration already exists. Perhaps error in same scope and
 	    warning if it shadows an outer scope? */
 
-	public void addVariable(String name, String type, String context, XmlObject src) throws CompilationException {
-		addVariable(name, type, context, false, src);
+	public void addVariable(String name, String type, String context, 
+	        VariableOrigin origin, XmlObject src) throws CompilationException {
+		addVariable(name, type, context, AccessType.LOCAL, origin, src);
 	}
 	
 	private Collection<VariableUsage> getVariableUsageValues() {
@@ -285,6 +310,9 @@ public class VariableScope {
 	 * guarantees a non-null return
 	 */
 	protected VariableUsage getUsageForUpdate(String name) {
+	    if (name == null) {
+	        throw new NullPointerException();
+	    }
 	    Map<String, VariableUsage> usage = getVariableUsage();
 	    VariableUsage u = usage.get(name);
 	    if (u == null) {
@@ -313,7 +341,8 @@ public class VariableScope {
 		}
 	}
 
-	public void addVariable(String name, String type, String context, boolean global, XmlObject src) throws CompilationException {
+	public void addVariable(String name, String type, String context, 
+	        AccessType accessType, VariableOrigin origin, XmlObject src) throws CompilationException {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Adding variable " + name + " of type " + type + " to scope " + hashCode());
 	    }
@@ -332,11 +361,11 @@ public class VariableScope {
 		        + ", shadows variable of same name on line " + parentScope.getDeclarationLine(name));
 		}
 
-		if (global && this != rootScope) {
+		if (accessType == AccessType.GLOBAL && this != rootScope) {
 			throw new CompilationException("Global " + name + " can only be declared in the root scope of a program.");
 		}
 		
-		getVariablesMap().put(name, new Variable(name, type, global, src));
+		getVariablesMap().put(name, new Variable(name, type, accessType, origin, src));
 	}
 	
 	private Map<String, Variable> getVariablesMap() {
@@ -360,7 +389,7 @@ public class VariableScope {
 			    + CompilerUtils.getLine(src) + ", was already defined on line " + getDeclarationLine(name));
 		}
 
-		getVariablesMap().put(name, new Variable(name, type, false, src));
+		getVariablesMap().put(name, new Variable(name, type, AccessType.LOCAL, VariableOrigin.INTERNAL, src));
 	}
 	
 	public String getDeclarationLine(String name) {
@@ -402,7 +431,7 @@ public class VariableScope {
 	        // if the search fails, see if there is a global with this name
 	        if (rootScope.variables != null) {
 	            Variable v = rootScope.variables.get(name);
-	            if (v != null && v.isGlobal) {
+	            if (v != null && v.isGlobal()) {
 	                return v;
 	            }
 	            else {
@@ -449,12 +478,12 @@ public class VariableScope {
 
 	public boolean isGlobalDefined(String name) {
 	    Variable var = rootScope.lookup(name);
-	    return var != null && var.isGlobal;
+	    return var != null && var.isGlobal();
 	}
 	
 	public XmlObject getGlobalSrc(String name) {
 	    Variable var = rootScope.lookup(name);
-        if (var != null && var.isGlobal) {
+        if (var != null && var.isGlobal()) {
             return var.src;
         }
         else {
@@ -865,12 +894,12 @@ public class VariableScope {
 
     private void setVariableReadInThisScope(String name, boolean partial, XmlObject where)
     throws CompilationException {
-	    // only care about full reads, since they can only happen in
-	    // a scope higher than the closing
 	    if (partial) {
-	        return;
+	        getUsageForUpdate(name).addPartialReadingStatement(where);
 	    }
-        getUsageForUpdate(name).addFullReadingStatement(where);
+	    else {
+	        getUsageForUpdate(name).addFullReadingStatement(where);
+	    }
     }
 	
 	private boolean isVariableWrittenToInThisScope(String name) {
@@ -899,7 +928,7 @@ public class VariableScope {
 	
 	private boolean isVariableFullyReadInThisScope(String name) {
         VariableUsage v = getExistingUsage(name);
-        return v != null && v.hasReaders();
+        return v != null && v.hasFullReaders();
     }
 	
 	private XmlObject getFirstFullRead(String name) {
@@ -1013,6 +1042,14 @@ public class VariableScope {
 		}
 		return null;
 	}
+	
+	private void setUnused(String name) {
+        StringTemplate decl = this.getLocalDeclaration(name, "declarations");
+        if (decl != null) {
+            decl.setAttribute("unused", true);
+        }
+        lookup(name).unused = true;
+    }
 
 	/** appends statement to the present scope, wrapping as appropriate
 	    with code to partially-close registered uses. perhaps should move
@@ -1065,8 +1102,9 @@ public class VariableScope {
     public List<String> getCleanups() {
         List<String> cleanups = new ArrayList<String>();
         for (String var : getLocallyDeclaredVariableNames()) {
-            String type = getVariableType(var);
-            if (!org.griphyn.vdl.type.Types.isPrimitive(type)) {
+            Variable v = lookup(var);
+            String type = v.type;
+            if (!org.griphyn.vdl.type.Types.isPrimitive(type) && !v.unused) {
                 cleanups.add(var);
             }
         }
@@ -1121,6 +1159,44 @@ public class VariableScope {
 
         for (String name : getLocallyDeclaredVariableNames()) {
             undeclare(access, name);
+        }
+    }
+    
+    public void checkUnused() {
+        checkUnusedRecursive();
+        removeUnused();
+    }
+
+    private void removeUnused() {
+        for (String name : getLocallyDeclaredVariableNames()) {
+            Variable var = lookup(name);
+            if (var.origin == VariableOrigin.USER && var.unused) {
+                setUnused(name);
+            }
+        }
+        
+        for (VariableScope child : children) {
+            child.removeUnused();
+        }
+    }
+
+    private void checkUnusedRecursive() {
+        for (String name : getLocallyDeclaredVariableNames()) {
+            Variable var = lookup(name);
+            if (var.origin == VariableOrigin.USER) {
+                var.unused = true;
+            }
+        }
+        
+        for (String name : getUsedVariableNames()) {
+            VariableUsage usage = getExistingUsage(name);
+            if (usage != null && (usage.hasWriters() || usage.hasReaders())) {
+                lookup(name).unused = false;
+            }
+        }
+        
+        for (VariableScope child : children) {
+            child.checkUnusedRecursive();
         }
     }
 

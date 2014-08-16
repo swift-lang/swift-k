@@ -42,7 +42,8 @@ public class Warnings {
         DEPRECATION, 
         SHADOWING, 
         DATAFLOW,
-        SITE
+        SITE,
+        UNUSED
     }
     
     private static Set<String> warnings = new HashSet<String>();
@@ -52,13 +53,14 @@ public class Warnings {
         enabledWarnings.add(Type.DEPRECATION);
         enabledWarnings.add(Type.DATAFLOW);
         enabledWarnings.add(Type.SITE);
+        enabledWarnings.add(Type.UNUSED);
     }
     
     public static void warn(Type type, XmlObject obj, String msg) {
         if (enabledWarnings.contains(type)) {
             if (!warnings.contains(msg)) {
                 warnings.add(msg);
-                msg = "Warning: " + msg + ", at " + CompilerUtils.getLine(obj.getDomNode());
+                msg = "Warning: " + msg + ", line " + CompilerUtils.getLine(obj.getDomNode());
                 logger.info(msg);
                 System.err.println(msg);
             }

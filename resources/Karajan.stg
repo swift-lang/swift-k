@@ -285,7 +285,8 @@ globalConstant(name, expr, datatype) ::= <<
 $name$ := $expr$
 >>
 
-variable(name, type, field, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line) ::= <<
+variable(name, type, field, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line, unused) ::= <<
+$if(!unused)$
 $name$ := 
 	$if(mapping)$
 	swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
@@ -301,6 +302,7 @@ $name$ :=
 		$endif$
 	$endif$
 $variable_log()$
+$endif$
 >>
 
 variable_log() ::= <<

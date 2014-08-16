@@ -61,7 +61,9 @@ import org.globus.swift.language.TypesDocument.Types;
 import org.globus.swift.language.TypesDocument.Types.Type;
 import org.globus.swift.language.Variable.Mapping;
 import org.globus.swift.language.Variable.Mapping.Param;
+import org.griphyn.vdl.engine.VariableScope.AccessType;
 import org.griphyn.vdl.engine.VariableScope.EnclosureType;
+import org.griphyn.vdl.engine.VariableScope.VariableOrigin;
 import org.griphyn.vdl.engine.VariableScope.WriteType;
 import org.griphyn.vdl.karajan.CompilationException;
 import org.griphyn.vdl.karajan.Loader;
@@ -419,6 +421,7 @@ public class Karajan {
         generateInternedFields(scope.bodyTemplate);
 		generateInternedConstants(scope.bodyTemplate);
 		scope.analyzeWriters();
+		scope.checkUnused();
 		
 		scope.bodyTemplate.setAttribute("cleanups", scope.getCleanups());
 
@@ -475,7 +478,8 @@ public class Karajan {
         }
         String type = normalize(param.getType().getLocalPart());
         checkIsTypeDefined(type);
-        scope.addVariable(param.getName(), type, returnArg ? "Return value" : "Parameter", false, param);
+        scope.addVariable(param.getName(), type, returnArg ? "Return value" : "Parameter", 
+                AccessType.LOCAL, VariableOrigin.INTERNAL, param);
         
         if (returnArg) {
             StringTemplate initWaitCountST = template("setWaitCount");
@@ -500,7 +504,8 @@ public class Karajan {
 
 	public void variableForSymbol(Variable var, VariableScope scope) throws CompilationException {
 		checkIsTypeDefined(var.getType().getLocalPart());
-		scope.addVariable(var.getName(), var.getType().getLocalPart(), "Variable", var.getIsGlobal(), var);
+		scope.addVariable(var.getName(), var.getType().getLocalPart(), "Variable", 
+		    var.getIsGlobal() ? AccessType.GLOBAL : AccessType.LOCAL, VariableOrigin.USER, var);
 	}
 
 	public void variable(Variable var, VariableScope scope) throws CompilationException {
@@ -543,7 +548,7 @@ public class Karajan {
 			}
    		}
 		else {
-			// add temporary mapping info in not primitive or array of primitive	    
+			// add temporary mapping info if not primitive or array of primitive	    
 			if (!isPrimitiveOrArrayOfPrimitive(var.getType().getLocalPart())) {
     			StringTemplate mappingST = new StringTemplate("mapping");
     			mappingST.setAttribute("descriptor", "ConcurrentMapper");
@@ -607,7 +612,7 @@ public class Karajan {
             scope.bodyTemplate.setAttribute("declarations", variableDeclarationST);
             StringTemplate paramValueST=expressionToKarajan(param.getAbstractExpression(),scope);
             String paramValueType = datatype(paramValueST);
-            scope.addVariable(parameterVariableName, paramValueType, "Variable", param);
+            scope.addVariable(parameterVariableName, paramValueType, "Variable", VariableOrigin.INTERNAL, param);
             variableDeclarationST.setAttribute("type", paramValueType);
             variableDeclarationST.setAttribute("field", addInternedField(parameterVariableName, paramValueType));
             
@@ -1114,7 +1119,8 @@ public class Karajan {
 		VariableScope loopScope = new VariableScope(this, scope, EnclosureType.ALL, iterate);
 		VariableScope innerScope = new VariableScope(this, loopScope, EnclosureType.LOOP, iterate);
 
-		loopScope.addVariable(iterate.getVar(), "int", "Iteration variable", iterate);
+		loopScope.addVariable(iterate.getVar(), "int", "Iteration variable", 
+		    VariableOrigin.USER, iterate);
 
 		StringTemplate iterateST = template("iterate");
 		iterateST.setAttribute("line", getLine(iterate));
@@ -1157,12 +1163,14 @@ public class Karajan {
 			if (itemType == null) {
 			    throw new CompilationException("You can iterate through an array structure only");
 			}
-			innerScope.addVariable(foreach.getVar(), itemType, "Iteration variable", foreach);
+			innerScope.addVariable(foreach.getVar(), itemType, "Iteration variable", 
+			    VariableOrigin.USER, foreach);
 			innerScope.addWriter(foreach.getVar(), WriteType.FULL, foreach, foreachST);
 			foreachST.setAttribute("indexVar", foreach.getIndexVar());
 			if (foreach.getIndexVar() != null) {
 			    foreachST.setAttribute("indexVarField", addInternedField(foreach.getIndexVar(), keyType));
-				innerScope.addVariable(foreach.getIndexVar(), keyType, "Iteration variable", foreach);
+				innerScope.addVariable(foreach.getIndexVar(), keyType, "Iteration variable", 
+				    VariableOrigin.USER, foreach);
 				innerScope.addWriter(foreach.getIndexVar(), WriteType.FULL, foreach, foreachST);
 			}
 
@@ -1608,7 +1616,7 @@ public class Karajan {
 			        + indexType + ") does not match the declared index type (" + declaredIndexType + ")");
 			}
 			
-			scope.addReader((String) parentST.getAttribute("var"), true, expression);
+			scope.addReader(getRootVar(parentST), true, expression);
 			
 			StringTemplate newst = template("extractarrayelement");
 			newst.setAttribute("arraychild", arrayST);
@@ -1666,7 +1674,7 @@ public class Karajan {
 				newst = template("extractstructelement");
 			}
 			
-			scope.addReader((String) parentST.getAttribute("var"), true, expression);
+			scope.addReader(getRootVar(parentST), true, expression);
 			newst.setAttribute("parent", parentST);
 			newst.setAttribute("memberchild", sm.getMemberName());
             newst.setAttribute("datatype", actualType);
@@ -1751,6 +1759,20 @@ public class Karajan {
 		// perhaps one big throw catch block surrounding body of this method
 		// which shows Compiler Exception and line number of error
 	}
+
+    private String getRootVar(StringTemplate st) throws CompilationException {
+        StringTemplate parent = (StringTemplate) st.getAttribute("parent");
+        if (parent == null || st == parent) {
+            String name = (String) st.getAttribute("var");
+            if (name == null) {
+                throw new CompilationException("Could not get variable name " + st);
+            }
+            return name;
+        }
+        else {
+            return getRootVar(parent);
+        }
+    }
 
     private StringTemplate callExpr(Call c, VariableScope scope, String expectedType) throws CompilationException {
         c.addNewOutput();
