@@ -173,7 +173,7 @@ sections:
 - global application declarations
 - Swift configuration properties
 
-Site Delcarations
+Site Declarations
 ^^^^^^^^^^^^^^^^^
 
 Swift site declarations are specified using the +site.<name>+ property, where text
