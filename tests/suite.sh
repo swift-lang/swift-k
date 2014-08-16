@@ -834,12 +834,6 @@ swift_test_case() {
 
   CDM=
   [ -r fs.data ] && CDM="-CDMFile fs.data"
-  
-  if [ "$HASCONF" == "1" ]; then
-    CONF="-config ./swift.conf"
-  else
-  	CONF=
-  fi
 
   (( TESTCOUNT++ ))
 
@@ -851,7 +845,8 @@ swift_test_case() {
   TEST_SHOULD_FAIL=$(( ! $?  ))
 
   OUTPUT=$NAME.stdout
-  monitored_exec $TIMEOUT swift $CONF $CDM $SWIFTSCRIPT $ARGS
+  export WORK=`pwd`/work
+  monitored_exec $TIMEOUT swift $CDM $SWIFTSCRIPT $ARGS
 
   TEST_SHOULD_FAIL=0
   if [ -x "$GROUP/$CHECKSCRIPT" ]; then
