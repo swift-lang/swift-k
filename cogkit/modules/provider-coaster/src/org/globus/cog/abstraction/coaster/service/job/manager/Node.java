@@ -86,6 +86,7 @@ public class Node implements Callback, ChannelListener {
     }
 
     public void shutdown() {
+        logger.info("Shutdown " + this);
         synchronized(this) {
             if (shutdown) {
                 return;
