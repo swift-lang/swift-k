@@ -41,12 +41,12 @@ namespace(swift) {
 				desthost=host, destdir=dir)
 		        log(LOG:INFO, "execute: cdm_cleanup.sh")
 			task:execute("/bin/bash", list("{dir}/cdm_cleanup.sh", cdm:get("GATHER_DIR"), cdm:get("GATHER_TARGET"), UID())
-				host=host, batch=true, TCProfile(host))
+				host=host, batch=true, TCProfile(host, tr = "*"))
 		}
 		if (!SITEDIR_KEEP) {
 			task:execute(siteProfile(host, "cleanupCommand"),
 				list(siteProfile(host, "cleanupCommandOptions"), dir)
-				host=host, batch=true, TCProfile(host))
+				host=host, batch=true, TCProfile(host, tr = "*"))
 		}
 		log(LOG:INFO, "END dir={dir} host={host}")
 	}

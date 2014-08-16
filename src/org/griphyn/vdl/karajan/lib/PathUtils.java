@@ -347,8 +347,6 @@ public class PathUtils {
             return new Signature(params("file", "dir", optional("destdir", null)), returns(channel("...", DYNAMIC)));
         }
         
-        
-
         @Override
         public void runBody(LWThread thr) {
             super.runBody(thr);
@@ -361,8 +359,8 @@ public class PathUtils {
             String destdir = this.destdir.getValue(stack);
             Channel<Object> ret = cr_vargs.get(stack);
             
-            ret.add(f.getProtocol());
-            ret.add(f.getHost());
+            ret.add(f.getProtocol("file"));
+            ret.add(f.getHost("localhost"));
             String fdir = f.getDirectory();
             if (destdir == null) {
                 ret.add(DirCat.function(dir, RelDirName.function(fdir), false));

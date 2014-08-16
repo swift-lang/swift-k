@@ -82,7 +82,7 @@ public class WriteData extends SwiftFunction {
 			PhysicalFormat pf = dest.map();
 			if (pf instanceof AbsFile) {
 				AbsFile af = (AbsFile) pf;
-				if (!af.getProtocol().equalsIgnoreCase("file")) {
+				if (!af.getProtocol("file").equalsIgnoreCase("file")) {
 					throw new ExecutionException("writeData only supports local files");
 				}
 				writeData(af.getPath(), src);

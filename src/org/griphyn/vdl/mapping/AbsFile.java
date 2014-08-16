@@ -35,6 +35,12 @@ import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.abstraction.interfaces.Service;
 
 public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
+    
+    private static final String cwd;
+    
+    static {
+        cwd = new File(".").getAbsolutePath();
+    }
 	
     public AbsFile(AbsFile dir, String name) {
         super(dir, name);
@@ -56,7 +62,7 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
         super(protocol, host, port, path);    
     }
 
-    @Override
+    /*@Override
     protected void parse(String str) {
         super.parse(str);
         if (getProtocol() == null) {
@@ -65,13 +71,13 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
         if (getHost() == null) {
             setHost("localhost");
         }
-    }
+    }*/
     
     protected FileResource getFileResource() throws IOException {
 		Service s = new ServiceImpl();
-		s.setProvider(getProtocol());
+		s.setProvider(getProtocol("file"));
 		s.setType(Service.FILE_OPERATION);
-		s.setServiceContact(new ServiceContactImpl(getHost(), getPort()));
+		s.setServiceContact(new ServiceContactImpl(getHost("localhost"), getPort()));
 		try {
 			return FileResourceCache.getDefault().getResource(s);
 		}
@@ -83,6 +89,15 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
 	protected void releaseResource(FileResource fr) {
 		FileResourceCache.getDefault().releaseResource(fr);
 	}
+	
+	public String getAbsolutePath() {
+	    if (this.isAbsolute()) {
+	        return getPath();
+	    }
+	    else {
+	        return cwd + File.separator + getPath();
+	    }
+    }
 
 	public boolean exists() {
 		try {

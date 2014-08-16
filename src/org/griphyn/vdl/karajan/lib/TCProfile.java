@@ -75,11 +75,16 @@ public class TCProfile extends SwiftFunction {
 
     public Object function(Stack stack) {
 		String tr = this.tr.getValue(stack);
-		
 		SwiftContact bc = this.host.getValue(stack);
+		
 		Application app = bc.findApplication(tr);
 		if (app == null) {
-		    throw new RuntimeException("Application '" + tr + "' not found on site '" + bc.getName() + "'");
+		    if ("*".equals(tr)) {
+		        return null;
+		    }
+		    else {
+		        throw new RuntimeException("Application '" + tr + "' not found on site '" + bc.getName() + "'");
+		    }
 		}
 		
 		addEnvironment(stack, app.getEnv());

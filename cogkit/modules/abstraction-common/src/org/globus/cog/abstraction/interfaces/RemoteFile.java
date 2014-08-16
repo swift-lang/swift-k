@@ -234,7 +234,11 @@ public class RemoteFile {
         return protocol;
     }
     
-    protected void setProtocol(String protocol) {
+    public String getProtocol(String _default) {
+        return protocol != null ? protocol : _default;
+    }
+    
+    public void setProtocol(String protocol) {
         this.protocol = protocol;
     }
 
@@ -242,7 +246,11 @@ public class RemoteFile {
         return host;
     }
     
-    protected void setHost(String host) {
+    public String getHost(String _default) {
+        return host != null ? host : _default;
+    }
+    
+    public void setHost(String host) {
         this.host = host;
     }
     
@@ -319,7 +327,21 @@ public class RemoteFile {
 
     @Override
     public int hashCode() {
-        return protocol.hashCode() + host.hashCode() + port + (dir == null ? 0 : dir.hashCode()) + name.hashCode();
+        int hc = 0;
+        if (protocol != null) {
+            hc += protocol.hashCode();
+        }
+        if (host != null) {
+            hc += host.hashCode();
+        }
+        if (dir != null) {
+            hc += dir.hashCode();
+        }
+        if (name != null) {
+            hc += name.hashCode();
+        }
+        hc += port;
+        return hc;
     }
     
     public static void main(String[] args) {

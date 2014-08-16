@@ -580,18 +580,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
     private static SwiftConfig loadConfig(ArgumentParser ap, Map<String, Object> cmdLine) throws IOException {
         SwiftConfig conf;
         conf = SwiftConfig.load(ap.getStringValue(ARG_RUN_CONFIG), 
-            splitConfigSearchPath(ap.getStringValue(ARG_CONFIG_SEARCH_PATH)), cmdLine);
+            SwiftConfig.splitConfigSearchPath(ap.getStringValue(ARG_CONFIG_SEARCH_PATH)), cmdLine);
         SwiftConfig.setDefault(conf);
         return conf;
-    }
-
-    private static List<String> splitConfigSearchPath(String path) {
-        if (path == null) {
-            return null;
-        }
-        else {
-            return Arrays.asList(path.split(File.pathSeparator));
-        }
     }
 
     private static Map<String, Object> getCommandLineProperties(ArgumentParser ap) {

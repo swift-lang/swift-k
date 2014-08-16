@@ -23,7 +23,11 @@ package org.griphyn.vdl.karajan.lib.swiftscript;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.FileNameExpander;
 import org.griphyn.vdl.karajan.FileNameExpander.MultiMode;
 import org.griphyn.vdl.karajan.FileNameExpander.Transform;
@@ -35,6 +39,17 @@ import org.griphyn.vdl.type.Field;
 
 public class FileNames extends SwiftFunction {
 	private ArgRef<AbstractDataNode> var;
+	private boolean inAppInvocation;
+	
+	@Override
+    public Node compile(WrapperNode w, Scope scope) throws CompilationException {        
+        Node self = super.compile(w, scope);
+        // either execute(arguments(this)) or execute(named(stdxxx, this)) 
+        if (getParent().getParent().getType().equals("swift:execute")) {
+            inAppInvocation = true;
+        }
+        return self;
+    }
 
     @Override
     protected Signature getSignature() {
@@ -44,9 +59,17 @@ public class FileNames extends SwiftFunction {
     @Override
 	public Object function(Stack stack) {
         AbstractDataNode var = this.var.getValue(stack);
-		
-		DSHandle result = NodeFactory.newRoot(Field.GENERIC_STRING_ARRAY, 
-		    new FileNameExpander(var, MultiMode.SEPARATE, Transform.RELATIVE).toStringList());
+	
+        DSHandle result;
+        
+        if (inAppInvocation) {
+            result = NodeFactory.newRoot(Field.GENERIC_ANY, 
+                new FileNameExpander(var, MultiMode.SEPARATE, Transform.RELATIVE));
+        }
+        else {
+            result = NodeFactory.newRoot(Field.GENERIC_STRING, 
+                new FileNameExpander(var, MultiMode.COMBINED, Transform.NONE).toCombinedString());
+        }
 		// DSHandle returnArray = NodeFactory.newRoot(Field.GENERIC_STRING_ARRAY, Arrays.asList(f));
 		// returnArray.closeShallow();
 		

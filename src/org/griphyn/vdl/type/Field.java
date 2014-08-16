@@ -80,6 +80,7 @@ public interface Field {
 	
 	public static final Field GENERIC_STRING = new FieldImpl("?", Types.STRING);
 	public static final Field GENERIC_ANY = new FieldImpl("?", Types.ANY);
+	public static final Field GENERIC_ANY_ARRAY = new FieldImpl("?", Types.ANY.arrayType());
 	public static final Field GENERIC_BOOLEAN = new FieldImpl("?", Types.BOOLEAN);
 	public static final Field GENERIC_INT = new FieldImpl("?", Types.INT);
 	public static final Field GENERIC_FLOAT = new FieldImpl("?", Types.FLOAT);

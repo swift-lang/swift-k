@@ -45,11 +45,13 @@ public class GetStagingInfo extends SwiftFunction {
 	
     private ArgRef<List<DSHandle>> stageins;
 	private ArgRef<List<DSHandle>> stageouts;
+	private ArgRef<String> defaultScheme;
     private ChannelRef<Object> cr_vargs;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("stageins", "stageouts"), returns(channel("...", 5)));
+        return new Signature(params("stageins", "stageouts", optional("defaultScheme", null)), 
+            returns(channel("...", 5)));
     }
     
     private static class Info {
@@ -63,13 +65,17 @@ public class GetStagingInfo extends SwiftFunction {
     public Object function(Stack stack) {
         Collection<DSHandle> fi = stageins.getValue(stack);
         Collection<DSHandle> fo = stageouts.getValue(stack);
+        String defaultScheme = this.defaultScheme.getValue(stack);
         Channel<Object> ret = cr_vargs.get(stack);
+        if (defaultScheme == null) {
+            defaultScheme = "file";
+        }
         
         Info info = new Info();
         
         try {
-            addPaths(info, fi, false);
-            addPaths(info, fo, true);
+            addPaths(info, fi, false, defaultScheme);
+            addPaths(info, fo, true, defaultScheme);
         }
         catch (HandleOpenException e) {
         	throw new ExecutionException(e.getMessage(), e);
@@ -81,7 +87,7 @@ public class GetStagingInfo extends SwiftFunction {
         return null;
     }
 
-    private void addPaths(Info info, Collection<DSHandle> vars, boolean out) throws HandleOpenException {
+    private void addPaths(Info info, Collection<DSHandle> vars, boolean out, String defaultScheme) throws HandleOpenException {
     	for (DSHandle var : vars) {
     	    if (!var.getType().hasMappedComponents()) {
     	        continue;
@@ -90,38 +96,41 @@ public class GetStagingInfo extends SwiftFunction {
     	    if (out && !m.isStatic() && var.getType().hasArrayComponents()) {
     	        Collection<AbsFile> patterns = m.getPattern(var.getPathFromRoot(), var.getType());
     	        for (AbsFile f : patterns) {
-    	            info.collectPatterns = addOne(f, info, info.collectPatterns);
+    	            info.collectPatterns = addOne(f, info, info.collectPatterns, defaultScheme);
     	        }
     	    }
     	    else {
-    	        addAllStatic(var, m, info, out);
+    	        addAllStatic(var, m, info, out, defaultScheme);
     	    }    
         }
     }
 
 
-    private void addAllStatic(DSHandle var, Mapper m, Info info, boolean out) throws HandleOpenException {
+    private void addAllStatic(DSHandle var, Mapper m, Info info, boolean out, String defaultScheme) throws HandleOpenException {
         for (DSHandle leaf : var.getLeaves()) {
             Type t = leaf.getType();
             if (t.equals(Types.EXTERNAL)) {
                 continue;
             }
             if (out) {
-                info.outFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, info.outFiles);
+                info.outFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, info.outFiles, defaultScheme);
             }
             else {
-                info.inFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, info.inFiles);
+                info.inFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, info.inFiles, defaultScheme);
             }
         }
     }
 
 
-    private Set<AbsFile> addOne(AbsFile f, Info info, Set<AbsFile> files) {
+    private Set<AbsFile> addOne(AbsFile f, Info info, Set<AbsFile> files, String defaultScheme) {
         String proto = f.getProtocol();
-        if ("direct".equals(proto)) {
-            // do not stage direct files
-            return files;
+        if (proto == null) {
+            f.setProtocol(defaultScheme);
         }
+        if (f.getHost() == null) {
+            f.setHost("localhost");
+        }
+        
         String dir = f.getDirectory();
         if (dir != null) {
             if (info.remoteDirNames.isEmpty()) {

@@ -9,7 +9,6 @@
  */
 package org.griphyn.vdl.karajan;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,7 +38,8 @@ public class FileNameExpander {
     
     private final DSHandle var;
     private final MultiMode mode;
-    private final Transform transform;
+    private Transform transform;
+    private String defaultScheme;
     
     public FileNameExpander(DSHandle var) {
         this(var, MultiMode.COMBINED, Transform.RELATIVE);
@@ -51,14 +51,25 @@ public class FileNameExpander {
         this.transform = transform;
     }
 
+    public Transform getTransform() {
+        return transform;
+    }
+
+    public void setTransform(Transform transform) {
+        this.transform = transform;
+    }
+
+    public String getDefaultScheme() {
+        return defaultScheme;
+    }
+
+    public void setDefaultScheme(String defaultScheme) {
+        this.defaultScheme = defaultScheme;
+    }
+
     @Override
     public String toString() {
-        if (mode == MultiMode.COMBINED) {
-            return "filename(" + var + ")";
-        }
-        else {
-            return "filenames(" + var + ")";
-        }
+        return toCombinedString();
     }
     
     public String toCombinedString() {
@@ -111,7 +122,7 @@ public class FileNameExpander {
 
     private String getPath(AbsFile f, boolean remote) {
         if (isDirect(f)) {
-            return new File(f.getPath()).getAbsolutePath();
+            return f.getAbsolutePath();
         }
         else if (remote) {
             return remoteName(f);
@@ -122,7 +133,7 @@ public class FileNameExpander {
     }
 
     private String remoteName(AbsFile f) {
-        if ("file".equals(f.getProtocol())) {
+        if ("file".equals(f.getProtocol()) || f.getProtocol() == null) {
             return PathUtils.remotePathName(f.getPath());
         }
         else {
@@ -142,7 +153,7 @@ public class FileNameExpander {
     }
     
     private boolean isLocal(AbsFile f) {
-        return "file".equals(f.getProtocol()) || "direct".equals(f.getProtocol());
+        return f.getProtocol() == null || "file".equals(f.getProtocol()) || "direct".equals(f.getProtocol());
     }
     
     private boolean isDirect(AbsFile f) {
@@ -185,7 +196,11 @@ public class FileNameExpander {
     }
 
     private AbsFile mapSingle() {
-        return (AbsFile) var.map();
+        AbsFile f = (AbsFile) var.map();
+        if (defaultScheme != null && f.getProtocol() == null) {
+            f.setProtocol(defaultScheme);
+        }
+        return f;
     }
 
     public static final String[] EMPTY_STRING_ARRAY = new String[0];
@@ -210,7 +225,11 @@ public class FileNameExpander {
         Collections.sort(src, new PathComparator());
         
         for (Path p : src) {
-            l.add((AbsFile) mapper.map(p));
+            AbsFile f = (AbsFile) mapper.map(p);
+            if (defaultScheme != null && f.getProtocol() == null) {
+                f.setProtocol(defaultScheme);
+            }
+            l.add(f);
         }
         return l;
     }

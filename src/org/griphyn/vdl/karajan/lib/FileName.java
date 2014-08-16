@@ -30,7 +30,7 @@ import org.griphyn.vdl.mapping.DSHandle;
 public class FileName extends SwiftFunction {
     private ArgRef<DSHandle> var;
     private ChannelRef<String> cr_vargs;
-    
+
     @Override
     protected Signature getSignature() {
         return new Signature(params("var"));

@@ -30,6 +30,7 @@ package org.griphyn.vdl.util;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +52,7 @@ import org.globus.cog.karajan.util.BoundContact;
 import org.globus.swift.catalog.site.Application;
 import org.globus.swift.catalog.site.SwiftContact;
 import org.globus.swift.catalog.site.SwiftContactSet;
+import org.globus.swift.catalog.types.SysInfo;
 import org.griphyn.vdl.util.ConfigTree.Node;
 
 import com.typesafe.config.Config;
@@ -206,6 +208,15 @@ public class SwiftConfig implements Cloneable {
         }
         return sb.toString();
     }
+    
+    public static List<String> splitConfigSearchPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        else {
+            return Arrays.asList(path.split(File.pathSeparator));
+        }
+    }
 
     public static SwiftConfig load(String cmdLineConfig, List<String> configSearchPath, Map<String, Object> cmdLineOptions) {
         List<String> loadedFiles = new ArrayList<String>();
@@ -217,6 +228,12 @@ public class SwiftConfig implements Cloneable {
         
         Config conf;
         
+        if (configSearchPath == null) {
+            String envSearchPath = System.getenv("SWIFT_CONF_PATH");
+            if (envSearchPath != null) {
+                configSearchPath = splitConfigSearchPath(envSearchPath);
+            }
+        }
         if (configSearchPath == null) {
             conf = loadNormal(cmdLineConfig, opt, loadedFiles, loadedFileIndices);
         }
@@ -553,7 +570,9 @@ public class SwiftConfig implements Cloneable {
             }
             
             if (n.hasKey("OS")) {
-                sc.setProperty("sysinfo", getString(n, "OS"));
+                SysInfo si = SysInfo.fromString(getString(n, "OS"));
+                sc.setProperty("sysinfo", si);
+                sc.setProperty("OS", si.getOs());
             }        
             
             for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : n.entrySet()) {
@@ -578,6 +597,9 @@ public class SwiftConfig implements Cloneable {
                 else if (ctype.equals("staging")) {
                     staging(sc, c);
                 }
+                else if (ctype.equals("OS")) {
+                    // handled above
+                }
                 else {
                     sc.setProperty(ctype, getObject(c));
                 }
@@ -593,23 +615,22 @@ public class SwiftConfig implements Cloneable {
         String staging = getString(n);
         if (BUILD_CHECK) {
             checkValue("site.*.staging", 
-                "swift", "wrapper", "local", "service-local", "shared-fs");
+                "swift", "wrapper", "local", "service-local", "shared-fs", "direct");
         }
         if (staging.equals("swift") || staging.equals("wrapper")) {
             sc.setProperty("staging", staging);
         }
         else if (staging.equals("local")) {
             sc.setProperty("staging", "provider");
-            if (isCoaster(sc)) {
-                sc.setProperty("stagingMethod", "proxy");
-            }
-            else {
-                sc.setProperty("stagingMethod", "file");
-            }
+            sc.setProperty("stagingMethod", "file");
+        }
+        else if (staging.equals("direct")) {
+            sc.setProperty("staging", "provider");
+            sc.setProperty("stagingMethod", "direct");
         }
         else if (staging.equals("service-local")) {
             sc.setProperty("staging", "provider");
-            sc.setProperty("stagingMethod", "file");
+            sc.setProperty("stagingMethod", "cs");
         }
         else if (staging.equals("shared-fs")) {
             sc.setProperty("staging", "provider");

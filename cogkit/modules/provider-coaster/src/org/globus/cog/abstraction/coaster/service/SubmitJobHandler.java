@@ -59,7 +59,6 @@ import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.handlers.RequestHandler;
-import org.globus.cog.karajan.util.Pair;
 
 public class SubmitJobHandler extends RequestHandler {
     
@@ -269,13 +268,13 @@ public class SubmitJobHandler extends RequestHandler {
         else {
             spath = path;
         }
-        if (spath.startsWith("proxy://localhost")) {
+        if (spath.startsWith("file://localhost")) {
             return prefix + "proxy://" + 
                    getChannel().getChannelContext().getChannelID() + 
-                   spath.substring("proxy://localhost".length());
+                   spath.substring("file://localhost".length());
         }
-        else if (spath.startsWith("file://localhost")) {
-            return path;
+        else if (spath.startsWith("cs://localhost")) {
+            return "file://localhost" + spath.substring("cs://localhost".length());
         }
         else {
             return spath;

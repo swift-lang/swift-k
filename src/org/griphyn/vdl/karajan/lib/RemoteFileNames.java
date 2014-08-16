@@ -20,9 +20,7 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import k.rt.Stack;
 
@@ -31,7 +29,7 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbsFile;
 
 public class RemoteFileNames extends SwiftFunction {
-    private ArgRef<Collection<AbsFile>> files;
+    private ArgRef<Collection<Object>> files;
         
     @Override
     protected Signature getSignature() {
@@ -40,16 +38,28 @@ public class RemoteFileNames extends SwiftFunction {
 
     @Override
     public Object function(Stack stack) {
-        Collection<AbsFile> files = this.files.getValue(stack);
-        List<String> ret = new ArrayList<String>();
-        for (AbsFile f : files) {
-            if ("file".equals(f.getProtocol())) {
-                ret.add(PathUtils.remotePathName(f.getPath()));
+        Collection<Object> files = this.files.getValue(stack);
+        StringBuilder sb = new StringBuilder();
+        for (Object o : files) {
+            if (sb.length() > 0) {
+                sb.append('|');
+            }
+            if (o instanceof String) {
+                sb.append(PathUtils.remotePathName((String) o));
             }
             else {
-                ret.add(PathUtils.remotePathName(f.getHost() + "/" + f.getPath()));
+                AbsFile f = (AbsFile) o;
+                if ("file".equals(f.getProtocol())) {
+                    sb.append(PathUtils.remotePathName(f.getPath()));
+                }
+                else if ("direct".equals(f.getProtocol())) {
+                    sb.append(f.getAbsolutePath());
+                }
+                else {
+                    sb.append(PathUtils.remotePathName(f.getHost() + "/" + f.getPath()));
+                }
             }
         }
-        return ret;
+        return sb.toString();
     }
 }

@@ -312,28 +312,27 @@ namespace(swiftStaging) {
 			wrapperMode := configProperty("wrapperParameterMode", host=rhost)
 
 			wrapfile := "{DEBUG_DIR}/param-{jobid}"
-
-			stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
-			stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr)),
 						
-			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout)
+			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout),
+			(stdins, stdouts, stderrs) := getStandardFilesInfo(stdin, stdout, stderr)
 
 			os := siteProfile(rhost, "OS")
+			eargs := expandArguments(arguments)
 			
 			if (wrapperMode == "files") {
 				sys:file:write(wrapfile) {
 					"-scratch ", try(siteProfile(rhost, "scratch"), ""),
 					"\n-e ", executable(tr, rhost),
-					"\n-out ", stdout,
-					"\n-err ", stderr,
-					"\n-i ", if (stdin != null, getFieldValue(stdin)),
-					"\n-d ", str:join(fileDirs, "|"),
-					"\n-if ", str:join(remoteFileNames(inFiles), "|"),
-					"\n-of ", str:join(remoteFileNames(outFiles), "|"),
-					"\n-cf ", str:join(remoteFileNames(outCollect), "|"),
+					"\n-out ", stdouts,
+					"\n-err ", stderrs,
+					"\n-i ", if (stdin != null, stdins),
+					"\n-d ", remoteFileNames(fileDirs),
+					"\n-if ", remoteFileNames(inFiles),
+					"\n-of ", remoteFileNames(outFiles),
+					"\n-cf ", remoteFileNames(outCollect),
 					"\n-cdmfile ", cdm:file(),
 					"\n-status ", statusMode,
-					for(a, arguments) {
+					for(a, eargs) {
 						"\n-a ", a
 					}
 				}
@@ -382,16 +381,16 @@ namespace(swiftStaging) {
 							"-jobdir", jobdir,
 							"-scratch", try(siteProfile(rhost, "scratch"), "")
 							"-e", executable(tr, rhost),
-							"-out", stdout,
-							"-err", stderr,
-							"-i", if (stdin != null, getFieldValue(stdin)),
-							"-d", str:join(fileDirs, "|"),
-							"-if", str:join(remoteFileNames(inFiles), "|"),
-							"-of", str:join(remoteFileNames(outFiles), "|"),
-							"-cf", str:join(remoteFileNames(outCollect), "|"),
+							"-out", stdouts,
+							"-err", stderrs,
+							"-i", if (stdin != null, stdins),
+							"-d", remoteFileNames(fileDirs),
+							"-if", remoteFileNames(inFiles),
+							"-of", remoteFileNames(outFiles),
+							"-cf", remoteFileNames(outCollect),
 							"-cdmfile", cdm:file(),
 							"-status", statusMode,
-							"-a", if (arguments != null, each(arguments))
+							"-a", if (arguments != null, each(eargs))
 						)
 						directory = RUN_DIR
 						redirect = false
@@ -460,7 +459,7 @@ namespace(swiftStaging) {
 						cleanupFiles(cacheFilesToRemove, rhost)
 					}
 
-					outs := transferStandardFiles(rhost, tmpdir, jobid, stdout, stderr)
+					outs := transferStandardFiles(rhost, tmpdir, jobid, stdouts, stderrs)
 
 					discard(maybe(transferWrapperLog(rhost, jobid, jobdir)))
 

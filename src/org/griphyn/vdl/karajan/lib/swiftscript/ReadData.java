@@ -75,7 +75,7 @@ public class ReadData extends SwiftFunction {
 			PhysicalFormat pf = src.map();
 			if (pf instanceof AbsFile) {
 				AbsFile af = (AbsFile) pf;
-				if (!af.getProtocol().equalsIgnoreCase("file")) {
+				if (!af.getProtocol("file").equals("file")) {
 					throw new ExecutionException("readData only supports local files");
 				}
 				readData(dest, af.getPath());

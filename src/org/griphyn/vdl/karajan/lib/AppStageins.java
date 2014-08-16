@@ -40,7 +40,6 @@ import org.griphyn.vdl.mapping.AbsFile;
 public class AppStageins extends InternalFunction {
 	private ArgRef<String> jobid;
 	private ArgRef<List<AbsFile>> files;
-	private ArgRef<String> stagingMethod;
 	
 	private ChannelRef<List<String>> cr_stagein;
 	
@@ -51,7 +50,7 @@ public class AppStageins extends InternalFunction {
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("jobid", "files", "stagingMethod"), returns(channel("stagein")));
+        return new Signature(params("jobid", "files"), returns(channel("stagein")));
     }
     
     @Override
@@ -64,7 +63,6 @@ public class AppStageins extends InternalFunction {
     protected void runBody(LWThread thr) {
     	Stack stack = thr.getStack();
     	List<AbsFile> files = this.files.getValue(stack);
-    	String stagingMethod = this.stagingMethod.getValue(stack);
         String cwd = this.cwd.getValue(stack);
         for (AbsFile file : files) {
             Policy policy = Director.lookup(file.toString());
@@ -74,8 +72,8 @@ public class AppStageins extends InternalFunction {
             }
                                         
             String protocol = file.getProtocol();
-            if (protocol.equals("file")) {
-                protocol = stagingMethod;
+            if ("direct".equals(protocol)) {
+                continue;
             }
             String path = file.getDirectory() == null ? 
                     file.getName() : file.getDirectory() + "/" + file.getName();

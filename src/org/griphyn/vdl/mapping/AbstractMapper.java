@@ -133,7 +133,7 @@ public abstract class AbstractMapper implements Mapper {
             FileGarbageCollector.getDefault().increaseUsageCount(pf);
         }
     }
-    
+        
     public abstract String getName();
     
     @Override

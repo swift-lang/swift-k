@@ -26,25 +26,23 @@ import k.rt.Stack;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.swift.catalog.site.SwiftContact;
 import org.griphyn.vdl.karajan.FileNameExpander;
 
 public class ExpandArguments extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(ExpandArguments.class);
 	
 	private ArgRef<Collection<Object>> args;
-	private ArgRef<SwiftContact> host;
+	private ArgRef<String> stagingMethod;
 
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("args", "host"));
+        return new Signature(params("args", "stagingMethod"));
     }
 
 	public Object function(Stack stack) {
 	    Collection<Object> args = this.args.getValue(stack);
-	    SwiftContact host = this.host.getValue(stack);
+	    String stagingMethod = this.stagingMethod.getValue(stack);
 	    
-	    String stagingMethod = (String) host.getProperty("stagingMethod");
 	    boolean direct = "direct".equals(stagingMethod);
 	    
 	    List<Object> ret = new ArrayList<Object>();

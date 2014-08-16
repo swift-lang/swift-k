@@ -111,7 +111,7 @@ public class SiteProperty extends SwiftFunction {
 	
 	private Object getSingle(SwiftContact bc, String name, Object defval) 
 	    throws ExecutionException {
-            String value = getProperty(bc, name);
+            Object value = getProperty(bc, name);
             if (value == null) {
             	Os os = getOS(bc);
             	if (DEFAULTS_NAMES.contains(name)) {
@@ -132,13 +132,13 @@ public class SiteProperty extends SwiftFunction {
             }
 	}
 
-    private String getProperty(SwiftContact bc, String name) {
+    private Object getProperty(SwiftContact bc, String name) {
         Object o = bc.getProperty(name);
         if (o == null) {
             return null;
         }
         else {
-            return o.toString();
+            return o;
         }
     }
     
@@ -148,7 +148,7 @@ public class SiteProperty extends SwiftFunction {
     		return DEFAULT_OS;
     	}
     	else {
-    		return SysInfo.fromString(o.toString()).getOs();
+    		return (Os) o;
     	}
     }    
 }
