@@ -126,7 +126,7 @@ public class Settings {
     // this would cause bad things for jobsPerNode > 1024
     private int maxNodes = Integer.MAX_VALUE / 1024;
 
-    private TimeInterval maxtime = TimeInterval.FOREVER;
+    private TimeInterval maxtime = TimeInterval.DAY.multiply(360);
 
     private final Set<URI> callbackURIs;
 

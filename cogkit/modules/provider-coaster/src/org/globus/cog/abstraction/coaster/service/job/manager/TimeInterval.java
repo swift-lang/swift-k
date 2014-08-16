@@ -35,6 +35,10 @@ import java.text.NumberFormat;
 public final class TimeInterval implements Comparable<TimeInterval> {
     private long ms;
     public static final TimeInterval FOREVER = new TimeInterval(Long.MAX_VALUE/2);
+    public static final TimeInterval SECOND = new TimeInterval(1000);
+    public static final TimeInterval MINUTE = SECOND.multiply(60);
+    public static final TimeInterval HOUR = MINUTE.multiply(60);
+    public static final TimeInterval DAY = HOUR.multiply(24);
 
     private TimeInterval(long ms) {
         this.ms = ms;
