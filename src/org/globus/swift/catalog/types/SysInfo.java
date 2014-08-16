@@ -105,7 +105,7 @@ public class SysInfo{
                 }
             } else {
                 throw new IllegalStateException(
-                    "Error : Please check your system info string");
+                    "Invalid SysInfo string: " + system);
             }
         } else {
             this.arch = Arch.INTEL32;
