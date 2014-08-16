@@ -237,13 +237,7 @@ public class Sprintf extends SwiftFunction {
     }
     
     private static void append_s(DSHandle arg, StringBuilder output) {
-        if (arg.getType() == Types.STRING) {
-            output.append(arg.getValue());
-        }
-        else {
-            throw new IllegalArgumentException("tracef(): %s requires a string! " 
-            		+ dshandleDescription(arg));
-        }
+        output.append(String.valueOf(arg.getValue()));
     }
     
     /**      
