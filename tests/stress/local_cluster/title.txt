@@ -1,0 +1,4 @@
+Simple MapReduce style job for Local cluster testing
+| The first map stage generates a large number of random numbers
+| The reduce stage aggregates the results and outputs the count
+| and sum
