@@ -564,19 +564,21 @@ ifStat returns [StringTemplate code=template("if")]
   StringTemplate body=template("statementList");
   StringTemplate els=template("statementList");
 }
-    :  "if" LPAREN cond=expression RPAREN
-        {
-        code.setAttribute("cond", cond);
+    :  "if" LPAREN cond=expression RPAREN {
+        	code.setAttribute("cond", cond);
         }
         compoundStat[body] {code.setAttribute("body", body);}
         (
           options {
               warnWhenFollowAmbig = false;
           }
-          : "else"
-          compoundStat[els] {code.setAttribute("els", els);}
+          : "else" els = bodyOrIf {code.setAttribute("els", els);}
         )?
     ;
+    
+bodyOrIf returns [StringTemplate stat] {stat = template("statementList");}:
+	stat = ifStat
+	| compoundStat[stat];
 
 foreachStat returns [StringTemplate code=template("foreach")]
 {
