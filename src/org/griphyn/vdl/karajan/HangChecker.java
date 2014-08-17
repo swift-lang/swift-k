@@ -68,6 +68,15 @@ public class HangChecker extends TimerTask {
         timer = new Timer("Hang checker");
         timer.scheduleAtFixedRate(this, CHECK_INTERVAL, CHECK_INTERVAL);
     }
+    
+    public void stop() {
+        try {
+            timer.cancel();
+        }
+        catch (Exception e) {
+            logger.info("Failed to stop hang checker", e);
+        }
+    }
 
     public void run() {
         try {

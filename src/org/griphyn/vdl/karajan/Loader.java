@@ -124,6 +124,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         boolean runerror = false;
         
         String runID = makeRunId(ap);
+        HangChecker hangChecker = null;
         
         try {
             String project;
@@ -232,7 +233,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
           
             logger.info("RUN_START");
-            new HangChecker(context).start();
+            hangChecker = new HangChecker(context);
+            hangChecker.start();
             
             long start = System.currentTimeMillis();
             ec.start(context);
@@ -252,6 +254,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
         else {
             logger.info("Swift finished with no errors");
+        }
+        if (hangChecker != null) {
+            hangChecker.stop();
         }
         if (ma != null) {
             ma.close();
