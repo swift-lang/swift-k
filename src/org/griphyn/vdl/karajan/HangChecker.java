@@ -77,6 +77,21 @@ public class HangChecker extends TimerTask {
             logger.info("Failed to stop hang checker", e);
         }
     }
+    
+    public void startShutdownCheck() {
+        // if still here after 10 seconds, dump the threads
+        Timer t = new Timer("Shutdown checker");
+        t.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                PrintStream ps = new PrintStream(os);
+                ps.println("Swift did not shut down 10 seconds after the run completed\n");
+                dumpJVMThreads(ps);
+                logger.warn(os.toString());
+            }
+        }, 10000);
+    }
 
     public void run() {
         try {

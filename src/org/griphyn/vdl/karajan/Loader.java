@@ -257,6 +257,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
         if (hangChecker != null) {
             hangChecker.stop();
+            hangChecker.startShutdownCheck();
         }
         if (ma != null) {
             ma.close();
