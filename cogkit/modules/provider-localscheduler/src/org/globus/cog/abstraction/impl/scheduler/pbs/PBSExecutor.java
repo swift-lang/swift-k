@@ -163,34 +163,38 @@ public class PBSExecutor extends AbstractExecutor {
 	   http://www.clusterresources.com/torquedocs/2.1jobsubmission.shtml
 	   @return true if this is a multi-core job
 	 */
-	protected boolean writeCountAndPPN(JobSpecification spec,
-	                                   Writer wr)
-	throws IOException {
-	    boolean result = false;
+	protected boolean writeCountAndPPN(JobSpecification spec, Writer wr)
+	        throws IOException {
+	    boolean multiple = false;
 
 	    Object o;
 
 	    // Number of program invocations
 	    o = getSpec().getAttribute("count");
-	    if (o != null)
+	    if (o != null) {
 	        count = parseAndValidateInt(o, "count");
-	    if (count != 1)
-	        result = true;
+	    }
+	    if (count != 1) {
+	        multiple = true;
+	    }
 
 	    o = spec.getAttribute("ppn");
-	    if (o != null)
+	    if (o != null) {
 	        ppn = parseAndValidateInt(o, "ppn");
+	    }
 
-            o = spec.getAttribute("depth");
-            if (o != null)
-                depth = parseAndValidateInt(o, "depth");
+        o = spec.getAttribute("depth");
+        if (o != null) {
+            depth = parseAndValidateInt(o, "depth");
+        }
 
 	    String pbsProperties =
 	        (String) getSpec().getAttribute("pbs.properties");
 
 	    boolean mpp = false;
-        if (spec.getAttribute("pbs.mpp") != null)
+        if (getBoolean(spec.getAttribute("pbs.mpp"))) {
             mpp = true;
+        }
 
 	    StringBuilder sb = new StringBuilder(512);
 	    sb.append("#PBS -l ");
@@ -219,7 +223,7 @@ public class PBSExecutor extends AbstractExecutor {
 
 	    wr.write(sb.toString());
 
-	    return result;
+	    return multiple;
 	}
 
 	/*
@@ -235,7 +239,20 @@ public class PBSExecutor extends AbstractExecutor {
 	}
 	*/
 
-	@Override
+	private boolean getBoolean(Object v) {
+        if (v == null) {
+            return false;
+        }
+        if (v instanceof Boolean) {
+            return ((Boolean) v).booleanValue();
+        }
+        if (v instanceof String) {
+            return Boolean.valueOf((String) v);
+        }
+        throw new IllegalArgumentException("Invalid boolean value: " + v);
+    }
+
+    @Override
 	protected void writeScript(Writer wr, String exitcodefile, String stdout,
 	                           String stderr) 
 	throws IOException {
@@ -281,20 +298,26 @@ public class PBSExecutor extends AbstractExecutor {
 
 		// aprun option specifically for Cray Beagle, Franklin
 		boolean aprun = false;
-		if (spec.getAttribute("pbs.aprun") != null)
+		if (spec.getAttribute("pbs.aprun") != null) {
 		    aprun = true;
+		}
 
 		String type = (String) spec.getAttribute("jobType");
-		if (logger.isDebugEnabled())
+		if (logger.isDebugEnabled()) {
 			logger.debug("Job type: " + type);
-		if ("multiple".equals(type)) 
+		}
+		if ("multiple".equals(type)) { 
 		    multiple = true;
-		else if("single".equals(type))
+		}
+		else if ("single".equals(type)) {
 		    multiple = false;
-		if (aprun) 
+		}
+		if (aprun) { 
 			multiple = false;
-		if (multiple)
+		}
+		if (multiple) {
             writeMultiJobPreamble(wr, exitcodefile);
+		}
 
 		if (type != null) {
 			String wrapper =
