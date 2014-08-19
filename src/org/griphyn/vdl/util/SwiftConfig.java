@@ -775,7 +775,7 @@ public class SwiftConfig implements Cloneable {
             }
             else if (k.equals("jobOptions")) {
                 for (String key : c.getLeafPaths()) {
-                    s.setAttribute(key, c.get(key));
+                    s.setAttribute(key, getObject(c, key));
                 }
             }
             else {
@@ -796,8 +796,8 @@ public class SwiftConfig implements Cloneable {
         return (String) c.get(key).value;
     }
     
-    private Object getObject(ConfigTree.Node<Object> c, String key) {
-        return c.get(key);
+    private Object getObject(ConfigTree.Node<ValueLocationPair> c, String key) {
+        return c.get(key).value;
     }
     
     private void checkType(String name, ConfigValue value, ConfigValueType type) {
