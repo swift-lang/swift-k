@@ -39,7 +39,7 @@ TOTAL_TIME=0
 INDIVIDUAL_TEST_TIME=0
 COLORIZE=0
 # The directory in which to start:
-TOPDIR=$( cd ../../../.. && echo $PWD )
+TOPDIR=$( cd ../.. && echo $PWD )
 CRTDIR=$PWD
 
 # Disable usage stats in test suite
@@ -168,7 +168,7 @@ SHUTDOWN=0
 echo "RUNNING_IN:  $RUNDIR"
 echo "HTML_OUTPUT: $HTML"
 
-TESTDIR=$TOPDIR/cog/modules/swift/tests
+TESTDIR=$TOPDIR/swift-k/tests
 
 # Gensites will now check the variables as needed 
 checkvars() {
@@ -558,7 +558,8 @@ process_exec() {
   PROG=$( basename $1 )
   if [[ $PROG == "swift" ]]; then
     # Get SwiftScript name
-    PROG=$( echo $@ | sed 's/.*\( [^ ]*.swift\)/\1/' )
+    PROG=$( echo $@ | sed 's/.*\( [^ ]*.swift\)/\1/' ) 
+    # '
     PROG=$( basename $PROG )
   fi
   
@@ -833,12 +834,6 @@ swift_test_case() {
 
   CDM=
   [ -r fs.data ] && CDM="-CDMFile fs.data"
-  
-  if [ "$HASCONF" == "1" ]; then
-    CONF="-config ./swift.conf"
-  else
-  	CONF=
-  fi
 
   (( TESTCOUNT++ ))
 
@@ -850,7 +845,8 @@ swift_test_case() {
   TEST_SHOULD_FAIL=$(( ! $?  ))
 
   OUTPUT=$NAME.stdout
-  monitored_exec $TIMEOUT swift $CONF $CDM $SWIFTSCRIPT $ARGS
+  export WORK=`pwd`/work
+  monitored_exec $TIMEOUT swift $CDM $SWIFTSCRIPT $ARGS
 
   TEST_SHOULD_FAIL=0
   if [ -x "$GROUP/$CHECKSCRIPT" ]; then
@@ -1176,22 +1172,22 @@ start_row
 
 OUTPUT=compile.stdout
 # Exit early if the Swift directory is not there
-if [[ ! -d $TOPDIR/cog/modules/swift ]]
+if [[ ! -d $TOPDIR/swift-k ]]
 then
   echo "Could not find swift source directory"
   echo "TOPDIR: $TOPDIR"
-  echo "Looked for $TOPDIR/cog/modules/swift"
+  echo "Looked for $TOPDIR/swift-k"
   crash
 fi
 
-test_exec cd $TOPDIR/cog/modules/swift
+test_exec cd $TOPDIR/swift-k
 if (( $CLEAN )); then
   test_exec rm -rf dist
 fi
 if (( $RUN_ANT )); then
   test_exec ant -quiet dist
 fi
-SWIFT_HOME=$TOPDIR/cog/modules/swift/dist/swift-svn
+SWIFT_HOME=$TOPDIR/swift-k/dist/swift-svn
 OUTPUT=compile.stdout
 OUTPUT=build.stdout
 if [ $BUILD_PACKAGE = "1" ]; then

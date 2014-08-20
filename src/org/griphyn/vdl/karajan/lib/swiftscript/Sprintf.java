@@ -141,6 +141,9 @@ public class Sprintf extends SwiftFunction {
         else if (c == 'i') {
             append_i(vars.get(arg), output);
         }
+        else if (c == 'd') {
+            append_i(vars.get(arg), output);
+        }
         else if (c == 'p') {
             output.append(vars.get(arg).toString());
         }

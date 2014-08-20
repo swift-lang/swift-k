@@ -21,6 +21,8 @@ namespace(swiftscript) {
 	export(assert, def("org.griphyn.vdl.karajan.lib.swiftscript.Assert"))
 	export(trace, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Trace"))
 	export(tracef, def("org.griphyn.vdl.karajan.lib.swiftscript.Tracef"))
+	export(print, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Print"))
+	export(printf, def("org.griphyn.vdl.karajan.lib.swiftscript.Printf"))
 	export(fprintf, def("org.griphyn.vdl.karajan.lib.swiftscript.Fprintf"))
 
 	/* included for backwards compatibility */
