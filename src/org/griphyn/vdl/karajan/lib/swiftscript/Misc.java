@@ -55,6 +55,40 @@ public class Misc {
 
 	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
 	
+    public static class Print extends InternalFunction {
+       private ChannelRef<AbstractDataNode> c_vargs;
+       
+       @Override
+       protected Signature getSignature() {
+           return new Signature(params("..."));
+       }
+       
+       @Override
+       protected void runBody(LWThread thr) {
+           Channel<AbstractDataNode> vargs = c_vargs.get(thr.getStack());
+           StringBuilder buf = new StringBuilder();
+           try {
+               Printf.waitForAll(this, vargs);
+               buf.append("SwiftScript print: ");
+               boolean first = true;
+               for (AbstractDataNode n : vargs) {
+                   if (!first) {
+                       buf.append(", ");
+                   }
+                   else {
+                       first = false;
+                   }
+                   prettyPrint(buf, n);
+               }
+           }
+           catch (DependentException e) {
+               buf.append("SwiftScript print: <exception>");
+           }
+           traceLogger.warn(buf);
+       }
+   }
+   
+
 	public static class Trace extends InternalFunction {
 		private ChannelRef<AbstractDataNode> c_vargs;
 

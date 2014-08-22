@@ -160,6 +160,7 @@ public class ProcedureSignature {
 		add(proceduresMap, "readStructured", returns(ANY), args(ANY));
 		add(proceduresMap, "trace", returns(), args(VARGS));
 		add(proceduresMap, "tracef", returns(), args(VARGS));
+		add(proceduresMap, "printf", returns(), args(VARGS));
 		add(proceduresMap, "fprintf", returns(), args(VARGS));
 		add(proceduresMap, "assert", returns(), args(VARGS));
 		add(proceduresMap, "writeData", returns(ANY), args(ANY));
