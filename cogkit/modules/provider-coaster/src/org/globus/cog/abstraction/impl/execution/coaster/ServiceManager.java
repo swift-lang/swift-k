@@ -74,7 +74,6 @@ import org.globus.cog.coaster.channels.IrrecoverableException;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
 import org.globus.common.CoGProperties;
-import org.globus.common.CoGProperties;
 import org.ietf.jgss.GSSCredential;
 
 public class ServiceManager implements StatusListener {
@@ -165,11 +164,11 @@ public class ServiceManager implements StatusListener {
     public String reserveService(Task task, String bootHandlerProvider)
             throws TaskSubmissionException {
         String userHomeOverride = null;
+        Service service = getService(task);
         if (task.getType() == Task.JOB_SUBMISSION) {
-            JobSpecification spec = (JobSpecification) task.getSpecification();
-            userHomeOverride = (String) spec.getAttribute(ATTR_USER_HOME_OVERRIDE);
+            userHomeOverride = (String) service.getAttribute(ATTR_USER_HOME_OVERRIDE);
         }
-        return reserveService(getService(task), bootHandlerProvider, userHomeOverride);
+        return reserveService(service, bootHandlerProvider, userHomeOverride);
     }
     
     private Service getService(Task task) {
@@ -210,14 +209,21 @@ public class ServiceManager implements StatusListener {
             
             boolean ssh = "ssh".equalsIgnoreCase(bootHandlerProvider) || 
                 "ssh-cl".equalsIgnoreCase(bootHandlerProvider);
+            boolean local = "local".equals(bootHandlerProvider);
             
             if (ssh) {
                 setupGSIProxy();
             }
+            if (!LOCALJVM_WHEN_LOCAL && local) {
+                // this is here for testing purposes
+                setupGSIProxy();
+                JobSpecification spec = (JobSpecification) t.getSpecification();
+                spec.addEnvironmentVariable("X509_USER_PROXY", System.getProperty("X509_USER_PROXY"));
+                spec.addEnvironmentVariable("X509_CERT_DIR", System.getProperty("X509_CERT_DIR"));
+            }
             
             setSecurityContext(t, sc, bootHandlerProvider);
             
-            boolean local = "local".equals(bootHandlerProvider);
             if (LOCALJVM || (LOCALJVM_WHEN_LOCAL && local)) {
                 final String ls = getLocalServiceURL();
                 final String id = "l" + getRandomID();
