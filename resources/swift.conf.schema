@@ -63,7 +63,7 @@ site."*" {
 
 	staging {
 		_type: "?Choice[swift, wrapper, local, service-local, shared-fs, direct]"
-		_default: "swift"
+		# default to global staging setting
 	}
 
 	filesystem {
