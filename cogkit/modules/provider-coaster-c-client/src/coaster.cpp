@@ -234,6 +234,19 @@ coaster_settings_set(coaster_settings *settings,
 }
 
 coaster_rc
+coaster_settings_remove(coaster_settings *settings,
+          const char *key, size_t key_len) COASTER_THROWS_NOTHING {
+  try {
+    settings->remove(key, key_len);
+    return COASTER_SUCCESS;
+  } catch (const CoasterError& err) {
+    return coaster_error_rc(err);
+  } catch (const std::exception& ex) {
+    return exception_rc(ex);
+  }
+}
+
+coaster_rc
 coaster_settings_get(coaster_settings *settings,
             const char *key, size_t key_len,
             const char **value, size_t *value_len) COASTER_THROWS_NOTHING {
