@@ -1,22 +1,3 @@
-/*
- * Swift Parallel Scripting Language (http://swift-lang.org)
- * Code from Java CoG Kit Project (see notice below) with modifications.
- *
- * Copyright 2005-2014 University of Chicago
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 //----------------------------------------------------------------------
 //This code is developed as part of the Java CoG Kit project
 //The terms of the license can be found at http://www.cogkit.org/license
@@ -50,14 +31,16 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class CobaltExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(CobaltExecutor.class);
 
-	private final String cqsub;
+	//private final String cqsub;
+	private final String qsub;
 	private final Pattern exitcodeRegexp;
 
 	private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
 	public CobaltExecutor(Task task, ProcessListener listener) {
 		super(task, listener);
-		this.cqsub = Properties.getProperties().getSubmitCommand();
+		//this.cqsub = Properties.getProperties().getSubmitCommand();
+		this.qsub = Properties.getProperties().getSubmitCommand();
 		this.exitcodeRegexp = Pattern.compile(Properties.getProperties()
 				.getExitcodeRegexp());
 	}
@@ -142,7 +125,8 @@ public class CobaltExecutor extends AbstractExecutor {
 	protected String[] buildCommandLine(File jobdir, File script,
 			String exitcode, String stdout, String stderr) throws IOException {
 		List<String> result = new ArrayList<String>();
-		result.add(cqsub);
+		//result.add(cqsub);
+		result.add(qsub);
 		Collection<String> names = getSpec().getEnvironmentVariableNames();
 		if (names != null && names.size() > 0) {
 			result.add("-e");
@@ -159,27 +143,35 @@ public class CobaltExecutor extends AbstractExecutor {
 			}
 			result.add(sb.toString());
 		}
-		addAttr("mode", "-m", result);
+		//addAttr("mode", "-m", result);
+		addAttr("mode", "--mode", result);
 		// We're gonna treat this as the node count
-		addAttr("count", "-c", result, true);
+		//addAttr("count", "-c", result, true);
+		addAttr("count", "--proccount", result, true);
 		addAttr("hostCount", "-n", result, "1", true);
-		addAttr("project", "-p", result);
+		//addAttr("project", "-p", result);
+		addAttr("project", "-A", result);
 		addAttr("queue", "-q", result);
-		addAttr("kernelprofile", "-k", result);
+		//addAttr("kernelprofile", "-k", result);
+		addAttr("kernelprofile", "--kernel", result);
 		// cqsub seems to require both the node count and time args
+		// qsub seems to require both the node count and time args
 		addAttr("maxwalltime", "-t", result, "10");
 		if (getSpec().getDirectory() != null) {
-			result.add("-C");
+			//result.add("-C");
+			result.add("--cwd");
 			result.add(getSpec().getDirectory());
 		}
 		result.add("-o");
 		result.add(stdout);
-		result.add("-E");
+		//result.add("-E");
+		result.add("-e");
 		result.add(stderr);
 		result.add(getSpec().getExecutable());
 		result.addAll(getSpec().getArgumentsAsList());
 		if (logger.isDebugEnabled()) {
-			logger.debug("cqsub command: " + result);
+			//logger.debug("cqsub command: " + result);
+			logger.debug("qsub command: " + result);
 		}
 		return result.toArray(EMPTY_STRING_ARRAY);
 	}
