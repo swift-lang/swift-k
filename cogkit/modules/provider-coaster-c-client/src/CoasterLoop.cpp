@@ -99,7 +99,9 @@ void CoasterLoop::stop() {
 		throw CoasterError(string("Could not join thread: ") + strerror(errno));
 	}
 
-	// TODO: close pipe?
+	// Need to close pipe
+        close(wakePipe[0]);
+        close(wakePipe[1]);
 	LogInfo << "Coaster loop stopped" << endl;
 }
 
