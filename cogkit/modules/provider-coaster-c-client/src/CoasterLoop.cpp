@@ -224,6 +224,7 @@ void CoasterLoop::removeSockets() {
 		channelMap.erase(sockFD);
 		socketCount--;
 		if (deleteChan) {
+			close(sockFD);
 			delete chan;
 		}
 	}

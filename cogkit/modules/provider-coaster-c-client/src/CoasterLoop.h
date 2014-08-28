@@ -92,7 +92,8 @@ class CoasterLoop {
 		 * Schedule removal of channel from loop.
 		 * The removal is performed by the loop thread
 		 * sometime after the call.
-		 * deleteChan: if true, the channel will be deleted after removal
+		 * deleteChan: if true, the channel will be deleted after
+                        removal and the channel socket fd will be closed
 		 */
 		void removeChannel(CoasterChannel* channel, bool deleteChan);
 		void addSockets();

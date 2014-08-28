@@ -141,7 +141,6 @@ void CoasterClient::stop() {
 
 	channel->shutdown();
 	loop->removeChannel(channel, true);
-	close(sockFD);
 
 	LogInfo << "Done" << endl;
 
