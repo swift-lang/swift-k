@@ -52,4 +52,5 @@ libcoasterclient_la_SOURCES = \
 	RemoteLogHandler.h RemoteLogHandler.cpp \
 	BQPStatusHandler.h BQPStatusHandler.cpp \
 	ResourceUpdateHandler.h ResourceUpdateHandler.cpp \
-	HeartBeatCommand.h HeartBeatCommand.cpp 
+	HeartBeatCommand.h HeartBeatCommand.cpp \
+	ShutdownCommand.h ShutdownCommand.cpp

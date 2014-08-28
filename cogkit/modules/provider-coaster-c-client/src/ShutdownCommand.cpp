@@ -1,7 +1,7 @@
 /*
  * Swift Parallel Scripting Language (http://swift-lang.org)
  *
- * Copyright 2012-2014 University of Chicago
+ * Copyright 2014 University of Chicago
  *  
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,48 +18,36 @@
 
 
 /*
- * HeartBeatCommand.cpp
+ * ShutdownCommand.cpp
  *
- *  Created on: Sep 5, 2012
- *      Author: mike
+ *  Created on: Aug 28, 2014
+ *      Author: Tim Armstrong
  */
 
-#include "HeartBeatCommand.h"
+#include "ShutdownCommand.h"
 #include "Logger.h"
-
-#include <cassert>
 #include <sstream>
 
 using namespace Coaster;
 
 using std::string;
 
-string HeartBeatCommand::NAME("HEARTBEAT");
+string ShutdownCommand::NAME("SHUTDOWN");
 
-HeartBeatCommand::HeartBeatCommand(): Command(&NAME) {
+ShutdownCommand::ShutdownCommand(): Command(&NAME) {
 }
 
-HeartBeatCommand::~HeartBeatCommand() {
+ShutdownCommand::~ShutdownCommand() {
 }
 
-void HeartBeatCommand::send(CoasterChannel* channel, CommandCallback* cb) {
-	assert(channel != NULL);
-	timeval now;
-
-	gettimeofday(&now, NULL);
-	sendtime = now.tv_sec * 1000 + now.tv_usec / 1000;
-	addOutData(Buffer::wrap(sendtime));
-
+void ShutdownCommand::send(CoasterChannel* channel, CommandCallback* cb) {
 	Command::send(channel, cb);
 }
 
-void HeartBeatCommand::dataSent(Buffer* buf) {
+void ShutdownCommand::dataSent(Buffer* buf) {
 	delete buf;
 }
 
-void HeartBeatCommand::replyReceived() {
-	long rectime = getInData()->at(0)->getLong(0);
-        assert(getChannel() != NULL);
-	LogInfo << "Latency for " << getChannel() << ": " << (rectime - sendtime) << endl;
+void ShutdownCommand::replyReceived() {
 	Command::replyReceived();
 }

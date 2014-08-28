@@ -15,7 +15,8 @@ include_HEADERS = src/coaster.h src/coaster-defs.h \
 	    src/JobSubmitCommand.h src/Lock.h \
             src/Logger.h src/RemoteCoasterException.h src/RequestReply.h \
             src/ServiceConfigurationCommand.h src/Settings.h \
-            src/StagingSetEntry.h
+            src/StagingSetEntry.h \
+            src/ShutdownCommand.h
 
 AM_CXXFLAGS = -pthread
 
