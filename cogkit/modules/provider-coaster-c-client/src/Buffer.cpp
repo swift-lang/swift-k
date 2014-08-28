@@ -129,6 +129,10 @@ Buffer* Buffer::wrap(long l) {
 	return b;
 }
 
+Buffer* Buffer::wrap(const char* data) {
+	wrap(data, (int)strlen(data));
+}
+
 Buffer* Buffer::wrap(const char* data, int len) {
 	StaticBuffer* b = new StaticBuffer(len);
 	b->setData(data);
