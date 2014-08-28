@@ -50,4 +50,5 @@ libcoasterclient_la_SOURCES = \
 	CoasterError.h CoasterError.cpp \
 	JobStatusHandler.h JobStatusHandler.cpp \
 	RemoteLogHandler.h RemoteLogHandler.cpp \
+	BQPStatusHandler.h BQPStatusHandler.cpp \
 	HeartBeatCommand.h HeartBeatCommand.cpp 

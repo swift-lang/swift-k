@@ -11,6 +11,7 @@ include_HEADERS = src/coaster.h src/coaster-defs.h \
             src/Flags.h src/HandlerFactory.h src/Handler.h \
             src/HeartBeatCommand.h src/Job.h src/JobStatus.h \
             src/JobStatusHandler.h src/RemoteLogHandler.h \
+            src/BQPStatusHandler.h \
 	    src/JobSubmitCommand.h src/Lock.h \
             src/Logger.h src/RemoteCoasterException.h src/RequestReply.h \
             src/ServiceConfigurationCommand.h src/Settings.h \
