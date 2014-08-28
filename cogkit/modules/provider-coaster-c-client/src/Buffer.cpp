@@ -130,7 +130,7 @@ Buffer* Buffer::wrap(long l) {
 }
 
 Buffer* Buffer::wrap(const char* data) {
-	wrap(data, (int)strlen(data));
+	return wrap(data, (int)strlen(data));
 }
 
 Buffer* Buffer::wrap(const char* data, int len) {
