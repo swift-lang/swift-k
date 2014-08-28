@@ -97,6 +97,7 @@ class StdoutLogger: public Logger {
 
 Logger& endl(Logger& l);
 
+#define LogFatal Logger::singleton().setFile(__FILE__) << Logger::FATAL
 #define LogError Logger::singleton().setFile(__FILE__) << Logger::ERROR
 #define LogWarn Logger::singleton().setFile(__FILE__) << Logger::WARN
 #define LogInfo Logger::singleton().setFile(__FILE__) << Logger::INFO
