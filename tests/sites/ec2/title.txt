@@ -1,0 +1,1 @@
+EC2 - Amazon sanity test
