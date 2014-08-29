@@ -46,8 +46,6 @@ class Handler: public RequestReply {
 		virtual void requestReceived();
 
 		virtual void send(CoasterChannel* channel);
-
-		virtual void dataSent(Buffer* buf);
 };
 
 }

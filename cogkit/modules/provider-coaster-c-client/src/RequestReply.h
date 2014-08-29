@@ -37,7 +37,7 @@ namespace Coaster {
 
 class CoasterChannel;
 
-class RequestReply: public ChannelCallback {
+class RequestReply {
 	private:
 		CoasterChannel* channel;
 		std::list<Buffer*> outData;

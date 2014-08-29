@@ -21,6 +21,7 @@
 
 #include <cstring>
 
+#include "ChannelCallback.h"
 #include "Logger.h"
 
 using namespace Coaster;
@@ -75,12 +76,8 @@ void Handler::send(CoasterChannel* channel) {
 
 	while (od->size() > 0) {
 		Buffer* b = od->front();
-		channel->send(tag, b, FLAG_REPLY + (od->size() == 0 ? FLAG_FINAL : 0), this);
+                int flags = FLAG_REPLY + (od->size() == 0 ? FLAG_FINAL : 0);
+		channel->send(tag, b, flags, &DeleteBufferCallback::CALLBACK);
 		od->pop_front();
 	}
-}
-
-
-void Handler::dataSent(Buffer* buf) {
-	delete buf;
 }

@@ -42,7 +42,7 @@ class CoasterChannel;
 class CommandCallback;
 
 
-class Command: public RequestReply {
+class Command: public RequestReply, public ChannelCallback {
 	private:
 		const std::string* name;
 		CommandCallback* cb;
