@@ -102,6 +102,18 @@
 		<copy todir="${dist.dir}/libexec">
 			<fileset dir="${module.dir}/libexec"/>
 		</copy>
+
+        <mkdir dir="${dist.dir}/libexec/ec2-cloud-provider"/>
+        <copy todir="${dist.dir}/libexec/ec2-cloud-provider">
+            <fileset dir="${cog.dir}/modules/provider-localscheduler/libexec/ec2-cloud-provider"/>
+        </copy>
+
+        <mkdir dir="${dist.dir}/libexec/gce-cloud-provider"/>
+        <copy todir="${dist.dir}/libexec/gce-cloud-provider">
+            <fileset dir="${cog.dir}/modules/provider-localscheduler/libexec/gce-cloud-provider"/>
+        </copy>
+
+
 		<copy todir="${dist.dir}/bin">
 			<fileset dir="${module.dir}/bin"/>
 		</copy>
@@ -262,6 +274,14 @@
 		<chmod perm="+x" file="${dist.dir}/bin/swift"/>
 		<chmod perm="+x" file="${dist.dir}/bin/swift-osg-ress-site-catalog"/>
 		<chmod perm="+x" file="${dist.dir}/libexec/cdm_broadcast.sh"/>
+
+        <chmod perm="+x" file="${dist.dir}/libexec/ec2-cloud-provider/stsubmit.sh"/>
+        <chmod perm="+x" file="${dist.dir}/libexec/ec2-cloud-provider/ststat.sh"/>
+        <chmod perm="+x" file="${dist.dir}/libexec/ec2-cloud-provider/stcancel.sh"/>
+
+        <chmod perm="+x" file="${dist.dir}/libexec/gce-cloud-provider/stsubmit.sh"/>
+        <chmod perm="+x" file="${dist.dir}/libexec/gce-cloud-provider/ststat.sh"/>
+        <chmod perm="+x" file="${dist.dir}/libexec/gce-cloud-provider/stcancel.sh"/>
 	</target>
 
 	<target name="antlr">
