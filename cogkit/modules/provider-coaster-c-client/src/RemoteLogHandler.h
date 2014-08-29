@@ -1,7 +1,7 @@
 /*
  * Swift Parallel Scripting Language (http://swift-lang.org)
  *
- * Copyright 2012-2014 University of Chicago
+ * Copyright 2014 University of Chicago
  *  
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,26 +18,26 @@
 
 
 /*
- * ClientHandlerFactory.cpp
+ * RemoteLogHandler.h
  *
- *  Created on: Aug 31, 2012
- *      Author: mike
+ *  Created on: Aug 28, 2014
+ *      Author: Tim Armstrong
  */
 
-#include "ClientHandlerFactory.h"
-#include "JobStatusHandler.h"
-#include "BQPStatusHandler.h"
-#include "RemoteLogHandler.h"
-#include "ResourceUpdateHandler.h"
+#ifndef REMOTELOGHANDLER_H_
+#define REMOTELOGHANDLER_H_
 
-using namespace Coaster;
+#include "Handler.h"
 
-ClientHandlerFactory::ClientHandlerFactory() {
-	addHandler<JobStatusHandler>("JOBSTATUS");
-	addHandler<BQPStatusHandler>("BQPSTATUS");
-	addHandler<ResourceUpdateHandler>("RESOURCEUPDATE");
-	addHandler<RemoteLogHandler>("RLOG");
+namespace Coaster {
+
+class RemoteLogHandler: public Handler {
+	public:
+		RemoteLogHandler();
+		virtual ~RemoteLogHandler();
+		virtual void requestReceived();
+};
+
 }
 
-ClientHandlerFactory::~ClientHandlerFactory() {
-}
+#endif /* REMOTELOGHANDLER_H_ */

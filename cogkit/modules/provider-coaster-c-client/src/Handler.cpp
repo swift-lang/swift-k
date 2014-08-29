@@ -19,6 +19,8 @@
 
 #include "Handler.h"
 
+#include <cstring>
+
 #include "Logger.h"
 
 using namespace Coaster;

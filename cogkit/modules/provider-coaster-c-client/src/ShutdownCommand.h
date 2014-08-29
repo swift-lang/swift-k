@@ -1,7 +1,7 @@
 /*
  * Swift Parallel Scripting Language (http://swift-lang.org)
  *
- * Copyright 2012-2014 University of Chicago
+ * Copyright 2014 University of Chicago
  *  
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,26 +18,33 @@
 
 
 /*
- * ClientHandlerFactory.cpp
+ * ShutdownCommand.h
  *
- *  Created on: Aug 31, 2012
- *      Author: mike
+ *  Created on: Aug 28, 2014
+ *      Author: Tim Armstrong
  */
 
-#include "ClientHandlerFactory.h"
-#include "JobStatusHandler.h"
-#include "BQPStatusHandler.h"
-#include "RemoteLogHandler.h"
-#include "ResourceUpdateHandler.h"
+#ifndef SHUTDOWNCOMMAND_H_
+#define SHUTDOWNCOMMAND_H_
 
-using namespace Coaster;
+#include "Command.h"
+#include <sys/time.h>
+#include <string>
 
-ClientHandlerFactory::ClientHandlerFactory() {
-	addHandler<JobStatusHandler>("JOBSTATUS");
-	addHandler<BQPStatusHandler>("BQPSTATUS");
-	addHandler<ResourceUpdateHandler>("RESOURCEUPDATE");
-	addHandler<RemoteLogHandler>("RLOG");
+namespace Coaster {
+
+class ShutdownCommand: public Command {
+	private:
+		long sendtime;
+	public:
+		static std::string NAME;
+		ShutdownCommand();
+		virtual ~ShutdownCommand();
+		virtual void send(CoasterChannel* channel, CommandCallback* cb);
+		virtual void dataSent(Buffer* buf);
+		virtual void replyReceived();
+};
+
 }
 
-ClientHandlerFactory::~ClientHandlerFactory() {
-}
+#endif /* SHUTDOWNCOMMAND_H_ */

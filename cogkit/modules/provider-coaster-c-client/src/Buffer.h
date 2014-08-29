@@ -64,6 +64,7 @@ class Buffer {
 
 		static Buffer* wrap(int i);
 		static Buffer* wrap(long l);
+		static Buffer* wrap(const char* buf);
 		static Buffer* wrap(const char* buf, int len);
 		static Buffer* wrap(std::string s);
 		static Buffer* wrap(const std::string* s);

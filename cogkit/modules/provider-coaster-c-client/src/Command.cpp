@@ -43,6 +43,7 @@ void Command::send(CoasterChannel* channel) {
 }
 
 void Command::send(CoasterChannel* channel, CommandCallback* pcb) {
+	setChannel(channel);
 	cb = pcb;
 	channel->registerCommand(this);
 

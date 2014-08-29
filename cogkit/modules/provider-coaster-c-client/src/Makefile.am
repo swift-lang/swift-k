@@ -49,4 +49,8 @@ libcoasterclient_la_SOURCES = \
 	StagingSetEntry.h StagingSetEntry.cpp \
 	CoasterError.h CoasterError.cpp \
 	JobStatusHandler.h JobStatusHandler.cpp \
-	HeartBeatCommand.h HeartBeatCommand.cpp 
+	RemoteLogHandler.h RemoteLogHandler.cpp \
+	BQPStatusHandler.h BQPStatusHandler.cpp \
+	ResourceUpdateHandler.h ResourceUpdateHandler.cpp \
+	HeartBeatCommand.h HeartBeatCommand.cpp \
+	ShutdownCommand.h ShutdownCommand.cpp

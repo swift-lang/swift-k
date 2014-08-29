@@ -1,7 +1,7 @@
 /*
  * Swift Parallel Scripting Language (http://swift-lang.org)
  *
- * Copyright 2012-2014 University of Chicago
+ * Copyright 2014 University of Chicago
  *  
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,26 +18,36 @@
 
 
 /*
- * ClientHandlerFactory.cpp
+ * ShutdownCommand.cpp
  *
- *  Created on: Aug 31, 2012
- *      Author: mike
+ *  Created on: Aug 28, 2014
+ *      Author: Tim Armstrong
  */
 
-#include "ClientHandlerFactory.h"
-#include "JobStatusHandler.h"
-#include "BQPStatusHandler.h"
-#include "RemoteLogHandler.h"
-#include "ResourceUpdateHandler.h"
+#include "ShutdownCommand.h"
+#include "Logger.h"
+#include <sstream>
 
 using namespace Coaster;
 
-ClientHandlerFactory::ClientHandlerFactory() {
-	addHandler<JobStatusHandler>("JOBSTATUS");
-	addHandler<BQPStatusHandler>("BQPSTATUS");
-	addHandler<ResourceUpdateHandler>("RESOURCEUPDATE");
-	addHandler<RemoteLogHandler>("RLOG");
+using std::string;
+
+string ShutdownCommand::NAME("SHUTDOWN");
+
+ShutdownCommand::ShutdownCommand(): Command(&NAME) {
 }
 
-ClientHandlerFactory::~ClientHandlerFactory() {
+ShutdownCommand::~ShutdownCommand() {
+}
+
+void ShutdownCommand::send(CoasterChannel* channel, CommandCallback* cb) {
+	Command::send(channel, cb);
+}
+
+void ShutdownCommand::dataSent(Buffer* buf) {
+	delete buf;
+}
+
+void ShutdownCommand::replyReceived() {
+	Command::replyReceived();
 }

@@ -26,7 +26,9 @@
 
 #include "CoasterChannel.h"
 #include "CoasterError.h"
+#include "CmdCBCV.h"
 #include "HeartBeatCommand.h"
+#include "ShutdownCommand.h"
 #include <cassert>
 #include <stdlib.h>
 #include <errno.h>
@@ -36,6 +38,7 @@
 #include "Logger.h"
 
 #include <algorithm>
+#include <cassert>
 #include <sstream>
 
 using namespace Coaster;
@@ -69,6 +72,8 @@ CoasterChannel::CoasterChannel(CoasterClient* client, CoasterLoop* loop,
 			       HandlerFactory* handlerFactory) :
 			       rhdr_buf(HEADER_LENGTH),
 			       rhdr(&rhdr_buf, (ChannelCallback*)NULL) {
+        assert(loop != NULL);
+        assert(client != NULL);
 	sockFD = 0;
 	this->handlerFactory = handlerFactory;
 	tagSeq = rand() % 65536;
@@ -94,7 +99,12 @@ void CoasterChannel::start() {
 }
 
 void CoasterChannel::shutdown() {
+	ShutdownCommand* cmd = new ShutdownCommand();
+        CmdCBCV callback;
 
+	cmd->send(this, &callback);
+
+        callback.wait();
 }
 
 int CoasterChannel::getSockFD() {
@@ -346,6 +356,8 @@ void CoasterChannel::unregisterHandler(Handler* h) {
 
 
 void CoasterChannel::send(int tag, Buffer* buf, int flags, ChannelCallback* cb) { Lock::Scoped l(writeLock);
+	assert(buf != NULL);
+        assert(buf->getData() != NULL);
 	sendQueue.push_back(makeHeader(tag, buf, flags));
 	sendQueue.push_back(new DataChunk(buf, cb));
 	loop->requestWrite(this, 2);
@@ -356,6 +368,7 @@ CoasterClient* CoasterChannel::getClient() {
 }
 
 void CoasterChannel::checkHeartbeat() {
+	// TODO: this can be sent after shutdown
 	Command* cmd = new HeartBeatCommand();
 	cmd->send(this);
 }

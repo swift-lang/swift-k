@@ -10,10 +10,13 @@ include_HEADERS = src/coaster.h src/coaster-defs.h \
             src/CommandCallback.h src/Command.h src/ConditionVariable.h \
             src/Flags.h src/HandlerFactory.h src/Handler.h \
             src/HeartBeatCommand.h src/Job.h src/JobStatus.h \
-            src/JobStatusHandler.h src/JobSubmitCommand.h src/Lock.h \
+            src/JobStatusHandler.h src/RemoteLogHandler.h \
+            src/BQPStatusHandler.h src/ResourceUpdateHandler.h \
+	    src/JobSubmitCommand.h src/Lock.h \
             src/Logger.h src/RemoteCoasterException.h src/RequestReply.h \
             src/ServiceConfigurationCommand.h src/Settings.h \
-            src/StagingSetEntry.h
+            src/StagingSetEntry.h \
+            src/ShutdownCommand.h
 
 AM_CXXFLAGS = -pthread
 

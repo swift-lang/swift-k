@@ -2,7 +2,7 @@
  * Swift Parallel Scripting Language (http://swift-lang.org)
  *
  * Copyright 2012-2014 University of Chicago
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,10 +27,11 @@
 #include "CoasterLoop.h"
 #include "CoasterError.h"
 #include "Logger.h"
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <string.h>
 
 using namespace Coaster;
 
@@ -40,7 +41,7 @@ using std::pair;
 using std::string;
 
 // 1 minute
-#define HEARTBEAT_CHECK_INTERVAL 60
+#define DEFAULT_HEARTBEAT_CHECK_INTERVAL 60
 
 void* run(void* ptr);
 void checkSelectError(int ret);
@@ -53,6 +54,24 @@ CoasterLoop::CoasterLoop() {
 	FD_ZERO(&wfds);
 	writesPending = 0;
 	maxFD = 0;
+	heartbeatCheckInterval = DEFAULT_HEARTBEAT_CHECK_INTERVAL;
+
+	// Allow overriding for testing, etc.
+	const char *hbEnvVar = "COASTER_HEARTBEAT_INTERVAL";
+	const char *hbEnv = getenv(hbEnvVar);
+	if (hbEnv != NULL) {
+		char *hbEnvEnd;
+		heartbeatCheckInterval = strtol(hbEnv, &hbEnvEnd, 10);
+		if (hbEnvEnd == hbEnv || hbEnvEnd[0] != '\0' ||
+		    heartbeatCheckInterval <= 0)
+		{
+			throw CoasterError("Invalid value for environment"
+				"var %s, must be positive integer: %s",
+				hbEnvVar, hbEnv);
+		}
+		LogDebug << "Heartbeat interval " << heartbeatCheckInterval
+			 << endl;
+	}
 }
 
 CoasterLoop::~CoasterLoop() {
@@ -99,7 +118,9 @@ void CoasterLoop::stop() {
 		throw CoasterError(string("Could not join thread: ") + strerror(errno));
 	}
 
-	// TODO: close pipe?
+	// Need to close pipe
+	close(wakePipe[0]);
+	close(wakePipe[1]);
 	LogInfo << "Coaster loop stopped" << endl;
 }
 
@@ -222,6 +243,7 @@ void CoasterLoop::removeSockets() {
 		channelMap.erase(sockFD);
 		socketCount--;
 		if (deleteChan) {
+			close(sockFD);
 			delete chan;
 		}
 	}
@@ -319,12 +341,14 @@ void CoasterLoop::checkHeartbeats() {
 
 	time(&now);
 
-	if (now - lastHeartbeatCheck > HEARTBEAT_CHECK_INTERVAL) {
+	if (now - lastHeartbeatCheck > heartbeatCheckInterval) {
 		lastHeartbeatCheck = now;
-		{ Lock::Scoped l(lock);
+		{
 			map<int, CoasterChannel*>::iterator it;
 			for (it = channelMap.begin(); it != channelMap.end(); ++it) {
-				it->second->checkHeartbeat();
+				CoasterChannel *channel = it->second;
+				LogDebug << "Channel " << channel << " heartbeat" << endl;
+				channel->checkHeartbeat();
 			}
 		}
 	}

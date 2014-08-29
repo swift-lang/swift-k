@@ -24,7 +24,6 @@
 
 using namespace Coaster;
 
-using std::cout;
 using std::map;
 using std::ostream;
 using std::string;
@@ -94,12 +93,12 @@ void JobSubmitCommand::serialize() {
 	}
 
 	if (job->getJobManager().empty()) {
-	cout<< "getJobManager == NULL, setting to :  fork "<< endl;
+		LogDebug << "getJobManager == NULL, setting to :  fork "<< endl;
 		add(ss, "jm", "fork");
 	}
 	else {
-	const char *jm_string = (job->getJobManager()).c_str();
-	cout<< "getJobManager != !NULL, setting to : "<< job->getJobManager() << endl;
+		const char *jm_string = (job->getJobManager()).c_str();
+		LogDebug << "getJobManager != !NULL, setting to : "<< job->getJobManager() << endl;
 		add(ss, "jm", jm_string);
 	}
 	addOutData(Buffer::wrap(ss));

@@ -71,23 +71,23 @@ class DataChunk {
 		DataChunk(Buffer* buf, ChannelCallback* pcb);
 		void reset();
 
-                /*
-                 * Detach buffer from DataChunk to pass ownership
-                 * elswehere
-                 */
-                inline Buffer* detachBuffer() {
-                	Buffer* b = buf;
-                        buf = NULL;
-                        return b;
-                }
+		/*
+		 * Detach buffer from DataChunk to pass ownership
+		 * elswehere
+		 */
+		inline Buffer* detachBuffer() {
+			Buffer* b = buf;
+			buf = NULL;
+			return b;
+		}
 
-                /*
-                 * Delete buffer
-                 */
-                inline void deleteBuffer() {
+		/*
+		 * Delete buffer
+		 */
+		inline void deleteBuffer() {
 			delete buf;
-                        buf = NULL;
-                }
+			buf = NULL;
+		}
 };
 
 class CoasterChannel: public CommandCallback {
@@ -133,6 +133,12 @@ class CoasterChannel: public CommandCallback {
 
 		std::list<DataChunk*> getSendQueue();
 
+		/*
+		 * Initiate shutdown and wait until shutdown acknowledged
+                 * by service.  After this no further messages will be
+                 * received from service, and no messages should be sent
+                 * by this client.
+		 */
 		void shutdown();
 		void start();
 

@@ -148,13 +148,24 @@ coaster_settings_free(coaster_settings *settings)
 coaster_rc
 coaster_settings_parse(coaster_settings *settings, const char *str,
              size_t str_len, char separator) COASTER_THROWS_NOTHING;
+
 /*
- * Set settings individually.
+ * Set settings individually.  Will overwrite previous values.
+ * key[_len]: settings key (must be non-null)
+ * values[_len]: settings value (must be non-null)
  */
 coaster_rc
 coaster_settings_set(coaster_settings *settings,
             const char *key, size_t key_len,
             const char *value, size_t value_len) COASTER_THROWS_NOTHING;
+/*
+ * Erase a key/value pair in settings.
+ * key[_len]: settings key (must be non-null)
+ */
+coaster_rc
+coaster_settings_remove(coaster_settings *settings,
+            const char *key, size_t key_len) COASTER_THROWS_NOTHING;
+
 /*
  * Get settings individually.
  * value[_len]: set to value of string, null if not present in settings.
