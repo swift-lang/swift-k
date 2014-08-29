@@ -58,6 +58,7 @@ class CoasterLoop {
 		void updateMaxFD();
 		void acknowledgeWriteRequest(int count);
 
+		int heartbeatCheckInterval;
 		time_t lastHeartbeatCheck;
 
 		/* Disable default copy constructor */
