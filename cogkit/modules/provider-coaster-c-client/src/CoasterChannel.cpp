@@ -346,6 +346,8 @@ void CoasterChannel::unregisterHandler(Handler* h) {
 
 
 void CoasterChannel::send(int tag, Buffer* buf, int flags, ChannelCallback* cb) { Lock::Scoped l(writeLock);
+	assert(buf != NULL);
+        assert(buf->getData() != NULL);
 	sendQueue.push_back(makeHeader(tag, buf, flags));
 	sendQueue.push_back(new DataChunk(buf, cb));
 	loop->requestWrite(this, 2);

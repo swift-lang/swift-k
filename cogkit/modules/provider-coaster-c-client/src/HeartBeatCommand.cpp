@@ -45,7 +45,7 @@ void HeartBeatCommand::send(CoasterChannel* channel, CommandCallback* cb) {
 
 	gettimeofday(&now, NULL);
 	sendtime = now.tv_sec * 1000 + now.tv_usec / 1000;
-	addOutData(new StaticBuffer(sendtime));
+	addOutData(Buffer::wrap(sendtime));
 
 	Command::send(channel, cb);
 }
