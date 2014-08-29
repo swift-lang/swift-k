@@ -100,8 +100,8 @@ void CoasterLoop::stop() {
 	}
 
 	// Need to close pipe
-        close(wakePipe[0]);
-        close(wakePipe[1]);
+	close(wakePipe[0]);
+	close(wakePipe[1]);
 	LogInfo << "Coaster loop stopped" << endl;
 }
 
@@ -327,7 +327,9 @@ void CoasterLoop::checkHeartbeats() {
 		{ Lock::Scoped l(lock);
 			map<int, CoasterChannel*>::iterator it;
 			for (it = channelMap.begin(); it != channelMap.end(); ++it) {
-				it->second->checkHeartbeat();
+				CoasterChannel *channel = it->second;
+				LogDebug << "Channel " << channel << " heartbeat" << endl;
+				channel->checkHeartbeat();
 			}
 		}
 	}
