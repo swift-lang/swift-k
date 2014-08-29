@@ -2,7 +2,7 @@
  * Swift Parallel Scripting Language (http://swift-lang.org)
  *
  * Copyright 2012-2014 University of Chicago
- *  
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -90,7 +90,13 @@ class DataChunk {
 		}
 };
 
-class CoasterChannel: public CommandCallback {
+class HeartbeatCallback: public CommandCallback {
+	public:
+		void errorReceived(Command* cmd, std::string* message, RemoteCoasterException* details);
+		void replyReceived(Command* cmd);
+};
+
+class CoasterChannel {
 	private:
 		std::list<DataChunk*> sendQueue;
 		DataChunk readChunk;
@@ -113,12 +119,17 @@ class CoasterChannel: public CommandCallback {
 		CoasterClient* client;
 		Lock writeLock;
 
+		HeartbeatCallback heartbeatCB;
+
 		DataChunk* makeHeader(int tag, Buffer* buf, int flags);
 		void decodeHeader(int* tag, int* flags, int* len);
 		void dispatchData();
 		void dispatchRequest();
 		void dispatchReply();
 		bool read(DataChunk* dc);
+
+                void registerHandler(int tag, Handler* h);
+		void unregisterHandler(Handler* h);
 
 		/* Disable default copy constructor */
 		CoasterChannel(const CoasterChannel&);
@@ -135,9 +146,9 @@ class CoasterChannel: public CommandCallback {
 
 		/*
 		 * Initiate shutdown and wait until shutdown acknowledged
-                 * by service.  After this no further messages will be
-                 * received from service, and no messages should be sent
-                 * by this client.
+		 * by service.  After this no further messages will be
+		 * received from service, and no messages should be sent
+		 * by this client.
 		 */
 		void shutdown();
 		void start();
@@ -148,9 +159,6 @@ class CoasterChannel: public CommandCallback {
 		void registerCommand(Command* cmd);
 		void unregisterCommand(Command* cmd);
 
-		void registerHandler(int tag, Handler* h);
-		void unregisterHandler(Handler* h);
-
 		void send(int tag, Buffer* buf, int flags, ChannelCallback* cb);
 
 		CoasterClient* getClient();
@@ -160,8 +168,6 @@ class CoasterChannel: public CommandCallback {
 
 		template<typename cls> friend cls& operator<< (cls& os, CoasterChannel* channel);
 
-		void errorReceived(Command* cmd, std::string* message, RemoteCoasterException* details);
-		void replyReceived(Command* cmd);
 };
 
 template<typename cls> cls& operator<< (cls& os, CoasterChannel* channel) {

@@ -38,10 +38,6 @@ const string* Command::getName() {
 	return name;
 }
 
-void Command::send(CoasterChannel* channel) {
-	send(channel, NULL);
-}
-
 void Command::send(CoasterChannel* channel, CommandCallback* pcb) {
 	setChannel(channel);
 	cb = pcb;

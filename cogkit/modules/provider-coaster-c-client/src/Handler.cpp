@@ -78,7 +78,6 @@ void Handler::send(CoasterChannel* channel) {
 		channel->send(tag, b, FLAG_REPLY + (od->size() == 0 ? FLAG_FINAL : 0), this);
 		od->pop_front();
 	}
-	channel->unregisterHandler(this);
 }
 
 

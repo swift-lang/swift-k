@@ -52,7 +52,6 @@ class Command: public RequestReply {
 
 		const std::string* getName();
 
-		virtual void send(CoasterChannel* channel);
 		virtual void send(CoasterChannel* channel, CommandCallback* cb);
 		virtual void execute(CoasterChannel* channel);
 
