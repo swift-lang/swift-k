@@ -40,7 +40,7 @@ class ShutdownCommand: public Command {
 		static std::string NAME;
 		ShutdownCommand();
 		virtual ~ShutdownCommand();
-		void send(CoasterChannel* channel, CommandCallback* cb);
+		virtual void send(CoasterChannel* channel, CommandCallback* cb);
 		virtual void dataSent(Buffer* buf);
 		virtual void replyReceived();
 };

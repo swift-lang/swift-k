@@ -40,7 +40,7 @@ class HeartBeatCommand: public Command {
 		static std::string NAME;
 		HeartBeatCommand();
 		virtual ~HeartBeatCommand();
-		void send(CoasterChannel* channel, CommandCallback* cb);
+		virtual void send(CoasterChannel* channel, CommandCallback* cb);
 		virtual void dataSent(Buffer* buf);
 		virtual void replyReceived();
 };
