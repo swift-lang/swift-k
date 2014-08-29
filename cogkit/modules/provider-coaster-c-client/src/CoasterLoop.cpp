@@ -324,7 +324,7 @@ void CoasterLoop::checkHeartbeats() {
 
 	if (now - lastHeartbeatCheck > HEARTBEAT_CHECK_INTERVAL) {
 		lastHeartbeatCheck = now;
-		{ Lock::Scoped l(lock);
+		{
 			map<int, CoasterChannel*>::iterator it;
 			for (it = channelMap.begin(); it != channelMap.end(); ++it) {
 				CoasterChannel *channel = it->second;
