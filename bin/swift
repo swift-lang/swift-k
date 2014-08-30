@@ -40,6 +40,7 @@ if [ ! -d "$SWIFT_HOME" ] ; then
     fi
 fi
 
+export SWIFT_HOME=$SWIFT_HOME
 OPTIONS="$OPTIONS -Djava.endorsed.dirs=$SWIFT_HOME/lib/endorsed"
 
 LOCALCLASSPATH=$SWIFT_HOME/etc$CPDELIM$SWIFT_HOME/libexec

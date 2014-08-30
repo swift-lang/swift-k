@@ -79,6 +79,9 @@ public abstract class RequestReply {
 	}
 
 	protected synchronized void addOutData(byte[] data) {
+        	if (data == null) {
+			throw new IllegalArgumentException("Argument must be non-null");
+                }
 		if (this.outData == null) {
 			this.outData = new LinkedList<byte[]>();
 		}
@@ -86,6 +89,9 @@ public abstract class RequestReply {
 	}
 
 	protected void addOutData(String str) {
+        	if (str == null) {
+			throw new IllegalArgumentException("Argument must be non-null");
+                }
 		this.addOutData(str.getBytes());
 	}
 

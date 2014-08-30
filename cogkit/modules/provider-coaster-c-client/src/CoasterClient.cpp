@@ -140,8 +140,8 @@ void CoasterClient::stop() {
 	LogInfo << "Stopping client " << getHostName() << endl;
 
 	channel->shutdown();
+
 	loop->removeChannel(channel, true);
-	close(sockFD);
 
 	LogInfo << "Done" << endl;
 
@@ -152,7 +152,7 @@ string CoasterClient::setOptions(Settings& s) {
 	LogInfo << "Setting options: " << s << endl;
 	ServiceConfigurationCommand scc(s);
 	scc.execute(channel);
-	string *id = scc.getConfigId();
+	const string *id = scc.getConfigId();
 	if (id == NULL) {
 		throw CoasterError("Did not get expected response for config");
 	}

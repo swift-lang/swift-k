@@ -26,7 +26,9 @@
 
 #include "CoasterChannel.h"
 #include "CoasterError.h"
+#include "CmdCBCV.h"
 #include "HeartBeatCommand.h"
+#include "ShutdownCommand.h"
 #include <cassert>
 #include <stdlib.h>
 #include <errno.h>
@@ -36,6 +38,7 @@
 #include "Logger.h"
 
 #include <algorithm>
+#include <cassert>
 #include <sstream>
 
 using namespace Coaster;
@@ -65,10 +68,21 @@ void DataChunk::reset() {
 	bufpos = 0;
 }
 
+void HeartbeatCallback::errorReceived(Command* cmd, string* message, RemoteCoasterException* details) {
+	delete cmd;
+	LogWarn << "Heartbeat failed: " << message << endl;
+}
+
+void HeartbeatCallback::replyReceived(Command* cmd) {
+	delete cmd;
+}
+
 CoasterChannel::CoasterChannel(CoasterClient* client, CoasterLoop* loop,
 			       HandlerFactory* handlerFactory) :
 			       rhdr_buf(HEADER_LENGTH),
 			       rhdr(&rhdr_buf, (ChannelCallback*)NULL) {
+	assert(loop != NULL);
+	assert(client != NULL);
 	sockFD = 0;
 	this->handlerFactory = handlerFactory;
 	tagSeq = rand() % 65536;
@@ -94,7 +108,12 @@ void CoasterChannel::start() {
 }
 
 void CoasterChannel::shutdown() {
+	ShutdownCommand* cmd = new ShutdownCommand();
+	CmdCBCV callback;
 
+	cmd->send(this, &callback);
+
+	callback.wait();
 }
 
 int CoasterChannel::getSockFD() {
@@ -227,12 +246,13 @@ void CoasterChannel::dispatchRequest() {
 			catch (...) {
 				LogWarn << "Handler::signalReceived() threw unknown exception" << endl;
 			}
+			unregisterHandler(h);
 		}
 		else {
 			h->dataReceived(msg.detachBuffer(), rflags);
 
 			if (rflags & FLAG_FINAL) {
-				try{
+				try {
 					h->receiveCompleted(rflags);
 				}
 				catch (exception &e) {
@@ -241,6 +261,7 @@ void CoasterChannel::dispatchRequest() {
 				catch (...) {
 					LogWarn << "Handler::receiveCompleted() threw unknown exception" << endl;
 				}
+				unregisterHandler(h);
 			}
 		}
 	}
@@ -341,11 +362,13 @@ void CoasterChannel::registerHandler(int tag, Handler* h) {
 
 void CoasterChannel::unregisterHandler(Handler* h) {
 	handlers.erase(h->getTag());
-	h->setChannel(NULL);
+	delete h;
 }
 
 
 void CoasterChannel::send(int tag, Buffer* buf, int flags, ChannelCallback* cb) { Lock::Scoped l(writeLock);
+	assert(buf != NULL);
+	assert(buf->getData() != NULL);
 	sendQueue.push_back(makeHeader(tag, buf, flags));
 	sendQueue.push_back(new DataChunk(buf, cb));
 	loop->requestWrite(this, 2);
@@ -356,17 +379,9 @@ CoasterClient* CoasterChannel::getClient() {
 }
 
 void CoasterChannel::checkHeartbeat() {
+	// TODO: this can be sent after shutdown
 	Command* cmd = new HeartBeatCommand();
-	cmd->send(this);
-}
-
-void CoasterChannel::errorReceived(Command* cmd, string* message, RemoteCoasterException* details) {
-	delete cmd;
-	LogWarn << "Heartbeat failed: " << message << endl;
-}
-
-void CoasterChannel::replyReceived(Command* cmd) {
-	delete cmd;
+	cmd->send(this, &heartbeatCB);
 }
 
 const string& CoasterChannel::getURL() const {

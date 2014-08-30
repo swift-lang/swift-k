@@ -79,6 +79,10 @@ void Settings::remove(const string& key) {
 	settings.erase(key);
 }
 
+void Settings::remove(const char* key, size_t key_len) {
+	settings.erase(key);
+}
+
 bool Settings::contains(const string& key) {
 	return settings.find(key) != settings.end();
 }

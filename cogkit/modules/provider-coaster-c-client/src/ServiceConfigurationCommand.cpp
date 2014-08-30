@@ -29,7 +29,7 @@ string ServiceConfigurationCommand::NAME("CONFIGSERVICE");
 
 ServiceConfigurationCommand::ServiceConfigurationCommand(Settings& s): Command(&NAME) {
 	settings = &s;
-	configId = NULL;
+        configIdReceived = false;
 }
 
 void ServiceConfigurationCommand::send(CoasterChannel* channel, CommandCallback* cb) {
@@ -51,10 +51,15 @@ void ServiceConfigurationCommand::serialize() {
 }
 
 void ServiceConfigurationCommand::replyReceived() {
-	configId = getInData()->at(0)->str();
+	getInData()->at(0)->str(configId);
+        configIdReceived = true;
 	Command::replyReceived();
 }
 
-std::string* ServiceConfigurationCommand::getConfigId() {
-	return configId;
+const std::string* ServiceConfigurationCommand::getConfigId() {
+	if (configIdReceived) {
+		return &configId;
+        } else {
+		return NULL;
+        }
 }

@@ -26,6 +26,8 @@
 
 #include "HeartBeatCommand.h"
 #include "Logger.h"
+
+#include <cassert>
 #include <sstream>
 
 using namespace Coaster;
@@ -41,11 +43,12 @@ HeartBeatCommand::~HeartBeatCommand() {
 }
 
 void HeartBeatCommand::send(CoasterChannel* channel, CommandCallback* cb) {
+	assert(channel != NULL);
 	timeval now;
 
 	gettimeofday(&now, NULL);
 	sendtime = now.tv_sec * 1000 + now.tv_usec / 1000;
-	addOutData(new StaticBuffer(sendtime));
+	addOutData(Buffer::wrap(sendtime));
 
 	Command::send(channel, cb);
 }
@@ -56,7 +59,7 @@ void HeartBeatCommand::dataSent(Buffer* buf) {
 
 void HeartBeatCommand::replyReceived() {
 	long rectime = getInData()->at(0)->getLong(0);
-
+        assert(getChannel() != NULL);
 	LogInfo << "Latency for " << getChannel() << ": " << (rectime - sendtime) << endl;
 	Command::replyReceived();
 }
