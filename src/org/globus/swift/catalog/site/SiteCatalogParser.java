@@ -36,6 +36,8 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
@@ -52,6 +54,7 @@ public class SiteCatalogParser {
     static final String JAXP_SCHEMA_LANGUAGE = "http://java.sun.com/xml/jaxp/properties/schemaLanguage";
     
     private File src;
+    private boolean hadErrors;
     
     public SiteCatalogParser(String fileName) {
         this.src = new File(fileName);
@@ -74,6 +77,10 @@ public class SiteCatalogParser {
         DocumentBuilder dbuilder = dfactory.newDocumentBuilder();
         dbuilder.setErrorHandler(new CErrorHandler());
         Document doc = dbuilder.parse(src);
+        if (hadErrors) {
+            System.err.println("Could not validate " + src.getPath() + 
+                " against schema. Attempting to load document as-is.");
+        }
                   
         return doc;
     }
@@ -87,6 +94,7 @@ public class SiteCatalogParser {
 
         @Override
         public void error(SAXParseException e) throws SAXException {
+            hadErrors = true;
             print(e, "Error", true);
         }
 
