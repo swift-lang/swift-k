@@ -95,12 +95,12 @@ public class SiteCatalogParser {
         @Override
         public void error(SAXParseException e) throws SAXException {
             hadErrors = true;
-            print(e, "Error", true);
+            print(e, "Warning", true);
         }
 
         @Override
         public void fatalError(SAXParseException e) throws SAXException {
-            print(e, "Fatal", true);
+            print(e, "Error", true);
         }
         
         private void print(SAXParseException e, String header, boolean err) {
