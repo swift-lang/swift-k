@@ -133,12 +133,16 @@ void* run(void* ptr) {
 
 	while(1) {
 		{ Lock::Scoped l(loop->lock);
+			/* Process channel removals before exiting look for
+			 * clean shutdown.
+			 */
+			loop->addSockets();
+			loop->removeSockets();
+
 			if (loop->done) {
 				loop->started = false;
 				break;
 			}
-			loop->addSockets();
-			loop->removeSockets();
 		}
 
 		timeout.tv_sec = 0.1;
