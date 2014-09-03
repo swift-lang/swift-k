@@ -26,7 +26,6 @@
 
 #include "CoasterChannel.h"
 #include "CoasterError.h"
-#include "CmdCBCV.h"
 #include "HeartBeatCommand.h"
 #include "ShutdownCommand.h"
 #include <cassert>
@@ -108,12 +107,8 @@ void CoasterChannel::start() {
 }
 
 void CoasterChannel::shutdown() {
-	ShutdownCommand* cmd = new ShutdownCommand();
-	CmdCBCV callback;
-
-	cmd->send(this, &callback);
-
-	callback.wait();
+	ShutdownCommand cmd;
+        cmd.execute(this);
 }
 
 int CoasterChannel::getSockFD() {
