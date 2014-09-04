@@ -911,7 +911,7 @@ sub process {
 			# table of (partial) incoming requests
 			delete($REQUESTS{$tag});
 		}
-		wlog DEBUG, "Fin flag set\n";
+		wlog DEBUG, "Fin flag set ($tag)\n";
 	}
 
 	$$cont{"dataIn"}($cont, $tag, 0, $flg, $msg);
