@@ -118,6 +118,14 @@ Logger& Logger::operator<< (long l) {
 	return *this;
 }
 
+Logger& Logger::operator<< (long long int ll) {
+	header();
+	if (level >= threshold) {
+		buffer << ll;
+	}
+	return *this;
+}
+
 Logger& Logger::operator<< (Logger& ( *pf )(Logger&)) {
 	(*pf)(*this);
 	return *this;

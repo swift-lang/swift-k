@@ -78,6 +78,7 @@ class Logger: public std::ostream {
 		Logger& operator<< (const char* str);
 		Logger& operator<< (int i);
 		Logger& operator<< (long l);
+		Logger& operator<< (long long int ll);
 		Logger& operator<< (Logger& ( *pf )(Logger&));
 		Logger& setFile(const char* file);
 		void endItem();
