@@ -251,10 +251,18 @@ coaster_settings_get(coaster_settings *settings,
             const char *key, size_t key_len,
             const char **value, size_t *value_len) COASTER_THROWS_NOTHING {
   try {
-    std::map<string, string> &map = settings->getSettings();
-    std::string &str_value = map[string(key, key_len)];
-    *value = str_value.c_str();
-    *value_len = str_value.length();
+    string key_s(key, key_len);
+
+    if (settings->contains(key_s)) {
+      // Get direct reference to settings string
+      std::map<string, string> &map = settings->getSettings();
+      std::string &str_value = map[key_s];
+      *value = str_value.c_str();
+      *value_len = str_value.length();
+    } else {
+      *value = NULL;
+      *value_len = 0;
+    }
     return COASTER_SUCCESS;
   } catch (const CoasterError& err) {
     return coaster_error_rc(err);
