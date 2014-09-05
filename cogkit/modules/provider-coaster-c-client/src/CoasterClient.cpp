@@ -26,6 +26,7 @@
 
 #include "CoasterClient.h"
 #include "JobSubmitCommand.h"
+#include "JobStatus.h"
 #include "ServiceConfigurationCommand.h"
 #include "ChannelConfigurationCommand.h"
 #include "CoasterError.h"
@@ -168,6 +169,8 @@ void CoasterClient::submit(Job& job, const std::string& configId) {
 }
 
 void CoasterClient::errorReceived(Command* cmd, string* message, RemoteCoasterException* details) {
+	LogDebug << "errorReceived cmd=" << cmd << " msg=" << *message
+                 << "details=" << details->str() << endl;
 	if (*(cmd->getName()) == JobSubmitCommand::NAME) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
 		coaster_job_id jobId = jsc->getJob()->getIdentity();
@@ -189,6 +192,7 @@ void CoasterClient::errorReceived(Command* cmd, string* message, RemoteCoasterEx
 }
 
 void CoasterClient::replyReceived(Command* cmd) {
+	LogDebug << "replyReceived cmd=" << cmd << endl;
 	if (*(cmd->getName()) == JobSubmitCommand::NAME) {
 		JobSubmitCommand* jsc = static_cast<JobSubmitCommand*>(cmd);
 		string remoteId = jsc->getRemoteId();
@@ -208,6 +212,9 @@ void CoasterClient::replyReceived(Command* cmd) {
   Internal function, should be called with lock already held.
  */
 void CoasterClient::updateJobStatusNoLock(Job* job, JobStatus* status) {
+	LogDebug << "updateJobStatusNoLock jobId=" << job->getIdentity()
+                 << " oldStatus=" << job->getStatus()
+                 << " newStatus=" << status << endl;
 	job->setStatus(status);
 	if (status->isTerminal()) {
 		// Remote id should have been set in job

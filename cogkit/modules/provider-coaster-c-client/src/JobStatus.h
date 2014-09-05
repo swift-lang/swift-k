@@ -64,8 +64,8 @@ class JobStatus {
 		static const char* statusCodeToStr(CoasterJobStatusCode code);
 		bool isTerminal();
 
-		template<typename cls> friend cls& operator<< (cls& os, JobStatus& s);
-		template<typename cls> friend cls& operator<< (cls& os, JobStatus* s);
+		template<typename cls> friend cls& operator<< (cls& os, const JobStatus& s);
+		template<typename cls> friend cls& operator<< (cls& os, const JobStatus* s);
 
                 static const CoasterJobStatusCode UNSUBMITTED = COASTER_STATUS_UNSUBMITTED;
                 static const CoasterJobStatusCode SUBMITTING = COASTER_STATUS_SUBMITTING;
@@ -83,11 +83,11 @@ class JobStatus {
 
 const char* statusCodeToStr(CoasterJobStatusCode code);
 
-template<typename cls> cls& operator<< (cls& os, JobStatus& s) {
+template<typename cls> cls& operator<< (cls& os, const JobStatus& s) {
 	return os << &s;
 }
 
-template<typename cls> cls& operator<< (cls& os, JobStatus* s) {
+template<typename cls> cls& operator<< (cls& os, const JobStatus* s) {
 	os << "Status(" << statusCodeToStr(s->getStatusCode());
 	if ((s->getMessage() != NULL) && (s->getMessage()->length() != 0)) {
 		os << ", msg: " << s->getMessage();
