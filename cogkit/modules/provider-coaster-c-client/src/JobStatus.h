@@ -88,11 +88,16 @@ template<typename cls> cls& operator<< (cls& os, const JobStatus& s) {
 }
 
 template<typename cls> cls& operator<< (cls& os, const JobStatus* s) {
-	os << "Status(" << statusCodeToStr(s->getStatusCode());
-	if ((s->getMessage() != NULL) && (s->getMessage()->length() != 0)) {
-		os << ", msg: " << s->getMessage();
-	}
-	os << ")";
+        if (s == NULL) {
+          os << "Status(NULL)";
+        }
+        else {
+          os << "Status(" << statusCodeToStr(s->getStatusCode());
+          if ((s->getMessage() != NULL) && (s->getMessage()->length() != 0)) {
+                  os << ", msg: " << s->getMessage();
+          }
+          os << ")";
+        }
 	return os;
 }
 
