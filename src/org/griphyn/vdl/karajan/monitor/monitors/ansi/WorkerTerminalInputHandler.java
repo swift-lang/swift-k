@@ -86,7 +86,7 @@ public class WorkerTerminalInputHandler implements InputHandler {
     private WorkerShellCommand startCmd(String cmd, final Terminal term, final Callback cb) {
         try {
             CoasterChannel channel = ChannelManager.getManager()
-                .reserveChannel(contact, cred, LocalRequestManager.INSTANCE);
+                .getOrCreateChannel(contact, cred, LocalRequestManager.INSTANCE);
             WorkerShellCommand wsc = new WorkerShellCommand(workerId, cmd) {
                 @Override
                 public void handleSignal(byte[] data) {
