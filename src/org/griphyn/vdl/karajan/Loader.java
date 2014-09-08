@@ -68,9 +68,9 @@ import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.IncorrectInvocationException;
 import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
-import org.griphyn.vdl.util.LazyFileAppender;
 import org.griphyn.vdl.util.SwiftConfig;
 import org.griphyn.vdl.util.SwiftConfigSchema;
+import org.swift.util.logging.LazyFileAppender;
 
 public class Loader extends org.globus.cog.karajan.Loader {
     private static final Logger logger = Logger.getLogger(Loader.class);

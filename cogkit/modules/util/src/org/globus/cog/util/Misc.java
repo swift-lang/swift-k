@@ -27,6 +27,7 @@
 package org.globus.cog.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Enumeration;
 
 import org.apache.log4j.Appender;
@@ -35,6 +36,7 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.swift.util.logging.LazyFileAppender;
 
 public class Misc
 {
@@ -57,6 +59,14 @@ public class Misc
 		}
 		fa.setFile(file.getAbsolutePath());
 		fa.activateOptions();
+		if (fa instanceof LazyFileAppender) {
+		    try {
+                ((LazyFileAppender) fa).fileNameConfigured();
+            }
+            catch (IOException e) {
+                logger.warn(e.getMessage(), e);
+            }
+		}
 	}
 	
 	/**

@@ -26,7 +26,7 @@
 /*
  * Created on May 24, 2013
  */
-package org.griphyn.vdl.util;
+package org.swift.util.logging;
 
 import java.io.BufferedWriter;
 import java.io.File;
