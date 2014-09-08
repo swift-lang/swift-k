@@ -1181,7 +1181,7 @@ sub shutdownw {
 	}
 	writeprofile();
 	
-	select(undef, undef, undef, 1);
+	select(undef, undef, undef, 0.2);
 	wlog INFO, "Exiting\n";
 	
 	exit 0;
