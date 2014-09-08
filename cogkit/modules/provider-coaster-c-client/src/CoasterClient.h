@@ -71,7 +71,6 @@ class CoasterClient: public CommandCallback {
 		HandlerFactory* handlerFactory;
 
 		std::map<coaster_job_id, Job*> jobs;
-		std::map<std::string, coaster_job_id> remoteJobIdMapping;
 
 		std::list<Job*> doneJobs;
 		

@@ -28,7 +28,7 @@
 #include "JobSubmitCommand.h"
 #include "JobStatus.h"
 #include "ServiceConfigurationCommand.h"
-#include "ChannelConfigurationCommand.h"
+#include "ServiceShutdownCommand.h"
 #include "CoasterError.h"
 #include <stdlib.h>
 #include <string.h>
@@ -125,9 +125,6 @@ void CoasterClient::start() {
 	channel->start();
 	loop->addChannel(channel);
 
-	ChannelConfigurationCommand ccc;
-	ccc.execute(channel);
-
 	LogInfo << "Done" << endl;
 
 	started = true;
@@ -140,7 +137,11 @@ void CoasterClient::stop() {
 
 	LogInfo << "Stopping client " << getHostName() << endl;
 
-	channel->shutdown();
+	ServiceShutdownCommand cmd;
+	cmd.execute(channel);
+	channel->close();
+	
+	LogInfo << "Channel shut down" << endl;
 
 	loop->removeChannel(channel, true);
 
@@ -198,11 +199,8 @@ void CoasterClient::replyReceived(Command* cmd) {
 		string remoteId = jsc->getRemoteId();
 		Job *job = jsc->getJob();
 		coaster_job_id jobId = job->getIdentity();
-		LogInfo << "Job " << jobId << " submitted; remoteId: " << remoteId << endl;
+		LogDebug << "Job " << jobId << " submitted; remoteId: " << remoteId << endl;
 
-		// Track relationship between both IDs
-		job->setRemoteIdentity(remoteId);
-		remoteJobIdMapping[remoteId] = jobId;
 		updateJobStatus(jobId, new JobStatus(JobStatus::SUBMITTED));
 	}
 	delete cmd;
@@ -218,28 +216,25 @@ void CoasterClient::updateJobStatusNoLock(Job* job, JobStatus* status) {
 	job->setStatus(status);
 	if (status->isTerminal()) {
 		// Remote id should have been set in job
-		const string *remoteId = job->getRemoteIdentity();
-		if (remoteId) {
-			remoteJobIdMapping.erase(*remoteId);
-		}
 		jobs.erase(job->getIdentity());
 		doneJobs.push_back(job);
 		cv.broadcast();
 	}
 }
 
-void CoasterClient::updateJobStatus(const string& remoteJobId, JobStatus* status) { Lock::Scoped l(lock);
-	if (remoteJobIdMapping.count(remoteJobId) == 0) {
-		LogWarn << "Received job status notification for unknown job (" << remoteJobId << "): " << status << endl;
-	}
-	else {
-		coaster_job_id jobId = remoteJobIdMapping[remoteJobId];
-		updateJobStatusNoLock(jobs[jobId], status);
-	}
+void CoasterClient::updateJobStatus(const string& jobId, JobStatus* status) {
+	coaster_job_id id;
+	std::istringstream(jobId) >> id;
+	updateJobStatus(id, status);
 }
 
 void CoasterClient::updateJobStatus(coaster_job_id jobId, JobStatus* status) { Lock::Scoped l(lock);
-	updateJobStatusNoLock(jobs[jobId], status);
+	if (jobs.count(jobId) == 0) {
+		LogWarn << "Received job status notification for unknown job (" << jobId << "): " << status << endl;
+	}
+	else {
+		updateJobStatusNoLock(jobs[jobId], status);
+	}
 }
 
 void CoasterClient::updateJobStatus(Job* job, JobStatus* status) { Lock::Scoped l(lock);
