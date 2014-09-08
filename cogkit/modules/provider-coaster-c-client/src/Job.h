@@ -67,8 +67,6 @@ class Job {
 		std::vector<StagingSetEntry>* stageOuts;
 		std::vector<std::string>* cleanups;
 		
-		std::string *remoteIdentity;
-
 		std::string* stdout;
 		std::string* stderr;
 
@@ -97,8 +95,6 @@ class Job {
 		  will return NULL if we haven't yet found out the
 		  remote identity.
 		 */
-		const std::string* getRemoteIdentity() const;
-		void setRemoteIdentity(const std::string& remoteId);
 
 		const std::vector<std::string*>& getArguments();
 

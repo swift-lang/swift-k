@@ -47,8 +47,6 @@ Job::Job(const string &pexecutable) {
 	stageOuts = NULL;
 	cleanups = NULL;
 
-	remoteIdentity = NULL;
-
 	stdout = NULL;
 	stderr = NULL;
 
@@ -57,17 +55,6 @@ Job::Job(const string &pexecutable) {
 
 coaster_job_id Job::getIdentity() const {
 	return identity;
-}
-
-const string* Job::getRemoteIdentity() const {
-	return remoteIdentity;
-}
-
-void Job::setRemoteIdentity(const string& remoteId) {
-	if (remoteIdentity != NULL) {
-		delete remoteIdentity;
-	}
-	remoteIdentity = new string(remoteId);
 }
 
 const vector<string*>& Job::getArguments() {
@@ -305,10 +292,6 @@ Job::~Job() {
 	}
 	if (stderrLocation != NULL) {
 		delete stderrLocation;
-	}
-	
-	if (remoteIdentity != NULL) {
-		delete remoteIdentity; 
 	}
 	for (unsigned int i = 0; i < arguments.size(); i++) {
 		delete arguments.at(i);
