@@ -85,17 +85,19 @@ class Multiplexer extends Thread {
 						}
 						i.remove();
 					}
-					try {
-						any |= channel.step();
-					}
-					catch (Exception e) {
-					    logger.info("Exception in channel step", e);
-						try {
-							shutdown(channel, e);
-						}
-						catch (Exception ee) {
-							logger.warn("Failed to shut down channel", ee);
-						}
+					else {
+    					try {
+    						any |= channel.step();
+    					}
+    					catch (Exception e) {
+    					    logger.info("Exception in channel step", e);
+    						try {
+    							shutdown(channel, e);
+    						}
+    						catch (Exception ee) {
+    							logger.warn("Failed to shut down channel", ee);
+    						}
+    					}
 					}
 				}
 				synchronized (this) {
