@@ -28,12 +28,12 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.coaster.channels.ChannelContext;
 
 public abstract class AbstractQueueProcessor extends Thread implements QueueProcessor {
     private final BlockingQueue<AssociatedTask> q;
@@ -58,7 +58,7 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
         q.offer(new AssociatedTask(t));
     }
 
-    public void shutdown() {
+    public void startShutdown() {
         shutdownFlag = true;
     }
 
@@ -69,6 +69,10 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
     protected final AssociatedTask take() throws InterruptedException {
         return q.take();
     }
+    
+    protected Queue<AssociatedTask> getQueue() {
+        return q;
+    }
 
     protected final boolean hasWrapped() {
         return wrap;
@@ -76,12 +80,6 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
 
     protected int queuedTaskCount() {
         return q.size();
-    }
-
-    @Override
-    public void setClientChannelContext(ChannelContext channelContext) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override

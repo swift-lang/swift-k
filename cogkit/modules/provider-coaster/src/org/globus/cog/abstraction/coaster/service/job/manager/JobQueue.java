@@ -37,7 +37,7 @@ import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.coaster.channels.ChannelContext;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class JobQueue {
     public static final Logger logger = Logger.getLogger(JobQueue.class);
@@ -47,17 +47,23 @@ public class JobQueue {
     private QueueProcessor local, coaster;
     private final Settings settings;
     private final LocalTCPService localService;
-    private ChannelContext clientChannelContext;
+    private CoasterChannel clientChannel;
+    private Broadcaster broadcaster;
     private String defaultQueueProcessor;
     private CoasterService service;
 
-    public JobQueue(CoasterService service, LocalTCPService localService) {
+    public JobQueue(CoasterService service, LocalTCPService localService, CoasterChannel clientChannel) {
         synchronized(JobQueue.class) {
             id = String.valueOf(sid++);
         }
         settings = new Settings();
         this.service = service;
         this.localService = localService;
+        this.broadcaster = new Broadcaster();
+        if (clientChannel != null) {
+            broadcaster.addChannel(clientChannel);
+        }
+        this.clientChannel = clientChannel;
         Collection<URI> addrs = settings.getLocalContacts(localService.getPort());
         if (addrs == null) {
             settings.setCallbackURI(localService.getContact());
@@ -69,23 +75,20 @@ public class JobQueue {
 
     public void start() {
         local = new LocalQueueProcessor(localService);
+        local.setBroadcaster(broadcaster);
         local.start();
     }
 
     public void enqueue(Task t) {
         Service s = t.getService(0);
-        // String jm = null;
         JobSpecification spec = (JobSpecification) t.getSpecification();
-        // if (s instanceof ExecutionService) {
-        //    jm = ((ExecutionService) s).getJobManager();
-        // }
         if (spec.isBatchJob()) {
             if (logger.isInfoEnabled()) {
                 logger.info("Job batch mode flag set. Routing through local queue.");
             }
         }
         QueueProcessor qp;
-        if (s.getProvider().equalsIgnoreCase("coaster") && !spec.isBatchJob()) {
+        if (!spec.isBatchJob()) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Adding task " + t + " to coaster queue");
             }
@@ -107,9 +110,7 @@ public class JobQueue {
     public synchronized QueueProcessor getQueueProcessor(String name) {
         if (coaster == null) {
             coaster = newQueueProcessor(name);
-            if (clientChannelContext != null) {
-                coaster.setClientChannelContext(clientChannelContext);
-            }
+            coaster.setBroadcaster(broadcaster);
             coaster.start();
         }
         return coaster;
@@ -138,20 +139,26 @@ public class JobQueue {
         return settings;
     }
 
-    public void shutdown() {
-        local.shutdown();
-        if (coaster != null)
-            coaster.shutdown();
-    }
-
-    public void setClientChannelContext(ChannelContext channelContext) {
-        if (this.clientChannelContext != null) {
-            return;
-        }
-        this.clientChannelContext = channelContext;
-        local.setClientChannelContext(channelContext);
+    public void startShutdown() {
+        local.startShutdown();
         if (coaster != null) {
-            coaster.setClientChannelContext(channelContext);
+            coaster.startShutdown();
+        }
+    }
+    
+    public void waitForShutdown() {
+        try {
+            while (!local.isShutDown()) {
+                Thread.sleep(100);
+            }
+            if (coaster != null) {
+                while (!coaster.isShutDown()) {
+                    Thread.sleep(100);
+                }
+            }
+        }
+        catch (InterruptedException e) {
+            logger.info("Interrupted", e);
         }
     }
 
@@ -165,5 +172,17 @@ public class JobQueue {
     
     public String getId() {
         return id;
+    }
+    
+    public String toString() {
+        return "JobQueue" + id;
+    }
+
+    public CoasterChannel getClientChannel() {
+        return clientChannel;
+    }
+
+    public Broadcaster getBroadcaster() {
+        return broadcaster;
     }
 }

@@ -33,9 +33,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.globus.cog.coaster.channels.ChannelContext;
-import org.ietf.jgss.GSSCredential;
-
 public class ServiceContext {
 	private Map<String, UserContext> users;
 	private Service service;
@@ -51,20 +48,7 @@ public class ServiceContext {
 			users.put(String.valueOf(uc.getName()), uc);
 		}
 	}
-		
-	public UserContext getUserContext(String name, GSSCredential cred, ChannelContext channelContext) {
-		//TODO this doesn't make much sense
-		synchronized(users) {
-			String sname = String.valueOf(name);
-			UserContext uc = users.get(sname);
-			if (uc == null) {
-				uc = new UserContext(cred, channelContext);
-				users.put(sname, uc);
-			}
-			return uc;
-		}
-	}
-	
+			
 	public Collection<UserContext> getUserContexts() {
 		synchronized(users) {
 			return new ArrayList<UserContext>(users.values());

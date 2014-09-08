@@ -35,6 +35,7 @@ import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceConfigurationCommand;
 import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class ServiceConfigurationHandler extends RequestHandler {
@@ -43,25 +44,36 @@ public class ServiceConfigurationHandler extends RequestHandler {
     public static final String NAME = ServiceConfigurationCommand.NAME;
 
     public void requestComplete() throws ProtocolException {
-        CoasterService service = (CoasterService) getChannel().getChannelContext().getService();
-        JobQueue q = service.createJobQueue();
-        Settings settings = q.getSettings();
-
-        try {
-            List<byte[]> l = getInDataChunks();
-            if (l != null) {
-                for (byte[] b : l) {
-                    String s = new String(b);
-                    String[] p = s.split("=", 2);
-                    settings.set(p[0], p[1]);
-                }
-            }
-            logger.debug(settings);
+        CoasterChannel channel = getChannel();
+        CoasterService service = (CoasterService) channel.getService();
+        
+        if (service.isPersistent() && ((CoasterPersistentService) service).isShared()) {
+            logger.info("Service is shared. Ignoring client configuration settings");
+            JobQueue q = ((CoasterPersistentService) service).getSharedQueue();
+            q.getBroadcaster().addChannel(channel);
             sendReply(q.getId());
         }
-        catch (Exception e) {
-            logger.warn("Failed to set configuration", e);
-            sendError("Failed to set configuration: " + e.getMessage(), e);
+        else {
+            JobQueue q = service.createJobQueue(channel);
+            
+            Settings settings = q.getSettings();
+    
+            try {
+                List<byte[]> l = getInDataChunks();
+                if (l != null) {
+                    for (byte[] b : l) {
+                        String s = new String(b);
+                        String[] p = s.split("=", 2);
+                        settings.set(p[0], p[1]);
+                    }
+                }
+                logger.debug(settings);
+                sendReply(q.getId());
+            }
+            catch (Exception e) {
+                logger.warn("Failed to set configuration", e);
+                sendError("Failed to set configuration: " + e.getMessage(), e);
+            }
         }
     }
 }

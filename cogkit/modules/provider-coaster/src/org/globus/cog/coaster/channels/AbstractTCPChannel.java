@@ -35,6 +35,7 @@ import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.UserContext;
 
 public abstract class AbstractTCPChannel extends AbstractStreamCoasterChannel {
     public static final Logger logger = Logger.getLogger(AbstractTCPChannel.class);
@@ -51,11 +52,10 @@ public abstract class AbstractTCPChannel extends AbstractStreamCoasterChannel {
 		logPerformanceData = "true".equals(System.getProperty("tcp.channel.log.io.performance"));
 	}
 
-	public AbstractTCPChannel(RequestManager requestManager, ChannelContext channelContext,
-			boolean client) {
-		super(requestManager, channelContext, client);
+	public AbstractTCPChannel(RequestManager requestManager, UserContext userContext, boolean client) {
+		super(requestManager, userContext, client);
 	}
-
+	
 	protected void setSocket(Socket socket) throws IOException {
 		this.socket = socket;
 		if (logPerformanceData) {
@@ -78,28 +78,14 @@ public abstract class AbstractTCPChannel extends AbstractStreamCoasterChannel {
 	}
 
 	public synchronized void start() throws ChannelException {
-		if (isClient()) {
-			setName("C(" + getContact() + ")");
-		}
-		else {
-			setName("S(" + socket.getLocalAddress() + ")");
-		}
 		initialize();
 		if (logger.isInfoEnabled()) {
-			logger.info("Channel started: " + this);
+			logger.info(this + ": channel started");
 		}
-		if (isClient()) {
-			try {
-				configure();
-			}
-			catch (Exception e) {
-				throw new ChannelException("Failed to configure channel", e);
-			}
-		}
+		super.start();
 	}
 
 	private void initialize() throws ChannelException {
-		ChannelContext context = getChannelContext();
 		try {
 			initializeConnection();
 			register();
@@ -120,21 +106,13 @@ public abstract class AbstractTCPChannel extends AbstractStreamCoasterChannel {
 		if (isLocalShutdown()) {
 			return;
 		}
-		try {
-			setLocalShutdown();
-			ChannelManager.getManager().shutdownChannel(this);
-		}
-		catch (ShuttingDownException e) {
-			logger.debug("Channel already shutting down");
-		}
-		catch (Exception e) {
-			logger.warn(getContact() + ": Could not shutdown channel", e);
-		}
+		setLocalShutdown();
+		ChannelManager.getManager().removeChannel(this);
 		super.close();
 		synchronized (this) {
 			notify();
 		}
-		logger.info(getContact() + ": Channel terminated");
+		logger.info(this + ": channel terminated");
 	}
 
 	public void close() {
@@ -147,11 +125,11 @@ public abstract class AbstractTCPChannel extends AbstractStreamCoasterChannel {
 		try {
 			if (!socket.isClosed()) {
 				socket.close();
-				logger.info(getContact() + ": Channel shut down");
+				logger.info(this + ": channel shut down");
 			}
 		}
 		catch (Exception e) {
-			logger.warn(getContact() + ": Failed to close socket", e);
+			logger.warn(this + ": Failed to close socket", e);
 		}
 		super.close();
 	}
@@ -160,12 +138,28 @@ public abstract class AbstractTCPChannel extends AbstractStreamCoasterChannel {
 		return started;
 	}
 
-	public boolean isOffline() {
-		return isClosed();
-	}
-
 	@Override
 	public SelectableChannel getNIOChannel() {
 		return nioChannel;
 	}
+	
+	public String toString() {
+        if (getName() == null) {
+            return getClass().getSimpleName() + "[" + (isClient() ? "client" : "server") + ", " + getPeerName() + "]";
+        }
+        else {
+            return getName();
+        }
+    }
+	
+	private String getPeerName() {
+        if (getContact() != null) {
+            return getContact().toString();
+        }
+        Socket sock = getSocket();
+        if (sock != null) {
+            return sock.getInetAddress().getHostAddress() + ":" + sock.getPort();
+        }
+        return "unknown";
+    }
 }

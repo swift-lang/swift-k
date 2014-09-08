@@ -31,32 +31,19 @@ package org.globus.cog.coaster.commands;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Timer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.RequestReply;
-import org.globus.cog.coaster.channels.ChannelIOException;
-import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.channels.SendCallback;
 
 public abstract class Command extends RequestReply implements SendCallback {
 	private static final Logger logger = Logger.getLogger(Command.class);
-
-	private static final Timer timer;
-
-	static {
-		timer = new Timer(true);
-	}
-
-	public static final int DEFAULT_MAX_RETRIES = 2;
-	private int maxRetries = DEFAULT_MAX_RETRIES;
-
+	
 	private Callback cb;
 	private String errorMsg;
 	private Exception exception;
-	private int retries;
 
 	public Command() {
 		setId(NOID);
@@ -117,34 +104,30 @@ public abstract class Command extends RequestReply implements SendCallback {
 		if (logger.isDebugEnabled()) {
 			logger.debug(ppOutData("CMD"));
 		}
-		try {
-			if (logger.isDebugEnabled()) {
-				logger.debug(this + " CMD: " + this);
-			}
-			int id = getId();
-			if (id == NOID) {
-				logger.warn("Command has NOID: " + this, new Throwable());
-			}
-			int flags;
-			boolean fin = (outData == null) || (outData.size() == 0);
-			if (fin) {
-				flags = CoasterChannel.FINAL_FLAG + CoasterChannel.INITIAL_FLAG;;
-			}
-			else {
-				flags = CoasterChannel.INITIAL_FLAG;;
-			}
 
-			channel.sendTaggedData(id, flags, getOutCmd().getBytes(), fin ? this : null);
-			if (!fin) {
-				Iterator<byte[]> i = outData.iterator();
-				while (i.hasNext()) {
-					byte[] buf = i.next();
-					channel.sendTaggedData(id, !i.hasNext(), buf, !i.hasNext() ? this : null);
-				}
-			}
+		if (logger.isDebugEnabled()) {
+			logger.debug(this + " CMD: " + this);
 		}
-		catch (ChannelIOException e) {
-			reexecute(e.getMessage(), e);
+		int id = getId();
+		if (id == NOID) {
+			logger.warn("Command has NOID: " + this, new Throwable());
+		}
+		int flags;
+		boolean fin = (outData == null) || (outData.size() == 0);
+		if (fin) {
+			flags = CoasterChannel.FINAL_FLAG + CoasterChannel.INITIAL_FLAG;;
+		}
+		else {
+			flags = CoasterChannel.INITIAL_FLAG;;
+		}
+
+		channel.sendTaggedData(id, flags, getOutCmd().getBytes(), fin ? this : null);
+		if (!fin) {
+			Iterator<byte[]> i = outData.iterator();
+			while (i.hasNext()) {
+				byte[] buf = i.next();
+				channel.sendTaggedData(id, !i.hasNext(), buf, !i.hasNext() ? this : null);
+			}
 		}
 	}
 
@@ -183,14 +166,6 @@ public abstract class Command extends RequestReply implements SendCallback {
         this.getChannel().unregisterCommand(this);
     }
 
-	public int getMaxRetries() {
-		return maxRetries;
-	}
-
-	public void setMaxRetries(int maxRetries) {
-		this.maxRetries = maxRetries;
-	}
-
 	public void receiveCompleted() {
 		if (logger.isDebugEnabled()) {
 			logger.debug(ppInData("CMD"));
@@ -225,33 +200,8 @@ public abstract class Command extends RequestReply implements SendCallback {
 
 	public void channelClosed() {
 		if (!this.isInDataReceived()) {
-			reexecute("Channel closed", null);
-		}
-	}
-
-	protected void reexecute(String message, Exception ex) {
-		if (++retries > maxRetries) {
-			logger.info(this + ": failed too many times", ex);
-			errorReceived(message, ex);
-		}
-		else {
-			logger.info(this + ": re-sending");
-			logger.warn(this + "fault was: " + message, ex);
-			try {
-				CoasterChannel channel = ChannelManager.getManager().reserveChannel(
-						getChannel().getChannelContext());
-				setChannel(channel);
-				if (getId() == NOID) {
-					channel.registerCommand(this);
-				}
-				send();
-			}
-			catch (ProtocolException e) {
-				errorReceived(e.getMessage(), e);
-			}
-			catch (Exception e) {
-				reexecute(e.getMessage(), ex);
-			}
+			logger.info(this + " channel was closed before reply was received");
+			errorReceived("Channel closed", null);
 		}
 	}
 

@@ -313,8 +313,7 @@ public class ServiceManager implements StatusListener {
                     CoasterChannel channel =
                             ChannelManager.getManager().getExistingChannel(url, cred);
                     if (channel != null) {
-                        channel.getChannelContext().notifyRegisteredCommandsAndHandlers(
-                            new IrrecoverableException(msg));
+                        channel.handleChannelException(new IrrecoverableException(msg));
                         channel.close();
                     }
                 }
@@ -510,12 +509,15 @@ public class ServiceManager implements StatusListener {
                 try {
                     logger.info("Shutting down service at " + url);
                     CoasterChannel channel =
-                            ChannelManager.getManager().reserveChannel(url, (GSSCredential) cred);
-                    logger.debug("Got channel " + channel);
-                    ServiceShutdownCommand ssc = new ServiceShutdownCommand();
-                    ssc.setMaxRetries(0);
-                    ssc.executeAsync(channel, this);
-                    ChannelManager.getManager().releaseChannel(channel);
+                            ChannelManager.getManager().getExistingChannel(url, (GSSCredential) cred);
+                    if (channel == null) {
+                        logger.debug("No channel found for " + url);
+                    }
+                    else {
+                        logger.debug("Shutting down channel " + channel);
+                        ServiceShutdownCommand ssc = new ServiceShutdownCommand();
+                        ssc.executeAsync(channel, this);
+                    }
                 }
                 catch (Exception e) {
                     logger.warn("Failed to shut down service " + url, e);

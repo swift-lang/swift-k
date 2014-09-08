@@ -34,7 +34,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.channels.GSSChannel;
 import org.globus.cog.coaster.channels.StreamChannel;
@@ -58,11 +57,12 @@ public class ConnectionHandler {
 		this.socket = socket;
 		
 		if (socket instanceof GssSocket) {
-			channel = new GSSChannel((GssSocket) socket, this.requestManager, new ChannelContext(name, service));
+			channel = new GSSChannel((GssSocket) socket, this.requestManager, null);
 		}
 		else {
-			channel = new TCPChannel(socket, this.requestManager, new ChannelContext(name, service));
+			channel = new TCPChannel(socket, this.requestManager, null);
 		}
+		channel.setService(service);
 	}
 	
 	protected ConnectionHandler(Socket socket, CoasterChannel channel, 
@@ -75,7 +75,7 @@ public class ConnectionHandler {
 	
 	public ConnectionHandler(String name, Service service, InputStream is, OutputStream os, RequestManager requestManager) {
 	    this.requestManager = requestManager == null ? new ServiceRequestManager() : requestManager;
-	    channel = new StreamChannel(is, os, this.requestManager, new ChannelContext(name, service));
+	    channel = new StreamChannel(is, os, this.requestManager, null, false);
 	}
 
 	public void start() throws Exception {

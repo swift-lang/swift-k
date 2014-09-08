@@ -29,6 +29,7 @@
 package org.globus.cog.coaster.channels;
 
 import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.UserContext;
 
 public class PipedServerChannel extends AbstractPipedChannel {
     
@@ -38,9 +39,8 @@ public class PipedServerChannel extends AbstractPipedChannel {
         return idSeq++;
     }
     
-	public PipedServerChannel(RequestManager requestManager, ChannelContext channelContext) {
-		super(requestManager, channelContext, false);
-		channelContext.getChannelID().setLocalID(ChannelID.newUID());
+	public PipedServerChannel(RequestManager requestManager, UserContext userContext) {
+		super(requestManager, userContext, false);
 		setName("spipe://" + nextIdSeq());
 	}
 	

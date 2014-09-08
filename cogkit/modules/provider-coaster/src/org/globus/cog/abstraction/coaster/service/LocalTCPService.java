@@ -48,7 +48,6 @@ import org.globus.cog.coaster.ConnectionHandler;
 import org.globus.cog.coaster.RequestManager;
 import org.globus.cog.coaster.Service;
 import org.globus.cog.coaster.ServiceContext;
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.ChannelException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.channels.TCPChannel;
@@ -91,10 +90,8 @@ public class LocalTCPService implements Registering, Service, Runnable {
             logger.info("Received registration: blockid = " +
                         blockid + ", url = " + url);
         }
-        ChannelContext cc = channel.getChannelContext();
-        cc.getChannelID().setLocalID(blockid);
         String wid = blockRegistry.nextId(blockid);
-        cc.getChannelID().setRemoteID(wid);
+        channel.setName(blockid + ":" + wid);
         blockRegistry.registrationReceived(blockid, wid, url, channel, options);
         return wid;
     }
@@ -262,15 +259,15 @@ public class LocalTCPService implements Registering, Service, Runnable {
     private static class WorkerConnectionHandler extends ConnectionHandler {
         public WorkerConnectionHandler(Service service, Socket socket, RequestManager requestManager)
                 throws IOException {
-            super(socket, new WorkerChannel(socket, requestManager, 
-                new ChannelContext("worker-" + nextId(), service)), requestManager);
+            super(socket, new WorkerChannel(socket, requestManager, service), requestManager);
         }
     }
     
     private static class WorkerChannel extends TCPChannel {
-        public WorkerChannel(Socket socket, RequestManager requestManager,
-                ChannelContext channelContext) throws IOException {
-            super(socket, requestManager, channelContext);
+        public WorkerChannel(Socket socket, RequestManager requestManager, Service service) throws IOException {
+            super(socket, requestManager, null);
+            setName("worker-" + nextId());
+            setService(service);
         }
 
         @Override

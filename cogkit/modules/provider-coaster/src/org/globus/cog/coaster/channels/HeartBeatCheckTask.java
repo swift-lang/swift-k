@@ -42,15 +42,15 @@ public class HeartBeatCheckTask extends TimerTask {
 		this.channel = channel;
 		this.multiplier = multiplier;
 		this.interval = interval;
-		channel.getChannelContext().setLastHeartBeat(System.currentTimeMillis());
+		channel.setLastHeartBeat(System.currentTimeMillis());
 	}
 
 	public void run() {
-		if (channel.isOffline()) {
+		if (channel.isClosed()) {
 			this.cancel();
 		}
 		else if (channel.isStarted()) {
-			if (channel.getChannelContext().getLastHeartBeat() - interval * multiplier > System.currentTimeMillis()) {
+			if (channel.getLastHeartBeat() - interval * multiplier > System.currentTimeMillis()) {
 				logger.warn("Channel (" + channel + ") has not received any heartbeat in "
 						+ multiplier + " intervals. Shutting it down.");
 				channel.shutdown();

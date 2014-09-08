@@ -30,6 +30,7 @@ package org.globus.cog.abstraction.coaster.service;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class ServiceShutdownHandler extends RequestHandler {
@@ -40,11 +41,10 @@ public class ServiceShutdownHandler extends RequestHandler {
 
     public void requestComplete() throws ProtocolException {
         try {
-            CoasterService cs = (CoasterService) getChannel()
-                    .getChannelContext().getService();
+            CoasterChannel channel = getChannel();
+            CoasterService cs = (CoasterService) channel.getService();
+            cs.clientRequestedShutdown(channel);
             sendReply("OK");
-            Thread.sleep(100);
-            cs.shutdown();
         }
         catch (Exception e) {
             logger.warn("Failed to shut down service", e);

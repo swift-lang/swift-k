@@ -44,6 +44,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.coaster.RequestManager;
 import org.globus.cog.coaster.ServiceContext;
 import org.globus.cog.coaster.UDPService;
+import org.globus.cog.coaster.UserContext;
 
 public class UDPChannel extends AbstractCoasterChannel {
 	public static final Logger logger = Logger.getLogger(UDPChannel.class);
@@ -60,9 +61,9 @@ public class UDPChannel extends AbstractCoasterChannel {
 	private Map<Integer, Integer> tagSeq;
 	private boolean started;
 
-	public UDPChannel(DatagramSocket ds, ChannelContext context, RequestManager rm,
+	public UDPChannel(DatagramSocket ds, UserContext userContext, RequestManager rm,
 			UDPService service, InetSocketAddress addr) {
-		super(rm, context, false);
+		super(rm, userContext, false);
 		this.ds = ds;
 		this.service = service;
 		this.addr = addr.getAddress();
@@ -71,8 +72,8 @@ public class UDPChannel extends AbstractCoasterChannel {
 		tagSeq = new HashMap<Integer, Integer>();
 	}
 
-	public UDPChannel(URI contact, ChannelContext context, RequestManager rm) {
-		super(rm, context, true);
+	public UDPChannel(URI contact, UserContext userContext, RequestManager rm) {
+		super(rm, userContext, true);
 		this.contact = contact;
 	}
 
@@ -198,11 +199,6 @@ public class UDPChannel extends AbstractCoasterChannel {
 		}
 		super.shutdown();
 		service.channelShutDown(this);
-	}
-
-	protected void ensureCallbackServiceStarted() throws Exception {
-		setCallbackService(service);
-		sc = new ServiceContext(service);
 	}
 
 	public URI getContact() {

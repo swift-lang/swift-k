@@ -37,7 +37,6 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.Registering;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.AbstractStreamCoasterChannel;
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.handlers.RequestHandler;
 
@@ -72,8 +71,7 @@ public class RegistrationHandler extends RequestHandler {
         }
 
         CoasterChannel channel = getChannel();
-        ChannelContext context = channel.getChannelContext();
-        Registering ls = (Registering) context.getService();
+        Registering ls = (Registering) channel.getService();
         try {
             String rid = ls.registrationReceived(id, url, channel, options);
             if (channel instanceof AbstractStreamCoasterChannel) {

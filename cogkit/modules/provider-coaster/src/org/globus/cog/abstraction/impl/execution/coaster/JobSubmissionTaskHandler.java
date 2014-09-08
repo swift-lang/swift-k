@@ -141,7 +141,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         else {
             url = task.getService(0).getServiceContact().getContact();
         }
-        return ChannelManager.getManager().reserveChannel(url, cred, LocalRequestManager.INSTANCE);
+        return ChannelManager.getManager().getOrCreateChannel(url, cred, LocalRequestManager.INSTANCE);
     }
 
     private String configureService(CoasterChannel channel, Task task) throws InterruptedException,
@@ -155,8 +155,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             Object rt = task.getService(0).getAttribute("resource-tracker");
             if (rt != null) {
                 if (rt instanceof CoasterResourceTracker) {
-                    LocalService ls = (LocalService) channel.getChannelContext().getService();
-                    ls.addResourceTracker(channel.getChannelContext(), 
+                    LocalService ls = (LocalService) channel.getService();
+                    ls.addResourceTracker(channel, 
                         task.getService(0), (CoasterResourceTracker) rt);
                 }
                 else {
@@ -215,7 +215,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         try {
             if (jobid != null) {
                 CoasterChannel channel =
-                        ChannelManager.getManager().reserveChannel(url, cred,
+                        ChannelManager.getManager().getOrCreateChannel(url, cred,
                             LocalRequestManager.INSTANCE);
                 CancelJobCommand cc = new CancelJobCommand(jobid);
                 cc.execute(channel);

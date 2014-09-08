@@ -97,7 +97,7 @@ public class FileResourceImpl extends AbstractFileResource {
 
     private void run(Command cmd) throws FileResourceException {
         try {
-            CoasterChannel channel = ChannelManager.getManager().reserveChannel(
+            CoasterChannel channel = ChannelManager.getManager().getOrCreateChannel(
                     url, (GSSCredential) getSecurityContext().getCredentials(),
                     LocalRequestManager.INSTANCE);
             try {

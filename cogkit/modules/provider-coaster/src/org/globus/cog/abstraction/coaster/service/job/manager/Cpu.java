@@ -45,8 +45,6 @@ import org.globus.cog.coaster.commands.Command.Callback;
 public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
     public static final Logger logger = Logger.getLogger(Cpu.class);
 
-    private static PullThread pullThread;
-
     private int id;
     private final List<Job> done;
     private Job running;
@@ -142,17 +140,11 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
         return getPullThread(block);
     }
 
-    static PullThread getPullThread(Block block) {
-        synchronized(Cpu.class) {
-            if (pullThread == null) {
-                pullThread = new PullThread(block.getAllocationProcessor());
-                pullThread.start();
-            }
-        }
-        return pullThread;
+    private PullThread getPullThread(Block block) {
+        return block.getAllocationProcessor().getTaskDispatcher();
     }
 
-    private static synchronized void pullLater(Cpu cpu) {
+    private synchronized void pullLater(Cpu cpu) {
         Block block = cpu.node.getBlock();
         if (logger.isDebugEnabled()) {
             logger.debug("ready for work: block=" + block.getId() +
@@ -194,7 +186,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
                 else if (running == null) {
                     lastseq = bqp.getQueueSeq();
                     TimeInterval time = endtime.subtract(Time.now());
-                    int cpus = pullThread.sleepers() + 1;
+                    int cpus = getPullThread().sleepers() + 1;
                     if (logger.isDebugEnabled())
                         logger.debug("requesting work: " +
                                      "block=" + block.getId() +

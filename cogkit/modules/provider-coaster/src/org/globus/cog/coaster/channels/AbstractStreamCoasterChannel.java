@@ -28,6 +28,7 @@
  */
 package org.globus.cog.coaster.channels;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,9 +40,8 @@ import java.util.Map;
 import java.util.zip.Adler32;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.coaster.RemoteConfiguration;
 import org.globus.cog.coaster.RequestManager;
-import org.globus.cog.coaster.commands.ChannelConfigurationCommand;
+import org.globus.cog.coaster.UserContext;
 
 public abstract class AbstractStreamCoasterChannel extends AbstractCoasterChannel implements
 		Purgeable {
@@ -62,11 +62,10 @@ public abstract class AbstractStreamCoasterChannel extends AbstractCoasterChanne
 	private int dataPointer;
 	private int state, tag, flags, len, hcsum, csum;
 
-	protected AbstractStreamCoasterChannel(RequestManager requestManager,
-			ChannelContext channelContext, boolean client) {
-		super(requestManager, channelContext, client);
+	protected AbstractStreamCoasterChannel(RequestManager requestManager, UserContext userContext, boolean client) {
+		super(requestManager, userContext, client);
 	}
-
+	
 	protected InputStream getInputStream() {
 		return inputStream;
 	}
@@ -89,22 +88,6 @@ public abstract class AbstractStreamCoasterChannel extends AbstractCoasterChanne
 
 	public void setContact(URI contact) {
 		this.contact = contact;
-	}
-
-	protected abstract void reconnect() throws ChannelException;
-
-	protected void configure() throws Exception {
-		URI callbackURI = null;
-		ChannelContext sc = getChannelContext();
-		if (sc.getConfiguration().hasOption(RemoteConfiguration.CALLBACK)) {
-			callbackURI = getCallbackURI();
-		}
-		// String remoteID = sc.getChannelID().getRemoteID();
-
-		ChannelConfigurationCommand ccc = new ChannelConfigurationCommand(sc.getConfiguration(),
-				callbackURI);
-		ccc.execute(this);
-		logger.info("Channel configured");
 	}
 
 	public void sendTaggedData(int tag, int flags, byte[] data, SendCallback cb) {
@@ -265,7 +248,10 @@ public abstract class AbstractStreamCoasterChannel extends AbstractCoasterChanne
 			PerformanceDiagnosticInputStream.bytesRead(c.read(buf));
 		}
 		else {
-			c.read(buf);
+			int read = c.read(buf);
+			if (read == -1) {
+			    throw new EOFException();
+			}
 		}
 	}
 

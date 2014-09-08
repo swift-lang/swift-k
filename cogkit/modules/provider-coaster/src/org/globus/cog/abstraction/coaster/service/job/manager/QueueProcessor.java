@@ -29,16 +29,16 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.coaster.channels.ChannelContext;
 
 public interface QueueProcessor {
 
-    public abstract void enqueue(Task t);
+    void enqueue(Task t);
     
-    public abstract void start();
+    void start();
 
-    public abstract void shutdown();
+    void startShutdown();
+    
+    boolean isShutDown(); 
 
-    public abstract void setClientChannelContext(ChannelContext channelContext);
-
+    void setBroadcaster(Broadcaster b);
 }

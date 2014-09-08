@@ -35,8 +35,6 @@ import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.coaster.channels.ChannelContext;
-import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
@@ -44,14 +42,18 @@ import org.globus.cog.coaster.commands.Command.Callback;
 public class TaskNotifier implements StatusListener, ExtendedStatusListener, Callback {
     public static final Logger logger = Logger.getLogger(TaskNotifier.class);
 
-    private ChannelContext channelContext;
     private Task task;
+    private String clientTaskId;
     private CoasterChannel channel;
     private static int notacknowledged;
 
-    public TaskNotifier(Task task, ChannelContext channelContext) {
+    public TaskNotifier(Task task, String clientTaskId, CoasterChannel channel) {
         this.task = task;
-        this.channelContext = channelContext;
+        this.clientTaskId = clientTaskId;
+        if (logger.isInfoEnabled()) {
+            logger.info("Task id mapping: " + channel + ":" + clientTaskId + " -> " + task.getIdentity());
+        }
+        this.channel = channel;
         this.task.addStatusListener(this);
         NotificationManager.getDefault().registerListener(task.getIdentity().getValue(), task, this);
     }
@@ -68,34 +70,31 @@ public class TaskNotifier implements StatusListener, ExtendedStatusListener, Cal
         }
     }
 
-    public static synchronized void sendStatus(TaskNotifier tn, Status s, String out, String err) {
-        String taskId = tn.task.getIdentity().toString();
-        JobStatusCommand c = new JobStatusCommand(taskId, s, out, err);
+    public static void sendStatus(TaskNotifier tn, Status s, String out, String err) {
+        JobStatusCommand c = new JobStatusCommand(tn.clientTaskId, s, out, err);
         try {
-            tn.channel = ChannelManager.getManager().reserveChannel(tn.channelContext);
-            if (s.isTerminal()) {
-                ChannelManager.getManager().releaseLongTerm(tn.channel);
-            }
             c.executeAsync(tn.channel, tn);
-            notacknowledged++;
+            synchronized(TaskNotifier.class) {
+                notacknowledged++;
+            }
         }
         catch (Exception e) {
-            logger.warn("Failed to send task notification", e);
+            logger.warn("Failed to send task notification for " + tn.task.getIdentity(), e);
         }
     }
     
     public void errorReceived(Command cmd, String msg, Exception t) {
-        logger.warn("Client could not properly process notification: " + msg, t);
-        ChannelManager.getManager().releaseChannel(channel);
+        logger.info("Client could not properly process notification for " + task.getIdentity() + ": " + 
+            msg + ". Command was " + cmd, t);
         synchronized(TaskNotifier.class) {
             notacknowledged--;
         }
     }
 
     public void replyReceived(Command cmd) {
-        ChannelManager.getManager().releaseChannel(channel);
         synchronized(TaskNotifier.class) {
             notacknowledged--;
         }
+        logger.info("Reply received for " + cmd);
     }
 }

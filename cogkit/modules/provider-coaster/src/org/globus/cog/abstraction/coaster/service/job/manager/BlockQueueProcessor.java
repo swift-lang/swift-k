@@ -48,7 +48,6 @@ import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class BlockQueueProcessor extends AbstractQueueProcessor implements RegistrationManager, Runnable {
@@ -99,7 +98,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
 
     private BQPMonitor monitor;
 
-    private ChannelContext clientChannelContext;
+    private Broadcaster broadcaster;
 
     private boolean done, planning, shuttingDown;
 
@@ -108,6 +107,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private final RemoteLogger rlogger;
     
     public static volatile int queuedJobs, runningJobs;
+    
+    private PullThread taskDispatcher;
 
     /**
        Formatter for time-based variables in whole seconds
@@ -139,9 +140,15 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         queued = new SortedJobSet(metric);
         running = new JobSet(metric);
         rlogger = new RemoteLogger();
+        taskDispatcher = new PullThread(this);
+        taskDispatcher.start();
         if (logger.isInfoEnabled()) {
             logger.info("Starting... id=" + id);
         }
+    }
+    
+    public PullThread getTaskDispatcher() {
+        return taskDispatcher;
     }
 
     public Metric getMetric() {
@@ -655,18 +662,35 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             Job j = holding.iterator().next();
             Task t = j.getTask();
             ExecutionService p = (ExecutionService) t.getService(0);
-            settings.setServiceContact(p.getServiceContact());
-            String jm = p.getJobManager();
-            int colon = jm.indexOf(':');
-            // remove provider used to bootstrap coasters
-            jm = jm.substring(colon + 1);
-            colon = jm.indexOf(':');
-            if (colon == -1) {
-                settings.setProvider(jm);
+            if (settings.getServiceContact() == null) {
+                settings.setServiceContact(p.getServiceContact());
             }
-            else {
-                settings.setJobManager(jm.substring(colon + 1));
-                settings.setProvider(jm.substring(0, colon));
+            if (settings.getJobManager() == null || settings.getProvider() == null) {
+                String jm = p.getJobManager();
+                if (jm == null) {
+                    if (settings.getProvider() == null) {
+                        holding.remove(j);
+                        j.fail("Don't know how to start blocks. " +
+                        		"Both the settings and the task are missing a provider", null);
+                        return;
+                    }
+                    else {
+                        // as long as there is a provider, the other things are optional
+                    }
+                }
+                else {
+                    int colon = jm.indexOf(':');
+                    // remove provider used to bootstrap coasters
+                    jm = jm.substring(colon + 1);
+                    colon = jm.indexOf(':');
+                    if (colon == -1) {
+                        settings.setProvider(jm);
+                    }
+                    else {
+                        settings.setJobManager(jm.substring(colon + 1));
+                        settings.setProvider(jm.substring(0, colon));
+                    }
+                }
             }
             if (p.getSecurityContext() != null) {
                 settings.setSecurityContext(p.getSecurityContext());
@@ -812,10 +836,11 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     @Override
-    public void shutdown() {
+    public void startShutdown() {
         synchronized(holding) {
             shuttingDown = true;
         }
+        taskDispatcher.shutDown();
         shutdownBlocks();
         done = true;
     }
@@ -830,10 +855,14 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
             b.shutdown(true);
         }
     }
+    
+    public boolean isShutDown() {
+        return blocks.size() == 0;
+    }
 
     public void blockTaskFinished(Block block) {
         if (logger.isInfoEnabled()) {
-            logger.info("Removing block " + block);
+            logger.info("Removing block " + block + ". Blocks active: " + blocks.size());
         }
         synchronized (blocks) {
             blocks.remove(block.getId());
@@ -888,19 +917,15 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         return blocks;
     }
 
-    public void setClientChannelContext(ChannelContext channelContext) {
-        this.clientChannelContext = channelContext;
-        rlogger.setChannelContext(channelContext);
+    public void setBroadcaster(Broadcaster b) {
+        this.broadcaster = b;
+        rlogger.setBroadcaster(b);
     }
 
-    public ChannelContext getClientChannelContext() {
-        return clientChannelContext;
+    public Broadcaster getBroadcaster() {
+        return broadcaster;
     }
     
-    public boolean clientIsConnected() {
-        return clientChannelContext != null;
-    }
-
     public static void main(String[] args) {
         Settings s = new Settings();
         System.out.println(overallocatedSize(1, s));

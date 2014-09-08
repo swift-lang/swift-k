@@ -29,12 +29,13 @@
 package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
+import java.util.Collection;
 
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.Service;
 import org.globus.cog.coaster.UserContext;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.handlers.RequestHandler;
@@ -46,6 +47,9 @@ public interface CoasterChannel {
 	public static final int COMPRESSED_FLAG = 0x00000008;
 	public static final int SIGNAL_FLAG = 0x00000010;
 	public static final int INITIAL_FLAG = 0x00000020;
+	
+	
+	String getID();
 
 	void sendTaggedData(int i, boolean fin, byte[] bytes);
 
@@ -78,32 +82,20 @@ public interface CoasterChannel {
 	void registerHandler(RequestHandler handler, int tag);
 
 	RequestManager getRequestManager();
-
-	int incUsageCount();
-
-	int decUsageCount();
 	
 	void start() throws ChannelException;
 
 	void shutdown();
 
 	void close();
+	
+	boolean isClosed();
 
 	void setLocalShutdown();
-	
-	ChannelContext getChannelContext();
-
-	void setChannelContext(ChannelContext context);
-
-	boolean isOffline();
-	
+		
 	boolean isStarted();
 	
 	void unregisterCommand(Command cmd);
-
-	int incLongTermUsageCount();
-
-	int decLongTermUsageCount();
 
 	/*
 	 * Provided for the sole purpose of being able to deterministically decide a
@@ -111,13 +103,35 @@ public interface CoasterChannel {
 	 */
 	boolean isClient();
 	
-	URI getCallbackURI() throws Exception;
-
 	void setRequestManager(RequestManager requestManager);
 
 	void flush() throws IOException;
 	
 	SelectableChannel getNIOChannel();
 	
-	boolean handleChannelException(Exception e);		
+	void handleChannelException(Exception e);
+		
+    Collection<Command> getActiveCommands();
+    
+    Collection<RequestHandler> getActiveHandlers();
+
+    Command getRegisteredCommand(int id);
+
+    RequestHandler getRegisteredHandler(int id);
+    
+    Service getService();
+    
+    void setService(Service service);
+    
+    long getLastHeartBeat();
+
+    void setLastHeartBeat(long lastHeartBeat);
+        
+    void addListener(ChannelListener l);
+    
+    void removeListener(ChannelListener l);
+    
+    void setName(String name);
+    
+    String getName();
 }

@@ -29,8 +29,6 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.coaster.channels.ChannelManager;
-import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
 
@@ -48,25 +46,17 @@ public class RemoteBQPMonitor implements BQPMonitor, Callback {
             BQPStatusCommand bsc =
                     new BQPStatusCommand(bqp.getSettings(), bqp.getJobs(), bqp.getBlocks().values(),
                         bqp.getQueued());
-            CoasterChannel channel =
-                    ChannelManager.getManager().reserveChannel(bqp.getClientChannelContext());
-            bsc.executeAsync(channel, this);
+            bqp.getBroadcaster().send(bsc);
         }
         catch (Exception e) {
             logger.warn("Failed to send BQP updates", e);
         }
     }
     
-    private void releaseChannel(Command cmd) {
-        ChannelManager.getManager().releaseChannel(cmd.getChannel());
-    }
-
     public void errorReceived(Command cmd, String msg, Exception t) {
         logger.warn("Failed to send command: " + msg, t);
-        releaseChannel(cmd);
     }
 
     public void replyReceived(Command cmd) {
-        releaseChannel(cmd);
     }
 }

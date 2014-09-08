@@ -29,14 +29,12 @@
 package org.globus.cog.coaster.channels;
 
 import org.globus.cog.coaster.RequestManager;
+import org.globus.cog.coaster.UserContext;
 
 public class PipedClientChannel extends AbstractPipedChannel {
 
-	public PipedClientChannel(RequestManager requestManager, ChannelContext channelContext, PipedServerChannel s) {
-		super(requestManager, channelContext, true);
-		channelContext.getChannelID().setLocalID(ChannelID.newUID());
-		channelContext.getChannelID().setRemoteID(s.getChannelContext().getChannelID().getLocalID());
-		s.getChannelContext().getChannelID().setRemoteID(channelContext.getChannelID().getLocalID());
+	public PipedClientChannel(RequestManager requestManager, UserContext userContext, PipedServerChannel s) {
+		super(requestManager, userContext, true);
 		setOther(s);
 		setName(s.getName().replace("spipe", "cpipe"));
 	}

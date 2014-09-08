@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.VersionCommand;
@@ -46,7 +45,7 @@ public class Client {
 	private final URI contact;
 	private CoasterChannel channel;
 	private RequestManager requestManager;
-	private ChannelContext sc;
+	private UserContext userContext;
 	private static Service callback;
 	private boolean connected, connecting;
 	private Exception e;
@@ -54,11 +53,11 @@ public class Client {
 	private static Map<String, Client> clients = new HashMap<String, Client>();
 	private static Service service;
 
-	public static Client getClient(String contact) throws Exception {
+	public static Client getClient(String contact, UserContext userContext, RequestManager rm) throws Exception {
 		Client client;
 		synchronized (clients) {
 			if (!clients.containsKey(contact)) {
-				client = new Client(contact);
+				client = newClient(contact, userContext, rm);
 				clients.put(contact, client);
 			}
 			client = clients.get(contact);
@@ -77,30 +76,20 @@ public class Client {
 		return client;
 	}
 
-	public static Client newClient(String contact, ChannelContext context) throws Exception {
-		return newClient(contact, context, new ClientRequestManager());
-	}
-
-	public static Client newClient(String contact, ChannelContext context,
+	public static Client newClient(String contact, UserContext userContext,
 			RequestManager requestManager) throws Exception {
-		Client client = new Client(contact, requestManager);
-		client.setChannelContext(context);
-		context.getChannelID().setClient(true);
+		Client client = new Client(contact, userContext, requestManager);
 		synchronized (client) {
 			client.connect();
 		}
 		return client;
 	}
 
-	private void setChannelContext(ChannelContext context) {
-		this.sc = context;
-	}
-
 	public Client(String contact) throws URISyntaxException {
-		this(contact, new ClientRequestManager());
+		this(contact, new UserContext(), new ClientRequestManager());
 	}
 
-	public Client(String contact, RequestManager requestManager) throws URISyntaxException {
+	public Client(String contact, UserContext userContext, RequestManager requestManager) throws URISyntaxException {
 		this.contact = new URI(contact);
 		this.requestManager = requestManager;
 	}
@@ -121,17 +110,13 @@ public class Client {
 			}
 		}
 		try {
-			if (sc == null) {
-				sc = new ChannelContext(contact.toString());
-				sc.setConfiguration(RemoteConfiguration.getDefault().find(contact.toString()));
-			}
 			URI c = contact;
 			String host = contact.getHost();
 			int port = contact.getPort();
 			if (port == -1) {
 				c = new URI(contact.getScheme(), null, contact.getHost(), 1984, null, null, null);
 			}
-			channel = ChannelFactory.newChannel(c, sc, requestManager);
+			channel = ChannelFactory.newChannel(c, userContext, requestManager);
 			connected = true;
 		}
 		catch (Exception e) {

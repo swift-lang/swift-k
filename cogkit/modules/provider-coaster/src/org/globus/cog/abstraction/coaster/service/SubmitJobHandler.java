@@ -56,8 +56,7 @@ import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry.Mode;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.ProtocolException;
-import org.globus.cog.coaster.channels.ChannelContext;
-import org.globus.cog.coaster.channels.ChannelManager;
+import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class SubmitJobHandler extends RequestHandler {
@@ -70,19 +69,21 @@ public class SubmitJobHandler extends RequestHandler {
     
     private static class TaskConfigPair {
         public final Task task;
-        public final String configid;
+        public final String configId;
+        public final String clientTaskId;
         
-        public TaskConfigPair(Task task, String configid) {
+        public TaskConfigPair(Task task, String clientTaskId, String configId) {
             this.task = task;
-            this.configid = configid;
+            this.clientTaskId = clientTaskId;
+            this.configId = configId;
         }
     }
 
     public void requestComplete() throws ProtocolException {
         Task task;
         try {
-            ChannelContext channelContext = getChannel().getChannelContext();
-            service = (CoasterService) channelContext.getService();
+            CoasterChannel channel = getChannel();
+            service = (CoasterService) channel.getService();
             TaskConfigPair p;
             if (COMPRESSION) {
                 p = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
@@ -91,11 +92,9 @@ public class SubmitJobHandler extends RequestHandler {
                 p = read(new ByteArrayInputStream(getInData(0)));
             }
             task = p.task;
-            new TaskNotifier(task, channelContext);
-            service.getJobQueue(p.configid).setClientChannelContext(channelContext);
-            service.getJobQueue(p.configid).enqueue(task);
+            new TaskNotifier(task, p.clientTaskId, channel);
+            service.getJobQueue(p.configId).enqueue(task);
             // make sure we'll have something to send notifications to
-            ChannelManager.getManager().reserveLongTerm(getChannel());
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -191,7 +190,7 @@ public class SubmitJobHandler extends RequestHandler {
         setServiceParams(service, intern(helper.read("contact")), intern(helper.read("provider")), intern(helper.read("jm")));
         task.setService(0, service);
         
-        return new TaskConfigPair(task, configId);
+        return new TaskConfigPair(task, clientId, configId);
     }
     
     private String intern(String str) {
@@ -270,7 +269,7 @@ public class SubmitJobHandler extends RequestHandler {
         }
         if (spath.startsWith("file://localhost")) {
             return prefix + "proxy://" + 
-                   getChannel().getChannelContext().getChannelID() + 
+                   getChannel().getID() + 
                    spath.substring("file://localhost".length());
         }
         else if (spath.startsWith("cs://localhost")) {

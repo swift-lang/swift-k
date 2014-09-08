@@ -39,18 +39,16 @@ import org.globus.cog.coaster.UserContext;
 
 public class TCPChannel extends AbstractTCPChannel {
 	
-	public TCPChannel(URI contact, ChannelContext channelContext, RequestManager rm) {
-		super(rm, channelContext, true);
+	public TCPChannel(URI contact, UserContext userContext, RequestManager rm) {
+		super(rm, userContext, true);
 		setContact(contact);
 		setName(contact.toString());
-		channelContext.setUserContext(new UserContext(channelContext));
 	}
 
-	public TCPChannel(Socket socket, RequestManager requestManager, ChannelContext channelContext)
+	public TCPChannel(Socket socket, RequestManager requestManager, UserContext userContext)
 			throws IOException {
-		super(requestManager, channelContext, false);
+		super(requestManager, userContext, false);
 		setSocket(socket);
-		channelContext.setUserContext(new UserContext(channelContext));
 	}
 
 	public void start() throws ChannelException {
@@ -69,20 +67,5 @@ public class TCPChannel extends AbstractTCPChannel {
 		catch (Exception e) {
 			throw new ChannelException("Failed to create socket", e);
 		}
-	}
-
-	public String toString() {
-		return "TCPChannel [type: " + (isClient() ? "client" : "server") + ", contact: " + getPeerName() + "]";
-	}
-
-	private String getPeerName() {
-		if (getContact() != null) {
-			return getContact().toString();
-		}
-		Socket sock = getSocket();
-		if (sock != null) {
-			return sock.getInetAddress().getHostAddress() + ":" + sock.getPort();
-		}
-		return "unknown";
 	}
 }

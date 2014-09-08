@@ -42,6 +42,9 @@ public class AssociatedTask {
     }
     
     public static WallTime getMaxWallTime(Task t) {
+        if (t == null) {
+            return null;
+        }
         Object wt = ((JobSpecification) t.getSpecification()).getAttribute("maxwalltime");
         if (wt == null) {
             return new WallTime("10");

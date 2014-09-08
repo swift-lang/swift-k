@@ -46,7 +46,7 @@ public class HeartBeatTask extends TimerTask implements Callback {
 	}
 
 	public void run() {
-		if (channel.isOffline()) {
+		if (channel.isClosed()) {
 			this.cancel();
 		}
 		else if (channel.isStarted()) {

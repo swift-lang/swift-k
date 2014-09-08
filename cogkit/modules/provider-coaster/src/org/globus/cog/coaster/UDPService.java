@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.ChannelException;
 import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
@@ -95,8 +94,7 @@ public class UDPService implements Service, Runnable {
 				synchronized (channels) {
 					channel = (UDPChannel) channels.get(addr);
 					if (channel == null) {
-						ChannelContext cc = new ChannelContext("udp", context);
-						channel = new UDPChannel(socket, cc, rm, this, addr);
+						channel = new UDPChannel(socket, null, rm, this, addr);
 						channels.put(addr, channel);
 						ChannelManager.getManager().registerChannel(
 								"udp://" + addr.getAddress().getHostAddress() + ":" + (addr.getPort() + 1), null, channel);

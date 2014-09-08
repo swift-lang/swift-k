@@ -28,7 +28,6 @@
  */
 package org.globus.cog.coaster;
 
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 
@@ -36,22 +35,14 @@ public class UserContext {
 
 	private String name;
 	private GSSCredential credential;
-	private final ChannelContext channelContext;
 	
-	public UserContext(ChannelContext channelContext) {
-		this(null, channelContext);
+	public UserContext() {
+		this(null);
 	}
 	
-	public UserContext(GSSCredential cred, ChannelContext channelContext) {
+	public UserContext(GSSCredential cred) {
 	    this.credential = cred;
 	    this.name = getName(cred);
-		this.channelContext = channelContext;
-		if (channelContext == null) {
-			throw new IllegalArgumentException("channelContext cannot be null");
-		}
-		if (channelContext.getServiceContext() != null) {
-			channelContext.getServiceContext().registerUserContext(this);
-		}
 	}
 
 	public static String getName(GSSCredential cred) {
@@ -78,13 +69,5 @@ public class UserContext {
 
 	public String getName() {
 		return name;
-	}
-
-
-	/**
-	 * Returns the channel context of the channel that created this user context
-	 */
-	public ChannelContext getChannelContext() {
-		return channelContext;
 	}
 }

@@ -35,9 +35,11 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -60,11 +62,10 @@ import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.coaster.ConnectionHandler;
 import org.globus.cog.coaster.GSSService;
-import org.globus.cog.coaster.RemoteConfiguration;
 import org.globus.cog.coaster.RequestManager;
 import org.globus.cog.coaster.ServiceRequestManager;
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.ChannelException;
+import org.globus.cog.coaster.channels.ChannelListener;
 import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.channels.PipedClientChannel;
@@ -72,7 +73,7 @@ import org.globus.cog.coaster.channels.PipedServerChannel;
 import org.globus.gsi.gssapi.auth.SelfAuthorization;
 import org.ietf.jgss.GSSCredential;
 
-public class CoasterService extends GSSService {
+public class CoasterService extends GSSService implements ChannelListener {
     public static final Logger logger = Logger
             .getLogger(CoasterService.class);
 
@@ -129,7 +130,7 @@ public class CoasterService extends GSSService {
         initializeLocalService();
         setPollingIntervals();
     }
-
+    
     private void setPollingIntervals() {
         setPollingInterval("pbs", 15);
         setPollingInterval("slurm", 15);
@@ -199,14 +200,43 @@ public class CoasterService extends GSSService {
         }
     }
 
-    public JobQueue createJobQueue() {
-        JobQueue q = new JobQueue(this, localService);
+    @Override
+    public void channelClosed(CoasterChannel channel, Exception e) {
+        shutDownQueuesForChannel(channel);
+    }
+
+    protected void shutDownQueuesForChannel(CoasterChannel channel) {
+        List<JobQueue> queuesToRemove = new ArrayList<JobQueue>();
+        for (JobQueue q : getQueues().values()) {
+            if (q.getClientChannel() == channel) {
+                queuesToRemove.add(q);
+            }
+        }
+        for (JobQueue q : queuesToRemove) {
+            q.startShutdown();
+            removeJobQueue(q.getId());
+        }
+        for (JobQueue q : queuesToRemove) {
+            logger.info("Waiting for queue " + q + " to shut down");
+            q.waitForShutdown();
+        }
+    }
+
+    public JobQueue createJobQueue(CoasterChannel channel) {
+        JobQueue q = new JobQueue(this, localService, channel);
+        if (channel != null) {
+            channel.addListener(this);
+        }
         q.start();
         if (defaultQP != null) {
             q.ensureQueueProcessorInitialized(defaultQP);
         }
         addJobQueue(q);
         return q;
+    }
+    
+    public boolean isPersistent() {
+        return false;
     }
 
     @Override
@@ -221,18 +251,15 @@ public class CoasterService extends GSSService {
             if (id != null) {
                 try {
                     logger.info("Reserving channel for registration");
-                    RemoteConfiguration.getDefault().prepend(
-                            getChannelConfiguration(registrationURL));
 
                     if (local) {
                         channelToClient = createLocalChannel();
                     }
                     else {
-                        channelToClient = ChannelManager.getManager()
-                            .reserveChannel(registrationURL, null,
+                        channelToClient = ChannelManager.getManager().openChannel(registrationURL, null,
                                     COASTER_REQUEST_MANAGER);
                     }
-                    channelToClient.getChannelContext().setService(this);
+                    channelToClient.setService(this);
 
                     logger.info("Sending registration");
                     String url = "https://" + getHost() + ":" + getPort();
@@ -259,16 +286,16 @@ public class CoasterService extends GSSService {
         PipedServerChannel psc =
                 ServiceManager.getDefault().getLocalService().newPipedServerChannel();
         PipedClientChannel pcc =
-                new PipedClientChannel(COASTER_REQUEST_MANAGER, new ChannelContext("cpipe"), psc);
+                new PipedClientChannel(COASTER_REQUEST_MANAGER, null, psc);
         psc.setClientChannel(pcc);
-        ChannelManager.getManager().registerChannel(pcc.getChannelContext().getChannelID(), pcc);
-        ChannelManager.getManager().registerChannel(psc.getChannelContext().getChannelID(), psc);
+        ChannelManager.getManager().registerChannel(pcc.getID(), pcc);
+        ChannelManager.getManager().registerChannel(psc.getID(), psc);
         return pcc;
     }
 
     private void stop(Exception exception) {
         for (JobQueue q : queues.values()) {
-            q.shutdown();
+            q.startShutdown();
         }
         synchronized (this) {
             this.exceptionAtStop = exception;
@@ -341,21 +368,35 @@ public class CoasterService extends GSSService {
     public synchronized void resume() {
         this.suspended = false;
     }
+    
+    public void clientRequestedShutdown(CoasterChannel channel) {
+        shutdown();
+    }
 
     @Override
     public void shutdown() {
-        try {
-            startShutdownWatchdog();
-            unregister();
-            super.shutdown();
-            for (JobQueue q : queues.values()) {
-                q.shutdown();
+        logger.info("Starting shutdown");
+        startShutdownWatchdog();
+        unregister();
+        super.shutdown();
+        for (JobQueue q : queues.values()) {
+            try {
+                q.startShutdown();
+            }
+            catch (Exception e) {
+                logger.info("Queue " + q + " threw exception in startShutdown", e);
             }
         }
-        finally {
-            done = true;
+        logger.info("Shutdown started");
+        for (JobQueue q : queues.values()) {
+            logger.info("Waiting for queue " + q + " to shut down");
+            q.waitForShutdown();
         }
-        logger.info("Shutdown sequence completed");
+        logger.info("Shutdown completed");
+        done = true;
+        synchronized(this) {
+            notifyAll();
+        }
     }
 
     /**
@@ -399,10 +440,10 @@ public class CoasterService extends GSSService {
                 @Override
                 public void run() {
                     logger
-                            .warn("Shutdown failed after 5 minutes. Forcefully shutting down");
+                            .warn("Shutdown failed after 2 minutes. Forcefully shutting down");
                     System.exit(3);
                 }
-            }, 5 * 60 * 1000);
+            }, 2 * 60 * 1000);
         }
     }
 
@@ -440,6 +481,12 @@ public class CoasterService extends GSSService {
             return queues.get(id);
         }
     }
+    
+    public boolean removeJobQueue(String id) {
+        synchronized(queues) {
+            return queues.remove(id) != null;
+        }
+    }
 
     public boolean getIgnoreIdleTime() {
         return ignoreIdleTime;
@@ -447,12 +494,6 @@ public class CoasterService extends GSSService {
 
     public void setIgnoreIdleTime(boolean ignoreIdleTime) {
         this.ignoreIdleTime = ignoreIdleTime;
-    }
-
-    protected RemoteConfiguration.Entry getChannelConfiguration(String contact) {
-        return new RemoteConfiguration.Entry(
-                contact.replaceAll("\\.", "\\."),
-                "KEEPALIVE, RECONNECT(8), HEARTBEAT(30)");
     }
 
     public static void main(String[] args) {

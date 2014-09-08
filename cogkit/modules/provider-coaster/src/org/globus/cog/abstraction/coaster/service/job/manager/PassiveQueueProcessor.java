@@ -34,8 +34,6 @@ import java.util.Map;
 import org.globus.cog.abstraction.coaster.rlog.RemoteLogCommand;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.coaster.service.ResourceUpdateCommand;
-import org.globus.cog.coaster.channels.ChannelContext;
-import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class PassiveQueueProcessor extends BlockQueueProcessor {
@@ -53,15 +51,12 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
     }
 
     @Override
-    public void setClientChannelContext(ChannelContext channelContext) {
-        super.setClientChannelContext(channelContext);
-        CoasterChannel channel;
+    public void setBroadcaster(Broadcaster b) {
+        super.setBroadcaster(b);
         try {
-            channel = ChannelManager.getManager().reserveChannel(channelContext);
             RemoteLogCommand cmd = new RemoteLogCommand(RemoteLogCommand.Type.STDERR,
                 "Passive queue processor initialized. Callback URI is " + callbackURI);
-            cmd.executeAsync(channel, null);
-            ChannelManager.getManager().releaseChannel(channel);
+            b.send(cmd);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -84,19 +79,17 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
 
         String r = getBlock(blockID).workerStarted(workerID, workerHostname, channel, options);
 
-        if (clientIsConnected()) {
-            ResourceUpdateCommand wsc;
-            synchronized(this) {
-                currentWorkers++;
-                wsc = new ResourceUpdateCommand("job-capacity",
-                    String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
-            }
-            try {
-                wsc.executeAsync(channel);
-            }
-            catch (Exception e) {
-                logger.info("Failed to send worker status update to client", e);
-            }
+        ResourceUpdateCommand wsc;
+        synchronized(this) {
+            currentWorkers++;
+            wsc = new ResourceUpdateCommand("job-capacity",
+                String.valueOf(currentWorkers * getSettings().getJobsPerNode()));
+        }
+        try {
+            wsc.executeAsync(channel);
+        }
+        catch (Exception e) {
+            logger.info("Failed to send worker status update to client", e);
         }
 
         return r;
@@ -131,9 +124,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
             }
         }
         try {
-            CoasterChannel channel = ChannelManager.getManager().reserveChannel(getClientChannelContext());
-            wsc.executeAsync(channel);
-            ChannelManager.getManager().releaseChannel(channel);
+            getBroadcaster().send(wsc);
         }
         catch (Exception e) {
             logger.warn("Failed to send worker status update to client", e);

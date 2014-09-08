@@ -88,11 +88,9 @@ class Sender extends Thread {
 					}
 				}
 				catch (IOException ex) {
-					logger.info("Channel IOException", ex);
+					logger.info("Channel IOException caught sending tag " + e.tag + " on " + e.channel, ex);
 					try {
-						if (e.channel.handleChannelException(ex)) {
-							queue.put(e);
-						}
+						e.channel.handleChannelException(ex);
 					}
 					catch (Exception exx) {
 					    logger.warn("Channel threw exception while handling channel exception", exx);
@@ -101,8 +99,7 @@ class Sender extends Thread {
 				catch (Exception ex) {
 					logger.warn("Caught exception while sending data", ex);
 					try {
-						e.channel.getChannelContext().getRegisteredCommand(e.tag).errorReceived(
-								null, ex);
+						e.channel.getRegisteredCommand(e.tag).errorReceived(null, ex);
 					}
 					catch (Exception exx) {
 						logger.warn("Exception", exx);

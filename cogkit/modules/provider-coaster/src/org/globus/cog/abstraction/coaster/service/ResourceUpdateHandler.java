@@ -38,13 +38,13 @@ public class ResourceUpdateHandler extends RequestHandler {
     
     @Override
     public void requestComplete() throws ProtocolException {
-        LocalService ls = (LocalService) getChannel().getChannelContext().getService();
+        LocalService ls = (LocalService) getChannel().getService();
         if (ls == null) {
             // getting this on a client channel, so just log this
             logger.info(getInDataAsString(0) + ": " + getInDataAsString(1));
         }
         else {
-            ls.resourceUpdated(getChannel().getChannelContext(), 
+            ls.resourceUpdated(getChannel(), 
                 getInDataAsString(0), getInDataAsString(1));
         }
         sendReply("OK");

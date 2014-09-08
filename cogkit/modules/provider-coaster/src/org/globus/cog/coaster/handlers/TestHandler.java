@@ -33,8 +33,6 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.coaster.ProtocolException;
-import org.globus.cog.coaster.channels.ChannelContext;
-import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.TestCommand;
 
@@ -52,21 +50,17 @@ public class TestHandler extends RequestHandler {
 	public void requestComplete() throws ProtocolException {
 		String mode = new String(getInData(0));
 		if ("INITIAL".equals(mode)) {
-			final ChannelContext cc = getChannel().getChannelContext();
 			sendReply("OK".getBytes());
+			final CoasterChannel channel = getChannel();
 			timer.schedule(new TimerTask() {
 				public void run() {
 					TestCommand done = new TestCommand(false);
 					CoasterChannel channel = null;
 					try {
-						channel = ChannelManager.getManager().reserveChannel(cc);
 						done.execute(channel);
 					}
 					catch (Exception e) {
 						logger.error("Got exception", e);
-					}
-					finally {
-						ChannelManager.getManager().releaseChannel(channel);
 					}
 				}
 			}, 1000 * 5);

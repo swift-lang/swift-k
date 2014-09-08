@@ -38,8 +38,7 @@ public class UnregisterHandler extends RequestHandler {
 	
 	public void requestComplete() throws ProtocolException {
 	    String id = this.getInDataAsString(0);
-        Registering ls = (Registering) 
-            getChannel().getChannelContext().getService();
+        Registering ls = (Registering) getChannel().getService();
         try {
             ls.unregister(id);
             this.sendReply("OK");

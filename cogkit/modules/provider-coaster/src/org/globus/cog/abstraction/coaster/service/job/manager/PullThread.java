@@ -64,6 +64,8 @@ class PullThread extends Thread {
     private long last;
     
     private final BlockQueueProcessor bqp;
+    
+    private boolean done;
 
     public PullThread(BlockQueueProcessor bqp) {
         this.bqp = bqp;
@@ -137,11 +139,15 @@ class PullThread extends Thread {
     @Override
     public void run() {
         last = System.currentTimeMillis();
-        while (true) {
+        while (!done) {
             Cpu cpu;
             synchronized (this) {
                 while (queue.isEmpty()) {
                     if (!awakeUseable()) {
+                        if (done) {
+                            logger.info(this + " exiting");
+                            return;
+                        }
                         try {
                             mwait(50);
                         }
@@ -154,6 +160,10 @@ class PullThread extends Thread {
             }
             cpu.pull();
         }
+    }
+    
+    public void shutDown() {
+        done = true;
     }
 
     private boolean awakeUseable() {
@@ -173,7 +183,7 @@ class PullThread extends Thread {
     private void mwait(int ms) throws InterruptedException {
         runTime += countAndResetTime();
         wait(ms);
-        sleepTime += countAndResetTime();
+        sleepTime += countAndResetTime();;
         if (runTime + sleepTime > 10000) {
             logger.debug("time running (milliseconds): " + runTime);
             logger.debug("time sleeping (milliseconds):" + sleepTime);

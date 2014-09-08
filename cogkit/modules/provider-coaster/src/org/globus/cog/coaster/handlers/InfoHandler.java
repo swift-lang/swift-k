@@ -55,7 +55,7 @@ public class InfoHandler extends RequestHandler {
 	    String opts = getInDataAsString(1);
 	    
 	    Map<String, Block> blocks = new HashMap<String, Block>();
-        CoasterService s = (CoasterService) getChannel().getChannelContext().getService();
+        CoasterService s = (CoasterService) getChannel().getService();
         for (Map.Entry<String, JobQueue> e : s.getQueues().entrySet()) {
             blocks.putAll(((BlockQueueProcessor) e.getValue().getCoasterQueueProcessor()).getBlocks());
         }

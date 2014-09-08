@@ -29,9 +29,12 @@
 package org.globus.cog.abstraction.coaster.client;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.local.LocalRequestManager;
 import org.globus.cog.abstraction.impl.execution.coaster.WorkerShellCommand;
 import org.globus.cog.coaster.ProtocolException;
@@ -41,9 +44,6 @@ import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
 import org.globus.cog.coaster.commands.InfoCommand;
-import org.apache.log4j.Logger;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Level;
 
 public class CoasterClient implements Callback {
     private String url;
@@ -81,13 +81,12 @@ public class CoasterClient implements Callback {
             System.err.println("Command not handled: " + cmd);
         }
         else {
-            CoasterChannel channel = ChannelManager.getManager().reserveChannel(url, 
+            CoasterChannel channel = ChannelManager.getManager().getOrCreateChannel(url, 
                 null, LocalRequestManager.INSTANCE);
             // do async execute since we can process the
             // replies/errors instead of having exceptions thrown by execute()
             c.executeAsync(channel, this);
             c.waitForReply();
-            ChannelManager.getManager().releaseChannel(channel);
         }
     }
 

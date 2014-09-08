@@ -34,7 +34,6 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.coaster.channels.ChannelListener;
-import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
@@ -56,7 +55,7 @@ public class Node implements Callback, ChannelListener {
         this.block = block;
         this.hostname = workerHostname;
         this.channel = channel;
-        channel.getChannelContext().addChannelListener(this);
+        channel.addListener(this);
         this.concurrency = concurrency;
         Settings settings = block.getAllocationProcessor().getSettings();
         cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
@@ -98,7 +97,6 @@ public class Node implements Callback, ChannelListener {
         try {
             CoasterChannel channel = getChannel();
             channel.setLocalShutdown();
-            ChannelManager.getManager().reserveLongTerm(channel);
             ShutdownCommand cmd = new ShutdownCommand();
             cmd.executeAsync(channel, this);
         }
@@ -137,7 +135,7 @@ public class Node implements Callback, ChannelListener {
         return channel;
     }
     
-    public void channelShutDown(Exception e) {
+    public void channelClosed(CoasterChannel channel, Exception e) {
         if (logger.isInfoEnabled()) {
             logger.info(this + " lost connection to worker; removing node from block.", e);
         }

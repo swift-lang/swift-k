@@ -32,7 +32,6 @@ import java.net.URI;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.ChannelException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.channels.GSSChannel;
@@ -50,9 +49,12 @@ public class ChannelFactory {
 	private static GSSCredential cachedCredential;
 	private static long credentialTime;
 
-	public static CoasterChannel newChannel(URI contact, ChannelContext context, RequestManager rm)
+	public static CoasterChannel newChannel(URI contact, UserContext context, RequestManager rm)
 			throws ChannelException {
 		CoasterChannel channel;
+		if (context == null) {
+		    context = new UserContext();
+		}
 		try {
 			if (contact.getScheme() == null || contact.getScheme().equals("tcps")) {
 				ensureCredentialPresent(context);
@@ -79,10 +81,10 @@ public class ChannelFactory {
 		}
 	}
 
-	private static void ensureCredentialPresent(ChannelContext context)
+	private static void ensureCredentialPresent(UserContext context)
 			throws InvalidSecurityContextException {
-		if (context.getUserContext().getCredential() == null) {
-			context.getUserContext().setCredential(getDefaultCredential());
+		if (context.getCredential() == null) {
+			context.setCredential(getDefaultCredential());
 		}
 	}
 

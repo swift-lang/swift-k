@@ -63,7 +63,7 @@ public abstract class RequestReply {
 		this.inCmd = inCmd;
 	}
 
-	protected String getOutCmd() {
+	public String getOutCmd() {
 		return outCmd;
 	}
 

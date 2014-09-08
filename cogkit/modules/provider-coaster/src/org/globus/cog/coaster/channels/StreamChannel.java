@@ -37,27 +37,22 @@ import org.globus.cog.coaster.UserContext;
 public class StreamChannel extends AbstractStreamCoasterChannel {
 	private boolean started;	
 
-	public StreamChannel(InputStream is, OutputStream os, RequestManager requestManager,
-			ChannelContext channelContext) {
-		super(requestManager, channelContext, false);
+	public StreamChannel(InputStream is, OutputStream os, RequestManager requestManager, 
+	        UserContext userContext, boolean client) {
+		super(requestManager, userContext, client);
 		setInputStream(is);
 		setOutputStream(os);
-		channelContext.setUserContext(new UserContext(channelContext));
+	}
+	
+	protected void connect() throws ChannelException {
 	}
 
-	protected void reconnect() throws ChannelException {
-	}
-
-
-	public boolean isOffline() {
-		return false;
-	}
-
+	@Override
 	public boolean isStarted() {
 		return started;
 	}
 
-	
+	@Override
 	public synchronized void start() throws ChannelException {
 		if (isClient()) {
 			setName("C(local)");
@@ -67,18 +62,9 @@ public class StreamChannel extends AbstractStreamCoasterChannel {
 		}
 		initialize();
 		logger.info(getContact() + "Channel started");
-		if (isClient()) {
-			try {
-				configure();
-			}
-			catch (Exception e) {
-				throw new ChannelException("Failed to configure channel", e);
-			}
-		}
 	}
 
 	private void initialize() throws ChannelException {
-		ChannelContext context = getChannelContext();
 		try {
 			register();
 			started = true;

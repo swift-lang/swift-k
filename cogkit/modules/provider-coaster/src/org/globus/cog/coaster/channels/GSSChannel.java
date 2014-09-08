@@ -80,16 +80,16 @@ public class GSSChannel extends AbstractTCPChannel {
 	private int id;
 	private static int sid = 1;
 
-	public GSSChannel(GssSocket socket, RequestManager requestManager, ChannelContext sc)
+	public GSSChannel(GssSocket socket, RequestManager requestManager, UserContext userContext)
 			throws IOException {
-		super(requestManager, sc, false);
+		super(requestManager, userContext, false);
 		setSocket(socket);
 		this.socket = socket;
 		init();
 	}
 
-	public GSSChannel(URI contact, RequestManager requestManager, ChannelContext sc) {
-		super(requestManager, sc, true);
+	public GSSChannel(URI contact, RequestManager requestManager, UserContext userContext) {
+		super(requestManager, userContext, true);
 		setContact(contact);
 		init();
 	}
@@ -99,11 +99,11 @@ public class GSSChannel extends AbstractTCPChannel {
 	}
 
 	public void start() throws ChannelException {
-		reconnect();
+		connect();
 		super.start();
 	}
 
-	protected void reconnect() throws ChannelException {
+	protected void connect() throws ChannelException {
 		try {
 			if (getContact() != null) {
 				HostAuthorization hostAuthz = new HostAuthorization("host");
@@ -111,7 +111,7 @@ public class GSSChannel extends AbstractTCPChannel {
 				Authorization authz = new FallbackAuthorization(new Authorization[] { hostAuthz,
 						SelfAuthorization.getInstance() });
 
-				GSSCredential cred = this.getChannelContext().getUserContext().getCredential();
+				GSSCredential cred = this.getUserContext().getCredential();
 				if (cred == null) {
 					cred = GSSService.initializeCredentials(true, null, null);
 				}
@@ -138,7 +138,7 @@ public class GSSChannel extends AbstractTCPChannel {
 
 				logger.info("Connected to " + contact);
 
-				getChannelContext().setRemoteContact(contact.toString());
+				setName(contact.toString());
 			}
 		}
 		catch (Exception e) {
@@ -149,7 +149,7 @@ public class GSSChannel extends AbstractTCPChannel {
 	protected void initializeConnection() {
 		try {
 			if (socket.getContext().isEstablished()) {
-				UserContext uc = getChannelContext().newUserContext(socket.getContext().getSrcName().toString());
+				UserContext uc = new UserContext();
 				// TODO Credentials should be associated with each
 				// individual instance
 
@@ -235,16 +235,5 @@ public class GSSChannel extends AbstractTCPChannel {
 
 	public String getPeerId() {
 		return peerId;
-	}
-
-	public String toString() {
-		return "GSSChannel [type: " + (isClient() ? "client" : "service") + ", contact: " + getContact() + ", id: " + id + ", context: " + this.getChannelContext() + "]";
-	}
-
-	protected synchronized void ensureCallbackServiceStarted() throws Exception {
-		if (getCallbackService() == null) {
-			setCallbackService(new GSSService(GSSService.initializeCredentials(true, null, null)));
-		}
-		logger.info("Started local service: " + getCallbackService().getContact());
 	}
 }

@@ -28,15 +28,20 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Enumeration;
+import java.util.Properties;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
+import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
+import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.channels.Timer;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
@@ -53,6 +58,9 @@ public class CoasterPersistentService extends CoasterService {
     public static final Logger logger = Logger.getLogger(CoasterPersistentService.class);
     
     private static boolean stats, passive;
+    
+    private JobQueue sharedQueue;
+    private boolean shared;
 
     public CoasterPersistentService() throws IOException {
         super(false);
@@ -68,6 +76,40 @@ public class CoasterPersistentService extends CoasterService {
     public CoasterPersistentService(boolean secure, int port, InetAddress bindTo)
             throws IOException {
         super(secure, port, bindTo);
+    }
+    
+    public void setShared(boolean shared) {
+        this.shared = shared;
+        if (shared) {
+            sharedQueue = super.createJobQueue(null);
+        }
+    }
+    
+    public boolean isPersistent() {
+        return true;
+    }
+    
+    public boolean isShared() {
+        return shared;
+    }
+    
+    public JobQueue getSharedQueue() {
+        if (!shared) {
+            throw new IllegalStateException("Not in shared mode");
+        }
+        return sharedQueue;
+    }
+
+    @Override
+    public void clientRequestedShutdown(CoasterChannel channel) {
+        if (shared) {
+            logger.info("Shutdown requested in shared mode. Ignoring.");
+            sharedQueue.getBroadcaster().removeChannel(channel);
+        }
+        else {
+            logger.info("Shutdown requested on channel " + channel + ". Shutting down affected queues.");
+            shutDownQueuesForChannel(channel);
+        }
     }
 
     public static void main(String[] args) {
@@ -98,6 +140,10 @@ public class CoasterPersistentService extends CoasterService {
         ap.addFlag("passive",
             "Initialize the passive worker service and " +
                     "set the passive worker manager to be the default (otherwise the block allocator will be used)");
+        ap.addOption("shared", "Enables shared automatically-allocated workers mode in which workers started by " +
+        		"a client can be re-used by subsequent clients. The argument specifies a file that contains all " +
+        		"the configuration options for the block allocator. Cannot be used with passive workers.", 
+        		"config-file", ArgumentParser.OPTIONAL);
         ap.addFlag("stats", "Show a table of various run-time information");
         ap.addFlag("help", "Displays usage information");
         ap.addAlias("help", "h");
@@ -178,6 +224,11 @@ public class CoasterPersistentService extends CoasterService {
                 s.setDefaultQP("passive");
                 passive = true;
             }
+            else if (ap.isPresent("shared")) {
+                s.setDefaultQP("block");
+                s.setShared(true);
+                loadSharedSettings(ap.getStringValue("shared"), s.getSharedQueue().getSettings());
+            }
             else {
                 s.setDefaultQP("block");
             }
@@ -218,6 +269,17 @@ public class CoasterPersistentService extends CoasterService {
         }
     }
     
+    private static void loadSharedSettings(String fileName, Settings settings) throws IOException {
+        Properties props = new Properties();
+        FileReader r = new FileReader(fileName);
+        props.load(r);
+        r.close();
+        
+        for (String name : props.stringPropertyNames()) {
+            settings.set(name, props.getProperty(name));
+        }
+    }
+
     private static void disableConsoleLogging() {
     	ConsoleAppender ca = (ConsoleAppender) getAppender(ConsoleAppender.class);
         if (ca == null) {

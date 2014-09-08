@@ -44,7 +44,6 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.ConnectionHandler;
 import org.globus.cog.coaster.GSSService;
-import org.globus.cog.coaster.channels.ChannelContext;
 import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.channels.PipedServerChannel;
@@ -62,7 +61,7 @@ public class LocalService extends GSSService implements Registering {
     private Map<String, String> services;
     private Map<String, Long> lastHeardOf;
     
-    private Map<ChannelContext, ServiceTrackerPair> resourceTrackers;
+    private Map<CoasterChannel, ServiceTrackerPair> resourceTrackers;
 
     public LocalService() throws IOException, GlobusCredentialException, GSSException {
         super();
@@ -75,7 +74,7 @@ public class LocalService extends GSSService implements Registering {
         setAuthorization(new SelfAuthorization());
         services = new HashMap<String, String>();
         lastHeardOf = new HashMap<String, Long>();
-        resourceTrackers = new HashMap<ChannelContext, ServiceTrackerPair>();
+        resourceTrackers = new HashMap<CoasterChannel, ServiceTrackerPair>();
         this.accept = true;
         Thread t = new Thread(this);
         t.setName("Local service");
@@ -110,7 +109,9 @@ public class LocalService extends GSSService implements Registering {
     }
     
     public PipedServerChannel newPipedServerChannel() {
-        return new PipedServerChannel(LocalRequestManager.INSTANCE, new ChannelContext("spipe", this));
+        PipedServerChannel psc = new PipedServerChannel(LocalRequestManager.INSTANCE, null);
+        psc.setService(this);
+        return psc;
     }
 
     public String waitForRegistration(Task t, String id) throws InterruptedException,
@@ -210,17 +211,17 @@ public class LocalService extends GSSService implements Registering {
         }
     }
 
-    public ServiceTrackerPair getResourceTracker(ChannelContext context) {
-        return resourceTrackers.get(context);
+    public ServiceTrackerPair getResourceTracker(CoasterChannel channel) {
+        return resourceTrackers.get(channel);
     }
 
-    public void addResourceTracker(ChannelContext ctx, Service service, 
+    public void addResourceTracker(CoasterChannel channel, Service service, 
             CoasterResourceTracker resourceTracker) {
-        resourceTrackers.put(ctx, new ServiceTrackerPair(service, resourceTracker));
+        resourceTrackers.put(channel, new ServiceTrackerPair(service, resourceTracker));
     }
 
-    public void resourceUpdated(ChannelContext ctx, String name, String value) {
-        ServiceTrackerPair stp = resourceTrackers.get(ctx);
+    public void resourceUpdated(CoasterChannel channel, String name, String value) {
+        ServiceTrackerPair stp = resourceTrackers.get(channel);
         if (stp != null) {
             stp.tracker.resourceUpdated(stp.service, name, value);
         }

@@ -30,6 +30,6 @@ package org.globus.cog.coaster.channels;
 
 public interface ChannelListener {
 
-	void channelShutDown(Exception e);
+	void channelClosed(CoasterChannel channel, Exception e);
 	
 }

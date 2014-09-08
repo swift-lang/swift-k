@@ -49,7 +49,6 @@ import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.coaster.ProtocolException;
-import org.globus.cog.coaster.channels.ChannelException;
 import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
@@ -104,16 +103,13 @@ public class ProxyIOProvider implements IOProvider {
         }
 
         public void close() throws IOException {
-            if (channel != null) {
-                ChannelManager.getManager().releaseChannel(channel);
-            }
         }
 
         public void setLength(long len) throws IOException {
             try {
                 RemoteFile uri = new RemoteFile(dst);
                 cmd = new CustomPutFileCmd(src, "file://localhost/" + uri.getPath(), len, this);
-                channel = ChannelManager.getManager().reserveChannel("id://" + uri.getHost(), null);
+                channel = ChannelManager.getManager().getExistingChannel("id://" + uri.getHost(), null);
                 cmd.executeAsync(channel, this);
                 cb.info(String.valueOf(cmd.getId()));
                 synchronized(this) {
@@ -147,7 +143,6 @@ public class ProxyIOProvider implements IOProvider {
 
         public void replyReceived(Command cmd) {
             cb.done(this);
-            ChannelManager.getManager().releaseChannel(channel);
         }
 
         public void abort() throws IOException {
@@ -284,12 +279,7 @@ public class ProxyIOProvider implements IOProvider {
             this.src = src;
             RemoteFile uri = newRemoteFile(src);
             cmd = new CustomGetFileCmd("file://localhost/" + uri.getPath(), dst, this);
-            try {
-                channel = ChannelManager.getManager().reserveChannel("id://" + uri.getHost(), null);
-            }
-            catch (ChannelException e) {
-                throw new IOException("Cannot establish channel to " + uri.getHost());
-            }
+            channel = ChannelManager.getManager().getExistingChannel("id://" + uri.getHost(), null);
         }
         
         public String toString() {
@@ -357,9 +347,6 @@ public class ProxyIOProvider implements IOProvider {
         }
 
         public void close() {
-            if (channel != null) {
-                ChannelManager.getManager().releaseChannel(channel);
-            }
         }
 
         public void abort() throws IOException {

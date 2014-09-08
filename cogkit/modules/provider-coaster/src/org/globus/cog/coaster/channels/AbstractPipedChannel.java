@@ -34,7 +34,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
 import org.globus.cog.coaster.RequestManager;
 import org.globus.cog.coaster.UserContext;
-import org.globus.cog.coaster.RemoteConfiguration.Entry;
 
 /**
  * A channel implementation for which the other endpoint lives in the
@@ -49,14 +48,11 @@ public class AbstractPipedChannel extends AbstractCoasterChannel {
 	private AbstractPipedChannel s;
 	private final Sender sender;
 
-	public AbstractPipedChannel(RequestManager requestManager, ChannelContext channelContext,
-			boolean client) {
-		super(requestManager, channelContext, client);
-		channelContext.setUserContext(new UserContext(null, channelContext));
-		channelContext.setConfiguration(new Entry("localhost", "KEEPALIVE(-1)"));
+	public AbstractPipedChannel(RequestManager requestManager, UserContext userContext, boolean client) {
+		super(requestManager, userContext, client);
 		sender = new Sender();
 	}
-
+	
 	protected void setOther(AbstractPipedChannel s) {
 		this.s = s;
 	}
@@ -161,6 +157,8 @@ public class AbstractPipedChannel extends AbstractCoasterChannel {
 		}
 	}
 
+	@Override
 	public void start() throws ChannelException {
+	    super.start();
 	}
 }

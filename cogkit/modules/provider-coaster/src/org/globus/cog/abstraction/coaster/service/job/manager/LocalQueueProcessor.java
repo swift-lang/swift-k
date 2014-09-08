@@ -40,10 +40,10 @@ import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
-import org.globus.cog.coaster.channels.ChannelContext;
 
 public class LocalQueueProcessor extends AbstractQueueProcessor {
     private TaskHandler taskHandler;
+    private boolean done;
 
     public LocalQueueProcessor(LocalTCPService localService) {
         super("Local Queue Processor", localService);
@@ -53,8 +53,11 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
     public void run() {
         try {
             AssociatedTask at;
-            while (!this.getShutdownFlag()) {
+            while (!getShutdownFlag()) {
                 at = take();
+                if (at.task == null && getShutdownFlag()) {
+                    break;
+                }
                 try {
                     at.task.setService(0, buildService(at.task));
                     taskHandler.submit(at.task);
@@ -64,13 +67,26 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
                     at.task.setStatus(new StatusImpl(Status.FAILED, null, e));
                 }
             }
+            done = true;
         }
         catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void setClientChannelContext(ChannelContext channelContext) {
+    @Override
+    public void startShutdown() {
+        super.startShutdown();
+        // wake up the loop
+        getQueue().offer(new AssociatedTask(null));
+    }
+
+    @Override
+    public boolean isShutDown() {
+        return done;
+    }
+
+    public void setBroadcaster(Broadcaster b) {
     }
 
     public static ExecutionService buildService(Task prototype)

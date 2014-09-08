@@ -62,7 +62,12 @@ public abstract class RequestHandler extends RequestReply {
 	}
 	
 	protected synchronized void unregister() {
-    	this.getChannel().unregisterHandler(this.getId());
+	    int id = this.getId();
+	    if (id == NOID) {
+	        return;
+	    }
+    	this.getChannel().unregisterHandler(id);
+    	this.setId(NOID);
 	}
 	
 	public void dataReceived(boolean fin, boolean error, byte[] data) throws ProtocolException {

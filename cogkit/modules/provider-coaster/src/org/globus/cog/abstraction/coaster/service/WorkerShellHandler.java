@@ -32,8 +32,6 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.abstraction.impl.execution.coaster.WorkerShellCommand;
 import org.globus.cog.coaster.ProtocolException;
-import org.globus.cog.coaster.channels.ChannelException;
-import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
@@ -53,24 +51,19 @@ public class WorkerShellHandler extends RequestHandler implements Callback {
                 forwardSignal(data);
             }
         };
-        CoasterService service = (CoasterService) getChannel().getChannelContext().getService();
+        CoasterChannel channel = getChannel();
+        CoasterService service = (CoasterService) channel.getService();
         int sep = id.indexOf(':');
         String blockID = id.substring(0, sep);
         String workerID = id.substring(sep + 1);
         BlockQueueProcessor bqp = service.getLocalService().getQueueProcessor(blockID);
-        try {
-            ChannelManager manager = ChannelManager.getManager();
-            CoasterChannel worker = bqp.getWorkerChannel(blockID, workerID);
-            if (worker == null) {
-                sendReply("Error: worker not found");
-            }
-            else {
-                CoasterChannel reserved = manager.reserveChannel(worker);
-                wsc.executeAsync(reserved, this);
-            }
+        
+        CoasterChannel worker = bqp.getWorkerChannel(blockID, workerID);
+        if (worker == null) {
+            sendReply("Error: worker not found");
         }
-        catch (ChannelException e) {
-            sendError("Cannot contact worker", e);
+        else {
+            wsc.executeAsync(channel, this);
         }
     }
 
