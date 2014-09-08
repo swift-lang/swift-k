@@ -145,13 +145,13 @@ void* run(void* ptr) {
 			}
 		}
 
-		timeout.tv_sec = 0.1;
+		timeout.tv_sec = 1;
 		timeout.tv_usec = 0;
 
 		// fd sets are updated by select, so make new ones every time
 		memcpy(&myrfds, rfds, sizeof(myrfds));
 		int ret = select(loop->getMaxFD() + 1, &myrfds, NULL, NULL, &timeout);
-
+		
 		checkSelectError(ret);
 
 		// can read or has data to write
@@ -195,6 +195,9 @@ bool CoasterLoop::readSockets(fd_set* fds) {
 }
 
 void CoasterLoop::writeSockets(fd_set* fds) {
+	if (done) {
+		return;
+	}
 	map<int, CoasterChannel*>::iterator it;
 
 	for (it = channelMap.begin(); it != channelMap.end(); ++it) {
@@ -279,6 +282,7 @@ void CoasterLoop::requestWrite(int count) {
 	if (!started) {
 		throw new CoasterError("requestWrite() on non-started loop");
 	}
+	/* helgrind will complain about this; it is only used for debugging */
 	writesPending += count;
 	LogDebug << "request " << count <<  " writes; writesPending: " << writesPending << endl;
 	char tmp[count];
@@ -309,7 +313,7 @@ fd_set* CoasterLoop::getWriteFDs() {
 	return &wfds;
 }
 
-int CoasterLoop::getMaxFD() {
+int CoasterLoop::getMaxFD() { Lock::Scoped l(lock);
 	return maxFD;
 }
 

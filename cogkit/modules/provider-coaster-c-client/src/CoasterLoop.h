@@ -53,7 +53,7 @@ class CoasterLoop {
 		fd_set rfds, wfds;
 		int socketCount;
 		int maxFD;
-		int writesPending;
+		volatile int writesPending;
 
 		void updateMaxFD();
 		void acknowledgeWriteRequest(int count);
