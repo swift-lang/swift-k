@@ -46,6 +46,7 @@ int main(void) {
 		s.set(Settings::Key::SLOTS, "1");
 		s.set(Settings::Key::MAX_NODES, "1");
 		s.set(Settings::Key::JOBS_PER_NODE, "2");
+		s.set(Settings::Key::PROVIDER, "local");
 
 		std::string configId = client.setOptions(s);
 

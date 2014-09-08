@@ -1,7 +1,9 @@
-bin_PROGRAMS = coaster-client-test run-coaster-job
+bin_PROGRAMS = coaster-client-test run-coaster-job coaster-client-test-multiple
 coaster_client_test_SOURCES = CoasterClientTest.cpp
+coaster_client_test_multiple_SOURCES = CoasterClientTestMultiple.cpp
 run_coaster_job_SOURCES = RunCoasterJob.cpp
 coaster_client_test_LDADD = libcoasterclient.la
+coaster_client_test_multiple_LDADD = libcoasterclient.la
 run_coaster_job_LDADD = libcoasterclient.la
 
 lib_LTLIBRARIES = libcoasterclient.la
@@ -22,7 +24,7 @@ lib_LTLIBRARIES = libcoasterclient.la
 
 libcoasterclient_la_SOURCES = \
 	$(SWIG_SRC) \
-        coaster.cpp coaster.h coaster-defs.h \
+	coaster.cpp coaster.h coaster-defs.h \
 	Lock.h Lock.cpp \
 	ConditionVariable.h ConditionVariable.cpp \
 	CommandCallback.h \
@@ -44,8 +46,8 @@ libcoasterclient_la_SOURCES = \
 	JobStatus.h JobStatus.cpp \
 	Job.h Job.cpp \
 	JobSubmitCommand.h JobSubmitCommand.cpp \
-	ChannelConfigurationCommand.h ChannelConfigurationCommand.cpp \
 	ServiceConfigurationCommand.h ServiceConfigurationCommand.cpp \
+	ServiceShutdownCommand.h ServiceShutdownCommand.cpp \
 	StagingSetEntry.h StagingSetEntry.cpp \
 	CoasterError.h CoasterError.cpp \
 	JobStatusHandler.h JobStatusHandler.cpp \

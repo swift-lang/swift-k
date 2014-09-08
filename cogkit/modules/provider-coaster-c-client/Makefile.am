@@ -4,7 +4,7 @@ EXTRA_DIST = autogen.sh
 LIBS = -pthread $(LIBS)
 include_HEADERS = src/coaster.h src/coaster-defs.h \
             src/Buffer.h src/ChannelCallback.h \
-            src/ChannelConfigurationCommand.h src/ClientHandlerFactory.h \
+            src/ClientHandlerFactory.h \
             src/CoasterChannel.h src/CoasterClient.h \
             src/CoasterError.h src/CoasterLoop.h src/CoasterSWIG.h \
             src/CommandCallback.h src/Command.h src/ConditionVariable.h \
@@ -12,9 +12,10 @@ include_HEADERS = src/coaster.h src/coaster-defs.h \
             src/HeartBeatCommand.h src/Job.h src/JobStatus.h \
             src/JobStatusHandler.h src/RemoteLogHandler.h \
             src/BQPStatusHandler.h src/ResourceUpdateHandler.h \
-	    src/JobSubmitCommand.h src/Lock.h \
+            src/JobSubmitCommand.h src/Lock.h \
             src/Logger.h src/RemoteCoasterException.h src/RequestReply.h \
             src/ServiceConfigurationCommand.h src/Settings.h \
+            src/ServiceShutdownCommand.h \
             src/StagingSetEntry.h \
             src/ShutdownCommand.h
 
@@ -26,6 +27,7 @@ binaries: all
 	cp src/.libs/libcoasterclient.a dist/lib
 	cp -d src/.libs/libcoasterclient.so* dist/lib
 	cp src/.libs/coaster-client-test dist/bin
+	cp src/.libs/coaster-client-test-multiple dist/bin
 	cp src/.libs/run-coaster-job dist/bin
 
 if SWIG
