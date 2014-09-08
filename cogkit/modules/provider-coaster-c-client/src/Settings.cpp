@@ -54,6 +54,10 @@ string Settings::Key::USE_HASH_BANG = "useHashBang";
 string Settings::Key::PARALLELISM = "parallelism";
 string Settings::Key::CORES_PER_NODE = "coresPerNode";
 
+string Settings::Key::PROVIDER = "provider";
+string Settings::Key::JOB_MANAGER = "jobManager";
+string Settings::Key::SERVICE_CONTACT = "serviceContact";
+
 Settings::Settings() {
 }
 

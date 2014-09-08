@@ -92,6 +92,14 @@ class Settings {
 				static std::string USE_HASH_BANG;
 				static std::string PARALLELISM;
 				static std::string CORES_PER_NODE;
+				// what provider to use to start the workers
+				static std::string PROVIDER;
+				// the job manager to use for starting the workers
+				// if the provider uses one
+				static std::string JOB_MANAGER;
+				// where to submit block jobs, if the provider 
+				// requires it
+				static std::string SERVICE_CONTACT;
 		};
 };
 
