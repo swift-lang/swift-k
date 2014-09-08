@@ -52,8 +52,8 @@ void JobStatusHandler::requestReceived() {
 		msg.assign(ss.str());
 	}
 	JobStatus* s = new JobStatus(statusCode, timestamp, &msg, NULL);
+	
+	sendReply("OK");
 
 	getChannel()->getClient()->updateJobStatus(jobId, s);
-
-	sendReply("OK");
 }
