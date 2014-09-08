@@ -317,11 +317,20 @@ public class RemoteFile {
     public boolean equals(Object obj) {
         if (obj instanceof RemoteFile) {
             RemoteFile a = (RemoteFile) obj;
-            return name.equals(a.name) && (dir == null ? a.dir == null : dir.equals(a.dir)) && 
-                host.equals(a.host) && port == a.port && protocol.equals(a.protocol);
+            return name.equals(a.name) && equals(dir, a.dir) && 
+                equals(host, a.host) && port == a.port && equals(protocol, a.protocol);
         }
         else {
             return false;
+        }
+    }
+
+    private boolean equals(String s1, String s2) {
+        if (s1 == null) {
+            return s2 == null;
+        }
+        else {
+            return s1.equals(s2);
         }
     }
 
