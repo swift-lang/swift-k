@@ -27,7 +27,6 @@
 #include "CoasterChannel.h"
 #include "CoasterError.h"
 #include "HeartBeatCommand.h"
-#include "ShutdownCommand.h"
 #include <cassert>
 #include <stdlib.h>
 #include <errno.h>
@@ -106,9 +105,8 @@ void CoasterChannel::start() {
 	}
 }
 
-void CoasterChannel::shutdown() {
-	ShutdownCommand cmd;
-        cmd.execute(this);
+void CoasterChannel::close() {
+	shutdown(sockFD, 2);
 }
 
 int CoasterChannel::getSockFD() {
@@ -177,12 +175,21 @@ void CoasterChannel::dispatchData() {
 	}
 }
 
-void CoasterChannel::dispatchReply() {
+Command* CoasterChannel::getRegisteredCommand(int tag) { Lock::Scoped l(writeLock);
 	if (commands.count(rtag) == 0) {
+		return NULL;
+	}
+	else {
+		return commands[rtag];
+	}
+}
+
+void CoasterChannel::dispatchReply() {
+	Command* cmd = getRegisteredCommand(rtag);
+	if (cmd == NULL) {
 		throw new CoasterError("Received reply to unknown command (tag: %d)", rtag);
 	}
 	LogDebug << "dispatching reply " << rtag << ", " << rflags << endl;
-	Command* cmd = commands[rtag];
 	if (rflags & FLAG_SIGNAL) {
 		try {
 			cmd->signalReceived(msg.detachBuffer());
@@ -269,7 +276,7 @@ void CoasterChannel::dispatchRequest() {
  */
 bool CoasterChannel::write() { Lock::Scoped l(writeLock);
 	DataChunk* dc = sendQueue.front();
-
+	
 	Buffer* buf = dc->buf;
 
 	int ret = socksend(sockFD, buf->getData(), (buf->getLen() - dc->bufpos), MSG_DONTWAIT);
@@ -339,13 +346,13 @@ void CoasterChannel::decodeHeader(int* tag, int* flags, int* len) {
 	}
 }
 
-void CoasterChannel::registerCommand(Command* cmd) {
+void CoasterChannel::registerCommand(Command* cmd) { Lock::Scoped l(writeLock);
 	int tag = tagSeq++;
 	cmd->setTag(tag);
 	commands[tag] = cmd;
 }
 
-void CoasterChannel::unregisterCommand(Command* cmd) {
+void CoasterChannel::unregisterCommand(Command* cmd) { Lock::Scoped l(writeLock);
 	commands.erase(cmd->getTag());
 }
 

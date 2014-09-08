@@ -128,9 +128,11 @@ class CoasterChannel {
 		void dispatchReply();
 		bool read(DataChunk* dc);
 
-                void registerHandler(int tag, Handler* h);
+        void registerHandler(int tag, Handler* h);
 		void unregisterHandler(Handler* h);
-
+		
+		Command* getRegisteredCommand(int tag);
+		
 		/* Disable default copy constructor */
 		CoasterChannel(const CoasterChannel&);
 		/* Disable default assignment */
@@ -144,14 +146,8 @@ class CoasterChannel {
 
 		std::list<DataChunk*> getSendQueue();
 
-		/*
-		 * Initiate shutdown and wait until shutdown acknowledged
-		 * by service.  After this no further messages will be
-		 * received from service, and no messages should be sent
-		 * by this client.
-		 */
-		void shutdown();
 		void start();
+		void close();
 
 		void read();
 		bool write();
