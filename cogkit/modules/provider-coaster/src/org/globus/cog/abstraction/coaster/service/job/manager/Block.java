@@ -205,7 +205,9 @@ public class Block implements StatusListener, Comparable<Block> {
     public void remove(Cpu cpu) {
         synchronized (cpus) {
             if (scpus.remove(cpu) == null) {
-                CoasterService.error(16, "CPU was not in the block", new Throwable());
+                if (!shutdown) {
+                    CoasterService.error(16, "CPU was not in the block", new Throwable());
+                }
             }
             if (scpus.containsKey(cpu)) {
                 CoasterService.error(17, "CPU not removed", new Throwable());
@@ -320,7 +322,7 @@ public class Block implements StatusListener, Comparable<Block> {
 				        logger.info("Adding short shutdown watchdog: count = " + 
 				            count + ", workers = " + workers + ", now = " + now);
 				    }
-                    addForcedShutdownWatchdog(100);
+                    addForcedShutdownWatchdog(1000);
 	            }
 				else {
 				    if (logger.isInfoEnabled()) {
@@ -348,7 +350,7 @@ public class Block implements StatusListener, Comparable<Block> {
             @Override
             public void run() {
                 if (running) {
-                    logger.info("Watchdog: forceShutdown: " + this);
+                    logger.info("Watchdog: forceShutdown: " + Block.this);
                     forceShutdown();
                 }
             }
