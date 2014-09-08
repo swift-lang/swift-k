@@ -307,7 +307,7 @@ public class TCPBufferManager {
 
         public synchronized void close() throws IOException {
             removeSocket(this);
-            super.close();
+            s.close();
         }
     }
 }
