@@ -76,7 +76,9 @@ void Handler::send(CoasterChannel* channel) {
 
 	while (od->size() > 0) {
 		Buffer* b = od->front();
-                int flags = FLAG_REPLY + (od->size() == 0 ? FLAG_FINAL : 0);
+		// od->size() is 1 on the last chunk, since the removal happens
+		// at the end of the loop
+		int flags = FLAG_REPLY + (od->size() == 1 ? FLAG_FINAL : 0);
 		channel->send(tag, b, flags, &DeleteBufferCallback::CALLBACK);
 		od->pop_front();
 	}
