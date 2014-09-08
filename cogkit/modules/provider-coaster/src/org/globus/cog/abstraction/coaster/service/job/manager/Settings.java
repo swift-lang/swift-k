@@ -46,6 +46,7 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
+import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 
@@ -638,6 +639,10 @@ public class Settings {
         else if (clazz.equals(TimeInterval.class)) {
             args = new Object[]
                 { TimeInterval.fromSeconds(Integer.parseInt(value)) };
+        }
+        else if (clazz.equals(ServiceContact.class)) {
+            args = new Object[]
+                { new ServiceContactImpl(value) };
         }
         else {
             throw new IllegalArgumentException
