@@ -101,7 +101,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     // private Task startServiceTask;
     private SubmitJobCommand jsc;
     private GSSCredential cred;
-    private String jobid;
     private String url;
     private String cancelMessage;
     private boolean cancel;
@@ -170,6 +169,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     private void submitJob(CoasterChannel channel, Task task, String configId) throws ProtocolException {
+        NotificationManager.getDefault().registerListener(task.getIdentity().getValue(), task, this);
         jsc = new SubmitJobCommand(task, configId);
         jsc.executeAsync(channel, this);
     }
@@ -213,6 +213,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             TaskSubmissionException {
         // TODO shouldn't this be setting the task status?
         try {
+            String jobid = getTask().getIdentity().getValue();
             if (jobid != null) {
                 CoasterChannel channel =
                         ChannelManager.getManager().getOrCreateChannel(url, cred,
@@ -244,21 +245,20 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     public void replyReceived(Command cmd) {
         if (cmd == jsc) {
-            jobid = cmd.getInDataAsString(0);
+            String remoteid = cmd.getInDataAsString(0);
             getTask().setStatus(Status.SUBMITTED);
             if (cancel) {
                 try {
                     cancel(cancelMessage);
                 }
                 catch (Exception e) {
-                    logger.warn("Failed to cancel jobid: " + jobid + " " + e.getMessage());
+                    logger.warn("Failed to cancel jobid: " + getTask().getIdentity() + " " + e.getMessage());
                 }
             }
             jsc = null;
             if (logger.isDebugEnabled()) {
-                logger.debug("Submitted task " + getTask() + ". Job id: " + jobid);
+                logger.debug("Submitted task " + getTask() + ". Remote id: " + remoteid);
             }
-            NotificationManager.getDefault().registerListener(jobid, getTask(), this);
         }
     }
 
