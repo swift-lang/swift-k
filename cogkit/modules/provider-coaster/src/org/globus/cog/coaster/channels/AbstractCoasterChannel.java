@@ -620,6 +620,7 @@ public abstract class AbstractCoasterChannel implements CoasterChannel {
 
 	@Override
 	public void flush() throws IOException {
+	    // sub-classes should implement this
 	}
 
 	@Override

@@ -369,8 +369,24 @@ public class CoasterService extends GSSService implements ChannelListener {
         this.suspended = false;
     }
     
-    public void clientRequestedShutdown(CoasterChannel channel) {
+    public boolean clientRequestedShutdown(CoasterChannel channel) {
         shutdown();
+        return true;
+    }
+    
+    public void waitForShutdown(CoasterChannel channel) {
+        try {
+            channel.flush();
+        }
+        catch (IOException e) {
+            logger.warn("Failed to flush channel", e);
+        }
+        super.shutdown();
+        logger.info("Shutdown completed");
+        done = true;
+        synchronized(this) {
+            notifyAll();
+        }
     }
 
     @Override
@@ -378,7 +394,6 @@ public class CoasterService extends GSSService implements ChannelListener {
         logger.info("Starting shutdown");
         startShutdownWatchdog();
         unregister();
-        super.shutdown();
         for (JobQueue q : queues.values()) {
             try {
                 q.startShutdown();
@@ -391,11 +406,6 @@ public class CoasterService extends GSSService implements ChannelListener {
         for (JobQueue q : queues.values()) {
             logger.info("Waiting for queue " + q + " to shut down");
             q.waitForShutdown();
-        }
-        logger.info("Shutdown completed");
-        done = true;
-        synchronized(this) {
-            notifyAll();
         }
     }
 

@@ -278,6 +278,7 @@ public abstract class AbstractStreamCoasterChannel extends AbstractCoasterChanne
 	}
 
 	public void flush() throws IOException {
+	    purge(this);
 		outputStream.flush();
 	}
 

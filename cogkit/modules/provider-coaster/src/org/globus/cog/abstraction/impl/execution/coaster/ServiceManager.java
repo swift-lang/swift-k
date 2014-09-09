@@ -538,13 +538,13 @@ public class ServiceManager implements StatusListener {
         }
 
         public synchronized void errorReceived(Command cmd, String msg, Exception t) {
-            logger.warn("error " + msg);
+            logger.warn("Error shutting down service: " + msg);
             count--;
             notifyAll();
         }
 
         public synchronized void replyReceived(Command cmd) {
-            // System.out.print("+");
+            cmd.getChannel().close();
             count--;
             notifyAll();
         }

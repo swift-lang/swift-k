@@ -43,8 +43,11 @@ public class ServiceShutdownHandler extends RequestHandler {
         try {
             CoasterChannel channel = getChannel();
             CoasterService cs = (CoasterService) channel.getService();
-            cs.clientRequestedShutdown(channel);
+            boolean mustWait = cs.clientRequestedShutdown(channel);
             sendReply("OK");
+            if (mustWait) {
+                cs.waitForShutdown(channel);
+            }
         }
         catch (Exception e) {
             logger.warn("Failed to shut down service", e);

@@ -101,7 +101,7 @@ public class CoasterPersistentService extends CoasterService {
     }
 
     @Override
-    public void clientRequestedShutdown(CoasterChannel channel) {
+    public boolean clientRequestedShutdown(CoasterChannel channel) {
         if (shared) {
             logger.info("Shutdown requested in shared mode. Ignoring.");
             sharedQueue.getBroadcaster().removeChannel(channel);
@@ -110,6 +110,7 @@ public class CoasterPersistentService extends CoasterService {
             logger.info("Shutdown requested on channel " + channel + ". Shutting down affected queues.");
             shutDownQueuesForChannel(channel);
         }
+        return false;
     }
 
     public static void main(String[] args) {
