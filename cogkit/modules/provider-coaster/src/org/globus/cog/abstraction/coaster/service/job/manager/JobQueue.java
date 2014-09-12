@@ -128,7 +128,7 @@ public class JobQueue {
             return new BlockQueueProcessor(localService, settings);
         }
         else if (name.equals("passive")) {
-            return service.getPassiveQueueProcessor();
+            return new PassiveQueueProcessor(localService, localService.getContact());
         }
         else {
             throw new IllegalArgumentException("No such queue processor: " + name);

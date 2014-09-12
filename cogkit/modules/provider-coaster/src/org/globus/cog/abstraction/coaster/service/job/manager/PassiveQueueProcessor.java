@@ -45,9 +45,10 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
     private int currentWorkers;
 
     public PassiveQueueProcessor(LocalTCPService localService, URI callbackURI) {
-        super(localService, null);
+        super(localService, new Settings());
         setName("Passive Queue Processor");
         this.callbackURI = callbackURI;
+        localService.setSingleQP(this);
     }
 
     @Override

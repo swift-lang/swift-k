@@ -277,5 +277,9 @@ public class LocalTCPService implements Registering, Service, Runnable {
             // x > interval).
             return false;
         }
+    }
+
+    public void setSingleQP(BlockQueueProcessor qp) {
+        blockRegistry.setSingleQP(qp);
     }    
 }

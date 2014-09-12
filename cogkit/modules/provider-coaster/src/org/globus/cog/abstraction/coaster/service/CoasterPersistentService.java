@@ -99,6 +99,16 @@ public class CoasterPersistentService extends CoasterService {
         }
         return sharedQueue;
     }
+    
+    @Override
+    public JobQueue getJobQueue(String id) {
+        if (shared) {
+            return sharedQueue;
+        }
+        else {
+            return super.getJobQueue(id);
+        }
+    }
 
     @Override
     public boolean clientRequestedShutdown(CoasterChannel channel) {
@@ -140,7 +150,8 @@ public class CoasterPersistentService extends CoasterService {
         ap.addFlag("local", "Binds the service to the loopback interface");
         ap.addFlag("passive",
             "Initialize the passive worker service and " +
-                    "set the passive worker manager to be the default (otherwise the block allocator will be used)");
+                    "set the passive worker manager to be the default (otherwise the block allocator will be used)." +
+                    "The workers will be shared by all connecting clients like in shared mode.");
         ap.addOption("shared", "Enables shared automatically-allocated workers mode in which workers started by " +
         		"a client can be re-used by subsequent clients. The argument specifies a file that contains all " +
         		"the configuration options for the block allocator. Cannot be used with passive workers.", 
@@ -223,6 +234,7 @@ public class CoasterPersistentService extends CoasterService {
             s.setIgnoreIdleTime(true);
             if (ap.isPresent("passive")) {
                 s.setDefaultQP("passive");
+                s.setShared(true);
                 passive = true;
             }
             else if (ap.isPresent("shared")) {
@@ -236,7 +248,9 @@ public class CoasterPersistentService extends CoasterService {
             s.start();
             addShutdownHook(s);
             System.out.println("Started coaster service: " + s);
-            System.out.println("Worker connection URL: " + s.getLocalService().getContact());
+            if (passive) {
+                System.out.println("Worker connection URL: " + s.getLocalService().getContact());
+            }
             if (ap.isPresent("stats")) {
             	disableConsoleLogging();
             	statusDisplay = new CPSStatusDisplay(passive);

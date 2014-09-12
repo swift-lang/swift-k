@@ -36,6 +36,7 @@ import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class BlockRegistry implements RegistrationManager {
     private Map<String, BlockQueueProcessor> managers;
+    private BlockQueueProcessor singleQP; 
     
     public BlockRegistry() {
         this.managers = new HashMap<String, BlockQueueProcessor>();
@@ -48,6 +49,9 @@ public class BlockRegistry implements RegistrationManager {
     }
     
     private BlockQueueProcessor get(String blockId) {
+        if (singleQP != null) {
+            return singleQP;
+        }
         synchronized(managers) {
             BlockQueueProcessor rm = managers.get(blockId);
             if (rm == null) {
@@ -76,5 +80,9 @@ public class BlockRegistry implements RegistrationManager {
 
     public BlockQueueProcessor getQueueProcessor(String blockID) {
         return get(blockID);
+    }
+
+    public void setSingleQP(BlockQueueProcessor qp) {
+        this.singleQP = qp;
     }
 }
