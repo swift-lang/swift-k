@@ -32,6 +32,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -214,6 +215,7 @@ public class CoasterPersistentService extends CoasterService {
             }
 
             setupLogging();
+            logger.info("Command line arguments: " + Arrays.asList(args));
             final CoasterPersistentService s;
             if (!secure) {
                 s = new CoasterPersistentService(false, port, bindTo);
@@ -230,9 +232,13 @@ public class CoasterPersistentService extends CoasterService {
             }
             
             writePorts(s, portFile, localPortFile);
-            
+                        
             s.setIgnoreIdleTime(true);
             if (ap.isPresent("passive")) {
+                if (ap.isPresent("shared")) {
+                    System.err.println("You cannot use -shared with -passive");
+                    System.exit(3);
+                }
                 s.setDefaultQP("passive");
                 s.setShared(true);
                 passive = true;
