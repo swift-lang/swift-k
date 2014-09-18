@@ -28,6 +28,8 @@
  */
 package org.globus.cog.abstraction.coaster.service.local;
 
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
@@ -36,6 +38,7 @@ import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.RemoteException;
 import org.globus.cog.coaster.handlers.RequestHandler;
 
 public class JobStatusHandler extends RequestHandler {
@@ -67,6 +70,9 @@ public class JobStatusHandler extends RequestHandler {
                     out = getInDataAsString(5);
                     err = getInDataAsString(6);
                 }
+                else if (getInDataSize() == 6) {
+                    s.setException(getException(getInData(5)));
+                }
             }
             if (message != null && !message.equals("")) {
                 s.setMessage(message);
@@ -77,6 +83,33 @@ public class JobStatusHandler extends RequestHandler {
         }
         catch (Exception e) {
             throw new ProtocolException("Could not deserialize job status", e);
+        }
+    }
+
+    private Exception getException(byte[] inData) {
+        if (inData.length > 2 && inData[0] == (byte) 0xac && inData[1] == (byte) 0xed) {
+            // serialized Java Object
+            try {
+                ByteArrayInputStream is = new ByteArrayInputStream(inData);
+                ObjectInputStream oos = new ObjectInputStream(is);
+                Object o = oos.readObject();
+                if (o instanceof Exception) {
+                    return new RemoteException((Exception) o);
+                }
+                else {
+                    return new RuntimeException(o.toString());
+                }
+            }
+            catch (Exception e) {
+                logger.info("Could not deserialize job status exception", e);
+                return new RuntimeException("Error deserializing job status exception");
+            }
+        }
+        else if (inData.length == 0) {
+            return null;
+        }
+        else {
+            return new RuntimeException(new String(inData));
         }
     }
 }

@@ -1117,13 +1117,13 @@ sub heartbeatCBDataIn {
 }
 
 sub queueJobStatusCmd {
-	my ($jobid, $statusCode, $errorCode, $msg) = @_;
+	my ($jobid, $statusCode, $errorCode, $msg, $detail) = @_;
 	
 	if ($statusCode == FAILED) {
 		checkSoftimageJobFailure($jobid, $msg);
-	} 
+	}
 	queueCmd((nullCB(), "JOBSTATUS", $jobid, 
-			encodeInt($statusCode), encodeInt($errorCode), $msg, NULL_TIMESTAMP));
+			encodeInt($statusCode), encodeInt($errorCode), $msg, NULL_TIMESTAMP, $detail));
 }
 
 sub queueJobStatusCmdExt {
@@ -1303,9 +1303,13 @@ sub getFileCBDataInIndirect {
 	my $jobid = $$state{"jobid"};
 	wlog DEBUG, "$jobid getFileCBDataInIndirect jobid: $jobid, tag: $tag, flags: $flags\n";
 	if ($flags & ERROR_FLAG) {
-		wlog DEBUG, "$jobid getFileCBDataInIndirect error: $reply\n";
-		queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_RECEIVE, "Error staging in file: $reply");
-		delete($JOBDATA{$jobid});
+		if (processCBError($state, $reply, $flags)) {
+			my $msg = getErrorMessage($state);
+			wlog DEBUG, "$jobid getFileCBDataInIndirect error: $msg\n";
+			queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_RECEIVE, 
+				"Error staging in file: $msg", getErrorDetail($state));
+			delete($JOBDATA{$jobid});	
+		}
 		return;
 	}
 	elsif ($timeout) {
@@ -1339,9 +1343,13 @@ sub getFileCBDataIn {
 			wlog DEBUG, "$jobid client acknowledged abort\n";
 		}
 		else {
-			wlog DEBUG, "$jobid getFileCBDataIn FAILED 520 Error staging in file: $reply\n";
-			queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_RECEIVE, "Error staging in file: $reply");
-			delete($JOBDATA{$jobid});
+			if (processCBError($state, $reply, $flags)) {
+				my $msg = getErrorMessage($state);
+				wlog DEBUG, "$jobid getFileCBDataIn error: $msg\n";
+				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_RECEIVE, 
+					"Error staging in file: $msg", getErrorDetail($state));
+				delete($JOBDATA{$jobid});
+			}
 		}
 		return;
 	}
@@ -1381,6 +1389,43 @@ sub getFileCBDataIn {
 			completePinnedFile($jobid);
 		}
 		stagein($jobid);
+	}
+}
+
+sub processCBError {
+	my ($state, $data, $flags) = @_;
+	
+	if (!defined $$state{"error"}) {
+		my @array;
+		$$state{"error"} = \@array;
+	}
+	my $dataArray = $$state{"error"};
+	push(@$dataArray, $data);
+	my $len = scalar $dataArray;
+	
+	return ($flags & FINAL_FLAG);
+}
+
+sub getErrorMessage {
+	my ($state) = @_;
+	
+	my $dataArray = $$state{"error"};
+	my $len = scalar $dataArray;
+	
+	return $$dataArray[0];
+}
+
+sub getErrorDetail {
+	my ($state) = @_;
+	
+	my $dataArray = $$state{"error"};
+	my $len = scalar $dataArray;
+	
+	if ($len > 1) {
+		return $$dataArray[1];
+	}
+	else {
+		return "";
 	}
 }
 
@@ -1949,10 +1994,10 @@ sub putFileCBDataIn {
 		if ($JOBDATA{$jobid}) {
 			wlog DEBUG, "$tag Stage out failed ($reply)\n";
 			if ($timeout) {
-				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_TIMEOUT, "Stage out failed ($reply)");
+				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_TIMEOUT, "Stage out timed-out");
 			}
 			else {
-				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_SEND, "Stage out failed ($reply)");
+				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_SEND, "Stage out failed", $reply);
 			}
 			delete($JOBDATA{$jobid});
 		}

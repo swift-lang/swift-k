@@ -34,4 +34,8 @@ public class RemoteException extends Exception {
 	public RemoteException(String msg, Exception remote) {
 		super(msg, remote);
 	}
+	
+	public RemoteException(Exception remote) {
+        super(remote);
+    }
 }
