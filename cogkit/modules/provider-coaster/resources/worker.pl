@@ -634,6 +634,7 @@ sub nextArrayData {
 	if ($index >= $#$data) {
 		$flags += FINAL_FLAG;
 	}
+	wlog DEBUG, "nextArrayData - flags: $flags, index: $index, data: $data\n";
 	return ($flags, $$data[$index], CONTINUE);
 }
 
@@ -1121,6 +1122,9 @@ sub queueJobStatusCmd {
 	
 	if ($statusCode == FAILED) {
 		checkSoftimageJobFailure($jobid, $msg);
+	}
+	if (!defined $detail) {
+		$detail = "";
 	}
 	queueCmd((nullCB(), "JOBSTATUS", $jobid, 
 			encodeInt($statusCode), encodeInt($errorCode), $msg, NULL_TIMESTAMP, $detail));
