@@ -74,6 +74,9 @@ public class ChannelManager {
 			HostCredentialPair hcp = new HostCredentialPair(host, cred);
 			channel = getChannel(hcp);
 		}
+		if (channel == null) {
+		    throw new IllegalStateException("No such channel: " + host);
+		}
 		return channel;
 	}
 	

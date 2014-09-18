@@ -35,6 +35,7 @@ import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceConfigurationCommand;
 import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.channels.ChannelManager;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.handlers.RequestHandler;
 
@@ -45,6 +46,9 @@ public class ServiceConfigurationHandler extends RequestHandler {
 
     public void requestComplete() throws ProtocolException {
         CoasterChannel channel = getChannel();
+        
+        ChannelManager.getManager().registerChannel("id://" + channel.getID(), channel);
+        
         CoasterService service = (CoasterService) channel.getService();
         
         if (service.isPersistent() && ((CoasterPersistentService) service).isShared()) {
