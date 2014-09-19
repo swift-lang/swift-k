@@ -87,6 +87,7 @@ public class JobStatusHandler extends RequestHandler {
     }
 
     private Exception getException(byte[] inData) {
+        // 0xaced is the magic sequence for the java serialization protocol
         if (inData.length > 2 && inData[0] == (byte) 0xac && inData[1] == (byte) 0xed) {
             // serialized Java Object
             try {
