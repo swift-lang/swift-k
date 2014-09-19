@@ -63,8 +63,16 @@ public class ChannelManager {
 	protected void setClientRequestManager(RequestManager crm) {
 		this.clientRequestManager = crm;
 	}
-
+	
 	public CoasterChannel getExistingChannel(String host, GSSCredential cred) {
+	    CoasterChannel channel = getChannel(host, cred);
+	    if (channel == null) {
+            throw new IllegalStateException("No such channel: " + host);
+        }
+        return channel;
+	}
+
+	private CoasterChannel getChannel(String host, GSSCredential cred) {
 		if (host == null) {
 			throw new NullPointerException("Host is null");
 		}
@@ -73,9 +81,6 @@ public class ChannelManager {
 		synchronized (channels) {
 			HostCredentialPair hcp = new HostCredentialPair(host, cred);
 			channel = getChannel(hcp);
-		}
-		if (channel == null) {
-		    throw new IllegalStateException("No such channel: " + host);
 		}
 		return channel;
 	}
@@ -142,7 +147,7 @@ public class ChannelManager {
 
 	public CoasterChannel getOrCreateChannel(String host, GSSCredential cred, RequestManager rm)
 			throws ChannelException {
-		CoasterChannel channel = getExistingChannel(host, cred);
+		CoasterChannel channel = getChannel(host, cred);
 		if (channel == null) {
 		    channel = openChannel(host, cred, rm);
 		}
