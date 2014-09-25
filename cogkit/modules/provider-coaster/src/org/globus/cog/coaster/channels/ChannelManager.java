@@ -29,7 +29,9 @@
 package org.globus.cog.coaster.channels;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.coaster.Client;
@@ -46,6 +48,7 @@ public class ChannelManager {
 	private Map<CoasterChannel, HostCredentialPair> rchannels;
 	private Map<HostCredentialPair, CoasterChannel> channels;
 	private RequestManager clientRequestManager;
+	private Set<HostCredentialPair> starting;
 	
 	public synchronized static ChannelManager getManager() {
 		if (manager == null) {
@@ -58,6 +61,7 @@ public class ChannelManager {
 		channels = new HashMap<HostCredentialPair, CoasterChannel>();
 		rchannels = new HashMap<CoasterChannel, HostCredentialPair>();
 		clientRequestManager = new ClientRequestManager();
+		starting = new HashSet<HostCredentialPair>();
 	}
 
 	protected void setClientRequestManager(RequestManager crm) {
@@ -117,9 +121,8 @@ public class ChannelManager {
 	    }
     }
 
-	public void registerChannel(String url, GSSCredential cred, CoasterChannel channel) {
+	private void registerChannel(HostCredentialPair hcp, CoasterChannel channel) {
 		synchronized (channels) {
-			HostCredentialPair hcp = new HostCredentialPair(url, cred);
 			CoasterChannel previous = getChannel(hcp);
 			if (previous != null) {
 			    throw new IllegalStateException("A channel already exists for this key: " + hcp);
@@ -133,7 +136,11 @@ public class ChannelManager {
 	    registerChannel(url, null, channel);
     }
 
-	private CoasterChannel getChannel(HostCredentialPair key) {
+	public void registerChannel(String url, GSSCredential cred, CoasterChannel channel) {
+	    registerChannel(new HostCredentialPair(url, cred), channel);
+    }
+
+    private CoasterChannel getChannel(HostCredentialPair key) {
 		CoasterChannel channel =  channels.get(key);
 		if (logger.isDebugEnabled()) {
 			logger.debug("getChannel(" + key + "): " + channel);
@@ -146,19 +153,58 @@ public class ChannelManager {
 	}
 
 	public CoasterChannel getOrCreateChannel(String host, GSSCredential cred, RequestManager rm)
-			throws ChannelException {
-		CoasterChannel channel = getChannel(host, cred);
-		if (channel == null) {
-		    channel = openChannel(host, cred, rm);
-		}
+			throws ChannelException, InterruptedException {
+	    CoasterChannel channel;
+	    HostCredentialPair hcp = new HostCredentialPair(host, cred);
+	    synchronized(this) {
+	        channel = getChannel(hcp);
+	        if (channel == null) {
+	            if (isStarting(hcp)) {
+    	            while (isStarting(hcp)) {
+                        wait();
+    	            }
+    	            return getChannel(hcp);
+	            }
+	        }
+	        else {
+	            return channel;
+	        }
+	        setStarting(hcp, true);
+	    }
+	    channel = openChannel(hcp, rm);
+	    synchronized(this) {
+	        setStarting(hcp, false);
+	        notifyAll();
+	    }
 		return channel;
 	}
 
-	public CoasterChannel openChannel(String host, GSSCredential cred, RequestManager rm) throws ChannelException {
+	private void setStarting(HostCredentialPair hcp, boolean v) {
+	    if (v) {
+	        if (!starting.add(hcp)) {
+	            throw new IllegalStateException("A channel for " + hcp + " is already starting");
+	        }
+	    }
+	    else {
+	        if (!starting.remove(hcp)) {
+	            throw new IllegalStateException("No starting channel for " + hcp);
+	        }
+	    }
+    }
+
+    private boolean isStarting(HostCredentialPair hcp) {
+        return starting.contains(hcp);
+    }
+    
+    public CoasterChannel openChannel(String host, GSSCredential cred, RequestManager rm) throws ChannelException {
+        return openChannel(new HostCredentialPair(host, cred), rm);
+    }
+
+    public CoasterChannel openChannel(HostCredentialPair hcp, RequestManager rm) throws ChannelException {
 		try {
-			Client client = Client.getClient(host, new UserContext(cred), rm);
+			Client client = Client.getClient(hcp.host, new UserContext(hcp.cred), rm);
 			CoasterChannel channel = client.getChannel();
-			registerChannel(host, cred, channel);
+			registerChannel(hcp, channel);
 			return channel;
 		}
 		catch (ChannelException e) {
@@ -171,9 +217,11 @@ public class ChannelManager {
 	
 	private static class HostCredentialPair {
 		private String host, DN;
+		private GSSCredential cred;
 
 		public HostCredentialPair(String host, GSSCredential cred) {
-			this(host, (String) null);
+			this.host = host;
+			this.cred = cred;
 			try {
 				if (cred != null) {
 					DN = String.valueOf(cred.getName());
@@ -184,11 +232,6 @@ public class ChannelManager {
 			}
 			catch (GSSException e) {
 			}
-		}
-
-		public HostCredentialPair(String host, String DN) {
-			this.host = host;
-			this.DN = DN;
 		}
 
 		public boolean equals(Object obj) {

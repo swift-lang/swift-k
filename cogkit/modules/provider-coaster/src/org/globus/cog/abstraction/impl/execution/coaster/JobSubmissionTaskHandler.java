@@ -131,7 +131,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     private CoasterChannel getChannel(Task task) throws InvalidServiceContactException,
             IllegalSpecException, TaskSubmissionException, InvalidSecurityContextException,
-            ChannelException {
+            ChannelException, InterruptedException {
         if (autostart) {
             String provider = getBootHandlerProvider(task);
             url = ServiceManager.getDefault().reserveService(task, provider);
