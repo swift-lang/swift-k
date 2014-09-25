@@ -79,7 +79,7 @@ use constant {
 	ERROR_STAGEIN_RECEIVE => 520,
 	ERROR_STAGEIN_TIMEOUT => 521,
 	ERROR_STAGEIN_FILE_WRITE => 522,
-	ERROR_STAGEIN_COPY => 524,
+	ERROR_STAGEIN_IO => 524,
 	ERROR_STAGEIN_REQUEST => 525,
 	ERROR_STAGEOUT_IO => 528,
 	ERROR_STAGEOUT_SEND => 515,
@@ -128,10 +128,11 @@ use constant MAX_RECONNECT_ATTEMPTS => 3;
 use constant NEVER => 9999999999;
 use constant NULL_TIMESTAMP => "\x00\x00\x00\x00\x00\x00\x00\x00";
 
-use constant JOB_CHECK_INTERVAL => 0.1; # seconds
+use constant SUBPROCESS_CHECK_INTERVAL => 0.1; # seconds
 
 my $JOBS_RUNNING = 0;
-my $LAST_JOB_CHECK_TIME = 0;
+my $ASYNC_RUNNING = 0;
+my $LAST_SUBPROCESS_CHECK_TIME = 0;
 my $JOB_COUNT = 0;
 
 use constant {
@@ -301,7 +302,7 @@ foreach $URI (@URIS) {
 my $SOCK;
 my $LAST_HEARTBEAT = 0;
 
-my %JOBWAITDATA = ();
+my %ASYNC_WAIT_DATA = ();
 my %JOBDATA = ();
 my %ACTIVECMDS = ();
 my $SHELLCWD = getcwd();
@@ -985,7 +986,7 @@ sub loopOne {
 	my ($rset, $wset, $eset);
 	
 	checkHeartbeat();
-	checkJobs();
+	checkSubprocesses();
 	checkCommands();
 	checkStartProbes();
 	
@@ -1485,13 +1486,29 @@ sub stagein {
 		elsif ($protocol eq "sfs") {
 			my $dst = $$STAGED[$STAGEINDEX];
 			mkfdir($jobid, $dst);
-			if (!copy($path, $dst)) {
-				wlog DEBUG, "$jobid Error staging in $path to $dst: $!\n";
-				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_COPY, "$@");
-			}
-			else {
-				stagein($jobid);
-			}
+			asyncRun($jobid, -1, sub {
+					my ($errpipe) = @_;
+					if (!copy($path, $dst)) {
+						wlog DEBUG, "$jobid Error staging in $path to $dst: $!\n";
+						write $errpipe, "Error staging in $path to $dst: $!";
+					}
+				},
+				sub {
+					# onStart($pid)
+					my ($pid) = @_;
+					wlog DEBUG, "$jobid pid: $pid staging $path -> $dst\n";
+				},
+				sub { # onComplete($err, $msg)
+					my ($err, $msg) = @_;
+					if (!$err) {
+						stagein($jobid);
+					}
+					else {
+						queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_IO, $msg);
+						delete($JOBDATA{$jobid});
+					}
+				}
+			);
 		}
 		else {
 			getFile($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
@@ -1600,6 +1617,34 @@ sub abortStageouts {
 	$JOBDATA{$jobid}{"stageindex"} = 1000000;
 }
 
+sub stageoutStarted {
+	my ($jobid) = @_;
+	
+	if (!defined $JOBDATA{$jobid}{"stageoutCount"}) {
+		$JOBDATA{$jobid}{"stageoutCount"} = 0;
+	}
+	$JOBDATA{$jobid}{"stageoutCount"} += 1;
+	wlog DEBUG, "$jobid Stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
+}
+
+sub stageoutEnded {
+	my ($jobid) = @_;
+	
+	wlog DEBUG, "$jobid Stageout done; stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
+	$JOBDATA{$jobid}{"stageoutCount"} -= 1;
+	if ($JOBDATA{$jobid}{"stageoutCount"} == 0) {
+		wlog DEBUG, "$jobid All stageouts acknowledged. Sending notification\n";
+		cleanup($jobid);
+		sendStatus($jobid);
+	}
+}
+
+sub activeStageoutCount {
+	my ($jobid) = @_;
+	
+	return $JOBDATA{$jobid}{"stageoutCount"};
+}
+
 sub stageout {
 	my ($jobid) = @_;
 
@@ -1613,9 +1658,14 @@ sub stageout {
 	my $sz = scalar @$STAGE;
 	wlog DEBUG, "sz: $sz, STAGEINDEX: $STAGEINDEX\n";
 	if (scalar @$STAGE <= $STAGEINDEX) {
-		$JOBDATA{$jobid}{"stageindex"} = 0;
-		wlog INFO, "$jobid No more stageouts. Doing cleanup.\n";
-		cleanup($jobid);
+		if (activeStageoutCount($jobid) > 0) {
+			# let stageoutEnded() handle it
+			wlog INFO, "$jobid No more stageouts. Waiting for active stageouts to complete.\n";
+		}
+		else {
+			wlog INFO, "$jobid No more stageouts. Doing cleanup.\n";
+			cleanup($jobid);
+		}
 	}
 	else {
 		if ($STAGEINDEX == 0) {
@@ -1647,29 +1697,44 @@ sub stageout {
 			my ($protocol, $host, $path) = urisplit($rfile);
 			if ($protocol eq "file" || $protocol eq "proxy") {
 				# make sure we keep track of the total number of actual stageouts
-				if (!defined $JOBDATA{$jobid}{"stageoutCount"}) {
-					$JOBDATA{$jobid}{"stageoutCount"} = 0;
-				}
-				$JOBDATA{$jobid}{"stageoutCount"} += 1;
-				wlog DEBUG, "$jobid Stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
+				stageoutStarted($jobid);
 
 				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $jobid, $lfile, $rfile));
+				wlog DEBUG, "$jobid PUT sent.\n";
 			}
 			elsif ($protocol eq "sfs") {
+				stageoutStarted($jobid);
 				mkfdir($jobid, $path);
-				if (!copy($lfile, $path)) {
-					wlog DEBUG, "$jobid Error staging out $lfile to $path: $!\n";
-					queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_IO, "$!");
-					return;
-				}
-				else {
-					stageout($jobid);
-				}
+				asyncRun($jobid, -1, sub {
+						my ($errpipe) = @_;
+						sleep(300);
+						if (!copy($lfile, $path)) {
+							wlog DEBUG, "$jobid Error staging out $lfile to $path: $!\n";
+							write $errpipe, "Error staging out $lfile to $path: $!";
+						}
+					},
+					sub {
+						# onStart($pid)
+						my ($pid) = @_;
+						wlog DEBUG, "$jobid pid: $pid staging $path <- $lfile\n";
+					},
+					sub { # onComplete($err, $msg)
+						my ($err, $msg) = @_;
+						if (!$err) {
+							stageout($jobid);
+							stageoutEnded($jobid);
+						}
+						else {
+							queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_IO, $msg);
+							delete($JOBDATA{$jobid});
+						}
+					}
+				);
 			}
 			else {
 				queueCmd((putFileCB($jobid), "PUT", pack("VV", 0, 0), $lfile, $rfile));
+				wlog DEBUG, "$jobid PUT sent.\n";
 			}
-			wlog DEBUG, "$jobid PUT sent.\n";
 		}
 		else {
 			if ($skip == 1) {
@@ -1910,17 +1975,8 @@ sub cleanup {
 
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
 	if (ASYNC) {
-		if (!defined($JOBDATA{$jobid}{"stageoutCount"}) || ($JOBDATA{$jobid}{"stageoutCount"} == 0)) {
-			# there were no stageouts. Notification can be sent now
-			wlog DEBUG, "$jobid There were no stageouts. Sending notification immediately\n";
-			sendStatus($jobid);
-		}
-		else {
-			# there were stageouts. Wait until all are acknowledged
-			# as done by the client. And we keep track of the
-			# count of stageouts that weren't acknowledged in
-			# $JOBDATA{$jobid}{"stageoutCount"}
-		}
+		wlog DEBUG, "$jobid async is on. Sending notification before cleanup\n";
+		sendStatus($jobid);
 	}
 
 	if ($ec != 0) {
@@ -1932,22 +1988,30 @@ sub cleanup {
 	my $CLEANUP = $JOBDATA{$jobid}{"cleanup"};
 	my $c;
 	if ($ec == 0) {
-		for $c (@$CLEANUP) {
-			if ($c =~ /\/\.$/) {
-				chop $c;
-				chop $c;
+		asyncRun($jobid, -1, sub {
+				for $c (@$CLEANUP) {
+					if ($c =~ /\/\.$/) {
+						chop $c;
+						chop $c;
+					}
+					wlog DEBUG, "$jobid Removing $c\n";
+					rmtree($c, 0, 0);
+					wlog DEBUG, "$jobid Removed $c\n";
+				}
+			},
+			sub {
+				my ($pid) = @_;
+				wlog DEBUG, "$jobid pid: $pid cleanup\n";
+			},
+			sub {
+				if (!ASYNC) {
+					queueJobStatusCmd($jobid, COMPLETED, 0, "");
+				}
 			}
-			wlog DEBUG, "$jobid Removing $c\n";
-			rmtree($c, 0, 0);
-			wlog DEBUG, "$jobid Removed $c\n";
-		}
+		);
 	}
-
-	if (!ASYNC) {
-		if ($ec == 0) {
-			queueJobStatusCmd($jobid, COMPLETED, 0, "");
-		}
-		else {
+	else {
+		if (!ASYNC) {
 			wlog DEBUG, "$jobid Sending failure.\n";
 			queueJobStatusCmd($jobid, FAILED, $ec, getExitMessage($jobid, $ec));
 		}
@@ -1978,10 +2042,10 @@ sub putFileCBDataSent {
 	my ($state, $tag) = @_;
 
 	if (ASYNC) {
-		wlog DEBUG, "$tag putFileCBDataSent\n";
 		my $jobid = $$state{"jobid"};
+		wlog DEBUG, "$jobid tag: $tag putFileCBDataSent\n";
 		if ($jobid != -1) {
-			wlog DEBUG, "$tag Data sent, async is on. Staging out next file\n";
+			wlog DEBUG, "$jobid tag: $tag Data sent, async is on. Staging out next file\n";
 			stageout($jobid);
 		}
 	}
@@ -1996,7 +2060,7 @@ sub putFileCBDataIn {
 
 	if (($flags & ERROR_FLAG) || $timeout) {
 		if ($JOBDATA{$jobid}) {
-			wlog DEBUG, "$tag Stage out failed ($reply)\n";
+			wlog DEBUG, "$jobid tag: $tag Stage out failed ($reply)\n";
 			if ($timeout) {
 				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_TIMEOUT, "Stage out timed-out");
 			}
@@ -2009,25 +2073,21 @@ sub putFileCBDataIn {
 	}
 	elsif ($reply eq "STOP") {
 		$SUSPENDED_TRANSFERS{"$tag"} = 1;
-		wlog DEBUG, "$tag Got stop request. Suspending transfer.\n";
+		wlog DEBUG, "$jobid tag: $tag Got stop request. Suspending transfer.\n";
 	}
 	elsif ($reply eq "CONTINUE") {
 		delete $SUSPENDED_TRANSFERS{"$tag"};
-		wlog DEBUG, "$tag Got continue request. Resuming transfer.\n";
+		wlog DEBUG, "$jobid tag: $tag Got continue request. Resuming transfer.\n";
 	}
 	elsif ($jobid != -1) {
 		# OK reply from client
 		if (!ASYNC) {
-			wlog DEBUG, "$tag Stageout done; staging out next file\n";
+			wlog DEBUG, "$jobid tag: $tag Stageout done; staging out next file\n";
 			stageout($jobid);
+			stageoutEnded($jobid);
 		}
 		else {
-			wlog DEBUG, "$jobid Stageout done; stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
-			$JOBDATA{$jobid}{"stageoutCount"} -= 1;
-			if ($JOBDATA{$jobid}{"stageoutCount"} == 0) {
-				wlog DEBUG, "$jobid All stageouts acknowledged. Sending notification\n";
-				sendStatus($jobid);
-			}
+			stageoutEnded($jobid);
 		}
 	}
 }
@@ -2319,7 +2379,7 @@ sub submitjob {
 	}
 }
 
-sub checkJob() {
+sub checkJob {
 	my ($tag, $JOBID, $JOB) = @_;
 	
 	wlog INFO, "$JOBID Job info received (tag=$tag)\n";
@@ -2357,6 +2417,43 @@ sub checkJob() {
 	}
 }
 
+sub asyncRun {
+	my ($logid, $timeout, $proc, $onStart, $onComplete) = @_;
+	
+	my ($PARENT_R, $CHILD_W);
+	pipe($PARENT_R, $CHILD_W);
+	
+	my $pid = fork();
+	
+	if (defined($pid)) {
+		if ($pid == 0) {
+			close $PARENT_R;
+			$proc->($CHILD_W);
+			close $CHILD_W;
+			exit 0;
+		}
+		else {
+			wlog INFO, "$logid Forked process $pid. Waiting for its completion\n";
+			if (defined $onStart) {
+				$onStart->($pid);
+			}
+			close $CHILD_W;
+			$ASYNC_RUNNING++;
+			$ASYNC_WAIT_DATA{$pid} = {
+				logid => $logid,
+				pipe => $PARENT_R,
+				startTime => time(),
+				timeout => $timeout,
+				onComplete => $onComplete,
+			};
+		}
+	}
+	else {
+		$onComplete->(ERROR_PROCESS_FORK, "Could not fork child process");
+	}
+}
+
+
 sub forkjob {
 	my ($JOBID) = @_;
 	my ($pid, $status);
@@ -2376,152 +2473,155 @@ sub forkjob {
 		wlog DEBUG, "Job $JOBID has undefined jobslot\n";
 	}
 	$JOBDATA{$JOBID}{"jobslot"} = $JOBSLOT;
-
-	my ($PARENT_R, $CHILD_W);
-	pipe($PARENT_R, $CHILD_W);
-
-	$pid = fork();
 	
-	if (defined($pid)) {
-		if ($pid == 0) {
-			close $PARENT_R;
+	asyncRun($JOBID, $JOBDATA{$JOBID}{"maxwalltime"}, sub {
+			my ($ERR) = @_;
 			if ($JOBDATA{$JOBID}{"perftrace"} != 0) {
-				stracerunjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
+				stracerunjob($ERR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
 			}
 			else {
-				runjob($CHILD_W, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
+				runjob($ERR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
 			}
-			close $CHILD_W;
-		}
-		else {
-			wlog INFO, "$JOBID Forked process $pid. Waiting for its completion\n";
-			close $CHILD_W;
+		},
+		sub {
+			# onStart($pid)
+			my ($pid) = @_;
+			wlog DEBUG, "$JOBID running in pid $pid\n";
 			$JOBDATA{$JOBID}{"pid"} = $pid;
 			$JOBS_RUNNING++;
-			$JOBWAITDATA{$JOBID} = {
-				pid => $pid,
-				pipe => $PARENT_R,
-				startTime => time()
-			};
 			if ($PROFILE) {
 				push(@PROFILE_EVENTS, "FORK", $pid, time());
 			}
+		},
+		sub {
+			# onComplete($err, $msg)
+			my ($err, $msg) = @_;
+			
+			$JOBDATA{$JOBID}{"exitcode"} = $err;
+			$JOBDATA{$JOBID}{"exitmessage"} = $msg;
+			
+			if ($PROFILE) {
+				push(@PROFILE_EVENTS, "TERM", $pid, time());
+			}
+
+			my $JOBSLOT = $JOBDATA{$JOBID}{"jobslot"};
+			if ( defined $JOBSLOT ) {
+				push @jobslots,$JOBSLOT;
+			}
+			
+			$JOBS_RUNNING--;
+			
+			$JOB_COUNT++;
+			stageout($JOBID);
 		}
-	}
-	else {
-		queueJobStatusCmd($JOBID, FAILED, ERROR_PROCESS_FORK, "Could not fork child process");
-	}
+	);
 }
 
-my $JOBSDONE = 0;
+my $SUBPROCESSES_DONE = 0;
 
 sub JOBDONE {
-	$JOBSDONE = 1;
+	$SUBPROCESSES_DONE = 1;
 	$SIG{CHLD} = \&JOBDONE;
 	wlog DEBUG, "Got one SIGCHLD\n";
 }
 
 $SIG{CHLD} = \&JOBDONE;
 
-sub checkJobs {
+sub checkSubprocesses {
 	my $now = time();
 	
-	if (!$JOBSDONE) {
-		if ($now - $LAST_JOB_CHECK_TIME < JOB_CHECK_INTERVAL) {
+	if (!$SUBPROCESSES_DONE) {
+		if ($now - $LAST_SUBPROCESS_CHECK_TIME < SUBPROCESS_CHECK_INTERVAL) {
 			return;
 		}
 	}
 	else {
 		wlog(INFO, "SIGCHLD received. Checking jobs\n");
 	}
-	$JOBSDONE = 0;
-	$LAST_JOB_CHECK_TIME = $now;
+	$SUBPROCESSES_DONE = 0;
+	$LAST_SUBPROCESS_CHECK_TIME = $now;
 	
-	checkProbes();
-	
-	if (!%JOBWAITDATA) {
+	if (!%ASYNC_WAIT_DATA) {
 		return;
 	}
 
-	wlog DEBUG, "Checking jobs status ($JOBS_RUNNING active)\n";
+	wlog DEBUG, "Checking subprocess status (total subprocesses: $ASYNC_RUNNING, jobs: $JOBS_RUNNING)\n";
 
 	my @DELETEIDS = ();
 
-	for my $JOBID (keys %JOBWAITDATA) {
-		if (checkJobStatus($JOBID, $now)) {
-			push @DELETEIDS, $JOBID;
+	for my $pid (keys %ASYNC_WAIT_DATA) {
+		if (checkSubprocessStatus($pid, $now)) {
+			push @DELETEIDS, $pid;
 		}
 	}
 	for my $i (@DELETEIDS) {
-		delete $JOBWAITDATA{$i};
+		delete $ASYNC_WAIT_DATA{$i};
 	}
 }
 
-sub checkJobStatus {
-	my ($JOBID, $now) = @_;
+sub checkSubprocessStatus {
+	my ($pid, $now) = @_;
 
-
-	my $pid = $JOBWAITDATA{$JOBID}{"pid"};
-	my $RD = $JOBWAITDATA{$JOBID}{"pipe"};
-	my $startTime = $JOBWAITDATA{$JOBID}{"startTime"};
+	my $RD = $ASYNC_WAIT_DATA{$pid}{"pipe"};
+	my $startTime = $ASYNC_WAIT_DATA{$pid}{"startTime"};
+	my $logid = $ASYNC_WAIT_DATA{$pid}{"logid"};
 
 	my $tid;
 	my $status;
-
-	wlog DEBUG, "$JOBID Checking pid $pid\n";
+	my $msg;
+	
+	wlog DEBUG, "$logid Checking pid $pid\n";
 
 	$tid = waitpid($pid, &WNOHANG);
 	if ($tid != $pid) {
 		# not done
-		my $mwt = $JOBDATA{$JOBID}{"maxwalltime"};
-		if ($now > $startTime + $mwt) {
-			wlog DEBUG, "$JOBID walltime exceeded (start: $startTime, now: $now, maxwalltime: $mwt); killing\n"; 
+		my $timeout = $ASYNC_WAIT_DATA{$pid}{"timeout"};
+		if (($timeout > 0) && ($now > $startTime + $timeout)) {
+			wlog DEBUG, "$logid subprocess timed-out (start: $startTime, now: $now, timeout: $timeout); killing\n"; 
 			kill 9, $pid;
 			# only kill it once
-			$JOBWAITDATA{$JOBID}{"startTime"} = -1;
-			$JOBWAITDATA{$JOBID}{"walltimeexceeded"} = 1;
-			$JOBDATA{$JOBID}{"exitmessage"} = "Walltime exceeded"; 
+			$ASYNC_WAIT_DATA{$pid}{"startTime"} = -1;
+			$ASYNC_WAIT_DATA{$pid}{"timedOut"} = 1;
 		}
 		else {
-			wlog DEBUG, "$JOBID Job $pid still running\n";
+			wlog DEBUG, "$logid Job $pid still running\n";
 		}
 		return 0;
 	}
 	else {
-		if ($JOBWAITDATA{$JOBID}{"walltimeexceeded"}) {
+		if ($ASYNC_WAIT_DATA{$pid}{"timedOut"}) {
 			wlog DEBUG, "Walltime exceeded. The status is $?\n";
 			$status = ERROR_PROCESS_WALLTIME_EXCEEDED;
+			$msg = "Walltime exceeded";
 		}
 		else {
 			# exit code is in MSB and signal in LSB, so
 			# switch them such that status & 0xff is the
 			# exit code
 			$status = $? >> 8 + (($? & 0xff) << 8);
+			$msg = "Process completed with exit code $status";
 		}
 	}
 
-	wlog INFO, "$JOBID Child process $pid terminated. Status is $status.\n";
+	wlog INFO, "$logid Child process $pid terminated. Status is $status.\n";
 	my $s;
 	if (!eof($RD)) {
 		$s = <$RD>;
 	}
-	wlog DEBUG, "$JOBID Got output from child. Closing pipe.\n";
+	wlog DEBUG, "$logid Got output from child. Closing pipe.\n";
 	close $RD;
-	$JOBDATA{$JOBID}{"exitcode"} = $status;
-
-	if ($PROFILE) {
-		push(@PROFILE_EVENTS, "TERM", $pid, time());
+	if (defined $s) {
+		$msg = $s;
+		if ($status == 0) {
+			# force non-zero status if some error message is present
+			$status = 1;
+		}
 	}
+	
+	my $onComplete = $ASYNC_WAIT_DATA{$pid}{"onComplete"};
+	$onComplete->($status, $msg);
 
-	my $JOBSLOT = $JOBDATA{$JOBID}{"jobslot"};
-	if ( defined $JOBSLOT ) {
-		push @jobslots,$JOBSLOT;
-	}
-
-	stageout($JOBID);
-
-	$JOB_COUNT++;
-	$JOBS_RUNNING--;
+	$ASYNC_RUNNING--;
 	return 1;
 }
 
@@ -2619,22 +2719,7 @@ sub stracerunjob {
 	runjob($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA);
 }
 
-my $PROBES_PID = 0;
-my $PROBES_OUT;
-
-sub checkProbes() {
-	if ($PROBES_PID == 0) {
-		return;
-	}
-	my $tid = waitpid($PROBES_PID, &WNOHANG);
-	if ($tid == $PROBES_PID) {
-		wlog DEBUG, "Probes done (pid=$tid)\n";
-		$PROBES_PID = 0;
-		processProbes($PROBES_OUT);
-	}
-}
-
-sub processProbes() {
+sub processProbes {
 	my ($in) = @_;
 	
 	my $current = 0;
@@ -2675,7 +2760,7 @@ sub processProbes() {
 
 my $LAST_CPU_LINE;
 
-sub calculateAndSendCPUStats() {
+sub calculateAndSendCPUStats {
 	my ($time, $line) = @_;
 	
 	# cpu  6687663 4396 12825492 47536746 74378 10 2743 0 0 0
@@ -2696,7 +2781,7 @@ sub calculateAndSendCPUStats() {
 	$LAST_CPU_LINE = $line;
 }
 
-sub sum() {
+sub sum {
 	my ($start, $end, @a) = @_;
 	
 	if ($end == -1) {
@@ -2711,7 +2796,7 @@ sub sum() {
 	return $s;
 }
 
-sub calculateAndSendDFStats() {
+sub calculateAndSendDFStats {
 	my ($time, $line) = @_;
 	
 	if ($line =~ /^Filesystem/) {
@@ -2730,7 +2815,7 @@ sub calculateAndSendDFStats() {
 
 my %LAST_DL_LINES = ();
 my %SECTOR_SIZES = ();
-sub calculateAndSendDLStats() {
+sub calculateAndSendDLStats {
 	my ($time, $line) = @_;
 	
 	if (!exists $SECTOR_SIZES{"initialized"}) {
@@ -2776,7 +2861,7 @@ sub calculateAndSendDLStats() {
 	$LAST_DL_LINES{$els2[2]} = [$line, $time];
 }
 
-sub getSectorSize() {
+sub getSectorSize {
 	my ($key) = @_;
 	
 	if (defined $SECTOR_SIZES{$key}) {
@@ -2787,7 +2872,7 @@ sub getSectorSize() {
 	}
 }
 
-sub readSectorSizes() {
+sub readSectorSizes {
 	%SECTOR_SIZES = ();
 	my $s = `lsblk -l -o NAME,PHY-SeC` || (wlog DEBUG, "Cannot get disk sector sizes: $!" && return);
 	my @els = split(/\n/, $s);
@@ -2797,7 +2882,7 @@ sub readSectorSizes() {
 	}
 }
 
-sub checkStartProbes() {
+sub checkStartProbes {
 	my $now = time();
 	
 	if ($now - $LAST_PROBE_TIME > $PROBE_INTERVAL) {
@@ -2806,39 +2891,35 @@ sub checkStartProbes() {
 	}
 }
 
-sub startProbes() {
-	my $CHILD_W;
-	pipe($PROBES_OUT, $CHILD_W);
-	
-	my $pid = fork();
-	
-	if (defined($pid)) {
-		if ($pid == 0) {
-			close $PROBES_OUT;
-			runProbes($CHILD_W);
-			close $CHILD_W;
-			exit 0;
+sub startProbes {
+	asyncRun("probes", -1, sub {
+			my ($errpipe) = @_;
+			runProbes($errpipe);
+		},
+		sub {
+			my ($pid) = @_;
+			wlog DEBUG, "Probes running in pid $pid\n";
+		},
+		sub {
+			my ($err, $msg) = @_;
+			if (!$err) {
+				processProbes($msg);
+			}
+			else {
+				queueCmd((nullCB(), "RLOG", "INFO", "Could not run probes: $msg ($err)"));
+			}
 		}
-		else {
-			# parent process; no need to wait here
-			close $CHILD_W;
-			wlog DEBUG, "Probes started; pid=$pid\n";
-			$PROBES_PID = $pid;
-		}
-	}
-	else {
-		queueCmd((nullCB(), "RLOG", "INFO", "Could not fork probe process"));
-	}
+	);
 }
 
-sub runProbes() {
+sub runProbes {
 	my ($OUT) = @_;
 	runCPUStatsProbe($OUT);
 	runDiskUseProbe($OUT);
 	runDiskLatencyProbe($OUT);
 }
 
-sub runCPUStatsProbe() {
+sub runCPUStatsProbe {
 	my ($OUT) = @_;
 	my $f;
 	open($f, "/proc/stat") || (wlog DEBUG, "Cannot open /proc/stat: $!\n" && return);
@@ -2849,7 +2930,7 @@ sub runCPUStatsProbe() {
 	print $OUT "\n\n";
 }
 
-sub runDiskUseProbe() {
+sub runDiskUseProbe {
 	my ($OUT) = @_;
 	my $s = `df` || {wlog DEBUG, "Cannot run df: $!\n" && return};
 	print $OUT "-DF ".time()."\n";
@@ -2857,7 +2938,7 @@ sub runDiskUseProbe() {
 	print $OUT "\n\n";
 }
 
-sub runDiskLatencyProbe() {
+sub runDiskLatencyProbe {
 	my ($OUT) = @_;
 	my $f;
 	open($f, "/proc/diskstats") || (wlog DEBUG, "Cannot open /proc/diskstats: $!\n" && return);
