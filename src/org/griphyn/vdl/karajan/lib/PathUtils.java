@@ -77,6 +77,30 @@ public class PathUtils {
             }
         }
     }
+    
+    public static String remoteDirName(AbsFile f) {
+        if ("file".equals(f.getProtocol())) {
+            return remotePathName(f.getDirectory());
+        }
+        else if ("direct".equals(f.getProtocol())) {
+            return f.getAbsoluteDir();
+        }
+        else {
+            return remotePathName(f.getHost() + "/" + f.getDirectory());
+        }
+    }
+    
+    public static String remotePathName(AbsFile f) {
+        if ("file".equals(f.getProtocol())) {
+            return remotePathName(f.getPath());
+        }
+        else if ("direct".equals(f.getProtocol())) {
+            return f.getAbsolutePath();
+        }
+        else {
+            return remotePathName(f.getHost() + "/" + f.getPath());
+        }
+    }
         
     private static final char EOL = '\0';
     /**
@@ -361,14 +385,14 @@ public class PathUtils {
             
             ret.add(f.getProtocol("file"));
             ret.add(f.getHost("localhost"));
-            String fdir = f.getDirectory();
             if (destdir == null) {
-                ret.add(DirCat.function(dir, RelDirName.function(fdir), false));
+                ret.add(DirCat.function(dir, remoteDirName(f), false));
             }
             else {
                 ret.add(DirCat.function(dir, destdir, false));
             }
             ret.add(f.getName());
+            String fdir = f.getDirectory();
             ret.add(fdir == null ? "" : fdir);
             
             return null;

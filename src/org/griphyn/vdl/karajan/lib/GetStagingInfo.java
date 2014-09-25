@@ -55,7 +55,7 @@ public class GetStagingInfo extends SwiftFunction {
     }
     
     private static class Info {
-        Set<String> remoteDirNames = Collections.emptySet();
+        Set<AbsFile> remoteDirNames = Collections.emptySet();
         Set<AbsFile> inFiles = Collections.emptySet();
         Set<AbsFile> outFiles = Collections.emptySet();
         Set<AbsFile> collectPatterns = Collections.emptySet();
@@ -80,7 +80,7 @@ public class GetStagingInfo extends SwiftFunction {
         catch (HandleOpenException e) {
         	throw new ExecutionException(e.getMessage(), e);
         }
-        ret.add(new ArrayList<String>(info.remoteDirNames));
+        ret.add(new ArrayList<AbsFile>(info.remoteDirNames));
         ret.add(new ArrayList<AbsFile>(info.inFiles));
         ret.add(new ArrayList<AbsFile>(info.outFiles));
         ret.add(new ArrayList<AbsFile>(info.collectPatterns));
@@ -132,11 +132,14 @@ public class GetStagingInfo extends SwiftFunction {
         }
         
         String dir = f.getDirectory();
-        if (dir != null) {
-            if (info.remoteDirNames.isEmpty()) {
-                info.remoteDirNames = new HashSet<String>();
-            }
-            info.remoteDirNames.add(remoteDir(f, dir));
+        if (info.remoteDirNames.isEmpty()) {
+            info.remoteDirNames = new HashSet<AbsFile>();
+        }
+        if (dir == null) {
+            info.remoteDirNames.add(new AbsFile(f.getProtocol(), f.getHost(), "."));
+        }
+        else {
+            info.remoteDirNames.add(new AbsFile(f.getProtocol(), f.getHost(), f.getDirectory()));
         }
         if (files.isEmpty()) {
             files = new HashSet<AbsFile>();
@@ -151,15 +154,5 @@ public class GetStagingInfo extends SwiftFunction {
             throw new ExecutionException("No mapper found for  " + var);
         }
         return m;
-    }
-
-    private String remoteDir(AbsFile f, String dir) {
-        if ("file".equals(f.getProtocol())) {
-            return PathUtils.remotePathName(dir);
-        }
-        else {
-            // also prepend host name to the path
-            return f.getHost() + "/" + PathUtils.remotePathName(dir);
-        }
     }
 }

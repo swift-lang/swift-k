@@ -49,15 +49,7 @@ public class RemoteFileNames extends SwiftFunction {
             }
             else {
                 AbsFile f = (AbsFile) o;
-                if ("file".equals(f.getProtocol())) {
-                    sb.append(PathUtils.remotePathName(f.getPath()));
-                }
-                else if ("direct".equals(f.getProtocol())) {
-                    sb.append(f.getAbsolutePath());
-                }
-                else {
-                    sb.append(PathUtils.remotePathName(f.getHost() + "/" + f.getPath()));
-                }
+                sb.append(PathUtils.remotePathName(f));
             }
         }
         return sb.toString();

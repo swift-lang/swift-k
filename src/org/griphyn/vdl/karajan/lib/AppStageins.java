@@ -75,14 +75,12 @@ public class AppStageins extends InternalFunction {
             if ("direct".equals(protocol)) {
                 continue;
             }
-            String path = file.getDirectory() == null ? 
-                    file.getName() : file.getDirectory() + "/" + file.getName();
-            String relpath = PathUtils.remotePathName(path);
+            String relpath = PathUtils.remotePathName(file);
             if (logger.isDebugEnabled()) {
                 logger.debug("will stage in: " + relpath + " via: " + protocol);
             }
             cr_stagein.append(stack,
-                makeList(localPath(cwd, protocol, path, file), relpath));
+                makeList(localPath(cwd, protocol, file.getPath(), file), relpath));
         }
     }
 

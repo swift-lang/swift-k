@@ -98,6 +98,15 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
 	        return cwd + File.separator + getPath();
 	    }
     }
+	
+	public String getAbsoluteDir() {
+        if (this.isAbsolute()) {
+            return getDirectory();
+        }
+        else {
+            return cwd + File.separator + getDirectory();
+        }
+    }
 
 	public boolean exists() {
 		try {

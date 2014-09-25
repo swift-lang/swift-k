@@ -78,12 +78,10 @@ public class AppStageouts extends InternalFunction {
             if ("direct".equals(protocol)) {
                 continue;
             }
-            String path = file.getDirectory() == null ? file.getName() : file.getDirectory()
-                    + "/" + file.getName();
-            String relpath = PathUtils.remotePathName(path);
+            String relpath = PathUtils.remotePathName(file);
             cr_stageout.append(stack, 
                 makeList(relpath,
-                    AppStageins.localPath(cwd, protocol, path, file)));
+                    AppStageins.localPath(cwd, protocol, file.getPath(), file)));
         }
     }
 

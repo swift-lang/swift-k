@@ -77,7 +77,7 @@ namespace(swiftStaging) {
 			}
 			throw(msg)
 		}
-	}	
+	}
 	
 	initSharedDir := function(progress, rhost) {
 		once(list(rhost, "shared")) {
@@ -111,7 +111,7 @@ namespace(swiftStaging) {
 		 * to be created and (eventually) exploiting the concurrency in that.
 		 */
 		log(LOG:INFO, "START jobid={jobid} host={host} - Initializing directory structure")
-		for(path, dirs) {
+		for(path, remoteFileNames(dirs)) {
 			cache(list(path, destdir, host)) {
 				dc := dircat(destdir, path)
 				log(LOG:INFO, "START path={path} dir={destdir} - Creating directory structure")

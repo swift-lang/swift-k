@@ -87,7 +87,7 @@ public class CacheUnlockFiles extends CacheFunction {
         boolean force = this.force.getValue(stack);
         
         for (AbsFile f : files) {
-            File cf = new File(PathUtils.remotePathName(f.getPath()), dir, host, 0);
+            File cf = new File(f.getName(), PathUtils.remoteDirName(f), host, 0);
             CacheReturn cr = cache.unlockEntry(cf, force);
             rem.addAll(cr.remove);
         }

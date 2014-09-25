@@ -125,19 +125,10 @@ public class FileNameExpander {
             return f.getAbsolutePath();
         }
         else if (remote) {
-            return remoteName(f);
+            return PathUtils.remotePathName(f);
         }
         else {
             return f.getPath();
-        }
-    }
-
-    private String remoteName(AbsFile f) {
-        if ("file".equals(f.getProtocol()) || f.getProtocol() == null) {
-            return PathUtils.remotePathName(f.getPath());
-        }
-        else {
-            return PathUtils.remotePathName(f.getHost() + "/" + f.getPath());
         }
     }
 

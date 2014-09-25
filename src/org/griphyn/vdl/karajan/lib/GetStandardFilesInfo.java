@@ -29,7 +29,6 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.FileNameExpander;
 import org.griphyn.vdl.karajan.FileNameExpander.Transform;
-import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 
 /**
@@ -120,16 +119,6 @@ public class GetStandardFilesInfo extends SwiftFunction {
         }
         else {
             throw new IllegalArgumentException("Invalid value for " + name + ": '" + o + "'");
-        }
-    }
-
-    private String remoteDir(AbsFile f, String dir) {
-        if ("file".equals(f.getProtocol())) {
-            return PathUtils.remotePathName(dir);
-        }
-        else {
-            // also prepend host name to the path
-            return f.getHost() + "/" + PathUtils.remotePathName(dir);
         }
     }
 }

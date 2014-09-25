@@ -158,15 +158,6 @@ public abstract class SwiftFunction extends AbstractFunction {
 		return p;
 	}
 
-	/**
-	 * removes leading / character from a supplied filename if present, so that
-	 * the path can be used as a relative path.
-	 */
-	public static String relativize(String name) {
-		name = pathOnly(name);
-		return PathUtils.remotePathName(name);
-	}
-
 	protected boolean compatible(Type expectedType, Type actualType) {
 		if (expectedType.equals(Types.FLOAT)) {
 			if (actualType.equals(Types.FLOAT) || actualType.equals(Types.INT)) {
