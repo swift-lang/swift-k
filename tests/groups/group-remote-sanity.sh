@@ -4,7 +4,7 @@ GROUPLIST=( # Site testing test-group
             $TESTDIR/sites/beagle \
             $TESTDIR/sites/mcs    \
             $TESTDIR/sites/midway \
-            $TESTDIR/sites/uc3    \
+            $TESTDIR/sites/osgconnect  \
             $TESTDIR/sites/mac-frisbee  \
             $TESTDIR/sites/blues  \
             $TESTDIR/sites/fusion \

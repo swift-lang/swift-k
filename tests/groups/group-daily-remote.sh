@@ -28,7 +28,7 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/sites/beagle \
             $TESTDIR/sites/mcs    \
             $TESTDIR/sites/midway \
-            $TESTDIR/sites/uc3    \
+            $TESTDIR/sites/osgconnect    \
 	        # Frisbee will fail due to Bug 1030
             $TESTDIR/sites/mac-frisbee  \
             $TESTDIR/sites/blues  \
