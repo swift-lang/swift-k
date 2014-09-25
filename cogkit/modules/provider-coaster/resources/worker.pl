@@ -1707,7 +1707,6 @@ sub stageout {
 				mkfdir($jobid, $path);
 				asyncRun($jobid, -1, sub {
 						my ($errpipe) = @_;
-						sleep(300);
 						if (!copy($lfile, $path)) {
 							wlog DEBUG, "$jobid Error staging out $lfile to $path: $!\n";
 							write $errpipe, "Error staging out $lfile to $path: $!";
