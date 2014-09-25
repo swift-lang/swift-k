@@ -236,7 +236,8 @@ public class CoasterPersistentService extends CoasterService {
             s.setIgnoreIdleTime(true);
             if (ap.isPresent("passive")) {
                 if (ap.isPresent("shared")) {
-                    System.err.println("You cannot use -shared with -passive");
+                    System.err.println("You cannot specify both -shared with -passive. " +
+                    		"Passive workers are automatically shared by clients.");
                     System.exit(3);
                 }
                 s.setDefaultQP("passive");
