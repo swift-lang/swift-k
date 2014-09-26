@@ -194,7 +194,7 @@ sub wlog {
 
 # Command-line arguments:
 my %OPTS=();
-getopts("cw:h", \%OPTS);
+getopts("c:w:h", \%OPTS);
 
 if (defined $OPTS{"h"}) {
 	print "worker.pl <serviceURL> <blockID> <logdir> [-w <maxwalltime>] [-c <concurrency>]\n";
@@ -203,7 +203,7 @@ if (defined $OPTS{"h"}) {
 
 my $CONCURRENCY;
 if (defined $OPTS{"c"}) {
-	$CONCURRENCY = $OPTS{"c"}; 
+	$CONCURRENCY = $OPTS{"c"};
 }
 
 my $URISTR=$ARGV[0];
