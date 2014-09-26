@@ -197,7 +197,7 @@ my %OPTS=();
 getopts("c:w:h", \%OPTS);
 
 if (defined $OPTS{"h"}) {
-	print "worker.pl <serviceURL> <blockID> <logdir> [-w <maxwalltime>] [-c <concurrency>]\n";
+	print "worker.pl [-w <maxwalltime>] [-c <concurrency>] <serviceURL> <blockID> <logdir>\n";
 	exit(1);
 }
 
