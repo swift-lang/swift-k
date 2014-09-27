@@ -482,7 +482,7 @@ public class Scope {
             return parent.getVarRef(name, frameBump(frame));
         }
         else {
-            throw new RuntimeException("Variable not found: " + name);
+            throw new VariableNotFoundException("Variable not found: " + name);
         }
     }
 	
@@ -507,7 +507,7 @@ public class Scope {
             return parent.getChannelRefRecursive(name, frameBump(frame));
         }
         else {
-            throw new RuntimeException("Variable not found: " + name);
+            throw new VariableNotFoundException("Variable not found: " + name);
         }
     }
 	
