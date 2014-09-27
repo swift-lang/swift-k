@@ -21,7 +21,11 @@ import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
@@ -39,6 +43,26 @@ public class GetFieldSubscript extends SwiftFunction {
     }
 
 	@Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+	    if (var.isStatic() && subscript.isStatic()) {
+	        DSHandle v = var.getValue();
+	        AbstractDataNode s = subscript.getValue();
+	        if (v.isClosed() && s.isClosed()) {
+	            try {
+                    if (staticReturn(scope, function(v, s.getValue()))) {
+                        return null;
+                    }
+                }
+                catch (Exception e) {
+                    throw new CompilationException(w, "Cannot compile array access", e);
+                }
+	        }
+	    }
+        return super.compileBody(w, argScope, scope);
+    }
+
+    @Override
 	public Object function(Stack stack) {
 		DSHandle var = this.var.getValue(stack);
 
@@ -47,12 +71,7 @@ public class GetFieldSubscript extends SwiftFunction {
 		try {
 		    indexh.waitFor();
 		    Object index = indexh.getValue();
-			if ("*".equals(index)) {
-			    return var.getAllFields();
-			}
-			else {
-			    return var.getField(Path.EMPTY_PATH.addFirst((Comparable<?>) index, true));
-			}
+		    return function(var, indexh.getValue());
 		}
 		catch (OOBYield y) {
 		    throw y.wrapped(this);
@@ -65,5 +84,12 @@ public class GetFieldSubscript extends SwiftFunction {
 		}
 	}
 
-
+    private Object function(DSHandle var, Object index) throws InvalidPathException, HandleOpenException {
+        if ("*".equals(index)) {
+            return var.getAllFields();
+        }
+        else {
+            return var.getField(Path.EMPTY_PATH.addFirst((Comparable<?>) index, true));
+        }
+    }
 }
