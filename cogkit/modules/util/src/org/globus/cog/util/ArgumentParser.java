@@ -51,7 +51,7 @@ public class ArgumentParser {
 
 	private Map<String, String> aliases;
 
-	private Set<String> flags;
+	private Set<String> seen;
 
 	private Map<String, String> details;
 
@@ -66,7 +66,7 @@ public class ArgumentParser {
 	public ArgumentParser() {
 		options = new HashMap<String, String>();
 		aliases = new HashMap<String, String>();
-		flags = new HashSet<String>();
+		seen = new HashSet<String>();
 		details = new LinkedHashMap<String, String>();
 		argumentNames = new HashMap<String, String>();
 		types = new HashMap<String, Integer>();
@@ -189,7 +189,7 @@ public class ArgumentParser {
     }
 
 	public boolean isPresent(String name) {
-		return flags.contains(name);
+		return seen.contains(name);
 	}
 
 	public boolean hasValue(String name) {
@@ -231,50 +231,68 @@ public class ArgumentParser {
 
 	public void parse(String[] args) throws ArgumentParserException {
 		String lastOption = null;
+		boolean argsDone = false;
 		for (int i = 0; i < args.length; i++) {
 			String crt = args[i];
 			String option = crt;
-			if (option.startsWith("-") && (lastOption == null)) {
-				option = option.substring(1);
-				if (aliases.containsKey(option)) {
-					option = aliases.get(option);
-				}
-			}
-			if (lastOption != null) {
-				if (isFlag(lastOption)) {
-					throw new ArgumentParserException("Argument '" + lastOption + "' is a flag");
-				}
-				options.put(lastOption, option);
-				lastOption = null;
-				continue;
-			}
-			if (options.containsKey(option)) {
-				flags.add(option);
-				if (isFlag(option)) {
-					lastOption = null;
-				}
-				else {
-					lastOption = option;
-				}
+			if (!argsDone) {
+			    if (option.startsWith("-")) {
+			        if (lastOption == null) {
+			            option = option.substring(1);
+                        if (aliases.containsKey(option)) {
+                            option = aliases.get(option);
+                        }
+                        if (options.containsKey(option)) {
+                            seen.add(option);
+                            if (isFlag(option)) {
+                                lastOption = null;
+                            }
+                            else {
+                                lastOption = option;
+                            }
+                        }
+                        else {
+                            throw new ArgumentParserException("Unknown option or flag: '-" + option + "'");
+                        }
+			        }
+			        else {
+			            throw new ArgumentParserException("Missing value for option '-" + lastOption + "'");
+			        }
+			    }
+			    else if (lastOption != null) {
+			        if (isFlag(lastOption)) {
+                        throw new ArgumentParserException("'-" + lastOption + "' is a flag");
+                    }
+                    options.put(lastOption, option);
+                    lastOption = null;
+			    }
+			    else {
+			        addDefaultOrArg(crt);
+			        argsDone = true;
+			    }
 			}
 			else {
-				if (options.containsKey(DEFAULT) && options.get(DEFAULT) == null) {
-					options.put(DEFAULT, crt);
-				}
-				else if (arguments != null) {
-					arguments.add(crt);
-				}
-				else {
-					throw new ArgumentParserException("Unrecognized argument: " + crt);
-				}
+			    addDefaultOrArg(crt);
 			}
 		}
 		if (lastOption != null) {
-			throw new ArgumentParserException("Missing value for argument '" + lastOption + "'");
+			throw new ArgumentParserException("Missing value for option '-" + lastOption + "'");
 		}
 	}
 
-	public void checkMandatory() throws ArgumentParserException {
+	private void addDefaultOrArg(String crt) throws ArgumentParserException {
+	    if (options.containsKey(DEFAULT) && options.get(DEFAULT) == null) {
+            options.put(DEFAULT, crt);
+        }
+        else if (arguments != null) {
+            arguments.add(crt);
+        }
+        else {
+            throw new ArgumentParserException("Invalid option: " + crt);
+        }
+    }
+
+    public void checkMandatory() throws ArgumentParserException {
 		for (String name : options.keySet()) {
 			if (!isOptional(name) && !isFlag(name) && (options.get(name) == null)) {
 				throw new ArgumentParserException("Missing mandatory argument " + name);
