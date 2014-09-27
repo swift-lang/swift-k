@@ -116,8 +116,12 @@ public class Mapping {
             	return this;
             }
             else {
-            	crv.append(new Pair<String, Object>(name.getValue(), value.getValue()));
-            	return null;
+                if (crv.append(new Pair<String, Object>(name.getValue(), value.getValue()))) {
+                    return null;
+                }
+                else {
+                    return this;
+                }
             }
         }
     }
