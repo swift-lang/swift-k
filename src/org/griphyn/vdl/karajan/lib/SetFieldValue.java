@@ -114,6 +114,31 @@ public class SetFieldValue extends SwiftFunction {
     }
 
     @Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+    	if (this.getClass() == SetFieldValue.class && var.isStatic() && path.isStatic() && value.isStatic()) {
+    		// it's safe to optimize assignments in the main block
+    		if (getParent().getParent().getParent().getType().equals("swift:mainp")) {
+        		try {
+            		DSHandle var = this.var.getValue();
+            		Path path = parsePath(this.path.getValue());
+                    DSHandle leaf = var.getField(path);
+                    AbstractDataNode value = this.value.getValue();
+                    if (value.isClosed()) {
+                        State state = new State();
+                        deepCopy(leaf, value, state, 0);
+                        return null;
+                    }
+        		}
+        		catch (Exception e) {
+        			throw new CompilationException(w, "Compile error in assignment", e);
+        		}
+    		}
+    	}
+        return super.compileBody(w, argScope, scope);
+    }
+
+    @Override
     protected void initializeArgs(Stack stack) {
         super.initializeArgs(stack);
         this.state.setValue(stack, null);
