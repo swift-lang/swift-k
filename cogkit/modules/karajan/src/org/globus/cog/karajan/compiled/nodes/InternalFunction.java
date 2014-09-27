@@ -119,9 +119,7 @@ public abstract class InternalFunction extends Sequential {
 			p.setDynamic();
 		}
 		else {
-			//p.arity = arity;
-			//TODO
-			p.setDynamic();
+			p.arity = arity;
 		}
 		return p;
 	}
@@ -457,6 +455,7 @@ public abstract class InternalFunction extends Sequential {
 	}
 
 	protected Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
+		dynamicChannelReturns(w, getSignature(), scope);
 		return this;
 	}
 
@@ -725,6 +724,13 @@ public abstract class InternalFunction extends Sequential {
 				vc.appendDynamic();
 			}
 			setChannelReturn(w, p, scope.parent.getChannelRef(vc));
+		}
+	}
+	
+	protected void dynamicChannelReturns(WrapperNode w, Signature sig, Scope scope) throws CompilationException {
+		for (Param p : sig.getChannelReturns()) {
+			Var.Channel vc = scope.parent.lookupChannel(p, this);
+			vc.appendDynamic();
 		}
 	}
 	
