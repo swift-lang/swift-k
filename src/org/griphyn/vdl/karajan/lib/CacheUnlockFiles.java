@@ -87,11 +87,20 @@ public class CacheUnlockFiles extends CacheFunction {
         boolean force = this.force.getValue(stack);
         
         for (AbsFile f : files) {
-            File cf = new File(f.getName(), PathUtils.remoteDirName(f), host, 0);
+            File cf = new File(f.getName(), dircat(dir, PathUtils.remoteDirName(f)), host, 0);
             CacheReturn cr = cache.unlockEntry(cf, force);
             rem.addAll(cr.remove);
         }
         
         cacheFilesToRemove.setValue(stack, rem);
+    }
+
+    private String dircat(String dir1, String dir2) {
+        if (dir2 == null || "".equals(dir2)) {
+            return dir1;
+        }
+        else {
+            return dir1 + "/" + dir2;
+        }
     }
 }
