@@ -86,7 +86,12 @@ public class PathUtils {
             return f.getAbsoluteDir();
         }
         else {
-            return remotePathName(f.getHost() + "/" + f.getDirectory());
+            if (f.getHost() == null) {
+                return remotePathName(f.getDirectory());
+            }
+            else {
+                return remotePathName(f.getHost() + "/" + f.getDirectory());
+            }
         }
     }
     
@@ -98,7 +103,12 @@ public class PathUtils {
             return f.getAbsolutePath();
         }
         else {
-            return remotePathName(f.getHost() + "/" + f.getPath());
+            if (f.getHost() == null) {
+                return remotePathName(f.getPath());
+            }
+            else {
+                return remotePathName(f.getHost() + "/" + f.getPath());
+            }
         }
     }
         
@@ -110,6 +120,9 @@ public class PathUtils {
      */
 
     public static String remotePathName(String dir) {
+        if (dir == null) {
+            return "";
+        }
         if (dir.length() == 0) {
             return dir;
         }
