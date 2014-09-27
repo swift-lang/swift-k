@@ -184,6 +184,7 @@ public class ProcedureSignature {
 		    new HashMap<String,ProcedureSignature>();
 
 		add(functionsMap, "arg", returns(STRING), args(STRING, optional(STRING)));
+		add(functionsMap, "args", returns("string[string]"), args(STRING));
 
 		add(functionsMap, "extractInt", returns(INT), args(ANY));
 		add(functionsMap, "extractFloat", returns(FLOAT), args(ANY));
