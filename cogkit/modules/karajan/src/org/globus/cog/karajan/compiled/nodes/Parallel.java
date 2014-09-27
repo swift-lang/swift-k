@@ -25,6 +25,10 @@
 
 package org.globus.cog.karajan.compiled.nodes;
 
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.parser.WrapperNode;
+
 import k.rt.ExecutionException;
 import k.rt.KRunnable;
 import k.rt.Stack;
@@ -35,6 +39,19 @@ import k.thr.Yield;
 
 public class Parallel extends OrderedChannelsNode {
 	
+	@Override
+	protected Node compileChildren(WrapperNode w, Scope scope) throws CompilationException {
+	    if (w.nodeCount() == 0) {
+	        return null;
+	    }
+	    else if (w.nodeCount() == 1) {
+	        return this.compileChild(w.getNode(0), scope);
+	    }
+	    else {
+	    	return super.compileChildren(w, scope);
+	    }
+	}
+
 	@Override
 	public void run(LWThread thr) {
 		int state = thr.checkSliceAndPopState();
