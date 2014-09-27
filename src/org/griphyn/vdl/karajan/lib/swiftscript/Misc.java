@@ -537,74 +537,34 @@ public class Misc {
         }
     }
 	
-	public static class ToInt extends AbstractSingleValuedSwiftFunction {
-        private ArgRef<AbstractDataNode> str;
-
+	public static class ToInt extends AbstractUnarySingleValuedSwiftFunction<Integer, String> {
+	    public ToInt() {
+	        super("toInt", Field.GENERIC_INT);
+	    }
+	    
         @Override
-        protected Signature getSignature() {
-            return new Signature(params("str"), returns(channel("...", 1)));
-        }
-        
-        @Override
-        protected Field getFieldType() {
-            return Field.GENERIC_INT;
-        }
-        
-        @Override
-        public Object function(Stack stack) {
-            AbstractDataNode hstr = str.getValue(stack);
-            String str = SwiftFunction.unwrap(this, hstr);
-            
-            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_INT, Integer.valueOf(str));
-
-            if (PROVENANCE_ENABLED) {
-                int provid = SwiftFunction.nextProvenanceID();
-                SwiftFunction.logProvenanceParameter(provid, hstr, "str");
-                SwiftFunction.logProvenanceResult(provid, handle, "toint");
-            }
-    
-            return handle;
+        protected Integer function(String v) {
+            return Integer.valueOf(v);
         }
     }
 	
-	public static class ToFloat extends AbstractSingleValuedSwiftFunction {
-        private ArgRef<AbstractDataNode> str;
-
+	public static class ToFloat extends AbstractUnarySingleValuedSwiftFunction<Double, Object> {
+	    
+	    public ToFloat() { 
+	        super("toFloat", Field.GENERIC_FLOAT);
+	    }
+                        
         @Override
-        protected Signature getSignature() {
-            return new Signature(params("str"));
-        }
-        
-        @Override
-        protected Field getFieldType() {
-            return Field.GENERIC_FLOAT;
-        }
-        
-        @Override
-        public Object function(Stack stack) {
-            AbstractDataNode hstr = str.getValue(stack);
-            Object obj = SwiftFunction.unwrap(this, hstr);
-            
-            DSHandle handle;
-            
+        protected Double function(Object obj) {
             if (obj instanceof String) {
-                handle = NodeFactory.newRoot(Field.GENERIC_FLOAT, Double.valueOf((String) obj));
+                return Double.valueOf((String) obj);
             }
             else if (obj instanceof Number) {
-                handle = NodeFactory.newRoot(Field.GENERIC_FLOAT, ((Number) obj).doubleValue());
+                return ((Number) obj).doubleValue();
             }
             else {
                 throw new ExecutionException("Expected a string or int. Got " + obj);
             }
-            
-
-            if (PROVENANCE_ENABLED) {
-                int provid = SwiftFunction.nextProvenanceID();
-                SwiftFunction.logProvenanceParameter(provid, hstr, "str");
-                SwiftFunction.logProvenanceResult(provid, handle, "tofloat");
-            }
-    
-            return handle;
         }
     }
 
