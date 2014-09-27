@@ -1,5 +1,7 @@
 group Karajan-np;
 
+variable_log() ::= << >>
+
 swift_log_inputs(params) ::= <<>>
 swift_log_outputs(params) ::= <<>>
 
@@ -7,12 +9,32 @@ callInternal_log_input() ::= <<$it$>>
 
 callInternal_log_output() ::= <<$it$>>
 
-variable_log() ::= << >>
-
 range(from, to, step, datatype) ::= <<swift:range($from$, $to$$if(step)$, step = $step$$endif$)>>
 
 slicearray(parent, memberchild, datatype) ::= <<
 	swift:sliceArray($parent$, "$memberchild$", "$datatype$")
 >>
 
+log_param(dir) ::= << >>
+
 cs() ::= << >>
+
+variable(name, type, field, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line, unused) ::= <<
+$! Overriding templates doesn't work if overriden template is inside an if !$
+$if(!unused)$
+$name$ := 
+	$if(mapping)$
+	swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+		$swift_mapping(mapping=mapping, file=file)$
+	)
+	$else$
+		$if(file)$
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+				$swift_mapping(mapping=mapping, file=file)$
+			)
+		$else$
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$)
+		$endif$
+	$endif$
+$endif$
+>>
