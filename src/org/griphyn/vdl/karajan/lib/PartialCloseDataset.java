@@ -21,7 +21,11 @@ import k.rt.Stack;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class PartialCloseDataset extends SwiftFunction {
@@ -29,8 +33,20 @@ public class PartialCloseDataset extends SwiftFunction {
 	
 	private ArgRef<DSHandle> var;
 	private ArgRef<Number> count;
-
+	
 	@Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+		if (var.isStatic()) {
+			if (var.getValue().isClosed()) {
+				// variables assigned at compile-time are already closed, so optimize this away
+				return null;
+			}
+		}
+        return super.compileBody(w, argScope, scope);
+    }
+
+    @Override
     protected Signature getSignature() {
         return new Signature(params("var", optional("count", 1)));
     }
