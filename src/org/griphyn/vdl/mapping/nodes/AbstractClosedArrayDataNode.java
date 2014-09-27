@@ -64,9 +64,15 @@ public abstract class AbstractClosedArrayDataNode extends AbstractClosedDataNode
             else if (n instanceof String) {
             	this.values[index] = NodeFactory.newNode(Field.Factory.createField(index, Types.STRING), getRoot(), this, n);
             }
+            else if (n instanceof Integer) {
+                this.values[index] = NodeFactory.newNode(Field.Factory.createField(index, Types.INT), getRoot(), this, n);
+            }
+            else if (n instanceof Double) {
+                this.values[index] = NodeFactory.newNode(Field.Factory.createField(index, Types.FLOAT), getRoot(), this, n);
+            }
             else {
                 throw new RuntimeException(
-                        "An array variable can only be initialized by a list of DSHandle values");
+                        "An array variable can only be initialized by a list of DSHandle or primitive values");
             }
             index++;
         }
