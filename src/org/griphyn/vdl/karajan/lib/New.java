@@ -50,6 +50,7 @@ import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.mapping.nodes.RootClosedArrayDataNode;
 import org.griphyn.vdl.mapping.nodes.RootClosedPrimitiveDataNode;
 import org.griphyn.vdl.mapping.nodes.RootFutureArrayDataNode;
+import org.griphyn.vdl.mapping.nodes.RootFuturePrimitiveDataNode;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
@@ -59,6 +60,7 @@ public class New extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(New.class);
 	
 	private static final Mapper NULL_MAPPER = new NullMapper();
+	private static final LWThread STATIC_THREAD = new LWThread("STATIC", null, null);
 		
 	private ArgRef<Field> field;
 	private ArgRef<GenericMappingParamSet> mapping;
@@ -94,6 +96,54 @@ public class New extends SwiftFunction {
         }
         tracer = Tracer.getTracer(this);
         return fn;
+    }
+
+    @Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+        DSHandle h = null;
+        RootHandle r = null;
+        int waitCount = 0;
+        if (this.waitCount.getValue() != null) {
+            waitCount = this.waitCount.getValue().intValue();
+        }
+        if (field.isStatic() && value.isStatic() && mapping.isStatic() && mapping.getValue() == null) {
+            Field f = field.getValue();
+            Type t = f.getType();
+            Object v = value.getValue();
+            if (v != null) {
+                if (t.isPrimitive() && !Types.EXTERNAL.equals(t)) {
+                    r = new RootClosedPrimitiveDataNode(f, internalValue(t, v)); 
+                }
+            }
+            else {
+                if (getParent().getType().equals("k:assign") && getParent().getParent().getType().equals("k:main")) {
+                    // in the main scope, so it can be initialized at compile-time
+                    if (t.isArray()) {
+                    	if (input.getValue()) {
+                    		r = new RootClosedArrayDataNode(f, Collections.emptyList(), null);
+                    	}
+                    	else {
+                    	    r = new RootFutureArrayDataNode(f, null);
+                    	}
+                    }
+                    else if (t.isPrimitive()) {
+                        r = new RootFuturePrimitiveDataNode(f);
+                    }
+                    // TODO can add other types
+                }
+            }
+        }
+        if (r != null) {
+            h = initHandle(r, NULL_MAPPER, STATIC_THREAD, _defline.getValue(), false);
+            h.setWriteRefCount(waitCount);
+        }
+        if (h != null && staticReturn(scope, h)) {
+            return null;
+        }
+        else {
+            return super.compileBody(w, argScope, scope);
+        }
     }
 
     @Override
