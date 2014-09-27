@@ -34,7 +34,6 @@ import k.rt.Context;
 
 import org.globus.cog.karajan.analyzer.RootScope;
 import org.globus.cog.karajan.util.KarajanProperties;
-import org.griphyn.vdl.karajan.lib.swiftscript.FnArg;
 import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 import org.griphyn.vdl.util.SwiftConfig;
 
@@ -49,7 +48,6 @@ public class SwiftRootScope extends RootScope {
         addVar("SWIFT:DRY_RUN", context.getAttribute("SWIFT:DRY_RUN"));
         addVar("SWIFT:RUN_ID", context.getAttribute("SWIFT:RUN_ID"));
         addVar("SWIFT:SCRIPT_NAME", context.getAttribute("SWIFT:SCRIPT_NAME"));
-        addVar("SWIFT:PARSED_ARGS", FnArg.parseArgs(context.getArguments()));
         addVar("SWIFT:DEBUG_DIR_PREFIX", context.getAttribute("SWIFT:DEBUG_DIR_PREFIX"));
     }
 }

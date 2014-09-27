@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import k.rt.Channel;
+import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
@@ -32,6 +33,7 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
@@ -57,7 +59,14 @@ public class FnArg extends SwiftFunction {
     @Override
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
-        parsedArgs = scope.getVarRef("SWIFT:PARSED_ARGS");
+        try {
+            parsedArgs = scope.getVarRef("SWIFT:PARSED_ARGS");
+        }
+        catch (VariableNotFoundException e) {
+            VarRef<Context> context = scope.getVarRef("#context");
+            scope.getRoot().addVar("SWIFT:PARSED_ARGS", parseArgs(context.getValue().getArguments()));
+            parsedArgs = scope.getVarRef("SWIFT:PARSED_ARGS");
+        }
     }
 
     @SuppressWarnings("cast")
