@@ -61,7 +61,7 @@ public class GetStandardFilesInfo extends SwiftFunction {
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("stdin", "stdout", "stderr", optional("defaultScheme", null)), 
+        return new Signature(params("stdin", "stdout", "stderr", optional("defaultScheme", "file")), 
             returns(channel("...", 3)));
     }
     
