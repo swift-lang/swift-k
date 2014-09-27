@@ -40,6 +40,7 @@ namespace(swiftscript) {
 	export(length, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Length"))
 	export(exists, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Exists"))
 	export(arg, def("org.griphyn.vdl.karajan.lib.swiftscript.FnArg"))
+	export(args, def("org.griphyn.vdl.karajan.lib.swiftscript.FnArgs"))
 }
 
 namespace(swift) {
