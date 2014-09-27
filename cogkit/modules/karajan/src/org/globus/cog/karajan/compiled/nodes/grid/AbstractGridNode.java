@@ -82,7 +82,7 @@ public abstract class AbstractGridNode extends InternalFunction {
 	protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
 			throws CompilationException {
 		context = scope.getVarRef("#context");
-		return this;
+		return super.compileBody(w, argScope, scope);
 	}
 
 	public final void runBody(LWThread thr) {
