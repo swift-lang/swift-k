@@ -34,7 +34,6 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 
@@ -54,13 +53,11 @@ public abstract class UnaryOp<T, R> extends AbstractFunction {
 	}
 
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
 			throws CompilationException {
-		Var v1 = argScope.lookupParam("v1");
-		if (v1.getValue() != null) {
-			if (staticReturn(scope, value((T) v1.getValue()))) {
+		if (v1.isStatic()) {
+			if (staticReturn(scope, value(v1.getValue()))) {
 				return null;
 			}
 		}

@@ -34,7 +34,6 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 
@@ -59,14 +58,11 @@ public abstract class BinaryOp<T, R> extends AbstractFunction {
 		cr_vargs.append(stack, value);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
 			throws CompilationException {
-		Var v1 = argScope.lookupParam("v1");
-		Var v2 = argScope.lookupParam("v2");
-		if (v1.getValue() != null && v2.getValue() != null) {
-			if (staticReturn(scope, value((T) v1.getValue(), (T) v2.getValue()))) {
+		if (v1.isStatic() && v2.isStatic()) {
+			if (staticReturn(scope, value(v1.getValue(), v2.getValue()))) {
 				return null;
 			}
 		}

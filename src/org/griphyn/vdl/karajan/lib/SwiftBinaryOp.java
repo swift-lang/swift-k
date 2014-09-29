@@ -30,7 +30,11 @@ package org.griphyn.vdl.karajan.lib;
 
 import k.rt.Stack;
 
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.functions.BinaryOp;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
@@ -53,6 +57,22 @@ public abstract class SwiftBinaryOp extends BinaryOp<AbstractDataNode, DSHandle>
         }
     }
     
+    @Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+        if (v1.isStatic() && v2.isStatic()) {
+            AbstractDataNode v1s = v1.getValue();
+            AbstractDataNode v2s = v2.getValue();
+            if (v1s.isClosed() && v2s.isClosed()) {
+                if (staticReturn(scope, value(v1s, v2s))) {
+                    return null;
+                }
+            }
+        }
+        returnDynamic(scope);
+        return this;
+    }
+
     protected Field getReturnType() {
         return Field.GENERIC_ANY; 
     }
