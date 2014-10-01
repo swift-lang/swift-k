@@ -1,3 +1,4 @@
 @suppressUnusedWarning
 @extends AbstractFileMapperParams
 Integer padding = 4
+String separator = "_"

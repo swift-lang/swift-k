@@ -50,6 +50,6 @@ public class SimpleFileMapper extends AbstractFileMapper {
     public void initialize(RootHandle root) {
 		super.initialize(root);
 		SimpleFileMapperParams cp = getParams();
-		setElementMapper(new DefaultFileNameElementMapper(cp.getPadding()));
+		setElementMapper(new DefaultFileNameElementMapper(cp.getPadding(), cp.getSeparator()));
 	}
 }
