@@ -106,7 +106,9 @@ public class FnArgs extends SwiftFunction {
 
     /**
      * fmt := arg, arg, ... arg
-     * arg := key [sep [typespec]]
+     * arg := optional | mandatory
+     * optional = '[' mandatory ']'
+     * mandatory := key [sep [typespec]]
      * key := ('-' | '/' | '_' | '0'...'9' | 'a'...'z' | 'A...Z')+
      * sep := ' ' | '=' | ':'
      * typespec := '<' type [ ':' value ] '>'
