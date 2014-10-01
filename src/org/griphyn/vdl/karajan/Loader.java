@@ -677,7 +677,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
             "string", ArgumentParser.OPTIONAL);
         ap.addOption(ARG_UI, 
             "Indicates how swift should display run-time information. The following are valid values:" +
-            "\n\t'summary' (default) - causesSswift to regularly print a count of jobs for each state that a job can be in" +
+            "\n\t'none' - does not print any progress information" + 
+            "\n\t'summary' (default) - causes swift to regularly print a count of jobs for each state that a job can be in" +
             "\n\t'text' - regularly prints a more detailed table with Swift run-time information" +
             "\n\t'TUI' - displays Swift run-time information using an interactive text user interface." +
             " The terminal must support standard ANSI/VT100 escape sequences. If a port is specified," +
@@ -756,14 +757,20 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
         Logger.getLogger(Log.class).setLevel(Level.INFO);
         if (ap.isPresent(ARG_UI) && !"summary".equals(ap.getStringValue(ARG_UI))) {
-            ma = new MonitorAppender(projectName, ap.getStringValue(ARG_UI));
-            Logger.getRootLogger().addAppender(ma);
-            Logger.getLogger(Log.class).setLevel(Level.DEBUG);
-            Logger.getLogger(AbstractGridNode.class).setLevel(Level.DEBUG);
-            Logger.getLogger(Execute.class).setLevel(Level.DEBUG);
-            Logger.getLogger(SwiftExecutor.class).setLevel(Level.INFO);
-            Logger.getLogger(WeightedHostScoreScheduler.class).setLevel(
-                Level.INFO);
+            if ("none".equals(ap.getStringValue(ARG_UI))) {
+                // config should be loaded now
+                SwiftConfig.getDefault().set(SwiftConfig.Key.TICKER_ENABLED, false);
+            }
+            else {
+                ma = new MonitorAppender(projectName, ap.getStringValue(ARG_UI));
+                Logger.getRootLogger().addAppender(ma);
+                Logger.getLogger(Log.class).setLevel(Level.DEBUG);
+                Logger.getLogger(AbstractGridNode.class).setLevel(Level.DEBUG);
+                Logger.getLogger(Execute.class).setLevel(Level.DEBUG);
+                Logger.getLogger(SwiftExecutor.class).setLevel(Level.INFO);
+                Logger.getLogger(WeightedHostScoreScheduler.class).setLevel(
+                    Level.INFO);
+            }
             ca.setThreshold(Level.FATAL);
         }
         else if (ap.isPresent(ARG_MINIMAL_LOGGING)) {

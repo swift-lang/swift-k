@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import k.rt.Context;
+import k.rt.Null;
 import k.rt.Stack;
 import k.thr.LWThread;
 
@@ -46,8 +47,7 @@ import org.griphyn.vdl.util.SwiftConfig;
 proof of concept. */
 
 public class RuntimeStats {
-
-    public static final boolean TICKER_DISABLED = !SwiftConfig.getDefault().isTickerEnabled();
+    public static boolean TICKER_DISABLED = !SwiftConfig.getDefault().isTickerEnabled();
     
 	public static final String TICKER = "SWIFT_TICKER";
 
@@ -99,6 +99,15 @@ public class RuntimeStats {
         }
 	}
 	
+	public static class NullProgressState extends ProgressState {
+        @Override
+        public void setState(String state) {
+            // do nothing
+        }
+	}
+	
+	private static final ProgressState NULL_PROGRESS_STATE = new NullProgressState();
+	
 	public static class InitProgressState extends Node {
 	    private VarRef<Context> context;
 	    private ChannelRef<Object> cr_vargs;
@@ -106,12 +115,18 @@ public class RuntimeStats {
 	    @Override
         public Node compile(WrapperNode w, Scope scope)
                 throws CompilationException {
-            super.compile(w, scope);
-            context = scope.getVarRef("#context");
-            Var.Channel r = scope.lookupChannel("...");
-            r.appendDynamic();
-            cr_vargs = scope.getChannelRef(r);
-            return TICKER_DISABLED ? null : this;
+	        Var.Channel r = scope.lookupChannel("...");
+	        if (TICKER_DISABLED) {
+	            r.append(NULL_PROGRESS_STATE);
+	            return null;
+	        }
+	        else {
+                super.compile(w, scope);
+                context = scope.getVarRef("#context");
+                r.appendDynamic();
+                cr_vargs = scope.getChannelRef(r);
+                return this;
+	        }
         }
 
         @Override
@@ -133,6 +148,17 @@ public class RuntimeStats {
             return new Signature(params("ps", "state"));
         }
         
+        @Override
+        public Node compile(WrapperNode w, Scope scope)
+                throws CompilationException {
+            if (TICKER_DISABLED) {
+                return null;
+            }
+            else {
+                return super.compile(w, scope);
+            }
+        }
+
         @Override
         protected void runBody(LWThread thr) {
             Stack stack = thr.getStack();
