@@ -39,7 +39,7 @@ TOTAL_TIME=0
 INDIVIDUAL_TEST_TIME=0
 COLORIZE=0
 # The directory in which to start:
-TOPDIR=$( cd ../.. && echo $PWD )
+TOPDIR=$( cd .. && echo $PWD )
 CRTDIR=$PWD
 
 # Disable usage stats in test suite
@@ -168,7 +168,7 @@ SHUTDOWN=0
 echo "RUNNING_IN:  $RUNDIR"
 echo "HTML_OUTPUT: $HTML"
 
-TESTDIR=$TOPDIR/swift-k/tests
+TESTDIR=$TOPDIR/tests
 
 # Gensites will now check the variables as needed 
 checkvars() {
@@ -1172,22 +1172,24 @@ start_row
 
 OUTPUT=compile.stdout
 # Exit early if the Swift directory is not there
-if [[ ! -d $TOPDIR/swift-k ]]
+# This check no longer makes sense because the parent of the test directory will
+# inevitably exist
+if [[ ! -d $TOPDIR ]]
 then
   echo "Could not find swift source directory"
   echo "TOPDIR: $TOPDIR"
-  echo "Looked for $TOPDIR/swift-k"
+  echo "Looked for $TOPDIR"
   crash
 fi
 
-test_exec cd $TOPDIR/swift-k
+test_exec cd $TOPDIR
 if (( $CLEAN )); then
   test_exec rm -rf dist
 fi
 if (( $RUN_ANT )); then
   test_exec ant -quiet dist
 fi
-SWIFT_HOME=$TOPDIR/swift-k/dist/swift-svn
+SWIFT_HOME=$TOPDIR/dist/swift-svn
 OUTPUT=compile.stdout
 OUTPUT=build.stdout
 if [ $BUILD_PACKAGE = "1" ]; then
