@@ -40,7 +40,6 @@ import org.griphyn.vdl.type.Field;
 public class RootFutureStructDataNode extends AbstractFutureStructDataNode implements RootHandle {
 	private int line = -1;
     private LWThread thread;
-    private boolean input;
     private Mapper mapper;
     
     public RootFutureStructDataNode(Field field, DuplicateMappingChecker dmc) {
@@ -112,16 +111,6 @@ public class RootFutureStructDataNode extends AbstractFutureStructDataNode imple
     @Override
     public void setLine(int line) {
         this.line = line;
-    }
-
-    @Override
-    public boolean isInput() {
-        return input;
-    }
-
-    @Override
-    public void setInput(boolean input) {
-        this.input = input;
     }
 
     @Override
