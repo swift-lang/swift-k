@@ -173,7 +173,7 @@ topLevelStatement[StringTemplate code]
 
 // they all begin with (id name)
     | (predictDeclaration) => declaration[code]
-
+	| (predictProceduredecl) => d=proceduredecl {code.setAttribute("functions", d);}
 // more complicated function invocations
 // note that function invocations can happen in above statements too
 // this section is just the remaining more specialised invocations
@@ -188,7 +188,6 @@ topLevelStatement[StringTemplate code]
 // this is a declaration, but not sorted out the predications yet to
 // group it into a decl block
     | ("app") => d=appproceduredecl {code.setAttribute("functions",d);}
-    | (predictProceduredecl) => d=proceduredecl {code.setAttribute("functions", d);}
     ;
 
 predictDeclaration {StringTemplate x,y;} : ("global") | (x=type y=declarator) ;
@@ -761,8 +760,8 @@ predictProcedurecallStatAssignManyReturnParam:
     ASSIGN
 ;
 
-predictProcedurecallStatAssignManyReturnOutput:
-	ID
+predictProcedurecallStatAssignManyReturnOutput {StringTemplate s;}:
+	ID (ASSIGN s=expression)?
 ;
 
 procedurecallStatAssignManyReturnParam [StringTemplate s]
@@ -819,20 +818,27 @@ returnParameter returns [ StringTemplate code = template("returnParam") ]
 	})?
 ;
 
-actualParameter returns [StringTemplate code=template("actualParam")]
-{StringTemplate d=null, id=null, ai=null;}
-    :
-    (
-        (declarator ASSIGN)=> (d=declarator ASSIGN)
-        {
-             code.setAttribute("bind", d);
-          }
-    )?
-    id=expression
-    {
-      code.setAttribute("value", id);
-    }
-    ;
+actualParameter returns [StringTemplate code=template("actualParam")]:
+	(predictNamedParam) => namedParam[code] 
+	| positionalParam[code]
+;
+
+predictNamedParam {StringTemplate d = null;}:
+	d=declarator ASSIGN
+;
+
+namedParam[StringTemplate code] {StringTemplate d = null;}:
+	d=declarator ASSIGN {
+		code.setAttribute("bind", d);
+	}
+	positionalParam[code]
+;
+
+positionalParam[StringTemplate code] {StringTemplate id = null;}:
+	id=expression {
+		code.setAttribute("value", id);
+	}
+;
 
 atomicBody [StringTemplate code]
 {StringTemplate app=null, svc=null;}
