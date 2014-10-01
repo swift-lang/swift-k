@@ -158,6 +158,9 @@ public abstract class Types {
 		    if (names != null) {
 				Type baseType = getType(names[0]);
 				Type keyType = getType(names[1]);
+				if (!keyType.isPrimitive()) {
+				    throw new NoSuchTypeException("Array key type must be a primitive type");
+				}
 				Type arrayType = new Array(baseType, keyType);
 				addType(arrayType);
 				return arrayType;
