@@ -755,6 +755,14 @@ procedureCallExpr returns [StringTemplate code=template("call")]
 
 predictProcedurecallStatAssignManyReturnParam:
 	LPAREN
+    predictProcedurecallStatAssignManyReturnOutput
+    (COMMA predictProcedurecallStatAssignManyReturnOutput)*
+    RPAREN
+    ASSIGN
+;
+
+predictProcedurecallStatAssignManyReturnOutput:
+	ID
 ;
 
 procedurecallStatAssignManyReturnParam [StringTemplate s]
