@@ -178,12 +178,12 @@ topLevelStatement[StringTemplate code]
 // note that function invocations can happen in above statements too
 // this section is just the remaining more specialised invocations
 
-    |   (procedurecallCode) => d=procedurecallCode
+    |   (predictProcedurecallCode) => d=procedurecallCode
        {
         code.setAttribute("statements",d);
        }
 
-    |   (procedurecallStatAssignManyReturnParam[code]) => procedurecallStatAssignManyReturnParam[code]
+    |   (predictProcedurecallStatAssignManyReturnParam) => procedurecallStatAssignManyReturnParam[code]
 
 // this is a declaration, but not sorted out the predications yet to
 // group it into a decl block
@@ -697,6 +697,10 @@ variableAssign returns [StringTemplate code=null]
             code.setAttribute("rhs", e);
         }
     ;
+    
+predictProcedurecallCode:
+	ID LPAREN
+;
 
 procedurecallCode returns [StringTemplate code=template("call")]
 {StringTemplate f=null;}
@@ -714,16 +718,14 @@ procedureInvocationWithoutSemi [StringTemplate code]
 {StringTemplate f=null;}
     :
         id:ID {code.setAttribute("func", id.getText());}
-        LPAREN
-        (   f=actualParameter
-        {
-        code.setAttribute("inputs", f);
-        }
-            (   COMMA f=actualParameter
-                {
-        code.setAttribute("inputs", f);
-            }
-            )*
+        LPAREN 
+        (
+        	f=actualParameter {
+        		code.setAttribute("inputs", f);
+        	}
+            ( COMMA f=actualParameter {
+        		code.setAttribute("inputs", f);
+            })*
         )?
         RPAREN
     ;
@@ -751,6 +753,17 @@ procedureCallExpr returns [StringTemplate code=template("call")]
         procedureInvocationExpr[code]
     ;
 
+predictProcedurecallStatAssignManyReturnParam:
+	LPAREN
+    predictProcedurecallStatAssignManyReturnOutput
+    (COMMA predictProcedurecallStatAssignManyReturnOutput)*
+    RPAREN
+    ASSIGN
+;
+
+predictProcedurecallStatAssignManyReturnOutput:
+	ID
+;
 
 procedurecallStatAssignManyReturnParam [StringTemplate s]
 { StringTemplate code=template("call"); }

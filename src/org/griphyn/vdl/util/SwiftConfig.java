@@ -384,6 +384,10 @@ public class SwiftConfig implements Cloneable {
         flat.put(key, value);
     }
     
+    public void set(Key key, Object value) {
+        flat.put(key.propName, value);
+    }
+    
     @SuppressWarnings("unchecked")
     private void build(ConfigTree<ValueLocationPair> tree) {
         this.tree = tree;

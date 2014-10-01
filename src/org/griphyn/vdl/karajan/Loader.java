@@ -160,20 +160,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
             
             WrapperNode tree = null;
-            if (project.endsWith(".swift")) {
-                try {
-                    project = compile(project, ap.isPresent(ARG_RECOMPILE), provenanceEnabled);
-                }
-                catch (ParsingException pe) {
-                    // the compiler should have already logged useful
-                    // error messages, so this log line is just for
-                    // debugging
-                    logger.debug("Exception when compiling " + project, pe);
-                    System.exit(3);
-                }
-                tree = load(project);
-            }
-            else if (project.endsWith(".kml")) {
+            if (project.endsWith(".kml")) {
                 try {
                     tree = load(project);
                 }
@@ -197,6 +184,20 @@ public class Loader extends org.globus.cog.karajan.Loader {
                     logger.debug("Exception when compiling " + project, pe);
                     System.exit(3);
                 }
+            }
+            else {
+                // assume swift source otherwise
+                try {
+                    project = compile(project, ap.isPresent(ARG_RECOMPILE), provenanceEnabled);
+                }
+                catch (ParsingException pe) {
+                    // the compiler should have already logged useful
+                    // error messages, so this log line is just for
+                    // debugging
+                    logger.debug("Exception when compiling " + project, pe);
+                    System.exit(3);
+                }
+                tree = load(project);
             }
             
             tree.setProperty("name", projectName + "-" + runID);
@@ -426,7 +427,14 @@ public class Loader extends org.globus.cog.karajan.Loader {
             CompilationException, IOException {
         File swiftscript = new File(project);
         debugText("SWIFTSCRIPT", swiftscript);
-        String projectBase = project.substring(0, project.lastIndexOf('.'));
+        int extIndex = project.lastIndexOf('.');
+        String projectBase;
+        if (extIndex == -1) {
+            projectBase = project;
+        }
+        else {
+            projectBase = project.substring(0, extIndex);
+        }
         File xml = new File(projectBase + ".swiftx");
         File kml = new File(projectBase + ".kml");
 
@@ -669,7 +677,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
             "string", ArgumentParser.OPTIONAL);
         ap.addOption(ARG_UI, 
             "Indicates how swift should display run-time information. The following are valid values:" +
-            "\n\t'summary' (default) - causesSswift to regularly print a count of jobs for each state that a job can be in" +
+            "\n\t'none' - does not print any progress information" + 
+            "\n\t'summary' (default) - causes swift to regularly print a count of jobs for each state that a job can be in" +
             "\n\t'text' - regularly prints a more detailed table with Swift run-time information" +
             "\n\t'TUI' - displays Swift run-time information using an interactive text user interface." +
             " The terminal must support standard ANSI/VT100 escape sequences. If a port is specified," +
@@ -748,14 +757,20 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
         Logger.getLogger(Log.class).setLevel(Level.INFO);
         if (ap.isPresent(ARG_UI) && !"summary".equals(ap.getStringValue(ARG_UI))) {
-            ma = new MonitorAppender(projectName, ap.getStringValue(ARG_UI));
-            Logger.getRootLogger().addAppender(ma);
-            Logger.getLogger(Log.class).setLevel(Level.DEBUG);
-            Logger.getLogger(AbstractGridNode.class).setLevel(Level.DEBUG);
-            Logger.getLogger(Execute.class).setLevel(Level.DEBUG);
-            Logger.getLogger(SwiftExecutor.class).setLevel(Level.INFO);
-            Logger.getLogger(WeightedHostScoreScheduler.class).setLevel(
-                Level.INFO);
+            if ("none".equals(ap.getStringValue(ARG_UI))) {
+                // config should be loaded now
+                SwiftConfig.getDefault().set(SwiftConfig.Key.TICKER_ENABLED, false);
+            }
+            else {
+                ma = new MonitorAppender(projectName, ap.getStringValue(ARG_UI));
+                Logger.getRootLogger().addAppender(ma);
+                Logger.getLogger(Log.class).setLevel(Level.DEBUG);
+                Logger.getLogger(AbstractGridNode.class).setLevel(Level.DEBUG);
+                Logger.getLogger(Execute.class).setLevel(Level.DEBUG);
+                Logger.getLogger(SwiftExecutor.class).setLevel(Level.INFO);
+                Logger.getLogger(WeightedHostScoreScheduler.class).setLevel(
+                    Level.INFO);
+            }
             ca.setThreshold(Level.FATAL);
         }
         else if (ap.isPresent(ARG_MINIMAL_LOGGING)) {
@@ -791,9 +806,14 @@ public class Loader extends org.globus.cog.karajan.Loader {
     }
 
     protected static String projectName(String project) {
-        project = project
-            .substring(project.lastIndexOf(File.separatorChar) + 1);
-        return project.substring(0, project.lastIndexOf('.'));
+        project = project.substring(project.lastIndexOf(File.separatorChar) + 1);
+        int extIndex = project.lastIndexOf('.');
+        if (extIndex == -1) {
+            return project;
+        }
+        else {
+            return project.substring(0, extIndex);
+        }
     }
 
     private static long lastTime = 0;

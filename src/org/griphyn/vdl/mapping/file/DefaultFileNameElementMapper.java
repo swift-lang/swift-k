@@ -35,13 +35,19 @@ public class DefaultFileNameElementMapper extends AbstractFileNameElementMapper 
 	public static final int DEFAULT_INDEX_WIDTH = 4;
 
 	public int indexWidth;
+	public String separator;
 
 	public DefaultFileNameElementMapper() {
 		this(DEFAULT_INDEX_WIDTH);
 	}
-
+	
 	public DefaultFileNameElementMapper(int indexWidth) {
+	    this(indexWidth, "_");
+	}
+
+	public DefaultFileNameElementMapper(int indexWidth, String separator) {
 		this.indexWidth = indexWidth;
+		this.separator = separator;
 	}
 
 	public String mapField(String fieldName) {
@@ -67,6 +73,6 @@ public class DefaultFileNameElementMapper extends AbstractFileNameElementMapper 
 	}
 
 	public String getSeparator(int depth) {
-		return "_";
+		return separator;
 	}
 }

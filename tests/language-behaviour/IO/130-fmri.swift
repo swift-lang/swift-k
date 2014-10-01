@@ -16,8 +16,8 @@ type jpeg;
 
 // inputs: 4 volumes and a reference volume
 
-volume inputs[] <simple_mapper;prefix="130-fmri.",suffix=".input.in">;
-volume template <simple_mapper;prefix="130-fmri.",suffix=".template.in">;
+volume inputs[] <simple_mapper;prefix="130-fmri.",suffix=".input.in",separator=".">;
+volume template <simple_mapper;prefix="130-fmri.",suffix=".template.in",separator=".">;
 
 // align 4 volumes to reference volume
 
@@ -55,7 +55,7 @@ foreach axis, i in axes {
 
 // convert each slice into a jpeg
 
-jpeg final[] <simple_mapper;prefix="130-fmri.",suffix=".jpeg">;
+jpeg final[] <simple_mapper;prefix="130-fmri.",suffix=".jpeg",separator=".">;
 
 app (jpeg j) convert(slice s) {
     touch @j;
