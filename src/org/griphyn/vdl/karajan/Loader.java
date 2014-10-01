@@ -160,20 +160,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
             
             WrapperNode tree = null;
-            if (project.endsWith(".swift")) {
-                try {
-                    project = compile(project, ap.isPresent(ARG_RECOMPILE), provenanceEnabled);
-                }
-                catch (ParsingException pe) {
-                    // the compiler should have already logged useful
-                    // error messages, so this log line is just for
-                    // debugging
-                    logger.debug("Exception when compiling " + project, pe);
-                    System.exit(3);
-                }
-                tree = load(project);
-            }
-            else if (project.endsWith(".kml")) {
+            if (project.endsWith(".kml")) {
                 try {
                     tree = load(project);
                 }
@@ -197,6 +184,20 @@ public class Loader extends org.globus.cog.karajan.Loader {
                     logger.debug("Exception when compiling " + project, pe);
                     System.exit(3);
                 }
+            }
+            else {
+                // assume swift source otherwise
+                try {
+                    project = compile(project, ap.isPresent(ARG_RECOMPILE), provenanceEnabled);
+                }
+                catch (ParsingException pe) {
+                    // the compiler should have already logged useful
+                    // error messages, so this log line is just for
+                    // debugging
+                    logger.debug("Exception when compiling " + project, pe);
+                    System.exit(3);
+                }
+                tree = load(project);
             }
             
             tree.setProperty("name", projectName + "-" + runID);
@@ -426,7 +427,14 @@ public class Loader extends org.globus.cog.karajan.Loader {
             CompilationException, IOException {
         File swiftscript = new File(project);
         debugText("SWIFTSCRIPT", swiftscript);
-        String projectBase = project.substring(0, project.lastIndexOf('.'));
+        int extIndex = project.lastIndexOf('.');
+        String projectBase;
+        if (extIndex == -1) {
+            projectBase = project;
+        }
+        else {
+            projectBase = project.substring(0, extIndex);
+        }
         File xml = new File(projectBase + ".swiftx");
         File kml = new File(projectBase + ".kml");
 
@@ -791,9 +799,14 @@ public class Loader extends org.globus.cog.karajan.Loader {
     }
 
     protected static String projectName(String project) {
-        project = project
-            .substring(project.lastIndexOf(File.separatorChar) + 1);
-        return project.substring(0, project.lastIndexOf('.'));
+        project = project.substring(project.lastIndexOf(File.separatorChar) + 1);
+        int extIndex = project.lastIndexOf('.');
+        if (extIndex == -1) {
+            return project;
+        }
+        else {
+            return project.substring(0, extIndex);
+        }
     }
 
     private static long lastTime = 0;
