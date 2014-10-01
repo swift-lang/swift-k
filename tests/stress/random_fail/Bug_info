@@ -1,0 +1,22 @@
+Regression tests for Bug 1067
+| Link -> http://bugzilla.mcs.anl.gov/swift/show_bug.cgi?id=1067
+Swift 0.94 swift-r6888 cog-r3762
+
+Exception in sh:
+    Arguments: [randfail.sh, 50, 0]
+    Host: local
+    Directory: rand_fail_Bug1067-20130820-1749-6n7zbux4/jobs/6/sh-6abm13el
+    stderr.txt: Failing 11 < 50
+    stdout.txt: 
+Caused by: Application /bin/bash failed with an exit code of 255
+
+Exception in sh:
+    Arguments: [randfail.sh, 50, 0]
+    Host: local
+    Directory: rand_fail_Bug1067-20130820-1749-6n7zbux4/jobs/8/sh-8abm13el
+    stderr.txt: Failing 19 < 50
+    stdout.txt: 
+Caused by: Application /bin/bash failed with an exit code of 255
+
+Execution failed:
+    Got one name (derr) and 0 values: []

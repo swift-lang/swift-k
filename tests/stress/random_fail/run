@@ -1,0 +1,21 @@
+#!/bin/bash
+
+PATH=/scratch/midway/yadunand/swift-0.94RC2/cog/modules/swift/dist/swift-svn/bin:$PATH
+
+
+echo "Swift location: "; which swift
+echo "Swift version : "; swift -version
+
+rm rand_fail_Bug1067.stdout
+cat title.txt
+
+./rand_fail_Bug1067.setup.sh
+
+for i in `seq 1 10`
+do
+swift -tc.file tc.template.data -config swift.properties -sites.file sites.template.xml rand_fail_Bug1067.swift  | tee -a rand_fail_Bug1067.stdout
+
+rm -rf *{swiftx,kml} rand_fail_Bug1067-* _concurrent* failed*
+done
+
+./rand_fail_Bug1067.check.sh
