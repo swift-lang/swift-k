@@ -71,12 +71,16 @@ start-workers-ssh()
          run_command_bg ssh -N -T -R *:$LOCAL_PORT:localhost:$LOCAL_PORT "$WORKER_USERNAME@$MACHINE"
       fi
 
+      if [ ! -z $WORKER_CONCURRENCY ]; then
+         CONCURRENCY="-c $WORKER_CONCURRENCY"
+      fi
+
       # Connect directly
       echo Starting worker on $MACHINE
       (
         run_command ssh $WORKER_USERNAME@$MACHINE "mkdir -p $WORKER_LOCATION && mkdir -p $WORKER_LOG_DIR" ;
         run_command scp $WORKER $WORKER_USERNAME@$MACHINE:$WORKER_LOCATION ;
-        run_command ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL nohup $WORKER_LOCATION/worker.pl $WORKERURL $MACHINE $WORKER_LOG_DIR &> /dev/null &"
+        run_command ssh $WORKER_USERNAME@$MACHINE "WORKER_LOGGING_LEVEL=$WORKER_LOGGING_LEVEL nohup $WORKER_LOCATION/worker.pl $CONCURRENCY $WORKERURL $MACHINE $WORKER_LOG_DIR &> /dev/null &"
       ) &
       waitpids="$waitpids $!"
    done
@@ -163,7 +167,7 @@ fi
 # Check values in configuration file to determine how we should start coaster-service
 echo Starting coaster-service
 if [ -z "$SERVICE_PORT" ] && [ -z "$LOCAL_PORT" ]; then
-   run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE -localportfile $LOCAL_PORT_FILE -passive 
+   run_command_bg $COASTER_SERVICE -nosec -portfile $SERVICE_PORT_FILE -localportfile $LOCAL_PORT_FILE -passive
 elif [ -n "$SERVICE_PORT" ] && [ -z "$LOCAL_PORT" ]; then
    run_command_bg $COASTER_SERVICE -nosec -port $SERVICE_PORT -localportfile $LOCAL_PORT_FILE -passive 
 elif [ -z "$SERVICE_PORT" ] && [ -n "$LOCAL_PORT" ]; then
@@ -207,12 +211,54 @@ export SERVICEURL="http://$IPADDR:$SERVICE_PORT"
 export EXECUTIONURL="$SERVICEURL"
 export WORKERURL="http://$IPADDR:$LOCAL_PORT"
 
-echo Generating sites.xml
-if [ -f "gensites.template" ]; then
-   $SWIFT_BIN/gensites $( cat gensites.template ) -p $CONFIG_FILE > sites.xml
-else
-   $SWIFT_BIN/gensites persistent-coasters -p $CONFIG_FILE > sites.xml
-fi
+#echo Generating sites.xml
+#if [ -f "gensites.template" ]; then
+#   $SWIFT_BIN/gensites $( cat gensites.template ) -p $CONFIG_FILE > sites.xml
+#else
+#   $SWIFT_BIN/gensites persistent-coasters -p $CONFIG_FILE > sites.xml
+#fi
+echo Generating swift.conf
+
+cat <<EOF > swift.conf
+sites: persistent-coaster
+
+site.persistent-coaster {
+    execution {
+        type:"coaster-persistent"
+        URL: "$SERVICEURL"
+        jobManager: "local:local"
+    }
+
+    initialParallelTasks: 20
+    maxParallelTasks: 20
+    filesystem.type: local
+    workDirectory: /tmp/swiftwork
+    staging: local
+    app.ALL {executable: "*"}
+
+}
+
+site.local {
+    filesystem {
+        type: "local"
+        URL: "localhost"
+    }
+    execution {
+        type: "local"
+        URL: "localhost"
+    }
+    workDirectory: /tmp/swiftwork
+    maxParallelTasks: 32
+    initialParallelTasks: 31
+    app.ALL {executable: "*"}
+}
+
+lazyErrors: false
+executionRetries: 0
+keepSiteDir: true
+providerStagingPinSwiftFiles: false
+alwaysTransferWrapperLog: true
+EOF
 
 # Start workers
 case $WORKER_MODE in
