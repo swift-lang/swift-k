@@ -37,6 +37,7 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -77,7 +78,7 @@ public class GetStagingInfo extends SwiftFunction {
             addPaths(info, fi, false, defaultScheme);
             addPaths(info, fo, true, defaultScheme);
         }
-        catch (HandleOpenException e) {
+        catch (Exception e) {
         	throw new ExecutionException(e.getMessage(), e);
         }
         ret.add(new ArrayList<AbsFile>(info.remoteDirNames));
@@ -87,7 +88,9 @@ public class GetStagingInfo extends SwiftFunction {
         return null;
     }
 
-    private void addPaths(Info info, Collection<DSHandle> vars, boolean out, String defaultScheme) throws HandleOpenException {
+    private void addPaths(Info info, Collection<DSHandle> vars, boolean out, String defaultScheme) 
+            throws HandleOpenException, InvalidPathException {
+        
     	for (DSHandle var : vars) {
     	    if (!var.getType().hasMappedComponents()) {
     	        continue;
@@ -106,7 +109,9 @@ public class GetStagingInfo extends SwiftFunction {
     }
 
 
-    private void addAllStatic(DSHandle var, Mapper m, Info info, boolean out, String defaultScheme) throws HandleOpenException {
+    private void addAllStatic(DSHandle var, Mapper m, Info info, boolean out, String defaultScheme) 
+            throws HandleOpenException, InvalidPathException {
+        
         for (DSHandle leaf : var.getLeaves()) {
             Type t = leaf.getType();
             if (t.equals(Types.EXTERNAL)) {
@@ -117,7 +122,7 @@ public class GetStagingInfo extends SwiftFunction {
             }
             else {
                 info.inFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, info.inFiles, defaultScheme);
-            }
+            }    
         }
     }
 

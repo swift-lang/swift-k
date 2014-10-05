@@ -73,7 +73,7 @@ public class ArrayFileMapper extends AbstractMapper {
     }
 
     @Override
-	public PhysicalFormat map(Path path) {
+	public PhysicalFormat map(Path path) throws InvalidPathException {
 		if (path.isEmpty()) {
 			throw new IllegalArgumentException("Path cannot be empty");
 		}
@@ -88,13 +88,8 @@ public class ArrayFileMapper extends AbstractMapper {
         logger.debug("dn: " + dn);
         
         DSHandle srcNode = null;
-        try {
-        	srcNode = dn.getField(path);
-        } 
-        catch (InvalidPathException e) {
-        	logger.error("Invalid path exception "+e+" for path "+path,e);
-        	return null;
-        }
+        srcNode = dn.getField(path);
+        
         String returnValue = srcNode.getValue().toString();
         return new AbsFile(returnValue);
 	}

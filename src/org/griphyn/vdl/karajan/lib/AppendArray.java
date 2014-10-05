@@ -22,6 +22,7 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class AppendArray extends SetFieldValue {
@@ -39,10 +40,13 @@ public class AppendArray extends SetFieldValue {
         // while there isn't a way to avoid conflicts between auto generated indices
         // and a user manually using the same index, adding a "#" may reduce
         // the incidence of problems
-       try {
+        try {
             deepCopy(var.getField(getThreadPrefix()), value, stack);
         }
         catch (NoSuchFieldException e) {
+            throw new ExecutionException(this, e);
+        }
+        catch (InvalidPathException e) {
             throw new ExecutionException(this, e);
         }
         return null;

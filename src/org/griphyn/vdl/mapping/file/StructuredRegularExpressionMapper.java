@@ -96,7 +96,7 @@ public class StructuredRegularExpressionMapper extends AbstractMapper {
     }
 
 	@Override
-	public PhysicalFormat map(Path path) {
+	public PhysicalFormat map(Path path) throws InvalidPathException {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("map(): path: " + path);
 	    }
@@ -104,13 +104,8 @@ public class StructuredRegularExpressionMapper extends AbstractMapper {
 
 		DSHandle sourceHandle = cp.getSource();
 		DSHandle hereHandle;
-		try {
-			hereHandle = sourceHandle.getField(path);
-		}
-		catch (InvalidPathException ipe) {
-			throw new RuntimeException("Cannot get requested path " + path
-					+ " from source data structure");
-		}
+		
+		hereHandle = sourceHandle.getField(path);
 		
 		String sourceStr;
 		Type sourceType = hereHandle.getType();

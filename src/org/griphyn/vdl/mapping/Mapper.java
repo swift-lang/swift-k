@@ -29,12 +29,17 @@ import org.griphyn.vdl.type.Type;
 
 public interface Mapper {
 
-    /** Returns a (?)filename for the specified SwiftScript path. */
-    PhysicalFormat map(Path path);
+    /** Returns a filename for the specified variable path. If the path
+     * is not valid for this mapper, it throws an InvalidPathException. The
+     * returned object must not be null. 
+     */
+    PhysicalFormat map(Path path) throws InvalidPathException;
 
     /** Returns true if a (file?) backing the specified SwiftScript path
-        already exists. */
-    boolean exists(Path path);
+        exists. The path must be valid for the data object mapped by this
+        mapper, otherwise an InvalidPathException will be thrown. 
+     * @throws InvalidPathException */
+    boolean exists(Path path) throws InvalidPathException;
 
     /** Returns a Collection of existing mappings, where each Collection
         entry is a Path object. The data files mapped to each Path object
@@ -69,8 +74,9 @@ public interface Mapper {
     /**
      * If this mapper supports remapping then remap the given path to
      * whatever the source mapper maps the sourcePath to
+     * @throws InvalidPathException 
      */
-    void remap(Path path, Mapper sourceMapper, Path sourcePath);
+    void remap(Path path, Mapper sourceMapper, Path sourcePath) throws InvalidPathException;
 
     /**
      * Clean the specified path. A temporary mapper may remove the

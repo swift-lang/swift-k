@@ -38,6 +38,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootHandle;
@@ -290,7 +291,12 @@ public class Tracer {
             return "?" + getVarName(n);
         }
         else {
-            return "<" + m.map(n.getPathFromRoot()) + ">";
+            try {
+                return "<" + m.map(n.getPathFromRoot()) + ">";
+            }
+            catch (InvalidPathException e) {
+                return "<ERROR>";
+            }
         }
     }
 }

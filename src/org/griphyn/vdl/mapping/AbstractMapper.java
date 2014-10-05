@@ -86,7 +86,7 @@ public abstract class AbstractMapper implements Mapper {
     }
 
     @Override
-	public boolean exists(Path path) {
+	public boolean exists(Path path) throws InvalidPathException {
 		if (logger.isDebugEnabled()) {
 			logger.debug("checking for existence of " + path);
 		}
@@ -107,7 +107,7 @@ public abstract class AbstractMapper implements Mapper {
 	}
 
     @Override
-    public void remap(Path path, Mapper sourceMapper, Path sourcePath) {
+    public void remap(Path path, Mapper sourceMapper, Path sourcePath) throws InvalidPathException {
         throw new UnsupportedOperationException();
     }
 
@@ -122,7 +122,7 @@ public abstract class AbstractMapper implements Mapper {
         return true;
     }
     
-    protected void ensureCollectionConsistency(Mapper sourceMapper, Path sourcePath) {
+    protected void ensureCollectionConsistency(Mapper sourceMapper, Path sourcePath) throws InvalidPathException {
         // if remapping from a persistent mapper, then file removal
         // should be avoided
         PhysicalFormat pf = sourceMapper.map(sourcePath);

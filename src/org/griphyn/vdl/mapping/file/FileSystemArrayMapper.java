@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Type;
@@ -49,12 +50,12 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 	}
 	
     @Override
-	public PhysicalFormat map(Path path) {
+	public PhysicalFormat map(Path path) throws InvalidPathException {
 		if (path.size() != 1) {
-			return null;
+			throw new InvalidPathException(path);
 		}
 		if (!path.isArrayIndex(0)) {
-			return null;
+			throw new InvalidPathException(path);
 		}
 		AbstractFileMapperParams cp = getParams();
 		String location = cp.getLocation();

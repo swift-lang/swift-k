@@ -416,20 +416,30 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     }
     
     @Override
-    public PhysicalFormat map(Path path) {
+    public PhysicalFormat map(Path path) throws InvalidPathException {
         Mapper m = getMapper();
         if (m == null) {
             return null;
         }
         else {
             Path p = getPathFromRoot().append(path);
-            return m.map(p);
+            try {
+                return m.map(p);
+            }
+            catch (InvalidPathException e) {
+                throw new InvalidPathException(path, this);
+            }
         }
     }
 
     @Override
     public PhysicalFormat map() {
-        return map(Path.EMPTY_PATH);
+        try {
+            return map(Path.EMPTY_PATH);
+        }
+        catch (InvalidPathException e) {
+            throw new RuntimeException("Unexpected error", e);
+        }
     }
     
     public synchronized String getIdentifier() {

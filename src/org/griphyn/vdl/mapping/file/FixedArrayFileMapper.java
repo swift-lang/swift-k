@@ -26,6 +26,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.FileSystemLister;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -94,9 +95,9 @@ public class FixedArrayFileMapper extends AbstractMapper {
     }
 
 	@Override
-	public PhysicalFormat map(Path path) {
+	public PhysicalFormat map(Path path) throws InvalidPathException {
 		if (!path.isArrayIndex(0)) {
-			throw new IllegalArgumentException(path.toString());
+			throw new InvalidPathException(path);
 		}
 		else {
 		    Object o = path.getFirst();

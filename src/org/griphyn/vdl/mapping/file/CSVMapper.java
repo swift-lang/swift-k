@@ -36,6 +36,7 @@ import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.GeneralizedFileFormat;
 import org.griphyn.vdl.mapping.InvalidMappingParameterException;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -195,9 +196,9 @@ public class CSVMapper extends AbstractMapper {
 	}
 
 	@Override
-	public PhysicalFormat map(Path path) {
+	public PhysicalFormat map(Path path) throws InvalidPathException {
 		if (path == null || path == Path.EMPTY_PATH) {
-			return null;
+			throw new InvalidPathException(path);
 		}
 		
 		CSVMapperParams cp = getParams();
@@ -207,21 +208,21 @@ public class CSVMapper extends AbstractMapper {
 		Iterator<Path.Entry> pi = path.iterator();
 		Path.Entry pe = pi.next();
 		if (!pe.isIndex()) {
-			return null;
+			throw new InvalidPathException(path);
 		}
 		int i = 0;
 		if (pe.getKey() instanceof Integer) {
 		    i = ((Integer) pe.getKey()).intValue();
 		}
 		else {
-			return null;
+			throw new InvalidPathException(path);
 		}
 		if (i > content.size()) {
 			return null;
 		}
 		List<String> cl = content.get(i);
 		if (cl == null) {
-			return null;
+			throw new InvalidPathException(path);
 		}
 
 		if (!pi.hasNext()) {
@@ -231,7 +232,7 @@ public class CSVMapper extends AbstractMapper {
 		pe = pi.next();
 		String col = String.valueOf(pe.getKey());
 		if (!colindex.containsKey(col)) {
-			return null;
+			throw new InvalidPathException(path);
 		}
 		int ci = colindex.get(col).intValue();
 		return new AbsFile(cl.get(ci));

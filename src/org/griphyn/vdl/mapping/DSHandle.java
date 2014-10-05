@@ -103,8 +103,9 @@ public interface DSHandle {
     
     /**
      * Maps the specified path relative to this node
+     * @throws InvalidPathException 
      */
-    PhysicalFormat map(Path path);
+    PhysicalFormat map(Path path) throws InvalidPathException;
     
     PhysicalFormat map();
     

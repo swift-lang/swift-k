@@ -45,6 +45,7 @@ import org.griphyn.vdl.karajan.PairSet;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DataDependentException;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
@@ -210,7 +211,7 @@ public class SetFieldValue extends SwiftFunction {
 	    return sb.toString();
 	}
 	
-    protected void deepCopy(DSHandle dest, DSHandle source, Stack stack) {
+    protected void deepCopy(DSHandle dest, DSHandle source, Stack stack) throws InvalidPathException {
 	    // don't create a state if only a non-composite is copied
         try {
             ((AbstractDataNode) source).waitFor(this);
@@ -236,8 +237,9 @@ public class SetFieldValue extends SwiftFunction {
 	}
 	
     /** make dest look like source - if its a simple value, copy that
-	    and if its an array then recursively copy */
-	public void deepCopy(DSHandle dest, DSHandle source, State state, int level) {
+	    and if its an array then recursively copy 
+     * @throws InvalidPathException */
+	public void deepCopy(DSHandle dest, DSHandle source, State state, int level) throws InvalidPathException {
 	    try {
             ((AbstractDataNode) source).waitFor(this);
         }
@@ -264,7 +266,7 @@ public class SetFieldValue extends SwiftFunction {
         return "assignment";
     }
 
-    private void copyStructure(DSHandle dest, DSHandle source, State state, int level) {
+    private void copyStructure(DSHandle dest, DSHandle source, State state, int level) throws InvalidPathException {
         Type type = dest.getType();
         StateEntry se = getStateEntry(state, level);
         Iterator<String> fni = se.it();
@@ -314,7 +316,7 @@ public class SetFieldValue extends SwiftFunction {
         state.l.remove(state.l.size() - 1);
     }
 
-    private static void copyNonComposite(DSHandle dest, DSHandle source, State state, int level) {
+    private static void copyNonComposite(DSHandle dest, DSHandle source, State state, int level) throws InvalidPathException {
         Path dpath = dest.getPathFromRoot();
         Mapper dmapper = dest.getMapper();
         if (dmapper.canBeRemapped(dpath)) {
@@ -354,7 +356,7 @@ public class SetFieldValue extends SwiftFunction {
         }
     }
 
-    private void copyArray(DSHandle dest, DSHandle source, State state, int level) {
+    private void copyArray(DSHandle dest, DSHandle source, State state, int level) throws InvalidPathException {
         StateEntry se = getStateEntry(state, level);
         Iterator<List<?>> it = se.it();
         if (it == null) {

@@ -28,6 +28,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.GenericMappingParamSet;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -68,11 +69,16 @@ public class RegularExpressionMapper extends AbstractMapper {
 	}
 
 	public Collection<Path> existing() {
-		if (exists(Path.EMPTY_PATH))
-			return Arrays.asList(new Path[] { Path.EMPTY_PATH });
-		else {
-			return Collections.emptyList();
-		}
+		try {
+            if (exists(Path.EMPTY_PATH))
+            	return Arrays.asList(new Path[] { Path.EMPTY_PATH });
+            else {
+            	return Collections.emptyList();
+            }
+        }
+        catch (InvalidPathException e) {
+            throw new RuntimeException("Unexpected error", e);
+        }
 	}
 	
 	@Override

@@ -64,4 +64,12 @@ public class InvalidPathException extends Exception {
     public InvalidPathException(String string) {
         super(string);
     }
+    
+    public InvalidPathException(Path path) {
+        super(path.toString());
+    }
+    
+    public InvalidPathException(DSHandle source) {
+        this(source.getPathFromRoot(), source);
+    }
 }

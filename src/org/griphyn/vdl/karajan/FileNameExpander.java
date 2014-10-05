@@ -22,6 +22,7 @@ import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.HandleOpenException;
+import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PathComparator;
@@ -181,6 +182,9 @@ public class FileNameExpander {
         catch (DependentException e) {
             return Collections.emptyList();
         }
+        catch (InvalidPathException e) {
+            throw new ExecutionException("Cannot map " + var, e);
+        }
         catch (HandleOpenException e) {
             throw new ExecutionException("The current implementation should not throw this exception", e);
         }
@@ -196,7 +200,7 @@ public class FileNameExpander {
 
     public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-    private List<AbsFile> mapMultiple() throws HandleOpenException {
+    private List<AbsFile> mapMultiple() throws HandleOpenException, InvalidPathException {
         RootHandle root = var.getRoot();
         Mapper mapper = root.getMapper();
                         

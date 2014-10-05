@@ -288,12 +288,17 @@ public class InitMapper implements Mapper, FutureListener {
             Type type = handle.getType();
             if (!type.isPrimitive() && !type.isComposite()) {
                 // mapped. Feed the DMC.
-                PhysicalFormat f = root.getActualMapper().map(handle.getPathFromRoot());
-                if (input) {
-                    dmc.addRead(f, handle);
+                try {
+                    PhysicalFormat f = root.getActualMapper().map(handle.getPathFromRoot());
+                    if (input) {
+                        dmc.addRead(f, handle);
+                    }
+                    else {
+                        dmc.addWrite(f, handle);
+                    }
                 }
-                else {
-                    dmc.addWrite(f, handle);
+                catch (InvalidPathException e) {
+                    throw new RuntimeException(new InvalidPathException(handle));
                 }
             }
             for (String fieldName : type.getFieldNames()) {

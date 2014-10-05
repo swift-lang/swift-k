@@ -20,12 +20,14 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.InvalidPathException;
 
 public class FileName extends SwiftFunction {
     private ArgRef<DSHandle> var;
@@ -39,6 +41,11 @@ public class FileName extends SwiftFunction {
     @Override
 	public Object function(Stack stack) {
 		DSHandle var = this.var.getValue(stack);
-		return var.map(var.getPathFromRoot());
+		try {
+            return var.map(var.getPathFromRoot());
+        }
+        catch (InvalidPathException e) {
+            throw new ExecutionException(this, e);
+        }
 	}
 }
