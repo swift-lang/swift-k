@@ -101,15 +101,14 @@ public class RegularExpressionMapper extends AbstractMapper {
 		Matcher m2 = p2.matcher(cp.getTransform());
 		StringBuffer sb = new StringBuffer();
 		while (m2.find()) {
-                        String group = m2.group(1);
+		    String group = m2.group(1);
 			int g = Integer.parseInt(group.substring(1));
-                        try { 
-         			m2.appendReplacement(sb, m.group(g));
-                        }
-                        catch (IndexOutOfBoundsException e)
-                        {
-                                throw new RuntimeException("regexp_mapper error: No group: \\\\" + g);
-                        }
+            try { 
+                m2.appendReplacement(sb, m.group(g));
+            }
+            catch (IndexOutOfBoundsException e) {
+                throw new RuntimeException("regexp_mapper error: No group: \\\\" + g);
+            }
 		}
 		m2.appendTail(sb);
 		return new AbsFile(sb.toString());
