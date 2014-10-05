@@ -96,7 +96,7 @@ public class CSVMapper extends AbstractMapper {
 				
 				while (st.hasMoreTokens()) {
 					String column = st.nextToken();
-					column.replaceAll("\\s", "_");
+					column = column.replaceAll("\\s", "_");
 					
 					cols.add(column);
 					colindex.put(column, new Integer(ix));
