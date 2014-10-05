@@ -68,10 +68,12 @@ public class ExternalDataNode extends AbstractFutureNonCompositeDataNode impleme
         this.line = line;
     }
 
+    @Override
     public boolean isInput() {
         return input;
     }
 
+    @Override
     public void setInput(boolean input) {
         this.input = input;
     }
