@@ -68,15 +68,20 @@ public class ReadData extends SwiftFunction {
 		    dest.setValue(new DataDependentException(dest, e));
 		    return null;
 		}
-		if (src.getType().equals(Types.STRING)) {
+		Type st = src.getType();
+		if (st.equals(Types.STRING)) {
 			readData(dest, (String) src.getValue());
+		}
+		else if (st.isPrimitive() || st.isComposite()) {
+		    throw new ExecutionException(this, "invalid argument of type '" + st + 
+		        "' passed to readData: must be a string or a mapped type");
 		}
 		else {
 			PhysicalFormat pf = src.map();
 			if (pf instanceof AbsFile) {
 				AbsFile af = (AbsFile) pf;
 				if (!af.getProtocol("file").equals("file")) {
-					throw new ExecutionException("readData only supports local files");
+					throw new ExecutionException(this, "readData only supports local files");
 				}
 				readData(dest, af.getPath());
 			}
