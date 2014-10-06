@@ -278,6 +278,8 @@ public class Loader extends org.globus.cog.karajan.Loader {
         System.out.println(version);
         System.out.println("RunID: " + runID);
         if (logger.isInfoEnabled()) {
+            logger.info("JAVA " + System.getProperty("java.vendor") + " " + 
+                System.getProperty("java.vm.name") + " " + System.getProperty("java.version"));
             logger.info("VERSION " + version);
             logger.info("RUN_ID " + runID);
             logger.info("ARGUMENTS " + Arrays.asList(argv));
