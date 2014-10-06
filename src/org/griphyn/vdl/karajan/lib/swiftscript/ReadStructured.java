@@ -39,6 +39,7 @@ import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 public class ReadStructured extends SwiftFunction {
@@ -66,10 +67,15 @@ public class ReadStructured extends SwiftFunction {
             dest.setValue(new DataDependentException(dest, e));
             return null;
         }
-		if (src.getType().equals(Types.STRING)) {
+        Type st = src.getType();
+		if (st.equals(Types.STRING)) {
 			readData(dest, (String) src.getValue());
 			dest.closeDeep();
 		}
+		else if (st.isPrimitive() || st.isComposite()) {
+            throw new ExecutionException(this, "invalid argument of type '" + st + 
+                "' passed to readData2: must be a string or a mapped type");
+        }
 		else {
 			PhysicalFormat pf = src.map();
 			if (pf instanceof AbsFile) {
