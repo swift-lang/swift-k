@@ -239,6 +239,7 @@ public class InitMapper implements Mapper, FutureListener {
 
     public static void addExisting(Collection<Path> existing, Mapper mapper, RootHandle root, DSHandle var) {
         boolean any = false;
+        checkBasicMappingConstraints(existing, var);
         for (Path p : existing) {
             try {
                 DSHandle field = var.getField(p);
@@ -263,6 +264,21 @@ public class InitMapper implements Mapper, FutureListener {
         if (!any && variableTracer.isEnabled()) {
             variableTracer.trace(root.getThread(), root.getLine(), 
                 root.getName() + " MAPPING no files found");
+        }
+    }
+
+    private static void checkBasicMappingConstraints(Collection<Path> existing,
+            DSHandle var) {
+        Type t = var.getType();
+        if (!t.isComposite()) {
+            if (existing.size() > 1) {
+                throw new RuntimeException("Invalid mapping for " + Tracer.getVarName(var) + 
+                    ". Expected a single file but found " + existing.size());
+            }
+            else if (existing.size() == 0) {
+                throw new RuntimeException("File not found for variable " + Tracer.getVarName(var) + 
+                    ": " + var.map());
+            }
         }
     }
 
@@ -298,7 +314,8 @@ public class InitMapper implements Mapper, FutureListener {
                     }
                 }
                 catch (InvalidPathException e) {
-                    throw new RuntimeException(new InvalidPathException(handle));
+                    throw new RuntimeException("Error mapping " + handle + ". No such path was found by the mapper.", 
+                        new InvalidPathException(handle));
                 }
             }
             for (String fieldName : type.getFieldNames()) {
@@ -308,7 +325,7 @@ public class InitMapper implements Mapper, FutureListener {
                 }
                 catch (InvalidPathException e) {
                     throw new RuntimeException("Data set initialization failed for " + handle
-                            + ". Missing required field: " + fieldName);
+                            + ". Missing required field: " + fieldName, e);
                 }
             }
         }

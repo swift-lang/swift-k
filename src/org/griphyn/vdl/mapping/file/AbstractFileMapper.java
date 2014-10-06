@@ -105,25 +105,28 @@ public abstract class AbstractFileMapper extends AbstractMapper {
         return new AbstractFileMapperParams();
     }
 
+	/**
+	 * Builds the full search pattern as follows:
+	 * ?prefix + (pattern | "*") + ?suffix
+	 * 
+	 * That is append prefix if set, then the pattern if set or 
+	 * "*" otherwise, then the suffix if set
+	 */
     @Override
 	public void initialize(RootHandle root) {
 		super.initialize(root);
 		AbstractFileMapperParams cp = getParams(); 
 		StringBuilder pattern = new StringBuilder();
-		boolean wildcard = false; 
 		if (cp.getPrefix() != null) {
 		    pattern.append(cp.getPrefix());
-		    pattern.append('*');
-		    wildcard = true;
 		}
 		if (cp.getPattern() != null) {
             pattern.append(cp.getPattern());
-            wildcard = false;
         }
+		else {
+		    pattern.append("*");
+		}
 		if (cp.getSuffix() != null) {
-			if (!wildcard) {
-			    pattern.append('*');
-			}
 			pattern.append(cp.getSuffix());
 		}
 		cp.setPattern(pattern.toString());
