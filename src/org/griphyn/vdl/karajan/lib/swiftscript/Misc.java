@@ -34,6 +34,7 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.griphyn.vdl.karajan.FileNameExpander;
 import org.griphyn.vdl.karajan.lib.StringCache;
@@ -54,6 +55,8 @@ public class Misc {
 	public static final boolean PROVENANCE_ENABLED = SwiftConfig.getDefault().isProvenanceEnabled();
 
 	private static final Logger traceLogger = Logger.getLogger("org.globus.swift.trace");
+	
+	public static final int ARRAY_PRETTY_PRINT_MAX_ITEMS = 10;
 	
     public static class Print extends InternalFunction {
        private ChannelRef<AbstractDataNode> c_vargs;
@@ -78,7 +81,7 @@ public class Misc {
                    else {
                        first = false;
                    }
-                   prettyPrint(buf, n);
+                   prettyPrint(this, buf, n);
                }
            }
            catch (DependentException e) {
@@ -113,7 +116,7 @@ public class Misc {
                         first = false;
                     }
                     //buf.append(v == null ? args[i] : v);
-                    prettyPrint(buf, n);
+                    prettyPrint(this, buf, n);
                 }
         	}
         	catch (DependentException e) {
@@ -124,7 +127,8 @@ public class Misc {
         }
 	}
 	
-	private static void prettyPrint(StringBuilder buf, DSHandle h) {
+	private static void prettyPrint(Node n, StringBuilder buf, DSHandle h) {
+	    ((AbstractDataNode) h).waitFor(n);
 	    Object o;
 	    try {
 	        o = h.getValue();
@@ -148,6 +152,7 @@ public class Misc {
             else if (h.getType().isArray()) {
                 buf.append('{');
                 boolean first = true;
+                int index = 0;
                 for (Map.Entry<Comparable<?>, DSHandle> e : h.getArrayValue().entrySet()) {
                     if (first) {
                         first = false;
@@ -157,7 +162,11 @@ public class Misc {
                     }
                     buf.append(e.getKey());
                     buf.append(" = ");
-                    prettyPrint(buf, e.getValue());
+                    prettyPrint(n, buf, e.getValue());
+                    if (index++ >= ARRAY_PRETTY_PRINT_MAX_ITEMS) {
+                        buf.append(", ...");
+                        break;
+                    }
                 }
                 buf.append('}');
             }
@@ -166,8 +175,8 @@ public class Misc {
             }
         }
     }
-	
-	public static class StrCat extends AbstractSingleValuedSwiftFunction {
+
+    public static class StrCat extends AbstractSingleValuedSwiftFunction {
         private ChannelRef<AbstractDataNode> c_vargs;
 
         @Override
@@ -662,7 +671,7 @@ public class Misc {
             hvalue.waitFor(this);
             
             StringBuilder sb = new StringBuilder();
-            prettyPrint(sb, hvalue);
+            prettyPrint(this, sb, hvalue);
             DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, StringCache.get(sb.toString()));
 
             if (PROVENANCE_ENABLED) {
