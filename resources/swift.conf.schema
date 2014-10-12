@@ -104,12 +104,17 @@ site."*" {
 			jobOptions {
 				"*": "?Object"
 				# known things
-				pbs.aprun: "?Boolean"
-				pbs.mpp: "?Boolean"
+				pbs {
+					"*": "?Object"
+					aprun: "?Boolean"
+					mpp: "?Boolean"	
+					properties: "?String"
+				}
 				depth: "?StrictlyPositiveInt"
 				ppn: "?StrictlyPositiveInt"
-				pbs.properties: "?String"
-				condor: "?Object"
+				condor {
+					"*": "?Object"
+				}
 
                 # Required ec2 configs :
                 ec2CredentialsFile: "?String"
@@ -129,7 +134,6 @@ site."*" {
                 gceWorkerImage: "?String"
                 # Optional gce configs
                 gceSecurityGroup: "?String"
-
 			}
 		}
 	}
@@ -148,12 +152,17 @@ site."*" {
 			jobProject: "?String"
 			count: "?StrictlyPositiveInt"
 			# some specific provider stuff
-			pbs.aprun: "?Boolean"
-			pbs.mpp: "?Boolean"
+			pbs {
+				"*": "?Object"
+				aprun: "?Boolean"
+				mpp: "?Boolean"	
+				properties: "?String"
+			}
 			depth: "?StrictlyPositiveInt"
 			ppn: "?StrictlyPositiveInt"
-			pbs.properties: "?String"
-			condor: "?Object"
+			condor {
+				"*": "?Object"
+			}
 			"*": "?Object"
 		}
 
