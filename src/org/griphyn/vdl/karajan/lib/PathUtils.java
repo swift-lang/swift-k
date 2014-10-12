@@ -103,7 +103,7 @@ public class PathUtils {
             return f.getAbsolutePath();
         }
         else {
-            if (f.getHost() == null) {
+            if (f.getHost() == null || f.getHost().equals("localhost")) {
                 return remotePathName(f.getPath());
             }
             else {
