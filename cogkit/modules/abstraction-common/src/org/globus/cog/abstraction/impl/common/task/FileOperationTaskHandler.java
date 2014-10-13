@@ -37,6 +37,7 @@ import org.globus.cog.abstraction.impl.common.TaskCollector;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 public class FileOperationTaskHandler extends MultiplexingTaskHandler {
     private Map<String, TaskHandler> mapping;
@@ -44,6 +45,12 @@ public class FileOperationTaskHandler extends MultiplexingTaskHandler {
     public FileOperationTaskHandler() {
         this.mapping = new HashMap<String, TaskHandler>();
         setType(TaskHandler.FILE_OPERATION);
+    }
+    
+
+    @Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.PLAIN_FILEOP;
     }
 
     protected TaskHandler getHandler(Task task) throws TaskSubmissionException {

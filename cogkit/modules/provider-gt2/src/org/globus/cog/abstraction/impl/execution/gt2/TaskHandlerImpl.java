@@ -27,6 +27,7 @@ package org.globus.cog.abstraction.impl.execution.gt2;
 
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 /**
  * Provides Globus Toolkit v2.2.4 specific <code>TaskHandler</code> s for job
@@ -38,6 +39,11 @@ public class TaskHandlerImpl extends
 	protected DelegatedTaskHandler newDelegatedTaskHandler() {
 		return DelegatedTaskHandlerFactory.newTaskHandler(Task.JOB_SUBMISSION);
 	}
+	
+	@Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.EXEC_SIMPLE_STAGING;
+    }
 
 	public String getName() {
 		return "GT2";

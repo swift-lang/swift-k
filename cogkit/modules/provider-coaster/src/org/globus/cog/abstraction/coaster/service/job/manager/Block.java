@@ -116,14 +116,14 @@ public class Block implements StatusListener, Comparable<Block> {
         bqp.getRLogger().log(
             "BLOCK_REQUESTED id=" + getId() + ", cores=" + getWorkerCount() + ", coresPerWorker=" + 
                     bqp.getSettings().getCoresPerNode() + ", walltime=" + getWalltime().getSeconds());
-        task = new BlockTask(this);
+        task = new BlockTask(this, getSubmitter());
         synchronized(cpus) {
             activeWorkers = 0;
         }
         task.addStatusListener(this);
         try {
             task.initialize();
-            getSubmitter().submit(this);
+            task.submit();
         }
         catch (Exception e) {
             taskFailed(null, e);

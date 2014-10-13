@@ -553,7 +553,12 @@ public class Misc {
 	    
         @Override
         protected Integer function(String v) {
-            return Integer.valueOf(v);
+            try {
+                return Integer.valueOf(v);
+            }
+            catch (NumberFormatException e) {
+                throw new ExecutionException(this, "Could not convert value to float: " + valueLiteral(v));
+            }
         }
     }
 	
@@ -566,16 +571,23 @@ public class Misc {
         @Override
         protected Double function(Object obj) {
             if (obj instanceof String) {
-                return Double.valueOf((String) obj);
+                try {
+                    return Double.valueOf((String) obj);
+                }
+                catch (NumberFormatException e) {
+                    throw new ExecutionException(this, "Could not convert value to float: " + valueLiteral(obj));
+                }
             }
             else if (obj instanceof Number) {
                 return ((Number) obj).doubleValue();
             }
             else {
-                throw new ExecutionException("Expected a string or int. Got " + obj);
+                throw new ExecutionException(this, "Expected a string or int. Got " + obj);
             }
         }
     }
+	
+	
 
 	/*
 	 * Takes in a float and formats to desired precision and returns a string
@@ -748,6 +760,15 @@ public class Misc {
                 SwiftFunction.logProvenanceParameter(provid, harray, "array");
             }
             return handle;
+        }
+    }
+
+    public static String valueLiteral(Object obj) {
+        if (obj instanceof String) {
+            return "\"" + obj + "\"";
+        }
+        else {
+            return String.valueOf(obj);
         }
     }
 }

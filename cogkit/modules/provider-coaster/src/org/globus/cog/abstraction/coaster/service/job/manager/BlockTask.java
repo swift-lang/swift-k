@@ -29,34 +29,48 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.CleanUpSetImpl;
+import org.globus.cog.abstraction.impl.common.ProviderMethodException;
+import org.globus.cog.abstraction.impl.common.StagingSetEntryImpl;
+import org.globus.cog.abstraction.impl.common.StagingSetImpl;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
+import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.execution.coaster.bootstrap.Bootstrap;
+import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities.Key;
 
 public class BlockTask extends TaskImpl {
     public static final Logger logger = Logger.getLogger(BlockTask.class);
 
     private final Block block;
     private final Settings settings;
+    private final BlockTaskSubmitter submitter;
 
-    public BlockTask(Block block) {
+    public BlockTask(Block block, BlockTaskSubmitter submitter) {
         this.block = block;
         this.settings = block.getAllocationProcessor().getSettings();
+        this.submitter = submitter;
     }
 
-    public void initialize() {
+    public void initialize() throws InvalidProviderException, ProviderMethodException {
         setType(Task.JOB_SUBMISSION);
-        JobSpecification spec = buildSpecification();
+        TaskHandler handler = submitter.getHandler(settings.getProvider());
+        JobSpecification spec = buildSpecification(handler.getCapabilities());
         setSpecification(spec);
         setName("B" + block.getId());
         setAttribute(spec, "maxwalltime", WallTime.format((int) block.getWalltime().getSeconds()));
@@ -100,9 +114,21 @@ public class BlockTask extends TaskImpl {
         }
     }
 
-    private JobSpecification buildSpecification() {
+    private JobSpecification buildSpecification(TaskHandlerCapabilities cap) {
         JobSpecification js = new JobSpecificationImpl();
-        String script = block.getAllocationProcessor().getScript().getAbsolutePath();
+        File script = block.getAllocationProcessor().getScript();
+        
+        boolean staging = cap.supportsAnyOf(Key.FULL_FILE_STAGING, 
+            Key.SIMPLE_FILE_STAGING, Key.JOB_DIR_STAGING);
+        
+        String scriptArg;
+        if (staging) {
+            scriptArg = script.getName();
+            addStagingSpec(js, script, scriptArg);
+        }
+        else {
+            scriptArg = script.getAbsolutePath();
+        }
         
         if ("true".equals(settings.getUseHashBang())) {
             if (!"false".equals(settings.getPerfTraceWorker())) {
@@ -117,10 +143,10 @@ public class BlockTask extends TaskImpl {
                 js.addArgument("-e");
                 js.addArgument("trace=" + settings.getPerfTraceWorker());
                 
-                js.addArgument(script);
+                js.addArgument(scriptArg);
             }
             else {
-                js.setExecutable(script);
+                js.setExecutable(scriptArg);
             }
         }
         else {
@@ -141,7 +167,7 @@ public class BlockTask extends TaskImpl {
             else {
                 js.setExecutable("/usr/bin/perl");
             }
-            js.addArgument(script);
+            js.addArgument(scriptArg);
         }
         
         // Cobalt on Intrepid, if no directory is specified, assumes $CWD for the
@@ -149,7 +175,7 @@ public class BlockTask extends TaskImpl {
         // If $CWD happens to be /scratch/something it has a filter in place
         // that rejects the job with the warning that /scratch/something is not accessible
         // on the worker node. And we don't care about the $CWD for the worker.
-        if (settings.getDirectory() == null) {
+        if (settings.getProvider().equals("cobalt") && settings.getDirectory() == null) {
             js.setDirectory("/");
         }
         else {
@@ -178,6 +204,16 @@ public class BlockTask extends TaskImpl {
         js.setStdErrorLocation(FileLocation.MEMORY);
     
         return js;
+    }
+
+    private void addStagingSpec(JobSpecification js, File script, String scriptArg) {
+        StagingSet ss = new StagingSetImpl();
+        ss.add(new StagingSetEntryImpl(script.getAbsolutePath(), scriptArg));
+        js.setStageIn(ss);
+        
+        CleanUpSet cs = new CleanUpSetImpl();
+        cs.add(scriptArg);
+        js.setCleanUpSet(cs);
     }
 
     private String join(Collection<?> c, String sep) {
@@ -209,5 +245,9 @@ public class BlockTask extends TaskImpl {
 
     public void setAttribute(String name, int value) {
         super.setAttribute(name, String.valueOf(value));
+    }
+
+    public void submit() {
+        submitter.submit(block);
     }
 }

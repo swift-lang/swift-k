@@ -29,6 +29,7 @@ import org.globus.cog.abstraction.impl.common.AbstractTaskHandler;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 /**
  * Provides generic <code>TaskHandler</code> s for job submission task.
@@ -44,7 +45,12 @@ public abstract class TaskHandlerImpl extends AbstractTaskHandler {
 		return newDelegatedTaskHandler();
 	}
 
-	protected abstract DelegatedTaskHandler newDelegatedTaskHandler();
+	@Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.NONE;
+    }
+
+    protected abstract DelegatedTaskHandler newDelegatedTaskHandler();
 	
 	public String toString() {
         return "ExecutionTaskHandler(provider = " + getName() + ")";

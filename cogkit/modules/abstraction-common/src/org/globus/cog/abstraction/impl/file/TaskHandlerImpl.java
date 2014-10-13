@@ -55,6 +55,7 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 /**
  * The base class for task handlers in all file providers
@@ -121,6 +122,12 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
     public int getType() {
         return this.type;
     }
+
+    @Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.PLAIN_FILEOP;
+    }
+    
 
     /**
      * submit the task for execution. Synchronized because additions and
