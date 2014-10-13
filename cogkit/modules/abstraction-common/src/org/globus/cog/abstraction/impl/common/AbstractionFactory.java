@@ -63,6 +63,9 @@ public class AbstractionFactory {
 
     public static TaskHandler newExecutionTaskHandler(String provider)
             throws InvalidProviderException, ProviderMethodException {
+        if (provider == null) {
+            throw new NullPointerException("Null provider requested");
+        }
         return newTaskHandler(provider,
                 AbstractionProperties.TYPE_EXECUTION_TASK_HANDLER);
     }
