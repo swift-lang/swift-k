@@ -198,8 +198,9 @@ swiftscript:$name$(
 
 iterate(declarations, statements, cond, var, refs, cleanups, trace, line) ::= <<
 swift:while($var$$if(trace)$, _traceline=$line$$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$) {
+	$declarations;separator="\n"$
 	if (!swift:getFieldValue($cond$)) {
-		$sub_comp(declarations=declarations, statements=statements, cleanups=cleanups)$
+		$sub_comp(statements=statements, cleanups=cleanups)$
 		next(swiftop:inc($var$))
 	}
 }
