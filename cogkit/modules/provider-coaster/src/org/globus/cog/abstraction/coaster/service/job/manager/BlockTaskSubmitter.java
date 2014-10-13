@@ -28,10 +28,14 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.task.ExecutionTaskHandler;
+import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.ProviderMethodException;
+import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -41,13 +45,13 @@ class BlockTaskSubmitter extends Thread {
     public static final Logger logger = Logger.getLogger(BlockTaskSubmitter.class);
 
     private final LinkedList<Block> queue;
-    private final TaskHandler handler;
+    private final Map<String, TaskHandler> handlers;
 
     public BlockTaskSubmitter() {
         setDaemon(true);
         setName("Block Submitter");
         queue = new LinkedList<Block>();
-        handler = new ExecutionTaskHandler();
+        handlers = new HashMap<String, TaskHandler>();
     }
 
     public void submit(Block block) {
@@ -61,8 +65,16 @@ class BlockTaskSubmitter extends Thread {
     }
 
     public void cancel(Block block)
-    throws InvalidSecurityContextException, TaskSubmissionException {
-        handler.cancel(block.getTask());
+            throws InvalidSecurityContextException, TaskSubmissionException {
+        try {
+            getHandler(block.getTask().getProvider()).cancel(block.getTask());
+        }
+        catch (InvalidProviderException e) {
+            throw new TaskSubmissionException(e);
+        }
+        catch (ProviderMethodException e) {
+            throw new TaskSubmissionException(e);
+        }
     }
 
     @Override
@@ -86,7 +98,7 @@ class BlockTaskSubmitter extends Thread {
                 }
                 try {
                     if (!b.isShutDown()) {
-                        handler.submit(b.getTask());
+                        getHandler(b.getTask().getService(0).getProvider()).submit(b.getTask());
                     }
                 }
                 catch (TaskSubmissionException e) {
@@ -112,6 +124,17 @@ class BlockTaskSubmitter extends Thread {
                     }
                 }
             }
+        }
+    }
+
+    public TaskHandler getHandler(String provider) throws InvalidProviderException, ProviderMethodException {
+        synchronized (handlers) {
+            TaskHandler h = handlers.get(provider);
+            if (h == null) {
+                h = AbstractionFactory.newExecutionTaskHandler(provider);
+                handlers.put(provider, h);
+            }
+            return h;
         }
     }
 }
