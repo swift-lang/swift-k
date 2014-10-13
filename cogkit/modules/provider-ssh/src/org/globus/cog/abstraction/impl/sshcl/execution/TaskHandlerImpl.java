@@ -27,6 +27,7 @@ package org.globus.cog.abstraction.impl.sshcl.execution;
 
 import org.globus.cog.abstraction.impl.common.AbstractTaskHandler;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 /**
  * Provides SSH specific <code>TaskHandler</code> for job submission task and
@@ -40,6 +41,11 @@ public class TaskHandlerImpl extends
 	protected DelegatedTaskHandler newDelegatedTaskHandler(int type) {
 		return new JobSubmissionTaskHandler();
 	}
+	
+	@Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.EXEC_NO_STAGING;
+    }
 
 	public String getName() {
 		return "SSH";
