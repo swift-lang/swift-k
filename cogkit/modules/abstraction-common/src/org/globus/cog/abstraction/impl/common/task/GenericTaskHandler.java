@@ -32,6 +32,7 @@ import org.globus.cog.abstraction.impl.common.MultiplexingTaskHandler;
 import org.globus.cog.abstraction.impl.common.TaskCollector;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 public class GenericTaskHandler extends MultiplexingTaskHandler {
     private TaskHandler execHandler;
@@ -43,6 +44,11 @@ public class GenericTaskHandler extends MultiplexingTaskHandler {
         this.execHandler = new ExecutionTaskHandler();
         this.transferHandler = new FileTransferTaskHandler();
         this.fileHandler = new FileOperationTaskHandler();
+    }
+
+    @Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.NONE;
     }
 
     public void submit(Task task)

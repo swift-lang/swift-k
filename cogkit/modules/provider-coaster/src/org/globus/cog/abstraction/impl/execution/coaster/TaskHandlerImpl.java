@@ -26,6 +26,7 @@
 package org.globus.cog.abstraction.impl.execution.coaster;
 
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 /**
  * Provides a local <code>TaskHandler</code> for job submission to the local
@@ -41,7 +42,12 @@ public class TaskHandlerImpl extends
 		return new JobSubmissionTaskHandler();
 	}
 
-	public String getName() {
+	@Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.EXEC_FULL_STAGING_AND_CLEANUP;
+    }
+
+    public String getName() {
 		return "Coaster";
 	}
 }

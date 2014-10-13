@@ -88,6 +88,8 @@ public interface TaskHandler {
     public String getName();
     
     public void setName(String provider);
+    
+    public TaskHandlerCapabilities getCapabilities();
 
     /**
      * Submits the given {@link Task}for execuiton. The <code>Task</code> is

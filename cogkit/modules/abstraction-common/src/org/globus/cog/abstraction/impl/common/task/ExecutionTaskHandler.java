@@ -39,6 +39,7 @@ import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 public class ExecutionTaskHandler extends TaskHandlerSkeleton {
     
@@ -48,6 +49,12 @@ public class ExecutionTaskHandler extends TaskHandlerSkeleton {
     public ExecutionTaskHandler() {
         mapping = new HashMap<String, TaskHandler>();
         setType(TaskHandler.EXECUTION);
+    }
+
+    @Override
+    public TaskHandlerCapabilities getCapabilities() {
+        // can't know until a task is submitted, so lowest common denominator
+        return TaskHandlerCapabilities.EXEC_NO_STAGING;
     }
 
     public void submit(Task task)

@@ -29,6 +29,7 @@ import org.globus.cog.abstraction.impl.common.AbstractTaskHandler;
 import org.globus.cog.abstraction.impl.fileTransfer.DelegatedFileTransferHandler;
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 public class FileTransferTaskHandler extends AbstractTaskHandler {
 	
@@ -38,6 +39,11 @@ public class FileTransferTaskHandler extends AbstractTaskHandler {
     
     public String getName() {
         return "FileTransferTaskHandler";
+    }
+
+    @Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.PLAIN_TRANSFER;
     }
 
     protected DelegatedTaskHandler newDelegatedTaskHandler(int type)
