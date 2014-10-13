@@ -27,6 +27,7 @@
 package org.globus.cog.abstraction.impl.execution.condor;
 
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 /**
  * Provides a condor <code>TaskHandler</code> for job submission to a
@@ -37,6 +38,11 @@ public class TaskHandlerImpl
 	
 	protected DelegatedTaskHandler newDelegatedTaskHandler() {
         return new JobSubmissionTaskHandler();
+    }
+
+    @Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.EXEC_IN_JOB_DIR_STAGING;
     }
 
     public String getName() {

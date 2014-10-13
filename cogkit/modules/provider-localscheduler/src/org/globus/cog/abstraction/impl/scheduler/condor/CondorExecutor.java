@@ -30,6 +30,7 @@ package org.globus.cog.abstraction.impl.scheduler.condor;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -42,6 +43,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 import org.globus.cog.abstraction.interfaces.Task;
 
 public class CondorExecutor extends AbstractExecutor {
@@ -82,17 +84,17 @@ public class CondorExecutor extends AbstractExecutor {
 			wr.write("stream_error  = False\n");
 			wr.write("Transfer_Executable = false\n");
 		}
-		else if("nonshared".equals(type)) {
-			nonshared = true;
-			wr.write("universe = vanilla\n");
-			wr.write("should_transfer_files = YES\n");
-			wr.write("when_to_transfer_output = ON_EXIT_OR_EVICT\n");
-			wr.write("Transfer_Executable = false\n");
-		}
 		else {
 			if(spec.getAttribute("condor.universe") == null) {
 				wr.write("universe = vanilla\n");
 			}
+		}
+		
+		if (spec.getStageIn() != null || spec.getStageOut() != null) {
+		    wr.write("should_transfer_files = YES\n");
+		    wr.write("when_to_transfer_output = ON_EXIT_OR_EVICT\n");
+		    wr.write("Transfer_Executable = false\n");
+		    writeStaging(wr, spec);
 		}
 
 		if ("true".equals(spec.getAttribute("holdIsFailure"))) {
@@ -112,7 +114,7 @@ public class CondorExecutor extends AbstractExecutor {
 			wr.write("environment = ");
 		}
 		while (i.hasNext()) {
-			String name = (String) i.next();
+			String name = i.next();
 			wr.write(name);
 			wr.write('=');
 			wr.write(quote(spec.getEnvironmentVariable(name)));
@@ -133,32 +135,18 @@ public class CondorExecutor extends AbstractExecutor {
 		wr.write("executable = " + quote(spec.getExecutable()) + "\n");
 		List<String> args = spec.getArgumentsAsList();
 		String wrapper = args.get(0);
-
-		// Use a relative path to the wrapper script
-		if(nonshared && args.size() > 1) {
-			String wrapperSplit[] = args.get(0).split("/");
-			String basename = wrapperSplit[wrapperSplit.length-1];
-			args.set(0, basename);
-		}
 		
 		if (args != null && args.size() > 0) {
 			wr.write("arguments = ");
 			i = args.iterator();
 			while (i.hasNext()) {
-				wr.write(quote((String) i.next()));
+				wr.write(quote(i.next()));
 				if (i.hasNext()) {
 					wr.write(' ');
 				}
 			}
 		}
  		wr.write('\n');
-
- 		// Transfer wrapper and remove full path name from executable arguments
- 		if(nonshared) {
- 			if(wrapper != null) {
- 				wr.write("transfer_input_files = " + wrapper + '\n'); 				
- 			}
- 		}
 
  		// Handle all condor attributes specified by the user
 	    for(String a : spec.getAttributeNames()) {
@@ -174,7 +162,39 @@ public class CondorExecutor extends AbstractExecutor {
 		wr.close();
 	}
 
-	private static final boolean[] TRIGGERS;
+	private void writeStaging(Writer wr, JobSpecification spec) throws IOException {
+	    if (spec.getStageIn() != null) {
+	        wr.write("transfer_input_files = ");
+	        boolean first = true;
+	        for (StagingSetEntry e : spec.getStageIn()) {
+	            if (first) {
+	                first = false;
+	            }
+	            else {
+	                wr.write(",");
+	            }
+	            wr.write(e.getSource());
+	        }
+	        wr.write("\n");
+	    }
+	    
+	    if (spec.getStageOut() != null) {
+            wr.write("transfer_output_files = ");
+            boolean first = true;
+            for (StagingSetEntry e : spec.getStageOut()) {
+                if (first) {
+                    first = false;
+                }
+                else {
+                    wr.write(",");
+                }
+                wr.write(e.getDestination());
+            }
+            wr.write("\n");
+        }
+    }
+
+    private static final boolean[] TRIGGERS;
 
     static {
         TRIGGERS = new boolean[128];
@@ -302,5 +322,10 @@ public class CondorExecutor extends AbstractExecutor {
 		catch (Exception e) {
 			logger.warn("Failed to cancel job " + jobid, e);
 		}
+	}
+	
+	public static void main(String[] args) {
+	    String[] s = "a/b/c/d".split("/");
+	    System.out.println(Arrays.asList(s));
 	}
 }
