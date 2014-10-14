@@ -27,6 +27,7 @@
 package org.globus.cog.abstraction.impl.scheduler.condor.execution;
 
 import org.globus.cog.abstraction.interfaces.DelegatedTaskHandler;
+import org.globus.cog.abstraction.interfaces.TaskHandlerCapabilities;
 
 /**
  *Provides a local Condor <code>TaskHandler</code>
@@ -40,6 +41,11 @@ public class TaskHandlerImpl extends
 	protected DelegatedTaskHandler newDelegatedTaskHandler() {
 		return new JobSubmissionTaskHandler();
 	}
+	
+	@Override
+    public TaskHandlerCapabilities getCapabilities() {
+        return TaskHandlerCapabilities.EXEC_IN_JOB_DIR_STAGING;
+    }
 
 	public String getName() {
 		return "Condor";
