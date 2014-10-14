@@ -24,22 +24,22 @@ file wrapper <"fibonacci.sh">;
 int  nsim   = toInt(arg("nsim","1"));
 int  nsteps = toInt(arg("nsteps","5"));
 
-file  out[] <simple_mapper; location="output", prefix="fibonacci", suffix=".out">;
-file  err[] <simple_mapper; location="output", prefix="fibonacci", suffix=".err">;
-file done[] <simple_mapper; location="output", prefix="fibonacci", suffix=".done">;
-string isdone[];
+file  out[][] <simple_mapper; location="output", prefix="fibonacci", suffix=".out">;
+file  err[][] <simple_mapper; location="output", prefix="fibonacci", suffix=".err">;
+file done[][] <simple_mapper; location="output", prefix="fibonacci", suffix=".done">;
+string isdone[][];
 
-// Set the initial conditions to enter the iterate loop
-isdone[0] = "notdone";
-// Set an empty file to be fed to the initial run of app
-out[0] = empty();
+foreach sim in [1:nsim]{
+    // Set the initial conditions to enter the iterate loop
+    isdone[sim][0] = "notdone";
+    // Set an empty file to be fed to the initial run of app
+    out[sim][0] = empty();
 
-iterate steps {
+    iterate steps {
 
-    (out[steps+1], err[steps+1], done[steps+1]) = fibonacci_randfail (wrapper , nsteps, 1, out[steps]);
-    //(out[steps+1], err[steps+1], done[steps+1]) = fibonacci (wrapper , 10, 1, out[steps]);
-    isdone[steps+1] = readData( done[steps+1] );
+        (out[sim][steps+1], err[sim][steps+1], done[sim][steps+1]) = fibonacci_randfail (wrapper , nsteps, 1, out[sim][steps]);
+        isdone[sim][steps+1] = readData( done[sim][steps+1] );
 
-} until ( isdone[steps] == "done" );
-
+    } until ( isdone[sim][steps] == "done" );
+}
 
