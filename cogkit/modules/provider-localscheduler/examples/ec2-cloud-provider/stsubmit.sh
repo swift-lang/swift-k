@@ -120,7 +120,7 @@ cat $SUBMIT_SCRIPT >> $LOG
 log "$PWD"
 log "python $CLOUD_PY --logfile $LOG --submit $SUBMIT_SCRIPT"
 
-JOBINFO=$(python $CLOUD_PY --logfile $LOG --submit $SUBMIT_SCRIPT)
+JOBINFO=$(python $CLOUD_PY --logfile $LOG --submit $SUBMIT_SCRIPT) 2> $LOG
 echo $JOBINFO
 retcode="$?"
 log "JOBINFO : $JOBINFO"

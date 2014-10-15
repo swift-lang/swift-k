@@ -27,7 +27,7 @@ fi
 if [[ "$1" != "" ]]
 then
     log "Cancelling $JOBID"
-    python $CLOUD_PY --cancel $CONF --jobid $JOBID | tee -a $LOG
+    python $CLOUD_PY --logfile $LOG --cancel $CONF --jobid $JOBID | tee -a $LOG
     EXITCODE=$?
     if [[ "$EXITCODE" == "0" ]]
     then

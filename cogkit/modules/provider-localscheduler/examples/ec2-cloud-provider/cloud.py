@@ -11,6 +11,14 @@ import datetime
 import time
 #from __future__ import print_function
 
+import imp
+
+try:
+    imp.find_module('libcloud')
+except ImportError:
+    sys.stderr.write("Python: Apache libcloud module not available, cannot proceed\n")
+    exit(-1)
+
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 from libcloud.compute.base import NodeSize, NodeImage
@@ -29,6 +37,9 @@ export JAVA=/usr/local/bin/jdk1.7.0_51/bin
 export SWIFT=/usr/local/bin/swift-trunk/bin
 export PATH=$JAVA:$SWIFT:$PATH
 export WORKER_LOGGING_LEVEL=TRACE
+'''
+
+NEW_LINE='''
 '''
 
 def aws_create_security_group(driver, configs):
@@ -125,14 +136,22 @@ def node_status(driver, node_uuids):
 
 def node_start(driver, configs, WORKER_STRING):
 
-    userdata   = WORKER_USERDATA + WORKER_STRING.lstrip('"').rstrip('"')
-    size       = NodeSize(id=configs['ec2workertype'], name="swift_worker",
-                          ram=None, disk=None, bandwidth=None, price=None, driver=driver)
-    image      = NodeImage(id=configs['ec2workerimage'], name=None, driver=driver)
+    cloudinit = ""
+    if "ec2cloudinit" in configs:
+        logging.info("ec2cloudinit from script : " + configs['ec2cloudinit'])
+        cloudinit = open(configs['ec2cloudinit'],'r').read()
 
+    userdata   = WORKER_USERDATA + cloudinit + NEW_LINE + WORKER_STRING.lstrip('"').rstrip('"')
+    image      = NodeImage(id=configs['ec2workerimage'], name=None, driver=driver)
+    sizes      = driver.list_sizes()
+    size       = [ s for s in sizes if s.id == configs['ec2workertype'] ]
+    if not size:
+        logging.info("ec2workerimage not legal/valid : %s", configs['ec2workertype'])
+        sys.stderr.write("ec2workerimage not legal/valid \n")
+        exit(-1);
     node       = driver.create_node(name="swift_worker",
                                     image=image,
-                                    size=size,
+                                    size=size[0],
                                     ex_keyname=configs['ec2keypairname'],
                                     ex_securitygroup=configs['ec2securitygroup'],
                                     ex_userdata=userdata )

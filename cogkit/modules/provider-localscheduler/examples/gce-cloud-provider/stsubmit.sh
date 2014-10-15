@@ -113,8 +113,8 @@ EOF
 cat $SUBMIT_SCRIPT >> $LOG
 
 echo "$PWD" >> $LOG
-echo "python $CLOUD_PY --submit $SUBMIT_SCRIPT" >> $LOG
-JOBINFO=$(python $CLOUD_PY --submit $SUBMIT_SCRIPT)
+echo "python $CLOUD_PY --logfile $LOG --submit $SUBMIT_SCRIPT" >> $LOG
+JOBINFO=$(python $CLOUD_PY --logfile $LOG --submit $SUBMIT_SCRIPT)
 retcode="$?"
 echo $JOBINFO
 [[ "$retcode" != "0" ]] && exit retcode

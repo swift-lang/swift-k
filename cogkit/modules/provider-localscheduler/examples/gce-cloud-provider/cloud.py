@@ -150,12 +150,19 @@ def node_start(driver, configs, WORKER_STRING):
 
 # node_names is a list
 def node_terminate(driver, node_uuids):
+    logging.debug("node_terminate : " + str(node_uuids));
     nodes          = driver.list_nodes()
     deleted_flag   = False
+
     for node in nodes:
+        logging.debug("Nodes: " + str(node.uuid));
         if node.uuid in node_uuids and node.state == NodeState.RUNNING :
-            code = driver.destroy_node(node)
+            logging.debug("Killing node :" + str(datetime.datetime.now()) )
+            code = driver.destroy_node(node, destroy_boot_disk=True)
+            logging.debug("Return code  :" + str(code) + " at " + str(datetime.datetime.now()) )
             deleted_flag = True
+
+    logging.debug("node_terminate : done!")
     return deleted_flag
 
 def _read_conf(config_file):
@@ -174,6 +181,7 @@ def init_checks(driver, configs):
     gce_check_image(driver, configs)
 
 def init(conf_file):
+
     configs    = _read_conf(conf_file)
     driver     = get_driver(Provider.GCE)
     gce_driver = driver(configs['gceemailaccount'],
@@ -194,9 +202,19 @@ if __name__ == '__main__' :
     mu_group.add_argument("-t", "--status", default=None ,  help='gets the status of the CMD_STRING in the configs for execution on a cloud resource')
     mu_group.add_argument("-c", "--cancel", default=None ,  help='cancels the jobs with jobids')
     parser.add_argument("-v", "--verbose", help="set level of verbosity, DEBUG, INFO, WARN")
+    parser.add_argument("-l", "--logfile", help="set path to logfile, defaults to /dev/null")
 
     parser.add_argument("-j", "--jobid", type=str, action='append')
     args   = parser.parse_args()
+
+    # Setting up logging
+    if args.logfile:
+        if not os.path.exists(os.path.dirname(args.logfile)):
+            os.makedirs(os.path.dirname(args.logfile))
+        logging.basicConfig(filename=args.logfile, level=logging.DEBUG)
+        logging.debug("Logging started")
+    else:
+        logging.basicConfig(filename='/dev/null', level=logging.DEBUG)
 
     config_file  = ( args.status or args.submit or args.cancel )
     configs, driver = init(config_file)
@@ -221,4 +239,5 @@ if __name__ == '__main__' :
         sys.stderr.write("ERROR: Exiting...")
         exit(-1)
 
+    logging.debug("Logging end")
     exit(0)
