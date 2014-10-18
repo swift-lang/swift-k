@@ -110,6 +110,10 @@ public class Buffers extends Thread {
     public static WriteBuffer newEmptyFileWriteBuffer(Buffers buffers, File f, WriteBufferCallback cb) {
         return new EmptyFileWriteBuffer(buffers, f, cb);
     }
+    
+    public static WriteBuffer newDeleteFileWriteBuffer(Buffers buffers, File f, WriteBufferCallback cb) {
+        return new DeleteFileWriteBuffer(buffers, f, cb);
+    }
 
     public static WriteBuffer newWriteBuffer(Buffers buffers, OutputStream os, WriteBufferCallback cb) {
         return new OutputStreamWriteBuffer(buffers, os, cb);

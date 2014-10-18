@@ -82,17 +82,22 @@ public class CoGResourceIOProvider implements IOProvider {
 
         public void setLength(long len) throws IOException {
             this.len = len;
-            File p = f.getParentFile();
-            if (!p.exists()) {
-                if (!p.mkdirs()) {
-                    throw new IOException("Failed to create directory " + p.getAbsolutePath());
-                }
-            }
-            if (len == 0) {
-            	buf = Buffers.newEmptyFileWriteBuffer(Buffers.getBuffers(BUFDIR), f, this);
+            if (len == -1) {
+                buf = Buffers.newDeleteFileWriteBuffer(Buffers.getBuffers(BUFDIR), f, this);
             }
             else {
-                buf = Buffers.newWriteBuffer(Buffers.getBuffers(BUFDIR), f, this);
+                File p = f.getParentFile();
+                if (!p.exists()) {
+                    if (!p.mkdirs()) {
+                        throw new IOException("Failed to create directory " + p.getAbsolutePath());
+                    }
+                } 
+                if (len == 0) {
+                	buf = Buffers.newEmptyFileWriteBuffer(Buffers.getBuffers(BUFDIR), f, this);
+                }
+                else {
+                    buf = Buffers.newWriteBuffer(Buffers.getBuffers(BUFDIR), f, this);
+                }
             }
         }
 

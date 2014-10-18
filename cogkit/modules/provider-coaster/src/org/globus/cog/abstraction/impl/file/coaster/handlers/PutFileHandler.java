@@ -47,8 +47,10 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
     
     public static final byte[] STOP = "STOP".getBytes();
     public static final byte[] CONTINUE = "CONTINUE".getBytes();
+    
+    public static final long LEN_NOT_SET = Long.MIN_VALUE;
 
-    private long len = -1;
+    private long len = LEN_NOT_SET;
     private String src, dst;
     private IOProvider provider;
     private IOWriter writer;
@@ -74,7 +76,7 @@ public class PutFileHandler extends CoasterFileRequestHandler implements WriteIO
             if (err) {
                 super.addInData(fin, err, data);
             }
-            else if (len == -1) {
+            else if (len == LEN_NOT_SET) {
                 len = unpackLong(data);
                 if (logger.isDebugEnabled()) {
                     logger.debug(this + " " + dst + " Size: " + len);

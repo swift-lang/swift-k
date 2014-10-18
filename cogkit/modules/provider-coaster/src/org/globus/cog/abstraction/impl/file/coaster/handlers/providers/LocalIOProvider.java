@@ -31,8 +31,6 @@ package org.globus.cog.abstraction.impl.file.coaster.handlers.providers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -101,7 +99,11 @@ public class LocalIOProvider implements IOProvider {
 
         public void setLength(long len) throws IOException {
             this.len = len;
-            if (len == 0) {
+            if (len == -1) {
+                // make sure file is deleted
+                buf = Buffers.newDeleteFileWriteBuffer(Buffers.getBuffers(Direction.OUT), f, this);
+            }
+            else if (len == 0) {
                 // no further writes
                 buf = Buffers.newEmptyFileWriteBuffer(Buffers.getBuffers(Direction.OUT), f, this);
             }

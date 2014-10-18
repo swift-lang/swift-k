@@ -408,18 +408,25 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 
         String srcPath = getPath(srf, dir);
         
+        boolean delete = false;
         if (mode.contains(Mode.IF_PRESENT) && !sres.exists(srcPath)) {
-            return;
+            delete = true;
         }
         if (mode.contains(Mode.ON_SUCCESS) && !jobSucceeded) {
-            return;
+            delete = true;
         }
         if (mode.contains(Mode.ON_ERROR) && jobSucceeded) {
+            delete = true;
+        }
+        
+        String dstPath = getPath(drf, dir);
+        if (delete) {
+            dres.deleteFile(dstPath);
             return;
         }
 
         InputStream is = sres.openInputStream(srcPath);
-        OutputStream os = dres.openOutputStream(getPath(drf, dir));
+        OutputStream os = dres.openOutputStream(dstPath);
         byte[] buffer = new byte[BUFFER_SIZE];
 
         int len = is.read(buffer);

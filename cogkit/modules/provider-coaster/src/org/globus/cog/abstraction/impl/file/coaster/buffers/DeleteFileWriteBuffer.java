@@ -29,33 +29,23 @@
 package org.globus.cog.abstraction.impl.file.coaster.buffers;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class EmptyFileWriteBuffer extends WriteBuffer {
+public class DeleteFileWriteBuffer extends EmptyFileWriteBuffer {
     
-    private static final ByteBuffer EMPTY_BB = ByteBuffer.allocate(0);
-    
-    protected WriteBufferCallback cb;
-    protected File f;
 
-    protected EmptyFileWriteBuffer(Buffers buffers, File f, WriteBufferCallback cb) {
-    	super(buffers);
-        this.f = f;
-        this.cb = cb;
-        buffers.queueRequest(true, EMPTY_BB, this, this);
+    protected DeleteFileWriteBuffer(Buffers buffers, File f, WriteBufferCallback cb) {
+    	super(buffers, f, cb);
     }
 
     public void doStuff(boolean last, ByteBuffer b, Buffers.Allocation alloc) {
         try {
-            File p = f.getParentFile();
-            if (!p.exists()) {
-                if (!p.mkdirs()) {
-                    throw new IOException("Failed to create directory " + p.getAbsolutePath());
-                }
+            if (f.exists()) {
+            	if (!f.delete()) {
+            		throw new IOException("Failed to delete file " + f.getAbsolutePath());
+            	}
             }
-            new FileOutputStream(f).close();
             cb.done(true);
         }
         catch (IOException e) {

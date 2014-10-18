@@ -1685,25 +1685,54 @@ sub stageout {
 		if (($mode & MODE_ON_SUCCESS) && ($JOBDATA{$jobid}{"exitcode"} != 0)) {
 			$skip = 3;
 		}
-		if (!$skip) {
-			if (!defined($JOBDATA{$jobid}{"stageoutStatusSent"})) {
-				wlog DEBUG, "$jobid Sending STAGEOUT status\n";
-				queueJobStatusCmd($jobid, STAGEOUT, 0, "");
-				$JOBDATA{$jobid}{"stageoutStatusSent"} = 1;
-			}
-			my $rfile = $$STAGED[$STAGEINDEX];
-			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
-			wlog INFO, "$jobid Staging out $lfile (mode = $mode).\n";
-			my ($protocol, $host, $path) = urisplit($rfile);
-			if ($protocol eq "file" || $protocol eq "proxy") {
-				# make sure we keep track of the total number of actual stageouts
-				stageoutStarted($jobid);
 
-				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $jobid, $lfile, $rfile));
-				wlog DEBUG, "$jobid PUT sent.\n";
+		if (!defined($JOBDATA{$jobid}{"stageoutStatusSent"})) {
+			wlog DEBUG, "$jobid Sending STAGEOUT status\n";
+			queueJobStatusCmd($jobid, STAGEOUT, 0, "");
+			$JOBDATA{$jobid}{"stageoutStatusSent"} = 1;
+		}
+		my $rfile = $$STAGED[$STAGEINDEX];
+		$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
+		wlog INFO, "$jobid Staging out $lfile->$rfile (mode = $mode).\n";
+		my ($protocol, $host, $path) = urisplit($rfile);
+		
+		if ($skip) {
+			# notify client that file will not be staged out
+			# this is needed to allow the client to delete
+			# old files with the same name
+			if ($skip == 1) {
+				wlog INFO, "$jobid Empty stageout of missing file ($lfile)\n";
 			}
-			elsif ($protocol eq "sfs") {
-				stageoutStarted($jobid);
+			elsif ($skip == 2) {
+				wlog INFO, "$jobid Empty stageout of file ($lfile) (ON_ERROR mode and job succeeded)\n";
+			}
+			elsif ($skip == 3) {
+				wlog INFO, "$jobid Empty stageout of file ($lfile) (ON_SUCCESS mode and job failed)\n";
+			}	
+		}
+		
+		if ($protocol eq "file" || $protocol eq "proxy") {
+			# make sure we keep track of the total number of actual stageouts
+			stageoutStarted($jobid);
+
+			if ($skip) {
+				# send length of -1
+				queueCmd((putFileCB($jobid), "PUT", pack("ll", -1, -1), $lfile, $rfile));
+			}
+			else {
+				queueCmdCustomDataHandling(putFileCB($jobid), fileData("PUT", $jobid, $lfile, $rfile));
+			}
+			wlog DEBUG, "$jobid PUT sent.\n";
+		}
+		elsif ($protocol eq "sfs") {
+			stageoutStarted($jobid);
+			if ($skip) {
+				wlog DEBUG, "$jobid deleting file $path\n";
+				unlink($path);
+				stageout($jobid);
+				stageoutEnded($jobid);
+			}
+			else {
 				mkfdir($jobid, $path);
 				asyncRun($jobid, -1, sub {
 						my ($errpipe) = @_;
@@ -1730,23 +1759,16 @@ sub stageout {
 					}
 				);
 			}
-			else {
-				queueCmd((putFileCB($jobid), "PUT", pack("VV", 0, 0), $lfile, $rfile));
-				wlog DEBUG, "$jobid PUT sent.\n";
-			}
 		}
 		else {
-			if ($skip == 1) {
-				wlog INFO, "$jobid Skipping stageout of missing file ($lfile)\n";
+			if ($skip) {
+				# send length of -1
+				queueCmd((putFileCB($jobid), "PUT", pack("ll", -1, -1), $lfile, $rfile));
 			}
-			elsif ($skip == 2) {
-				wlog INFO, "$jobid Skipping stageout of file ($lfile) (ON_ERROR mode and job succeeded)\n";
+			else {
+				queueCmd((putFileCB($jobid), "PUT", pack("VV", 0, 0), $lfile, $rfile));
 			}
-			elsif ($skip == 3) {
-				wlog INFO, "$jobid Skipping stageout of file ($lfile) (ON_SUCCESS mode and job failed)\n";
-			}
-			$JOBDATA{$jobid}{"stageindex"} = $STAGEINDEX + 1;
-			stageout($jobid);
+			wlog DEBUG, "$jobid PUT sent.\n";
 		}
 	}
 }
