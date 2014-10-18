@@ -38,6 +38,7 @@ namespace(providerStaging) {
 			}
 			stderr := if(stderr == null, "{dir}/{jobid}.stderr", stderr)
 			stdout := if(stdout == null, "{dir}/{jobid}.stdout", stdout)
+			
 			if(file:exists(stderr)) {
 				"\n\n------- Application STDERR --------\n"
 				str:strip(file:read(stderr))
@@ -158,7 +159,7 @@ namespace(providerStaging) {
 				}
 				else {
 					setProgress(progress, "Failed but can retry")
-					exception := try(exception(readErrorFiles(DEBUG_DIR, jobid, stdout, stderr), prev), prev)
+					exception := try(exception(readErrorFiles(DEBUG_DIR, jobid, stdouts, stderrs), prev), prev)
 					log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 				
 					throw(
