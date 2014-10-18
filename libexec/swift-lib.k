@@ -143,6 +143,8 @@ namespace(swift) {
 	export(siteCatalog, def("org.griphyn.vdl.karajan.lib.SiteCatalog"))
 	
 	export(getURLPrefix, def("org.griphyn.vdl.karajan.lib.GetURLPrefix"))
+	
+	export(generateJobId, def("org.griphyn.vdl.karajan.lib.GenerateJobId"))
 }
 
 namespace(cdm) {

@@ -55,9 +55,7 @@ namespace(providerStaging) {
 		function(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
 			stagein, stageout, replicationGroup, replicationChannel) {
 
-			uid := UID()
-			jobdir := substring(uid, 0, to=1)
-			jobid := "{tr}-{uid}"
+			(jobid, jobdir) := generateJobId(tr)
 
 			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 			

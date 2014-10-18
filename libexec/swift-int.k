@@ -301,11 +301,9 @@ namespace(swiftStaging) {
 			}
 			else catch(exception) {
 				throw(exception("Could not initialize shared directory on {rhost}", exception))
-			}
+			},
 				
-			uid := UID()
-			jobdir := substring(uid, 0, to=1)
-			jobid := "{tr}-{uid}"
+			(jobid, jobdir) := generateJobId(tr)
 
 			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 

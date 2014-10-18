@@ -300,11 +300,19 @@ public class Misc {
 		public Object function(Stack stack) {
 			String prefix = this.prefix.getValue(stack);
 			String suffix = this.suffix.getValue(stack);
+			return nextUID(prefix, suffix);
+		}
+		
+		public static String nextUID() {
+		    return nextUID("", "");
+		}
+
+		public static String nextUID(String prefix, String suffix) {
 			long index;
-			synchronized (Misc.class) {
-			    index = UIDIndex++;
-			}
-			return prefix + alphanum(index) + suffix;
+            synchronized (Misc.class) {
+                index = UIDIndex++;
+            }
+            return prefix + alphanum(index) + suffix;
 		}
 	}
 

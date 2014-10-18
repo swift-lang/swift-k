@@ -104,12 +104,11 @@ namespace(wrapperStaging) {
 			}
 			else catch(exception) {
 				throw(exception("Could not initialize shared directory on {rhost}", exception))
-			}
+			},
 
-			uid := UID()
-			jobid := "{tr}-{uid}"
+			(jobid, jobdir) := generateJobId(tr)
 			
-			jobdir := concat(ddir, "/jobs/", substring(uid, from=0, to=1), "/{jobid}/")
+			jobdir := "{ddir}/jobs/{jobdir}/{jobid}/"
 
 			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 
