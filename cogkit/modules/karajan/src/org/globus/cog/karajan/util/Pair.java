@@ -36,4 +36,8 @@ public class Pair<S, T> {
 		this.s = s;
 		this.t = t;
 	}
+	
+	public String toString() {
+		return "(" + s + ", " + t + ")";
+	}
 }
