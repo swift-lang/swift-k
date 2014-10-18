@@ -78,8 +78,7 @@ public class Execute extends GridExec {
 	    params.add(optional("jobid", null));
 	    removeParams(params, "stdout", "stderr", "stdoutLocation", "stderrLocation", 
 	        "stdin", "provider", "securityContext", "nativespec", 
-	        "delegation", "batch", "environment");
-	    params.add(optional("environment", null));
+	        "delegation", "batch");
 	    return sig;
     }
 	
