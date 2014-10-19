@@ -421,7 +421,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         
         String dstPath = getPath(drf, dir);
         if (delete) {
-            dres.deleteFile(dstPath);
+            if (dres.exists(dstPath)) {
+                dres.deleteFile(dstPath);
+            }
             return;
         }
 
