@@ -69,10 +69,12 @@ public class ExternalMapper extends AbstractMapper {
 		String exec = cp.getExec();
 		String bdir = getBaseDir();
 		if (bdir != null && !exec.startsWith("/")) {
-			exec = bdir + File.separator + exec;
+		    if (new File(bdir + File.separator + exec).exists()) {
+		        exec = bdir + File.separator + exec;
+		    }
 		}
 		List<String> cmd = new ArrayList<String>();
-		cmd.add(exec);
+		addExec(cmd, exec);
 		Map<String, Object> other = cp.getOtherParams();
 		for (Map.Entry<String, Object> e : other.entrySet()) {
 		    cmd.add('-' + e.getKey());
@@ -82,7 +84,7 @@ public class ExternalMapper extends AbstractMapper {
 		    if (logger.isDebugEnabled()) {
 		        logger.debug("invoking external mapper: " + cmd);
 		    }
-			Process p = Runtime.getRuntime().exec(cmd.toArray(STRING_ARRAY));
+			Process p = Runtime.getRuntime().exec(cmd.toArray(STRING_ARRAY), null, null);
 			process(p.getInputStream());
 			int ec = p.waitFor();
 			if (ec != 0) {
@@ -98,7 +100,45 @@ public class ExternalMapper extends AbstractMapper {
 		}
 	}
 
-	private String join(List<?> l) {
+	private void addExec(List<String> cmd, String exec) {
+	    if (exec.indexOf(' ') >= 0) {
+	        tokenize(cmd, exec);
+	    }
+	    else {
+	        cmd.add(exec);
+	    }
+    }
+
+
+    private void tokenize(List<String> cmd, String exec) {
+        int last = -1;
+        int crt = exec.indexOf(' ', last + 1);
+        while (crt >= 0) {
+            if (crt == -1) {
+                break;
+            }
+            else if (crt == 0) {
+                // starts with a space? ignore that space
+                last = 0;
+            }
+            else if (exec.charAt(crt - 1) == '\\') {
+                // escaped space: do nothing
+            }
+            else {
+                cmd.add(extract(exec, last + 1, crt));
+                last = crt;
+            }
+            crt = exec.indexOf(' ', crt + 1);
+        }
+        cmd.add(extract(exec, last + 1, exec.length()));
+    }
+
+    private String extract(String s, int start, int end) {
+        s = s.substring(start, end);
+        return s.replace("\\ ", " ");
+    }
+
+    private String join(List<?> l) {
 		StringBuffer sb = new StringBuffer();
 		for (Object o : l) {
 			sb.append(o);
