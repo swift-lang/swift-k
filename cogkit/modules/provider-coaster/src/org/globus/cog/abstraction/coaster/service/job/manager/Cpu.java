@@ -315,10 +315,23 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
     public int compareTo(Cpu o) {
         TimeInterval diff = timelast.subtract(o.timelast);
         if (diff.getMilliseconds() == 0) {
-            return id - o.id;
+            long l = System.identityHashCode(this) - System.identityHashCode(o);
+            return sgn(l);
         }
         else {
             return (int) diff.getMilliseconds();
+        }
+    }
+
+    private int sgn(long l) {
+        if (l < 0) {
+            return -1;
+        }
+        else if (l > 0) {
+            return 1;
+        }
+        else {
+            return 0;
         }
     }
 
