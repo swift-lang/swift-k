@@ -404,7 +404,8 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
 
      public synchronized void statusChanged(Status s, String out, String err) {
          if (logger.isDebugEnabled()) {
-             logger.debug(s);
+             logger.debug("WORKER_JOB_STATUS " + block.getId() + ":" + getId() + 
+                 " (" + System.identityHashCode(this) + ") jobTerminated");
          }
          if (s.isTerminal()) {
              running.setEndTime(Time.now());
