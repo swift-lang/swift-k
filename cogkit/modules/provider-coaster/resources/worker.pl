@@ -455,6 +455,7 @@ sub initlog() {
 			# This message may help people find the log
 			print "LOG: $LOG\n";
 		}
+		mkpath($LOGDIR);
 		open(LOG, ">>$LOG") or die "Failed to open log file ($LOG): $!";
 		LOG->autoflush(1);
 		my $date = localtime;

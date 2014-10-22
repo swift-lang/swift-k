@@ -9,7 +9,8 @@ use File::Path;
 use Getopt::Long qw(GetOptionsFromArray);
 use Cwd;
 
-Getopt::Long::Configure("pass_through");
+
+Getopt::Long::Configure("pass_through", "no_auto_abbrev");
 
 my $option_tcfile;		# Value of -tc.file option
 my $option_sitesfile;		# Value of -sites.file option
