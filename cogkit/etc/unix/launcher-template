@@ -78,6 +78,7 @@ updateOptions "$X509_USER_KEY" "X509_USER_KEY"
 updateOptions "$X509_CERT_DIR" "X509_CERT_DIR"
 updateOptions "$X509_USER_PROXY" "X509_USER_PROXY"
 updateOptions "$COG_INSTALL_PATH" "COG_INSTALL_PATH"
+updateOptions "$SWIFT_USERHOME" "user.home"
 
 if [ "X$HEAPMAX" != "X" ]; then
 	OPTIONS="-Xmx$HEAPMAX $OPTIONS"
