@@ -19,6 +19,9 @@ package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import k.rt.Channel;
 import k.rt.ExecutionException;
@@ -26,8 +29,13 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
+import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Type;
@@ -37,11 +45,107 @@ public class Java extends SwiftFunction {
     private ArgRef<AbstractDataNode> lib;
     private ArgRef<AbstractDataNode> name;
     private ChannelRef<AbstractDataNode> c_vargs;
+    private Method method;
+    private static Map<MethodEntry, Method> cachedMethods;
+    
+    static {
+        cachedMethods = new WeakHashMap<MethodEntry, Method>();
+    }
+    
+    private static class MethodEntry {
+        private final String className;
+        private final String methodName;
+        private final Class<?>[] parameterTypes;
+        
+        public MethodEntry(String className, String methodName, Class<?>[] parameterTypes) {
+            this.className = className;
+            this.methodName = methodName;
+            this.parameterTypes = parameterTypes;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof MethodEntry) {
+                MethodEntry me = (MethodEntry) o;
+                if (!className.equals(me.className)) {
+                    return false;
+                }
+                if (!methodName.equals(me.methodName)) {
+                    return false;
+                }
+                if (parameterTypes.length != me.parameterTypes.length) {
+                    return false;
+                }
+                
+                for (int i = 0; i < parameterTypes.length; i++) {
+                    if (!parameterTypes[i].equals(me.parameterTypes[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            int h = 0;
+            h += className.hashCode();
+            h += methodName.hashCode();
+            for (Class<?> c : parameterTypes) {
+                h += c.hashCode();
+            }
+            return h;
+        }
+    }
     
     @Override
     protected Signature getSignature() {
         return new Signature(params("lib", "name", "..."));
     }
+    
+    
+    @Override
+    protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
+            throws CompilationException {
+        if (lib.isStatic() && name.isStatic()) {
+            AbstractDataNode lib = this.lib.getValue();
+            AbstractDataNode name = this.name.getValue();
+            if (lib != null && name != null && lib.isClosed() && name.isClosed()) {
+                method = getSingleMethod(w, (String) lib.getValue(), (String) name.getValue());
+            }
+        }
+        return super.compileBody(w, argScope, scope);
+    }
+
+
+
+    private Method getSingleMethod(WrapperNode w, String clsName, String methodName) 
+            throws CompilationException {
+        
+        try {
+            Class<?> cls = Class.forName(clsName);
+            Method[] methods = cls.getMethods();
+            Method result = null;
+            for (Method m : methods) {
+                if (methodName.equals(m.getName())) {
+                    if (result == null) {
+                        result = m;
+                    }
+                    else {
+                        return null;
+                    }
+                }
+            }
+            return result;
+        }
+        catch (ClassNotFoundException e) {
+            throw new CompilationException(w, e.getMessage());
+        }
+    }
+
 
     @Override
     public Object function(Stack stack) {
@@ -53,7 +157,10 @@ public class Java extends SwiftFunction {
         hname.waitFor(this);
         waitForAll(this, args);
 
-        Method method = getMethod((String) hlib.getValue(), (String) hname.getValue(), args);
+        Method method = this.method;
+        if (method == null) {
+            method = getMethod((String) hlib.getValue(), (String) hname.getValue(), args);
+        }
         Object[] p = convertInputs(method, args);
         Type type = returnType(method);
         Object value = invoke(method, p);
@@ -65,7 +172,6 @@ public class Java extends SwiftFunction {
     */
 
     private Method getMethod(String lib, String name, Channel<AbstractDataNode> args) {
-        Method result;
         Class<?> clazz;
 
         Class<?>[] parameterTypes = new Class[args.size()];
@@ -74,45 +180,234 @@ public class Java extends SwiftFunction {
             clazz = Class.forName(lib);
 
             for (int i = 0; i < args.size(); i++) {
-                Class<?> p = null;
                 Type t = args.get(i).getType();
-
-                if (t.equals(Types.FLOAT))        p = double.class;
-                else if (t.equals(Types.INT))     p = int.class;
-                else if (t.equals(Types.BOOLEAN)) p = boolean.class;
-                else if (t.equals(Types.STRING))  p = String.class;
-                else                              throw new RuntimeException("Cannot use @java with non-primitive types");
-
-                parameterTypes[i] = p;
+                parameterTypes[i] = getJavaType(t);
             }
-            result = clazz.getMethod(name, parameterTypes);
+            Method m = getCachedMethod(lib, name, parameterTypes);
+            if (m != null) {
+                return m;
+            }
+            m = searchForMethod(clazz, name, parameterTypes);
+            if (m == null) {
+                throw new ExecutionException(this, "No method: " 
+                    + name + " in " + lib + " with parameter types" 
+                    + Arrays.toString(parameterTypes));
+            }
+            else {
+                cacheMethod(lib, name, parameterTypes, m);
+                return m;
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
-            throw new ExecutionException(this, "@java(): Error attempting to use: " + lib);
+            throw new ExecutionException(this, "Error attempting to use: " + lib);
         }
-
-        if (result == null)
-            throw new ExecutionException(this, "No method: " 
-            		+ name + " in " + lib + "with parameter types" 
-            		+ Arrays.toString(parameterTypes));
-
-        return result;
     }
+
+    private Method searchForMethod(Class<?> cls, String name, Class<?>[] parameterTypes) {
+        Method[] methods = cls.getMethods();
+        for (Method m : methods) {
+            if (name.equals(m.getName())) {
+                if (parametersMatch(m, parameterTypes)) {
+                    return m;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean parametersMatch(Method m, Class<?>[] parameterTypes) {
+        Class<?>[] methodPTypes = m.getParameterTypes();
+        if (methodPTypes.length > parameterTypes.length) {
+            return false;
+        }
+        boolean varargs = false;
+        int n = methodPTypes.length;
+        if (n <= parameterTypes.length) {
+            // could be varargs
+            if (m.isVarArgs()) {
+                if (n == parameterTypes.length && parameterTypes[n - 1].isArray()) {
+                    // varargs passed as array
+                }
+                else {
+                    // only match the first n - 1 parameter types and pass the rest as varargs
+                    n--;
+                    varargs = true;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            Class<?> pt = checkWrapPrimitive(parameterTypes[i], methodPTypes[i]);
+            if (!methodPTypes[i].isAssignableFrom(pt)) {
+                return false;
+            }
+        }
+        if (varargs) {
+            // match vararg types
+            Class<?> vargsType = methodPTypes[methodPTypes.length - 1];
+            if (!vargsType.isArray()) {
+                throw new RuntimeException("Method with varargs does not have array last parameter?");
+            }
+            Class<?> memberType = vargsType.getComponentType();
+            for (int i = n; i < parameterTypes.length; i++) {
+                Class<?> pt = checkWrapPrimitive(parameterTypes[i], memberType);
+                if (!memberType.isAssignableFrom(pt)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private Class<?> checkWrapPrimitive(Class<?> pt, Class<?> expected) {
+        if (pt.isPrimitive() || (pt.isArray() && pt.getComponentType().isPrimitive())) {
+            // for int, try both int.class and Integer.class
+            if (!expected.equals(pt)) {
+                return getWrappedType(pt);
+            }
+        }
+        return pt;
+    }
+
+
+    private Class<?> getWrappedType(Class<?> cls) {
+        if (cls == int.class) {
+            return Integer.class;
+        }
+        else if (cls == boolean.class) {
+            return Boolean.class;
+        }
+        else if (cls == double.class) {
+            return Double.class;
+        }
+        else if (cls == int[].class) {
+            return Integer[].class;
+        }
+        else if (cls == boolean[].class) {
+            return Boolean[].class;
+        }
+        else if (cls == double[].class) {
+            return Double[].class;
+        }
+        else {
+            return cls;
+        }
+    }
+
+
+    private static synchronized Method getCachedMethod(String cls, String name, Class<?>[] parameterTypes) {
+        return cachedMethods.get(new MethodEntry(cls, name, parameterTypes));
+    }
+    
+    private static synchronized void cacheMethod(String cls, String name, Class<?>[] parameterTypes, Method m) {
+        cachedMethods.put(new MethodEntry(cls, name, parameterTypes), m);
+    }
+
+
+    private Class<?> getJavaType(Type t) {
+        if (t.equals(Types.FLOAT)) {
+            return double.class;
+        }
+        else if (t.equals(Types.INT)) {
+            return int.class;
+        }
+        else if (t.equals(Types.BOOLEAN)) {
+            return boolean.class;
+        }
+        else if (t.equals(Types.STRING)) {
+            return String.class;
+        }
+        else if (t.equals(Types.FLOAT.arrayType())) {
+            return double[].class;
+        }
+        else if (t.equals(Types.INT.arrayType())) {
+            return int[].class;
+        }
+        else if (t.equals(Types.BOOLEAN.arrayType())) {
+            return boolean[].class;
+        }
+        else if (t.equals(Types.STRING.arrayType())) {
+            return String[].class;
+        }
+        else {
+            throw new RuntimeException("Cannot use @java with non-primitive types");
+        }
+    }
+
 
     /**
        Convert the user args to a Java Object array.
     */
     private Object[] convertInputs(Method method, Channel<AbstractDataNode> args) {
-        Object[] result = new Object[args.size()];
-        Object a = null;
-        for (int i = 0; i < args.size(); i++) {
-            result[i] = args.get(i).getValue();
+        int n = method.getParameterTypes().length;
+        Object[] result = new Object[n];
+        boolean varargs = false;
+        if (method.isVarArgs() && (args.size() > n || !args.get(n - 1).getType().isArray())) {
+            // so:
+            // assuming f(String, Object...):
+            // f("a", 1) -> invoked as f("a", [1])
+            // f("a", 1, 2) -> invoked as f("a", [1, 2])
+            // f{"a", [1, 2]) -> invoked as f("a", [1, 2])
+            varargs = true;
+            n--;
+        }
+        for (int i = 0; i < n; i++) {
+            result[i] = javaValue(args.get(i));
+        }
+        if (varargs) {
+            Object[] vargs = new Object[args.size() - n];
+            for (int i = 0; i < vargs.length; i++) {
+                vargs[i] = javaValue(args.get(n + i));
+            }
+            result[n] = vargs;
         }
         return result;
     }
 
-    Type returnType(Method method) {
+    private Object javaValue(AbstractDataNode dn) {
+        Type t = dn.getType();
+        if (t.isPrimitive()) {
+            return dn.getValue();
+        }
+        if (t.isArray()) {
+            if (t.keyType().equals(Types.INT) && t.itemType().isPrimitive()) { 
+                return unwrapArray(dn);
+            }
+            else {
+                return unwrapMap(dn);
+            }
+        }
+        throw new ExecutionException(this, "Don't know how to convert " + dn + " to a java object");
+    }
+
+
+    private Object unwrapMap(AbstractDataNode dn) {
+        waitForArray(this, dn);
+        Map<Object, Object> m = new HashMap<Object, Object>();
+        Map<Comparable<?>, DSHandle> sa = dn.getArrayValue();
+        for (Map.Entry<Comparable<?>, DSHandle> e : sa.entrySet()) {
+            m.put(e.getKey(), javaValue((AbstractDataNode) e.getValue()));
+        }
+        return m;
+    }
+
+
+    private Object unwrapArray(AbstractDataNode dn) {
+        waitForArray(this, dn);
+        Map<Comparable<?>, DSHandle> sa = dn.getArrayValue();
+        Object[] a = new Object[sa.size()];
+        int i = 0;
+        for (DSHandle h : sa.values()) {
+            a[i++] = javaValue((AbstractDataNode) h);
+        }
+        return a;
+    }
+
+
+    private Type returnType(Method method) {
         Type result = null;
 
         Class<?> rt = method.getReturnType();
@@ -127,20 +422,14 @@ public class Java extends SwiftFunction {
         return result;
     }
 
-    Object invoke(Method method, Object[] p)
-    {
-        Object result = null;
-        try
-        {
-            result = method.invoke(null, p);
+    private Object invoke(Method method, Object[] p) {
+        try {
+            return method.invoke(null, p);
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException
-                ("Error attempting to invoke: " +
+            throw new RuntimeException("Error attempting to invoke: " +
                  method.getDeclaringClass() + "." + method);
         }
-        return result;
     }
 }

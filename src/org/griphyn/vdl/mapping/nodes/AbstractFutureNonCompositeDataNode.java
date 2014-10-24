@@ -70,7 +70,8 @@ public abstract class AbstractFutureNonCompositeDataNode extends AbstractFutureD
         if (value == null) {
             AbstractDataNode parent = getParentNode();
             if (parent != null && parent.getType().isArray()) {
-                throw new IndexOutOfBoundsException("Invalid index [" + field.getId() + "] for " + parent.getFullName());
+                throw new IndexOutOfBoundsException("Invalid index [" + field.getId() + "] for " + 
+                    parent.getFullName());
             }
             else if (getType().isPrimitive()) {
                 throw new RuntimeException(getFullName() + " has no value");
