@@ -293,7 +293,7 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
         else if (type.equals("applist")) {
             new AppListBuilder(this, getParam(params, "name", null), 
                 Integer.parseInt(getParam(params, "page", "1")),
-                Integer.parseInt(getParam(params, "pageSize", "20")), 
+                Integer.parseInt(getParam(params, "pageSize", "-1")),
                 Integer.parseInt(getParam(params, "state", "-1")), 
                 getParam(params, "host", null)).getData(e);
         }

@@ -95,6 +95,9 @@ function display_(dstId, srcId, template, text, pvalues) {
 	if (mode == "replace") {
 		displayReplace(dest, xml, dstId, pvalues);
 	}
+	else if (mode == "append") {
+		displayAppend(dest, xml, dstId, pvalues);
+	}
 	else {
 		throw new Error("Unknown mode: '" + mode + "'");
 	}
@@ -121,6 +124,18 @@ function displayReplace(dst, src, id, pvalues) {
 		pvalues._runAfterReplace[i]();
 	}
 }
+
+function displayAppend(dst, src, id, pvalues) {
+	pvalues._procs = {};
+	pvalues._runAfterReplace = [];
+	expandChildren(dst, src, pvalues);
+	
+	for (var i in pvalues._runAfterReplace) {
+		//console.log(pvalues._runAfterReplace[i]);
+		pvalues._runAfterReplace[i]();
+	}
+}
+
 
 function expandChildren(dst, src, params) {
 	for (var i = 0; i < src.childNodes.length; i++) {
@@ -201,7 +216,8 @@ function runOp(dst, src, params) {
 		var maxPage = expandString(src.getAttribute("maxPage"), params);
 		var crtPage = expandString(src.getAttribute("crtPage"), params);
 		var target = expandString(src.getAttribute("target"), params);
-		runPager(dst, id, maxPage, crtPage, target, params);
+		var targetTable = expandString(src.getAttribute("targetTable"), params);
+		runPager(dst, id, maxPage, crtPage, target, params, targetTable);
 	}
 	else if (op == "js") {
 		runJS(dst, expandString(src.textContent, params), params);
@@ -221,8 +237,20 @@ function runOp(dst, src, params) {
 }
 
 function runProc(src, name, procParams, params) {
+	var params0 = procParams.split(/[, ]+/);
+	var pparams = new Array();
+	for (var i = 0; i < params0.length; i++) {
+		var param = params0[i];
+		var p0 = param.split(/=/, 2);
+		if (p0.length == 1) {
+			pparams[i] = {name: param, optional: false};
+		}
+		else {
+			pparams[i] = {name: p0[0], optional: true, defaultValue: p0[1]};
+		}
+	}
 	proc = {
-		params: procParams.split(/[, ]+/),
+		params: pparams,
 		src: src
 	}
 	params._procs[name] = proc;
@@ -237,14 +265,19 @@ function runCall(dst, src, name, params) {
 	var cparams = $.extend({}, params);
 	for (var i = 0; i < proc.params.length; i++) {
 		var param = proc.params[i];
-		var actual = src.getAttribute(param);
+		var actual = src.getAttribute(param.name);
 		if (actual == null) {
-			throw new Error("Missing parameter '" + param + "' for procedure '" + name + "'");
+			if (param.optional) {
+				actual = param.defaultValue;
+			}
+			if (actual == null) {
+				throw new Error("Missing parameter '" + param.name + "' for procedure '" + name + "'");
+			}
 		}
 		var value = expandString(actual, params);
 		//console.log(param + ":");
 		//console.log(value);
-		cparams[param] = value;
+		cparams[param.name] = value;
 	}
 		
 	expandChildren(dst, proc.src, cparams);
@@ -266,6 +299,9 @@ function expandParam(str, p) {
 }
 
 function expandString(str, p) {
+	if (str == null) {
+		return null;
+	}
 	var index = str.indexOf("{");
 	
 	if (index == 0 && str.indexOf("{", 1) == -1 && str.indexOf("}") == str.length - 1) {
@@ -274,7 +310,9 @@ function expandString(str, p) {
 	var last = 0;
 	var r = "";
 	while (index >= 0) {
-		if (index == 0 && str.charAt(index - 1) == "\\") {
+		if (index > 0 && str.charAt(index - 1) == "\\") {
+			r = r + str.substring(last, index - 1);
+			last = index;
 			index = str.indexOf("{", index + 1);
 			continue;
 		}
@@ -285,7 +323,15 @@ function expandString(str, p) {
 		//console.log(name);
 		name = name.replace(/\$/g, "p.");
 		//console.log(name);
-		var value = eval(name);
+		var value;
+		try {
+			value = eval(name);
+		}
+		catch (err) {
+			console.log("Error evaluating string:");
+			console.log(name);
+			throw err;
+		}
 		//console.log("eval(" + name + "): " + value);
 		r = r + value;
 		index = str.indexOf("{", last);
@@ -364,7 +410,7 @@ function getNonTextNode(src, index) {
 }
 
 
-function runPager(dst, id, maxPage, crtPage, target, params) {
+function runPager(dst, id, maxPage, crtPage, target, params, targetTable) {
 	$(dst).append('\
 			<div id="' + id + '" class="pagination">\
 				<a href="#" class="first" data-action="first">&laquo;</a>\
@@ -373,22 +419,43 @@ function runPager(dst, id, maxPage, crtPage, target, params) {
 				<a href="#" class="next" data-action="next">&rsaquo;</a>\
 				<a href="#" class="last" data-action="last">&raquo;</a>\
 			</div>');
-	target = expandCGIParams(target, params);
-	params._runAfterReplace.push(function() {
-		$("#" + id).jqPagination({
-			current_page: crtPage,
-			max_page: maxPage,
-			paged: function(page) {
-				console.log("Switching page to " + page);
-				browserSetAddr(target.replace("%", page));	
-			}
+	if (targetTable != null) {
+		params._runAfterReplace.push(function() {
+			$("#" + id).jqPagination({
+				current_page: $(targetTable).columns("getPage"),
+				max_page: $(targetTable).columns("getRange"),
+				paged: function(page) {
+					console.log("Switching page to " + page);
+					$(targetTable).columns("gotoPage", page);	
+				}
+			});
 		});
-	});
+	}
+	else {
+		target = expandCGIParams(target, params);
+		params._runAfterReplace.push(function() {
+			$("#" + id).jqPagination({
+				current_page: crtPage,
+				max_page: maxPage,
+				paged: function(page) {
+					console.log("Switching page to " + page);
+					browserSetAddr(target.replace("%", page));	
+				}
+			});
+		});
+	}
 }
 
 function runJS(dst, text, _p) {
 	_p._runAfterReplace.push(function() {
-		eval(text);
+		try {
+			eval(text);
+		}
+		catch (err) {
+			console.log("Error evaluating:");
+			console.log(text);
+			console.log(err);
+		}
 	});
 }
 
@@ -475,4 +542,42 @@ function getTabIndex(idp, idt) {
 		i = i + 1;
 	});
 	return index;
+}
+
+function makeTable(id, options) {
+	$("#" + id).columns(options);
+	$("#" + id + " .ui-columns-pager").append('\
+			<div id="' + id + '-pager" class="pagination">\
+				<a href="#" class="first" data-action="first">&laquo;</a>\
+				<a href="#" class="previous" data-action="previous">&lsaquo;</a>\
+				<input type="text" readonly="readonly" data-max-page="40" />\
+				<a href="#" class="next" data-action="next">&rsaquo;</a>\
+				<a href="#" class="last" data-action="last">&raquo;</a>\
+			</div>');
+	var total = $("#" + id).columns("getTotal");
+	$("#" + id + "-pager").jqPagination({
+		current_page: $("#" + id).columns("getPage"),
+		max_page: Math.ceil(total / 20),
+		paged: function(page) {
+			console.log("Switching page to " + page);
+			$("#" + id).columns("gotoPage", page);	
+		}
+	});
+}
+
+function formatAppListId(id) {
+	return '<a href="#browser?type=appinstance&id=' + id + '">' + id + '</a>';
+}
+
+function formatAppListHost(host) {
+	return host;
+}
+
+function formatAppListWorker(w, row) {
+	if (w) {
+		return '<a href="#browser?type=worker&host=' + row.host + '&id=' + w + '">' + w + '</a>';
+	}
+	else {
+		return "";
+	}
 }

@@ -62,6 +62,9 @@ public class AppListBuilder {
     public void getData(JSONEncoder e) {
         SortedSet<ApplicationItem> sorted = getInstances(name, stateFilter, hostFilter);
         
+        if (pageSize == -1) {
+            pageSize = sorted.size();
+        }
         int start = (page - 1) * pageSize;
         int index = 0;
         e.beginMap();
@@ -134,6 +137,9 @@ public class AppListBuilder {
         SortedSet<ApplicationItem> sorted = new TreeSet<ApplicationItem>(BrowserDataBuilder.APP_TIME_COMPARATOR);
         if (!name.isEmpty()) {
             List<SortedSet<ApplicationItem>> l = byName.get(name);
+            if (l == null) {
+                throw new RuntimeException("No such app name: '" + name + "'");
+            }
             getInstances(sorted, l, stateFilter, hostFilter);
         }
         else {
