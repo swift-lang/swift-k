@@ -52,15 +52,19 @@ function browserDisable() {
 }
 
 function browserSetAddr(addr) {
-	console.log("browserSetAddr(" + addr + ")");
-	document.browserAddr = addr;
-	document.browserDisplayTemplate = "browser-template-" + getCGIParam(addr, "type", "apps");
-	if (window.location.href != addr) {
-		window.location.href = addr;
+	if (document.browserAddr == addr) {
+		console.log("browserSetAddr(" + addr + ") (already there)");
 	}
-	stopUpdatesByID("browser");
-	console.log(new Error());
-	registerUpdate("browser", "browser.state" + addr, browserDataReceived);
+	else {
+		console.log("browserSetAddr(" + addr + ")");
+		document.browserAddr = addr;
+		document.browserDisplayTemplate = "browser-template-" + getCGIParam(addr, "type", "apps");
+		if (window.location.href != addr) {
+			window.location.href = addr;
+		}
+		stopUpdatesByID("browser");
+		registerUpdate("browser", "browser.state" + addr, browserDataReceived);
+	}
 }
 
 function browserGetAddr() {
