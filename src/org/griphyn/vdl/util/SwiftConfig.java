@@ -55,6 +55,7 @@ import org.globus.swift.catalog.site.SwiftContactSet;
 import org.globus.swift.catalog.types.SysInfo;
 import org.griphyn.vdl.util.ConfigTree.Node;
 
+import com.ibm.jsse2.sc;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigIncludeContext;
@@ -459,6 +460,9 @@ public class SwiftConfig implements Cloneable {
         if (all != null) {
             mergeEnvsToApps(sc, all.getEnv());
             mergePropsToApps(sc, all.getProperties());
+        }
+        if (all.getExecutable() == null) {
+            sc.removeApplication(all);
         }
     }
         
