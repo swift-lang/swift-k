@@ -93,6 +93,16 @@ typedef struct {
   coaster_staging_mode mode;
 } coaster_stage_entry;
 
+typedef struct {
+  coaster_job_status_code code;
+  time_t timestamp; // Timestamp of status change
+  const char *message; // Message associated with status, can be null
+  size_t message_len;
+
+  const char *exception; // Description of remote exception, can be null
+  size_t exception_len;
+} coaster_job_status;
+
 // Set appropriate macro to specify that we shouldn't throw exceptions
 #ifdef __cplusplus
 #define COASTER_THROWS_NOTHING throw()
@@ -300,12 +310,24 @@ coaster_job_id
 coaster_job_get_id(const coaster_job *job) COASTER_THROWS_NOTHING;
 
 /*
- * Get status of a submitted job.
+ * Get status code of a submitted job.
  * Return COASTER_ERROR_INVALID if job is invalid or has no status.
  */
 coaster_rc
-coaster_job_status_code(const coaster_job *job, coaster_job_status *code)
-                COASTER_THROWS_NOTHING;
+coaster_job_get_status_code(const coaster_job *job,
+    coaster_job_status_code *code) COASTER_THROWS_NOTHING;
+
+/*
+ * Get status and associated data for submitted job.
+ *
+ * Returned strings are pointers to job state, so are only valid until
+ * job is freed.
+ *
+ * Return COASTER_ERROR_INVALID if job is invalid or has no status.
+ */
+coaster_rc
+coaster_job_get_status(const coaster_job *job,
+      coaster_job_status *status) COASTER_THROWS_NOTHING;
 
 /*
  * Get stdin/out of completed job.
