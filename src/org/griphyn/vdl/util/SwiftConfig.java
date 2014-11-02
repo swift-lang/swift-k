@@ -459,9 +459,9 @@ public class SwiftConfig implements Cloneable {
         if (all != null) {
             mergeEnvsToApps(sc, all.getEnv());
             mergePropsToApps(sc, all.getProperties());
-        }
-        if (all.getExecutable() == null) {
-            sc.removeApplication(all);
+            if (all.getExecutable() == null) {
+                sc.removeApplication(all);
+            }
         }
     }
         
