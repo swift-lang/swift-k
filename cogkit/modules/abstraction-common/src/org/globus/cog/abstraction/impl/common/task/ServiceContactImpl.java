@@ -115,13 +115,22 @@ public class ServiceContactImpl implements ServiceContact {
         int pathsep = contact.indexOf('/', schemesep);
         if (portsep != -1 && (pathsep == -1 || portsep < pathsep)) {
             host = contact.substring(schemesep, portsep);
+            String sPort;
             if (pathsep == -1) {
-                port = Integer.parseInt(contact.substring(portsep + 1));
+                sPort = contact.substring(portsep + 1);
                 path = null;
             }
             else {
-                port = Integer.parseInt(contact.substring(portsep + 1, pathsep));
+                sPort = contact.substring(portsep + 1, pathsep);
                 path = contact.substring(pathsep);
+            }
+            if (!sPort.equals("")) {
+                try {
+                    port = Integer.parseInt(sPort);
+                }
+                catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid port number: '" + sPort + "'");
+                }
             }
         }
         else if (pathsep != -1) {

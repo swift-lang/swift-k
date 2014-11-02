@@ -29,6 +29,7 @@
 package org.griphyn.vdl.util;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -45,6 +46,7 @@ import com.typesafe.config.ConfigOrigin;
 public abstract class ConfigPropertyType<T> {
     public static final ConfigPropertyType<Object> BOOLEAN = new CPTBoolean();
     public static final ConfigPropertyType<String> STRING = new CPTString();
+    public static final ConfigPropertyType<String> URI = new CPTURI();
     public static final ConfigPropertyType<Object> INT = new Int();
     public static final ConfigPropertyType<Object> THROTTLE = new Throttle();
     public static final ConfigPropertyType<String> PORT_RANGE = new PortRange();
@@ -147,6 +149,30 @@ public abstract class ConfigPropertyType<T> {
         @Override
         public String toString() {
             return "string";
+        }
+    }
+    
+    private static class CPTURI extends ConfigPropertyType<String> {
+        @Override
+        public Object checkValue(String propName, String value, ConfigOrigin loc) {
+            try {
+                URI u = new URI(value);
+                return value;
+            }
+            catch (Exception e) {
+                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+                    propName + "'");
+            }
+        }
+
+        @Override
+        public ConfigPropertyType<?> getBaseType() {
+            return STRING;
+        }
+        
+        @Override
+        public String toString() {
+            return "URI";
         }
     }
     
