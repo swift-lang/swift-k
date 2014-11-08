@@ -20,45 +20,26 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Collection;
-
-import k.rt.Stack;
-
-import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.AbsFile;
 
-public class RemoteFileNames extends SwiftFunction {
-    private ArgRef<Collection<Object>> files;
-        
-    @Override
-    protected Signature getSignature() {
-        return new Signature(params("files"));
-    }
+public class RemoteFileNamesWS extends RemoteFileNames {
 
     @Override
-    public Object function(Stack stack) {
-        Collection<Object> files = this.files.getValue(stack);
-        StringBuilder sb = new StringBuilder();
-        for (Object o : files) {
-            if (sb.length() > 0) {
-                sb.append('|');
-            }
-            if (o instanceof String) {
-                appendOne(sb, (String) o);
-            }
-            else {
-                appendOne(sb, (AbsFile) o);
-            }
-        }
-        return sb.toString();
-    }
-
     protected void appendOne(StringBuilder sb, AbsFile f) {
+        if ("file".equals(f.getProtocol())) {
+            sb.append(f.getPath());
+        }
+        else {
+            sb.append(f.toString());
+        }
+        sb.append('!');
         sb.append(PathUtils.remotePathName(f));
     }
 
+    @Override
     protected void appendOne(StringBuilder sb, String s) {
+        sb.append(s);
+        sb.append('!');
         sb.append(PathUtils.remotePathName(s));
     }
 }

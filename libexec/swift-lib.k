@@ -130,6 +130,7 @@ namespace(swift) {
 	export(appStageouts, def("org.griphyn.vdl.karajan.lib.AppStageouts"))
 	export(remoteFileName, def("org.griphyn.vdl.karajan.lib.RemoteFileName"))
 	export(remoteFileNames, def("org.griphyn.vdl.karajan.lib.RemoteFileNames"))
+	export(remoteFileNamesWS, def("org.griphyn.vdl.karajan.lib.RemoteFileNamesWS"))
 	export(isDone, def("org.griphyn.vdl.karajan.lib.IsDone"))
 	export(mark, def("org.griphyn.vdl.karajan.lib.Mark"))
 	export(parameterlog, def("org.griphyn.vdl.karajan.lib.Parameterlog"))

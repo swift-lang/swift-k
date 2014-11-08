@@ -10,6 +10,12 @@ SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
 SWIFT:HOME := contextAttribute("SWIFT:HOME")
 SITEDIR_KEEP := configProperty("keepSiteDir")
 
+SWIFT:DEBUG_DIR_PREFIX := contextAttribute("SWIFT:DEBUG_DIR_PREFIX")
+DEBUG_DIR := "{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
+
+if (!file:exists(DEBUG_DIR)) {
+	task:dir:make(DEBUG_DIR)
+}
 
 namespace(wrapperStaging) {
 	
@@ -53,17 +59,6 @@ namespace(wrapperStaging) {
 		}
 	}
 	
-	initDDir := function() {
-		ddir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
-		
-		once(ddir) {
-			if(!file:exists(ddir)) {
-				task:dir:make(ddir)
-			}
-		}
-		ddir
-	}
-
 	stageWrapperParams := function(jobid, jobdir, wrapfile, dir, host) {
 		log(LOG:INFO, "START jobid={jobid} - staging in wrapper params"),
 		(provider, srchost, destdir, filename, srcdir) := splitFileURL(wrapfile, dir, destdir="parameters/{jobdir}")
@@ -98,7 +93,6 @@ namespace(wrapperStaging) {
 		function(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
 			stagein, stageout, replicationGroup, replicationChannel) {
 
-			ddir := initDDir()
 			wfdir := try {
 				initSharedDir(progress, rhost)
 			}
@@ -108,7 +102,7 @@ namespace(wrapperStaging) {
 
 			(jobid, jobdir) := generateJobId(tr)
 			
-			jobdir := "{ddir}/jobs/{jobdir}/{jobid}/"
+			jobdir := "{DEBUG_DIR}/jobs/{jobdir}/{jobid}/"
 
 			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 
@@ -117,29 +111,29 @@ namespace(wrapperStaging) {
 
 			wrapfile := "{jobdir}/_paramfile"
 
-			stdout := if (stdout == null, "stdout.txt", getFieldValue(stdout))
-			stderr := if (stderr == null, "stderr.txt", getFieldValue(stderr)),
-			
-			(localFileDirs, remoteFileDirs, inFiles, outFiles) := getStagingInfo(stagein, stageout)
+			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout),
+			(stdins, stdouts, stderrs) := getStandardFilesInfo(stdin, stdout, stderr)
 
 			os := siteProfile(rhost, "OS")
+			eargs := expandArguments(arguments)
 			
 			scratch := siteProfile(rhost, "scratch")
 
-			if(wrapperMode == "files") {
+			if (wrapperMode == "files") {
 				file:write(wrapfile) {
 					"-e ", executable(tr, rhost),
-					"\n-out ", stdout,
-					"\n-err ", stderr,
-					"\n-i ", if (stdin != null, getFieldValue(stdin)),
-					"\n-d ", str:join(remoteFileDirs, "|"),
-					"\n-if ", str:join(remoteFileNames(inFiles), "|"),
-					"\n-of ", str:join(remoteFileNames(outFiles), "|"),
+					"\n-out ", stdouts,
+					"\n-err ", stderrs,
+					"\n-i ", if (stdin != null, stdins),
+					"\n-d ", remoteFileNames(fileDirs),
+					"\n-if ", remoteFileNamesWS(inFiles),
+					"\n-of ", remoteFileNamesWS(outFiles),
+					"\n-cf ", remoteFileNamesWS(outCollect),
 					"\n-wt", WRAPPER_LOG_ALWAYS_TRANSFER,
 					"\n-sk", SITEDIR_KEEP,
 					"\n-cdmfile ", cdm:file(),
 					"\n-status ", statusMode,
-					for(a, arguments) {
+					for(a, eargs) {
 						"\n-a ", a
 					}
 				}
@@ -181,6 +175,7 @@ namespace(wrapperStaging) {
 				}
 				if (wrapperMode == "args") {
 					swift:execute(
+						progress,
 						siteProfile(rhost, "wrapperInterpreter"),
 						list(
 							siteProfile(rhost, "wrapperInterpreterOptions"),
@@ -190,17 +185,18 @@ namespace(wrapperStaging) {
 							"-jobdir", jobdir,
 							"-scratch", scratch,
 							"-e", executable(tr, rhost),
-							"-out", stdout,
-							"-err", stderr,
-							"-i", if (stdin != null, getFieldValue(stdin)),
-							"-d", str:join(remoteFileDirs, "|"),
-							"-if", str:join(remoteFileNames(inFiles), "|"),
-							"-of", str:join(remoteFileNames(outFiles), "|"),
+							"-out", stdouts,
+							"-err", stderrs,
+							"-i", if (stdin != null, stdins),
+							"-d", remoteFileNames(fileDirs),
+							"-if", remoteFileNamesWS(inFiles),
+							"-of", remoteFileNamesWS(outFiles),
+							"-cf", remoteFileNamesWS(outCollect),
 							"-wt", WRAPPER_LOG_ALWAYS_TRANSFER,
 							"-sk", SITEDIR_KEEP,
 							"-cdmfile", cdm:file(),
 							"-status", statusMode,
-							"-a", if (arguments != null, each(arguments))
+							"-a", if (arguments != null, each(eargs))
 						)
 						directory=wfdir
 						redirect=false
@@ -232,6 +228,9 @@ namespace(wrapperStaging) {
 				doRestartLog(stageout)
 				
 				log(LOG:DEBUG, "JOB_END jobid={jobid}")
+				/* empty collect list */
+				// TODO
+				[] 
 			}
 			else catch(prev) {
 				if (matches(prev, "^Abort$")) {
@@ -248,7 +247,7 @@ namespace(wrapperStaging) {
 						throw(exception)
 					}
 					
-					outs := readStandardFiles(jobdir, stdout, stderr)
+					outs := readStandardFiles(jobdir, stdouts, stderrs)
 					
 					throw(
 						exception(
