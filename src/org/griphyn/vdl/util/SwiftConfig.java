@@ -854,7 +854,7 @@ public class SwiftConfig implements Cloneable {
             }
             int start = sb.length();
             for (int i = 0; i < indentationLevel; i++) {
-                sb.append("    ");
+                sb.append('\t');
             }
             sb.append(key);
             sb.append(": ");
