@@ -286,7 +286,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				catch (NoSuchResourceException ex) {
 				    if (e.task instanceof ContactAllocationTask) {
 				    	failTask(e, "The application \"" + getTaskConstraints(e).getConstraint("tr")
-				    		+ "\" is not available in on any of the sites", ex);
+				    		+ "\" is not available on any of the sites", ex);
 				    }
 				    else {
 				        failTask(e, ex.getMessage(), ex);
