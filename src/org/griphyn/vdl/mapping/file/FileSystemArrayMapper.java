@@ -23,18 +23,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Type;
 
 public class FileSystemArrayMapper extends AbstractFileMapper {    
-    private Map<Comparable<?>, String> filenames = new HashMap<Comparable<?>, String>();
+    private Map<Comparable<?>, String> filenames;
     private int count = 0;
 
     @Override
     public String getName() {
         return "FilesysMapper";
+    }
+
+    @Override
+    public Collection<Path> existing(FileSystemLister fsl) {
+        filenames = new HashMap<Comparable<?>, String>();
+        return super.existing(fsl);
     }
 
     @Override
@@ -51,6 +58,9 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 	
     @Override
 	public PhysicalFormat map(Path path) throws InvalidPathException {
+        if (filenames == null) {
+            throw new InvalidPathException("The FilesysMapper could not map " + path);
+        }
 		if (path.size() != 1) {
 			throw new InvalidPathException(path);
 		}

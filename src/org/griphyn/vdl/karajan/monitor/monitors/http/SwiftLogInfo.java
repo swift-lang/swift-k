@@ -69,43 +69,73 @@ public class SwiftLogInfo {
         else {
             System.out.print("Parsing " + logFileName + "...");
         }
+        StringBuilder crt = new StringBuilder();
         String line = null;
         while (follow || (line = br.readLine()) != null) {
             if (line == null) {
                 Thread.sleep(FOLLOW_SLEEP_TIME);
                 continue;
             }
-            String[] els = line.split("\\s+", 5);
-            if (els.length < 5) {
-                continue;
+            if (isMessageHeader(line)) {
+                firstLogTime = commit(crt, firstLogTime, firstActualTime, ap);
             }
-            
-            long time;
-            try {
-                time = SDF.parse(els[0] + " " + els[1]).getTime();
-            }
-            catch (ParseException e) {
-                continue;
-            }
-            
-            if (rate != 0) {
-                if (firstLogTime == -1) {
-                    firstLogTime = time;
-                }
-                long now = System.currentTimeMillis();
-                // this event is supposed to happen at this relative time
-                long deadline = (long) ((time - firstLogTime) / rate);
-                long delay = deadline - (now - firstActualTime);
-                System.out.println("deadline: " + deadline + ", now: " + (now - firstActualTime));
-                if (delay >= 0) {
-                    Thread.sleep(delay);
-                }
-            }
-                        
-            LoggingEvent le = new LoggingEvent(els[3], Logger.getLogger(els[3]), time, getLevel(els[2]), els[4], null);
-            ap.doAppend(le);
+            append(crt, line);
         }
+        commit(crt, firstLogTime, firstActualTime, ap);
         System.out.println("done");
+    }
+
+    private long commit(StringBuilder crt, long firstLogTime, long firstActualTime, MonitorAppender ap) 
+            throws InterruptedException, ParseException {
+        if (crt.length() == 0) {
+            return firstLogTime;
+        }
+        String msg = crt.toString();
+        crt.delete(0, crt.length());
+        
+        String[] els = msg.split("\\s+", 5);
+        long time = SDF.parse(els[0] + " " + els[1]).getTime();
+        
+        if (rate != 0) {
+            if (firstLogTime == -1) {
+                firstLogTime = time;
+            }
+            long now = System.currentTimeMillis();
+            // this event is supposed to happen at this relative time
+            long deadline = (long) ((time - firstLogTime) / rate);
+            long delay = deadline - (now - firstActualTime);
+            System.out.println("deadline: " + deadline + ", now: " + (now - firstActualTime));
+            if (delay >= 0) {
+                Thread.sleep(delay);
+            }
+        }
+                    
+        LoggingEvent le = new LoggingEvent(els[3], Logger.getLogger(els[3]), time, getLevel(els[2]), els[4], null);
+        ap.doAppend(le);
+        
+        return firstLogTime;
+    }
+
+    private void append(StringBuilder crt, String line) {
+        if (crt.length() > 0) {
+            crt.append('\n');
+        }
+        crt.append(line);
+    }
+
+    private boolean isMessageHeader(String line) {
+        String[] els = line.split("\\s+", 5);
+        if (els.length < 5) {
+            return false;
+        }
+        
+        try {
+            SDF.parse(els[0] + " " + els[1]).getTime();
+        }
+        catch (ParseException e) {
+            return false;
+        }
+        return true;
     }
 
     public static void main(String[] args) {
@@ -124,6 +154,11 @@ public class SwiftLogInfo {
             if (ap.isPresent("h")) {
                 ap.usage();
                 System.exit(0);
+            }
+            if (!ap.isPresent(ArgumentParser.DEFAULT)) {
+                System.err.println("Missing log file name");
+                ap.usage();
+                System.exit(1);
             }
             SwiftLogInfo sli = new SwiftLogInfo(ap.getStringValue(ArgumentParser.DEFAULT), 
                 ap.isPresent("f"), ap.getFloatValue("rt", 0));

@@ -60,6 +60,7 @@ public class SummaryDataBuilder extends StateDataBuilder {
         e.writeMapItem("timeLeftFormatted", state.getEstimatedTimeLeftFormatted());
         e.writeMapItem("elapsedTimeFormatetd", state.getElapsedTimeFormatted());
         e.writeMapItem("progressString", state.getGlobalProgressString());
+        e.writeMapItem("runFinished", state.getRunFinished());
         
         SummaryItem summary = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
         if (summary != null) {

@@ -459,6 +459,9 @@ public class SwiftConfig implements Cloneable {
         if (all != null) {
             mergeEnvsToApps(sc, all.getEnv());
             mergePropsToApps(sc, all.getProperties());
+            if (all.getExecutable() == null) {
+                sc.removeApplication(all);
+            }
         }
     }
         
@@ -851,7 +854,7 @@ public class SwiftConfig implements Cloneable {
             }
             int start = sb.length();
             for (int i = 0; i < indentationLevel; i++) {
-                sb.append("    ");
+                sb.append('\t');
             }
             sb.append(key);
             sb.append(": ");

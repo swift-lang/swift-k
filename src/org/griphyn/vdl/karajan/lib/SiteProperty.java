@@ -124,7 +124,8 @@ public class SiteProperty extends SwiftFunction {
                     return defval;
                 }
                 else {
-                	throw new ExecutionException(this, "Missing profile: " + name);
+                	throw new ExecutionException(this, bc.getName() + 
+                			": missing required site property: '" + name + "'");
                 }
             }
             else {

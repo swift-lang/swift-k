@@ -38,7 +38,7 @@ class RemoteCoasterException {
 	public:
 		RemoteCoasterException(const char* data, int len);
 		virtual ~RemoteCoasterException();
-		std::string& str();
+		const std::string& str() const;
 };
 
 }

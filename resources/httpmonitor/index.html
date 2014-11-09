@@ -6,6 +6,7 @@
 		<link href="css/spectrum.css" rel="stylesheet" type="text/css" />
 		<link href="css/theme-light.css" rel="stylesheet" type="text/css" />
 		<link href="css/theme-light/jquery-ui-1.10.3.custom.css" rel="stylesheet" />
+		<link href="css/columns-clean.css" rel="stylesheet" />
 		<link href="css/jqpagination.css" rel="stylesheet" />
 		<script src="js/jquery-1.9.1.js"></script>
 		<script src="js/jquery-ui-1.10.3.custom.js"></script>
@@ -18,11 +19,11 @@
         <script language="javascript" type="text/javascript" src="js/jquery.flot.pie.js"></script>
         <script language="javascript" type="text/javascript" src="js/jquery.flot.crosshair.min.js"></script>
         <script language="javascript" type="text/javascript" src="js/jquery.flot.stack.js"></script>
-        <script language="javascript" type="text/javascript" src="js/jquery.loadTemplate-1.4.4.min.js"></script>
         <script language="javascript" type="text/javascript" src="js/spectrum.js"></script>
         <script language="javascript" type="text/javascript" src="js/jquery.noty.packaged.js"></script>
         <script language="javascript" type="text/javascript" src="js/jquery.jqpagination.js"></script>
         <script language="javascript" type="text/javascript" src="js/jquery.sparkline.js"></script>
+        <script language="javascript" type="text/javascript" src="js/jquery.columns.min.js"></script>
         <script type="text/javascript" src="js/async.js"></script>
 		<script type="text/javascript" src="js/plots.js"></script>
 		<script type="text/javascript" src="js/page.js"></script>
@@ -76,13 +77,13 @@
 			</div>
 			<div id="tab-tasks"></div>
 		</div>
-		<script type="text/html" id="appSummary-template">
+		<script type="text/html" class="template" id="appSummary-template" params="id, state" mode="append">
 			<tr>
 				<td>
-					<span class="label nowrap" data-content="state">:</span>
+					<span class="label nowrap">{$state}</span>
 				</td>
 				<td width="100%">
-					<div class="pbi" data-id="id"><span class="pbl"></span></div>
+					<div class="pbi" id="{$id}"><span class="pbl"></span></div>
 				</td>
 			</tr>
 		</script>
@@ -94,10 +95,10 @@
 				addPlot();
 			});
 			for (var i = 0; i < summaryAppStates.length; i++) {
-				$("#appSummary").loadTemplate("#appSummary-template", {
+				display("appSummary", "appSummary-template", {
 					state: summaryAppStates[i],
 					id: "pb" + i
-				}, {append: true});
+				});
 			}
 		
 			registerUpdate("summary", "summary.state", update);
@@ -140,13 +141,9 @@
 				}
 				else if (data.error != null) {
 					noty({text: data.error});
-					stopUpdates();
+					stopUpdatesByID("summary");
 				}
 				else {
-					s = "";
-					for (var k in data) {
-						s = s + "\n" + k + ": " + data[k];
-					}
 					var max = parseInt(data["maxCount"]);
 					for (i = 0; i < summaryAppStates.length; i++) {
 						if (data[summaryAppStates[i]] != null) {
@@ -165,6 +162,11 @@
 					$("#pbi-main").progressbar("option", "max", parseInt(data["total"]));
 					$("#pbi-main").progressbar("option", "value", parseInt(data["completed"]));
 					$(".pbl", "#pbi-main").text(data["progressString"]);
+					
+					if (data["runFinished"]) {
+						console.log("Run finished. Stopping updates.");
+						stopUpdatesByID("summary");
+					}
 				}
 			}
 			
@@ -218,20 +220,20 @@
 						countPerSitePlot("#appdetail-count-per-site", _p.data.sites);
 						timePerSitePlot("#appdetail-time-per-site", _p.data.sites);
 					</js>
-					<proc name="p1" params="title, pdata, host">
+					<proc name="p1" params="title, pdata, host, appname">
 						<tr><td colspan="2"><h2>{$title}</h2></td></tr>
 						<tr><td colspan="2">
-							Total: <a tref="#browser?type=applist&amp;name={$pdata.name}&amp;host={$host}">{$pdata.count} instances</a>,
+							Total: <a tref="#browser?type=applist&amp;name={$appname}&amp;host={$host}">{$pdata.count} instances</a>,
 							<if test="{$pdata.completedCount == 0}">
 								<then>Completed: 0 instances,</then>
 								<else>
-									Completed: <a tref="#browser?type=applist&amp;name={$pdata.name}&amp;host={$host}&amp;state=10">{$pdata.completedCount} instances</a>,
+									Completed: <a tref="#browser?type=applist&amp;name={$appname}&amp;host={$host}&amp;state=10">{$pdata.completedCount} instances</a>,
 								</else>
 							</if>
 							<if test="{$pdata.failedCount == 0}">
 								<then>Failed: 0 instances,</then>
 								<else>
-									Failed: <a tref="#browser?type=applist&amp;name={$pdata.name}&amp;host={$host}&amp;state=7">{$pdata.failedCount} instances</a>
+									Failed: <a tref="#browser?type=applist&amp;name={$appname}&amp;host={$host}&amp;state=7">{$pdata.failedCount} instances</a>
 								</else>
 							</if>
 						</td></tr>
@@ -271,14 +273,14 @@
 						</tr>
 						<js>
 							histogram("#appdetail-c-time-dist-{$host}", [{$pdata.completedTimeDist}], {$pdata.distMinTime}, 
-								{$pdata.distMaxTime}, COMPLETED_COLOR);
+								{$pdata.distMaxTime}, COMPLETED_COLOR, true);
 							histogram("#appdetail-f-time-dist-{$host}", [{$pdata.failedTimeDist}], {$pdata.distMinTime}, 
-								{$pdata.distMaxTime}, FAILED_COLOR);
+								{$pdata.distMaxTime}, FAILED_COLOR, true);
 						</js>
 					</proc>
-					<call name="p1" title="All sites combined" pdata="{$data}" host="{null}"/>
+					<call name="p1" title="All sites combined" pdata="{$data}" host="{null}" appname="{$data.name}"/>
 					<for name="site" in="{$data.sites}">
-						<call name="p1" title="Site: {$site.name}" pdata="{$site}" host="{$site.name}"/>
+						<call name="p1" title="Site: {$site.name}" pdata="{$site}" host="{$site.name}" appname="{$data.name}"/>
 					</for>
 				</table>
 			</div>
@@ -286,47 +288,24 @@
 		<script type="text/xml" class="template" id="browser-template-applist" params="data" mode="replace">
 			<div>
 				<h1>{$data.title}</h1>
-				<table class="bordered ui-corner-all">
-					<tr>
-						<td class="paging">
-							<pager id="applistpager" maxPage="{$data.pages}" crtPage="{$data.crtPage}" 
-								target="#browser?type=applist&amp;name={$data.name}&amp;state={$data.state}&amp;host={$data.host}&amp;page=%"/>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<table class="alt-shaded collapsed-border" id="app-names-table">
-								<tr id="app-names-heading-row" class="ui-widget-header">
-									<th>ID</th><th>State</th><th>Start Time</th><th>Run Time (min)</th><th>Host (/ Worker)</th><th>Arguments</th>
-								</tr>
-								<for name="s" in="{$data.data}">
-									<tr>
-										<td><a tref="#browser?type=appinstance&amp;id={$s.id}">{$s.id}</a></td>
-										<td>{appStates[$s.state]}</td>
-										<td>{formatTimestamp($s.startTime)}</td>
-										<if test="{$s.runTime == 0}">
-											<then>
-												<td>N/A</td>
-											</then>
-											<else>
-												<td class="numeric">{formatInterval($s.runTime)}</td>
-											</else>
-										</if>
-										<td>
-											<a tref="#browser?type=host&amp;name={$s.host}">{$s.host}</a>
-											<if test="{'worker' in $s}">
-												<then>
-													/ <a tref="#browser?type=worker&amp;host={$s.host}&amp;id={$s.worker}">{$s.worker}</a>
-												</then>
-											</if>
-										</td>
-										<td class="numeric">{cutString($s.args, 40)}</td>
-									</tr>
-								</for>
-							</table>
-						</td>
-					</tr>
-				</table>
+				<div id="app-table">
+				</div>
+				<js>
+					makeTable("app-table", \{
+							data: _p.data.data,
+							schema: [
+								\{header: "ID", key: "id", formatter: formatAppListId},
+								\{header: "State", key: "state", formatter: function(x) \{return appStates[x]}},
+								\{header: "Start Time", key: "startTime", formatter: formatTimestamp},
+								\{header: "Run Time", key: "runTime", formatter: formatInterval},
+								\{header: "Host", key: "host", formatter: formatAppListHost},
+								\{header: "Worker", key: "worker", formatter: formatAppListWorker},
+								\{header: "Arguments", key: "args", formatter: function(x) \{return cutString(x, 40)}},
+							],
+							size: 20,
+							sortBy: "startTime",
+					});
+				</js>
 			</div>
 		</script>
 		<script type="text/xml" class="template" id="browser-template-appinstance" params="data" mode="replace">

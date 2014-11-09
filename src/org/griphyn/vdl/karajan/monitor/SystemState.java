@@ -46,7 +46,7 @@ public class SystemState {
     private String projectName;
     private final Runtime runtime;
     private SortedSet<TimerTaskEntry> tasks;
-    private boolean replicationEnabled, resumed;
+    private boolean replicationEnabled, resumed, runFinished;
     
     private static final Unit BYTES = new Unit.P2("B");
 
@@ -297,6 +297,14 @@ public class SystemState {
 
     public void setResumed(boolean resumed) {
         this.resumed = resumed;
+    }
+
+    public boolean getRunFinished() {
+        return runFinished;
+    }
+
+    public void setRunFinished(boolean runFinished) {
+        this.runFinished = runFinished;
     }
 
     public long getCurrentTime() {

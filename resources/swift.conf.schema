@@ -70,7 +70,7 @@ site."*" {
 		_type: "?Object"
 		type: "String"
 		URL {
-			_type: "?String"
+			_type: "?URI"
 			_default: null
 		}
 		options: "?Object"
@@ -78,7 +78,7 @@ site."*" {
 
 	execution {
 		type: "String"
-		URL: "?String"
+		URL: "?URI"
 		jobManager: "?String"
 		options {
 			# Coasters

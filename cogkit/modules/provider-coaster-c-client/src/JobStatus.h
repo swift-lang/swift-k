@@ -58,8 +58,8 @@ class JobStatus {
 		CoasterJobStatusCode getStatusCode() const;
 		time_t getTime();
 		const std::string* getMessage() const;
-		RemoteCoasterException* getException();
-		const JobStatus* getPreviousStatus();
+		RemoteCoasterException* getException() const;
+		const JobStatus* getPreviousStatus() const;
 		void setPreviousStatus(JobStatus* prev);
 		static const char* statusCodeToStr(CoasterJobStatusCode code);
 		bool isTerminal();

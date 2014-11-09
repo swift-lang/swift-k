@@ -56,18 +56,20 @@ debug() {
 }
 
 localPath() {
-        # remove protocol://
-        PATH="${1#*://}"
-        # Remove hostname
-        PATH="${PATH#*/}"
-        # remove leading "/" if present
-        PATH="${PATH#/}"
-	log "Transformed $1 to $PATH"
+    # remove protocol://
+    PATH="${1#*!}"
+	log "localPath($1) -> $PATH"
+	echo $PATH
+}
+
+remotePath() {
+	PATH="${1%!*}"
+	log "remotePath($1) -> $PATH"
 	echo $PATH
 }
 
 stagein() {
-	SRC=$1
+	SRC=`remotePath $1`
 	DST=$2
 	case $SRC in
 		*://*)
@@ -81,7 +83,7 @@ stagein() {
 	
 	case $SRC in
 		file://*)
-			SRC=${SRC#file://*/}
+			SRC=${SRC#file://}
 			log "Copying $SRC to $DST"
 			if [ ! -f $SRC ]; then
 				fail 254 "Cannot stage in $SRC. File not found."
@@ -94,16 +96,16 @@ stagein() {
 			if [ ! -f $SRC ]; then
 				fail 254 "Cannot stage in $SRC. File not found."
 			fi
-                        dd if=$SRC of=$DST bs=10M 2>&1 >& "$INFO"
+            dd if=$SRC of=$DST bs=10M 2>&1 >& "$INFO"
 			;;
-                direct://*)
-                	SRC=${SRC#direct://}
-                        log "Linking $SRC to $DST"
-                        if [ ! -f $SRC ]; then
+        direct://*)
+            SRC=${SRC#direct://}
+			log "Linking $SRC to $DST"
+			if [ ! -f $SRC ]; then
 				fail 245 "Cannot stage in $SRC. File not found."
 			fi
-                        ln -s $SRC $DST 2>&1 >& "$INFO"
-                        ;;
+            ln -s $SRC $DST 2>&1 >& "$INFO"
+            ;;
 		http://*)
 			log "Fetching $SRC using wget"
 			wget $SRC -O $DST 2>&1 >& "$INFO"
@@ -119,7 +121,7 @@ stagein() {
 
 stageout() {
 	SRC=$1
-	DST=$2
+	DST=`remotePath $2`
 	
 	case $DST in
 		*://*)
@@ -188,8 +190,9 @@ checkparamfile() {
 	if [ "$1" == "-p" ]; then
 		PARAMFILE="$SCRATCH/_paramfile"
 		stagein "$URLPREFIX/$2" "$PARAMFILE"
+	else
+		log "No paramfile specified"
 	fi
-	log "paramfile is: $PARAMFILE"
 }
 
 getarg() {
@@ -317,6 +320,7 @@ INFODIR=$SCRATCH
 
 checkEmpty "$JOBDIR" "Missing job directory prefix"
 mkdir -p $INFODIR
+log "Info dir is $INFODIR"
 closeinfo
 
 if [ -z $MPI_RANK ]; then
@@ -359,6 +363,13 @@ shift $SHIFTCOUNT
 
 getarg "-of" "$@"
 OUTF=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-cf" "$@"
+COLLECT=$VALUE
+if [ "X$VALUE" != "X" ]; then
+	fail "Output file collection not supported (yet) with wrapper staging"
+fi
 shift $SHIFTCOUNT
 
 getarg "-wt" "$@"
@@ -476,7 +487,7 @@ if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
 			continue
 		fi
 	
-                stagein $L "$DIR/`localPath $L`"
+        stagein $L "$DIR/`localPath $L`"
 	done
 	
 	if [[ $CDM_FILE != "" ]]; then

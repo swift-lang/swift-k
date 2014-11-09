@@ -137,6 +137,9 @@ public class SwiftConfigSchema {
         if (type.equals("String")) {
             return ConfigPropertyType.STRING;
         }
+        else if (type.equals("URI")) {
+            return ConfigPropertyType.URI;
+        }
         else if (type.equals("Boolean")) {
             return ConfigPropertyType.BOOLEAN;
         }

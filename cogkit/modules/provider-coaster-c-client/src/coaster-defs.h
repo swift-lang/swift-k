@@ -48,7 +48,7 @@ typedef enum CoasterJobStatusCode {
   COASTER_STATUS_STAGE_IN = 16,
   COASTER_STATUS_STAGE_OUT = 17,
   COASTER_STATUS_UNKNOWN = 9999
-} coaster_job_status;
+} coaster_job_status_code;
 
 typedef enum CoasterStagingMode {
   COASTER_STAGE_ALWAYS = 1,

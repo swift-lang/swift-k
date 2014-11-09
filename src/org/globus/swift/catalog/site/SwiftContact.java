@@ -111,4 +111,8 @@ public class SwiftContact extends BoundContact {
         }
         return app;
     }
+
+    public void removeApplication(Application app) {
+        apps.remove(app.getName());
+    }
 }

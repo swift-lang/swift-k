@@ -73,7 +73,7 @@ RemoteCoasterException::~RemoteCoasterException() {
 	delete className;
 }
 
-string& RemoteCoasterException::str() {
+const string& RemoteCoasterException::str() const {
 	return data;
 }
 

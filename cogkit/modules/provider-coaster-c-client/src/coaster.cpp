@@ -582,15 +582,50 @@ coaster_job_get_id(const coaster_job *job) COASTER_THROWS_NOTHING {
 }
 
 coaster_rc
-coaster_job_status_code(const coaster_job *job, coaster_job_status *code)
-                                            COASTER_THROWS_NOTHING {
-  const JobStatus *status;
-  if (job == NULL || (status = job->getStatus()) == NULL) {
+coaster_job_get_status(const coaster_job *job,
+      coaster_job_status_code *code) COASTER_THROWS_NOTHING {
+  const JobStatus *js;
+  if (job == NULL || (js = job->getStatus()) == NULL) {
     return coaster_return_error(COASTER_ERROR_INVALID,
                                 "invalid or unsubmitted job");
   }
 
-  *code = status->getStatusCode();
+  *code = js->getStatusCode();
+  return COASTER_SUCCESS;
+}
+
+coaster_rc
+coaster_job_get_status(const coaster_job *job,
+      coaster_job_status *status) COASTER_THROWS_NOTHING {
+  const JobStatus *js;
+  if (job == NULL || (js = job->getStatus()) == NULL) {
+    return coaster_return_error(COASTER_ERROR_INVALID,
+                                "invalid or unsubmitted job");
+  }
+
+  status->code = js->getStatusCode();
+
+  const string *msg = js->getMessage();
+  if (msg == NULL) {
+    status->message = NULL;
+    status->message_len = 0;
+  }
+  else {
+    status->message = msg->c_str();
+    status->message_len = msg->length();
+  }
+
+  const RemoteCoasterException *re = js->getException();
+  if (re == NULL) {
+    status->exception = NULL;
+    status->exception_len = 0;
+  }
+  else {
+    const string &re_str = re->str();
+    status->exception = re_str.c_str();
+    status->exception_len = re_str.length();
+  }
+
   return COASTER_SUCCESS;
 }
 

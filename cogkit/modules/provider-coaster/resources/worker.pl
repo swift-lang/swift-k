@@ -2627,8 +2627,10 @@ sub checkSubprocessStatus {
 
 	wlog INFO, "$logid Child process $pid terminated. Status is $status.\n";
 	my $s;
-	if (!eof($RD)) {
-		$s = <$RD>;
+	my $l;
+	while (!eof($RD)) {
+		$l = <$RD>;
+		$s = $s.$l;
 	}
 	wlog DEBUG, "$logid Got output from child. Closing pipe.\n";
 	close $RD;
@@ -2749,7 +2751,8 @@ sub processProbes {
 	
 	wlog DEBUG, "Processing probe data\n";
 	
-	while (my $line = <$in>) {
+	my @lines = split /\n/, $in;
+	foreach my $line (@lines) {
 		$line = trim($line);
 		wlog TRACE, "Probe line: $line\n";
 		if ($line eq "") {
@@ -2915,8 +2918,8 @@ sub checkStartProbes {
 
 sub startProbes {
 	asyncRun("probes", -1, sub {
-			my ($errpipe) = @_;
-			runProbes($errpipe);
+			my ($pipe) = @_;
+			runProbes($pipe);
 		},
 		sub {
 			my ($pid) = @_;
@@ -2924,12 +2927,7 @@ sub startProbes {
 		},
 		sub {
 			my ($err, $msg) = @_;
-			if (!$err) {
-				processProbes($msg);
-			}
-			else {
-				queueCmd((nullCB(), "RLOG", "INFO", "Could not run probes: $msg ($err)"));
-			}
+			processProbes($msg);
 		}
 	);
 }

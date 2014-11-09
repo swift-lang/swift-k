@@ -64,20 +64,17 @@ function stateTimesStrip2(id, data) {
 function stateTimesStrip0(id, data, states, legendid) {
 	var x = new Array(states.length);
 	//x[0] = ["State", "Duration"];
-		
 	for (var i = 0; i < states.length; i++) {
 		//x[i] = [{label: STATES_W[states[i]], data: 0.0, color: STATE_COLORS[states[i]]}];
 		//x[i + 1] = [STATES_W[states[i]], 0.0];
 		x[i] = {label: STATES_W[states[i]], color: STATE_COLORS[states[i]], data: [[0.0, 1]]};
 		for (var j = 0; j < data.length; j++) {
-			if (states[i] == data[j].state) {
-				x[i].data[0][0] = data[j].time;
+			if (states[i] == data[j][0]) {
+				x[i].data[0][0] = data[j][1];
 			}
 		}
 	}
 	
-	console.log(x);
-
 	$.plot(id, x , {
 		series: {
 			stack: true,
@@ -85,7 +82,7 @@ function stateTimesStrip0(id, data, states, legendid) {
 				show: true,
 				barWidth: 0.6,
 				horizontal: true,
-				lineWidth: 0,
+				lineWidth: 1,
 				fill: 1
 			}
 		},
@@ -103,15 +100,19 @@ function stateTimesStrip0(id, data, states, legendid) {
 	});
 }
 
-function histogram(id, data, min, max, color) {
+function histogram(id, data, min, max, color, logScale) {
 	var x = new Array(data.length);
 	
 	//console.log("min: " + min + ", max: " + max);
-	
+
+	var ymax = 0;
 	for (var i = 0; i < data.length; i++) {
 		var p = 1.0 * i / data.length;
 		var v = p * (max - min) + min;
-		x[i] = [v, data[i]]; 
+		x[i] = [v, data[i]];
+		if (data[i] > ymax) {
+			ymax = data[i];
+		}
 	}
 	
 	//console.log("Histogram data:");
@@ -119,17 +120,45 @@ function histogram(id, data, min, max, color) {
 	
 	var ds = [{data: x}];
 
-	$.plot(id, ds , {
-		series: {
-			lines: {
-				show: true,
-				fill: true,
-				fillColor: color
+	if (logScale) {
+		$.plot(id, ds , {
+			series: {
+				lines: {
+					show: true,
+					fill: true,
+					fillColor: color
+				},
+				shadowSize: 0
 			},
-			shadowSize: 0
-		},
-		colors: [color]
-	});
+			yaxis: {
+				ticks: [[1, "1"], [10, "10"], [100, "100"], [1000, "1k"], [10000, "10k"], [1e5, "100k"], [1e6, "1m"], [1e7, "10m"]],
+				transform: function(y) {
+					if (y == 0) {
+						return 0;
+					}
+					else {
+						return Math.log(y + 1);
+					}
+				},
+				min: 0,
+				max: ymax
+			},
+			colors: [color]
+		});
+	}
+	else {
+		$.plot(id, ds , {
+			series: {
+				lines: {
+					show: true,
+					fill: true,
+					fillColor: color
+				},
+				shadowSize: 0
+			},
+			colors: [color]
+		});
+	}
 }
 
 function stuffPerSitePlot(id, data, cprop, fprop) {

@@ -26,10 +26,10 @@ import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.processors.AbstractMessageProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.SimpleParser;
 
-public class ConfigurationProcessor extends AbstractMessageProcessor {
+public class CompletionProcessor extends AbstractMessageProcessor {
     
 	public Level getSupportedLevel() {
-		return Level.DEBUG;
+		return Level.INFO;
 	}
 
 	public Class<?> getSupportedSource() {
@@ -38,24 +38,8 @@ public class ConfigurationProcessor extends AbstractMessageProcessor {
 
 	public void processMessage(SystemState state, Object message, Object details) {
 		String msg = String.valueOf(message);
-		SimpleParser p = new SimpleParser(msg);
-		if (p.matchAndSkip("SWIFT_CONFIGURATION")) {
-		    String[] lines = msg.split("\n");
-		    for (String line : lines) {
-		        String[] vc = line.split("#", 2);
-		        String[] kv = vc[0].trim().split(":");
-		        if (kv.length != 2) {
-		            continue;
-		        }
-		        String k = kv[0].trim();
-		        String v = kv[1].trim();
-		        if (k.equals("execution.retries")) {
-		            state.setRetries(Integer.parseInt(v));
-		        }
-		        else if (k.equals("replication.enabled")) {
-		            state.setReplicationEnabled(Boolean.parseBoolean(v));
-		        }
-		    }
+		if (msg.startsWith("Swift finished")) {
+		    state.setRunFinished(true);
 		}
 	}	
 }

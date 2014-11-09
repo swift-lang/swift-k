@@ -283,6 +283,7 @@ public class ArgumentParser {
 	private void addDefaultOrArg(String crt) throws ArgumentParserException {
 	    if (options.containsKey(DEFAULT) && options.get(DEFAULT) == null) {
             options.put(DEFAULT, crt);
+            seen.add(DEFAULT);
         }
         else if (arguments != null) {
             arguments.add(crt);

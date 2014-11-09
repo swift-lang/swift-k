@@ -81,7 +81,7 @@ const string* JobStatus::getMessage() const {
 	return haveMessage ? &message : NULL;
 }
 
-RemoteCoasterException* JobStatus::getException() {
+RemoteCoasterException* JobStatus::getException() const {
 	return exception;
 }
 
@@ -89,7 +89,7 @@ void JobStatus::setPreviousStatus(JobStatus* pprev) {
 	prev = pprev;
 }
 
-const JobStatus* JobStatus::getPreviousStatus() {
+const JobStatus* JobStatus::getPreviousStatus() const {
 	return prev;
 }
 
