@@ -128,8 +128,11 @@ public class FileNameExpander {
         else if (remote) {
             return PathUtils.remotePathName(f);
         }
-        else {
+        else if (isLocal(f) || f.getHost() == null) {
             return f.getPath();
+        }
+        else {
+            return f.getHost() + "/" + f.getPath();
         }
     }
 
