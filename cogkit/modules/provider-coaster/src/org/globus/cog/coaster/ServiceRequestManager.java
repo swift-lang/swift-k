@@ -28,7 +28,6 @@
  */
 package org.globus.cog.coaster;
 
-import org.globus.cog.coaster.handlers.ChannelConfigurationHandler;
 import org.globus.cog.coaster.handlers.EchoHandler;
 import org.globus.cog.coaster.handlers.HeartBeatHandler;
 import org.globus.cog.coaster.handlers.ShutdownHandler;
@@ -41,6 +40,5 @@ public class ServiceRequestManager extends AbstractRequestManager {
 		//addHandler("TEST", TestHandler.class);
 		addHandler("SHUTDOWN", ShutdownHandler.class);
 		addHandler(HeartBeatHandler.NAME, HeartBeatHandler.class);
-		addHandler(ChannelConfigurationHandler.NAME, ChannelConfigurationHandler.class);
 	}
 }

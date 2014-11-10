@@ -104,6 +104,24 @@ public class GSSChannel extends AbstractTCPChannel {
 	public void start() throws ChannelException {
 		connect();
 		super.start();
+		if (isClient()) {
+    		if (streamCompression) {
+                EnumSet<CompressionType> t = EnumSet.noneOf(CompressionType.class);
+                t.add(CompressionType.NONE);
+                t.add(CompressionType.DEFLATE);
+                ChannelConfigurationCommand ccc = new ChannelConfigurationCommand(t);
+                try {
+                    logger.info(this + " requesting stream compression");
+                    ccc.execute(this);
+                }
+                catch (Exception e) {
+                    throw new ChannelException("Failed to configure channel", e);
+                }
+            }
+    		else {
+    		    logger.info(this + " stream compression disabled");
+    		}
+		}
 	}
 
 	protected void connect() throws ChannelException {
@@ -142,14 +160,6 @@ public class GSSChannel extends AbstractTCPChannel {
 				logger.info("Connected to " + contact);
 
 				setName(contact.toString());
-				
-				if (streamCompression) {
-				    EnumSet<CompressionType> t = EnumSet.noneOf(CompressionType.class);
-				    t.add(CompressionType.NONE);
-				    t.add(CompressionType.DEFLATE);
-				    ChannelConfigurationCommand ccc = new ChannelConfigurationCommand(t);
-				    ccc.execute(this);
-				}
 			}
 		}
 		catch (Exception e) {

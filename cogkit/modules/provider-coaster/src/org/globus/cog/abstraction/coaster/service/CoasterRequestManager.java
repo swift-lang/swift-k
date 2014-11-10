@@ -53,6 +53,7 @@ import org.globus.cog.abstraction.impl.file.coaster.handlers.RenameHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.RmdirHandler;
 import org.globus.cog.coaster.AbstractRequestManager;
 import org.globus.cog.coaster.commands.InfoCommand;
+import org.globus.cog.coaster.handlers.ChannelConfigurationHandler;
 import org.globus.cog.coaster.handlers.HeartBeatHandler;
 import org.globus.cog.coaster.handlers.InfoHandler;
 import org.globus.cog.coaster.handlers.ShutdownHandler;
@@ -68,6 +69,7 @@ public class CoasterRequestManager extends AbstractRequestManager {
         addHandler(ServiceShutdownHandler.NAME, ServiceShutdownHandler.class);
         addHandler(WorkerShellHandler.NAME, WorkerShellHandler.class);
         addHandler(ServiceConfigurationHandler.NAME, ServiceConfigurationHandler.class);
+        addHandler(ChannelConfigurationHandler.NAME, ChannelConfigurationHandler.class);
         
         addHandler(ExistsCommand.NAME, ExistsHandler.class);
         addHandler(DeleteCommand.NAME, DeleteHandler.class);
