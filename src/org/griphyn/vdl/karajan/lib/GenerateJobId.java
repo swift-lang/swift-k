@@ -32,16 +32,14 @@ public class GenerateJobId extends AbstractFunction {
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("tr"), returns(channel("...", 2)));
+        return new Signature(params("tr"), returns(channel("...", 1)));
     }
 
     @Override
     public Object function(Stack stack) {
     	String tr = this.tr.getValue(stack);
         String uid = UID.nextUID();
-        String jobdir = uid.substring(0, 1);
         ret(stack, removeSpecialChars(tr) + "-" + uid);
-        ret(stack, jobdir);
         return null;
     }
 
