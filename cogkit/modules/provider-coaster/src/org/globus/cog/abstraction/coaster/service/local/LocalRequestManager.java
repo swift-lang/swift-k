@@ -36,6 +36,7 @@ import org.globus.cog.abstraction.coaster.service.job.manager.BQPStatusHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.GetFileHandler;
 import org.globus.cog.abstraction.impl.file.coaster.handlers.PutFileHandler;
 import org.globus.cog.coaster.AbstractRequestManager;
+import org.globus.cog.coaster.handlers.ChannelConfigurationHandler;
 import org.globus.cog.coaster.handlers.HeartBeatHandler;
 
 public class LocalRequestManager extends AbstractRequestManager {
@@ -52,5 +53,6 @@ public class LocalRequestManager extends AbstractRequestManager {
         addHandler("GET", GetFileHandler.class);
         addHandler("PUT", PutFileHandler.class);
         addHandler(ResourceUpdateCommand.NAME, ResourceUpdateHandler.class);
+        addHandler(ChannelConfigurationHandler.NAME, ChannelConfigurationHandler.class);
     }
 }

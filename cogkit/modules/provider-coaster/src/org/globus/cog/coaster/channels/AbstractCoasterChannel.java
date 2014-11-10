@@ -47,6 +47,7 @@ import org.globus.cog.coaster.RequestReply;
 import org.globus.cog.coaster.Service;
 import org.globus.cog.coaster.TimeoutException;
 import org.globus.cog.coaster.UserContext;
+import org.globus.cog.coaster.channels.ChannelOptions.Type;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.handlers.RequestHandler;
 
@@ -687,5 +688,14 @@ public abstract class AbstractCoasterChannel implements CoasterChannel {
             }
             listeners = null;
         }
+    }
+
+    @Override
+    public boolean supportsOption(Type type, Object value) {
+        return false;
+    }
+
+    @Override
+    public void setOption(Type type, Object value) {
     }
 }

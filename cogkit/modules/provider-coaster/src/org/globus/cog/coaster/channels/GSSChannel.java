@@ -29,10 +29,10 @@
 package org.globus.cog.coaster.channels;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.net.URI;
+import java.util.EnumSet;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -41,6 +41,9 @@ import org.globus.cog.coaster.FallbackAuthorization;
 import org.globus.cog.coaster.GSSService;
 import org.globus.cog.coaster.RequestManager;
 import org.globus.cog.coaster.UserContext;
+import org.globus.cog.coaster.channels.ChannelOptions.CompressionType;
+import org.globus.cog.coaster.channels.ChannelOptions.Type;
+import org.globus.cog.coaster.commands.ChannelConfigurationCommand;
 import org.globus.cog.coaster.commands.ShutdownCommand;
 import org.globus.gsi.GSIConstants;
 import org.globus.gsi.gssapi.GSSConstants;
@@ -139,6 +142,14 @@ public class GSSChannel extends AbstractTCPChannel {
 				logger.info("Connected to " + contact);
 
 				setName(contact.toString());
+				
+				if (streamCompression) {
+				    EnumSet<CompressionType> t = EnumSet.noneOf(CompressionType.class);
+				    t.add(CompressionType.NONE);
+				    t.add(CompressionType.DEFLATE);
+				    ChannelConfigurationCommand ccc = new ChannelConfigurationCommand(t);
+				    ccc.execute(this);
+				}
 			}
 		}
 		catch (Exception e) {
@@ -195,37 +206,74 @@ public class GSSChannel extends AbstractTCPChannel {
 		}
 	}
 
-	@Override
-    protected void setInputStream(InputStream inputStream) {
-	    if (streamCompression) {
-	        super.setInputStream(new InflaterInputStream(inputStream));
-	    }
-	    else {
-	        super.setInputStream(inputStream);
-	    }
-    }
-
     @Override
-    protected void setOutputStream(OutputStream outputStream) {
-        if (streamCompression) {
-            try {
-                /*
-                 * Instantiate DeflaterOutputStream(out, syncFlush) using reflection
-                 * since it is only available in 1.7, but we still want this
-                 * to compile on 1.6. 
-                 */
-                Constructor<DeflaterOutputStream> cons = 
-                    DeflaterOutputStream.class.getConstructor(OutputStream.class, boolean.class);
-                DeflaterOutputStream dos = cons.newInstance(outputStream, true);
-                super.setOutputStream(dos);
+    public boolean supportsOption(Type type, Object value) {
+        if (type.equals(ChannelOptions.Type.COMPRESSION)) {
+            if (value == null) {
+                return false;
             }
-            catch (Exception e) {
-                logger.warn("Failed to instantiate DeflaterOutputStream", e);
-                throw new RuntimeException(e);
+            else if (value.equals(CompressionType.NONE)) {
+                return true;
+            }
+            else if (value.equals(CompressionType.DEFLATE)) {
+                return streamCompression;
+            }
+            else {
+                return false;
             }
         }
         else {
-            super.setOutputStream(outputStream);
+            return super.supportsOption(type, value);
+        }
+    }
+
+    @Override
+    public void setOption(Type type, Object value) {
+        if (type.equals(ChannelOptions.Type.COMPRESSION) || 
+                type.equals(ChannelOptions.Type.UP_COMPRESSION)  || 
+                type.equals(ChannelOptions.Type.DOWN_COMPRESSION)) {
+            
+            if (CompressionType.NONE.equals(value)) {
+                // do nothing
+            }
+            else if (CompressionType.DEFLATE.equals(value)) {
+                if (type.equals(ChannelOptions.Type.COMPRESSION) || 
+                        type.equals(ChannelOptions.Type.UP_COMPRESSION)) {
+                    compressOutput();
+                }
+                if (type.equals(ChannelOptions.Type.COMPRESSION) || 
+                        type.equals(ChannelOptions.Type.DOWN_COMPRESSION)) {
+                    compressInput();
+                }
+            }
+            else {
+                throw new IllegalArgumentException("Unsupported compression type: " + value);
+            }
+        }
+        else {
+            super.setOption(type, value);
+        }
+    }
+
+    private void compressInput() {
+        setInputStream(new InflaterInputStream(getInputStream()));
+    }
+
+    private void compressOutput() {
+        try {
+            /*
+             * Instantiate DeflaterOutputStream(out, syncFlush) using reflection
+             * since it is only available in 1.7, but we still want this
+             * to compile on 1.6. 
+             */
+            Constructor<DeflaterOutputStream> cons = 
+                DeflaterOutputStream.class.getConstructor(OutputStream.class, boolean.class);
+            DeflaterOutputStream dos = cons.newInstance(getOutputStream(), true);
+            setOutputStream(dos);
+        }
+        catch (Exception e) {
+            logger.warn("Failed to instantiate DeflaterOutputStream", e);
+            throw new RuntimeException(e);
         }
     }
 

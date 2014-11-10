@@ -134,4 +134,8 @@ public interface CoasterChannel {
     void setName(String name);
     
     String getName();
+    
+    boolean supportsOption(ChannelOptions.Type type, Object value);
+    
+    void setOption(ChannelOptions.Type type, Object value);
 }
