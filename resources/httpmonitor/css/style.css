@@ -225,6 +225,11 @@ table.collapsed-border {
 	margin-left: 0px;
 }
 
+#browser h2 {
+	background-color: #f0f0f0;
+	padding: 4px 0px 4px 8px;
+}
+
 #browser em {
 	font-weight: bold;
 }
