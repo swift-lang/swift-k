@@ -24,10 +24,9 @@ import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
-import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.processors.SimpleParser;
 
-public class AppStartProcessor extends AbstractSwiftProcessor {
+public class AppInitProcessor extends AbstractSwiftProcessor {
 
     public Level getSupportedLevel() {
         return Level.DEBUG;
@@ -35,7 +34,7 @@ public class AppStartProcessor extends AbstractSwiftProcessor {
 
     @Override
     public String getMessageHeader() {
-        return "JOB_START";
+        return "JOB_INIT";
     }
 
     public void processMessage(SystemState state, SimpleParser p, Object details) {
@@ -45,20 +44,13 @@ public class AppStartProcessor extends AbstractSwiftProcessor {
 
             p.matchAndSkip("tr=");
             String appname = p.word();
-            String args = "";
-            if (p.matchAndSkip("arguments=[")) {
-                p.beginToken();
-                p.markMatchedTo(']', '[');
-                args = p.getToken();
-            }
-            p.skip("host=");
-            String host = p.word();
             
-            ApplicationItem app = (ApplicationItem) state.getItemByID(id, StatefulItemClass.APPLICATION);
-            app.setArguments(args);
-            app.setHost(host);
-            app.setState(ApplicationState.SUBMITTING, state.getCurrentTime());
-            state.itemUpdated(app);
+            ApplicationItem app = new ApplicationItem(id);
+            app.setName(appname);
+            app.setStartTime(state.getCurrentTime());
+            app.setState(ApplicationState.INITIALIZING, state.getCurrentTime());
+            state.addItem(app);
+            state.getStats("apps").add();
         }
         catch (Exception e) {
             e.printStackTrace();

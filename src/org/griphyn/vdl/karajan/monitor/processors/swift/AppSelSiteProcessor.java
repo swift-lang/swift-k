@@ -27,7 +27,7 @@ import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.processors.SimpleParser;
 
-public class AppStartProcessor extends AbstractSwiftProcessor {
+public class AppSelSiteProcessor extends AbstractSwiftProcessor {
 
     public Level getSupportedLevel() {
         return Level.DEBUG;
@@ -35,7 +35,7 @@ public class AppStartProcessor extends AbstractSwiftProcessor {
 
     @Override
     public String getMessageHeader() {
-        return "JOB_START";
+        return "JOB_SITE_SELECT";
     }
 
     public void processMessage(SystemState state, SimpleParser p, Object details) {
@@ -43,21 +43,8 @@ public class AppStartProcessor extends AbstractSwiftProcessor {
             p.skip("jobid=");
             String id = p.word();
 
-            p.matchAndSkip("tr=");
-            String appname = p.word();
-            String args = "";
-            if (p.matchAndSkip("arguments=[")) {
-                p.beginToken();
-                p.markMatchedTo(']', '[');
-                args = p.getToken();
-            }
-            p.skip("host=");
-            String host = p.word();
-            
             ApplicationItem app = (ApplicationItem) state.getItemByID(id, StatefulItemClass.APPLICATION);
-            app.setArguments(args);
-            app.setHost(host);
-            app.setState(ApplicationState.SUBMITTING, state.getCurrentTime());
+            app.setState(ApplicationState.SELECTING_SITE, state.getCurrentTime());
             state.itemUpdated(app);
         }
         catch (Exception e) {
