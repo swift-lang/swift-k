@@ -124,7 +124,7 @@ function zeroPad(v) {
 var STATES_W = ["Initializing", "Sel. site", "Submitting", "Submitted", "Stage in", "Active", "Stage out"];
 var STATE_COLORS = ["#984ea3", "#ff7f00", "#efe733", "#a65628", "#e41a1c", "#377eb8", "#4daf4a"];
 var STATES1 = [0, 1, 2, 3, 4, 5, 6];
-var STATES2 = [4, 5, 6];
+var STATES2 = [2, 3, 4, 5, 6];
 var COMPLETED_COLOR = "#30d020";
 var FAILED_COLOR = "#d03020";
 
