@@ -130,21 +130,21 @@ namespace(swift) {
 		}
 	)
 	
-	executeSelect := function(rhost, progress, tr, arguments, attributes,
+	executeSelect := function(jobid, rhost, progress, tr, arguments, attributes,
 		stdin, stdout, stderr, stagein, stageout, replicationGroup, replicationChannel) {
 		
 		staging := configProperty("staging", host = rhost)
 		
 		if (staging == "swift") {
-			swiftStaging:execute2(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+			swiftStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
 				stagein, stageout, replicationGroup, replicationChannel)
 		}
 		else if (staging == "provider") {
-			providerStaging:execute2(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+			providerStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
 				stagein, stageout, replicationGroup, replicationChannel)
 		}
 		else {
-			wrapperStaging:execute2(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+			wrapperStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
 				stagein, stageout, replicationGroup, replicationChannel)
 		}
 	}
@@ -156,8 +156,11 @@ namespace(swift) {
 			attributes = null, 
 			deperror = false, mdeperror = false, 
 			channel(stagein), channel(stageout)) {
+			
+			jobid := generateJobId(tr)
 		
 			progress := initProgressState()
+			log(LOG:DEBUG, "JOB_INIT jobid={jobid} tr={tr}")
 		
 			done := isDone(stageout)
 			derr := try(deperror, false)
@@ -176,9 +179,10 @@ namespace(swift) {
 									replicationGroup := UID()
 									parallelFor(i, replicationChannel) {
 										try {
+											log(LOG:DEBUG, "JOB_SITE_SELECT jobid={jobid}")
 											allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
 												executeSelect(
-													rhost, progress, 
+													jobid, rhost, progress, 
 													tr, if(arguments != null, unwrapClosedList(arguments), []),
 													attributes,
 													stdin, stdout, stderr, 
@@ -198,9 +202,10 @@ namespace(swift) {
 								}
 								else {
 									try {
+										log(LOG:DEBUG, "JOB_SITE_SELECT jobid={jobid}")
 										allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
 											executeSelect(
-												rhost, progress, 
+												jobid, rhost, progress, 
 												tr, if(arguments != null, unwrapClosedList(arguments), []),
 												attributes,
 												stdin, stdout, stderr, 

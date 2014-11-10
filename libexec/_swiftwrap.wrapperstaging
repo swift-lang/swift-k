@@ -288,11 +288,6 @@ cdm_gather()
 	cdm_gather_action $GATHER_MAX $GATHER_OUTPUT
 }
 
-strip_prefix()
-{
-   echo $@ | sed -e s/__root__//g -e s/__parent__//g 
-}
-
 COMMANDLINE=$@
 PARAMFILE=
 
@@ -354,7 +349,7 @@ STDIN=$VALUE
 shift $SHIFTCOUNT
 
 getarg "-d" "$@"
-DIRS=$( strip_prefix $VALUE )
+DIRS=$VALUE
 shift $SHIFTCOUNT
 
 getarg "-if" "$@"
@@ -394,7 +389,7 @@ shift $SHIFTCOUNT
 declare -a CMDARGS
 if [ "$PARAMFILE" == "" ] && [ "$1" == "-a" ] ; then
 	shift
-	CMDARGS=( $( strip_prefix "$@" ) )
+	CMDARGS=("$@")
 elif [ "$PARAMFILE" != "" ] ; then
 	CMDARGS=()
 	FIRST=1

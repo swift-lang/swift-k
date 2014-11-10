@@ -293,7 +293,7 @@ namespace(swiftStaging) {
 	}
 
 	export(execute2,
-		function(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
+		function(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
 			stagein, stageout, replicationGroup, replicationChannel) {
 
 			try {
@@ -303,7 +303,7 @@ namespace(swiftStaging) {
 				throw(exception("Could not initialize shared directory on {rhost}", exception))
 			},
 				
-			(jobid, jobdir) := generateJobId(tr)
+			jobdir := substring(jobid, 0, to = 1)
 
 			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 

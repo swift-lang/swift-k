@@ -57,7 +57,13 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
     public static final Comparator<ApplicationItem> APP_TIME_COMPARATOR = new Comparator<ApplicationItem>() {
         @Override
         public int compare(ApplicationItem o1, ApplicationItem o2) {
-            return (int) (o1.getStartTime() - o2.getStartTime());
+            int d = (int) (o1.getStartTime() - o2.getStartTime());
+            if (d == 0) {
+                return o1.getID().compareTo(o2.getID());
+            }
+            else {
+                return d;
+            }
         }
     };
     
@@ -190,7 +196,7 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
             }
         }
     }
-
+    
     private void appUpdated(UpdateType updateType, ApplicationItem app) {
         if (app.getName() == null) {
             return;

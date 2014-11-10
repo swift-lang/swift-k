@@ -90,7 +90,7 @@ namespace(wrapperStaging) {
 		
 
 	export(execute2,
-		function(rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
+		function(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
 			stagein, stageout, replicationGroup, replicationChannel) {
 
 			wfdir := try {
@@ -100,7 +100,7 @@ namespace(wrapperStaging) {
 				throw(exception("Could not initialize shared directory on {rhost}", exception))
 			},
 
-			(jobid, jobdir) := generateJobId(tr)
+			jobdir := substring(jobid, 0, to = 1)
 			
 			jobdir := "{DEBUG_DIR}/jobs/{jobdir}/{jobid}/"
 
