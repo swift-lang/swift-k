@@ -50,8 +50,9 @@ public class ChannelConfigurationCommand extends Command {
 
 	public void send() throws ProtocolException {
         StringBuilder sb = new StringBuilder();
-        sb.append("compression: ");
+        sb.append("compression:");
         for (CompressionType t : compression) {
+            sb.append(' ');
             sb.append(t.toString());
         }
         addOutData(sb.toString());
