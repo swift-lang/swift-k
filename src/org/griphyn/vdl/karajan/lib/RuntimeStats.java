@@ -309,7 +309,7 @@ public class RuntimeStats {
 			if (disabled) {
 				return;
 			}
-			printStates("Final status:", true);
+			printStates("Final status: ", true);
 		}
 		
 		private Map<String, MutableInt> getSummary() {
