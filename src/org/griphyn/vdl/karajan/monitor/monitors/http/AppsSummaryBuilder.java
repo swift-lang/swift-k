@@ -55,12 +55,17 @@ public class AppsSummaryBuilder {
           for (Map.Entry<String, List<SortedSet<ApplicationItem>>> en : byName.entrySet()) {
               e.writeMapKey(en.getKey());
               e.beginArray();
+                int[] counts = new int[ApplicationState.values().length];
+                for (ApplicationState s : ApplicationState.values()) {
+                    int stateIndex = s.getAliasIndex();
+                    counts[stateIndex] += en.getValue().get(s.ordinal()).size();
+                }
                 for (ApplicationState s : ApplicationState.values()) {
                     if (s.isEnabled()) {
                         e.beginArrayItem();
                           e.beginArray();
                             e.writeArrayItem(s.ordinal());
-                            e.writeArrayItem(en.getValue().get(s.ordinal()).size());
+                            e.writeArrayItem(counts[s.ordinal()]);
                           e.endArray();
                         e.endArrayItem();
                     }
@@ -70,5 +75,4 @@ public class AppsSummaryBuilder {
           e.endMap();
         e.endMap();
     }
-
 }

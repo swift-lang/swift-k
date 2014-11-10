@@ -37,26 +37,28 @@ public enum ApplicationState {
     //3
     SUBMITTING("Submitting"), SUBMITTED("Submitted"), ACTIVE("Active"), STAGE_OUT("Stage out"),
     //7
-    FAILED("Failed"), REPLICATING("Replicating", "Replicating", false), 
-    FINISHED_IN_PREVIOUS_RUN("Finished in previous run", "Finished in prev. run", false),
+    FAILED("Failed"), REPLICATING("Replicating", "Replicating", false, 4 /* SUBMITTED */), 
+    FINISHED_IN_PREVIOUS_RUN("Finished in previous run", "Finished in prev. run", false, 10),
     //10
     FINISHED_SUCCESSFULLY("Finished successfully");
     
     private String name, shortName;
     private boolean enabled;
+    private int aliasIndex;
     
     private ApplicationState(String name) {
         this(name, name);
     }
     
     private ApplicationState(String name, String shortName) {
-        this(name, name, true);
+        this(name, name, true, -1);
     }
     
-    private ApplicationState(String name, String shortName, boolean enabled) {
+    private ApplicationState(String name, String shortName, boolean enabled, int aliasIndex) {
         this.name = name;
         this.shortName = shortName;
         this.enabled = enabled;
+        this.aliasIndex = aliasIndex;
     }
     
     public String getName() {
@@ -98,5 +100,14 @@ public enum ApplicationState {
 
     public boolean isTerminal() {
         return this == FAILED || this == FINISHED_SUCCESSFULLY || this == FINISHED_IN_PREVIOUS_RUN;
+    }
+
+    public int getAliasIndex() {
+        if (aliasIndex == -1) {
+            return ordinal();
+        }
+        else {
+            return aliasIndex;
+        }
     }
 }
