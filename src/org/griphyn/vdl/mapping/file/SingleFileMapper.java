@@ -56,7 +56,7 @@ public class SingleFileMapper extends AbstractMapper {
     @Override
     public Collection<Path> existing() {
         SingleFileMapperParams cp = getParams();
-		if (cp.getFile().exists()) {
+		if ("globus".equals(cp.getFile().getProtocol()) || cp.getFile().exists()) {
 			return Arrays.asList(new Path[] {Path.EMPTY_PATH});
 		}
 		else {
