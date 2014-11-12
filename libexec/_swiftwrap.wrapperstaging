@@ -68,6 +68,11 @@ remotePath() {
 	echo $PATH
 }
 
+# SEE NOTE BELOW FOR THESE VARS:
+
+SWIFT_GLOBUS_USER=$USER
+SWIFT_SITE_SCRATCH_ENDPOINT="ucrcc#midway"
+
 stagein() {
 	SRC=`remotePath $1`
 	DST=$2
@@ -75,8 +80,8 @@ stagein() {
 		*://*)
 			;;
 		*)
-			SRC=$URLPREFIX/$SRC
-			;;
+		SRC=$URLPREFIX/$SRC
+		;;
 	esac
 	
 	log "Staging in $SRC to $DST"
@@ -107,9 +112,28 @@ stagein() {
             ln -s $SRC $DST 2>&1 >& "$INFO"
             ;;
         globus://*)
-        	SRC="http://${SRC#globus://}"
-        	log "Fetching $SRC using wget"
-			wget $SRC -O $DST 2>&1 >& "$INFO"
+
+# THIS ASSUMES:
+# - user has created a proxy that is recognixed by their globus.org account, in $HOME/.globus/.glob
+#   (as opposed to /tmp, because it needs to be seen by the worker nodes)
+# - worker nodes share filesystem with swift node
+# - globus userid is same as current userid
+# - scratch and workdirectory are on shared storage and accessible to globus.org transfer service
+# - the endpoint for the site is set in $SWIFT_SITE_SCRATCH_ENDPOINT
+# - the gsissh command is in the PATH, and functional
+
+        	SRC="${SRC#globus://}"
+            EP="${SRC/'/'*/}"
+            FN="/${SRC#*'/'}"
+        	log "Fetching with Globus: EP=$EP FILE=$FN"
+            log "Doing: $GLOBUSCP $EP:$FN $SWIFT_SITE_SCRATCH_ENDPOINT:$DST"
+            unset X509_CERT_DIR
+            X509_USER_PROXY=$HOME/.globus/.glob gsissh $SWIFT_GLOBUS_USER@cli.globusonline.org scp "$EP:$FN" "$SWIFT_SITE_SCRATCH_ENDPOINT:$DST" >& "$INFO"
+			;;
+        globustest://*) # clone of http case, for testing (was globus:)
+        	ASRC="http://${SRC#globus://}"
+        	log "Fetching $SRC ($ASRC) using Globus"
+			wget $ASRC -O $DST 2>&1 >& "$INFO"
 			;;
 		http://*)
 			log "Fetching $SRC using wget"
@@ -146,6 +170,15 @@ stageout() {
 			mkdir -p $DIR
 			log "Copying $SRC to $DST"
 			dd if=$SRC of=$DST bs=16M 2>&1 >& "$INFO"
+			;;
+        globus://*)
+        	DST="${DST#globus://}"
+            EP="${DST/'/'*/}"
+            FN="/${DST#*'/'}"
+        	log "Staging with Globus: EP=$EP FILE=$FN"
+            log "Doing: scp $SCRATCHEP:$SRC" $EP:$FN 
+            unset X509_CERT_DIR
+            X509_USER_PROXY=$HOME/.globus/.glob gsissh $SWIFT_GLOBUS_USER@cli.globusonline.org scp "$SWIFT_SITE_SCRATCH_ENDPOINT:$SRC" "$EP:$FN"  >& "$INFO"
 			;;
 		*://*)
 			fail 254 "Cannot handle protocol ${DST%%://*}"
