@@ -39,6 +39,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Status;
+import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
 
 class BlockTaskSubmitter extends Thread {
@@ -67,7 +68,8 @@ class BlockTaskSubmitter extends Thread {
     public void cancel(Block block)
             throws InvalidSecurityContextException, TaskSubmissionException {
         try {
-            getHandler(block.getTask().getProvider()).cancel(block.getTask());
+            Task t = block.getTask();
+            getHandler(getProvider(t)).cancel(t);
         }
         catch (InvalidProviderException e) {
             throw new TaskSubmissionException(e);
@@ -75,6 +77,10 @@ class BlockTaskSubmitter extends Thread {
         catch (ProviderMethodException e) {
             throw new TaskSubmissionException(e);
         }
+    }
+
+    private String getProvider(Task t) {
+        return t.getService(0).getProvider();
     }
 
     @Override
