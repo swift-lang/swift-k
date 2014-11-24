@@ -52,6 +52,7 @@ import org.griphyn.vdl.karajan.monitor.processors.swift.AppFailureProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.AppInitProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.AppSelSiteProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.AppStartProcessor;
+import org.griphyn.vdl.karajan.monitor.processors.swift.AppTempFailureProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.AppThreadProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.CompletionProcessor;
 import org.griphyn.vdl.karajan.monitor.processors.swift.ConfigurationProcessor;
@@ -108,6 +109,7 @@ public class MonitorAppender implements Appender {
     	    new AppEndProcessor(),
     	    new AppThreadProcessor(),
     	    new AppFailureProcessor(),
+    	    new AppTempFailureProcessor(),
     	    new ProcedureStartProcessor(),
     	    new ProcedureEndProcessor(),
     	    new ForeachItStartProcessor(),

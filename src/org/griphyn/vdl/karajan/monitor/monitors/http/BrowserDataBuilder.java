@@ -30,6 +30,7 @@ package org.griphyn.vdl.karajan.monitor.monitors.http;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -75,6 +76,10 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
             this.time = time;
             this.value = value;
         }
+        
+        public String toString() {
+            return time + " - " + value;
+        }
     }
     
     public static class AppEntry {
@@ -82,6 +87,7 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
         public ApplicationState oldState;
         public List<TaskItem> tasks;
         public List<TimedValue<ApplicationState>> stateTimeline;
+        public int failures;
     }
     
     public static class WorkerData {
@@ -201,6 +207,9 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
         if (app.getName() == null) {
             return;
         }
+        if (updateType == UpdateType.ITEM_REMOVED) {
+            return;
+        }
         if (entries.containsKey(app.getID())) {
             updateApp(app);
         }
@@ -231,9 +240,12 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
                 case ACTIVE:
                     wd.activeApps++;
                     break;
+                case FAILED_BUT_CAN_RETRY:
+                    e.failures++;
+                    wd.activeApps--;
+                    break;
                 case FAILED:
                     wd.failedApps++;
-                    wd.activeApps--;
                     break;
                 case FINISHED_SUCCESSFULLY:
                     wd.activeApps--;
@@ -326,25 +338,35 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
         return ByteBuffer.wrap(e.toString().getBytes());
     }
     
-    public List<List<Integer>> getStateTimes(ApplicationItem app) {
+    public List<List<Object>> getStateTimes(ApplicationItem app) {
         List<TimedValue<ApplicationState>> tl = getTimeline(app);
-        List<List<Integer>> l = new ArrayList<List<Integer>>();
+        List<List<Object>> l = new ArrayList<List<Object>>();
         if (tl != null) {
             long lastTime = -1;
             long firstTime = -1;
             ApplicationState lastState = null;
             for (TimedValue<ApplicationState> p : tl) {
                 if (lastState != null) {
-                    l.add(new org.griphyn.vdl.karajan.Pair<Integer>(lastState.ordinal(), (int) (p.time - lastTime))); 
+                    l.add(makeList(lastState.ordinal(), (int) (p.time - lastTime), p.time)); 
                 }
                 lastTime = p.time;
                 lastState = p.value;
+            }
+            if (lastState.isTerminal()) {
+                l.add(makeList(lastState.ordinal(), 0, lastTime));
+            }
+            else {
+                l.add(makeList(lastState.ordinal(), (int) (state.getCurrentTime() - lastTime), lastTime));
             }
         }
         return l;
     }
        
         
+    private List<Object> makeList(Object... os) {
+        return Arrays.asList(os);
+    }
+
     private String getParam(Map<String, String> params, String name, String _default) {
         String value = params.get(name);
         if (value == null) {

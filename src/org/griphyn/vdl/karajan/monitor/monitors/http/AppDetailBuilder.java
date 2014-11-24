@@ -30,6 +30,7 @@ package org.griphyn.vdl.karajan.monitor.monitors.http;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,7 +56,7 @@ public class AppDetailBuilder {
     
     private static class StateTimesAverage {
         public static final int N = 7;
-        public int[] stateTimeSum = new int[N];
+        public long[] stateTimeSum = new long[N];
         public int[] stateTimeCount = new int[N];
         
         public void add(ApplicationState state, long time) {
@@ -71,7 +72,7 @@ public class AppDetailBuilder {
                     avg[i] = 0;
                 }
                 else {
-                    avg[i] = stateTimeSum[i] / stateTimeCount[i];
+                    avg[i] = (int) (stateTimeSum[i] / stateTimeCount[i]);
                 }
             }
             return avg;
@@ -94,6 +95,7 @@ public class AppDetailBuilder {
     public void getData(JSONEncoder e) {
         // sites it ran on
         Set<String> sites = new TreeSet<String>();
+        Map<String, Set<String>> seen = new HashMap<String, Set<String>>();
         // average times for each relevant state then for total
         // relevant states: Initializing, Sel. site, Stage in, Submitting, Submitted (queued remotely).
         // Active, Stage out, Total
@@ -117,8 +119,10 @@ public class AppDetailBuilder {
                     sts.put(host, new StateTimesAverage());
                     totalTimesCompletedSite.put(host, new ArrayList<Integer>());
                     totalTimesFailedSite.put(host, new ArrayList<Integer>());
+                    seen.put(host, new HashSet<String>());
                 }
                 
+                seen.get(host).add(item.getID());
                 StateTimesAverage stss = sts.get(host);
                 List<Integer> ttCs = totalTimesCompletedSite.get(host);
                 List<Integer> ttFs = totalTimesFailedSite.get(host);
@@ -131,9 +135,12 @@ public class AppDetailBuilder {
                     if (lastState != null) {
                         switch (lastState) {
                             case STAGE_IN:
-                                firstTime = p.time;
+                                if (firstTime == -1) {
+                                    firstTime = p.time;
+                                }
                             case FINISHED_SUCCESSFULLY:
                             case FAILED:
+                            case FAILED_BUT_CAN_RETRY:
                             case INITIALIZING:
                             case SELECTING_SITE:
                             case SUBMITTING:
@@ -143,22 +150,22 @@ public class AppDetailBuilder {
                                 st.add(lastState, p.time - lastTime);
                                 stss.add(lastState, p.time - lastTime);
                         }
-                        int time;
-                        switch (lastState) {
-                            case FINISHED_SUCCESSFULLY:
-                                time = (int) (p.time - firstTime);
-                                totalTimesC.add(time);
-                                ttCs.add(time);
-                                break;
-                            case FAILED:
-                                time = (int) (p.time - firstTime);
-                                totalTimesF.add(time);
-                                ttFs.add(time);
-                                break;
-                        }
                     }
                     lastTime = p.time;
                     lastState = p.value;
+                }
+                int time;
+                switch (lastState) {
+                    case FINISHED_SUCCESSFULLY:
+                        time = (int) (lastTime - firstTime);
+                        totalTimesC.add(time);
+                        ttCs.add(time);
+                        break;
+                    case FAILED:
+                        time = (int) (lastTime - firstTime);
+                        totalTimesF.add(time);
+                        ttFs.add(time);
+                        break;
                 }
             }
         }
@@ -191,7 +198,7 @@ public class AppDetailBuilder {
                     e.beginArrayItem();
                         e.beginMap();
                             e.writeMapItem("name", host);
-                            e.writeMapItem("count", totalTimesCompletedSite.get(host).size());
+                            e.writeMapItem("count", seen.get(host).size());
                             e.writeMapItem("completedCount", totalTimesCompletedSite.get(host).size());
                             e.writeMapItem("failedCount", totalTimesFailedSite.get(host).size());
                             e.writeMapItem("avgStateTimes", sts.get(host).getAverages());
@@ -213,11 +220,11 @@ public class AppDetailBuilder {
         if (l.isEmpty()) {
             return 0;
         }
-        int sum = 0;
+        long sum = 0;
         for (Integer i : l) {
             sum += i;
         }
-        return sum / l.size();
+        return (int) (sum / l.size());
     }
 
     private List<Integer> bin(List<Integer> l, double binSize, int minTime, int maxTime, int binCount) {
@@ -226,7 +233,10 @@ public class AppDetailBuilder {
             hist.add(0);
         }
         for (Integer v : l) {
-            int bin = (int) Math.ceil((v - minTime) / binSize) - 1;
+            int bin = (int) Math.floor((v - minTime) / binSize);
+            if (bin == binCount) {
+                bin = binCount - 1;
+            }
             hist.set(bin, hist.get(bin) + 1);
         }
         return hist;

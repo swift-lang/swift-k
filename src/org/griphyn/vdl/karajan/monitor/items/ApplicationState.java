@@ -37,10 +37,11 @@ public enum ApplicationState {
     //3
     SUBMITTING("Submitting"), SUBMITTED("Submitted"), ACTIVE("Active"), STAGE_OUT("Stage out"),
     //7
-    FAILED("Failed"), REPLICATING("Replicating", "Replicating", false, 4 /* SUBMITTED */), 
+    FAILED_BUT_CAN_RETRY("Retrying"), REPLICATING("Replicating", "Replicating", false, 4 /* SUBMITTED */), 
     FINISHED_IN_PREVIOUS_RUN("Finished in previous run", "Finished in prev. run", false, 10),
     //10
-    FINISHED_SUCCESSFULLY("Finished successfully");
+    FINISHED_SUCCESSFULLY("Completed"),
+    FAILED("Failed");
     
     private String name, shortName;
     private boolean enabled;

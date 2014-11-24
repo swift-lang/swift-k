@@ -24,32 +24,29 @@ import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
-import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.processors.SimpleParser;
 
-public class AppFailureProcessor extends AbstractSwiftProcessor {
+public class AppTempFailureProcessor extends AbstractSwiftProcessor {
 
     public Level getSupportedLevel() {
-        return Level.INFO;
+        return Level.DEBUG;
     }
 
     @Override
     public String getMessageHeader() {
-        return "END_FAILURE";
+        return "APPLICATION_EXCEPTION";
     }
 
     public void processMessage(SystemState state, SimpleParser p, Object details) {
         try {
-            p.skip("thread=");
-            String threadid = p.word();
+            p.skip("jobid=");
+            String jobid = p.word();
 
-            StatefulItem thread = state.getItemByID(threadid, StatefulItemClass.BRIDGE);
-            ApplicationItem app = (ApplicationItem) thread.getParent();
-            app.setState(ApplicationState.FAILED, state.getCurrentTime());
+            ApplicationItem app = (ApplicationItem) state.getItemByID(jobid, StatefulItemClass.APPLICATION);
+            // actually, we don't know here if this is the final failure or not
+            app.setState(ApplicationState.FAILED_BUT_CAN_RETRY, state.getCurrentTime());
             state.itemUpdated(app);
-            state.removeItem(app);
-            state.getStats("apps").remove();
         }
         catch (Exception e) {
             e.printStackTrace();

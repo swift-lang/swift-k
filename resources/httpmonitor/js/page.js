@@ -493,8 +493,16 @@ function resizeTabs(id) {
 	var winw = $(window).width() - 40;
 	var winh = $(window).height() - $("#tabs-heading").height() - 16;
 	var tcw = $(id).width();
-	var tch = $(id).height() + $("#tabs-heading").height() + 24;
-	
+	var tch = 0;
+	var topref = $(id).offset().top;
+	$(id + " *").each(function() {
+		var el = $(this);
+		var bottom = el.offset().top - topref + el.height();
+		if (bottom > tch) {
+			tch = bottom;
+		}
+	});
+	tch = tch + $("#tabs-heading").height() + 24;
 	
 	var targetw = Math.max(winw, tcw).toFixed(0);
 	var targeth = Math.max(winh, tch).toFixed(0);

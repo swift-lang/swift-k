@@ -168,7 +168,8 @@ public class TaskProcessor extends AbstractMessageProcessor {
         if (ti != null && ti.getParent() != null && taskState != 0) {
             ApplicationItem app = (ApplicationItem) ti.getParent();
             switch (taskState) {
-                case Status.SUBMITTING:
+                //handled in AppStartProcessor
+                //case Status.SUBMITTING:
                 case Status.SUBMITTED:
                 case Status.ACTIVE:
                 case Status.STAGE_IN:

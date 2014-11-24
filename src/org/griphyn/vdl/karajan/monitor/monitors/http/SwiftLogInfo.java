@@ -29,9 +29,12 @@
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -59,7 +62,10 @@ public class SwiftLogInfo {
     public void run() throws Exception {
         MonitorAppender ap = new MonitorAppender("bla", "http");
         BufferedReader br = new BufferedReader(new FileReader(logFileName));
-        
+
+        long filesz = new File(logFileName).length();
+        long pos = 0;
+        int lastTenth = 0;
         long firstLogTime = -1;
         long firstActualTime = System.currentTimeMillis();
         
@@ -79,6 +85,12 @@ public class SwiftLogInfo {
             if (isMessageHeader(line)) {
                 firstLogTime = commit(crt, firstLogTime, firstActualTime, ap);
             }
+            pos = pos + line.length() + 1;
+            int tenth = (int) (pos * 10 / filesz);
+            if (tenth != lastTenth) {
+                System.out.print('.');
+                lastTenth = tenth;
+            }
             append(crt, line);
         }
         commit(crt, firstLogTime, firstActualTime, ap);
@@ -90,11 +102,8 @@ public class SwiftLogInfo {
         if (crt.length() == 0) {
             return firstLogTime;
         }
-        String msg = crt.toString();
-        crt.delete(0, crt.length());
-        
-        String[] els = msg.split("\\s+", 5);
-        long time = SDF.parse(els[0] + " " + els[1]).getTime();
+        String[] els = split(crt);
+        long time = parseTime(els);
         
         if (rate != 0) {
             if (firstLogTime == -1) {
@@ -104,16 +113,86 @@ public class SwiftLogInfo {
             // this event is supposed to happen at this relative time
             long deadline = (long) ((time - firstLogTime) / rate);
             long delay = deadline - (now - firstActualTime);
-            System.out.println("deadline: " + deadline + ", now: " + (now - firstActualTime));
             if (delay >= 0) {
                 Thread.sleep(delay);
             }
         }
                     
-        LoggingEvent le = new LoggingEvent(els[3], Logger.getLogger(els[3]), time, getLevel(els[2]), els[4], null);
+        LoggingEvent le = new LoggingEvent(els[2], Logger.getLogger(els[2]), time, getLevel(els[1]), els[3], null);
         ap.doAppend(le);
         
         return firstLogTime;
+    }
+    
+    private static Calendar cal = new GregorianCalendar();
+    private long lastTime = -1;
+    private int lasthh, lastmm, lastss, lastms;
+    // out of laziness, assume that there is at least one event per day
+
+    private long parseTime(String[] els) throws ParseException {
+        // if used, SimpleDateFormat.parse takes 60% of the CPU time 
+        String ts = els[0];
+        try {
+            int yyyy = Integer.parseInt(ts.substring(0, 4));
+            int MM = Integer.parseInt(ts.substring(5, 7));
+            int dd = Integer.parseInt(ts.substring(8, 10));
+            
+            int hh = Integer.parseInt(ts.substring(11, 13));
+            int mm = Integer.parseInt(ts.substring(14, 16));
+            int ss = Integer.parseInt(ts.substring(17, 19));
+            int ms = Integer.parseInt(ts.substring(20, 22));
+            if (lastTime > 0) {
+                if (lastss == ss && lastmm == mm && lasthh == hh) {
+                    lastTime = lastTime + ms - lastms; 
+                
+                    lasthh = hh;
+                    lastmm = mm;
+                    lastss = ss;
+                    lastms = ms;
+                    return lastTime;
+                }
+            }
+            lasthh = hh;
+            lastmm = mm;
+            lastss = ss;
+            lastms = ms;
+        
+            // use local time
+            // int tz = Integer.parseInt(ts.substring(22, 25));
+            cal.set(yyyy, MM, dd, hh, mm, ss);
+            lastTime = cal.getTimeInMillis() + ms;
+            return lastTime;
+        }
+        catch (NumberFormatException e) {
+            throw new RuntimeException("Could not parse timestamp '" + ts + "'", e);
+        }
+    }
+    
+    private final int TIMESTAMP_LEN = 28;
+    private final int CATEGORY_START = 29;
+    private final int CLASS_START = 35;
+
+    private String[] split(StringBuilder crt) {
+        String[] els = new String[5];
+        els[0] = crt.substring(0, TIMESTAMP_LEN);
+        for (int i = CATEGORY_START; i < crt.length(); i++) {
+            if (crt.charAt(i) == ' ') {
+                els[1] = crt.substring(CATEGORY_START, i);
+                break;
+            }
+        }
+        
+        for (int i = CLASS_START; i < crt.length(); i++) {
+            if (crt.charAt(i) == ' ') {
+                els[2] = crt.substring(CLASS_START, i);
+                els[3] = crt.substring(i + 1);
+                break;
+            }
+        }
+        
+        crt.delete(0, crt.length());
+        
+        return els;
     }
 
     private void append(StringBuilder crt, String line) {
@@ -122,18 +201,27 @@ public class SwiftLogInfo {
         }
         crt.append(line);
     }
+    
+    private static final String HEADER_FMT = "0000-00-00 00:00:00,000-0000";
 
     private boolean isMessageHeader(String line) {
-        String[] els = line.split("\\s+", 5);
-        if (els.length < 5) {
+        if (line.length() < HEADER_FMT.length()) {
             return false;
         }
-        
-        try {
-            SDF.parse(els[0] + " " + els[1]).getTime();
-        }
-        catch (ParseException e) {
-            return false;
+        for (int i = 0; i < HEADER_FMT.length(); i++) {
+            char expected = HEADER_FMT.charAt(i);
+            char actual = line.charAt(i);
+            switch (expected) {
+                case '0':
+                    if (actual < '0' || actual > '9') {
+                        return false;
+                    }
+                    break;
+                default:
+                    if (actual != expected) {
+                        return false;
+                    }
+            }
         }
         return true;
     }
@@ -172,7 +260,7 @@ public class SwiftLogInfo {
             e.printStackTrace();
         }        
     }
-
+    
     private static Priority getLevel(String s) {
         if ("WARN".equals(s)) {
             return Level.WARN;

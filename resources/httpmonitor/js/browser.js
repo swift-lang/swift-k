@@ -87,7 +87,7 @@ function getCGIParam(addr, name, defVal) {
 }
 
 function formatTimestamp(ts) {
-	return new Date(ts).toISOString();
+	return new Date(ts).toISOString().replace("T", " ");
 }
 
 function formatPercent(x) {
@@ -109,33 +109,34 @@ function formatInterval(ms) {
 	m = (s - sp) / 60;
 	mp = m % 60;
 	h = (m - mp) / 60;
-	return zeroPad(h) + ":" + zeroPad(mp) + ":" + zeroPad(sp);
+	return zeroPad(h, 2) + "h " + zeroPad(mp, 2) + "m " + zeroPad(sp, 2) + "." + zeroPad(ms % 1000, 3) + "s";
 }
 
-function zeroPad(v) {
-	if (v < 9) {
-		return "0" + v;
+function zeroPad(v, len) {
+	var s = v.toString();
+	while (s.length < len) {
+		s = "0" + s;
 	}
-	else {
-		return v;
-	}
+	return s;
 }
 
-var STATES_W = ["Initializing", "Sel. site", "Submitting", "Submitted", "Stage in", "Active", "Stage out"];
-var STATE_COLORS = ["#984ea3", "#ff7f00", "#efe733", "#a65628", "#e41a1c", "#377eb8", "#4daf4a"];
-var STATES1 = [0, 1, 2, 3, 4, 5, 6];
-var STATES2 = [2, 3, 4, 5, 6];
-var COMPLETED_COLOR = "#30d020";
-var FAILED_COLOR = "#d03020";
+var STATES_W = ["Initializing", "Sel. site", "Stage in", "Submitting", "Submitted", "Active", "Stage out", "Retrying", 
+                "Replicating", "Finished in prev. run", "Completed", "Failed"];
+var STATE_COLORS = ["#77a1b5", "#e03fd8", "#0307d4", "#7bc8f6", "#f9bc08", "#c9ff27", "#058907", "#fd411e"];
+var STATES1 = [0, 1, 2, 3, 4, 5, 6, 7];
+var STATES2 = [2, 3, 4, 5, 6, 7];
+var COMPLETED_COLOR = "#50f010";
+var FAILED_COLOR = "#f06000";
 
-
+var STATES_PIE_1 = [0, 1, 2, 3, 4, 5, 6];
+var STATES_PIE_2 = [2, 3, 4, 5, 6];
 
 function sumTimes1(data) {
-	return sumTimes0(data, STATES1);
+	return sumTimes0(data, STATES_PIE_1);
 }
 
 function sumTimes2(data) {
-	return sumTimes0(data, STATES2);
+	return sumTimes0(data, STATES_PIE_2);
 }
 
 function sumTimes0(data, states) {
@@ -161,8 +162,8 @@ function countPerSitePlot(id, data) {
 	stuffPerSitePlot(id, data, "completedCount", "failedCount");
 }
 
-function timePerSitePlot(id, data) {
-	stuffPerSitePlot(id, data, "completedTimeAvg", "failedTimeAvg");
+function timePerSitePlot(id, data, yticks) {
+	stuffPerSitePlot(id, data, "completedTimeAvg", "failedTimeAvg", yticks);
 }
 
 function cpuLoadSpark(sel, data) {
