@@ -623,9 +623,12 @@ function seriesDataCB(seriesKey, rdata, error) {
 				}
 				//makePlot(target.plot);
 			}
+			if (document.runFinished) {
+				stopUpdatesByID(seriesKey);
+			}
 		}
 		catch (err) {
-			stopUpdates(seriesKey);
+			stopUpdatesByID(seriesKey);
 			console.error(err);
 		}
 	}
@@ -706,8 +709,6 @@ function resizePlotsContainer() {
 		}
 	}
 	
-	console.log($("#tabs").width());
-	console.log($("#tabs").height());
 	if (w < $("#tabs").width() && h < $("#tabs").height()) {
 		return;
 	}

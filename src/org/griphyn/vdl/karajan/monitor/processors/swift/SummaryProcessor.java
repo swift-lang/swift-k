@@ -20,6 +20,9 @@
  */
 package org.griphyn.vdl.karajan.monitor.processors.swift;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.lib.RuntimeStats.ProgressTicker;
 import org.griphyn.vdl.karajan.monitor.SystemState;
@@ -36,6 +39,15 @@ public class SummaryProcessor extends AbstractMessageProcessor {
 
 	public Class<?> getSupportedSource() {
 		return ProgressTicker.class;
+	}
+	
+	private static Map<String, ApplicationState> keyMapping;
+	
+	static {
+	    keyMapping = new HashMap<String, ApplicationState>();
+	    for (ApplicationState s : ApplicationState.values()) {
+	        keyMapping.put(s.getLogName(), s);
+	    }
 	}
 
 	public void processMessage(SystemState state, Object message, Object details) {
@@ -68,7 +80,7 @@ public class SummaryProcessor extends AbstractMessageProcessor {
 		SummaryItem s = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
 		String[] pairs = msg.split("  ");
 		for (ApplicationState key : SummaryItem.STATES) {
-		    s.setCount(key.getName(), 0);
+		    s.setCount(key, 0);
 		}
 		for (String pair : pairs) {
 		    if (pair.equals("")) {
@@ -77,10 +89,10 @@ public class SummaryProcessor extends AbstractMessageProcessor {
 		    String[] v = pair.split(":");
 		    String key = v[0].trim();
 		    int value = Integer.parseInt(v[1]);
-		    if (key.equals(ApplicationState.FINISHED_IN_PREVIOUS_RUN.getName())) {
+		    if (key.equals(ApplicationState.FINISHED_IN_PREVIOUS_RUN.getLogName())) {
 		        state.setCompletedPreviously(value);
 		    }
-		    s.setCount(key, value);
+		    s.setCount(keyMapping.get(key), value);
 		}
 		state.itemUpdated(s);
 	}

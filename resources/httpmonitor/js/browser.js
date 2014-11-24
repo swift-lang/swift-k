@@ -32,19 +32,16 @@ function updateLinks() {
 }
 
 function browserSetHome(addr) {
-	var url = window.location.href;
 	document.browserHome = addr;
-	var index = url.indexOf("#browser");
-	if (index != -1) {
-		browserSetAddr(url.substring(index));
-	}
-	else {
-		browserSetAddr(addr);
-	}
 }
 
 function browserEnable() {
-	browserSetAddr(document.browserAddr);
+	if (document.browserAddr == null) {
+		browserSetAddr(document.browserHome);
+	}
+	else {
+		browserSetAddr(document.browserAddr);
+	}
 }
 
 function browserDisable() {

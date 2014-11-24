@@ -30,11 +30,21 @@
 		<script type="text/javascript" src="js/browser.js"></script>
 		<script type="text/javascript" src="js/charts-flot.js"></script>
 		<script>
-		summaryAppStates = ["Initializing", "Sel. site", "Stage in", "Submitting", "Submitted", "Active", "Stage out", "Retrying", "Replicating", "Completed", "Failed"];
-		appStates = summaryAppStates.slice(0, 9);
-		appStates.push("Finished in prev. run");
-		appStates.push("Completed");
-		appStates.push("Failed");
+		summaryAppStates = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11];
+		appStates = new Array();
+		appStates[0] = "Initializing";
+		appStates[1] = "Sel. site";
+		appStates[2] = "Stage in";
+		appStates[3] = "Submitting";
+		appStates[4] = "Submitted";
+		appStates[5] = "Active";
+		appStates[6] = "Stage out";
+		appStates[7] = "Retrying";
+		appStates[8] = "Replicating";
+		appStates[9] = "Finished in prev. run";
+		appStates[10] = "Completed";
+		appStates[11] = "Failed";
+		
 		browserSetHome("#browser?type=apps");
 		</script>
 	</head>
@@ -97,7 +107,7 @@
 			});
 			for (var i = 0; i < summaryAppStates.length; i++) {
 				display("appSummary", "appSummary-template", {
-					state: summaryAppStates[i],
+					state: appStates[summaryAppStates[i]],
 					id: "pb" + i
 				});
 			}
@@ -146,6 +156,7 @@
 				}
 				else {
 					var max = parseInt(data["maxCount"]);
+					console.log(data);
 					for (i = 0; i < summaryAppStates.length; i++) {
 						if (data[summaryAppStates[i]] != null) {
 							var v = data[summaryAppStates[i]];
@@ -167,6 +178,7 @@
 					if (data["runFinished"]) {
 						console.log("Run finished. Stopping updates.");
 						stopUpdatesByID("summary");
+						document.runFinished = true;
 					}
 				}
 			}

@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 
 import k.rt.Context;
-import k.rt.Null;
 import k.rt.Stack;
 import k.thr.LWThread;
 
@@ -41,6 +40,7 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
+import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 import org.griphyn.vdl.util.SwiftConfig;
 
 /** this is an icky class that does too much with globals, but is for
@@ -59,19 +59,19 @@ public class RuntimeStats {
 
 	public static final String[] preferredOutputOrder = {
 		"uninitialized",
-		"Initializing",
-		"Selecting site",
+		ApplicationState.INITIALIZING.getLogName(),
+		ApplicationState.SELECTING_SITE.getLogName(),
 		"Initializing site shared directory",
-		"Stage in",
-		"Submitting",
-		"Submitted",
-		"Active",
+		ApplicationState.STAGE_IN.getLogName(),
+		ApplicationState.SUBMITTING.getLogName(),
+		ApplicationState.SUBMITTED.getLogName(),
+		ApplicationState.ACTIVE.getLogName(),
 		"Checking status",
-		"Stage out",
-		"Failed",
-		"Replicating",
-		"Finished in previous run",
-		"Finished successfully"
+		ApplicationState.STAGE_OUT.getLogName(),
+		ApplicationState.FAILED.getLogName(),
+		ApplicationState.REPLICATING.getLogName(),
+		ApplicationState.FINISHED_IN_PREVIOUS_RUN.getLogName(),
+		ApplicationState.FINISHED_SUCCESSFULLY.getLogName()
 	};
 		
 	public static class StartProgressTicker extends Node {

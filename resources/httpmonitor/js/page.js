@@ -528,8 +528,8 @@ function setActiveTabFromURL() {
 			tabid = url.substring(hash);
 		}
 	}
-	
 	if (tabid == null) {
+		resizeTabs(".tab-contents");
 		return;
 	}
 	
@@ -538,6 +538,7 @@ function setActiveTabFromURL() {
 	if (tabid == "#browser") {
 		browserSetAddr(url.substring(hash));
 	}
+	resizeTabs(tabid);
 }
 
 function getTabIndex(idp, idt) {

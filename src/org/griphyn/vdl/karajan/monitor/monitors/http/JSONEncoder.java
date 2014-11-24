@@ -221,6 +221,13 @@ public class JSONEncoder {
         write(value);
     }
     
+    public void writeMapItem(int key, int value) {
+        mapSeparator();
+        write(String.valueOf(key));
+        sb.append(": ");
+        write(value);
+    }
+    
     public void writeMapItem(String key, boolean value) {
         mapSeparator();
         write(key);

@@ -135,7 +135,7 @@ public class SystemState {
 
     public synchronized void incTotal() {
         if (total == 0) {
-            start = System.currentTimeMillis();
+            start = getCurrentTime();
         }
         total++;
     }
@@ -185,7 +185,7 @@ public class SystemState {
     }
     
     public String getElapsedTimeFormatted() {
-        return format(System.currentTimeMillis() - start);
+        return format(getCurrentTime() - start);
     }
     
     public String getEstimatedTimeLeftFormatted() {
@@ -197,7 +197,7 @@ public class SystemState {
             return "N/A";
         }
         else {
-            long time = System.currentTimeMillis() - start;
+            long time = getCurrentTime() - start;
             long et = (time * t / c) - time;
             return format(et);
         }

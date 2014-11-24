@@ -65,18 +65,18 @@ public class SummaryPane extends Container {
         try {
             SummaryItem summary = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
             if (summary != null) {
-                Map<String, Integer> counts = summary.getCounts(state);
+                Map<ApplicationState, Integer> counts = summary.getCounts(state);
                 bars.setRange(state.getTotal());
                 for (int i = 0; i < SummaryItem.STATES.length; i++) {
                     if (SummaryItem.STATES[i].isEnabled()) {
-                        Integer v = counts.get(SummaryItem.STATES[i].getName());
+                        Integer v = counts.get(SummaryItem.STATES[i]);
                         int iv = 0, prev = 0;
                         if (v != null) {
                             iv = v.intValue();
                         }
                         
                         if (SummaryItem.STATES[i] == ApplicationState.FINISHED_SUCCESSFULLY) {
-                            v = counts.get(ApplicationState.FINISHED_IN_PREVIOUS_RUN.getName());
+                            v = counts.get(ApplicationState.FINISHED_IN_PREVIOUS_RUN);
                             if (v != null) {
                                 prev = v.intValue();
                             }

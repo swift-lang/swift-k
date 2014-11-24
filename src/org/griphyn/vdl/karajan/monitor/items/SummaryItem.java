@@ -37,14 +37,14 @@ public class SummaryItem extends AbstractStatefulItem {
         return null;
     }
     
-	private Map<String, Integer> counts;
+	private Map<ApplicationState, Integer> counts;
 	private int status;
 	
 	public static final String ID = "SUMMARY";
 	
 	public SummaryItem() {
 		super(ID);
-		counts = new HashMap<String, Integer>();
+		counts = new HashMap<ApplicationState, Integer>();
 	}
 	
 	public StatefulItemClass getItemClass() {
@@ -54,19 +54,9 @@ public class SummaryItem extends AbstractStatefulItem {
 	public String toString() {
 		return counts.toString();
 	}
-
-	public synchronized int getCount(String key) {
-	    Integer i = counts.get(key);
-	    if (i == null) {
-	        return 0;
-	    }
-	    else {
-	        return i;
-	    }
-	}
 	
 	public synchronized int getCount(ApplicationState key) {
-        Integer i = counts.get(key.getName());
+        Integer i = counts.get(key);
         if (i == null) {
             return 0;
         }
@@ -75,15 +65,15 @@ public class SummaryItem extends AbstractStatefulItem {
         }
     }
 	
-	public int getCount(String key, SystemState state) {
+	public int getCount(ApplicationState key, SystemState state) {
         return getCount(key);
 	}
 	
-	public synchronized Map<String, Integer> getCounts(SystemState state) {
-        return new HashMap<String, Integer>(counts);
+	public synchronized Map<ApplicationState, Integer> getCounts(SystemState state) {
+        return new HashMap<ApplicationState, Integer>(counts);
 	}
 	
-	public synchronized void setCount(String key, int value) {
+	public synchronized void setCount(ApplicationState key, int value) {
 	    counts.put(key, value);
 	}	
 }
