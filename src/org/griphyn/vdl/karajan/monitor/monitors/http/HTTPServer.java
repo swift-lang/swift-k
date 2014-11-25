@@ -204,8 +204,7 @@ public class HTTPServer implements Runnable {
                             boolean ok = false;
                             if (s != null) {
                                 try {
-                                    s.process(key);
-                                    ok = true;
+                                    ok = s.process(key);
                                 }
                                 catch (Exception e) {
                                 }
@@ -277,10 +276,13 @@ public class HTTPServer implements Runnable {
             cmd = null;
         }
 
-        public void process(SelectionKey key) throws IOException {
+        public boolean process(SelectionKey key) throws IOException {
             if (state == IDLE && key.isReadable()) {
                 try {
-                    channel.read(rbuf);
+                    int r = channel.read(rbuf);
+                    if (r == 0) {
+                        return false;
+                    }
                 }
                 catch (BufferOverflowException e) {
                     logger.warn("Invalid request received", e);
@@ -354,6 +356,7 @@ public class HTTPServer implements Runnable {
                     }
                 }
             }
+            return true;
         }
 
         private void processCommand(String cmd, Map<String,String> headers, SelectionKey key) {

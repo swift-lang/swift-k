@@ -28,11 +28,13 @@
  */
 package org.griphyn.vdl.karajan.monitor.processors.coasters;
 
+import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.processors.SimpleParser;
 
 public class WorkerProbeProcessor extends AbstractRemoteLogProcessor {
+    private static final Logger logger = Logger.getLogger(WorkerProbeProcessor.class);
     private CoasterStatusItem item;
     
     @Override
@@ -64,7 +66,7 @@ public class WorkerProbeProcessor extends AbstractRemoteLogProcessor {
             }
             else if (type.equals("DF")) {
                 p.skip("mount=");
-                String mountPoint = p.word();
+                String mountPoint = p.immediateWord();
                 p.skip("fs=");
                 String fs = p.word();
                 p.skip("used=");
@@ -89,7 +91,7 @@ public class WorkerProbeProcessor extends AbstractRemoteLogProcessor {
             }
         }
         catch (Exception e) {
-            e.printStackTrace();
+            logger.debug(new RuntimeException("Failed to parse log line: '" + p.getStr() + "'", e));
         }
     }
 }

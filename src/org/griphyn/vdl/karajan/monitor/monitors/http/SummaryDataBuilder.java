@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
+import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
 
@@ -58,15 +59,15 @@ public class SummaryDataBuilder extends StateDataBuilder {
         e.writeMapItem("crtHeap", state.getUsedHeap());
         e.writeMapItem("crtHeapFormatted", state.getCurrentHeapFormatted());
         e.writeMapItem("timeLeftFormatted", state.getEstimatedTimeLeftFormatted());
-        e.writeMapItem("elapsedTimeFormatetd", state.getElapsedTimeFormatted());
+        e.writeMapItem("elapsedTimeFormatted", state.getElapsedTimeFormatted());
         e.writeMapItem("progressString", state.getGlobalProgressString());
         e.writeMapItem("runFinished", state.getRunFinished());
         
         SummaryItem summary = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
         if (summary != null) {
-            Map<String, Integer> counts = summary.getCounts(state);
+            Map<ApplicationState, Integer> counts = summary.getCounts(state);
             for (int i = 0; i < SummaryItem.STATES.length; i++) {
-                Integer v = counts.get(SummaryItem.STATES[i].getName());
+                Integer v = counts.get(SummaryItem.STATES[i]);
                 if (v != null) {
                     if (v > maxCount) {
                         maxCount = v;
@@ -75,13 +76,12 @@ public class SummaryDataBuilder extends StateDataBuilder {
             }
             e.writeMapItem("maxCount", maxCount);
             for (int i = 0; i < SummaryItem.STATES.length; i++) {
-                String name = SummaryItem.STATES[i].getName();
-                Integer v = counts.get(name);
+                Integer v = counts.get(SummaryItem.STATES[i]);
                 if (v != null) {
-                    e.writeMapItem(name, v);
+                    e.writeMapItem(SummaryItem.STATES[i].ordinal(), v);
                 }
                 else {
-                    e.writeMapItem(name, 0);
+                    e.writeMapItem(SummaryItem.STATES[i].ordinal(), 0);
                 }
             }
         }

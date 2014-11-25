@@ -33,16 +33,17 @@ import java.util.List;
 
 public enum ApplicationState {
     //0
-    INITIALIZING("Initializing"), SELECTING_SITE("Selecting site", "Sel. site"), STAGE_IN("Stage in"),
+    INITIALIZING("Initializing"), SELECTING_SITE("Selecting site"), STAGE_IN("Stage in"),
     //3
     SUBMITTING("Submitting"), SUBMITTED("Submitted"), ACTIVE("Active"), STAGE_OUT("Stage out"),
     //7
-    FAILED("Failed"), REPLICATING("Replicating", "Replicating", false, 4 /* SUBMITTED */), 
+    FAILED_BUT_CAN_RETRY("Retrying", "Failed but can retry"), REPLICATING("Replicating", "Replicating", false, 4 /* SUBMITTED */), 
     FINISHED_IN_PREVIOUS_RUN("Finished in previous run", "Finished in prev. run", false, 10),
     //10
-    FINISHED_SUCCESSFULLY("Finished successfully");
+    FINISHED_SUCCESSFULLY("Completed", "Finished successfully"),
+    FAILED("Failed");
     
-    private String name, shortName;
+    private String name, logName;
     private boolean enabled;
     private int aliasIndex;
     
@@ -50,13 +51,13 @@ public enum ApplicationState {
         this(name, name);
     }
     
-    private ApplicationState(String name, String shortName) {
-        this(name, name, true, -1);
+    private ApplicationState(String name, String logName) {
+        this(name, logName, true, -1);
     }
     
-    private ApplicationState(String name, String shortName, boolean enabled, int aliasIndex) {
+    private ApplicationState(String name, String logName, boolean enabled, int aliasIndex) {
         this.name = name;
-        this.shortName = shortName;
+        this.logName = logName;
         this.enabled = enabled;
         this.aliasIndex = aliasIndex;
     }
@@ -65,12 +66,8 @@ public enum ApplicationState {
         return name;
     }
     
-    public String getShortName() {
-        return shortName;
-    }
-
-    public void setShortName(String shortName) {
-        this.shortName = shortName;
+    public String getLogName() {
+        return logName;
     }
     
     public boolean isEnabled() {

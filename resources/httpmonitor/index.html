@@ -30,10 +30,21 @@
 		<script type="text/javascript" src="js/browser.js"></script>
 		<script type="text/javascript" src="js/charts-flot.js"></script>
 		<script>
-		summaryAppStates = ["Initializing", "Sel. site", "Stage in", "Submitting", "Submitted", "Active", "Stage out", "Failed", "Replicating", "Finished successfully"];
-		appStates = summaryAppStates.slice(0, 9);
-		appStates.push("Finished in prev. run");
-		appStates.push("Finished successfully");
+		summaryAppStates = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11];
+		appStates = new Array();
+		appStates[0] = "Initializing";
+		appStates[1] = "Sel. site";
+		appStates[2] = "Stage in";
+		appStates[3] = "Submitting";
+		appStates[4] = "Submitted";
+		appStates[5] = "Active";
+		appStates[6] = "Stage out";
+		appStates[7] = "Retrying";
+		appStates[8] = "Replicating";
+		appStates[9] = "Finished in prev. run";
+		appStates[10] = "Completed";
+		appStates[11] = "Failed";
+		
 		browserSetHome("#browser?type=apps");
 		</script>
 	</head>
@@ -69,7 +80,7 @@
 			<div id="browser" class="tab-contents">
 				<ul class="toolbar">
 					<li><a href="#browser?type=apps" id="browser-apps" class="button bookmark uify">Applications Overview</a></li>
-					<li><a href="#browser?type=applist&state=7" id="failed-apps" class="button bookmark uify">Failed Instances</a></li>
+					<li><a href="#browser?type=applist&state=11" id="failed-apps" class="button bookmark uify">Failed Instances</a></li>
 					<li><a href="#browser?type=sites" id="browser-sites" class="button bookmark uify">Sites</a></li>
 				</ul>
 				<div id="browser-container">
@@ -96,7 +107,7 @@
 			});
 			for (var i = 0; i < summaryAppStates.length; i++) {
 				display("appSummary", "appSummary-template", {
-					state: summaryAppStates[i],
+					state: appStates[summaryAppStates[i]],
 					id: "pb" + i
 				});
 			}
@@ -145,6 +156,7 @@
 				}
 				else {
 					var max = parseInt(data["maxCount"]);
+					console.log(data);
 					for (i = 0; i < summaryAppStates.length; i++) {
 						if (data[summaryAppStates[i]] != null) {
 							var v = data[summaryAppStates[i]];
@@ -166,6 +178,7 @@
 					if (data["runFinished"]) {
 						console.log("Run finished. Stopping updates.");
 						stopUpdatesByID("summary");
+						document.runFinished = true;
 					}
 				}
 			}
@@ -218,7 +231,7 @@
 					</tr>
 					<js>
 						countPerSitePlot("#appdetail-count-per-site", _p.data.sites);
-						timePerSitePlot("#appdetail-time-per-site", _p.data.sites);
+						timePerSitePlot("#appdetail-time-per-site", _p.data.sites, TIME_INTERVAL_TICKS);
 					</js>
 					<proc name="p1" params="title, pdata, host, appname">
 						<tr><td colspan="2"><h2>{$title}</h2></td></tr>
@@ -233,7 +246,7 @@
 							<if test="{$pdata.failedCount == 0}">
 								<then>Failed: 0 instances,</then>
 								<else>
-									Failed: <a tref="#browser?type=applist&amp;name={$appname}&amp;host={$host}&amp;state=7">{$pdata.failedCount} instances</a>
+									Failed: <a tref="#browser?type=applist&amp;name={$appname}&amp;host={$host}&amp;state=11">{$pdata.failedCount} instances</a>
 								</else>
 							</if>
 						</td></tr>
@@ -273,12 +286,16 @@
 						</tr>
 						<js>
 							histogram("#appdetail-c-time-dist-{$host}", [{$pdata.completedTimeDist}], {$pdata.distMinTime}, 
-								{$pdata.distMaxTime}, COMPLETED_COLOR, true);
+								{$pdata.distMaxTime}, COMPLETED_COLOR, true, TIME_INTERVAL_TICKS);
 							histogram("#appdetail-f-time-dist-{$host}", [{$pdata.failedTimeDist}], {$pdata.distMinTime}, 
-								{$pdata.distMaxTime}, FAILED_COLOR, true);
+								{$pdata.distMaxTime}, FAILED_COLOR, true, TIME_INTERVAL_TICKS);
 						</js>
 					</proc>
-					<call name="p1" title="All sites combined" pdata="{$data}" host="{null}" appname="{$data.name}"/>
+					<if test="{$data.sites.length > 1}">
+						<then>
+							<call name="p1" title="All sites combined" pdata="{$data}" host="{null}" appname="{$data.name}"/>
+						</then>
+					</if>
 					<for name="site" in="{$data.sites}">
 						<call name="p1" title="Site: {$site.name}" pdata="{$site}" host="{$site.name}" appname="{$data.name}"/>
 					</for>
@@ -355,6 +372,20 @@
 					<call name="row" data="{$data}" label="STDERR" key="stderr"/>
 					<call name="row" data="{$data}" label="Input files" key="stagein"/>
 					<call name="row" data="{$data}" label="Output files" key="stageout"/>
+					<tr>
+						<td>
+							Timeline:
+							<table>
+								<tr><th>Time</th><th>Event</th></tr>
+								<for name="event" in="{$data.timeline}">
+									<tr>
+										<td>{formatTimestamp($event[2])}</td>
+										<td>{STATES_W[$event[0]]}</td>
+									</tr>
+								</for>
+							</table>
+						</td>
+					</tr>
 				</table>
 				<div id="legend" class="float-left"></div>
 			</div>
@@ -490,14 +521,14 @@
 						<td>
 							<table>
 								<tr>
-									<for name="d" in="{$data.diskUsage}">
-										<td>{$d.mount}</td>
-									</for>
-								</tr>
-								<tr>
-									<for name="d" in="{$data.diskUsage}">
-										<td><div id="du-{$d.index}" class="plot-small"></div></td>
-									</for>
+									<td>
+										<for name="d" in="{$data.diskUsage}">
+											<div style="float: left;">
+												<div class="plothdr">{$d.mount}</div>
+												<div id="du-{$d.index}" class="plot-small"></div>
+											</div>
+										</for>
+									</td>
 								</tr>
 							</table>
 						</td>
@@ -510,14 +541,14 @@
 						<td>
 							<table>
 								<tr>
-									<for name="d" in="{$data.ioLoad}">
-										<td>{$d.device}</td>
-									</for>
-								</tr>
-								<tr>
-									<for name="d" in="{$data.ioLoad}">
-										<td><div id="dlr-{$d.index}" class="plot-small"></div></td>
-									</for>
+									<td>
+										<for name="d" in="{$data.ioLoad}">
+											<div style="float: left;">
+												<div class="plothdr">{$d.device}</div>
+												<div style="float: left;" id="dlr-{$d.index}" class="plot-small"></div>
+											</div>
+										</for>
+									</td>
 								</tr>
 							</table>
 						</td>
@@ -530,14 +561,14 @@
 						<td>
 							<table>
 								<tr>
-									<for name="d" in="{$data.ioLoad}">
-										<td>{$d.device}</td>
-									</for>
-								</tr>
-								<tr>
-									<for name="d" in="{$data.ioLoad}">
-										<td><div id="dlw-{$d.index}" class="plot-small"></div></td>
-									</for>
+									<td>
+										<for name="d" in="{$data.ioLoad}">
+											<div style="float: left;">
+												<div class="plothdr">{$d.device}</div>
+												<div id="dlw-{$d.index}" class="plot-small"></div>
+											</div>
+										</for>
+									</td>
 								</tr>
 							</table>
 						</td>

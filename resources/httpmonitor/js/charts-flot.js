@@ -27,11 +27,11 @@ function stateTimesChart(id, data) {
 }
 
 function stateTimesPie1(id, data) {
-	stateTimesPie0(id, data, STATES1);
+	stateTimesPie0(id, data, STATES_PIE_1);
 }
 
 function stateTimesPie2(id, data) {
-	stateTimesPie0(id, data, STATES2);
+	stateTimesPie0(id, data, STATES_PIE_2);
 }
 
 function stateTimesPie0(id, data, states) {
@@ -54,27 +54,59 @@ function stateTimesPie0(id, data, states) {
 }
 
 function stateTimesStrip1(id, data) {
-	stateTimesStrip0(id, data, STATES1, "#legend");
-}
-
-function stateTimesStrip2(id, data) {
-	stateTimesStrip0(id, data, STATES2, null);
-}
-
-function stateTimesStrip0(id, data, states, legendid) {
-	var x = new Array(states.length);
-	//x[0] = ["State", "Duration"];
-	for (var i = 0; i < states.length; i++) {
-		//x[i] = [{label: STATES_W[states[i]], data: 0.0, color: STATE_COLORS[states[i]]}];
-		//x[i + 1] = [STATES_W[states[i]], 0.0];
-		x[i] = {label: STATES_W[states[i]], color: STATE_COLORS[states[i]], data: [[0.0, 1]]};
-		for (var j = 0; j < data.length; j++) {
-			if (states[i] == data[j][0]) {
-				x[i].data[0][0] = data[j][1];
+	var x = new Array();
+	var index = 0;
+	for (var j = 0; j < data.length; j++) {
+		for (var i = 0; i < STATES1.length; i++) {
+			if (STATES1[i] == data[j][0]) {
+				x[index++] = {label: STATES_W[STATES1[i]], color: STATE_COLORS[STATES1[i]], data: [[data[j][1], 1]]};
 			}
 		}
 	}
-	
+	makeLegend();
+	stateTimesStripPlot(id, x, null);
+}
+
+function makeLegend() {
+	var table = $("#legend").append($("<table>"));
+	for (var i = 0; i < STATES1.length; i++) {
+		var tr = $("<tr>");
+		var tdc = $("<td>");
+		var tdl = $("<td>");
+		tdc.css("background-color", STATE_COLORS[STATES1[i]]);
+		tdl.html(STATES_W[STATES1[i]]);
+		table.append(tr);
+		tr.append(tdc);
+		tr.append(tdl);
+	}
+}
+
+function stateTimesStrip2(id, data) {
+	var lastStageInIndex = -1;
+	for (var j = 0; j < data.length; j++) {
+		if (data[j][0] == 2) {
+			lastStageInIndex = j;
+		}
+	}
+	if (lastStageInIndex != -1) {
+		var x = new Array();
+		var index = 0;
+		for (var j = lastStageInIndex; j < data.length; j++) {
+			for (var i = 0; i < STATES1.length; i++) {
+				if (STATES1[i] == data[j][0]) {
+					x[index++] = {label: STATES_W[STATES1[i]], color: STATE_COLORS[STATES1[i]], data: [[data[j][1], 1]]};
+				}
+			}
+			// failed or completed
+			if (data[j][0] == 7 || data[j][0] == 10) {
+				break;
+			}
+		}
+		stateTimesStripPlot(id, x, null);
+	}
+}
+
+function stateTimesStripPlot(id, x, legendid) {	
 	$.plot(id, x , {
 		series: {
 			stack: true,
@@ -100,7 +132,14 @@ function stateTimesStrip0(id, data, states, legendid) {
 	});
 }
 
-function histogram(id, data, min, max, color, logScale) {
+
+function histogram(id, data, min, max, color, logScale, xticks) {
+	if (xticks == null) {
+		xticks = NULL_TICKS;
+	}
+	if (typeof(xticks) == "function") {
+		xticks = xticks(min, max);
+	}
 	var x = new Array(data.length);
 	
 	//console.log("min: " + min + ", max: " + max);
@@ -129,6 +168,10 @@ function histogram(id, data, min, max, color, logScale) {
 					fillColor: color
 				},
 				shadowSize: 0
+			},
+			xaxis: {
+				tickSize: xticks.size,
+				tickFormatter: xticks.formatter
 			},
 			yaxis: {
 				ticks: [[1, "1"], [10, "10"], [100, "100"], [1000, "1k"], [10000, "10k"], [1e5, "100k"], [1e6, "1m"], [1e7, "10m"]],
@@ -161,30 +204,97 @@ function histogram(id, data, min, max, color, logScale) {
 	}
 }
 
-function stuffPerSitePlot(id, data, cprop, fprop) {
-	var cseries = {data: [], label: "Completed", color: COMPLETED_COLOR, };
-	var fseries = {data: [], label: "Failed", color: FAILED_COLOR};
-	for (var site in data) {
-		cseries.data.push([data[site].name, data[site][cprop]]);
-		fseries.data.push([data[site].name, data[site][fprop]]);
+function getTickUnit(min, max) {
+	if (max < 1000) {
+		return "ms";
 	}
+	else if (max < 5 * 60 * 1000) {
+		return "s";
+	}
+	else if (max < 5 * 3600 * 1000) {
+		return "m";
+	}
+	else {
+		return "h";
+	}
+}
+
+var NULL_TICKS = {size: null, formatter: null}
+var TIME_INTERVAL_TICKS = timeIntervalTicks
+
+function timeIntervalTicks(min, max) {
+	var u = getTickUnit(max);
+	if (u == "ms") {
+		return {size: max / 7, formatter: function(val, axis) {return val.toFixed(0) + "ms";}}
+	}
+	else if (u == "s") {
+		return {size: max / 7, formatter: function(val, axis) {return (val / 1000).toFixed(1) + "s";}}
+	}
+	else if (u == "m") {
+		return {size: round(max / 7, 60 * 1000), formatter: function(val, axis) {return (val / 1000 / 60).toFixed(0) + "m";}}
+	}
+	else if (u == "h") {
+		return {size: round(max / 7, 3600 * 1000), formatter: function(val, axis) {return (val / 1000 / 3600).toFixed(0) + "h";}}
+	}
+}
+
+function round(x, n) {
+	if (x < n) {
+		return n;
+	}
+	else {
+		return Math.round(x / n) * n;
+	}
+}
+
+function stuffPerSitePlot(id, data, cprop, fprop, yticks) {
+	if (yticks == null) {
+		yticks = NULL_TICKS;
+	}
+	var cseries = {data: [], label: "Completed", color: COMPLETED_COLOR};
+	var fseries = {data: [], label: "Failed", color: FAILED_COLOR};
+	var ymax = Number.MIN_VALUE;
+	var index = 0;
+	var ticks = new Array();
+	var siteNames = new Array();
 		
+	for (var site in data) {
+		var y = data[site][cprop] + data[site][fprop];
+		if (y > ymax) {
+			ymax = y;
+		}
+		ticks.push(index + 0.5);
+		siteNames.push(data[site].name);
+		cseries.data.push([index++, data[site][cprop]]);
+		fseries.data.push([index++, data[site][fprop]]);
+	}
+	
 	var ds = [cseries, fseries];
+	
+	if (typeof(yticks) == "function") {
+		yticks = yticks(0, ymax);
+	}
 
 	$.plot(id, ds , {
 		series: {
-			stack: true,
 			bars: {
 				show: true,
-				barWidth: 0.6,
 				align: "center",
-				fill: 1
+				fill: 1,
+				barWidth: 0.8
 			},
 			shadowSize: 0
 		},
 		xaxis: {
-			mode: "categories",
-			font: { size: 12, weight: "bold", color: "#000000" }
+			font: { size: 12, weight: "bold", color: "#000000" },
+			ticks: ticks,
+			tickFormatter: function(x, axis) {
+				return siteNames[(x - 0.5) / 2];
+			}
+		},
+		yaxis: {
+			tickSize: yticks.size,
+			tickFormatter: yticks.formatter
 		},
 		legend: {
 			show: true,

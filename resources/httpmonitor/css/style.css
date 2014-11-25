@@ -258,3 +258,9 @@ table.collapsed-border {
 .float-left {
 	float: left;
 }
+
+.plothdr {
+	text-align: center;
+	margin-top: 16px;
+	font-weight: bold;
+}

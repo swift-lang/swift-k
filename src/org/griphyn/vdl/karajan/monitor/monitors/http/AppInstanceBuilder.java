@@ -102,22 +102,31 @@ public class AppInstanceBuilder {
         if (tl == null || tl.isEmpty()) {
             return 0;
         }
-        return (int) (state.getCurrentTime() - tl.get(0).time); 
+        TimedValue<ApplicationState> lastState = tl.get(tl.size() - 1);
+        return (int) (lastState.time - tl.get(0).time); 
     }
     
     private int getRunTime(List<TimedValue<ApplicationState>> tl) {
         if (tl == null || tl.isEmpty()) {
             return 0;
         }
+        TimedValue<ApplicationState> lastState = tl.get(tl.size() - 1);
+        long lastTime = lastState.time;
+        if (!lastState.value.isTerminal()) {
+            lastTime = state.getCurrentTime();
+        }
+        TimedValue<ApplicationState> lastStageIn = null;
         for (TimedValue<ApplicationState> p : tl) {
-            switch (p.value) {
-                case STAGE_IN:
-                case STAGE_OUT:
-                case ACTIVE:
-                    return (int) (state.getCurrentTime() - p.time);
+            if (p.value == ApplicationState.STAGE_IN) {
+                lastStageIn = p;
             }
         }
-        return 0;
+        if (lastStageIn != null) {
+            return (int) (lastTime - lastStageIn.time);
+        }
+        else {
+            return 0;
+        }
     }
 
     private void extractJobInfo(JSONEncoder e, List<String> args) {
@@ -132,7 +141,12 @@ public class AppInstanceBuilder {
                 l.clear();
             }
             else {
-                l.add(arg);
+                if ("-of".equals(key) || "-if".equals(key)) {
+                    l.add(arg.replace("|", ", "));
+                }
+                else {
+                    l.add(arg);
+                }
             }
         }
     }

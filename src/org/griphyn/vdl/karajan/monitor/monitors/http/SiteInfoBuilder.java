@@ -157,9 +157,9 @@ public class SiteInfoBuilder {
         }
         
         add(states, app.getState().ordinal(), 1);
-        List<List<Integer>> st = db.getStateTimes(app);
-        for (List<Integer> sti : st) {
-            add(stateTimes, sti.get(0), sti.get(1));
+        List<List<Object>> st = db.getStateTimes(app);
+        for (List<Object> sti : st) {
+            add(stateTimes, (Integer) sti.get(0), (Integer) sti.get(1));
         }
         si.appCountByType.put(name, count + 1);
     }

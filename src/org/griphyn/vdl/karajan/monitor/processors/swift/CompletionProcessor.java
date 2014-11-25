@@ -24,7 +24,6 @@ import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.processors.AbstractMessageProcessor;
-import org.griphyn.vdl.karajan.monitor.processors.SimpleParser;
 
 public class CompletionProcessor extends AbstractMessageProcessor {
     

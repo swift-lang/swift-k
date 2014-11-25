@@ -84,14 +84,18 @@ public class SimpleParser {
 		}
 		return b;
 	}
+	
+	public String immediateWord() {
+        beginToken();
+        skipToWhitespace();
+        endToken();
+        skipWhitespace();
+        return getToken().intern();
+    }
 
 	public String word() {
 		skipWhitespace();
-		beginToken();
-		skipToWhitespace();
-		endToken();
-		skipWhitespace();
-		return getToken();
+		return immediateWord();
 	}
 
 	public void skipWhitespace() {

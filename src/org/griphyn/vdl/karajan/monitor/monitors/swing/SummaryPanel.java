@@ -42,6 +42,7 @@ import javax.swing.border.EtchedBorder;
 
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.common.GlobalTimer;
+import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.SummaryItem;
 
@@ -160,9 +161,9 @@ public class SummaryPanel extends JPanel {
     private void update() {
         SummaryItem summary = (SummaryItem) state.getItemByID(SummaryItem.ID, StatefulItemClass.WORKFLOW);
         if (summary != null) {
-            Map<String, Integer> counts = summary.getCounts(state);
+            Map<ApplicationState, Integer> counts = summary.getCounts(state);
             for (int i = 0; i < SummaryItem.STATES.length; i++) {
-                Integer v = counts.get(SummaryItem.STATES[i].getName());
+                Integer v = counts.get(SummaryItem.STATES[i]);
                 if (v != null) {
                     if (v > maxCount) {
                         maxCount = v;
