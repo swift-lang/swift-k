@@ -235,7 +235,7 @@ public class Java extends SwiftFunction {
                     varargs = true;
                 }
             }
-            else {
+            else if (n < parameterTypes.length) {
                 return false;
             }
         }
