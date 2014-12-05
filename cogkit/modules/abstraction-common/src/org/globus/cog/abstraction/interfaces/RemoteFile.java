@@ -218,18 +218,10 @@ public class RemoteFile {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getDirectory() {
         return dir;
     }
     
-    protected void setDirectory(String dir) {
-        this.dir = dir;
-    }
-
     public String getProtocol() {
         return protocol;
     }
@@ -238,10 +230,6 @@ public class RemoteFile {
         return protocol != null ? protocol : _default;
     }
     
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
-
     public String getHost() {
         return host;
     }
@@ -249,11 +237,7 @@ public class RemoteFile {
     public String getHost(String _default) {
         return host != null ? host : _default;
     }
-    
-    public void setHost(String host) {
-        this.host = host;
-    }
-    
+        
     public int getPort() {
         return port;
     }

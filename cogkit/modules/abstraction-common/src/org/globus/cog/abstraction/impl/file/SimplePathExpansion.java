@@ -76,8 +76,7 @@ public class SimplePathExpansion {
             }
             
             String[] result = new String[2];
-            RemoteFile rf = new RemoteFile(srf);
-            rf.setName(f.getName());
+            RemoteFile rf = new RemoteFile(srf.getProtocol(), srf.getHost(), srf.getPort(), srf.getDirectory(), f.getName());
             result[0] = rf.getURIAsString();
             result[1] = substituteGroups(drf, m);
             results.add(result);
@@ -181,8 +180,7 @@ public class SimplePathExpansion {
         else {
             sb.append(dst.substring(begin));
         }
-        RemoteFile rf = new RemoteFile(drf);
-        rf.setName(sb.toString());
+        RemoteFile rf = new RemoteFile(drf.getProtocol(), drf.getHost(), drf.getPort(), drf.getDirectory(), sb.toString());
         return rf.getURIAsString();
     }
 }

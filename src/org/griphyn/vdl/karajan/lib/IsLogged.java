@@ -29,9 +29,9 @@ import k.rt.Stack;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.restartLog.LogEntry;
+import org.globus.cog.karajan.compiled.nodes.restartLog.MutableInteger;
 import org.globus.cog.karajan.compiled.nodes.restartLog.RestartLog;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -89,10 +89,16 @@ public class IsLogged extends SwiftFunction {
         LogEntry entry = LogEntry.build(str);
         boolean found = false;
         synchronized (logData) {
-            List<?> files = (List<?>) logData.get(entry);
-            if (files != null && !files.isEmpty()) {
-                found = true;
-            }
+        	Object v = logData.get(entry);
+        	if (v instanceof MutableInteger) {
+        		return true;
+        	}
+        	else {
+                List<?> files = (List<?>) v;
+                if (files != null && !files.isEmpty()) {
+                    found = true;
+                }
+        	}
         }
         return found;
     }
