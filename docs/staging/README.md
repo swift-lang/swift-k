@@ -37,8 +37,8 @@ Staging method : local
 
 ![Local staging](/figs/local_staging.pdf)
 
-Summary
-^^^^^^^
+###Summary
+
 
 The local staging method is designed for shared-nothing architectures such as
 clusters and clouds with no shared file-systems. The data originates on the
@@ -52,13 +52,11 @@ bandwidth of the service could bottleneck the data flow. Similarly if the swift
 client is running remotely, the network links between the client and the service
 could potentially become a bottleneck for large volumes of data.
 
-When to use this mode
-^^^^^^^^^^^^^^^^^^^^^
+###When to use this mode
 
 The data volumes that need to be transferred to and from the workers to the client are
 
-Example configs
-^^^^^^^^^^^^^^^
+###Example configs
 
 -----
 sites: midway
@@ -86,12 +84,12 @@ site.midway {
 -----
 
 
-Analysing logs
-^^^^^^^^^^^^^^
+###Analysing logs
+
 TODO
 
-Performance
-^^^^^^^^^^^
+###Performance
+
 All data-flow is over the network in this staging method and as a result, larger
 data volumes can impact performance adversely. The entire data flow must go through
 the nodes on which the client and service are running and the bandwidth limitations
@@ -100,22 +98,21 @@ of that node must be taken into account.
 When several small files are involved, or with sufficiently large files, the
 filesystem on the client node can become a bottleneck.
 
-Notes:
-^^^^^^
+###Notes:
+
 
 When running using local coasters (local instead of ssh-cl), the client and service run on the same node.
 
 
 
-Staging method : Direct
------------------------
+###Staging method : Direct
 
 image:figs/direct_staging.pdf[]
 
 image:figs/direct_staging_scratch.pdf[]
 
-Summary
-^^^^^^^
+###Summary
+
 The direct staging mode is designed for computational resources with shared-filesystems.
 This mode requires that a shared filesystem such as NFS, Lustre, or even FUSE-mounted-S3
 is mounted across the nodes where the client, service, and the workers are executing.
