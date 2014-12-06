@@ -42,7 +42,12 @@ public class LogEntry {
 	public static LogEntry parse(String line) {
 		LogEntry entry = new LogEntry();
 		StringTokenizer st = new StringTokenizer(line, "!");
-		if (st.countTokens() < 2 && st.countTokens() > 3) {
+		int tokCount = st.countTokens();
+		if (tokCount == 1) {
+			entry.key = line;
+			return entry;
+		}
+		if (tokCount > 3) {
 			throw new ExecutionException();
 		}
 		entry.key = st.nextToken();

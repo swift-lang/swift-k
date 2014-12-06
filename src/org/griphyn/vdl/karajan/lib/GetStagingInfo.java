@@ -128,28 +128,23 @@ public class GetStagingInfo extends SwiftFunction {
 
 
     private Set<AbsFile> addOne(AbsFile f, Info info, Set<AbsFile> files, String defaultScheme) {
-        String proto = f.getProtocol();
-        if (proto == null) {
-            f.setProtocol(defaultScheme);
-        }
-        if (f.getHost() == null) {
-            f.setHost("localhost");
-        }
+        String proto = f.getProtocol(defaultScheme);
+        String host = f.getHost("localhost");
         
         String dir = f.getDirectory();
         if (info.remoteDirNames.isEmpty()) {
             info.remoteDirNames = new HashSet<AbsFile>();
         }
         if (dir == null) {
-            info.remoteDirNames.add(new AbsFile(f.getProtocol(), f.getHost(), "."));
+            info.remoteDirNames.add(new AbsFile(proto, host, "."));
         }
         else {
-            info.remoteDirNames.add(new AbsFile(f.getProtocol(), f.getHost(), f.getDirectory()));
+            info.remoteDirNames.add(new AbsFile(proto, host, f.getDirectory()));
         }
         if (files.isEmpty()) {
             files = new HashSet<AbsFile>();
         }
-        files.add(f);
+        files.add(new AbsFile(proto, host, f.getPort(), f.getDirectory(), f.getName()));
         return files;
     }
 

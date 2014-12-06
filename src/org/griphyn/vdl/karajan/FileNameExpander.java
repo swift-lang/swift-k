@@ -196,7 +196,7 @@ public class FileNameExpander {
     private AbsFile mapSingle() {
         AbsFile f = (AbsFile) var.map();
         if (defaultScheme != null && f.getProtocol() == null) {
-            f.setProtocol(defaultScheme);
+            f = new AbsFile(defaultScheme, f.getHost(), f.getPort(), f.getDirectory(), f.getName());
         }
         return f;
     }
@@ -225,7 +225,7 @@ public class FileNameExpander {
         for (Path p : src) {
             AbsFile f = (AbsFile) mapper.map(p);
             if (defaultScheme != null && f.getProtocol() == null) {
-                f.setProtocol(defaultScheme);
+                f = new AbsFile(defaultScheme, f.getHost(), f.getPort(), f.getDirectory(), f.getName());
             }
             l.add(f);
         }

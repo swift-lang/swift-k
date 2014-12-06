@@ -40,6 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.Channel;
 import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
@@ -55,11 +56,14 @@ import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 
 public class RestartLog extends InternalFunction {
+	public static final int VERSION_MAJ = 2;
+	public static final int VERSION_MIN = 0;
+	
 	public static final Logger logger = Logger.getLogger(RestartLog.class);
 	
 	public static final String LOG_DATA = "RESTART_LOG:DATA";
@@ -201,12 +205,12 @@ public class RestartLog extends InternalFunction {
 			name = fileName.getValue(stack);
 		}
 		for (int i = 0; i < Integer.MAX_VALUE; i++) {
-                        String restartLogFilename = System.getProperty("restart.log.name");
-                        if(restartLogFilename == null) {
-                                String index = "." + String.valueOf(i);
-                                restartLogFilename = name + index + ".rlog";
-                        }
-                        File f = new File(restartLogFilename);
+            String restartLogFilename = System.getProperty("restart.log.name");
+            if(restartLogFilename == null) {
+                    String index = "." + String.valueOf(i);
+                    restartLogFilename = name + index + ".rlog";
+            }
+            File f = new File(restartLogFilename);
 
 			if (f.exists()) {
 				if (i == MAX_INDEX) {
@@ -217,6 +221,7 @@ public class RestartLog extends InternalFunction {
 			try {
 				logffw = new FlushableLockedFileWriter(f, true);
 				writeDate(logffw, "# Log file created ");
+				logffw.write("# Format version " + VERSION_MAJ + "." + VERSION_MIN + "\n");
 			}
 			catch (IOException e) {
 				throw new ExecutionException(this, "Exception caught trying to get exclusive lock on "
@@ -246,7 +251,11 @@ public class RestartLog extends InternalFunction {
 
 	private void closeLog(Stack stack) throws ExecutionException {
 		try {
-			c_restartLog.get(stack).close();
+		    Channel<String> log = c_restartLog.get(stack);
+		    if (log != null) {
+		        // it's possible for an error to occur during log creation
+		        log.close();
+		    }
 		}
 		catch (Exception e) {
 			logger.warn("Failed to close log file", e);
@@ -269,6 +278,9 @@ public class RestartLog extends InternalFunction {
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line.length() == 0 || line.charAt(0) == '#') {
+					if (line.startsWith("# Format version")) {
+						checkCompatible(line);
+					}
 					continue;
 				}
 				try {
@@ -305,6 +317,15 @@ public class RestartLog extends InternalFunction {
 			catch (IOException e) {
 				logger.warn("Could not close log file");
 			}
+		}
+	}
+
+	private void checkCompatible(String line) {
+		String[] e1 = line.split("\\s+");
+		String version = e1[e1.length - 1];
+		String[] e2 = version.split("\\.");
+		if (Integer.parseInt(e2[0]) != VERSION_MAJ) {
+			throw new ExecutionException(this, "Incompatible restart log format (" + e2[0] + ".X). Expected " + VERSION_MAJ + ".X");
 		}
 	}
 }
