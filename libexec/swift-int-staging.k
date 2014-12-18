@@ -38,7 +38,6 @@ namespace(providerStaging) {
 			}
 			stderrs := if(stderr == null, "{dir}/{jobid}.stderr", stderrs)
 			stdouts := if(stdout == null, "{dir}/{jobid}.stdout", stdouts)
-			echo("stdout: ", stdouts, "\nstderr: ", stderrs)
 			if(file:exists(stderrs)) {
 				"\n\n------- Application STDERR --------\n"
 				str:strip(file:read(stderrs))
@@ -61,7 +60,7 @@ namespace(providerStaging) {
 			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 			
 			wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
-			tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)				
+			tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 			
 			sm := siteProfile(rhost, "stagingMethod", default="file"),
 			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout, defaultScheme = sm),
