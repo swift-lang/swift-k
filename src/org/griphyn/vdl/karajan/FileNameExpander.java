@@ -93,39 +93,38 @@ public class FileNameExpander {
     }
 
     public void toString(Collection<Object> ret, boolean direct) {
-        boolean remote = (this.transform == Transform.RELATIVE) && !direct;
         if (mode == MultiMode.COMBINED) {
-            ret.add(combine(map(), remote));
+            ret.add(combine(map(), direct));
         }
         else {
-            addAll(ret, map(), remote);
+            addAll(ret, map(), direct);
         }
     }
 
-    private void addAll(Collection<Object> ret, List<AbsFile> l, boolean remote) {
+    private void addAll(Collection<Object> ret, List<AbsFile> l, boolean direct) {
         for (int i = 0; i < l.size(); i++) {
             AbsFile f = l.get(i);
-            ret.add(getPath(f, remote));
+            ret.add(getPath(f, direct));
         }
     }
 
-    private String combine(List<AbsFile> l, boolean remote) {
+    private String combine(List<AbsFile> l, boolean direct) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < l.size(); i++) {
             AbsFile f = l.get(i);
             if (i > 0) {
                 sb.append(' ');
             }
-            sb.append(getPath(f, remote));
+            sb.append(getPath(f, direct));
         }
         return sb.toString();
     }
 
-    private String getPath(AbsFile f, boolean remote) {
-        if (isDirect(f)) {
+    private String getPath(AbsFile f, boolean direct) {
+        if (isDirect(f) || direct) {
             return f.getAbsolutePath();
         }
-        else if (remote) {
+        else if (this.transform == Transform.RELATIVE) {
             return PathUtils.remotePathName(f);
         }
         else if (isLocal(f) || f.getHost() == null) {
