@@ -34,7 +34,7 @@ public class FileNameExpander {
     }
     
     public enum Transform {
-        NONE, RELATIVE
+        NONE, REMOTE, ABSOLUTE
     }
     
     private final DSHandle var;
@@ -43,7 +43,7 @@ public class FileNameExpander {
     private String defaultScheme;
     
     public FileNameExpander(DSHandle var) {
-        this(var, MultiMode.COMBINED, Transform.RELATIVE);
+        this(var, MultiMode.COMBINED, Transform.REMOTE);
     }
 
     public FileNameExpander(DSHandle var, MultiMode mode, Transform transform) {
@@ -74,16 +74,15 @@ public class FileNameExpander {
     }
     
     public String toCombinedString() {
-        return combine(map(), this.transform == Transform.RELATIVE);
+        return combine(map());
     }
     
     public String[] toStringArray() {
-        boolean remote = (this.transform == Transform.RELATIVE);
         List<AbsFile> l = map();
         String[] r = new String[l.size()];
         for (int i = 0; i < l.size(); i++) {
             AbsFile f = l.get(i);
-            r[i] = getPath(f, remote);
+            r[i] = getPath(f);
         }
         return r;
     }
@@ -92,39 +91,39 @@ public class FileNameExpander {
         return Arrays.asList(toStringArray());
     }
 
-    public void toString(Collection<Object> ret, boolean direct) {
+    public void toString(Collection<Object> ret) {
         if (mode == MultiMode.COMBINED) {
-            ret.add(combine(map(), direct));
+            ret.add(combine(map()));
         }
         else {
-            addAll(ret, map(), direct);
+            addAll(ret, map());
         }
     }
 
-    private void addAll(Collection<Object> ret, List<AbsFile> l, boolean direct) {
+    private void addAll(Collection<Object> ret, List<AbsFile> l) {
         for (int i = 0; i < l.size(); i++) {
             AbsFile f = l.get(i);
-            ret.add(getPath(f, direct));
+            ret.add(getPath(f));
         }
     }
 
-    private String combine(List<AbsFile> l, boolean direct) {
+    private String combine(List<AbsFile> l) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < l.size(); i++) {
             AbsFile f = l.get(i);
             if (i > 0) {
                 sb.append(' ');
             }
-            sb.append(getPath(f, direct));
+            sb.append(getPath(f));
         }
         return sb.toString();
     }
 
-    private String getPath(AbsFile f, boolean direct) {
-        if (isDirect(f) || direct) {
+    private String getPath(AbsFile f) {
+        if (isDirect(f) || this.transform == Transform.ABSOLUTE) {
             return f.getAbsolutePath();
         }
-        else if (this.transform == Transform.RELATIVE) {
+        else if (this.transform == Transform.REMOTE) {
             return PathUtils.remotePathName(f);
         }
         else if (isLocal(f) || f.getHost() == null) {
