@@ -9,11 +9,11 @@ file out[] <simple_mapper;prefix="out/driver", suffix=".out">;
 file err[] <simple_mapper;prefix="out/driver", suffix=".err">;
 file log[] <simple_mapper;prefix="out/Logs_",  suffix=".tar">;
 
-string sites[] = ["uc3", "beagle", "midway", "crush", "frisbee", "blues", "fusion", "bridled", "communicado"];
+string sites[] = ["osg", "beagle", "midway", "crush", "frisbee", "blues", "fusion", "bridled", "communicado"];
 
-app (file out, file err, file log) remote_uc3	  (script run, file tar)
+app (file out, file err, file log) remote_osg	  (script run, file tar)
 {
-    uc3 @run @filename(tar) @log stdout=@filename(out) stderr=@filename(err);
+    osg @run @filename(tar) @log stdout=@filename(out) stderr=@filename(err);
 }
 
 app (file out, file err, file log) remote_beagle  (script run, file tar)
@@ -72,8 +72,8 @@ foreach site, i in sites {
     switch(i)
     {
 	case 0:
-        tracef("Calling uc3\n");
-  		(out[i], err[i], log[i]) = remote_uc3     (wrapper, swift_package);
+        tracef("Calling osg\n");
+  		(out[i], err[i], log[i]) = remote_osg     (wrapper, swift_package);
 	case 1:
         tracef("Calling beagle \n");
   		(out[i], err[i], log[i]) = remote_beagle  (wrapper, swift_package);
@@ -85,7 +85,7 @@ foreach site, i in sites {
         (out[i], err[i], log[i]) = remote_mcs     (wrapper, swift_package);
 	case 4:
         tracef("Skipping Frisbee on MCS (Will fail due to BUG:1030)\n");
-		//(out[i], err[i], log[i]) = remote_frisbee (wrapper, swift_package);
+		(out[i], err[i], log[i]) = remote_frisbee (wrapper, swift_package);
 	case 5:
         tracef("Calling Blues\n");
     	(out[i], err[i], log[i]) = remote_blues   (wrapper, swift_package);

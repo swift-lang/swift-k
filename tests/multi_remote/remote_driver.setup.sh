@@ -1,8 +1,6 @@
 #!/bin/bash
-
-[ ! -z $COG_URL ]         || COG_URL=https://svn.code.sf.net/p/cogkit/svn/trunk/src/cog
-[ ! -z $SWIFT_URL ]       || SWIFT_URL=https://svn.ci.uchicago.edu/svn/vdl2/trunk
 [ ! -z $SWIFT_VERSION ]   || SWIFT_VERSION=trunk
+[ ! -z $GIT_REPO ]        || GIT_REPO="https://github.com/swift-lang/swift-k.git"
 [ ! -z $BEAGLE_USERNAME ] || BEAGLE_USERNAME="yadunandb"
 [ ! -z $MIDWAY_USERNAME ] || MIDWAY_USERNAME="yadunand"
 [ ! -z $UC3_USERNAME ]    || UC3_USERNAME="yadunand"
@@ -15,19 +13,7 @@
 [ ! -z $SWIFT_SOURCE ]    || SWIFT_SOURCE="/home/yadunand/swift"
 [ ! -z $RUN_TYPE ]        || RUN_TYPE="daily"
 [ ! -z $SWIFT_TAR_FILE ]  || SWIFT_TAR_FILE="/scratch/midway/yadunand/swift-trunk.tar"
-[ ! -z $CLEAN_CHECKOUT ]  || CLEAN_CHECKOUT="yes"
-
-SITES="sites.xml"
-cp  $SITES  $SITES.bak
-cat $SITES | sed "s/BEAGLE_USERNAME/$BEAGLE_USERNAME/g" > tmp && mv tmp $SITES
-cat $SITES | sed "s/MIDWAY_USERNAME/$MIDWAY_USERNAME/g" > tmp && mv tmp $SITES
-cat $SITES | sed "s/UC3_USERNAME/$UC3_USERNAME/g"       > tmp && mv tmp $SITES
-cat $SITES | sed "s/MCS_USERNAME/$MCS_USERNAME/g"       > tmp && mv tmp $SITES
-cat $SITES | sed "s/PUBLISH_FOLDER/$PUBLISH_FOLDER/g"   > tmp && mv tmp $SITES
-cat $SITES | sed "s/BRID_USERNAME/$BRID_USERNAME/g"     > tmp && mv tmp $SITES
-cat $SITES | sed "s/COMM_USERNAME/$COMM_USERNAME/g"     > tmp && mv tmp $SITES
-cat $SITES | sed "s/FUSION_USERNAME/$FUSION_USERNAME/g" > tmp && mv tmp $SITES
-cat $SITES | sed "s/BLUES_USERNAME/$BLUES_USERNAME/g"   > tmp && mv tmp $SITES
+[ ! -z $CLEAN_CHECKOUT ]  || CLEAN_CHECKOUT="true"
 
 export GLOBUS_HOSTNAME="swift.rcc.uchicago.edu"
 
@@ -39,30 +25,17 @@ BASE=$PWD
 
 if [ "$REMOTE_DRIVER_FASTSETUP" == "true" ]
 then
-    echo "FASTSETUP: Skipping svn update and rebuild"
+    echo "FASTSETUP: Skipping git update and rebuild"
 else
-    if [ -f "swift.tar" ]
-    then
-	    echo "Found swift.tar. Extracting.."
-	    tar -xf swift.tar
-    fi
 
-    if [ "$CLEAN_CHECKOUT" == "yes" ] || [ ! -d "swift" ]
+    if [ "$CLEAN_CHECKOUT" == "true" ]
     then
 	    echo "Cleaning and making fresh checkout"
 	    rm -rf swift &> /dev/null
-	    mkdir swift && cd swift
-	    svn co $COG_URL
-	    cd cog/modules
-	    svn co $SWIFT_URL swift
+        git clone $GIT_REPO swift
 	    cd swift
     else
-	    echo "Updating Cog sources"
-	    cd swift/
-	    svn up *
-	    echo "Updating Swift sources"
-	    cd cog/modules/swift
-        svn up *
+        echo "CLEAN_CHECKOUT not enabled. Cannot proceed"
     fi
 
     echo "$PWD : Starting compile"
