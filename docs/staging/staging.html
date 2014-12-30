@@ -798,7 +798,8 @@ Service-local
 </div>
 <div class="sect2">
 <h3 id="_staging_method_local">Staging method : local</h3>
-<div class="paragraph"><p><span class="image">
+<div class="paragraph"><p>Data flow in local staging:
+<span class="image">
 <img src="figs/local_staging.png" alt="Local staging" />
 </span></p></div>
 <div class="sect3">
@@ -877,10 +878,12 @@ In this case, the network links are between the service and workers.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_staging_method_direct">Staging method : Direct</h3>
-<div class="paragraph"><p><span class="image">
+<div class="paragraph"><p>Data flow with Direct staging:
+<span class="image">
 <img src="figs/direct_staging.png" alt="Direct staging" />
 </span></p></div>
-<div class="paragraph"><p><span class="image">
+<div class="paragraph"><p>Data flow with Direct staging and a scratch directory:
+<span class="image">
 <img src="figs/direct_staging_scratch.png" alt="Direct staging with scratch directory" />
 </span></p></div>
 <div class="sect3">
@@ -888,7 +891,9 @@ In this case, the network links are between the service and workers.</p></div>
 <div class="paragraph"><p>The direct staging mode is designed for computational resources with shared-filesystems.
 This mode requires that a shared filesystem such as NFS, Lustre, or even FUSE-mounted-S3
 is mounted across the nodes where the client, service, and the workers are executing.
-While sandbox directories are created for the individual task executions, the tasks
+Instead of Swift managing network transfers, the network transfers are implicitly
+managed by the shared-filesystem.
+The apps run in sandbox directories created under the workDirectory, but the tasks
 themselves will receive absolute paths for the input and output files. For applications
 that are IO bound, writing directly to the shared-filesystem can adversely affect the
 shared filesystem performance. To avoid this there is an option to specify a “scratch”
@@ -1019,21 +1024,46 @@ shared-filesystem and indirectly the network.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_staging_method_swift">Staging method : Swift</h3>
-<div class="paragraph"><p><span class="image">
+<div class="paragraph"><p>Data flow with staging method Swift:
+<span class="image">
 <img src="figs/swift_staging.png" alt="Swift staging" />
 </span></p></div>
 <div class="sect3">
 <h4 id="_summary_3">Summary</h4>
-<div class="paragraph"><p>Swift staging, invovles the client accessing file over a supported method like
+<div class="paragraph"><p>Swift staging, involves the client accessing file over a supported method like
 ssh or a local-filesystem access, and making the inputs available to the workers
-over a work-directory on a shared filesystem. However, this staging method uses
-an intermediate staginge location that is on a shared-FS so each files is,
-in addition to being read from the initial location,written to and read from a
+over a work-directory on a shared filesystem. This staging method uses
+an intermediate staging location that is on a shared-FS so each files is,
+in addition to being read from the initial location, written to and read from a
 shared FS, both of each are overhead. The only advantage to this is that you don&#8217;t
 need coasters to use it and it&#8217;s supported on a large number of computational resources.</p></div>
+<div class="paragraph"><p>This is the default staging mechanism used if no staging method is defined in the
+swift config file.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_when_to_use_this_mode_3">When to use this mode</h4>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+You can access data using one of the supported methods like:
+    local filesystem access
+    ssh - Use scp to access files
+    GSIFTP
+    GridFTP
+</p>
+</li>
+<li>
+<p>
+A shared-FS is present, that works well for your data access patterns.
+</p>
+</li>
+<li>
+<p>
+You want to use a non-coaster execution provider.
+</p>
+</li>
+</ol></div>
+<div class="paragraph"><p>The GSIFTP and GridFTP are not actively tested, and are not guaranteed to work.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_example_configs_3">Example configs</h4>
@@ -1043,6 +1073,10 @@ need coasters to use it and it&#8217;s supported on a large number of computatio
 </div>
 <div class="sect3">
 <h4 id="_performance_3">Performance</h4>
+<div class="paragraph"><p>The Swift staging method uses an intermediate staging location that is on a shared FS,
+each files is, in addition to being read from the initial location, written to and read
+from a shared FS, both of each are overhead. The only advantage to this is that you
+don&#8217;t need coasters to use it and it&#8217;s supported in a lot of cases.</p></div>
 </div>
 </div>
 <div class="sect2">
@@ -1072,7 +1106,7 @@ need coasters to use it and it&#8217;s supported on a large number of computatio
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-12-10 11:59:24 CST
+Last updated 2014-12-10 15:53:27 CST
 </div>
 </div>
 </body>
