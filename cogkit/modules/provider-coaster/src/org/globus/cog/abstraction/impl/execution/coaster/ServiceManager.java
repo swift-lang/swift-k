@@ -106,18 +106,18 @@ public class ServiceManager implements StatusListener {
 
     private BootstrapService bootstrapService;
     private LocalService localService;
-    private Map<Object, String> services;
+    private Map<Service, String> services;
     private Map<String, Object> credentials;
     private Map<String, TaskHandler> bootHandlers;
-    private Set<Object> starting;
-    private Map<Object, Integer> usageCount;
+    private Set<Service> starting;
+    private Map<Service, Integer> usageCount;
     private ServiceReaper serviceReaper;
 
     public ServiceManager() {
-        services = new HashMap<Object, String>();
+        services = new HashMap<Service, String>();
         credentials = new HashMap<String, Object>();
-        starting = new HashSet<Object>();
-        usageCount = new HashMap<Object, Integer>();
+        starting = new HashSet<Service>();
+        usageCount = new HashMap<Service, Integer>();
         bootHandlers = new HashMap<String, TaskHandler>();
         serviceReaper = new ServiceReaper();
         Runtime.getRuntime().addShutdownHook(serviceReaper);
@@ -147,13 +147,13 @@ public class ServiceManager implements StatusListener {
         try {
             // beah. it's impossible to nicely abstract both concurrency
             // and normal program semantics
-            String url = waitForStart(contact);
+            String url = waitForStart(service);
             if (url == null) {
                 url =
                         startService(service, getBootHandler(bootHandlerProvider),
                             bootHandlerProvider, userHomeOverride);
             }
-            increaseUsageCount(contact);
+            increaseUsageCount(service);
             return url;
         }
         catch (Exception e) {
@@ -175,7 +175,7 @@ public class ServiceManager implements StatusListener {
         return task.getService(0);
     }
 
-    protected String waitForStart(Object service) throws InterruptedException {
+    protected String waitForStart(Service service) throws InterruptedException {
         synchronized (services) {
             while (starting.contains(service)) {
                 services.wait(100);
@@ -239,7 +239,7 @@ public class ServiceManager implements StatusListener {
             }
             String url = localService.waitForRegistration(t, (String) t.getAttribute(TASK_ATTR_ID));
             synchronized (services) {
-                services.put(contact, url);
+                services.put(service, url);
                 if (sc != null) {
                     credentials.put(url, sc.getCredentials());
                 }
@@ -248,7 +248,7 @@ public class ServiceManager implements StatusListener {
         }
         finally {
             synchronized (services) {
-                starting.remove(contact);
+                starting.remove(service);
                 services.notifyAll();
             }
         }
@@ -289,9 +289,9 @@ public class ServiceManager implements StatusListener {
                 logger.info("Service task " + t + " terminated. Removing service.");
             }
             String url;
-            ServiceContact contact = getContact(t);
+            Service service = getService(t);
             synchronized (services) {
-                url = services.remove(contact);
+                url = services.remove(service);
                 if (url == null) {
                     logger.info("Service does not appear to be registered with this manager");
                 }
@@ -305,7 +305,7 @@ public class ServiceManager implements StatusListener {
             if (logger.isInfoEnabled()) {
                 logger.info(msg);
             }
-            NotificationManager.getDefault().serviceTaskEnded(contact, msg);
+            NotificationManager.getDefault().serviceTaskEnded(service, msg);
             try {
                 if (url != null) {
                     GSSCredential cred =
@@ -325,7 +325,7 @@ public class ServiceManager implements StatusListener {
     }
     private static final Integer ZERO = new Integer(0);
 
-    protected void increaseUsageCount(Object service) {
+    protected void increaseUsageCount(Service service) {
         synchronized (usageCount) {
             Integer i = usageCount.get(service);
             if (i == null) {
@@ -333,10 +333,6 @@ public class ServiceManager implements StatusListener {
             }
             usageCount.put(service, i + 1);
         }
-    }
-
-    protected ServiceContact getContact(Task task) {
-        return task.getService(0).getServiceContact();
     }
 
     protected SecurityContext getSecurityContext(Task task) {
