@@ -791,21 +791,28 @@ Service-local
 </li>
 </ul></div>
 <div class="paragraph"><p>These staging methods are explained in detail in the following sections.</p></div>
+<div class="paragraph"><p>Legend for the following sections:
+<span class="image">
+<img src="figs/legend.png" alt="Legend" />
+</span></p></div>
 </div>
 <div class="sect2">
 <h3 id="_staging_method_local">Staging method : local</h3>
-<div class="paragraph"><p><span class="image">
-<img src="figs/local_staging.png" alt="Local staging" />
+<div class="paragraph"><p>Data flow in local staging:
+<span class="image">
+<img src="figs/local.png" alt="Local staging" />
 </span></p></div>
 <div class="sect3">
 <h4 id="_summary">Summary</h4>
 <div class="paragraph"><p>The local staging method is designed for shared-nothing architectures such as
 clusters and clouds with no shared file-systems. The data originates on the
-node where the client runs and all data transfers are done over the network.
-The client and service need not be on the same machine, which allows a client
-running on a local workstation to channel data through a service on the
-headnode of a Cluster1 to compute nodes provisioned from Cluster1.
-The is the default file staging method as this works on all computational
+node where the client runs and all data transfers are done explicity over the network.
+This method avoids using a shared-filesystem to transfer the files over the network,
+as in many cases the shared-filesystem is a shared among multiple users which adds
+congestion and it also could just be unsuitable for certain file access patterns.
+The client and service need not be on the same machine, which allows a client running on a local workstation to channel
+data through a service on the headnode of a Cluster1 to compute nodes provisioned
+from Cluster1. The is the default file staging method as this works on all computational
 resources. Since all the data is transferred via the swift-service the network
 bandwidth of the service could bottleneck the data flow. Similarly if the swift
 client is running remotely, the network links between the client and the service
@@ -813,7 +820,14 @@ could potentially become a bottleneck for large volumes of data.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_when_to_use_this_mode">When to use this mode</h4>
-<div class="paragraph"><p>The data volumes that need to be transferred to and from the workers to the client are</p></div>
+<div class="paragraph"><p>The data volumes that need to be transferred to and from the workers to the client per worker
+are not more that hundreds of MB. As data sizes approach GBs of data per task, other transport
+mechanisms such as Globus transfers are worth considering.</p></div>
+<div class="paragraph"><p>When each task either consumes or generates a large number of small files, shared-filesystem
+based copies can be very slow. The local staging method is an ideal candidate for this scenario.
+However, when there are large number of files involved the filesystem of the system on which
+the client is executing could become a bottleneck. Using a faster non-disk filesystem when available
+generally improves performance significantly.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_example_configs">Example configs</h4>
@@ -849,32 +863,37 @@ site.midway {
 </div>
 <div class="sect3">
 <h4 id="_performance">Performance</h4>
-<div class="paragraph"><p>All data-flow is over the network in this staging method and as a result, larger
-data volumes can impact performance adversely. The entire data flow must go through
-the nodes on which the client and service are running and the bandwidth limitations
-of that node must be taken into account.</p></div>
+<div class="paragraph"><p>All data-flow is over the network links from the client node and service node in this staging method
+and as a result, the network capacity is a potential limiting factor for large data voluems.</p></div>
 <div class="paragraph"><p>When several small files are involved, or with sufficiently large files, the
 filesystem on the client node can become a bottleneck.</p></div>
+<div class="paragraph"><p>There are performance limitations to the the staging/transport mechanism that swift uses, which could
+limit transfer throughputs. [TODO: Data to support this would be very nice]</p></div>
 </div>
 <div class="sect3">
 <h4 id="_notes">Notes:</h4>
-<div class="paragraph"><p>When running using local coasters (local instead of ssh-cl), the client and service run on the same node.</p></div>
+<div class="paragraph"><p>When running using local coasters (local instead of ssh-cl), the client and service run on the same node.
+In this case, the network links are between the service and workers.</p></div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_staging_method_direct">Staging method : Direct</h3>
-<div class="paragraph"><p><span class="image">
-<img src="figs/direct_staging.png" alt="Direct staging" />
+<div class="paragraph"><p>Data flow with Direct staging:
+<span class="image">
+<img src="figs/direct.png" alt="Direct staging" />
 </span></p></div>
-<div class="paragraph"><p><span class="image">
-<img src="figs/direct_staging_scratch.png" alt="Direct staging with scratch directory" />
+<div class="paragraph"><p>Data flow with Direct staging and a scratch directory:
+<span class="image">
+<img src="figs/direct_with_scratch.png" alt="Direct staging with scratch directory" />
 </span></p></div>
 <div class="sect3">
 <h4 id="_summary_2">Summary</h4>
 <div class="paragraph"><p>The direct staging mode is designed for computational resources with shared-filesystems.
 This mode requires that a shared filesystem such as NFS, Lustre, or even FUSE-mounted-S3
 is mounted across the nodes where the client, service, and the workers are executing.
-While sandbox directories are created for the individual task executions, the tasks
+Instead of Swift managing network transfers, the network transfers are implicitly
+managed by the shared-filesystem.
+The apps run in sandbox directories created under the workDirectory, but the tasks
 themselves will receive absolute paths for the input and output files. For applications
 that are IO bound, writing directly to the shared-filesystem can adversely affect the
 shared filesystem performance. To avoid this there is an option to specify a “scratch”
@@ -882,10 +901,13 @@ folder on a local disk on the compute nodes.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_when_to_use_this_mode_2">When to use this mode</h4>
-<div class="paragraph"><p>Large volumes of data are either consumed or generated by the application and a shared
--filesystem is available across the nodes. Given the volume of data and the network
-capacity of the headnode, using the network to transfer data to the compute nodes might
-be sub-optimal.</p></div>
+<div class="paragraph"><p>Large volumes of data are either consumed or generated by the application and a High Performance
+shared-filesystem is available across the nodes. On systems which have shared-filesystems, with
+I/O bandwidth that exceeds the network links between the headnode and the worker nodes, using
+the network to transfer data to the compute nodes could be sub-optimal.</p></div>
+<div class="paragraph"><p>When a high-performance shared filesystem is available, such as the case on many supercomputing
+systems, there is sufficient I/O bandwidth to support several applications reading and writing
+to the filesystem in parallel.</p></div>
 <div class="paragraph"><p>Another scenario is when the shared-filesystem is sensitive to creation and deletion
 of small files and directories. The swift workers create a sandbox directory for each
 task, which is (3 : TODO:confirm this with Mihael) levels deep. Using the direct mode
@@ -895,8 +917,11 @@ mechanisms for sandboxing tasks.</p></div>
 <div class="sect3">
 <h4 id="_example_configs_2">Example configs</h4>
 <div class="paragraph"><p>The following is an example for the direct staging mode.
-Staging method is set to “direct”
-workDirectory may be set to the shared filesystem or a local filesystem.</p></div>
+* Staging method is set to “direct”.
+* workDirectory may be set to the shared filesystem or a local filesystem.</p></div>
+<div class="paragraph"><p>In this case, Swift assumes that file variables point at files on the shared filesystem.
+The apps which are executed on the workers resolve the file variables to absolute paths
+to the input and output files on the shared-filesystem.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><code>sites: midway
@@ -923,13 +948,28 @@ site.midway {
     }
 }</code></pre>
 </div></div>
-<div class="paragraph"><p>The following is an example for the direct staging mode.
+<div class="paragraph"><p>The following is an example for the direct staging mode.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
 Staging method is set to “direct”
+</p>
+</li>
+<li>
+<p>
 workDirectory may be set to the shared filesystem or a local filesystem.
-Scratch is set to a directory on the local disks of the workers. The input/output files
-are copied to this directory and the user tasks are presented with paths which point to
-files in this directory. The workers will copy output files from the scratch directory to
-the shared-filesystem paths for the outputs.</p></div>
+</p>
+</li>
+<li>
+<p>
+Scratch is set to a directory on the local disks of the workers.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Since the staging method is set to “direct”, swift will assume that file are on a shared file-system.
+In the context of user-application the file variables will resolve to absolute paths of the input/output files on the scratch directory.
+Before the workers start the execution of user tasks, the workers will copy the input files from the shared-filesystem to the
+scratch directory, and after execution will copy out the output files from the scratch directory to the shared-filesystem.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><code>sites: midway
@@ -975,21 +1015,55 @@ alwaysTransferWrapperLog: true</code></pre>
 </div>
 <div class="sect3">
 <h4 id="_performance_2">Performance</h4>
+<div class="paragraph"><p>"Direct" is theoretically the optimal way to use the shared-filesystem. There are no unnecessary copies, and the application
+that requires the file alone access the data.</p></div>
+<div class="paragraph"><p>If the data access pattern of the application involves random seeks or creation of several intermediate small files, the "scratch"
+option allows you to offload sub-optimal file access patterns to a local disk/memory. This avoids costly accesses on the
+shared-filesystem and indirectly the network.</p></div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_staging_method_swift">Staging method : Swift</h3>
-<div class="paragraph"><p><span class="image">
-<img src="figs/swift_staging.png" alt="Swift staging" />
+<div class="paragraph"><p>Data flow with staging method Swift:
+<span class="image">
+<img src="figs/swift.png" alt="Swift staging" />
 </span></p></div>
 <div class="sect3">
 <h4 id="_summary_3">Summary</h4>
-<div class="paragraph"><p>Swift staging, invovles the client accessing file over a supported method like
+<div class="paragraph"><p>Swift staging, involves the client accessing file over a supported method like
 ssh or a local-filesystem access, and making the inputs available to the workers
-over a work-directory on a shared filesystem.</p></div>
+over a work-directory on a shared filesystem. This staging method uses
+an intermediate staging location that is on a shared-FS so each files is,
+in addition to being read from the initial location, written to and read from a
+shared FS, both of each are overhead. The only advantage to this is that you don&#8217;t
+need coasters to use it and it&#8217;s supported on a large number of computational resources.</p></div>
+<div class="paragraph"><p>This is the default staging mechanism used if no staging method is defined in the
+swift config file.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_when_to_use_this_mode_3">When to use this mode</h4>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+You can access data using one of the supported methods like:
+    local filesystem access
+    ssh - Use scp to access files
+    GSIFTP
+    GridFTP
+</p>
+</li>
+<li>
+<p>
+A shared-FS is present, that works well for your data access patterns.
+</p>
+</li>
+<li>
+<p>
+You want to use a non-coaster execution provider.
+</p>
+</li>
+</ol></div>
+<div class="paragraph"><p>The GSIFTP and GridFTP are not actively tested, and are not guaranteed to work.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_example_configs_3">Example configs</h4>
@@ -999,12 +1073,16 @@ over a work-directory on a shared filesystem.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_performance_3">Performance</h4>
+<div class="paragraph"><p>The Swift staging method uses an intermediate staging location that is on a shared FS,
+each files is, in addition to being read from the initial location, written to and read
+from a shared FS, both of each are overhead. The only advantage to this is that you
+don&#8217;t need coasters to use it and it&#8217;s supported in a lot of cases.</p></div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_staging_method_wrapper">Staging method : Wrapper</h3>
 <div class="paragraph"><p><span class="image">
-<img src="figs/wrapper_staging.png" alt="Wrapper staging" />
+<img src="figs/wrapper.png" alt="Wrapper staging" />
 </span></p></div>
 <div class="sect3">
 <h4 id="_summary_4">Summary</h4>
@@ -1028,7 +1106,7 @@ over a work-directory on a shared filesystem.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-12-05 18:14:00 CST
+Last updated 2014-12-30 17:48:17 CST
 </div>
 </div>
 </body>

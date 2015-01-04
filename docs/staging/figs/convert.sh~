@@ -1,0 +1,3 @@
+#!/bin/bash
+
+for i in $(echo *pdf); do convert -resize 800x200 -density 100 $i ${i%.pdf}.png ;done

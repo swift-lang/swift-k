@@ -40,6 +40,7 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
@@ -740,6 +741,7 @@ public class SwiftConfig implements Cloneable {
         }
         
         s.setProvider(provider);
+        s.setIdentity(new IdentityImpl());
         if (url != null) {
             ServiceContact contact = new ServiceContactImpl(url);
             s.setServiceContact(contact);
