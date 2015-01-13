@@ -37,7 +37,6 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.ExtendedStatusListener;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
-import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
@@ -161,21 +160,18 @@ public class NotificationManager {
         p.add(es);
     }
 
-    public void serviceTaskEnded(ServiceContact contact1, 
-                                 String msg) {
+    public void serviceTaskEnded(org.globus.cog.abstraction.interfaces.Service service, String msg) {
         List<Map.Entry<String, TaskListenerPair>> ts;
         synchronized (listeners) {
             ts = new ArrayList<Map.Entry<String, TaskListenerPair>>(listeners.entrySet());
         }
-        logger.info(contact1.toString());
+        logger.info(service.toString());
         for (Map.Entry<String, TaskListenerPair> e: ts) {
-            ServiceContact contact2 = 
-                e.getValue().task.getService(0).getServiceContact();
-            logger.info(contact2.toString());
-            if (contact2.equals(contact1)) {
+            org.globus.cog.abstraction.interfaces.Service service2 = e.getValue().task.getService(0);
+            logger.info(service2.toString());
+            if (service2.equals(service)) {
                 notificationReceived(e.getKey(), 
-                                     new StatusImpl(Status.FAILED, 
-                                                    msg, null), null, null);
+                    new StatusImpl(Status.FAILED, msg, null), null, null);
             }
         }
     }

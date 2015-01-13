@@ -210,7 +210,8 @@ public class ServiceImpl implements Service {
     public boolean equals(Object o) {
         if (o instanceof Service) {
             Service s = (Service) o;
-            return serviceContact.equals(s.getServiceContact())
+            return equals(identity, s.getIdentity())
+                    && serviceContact.equals(s.getServiceContact())
                     && provider.equals(s.getProvider())
                     && equals(securityContext, s.getSecurityContext());
         }
