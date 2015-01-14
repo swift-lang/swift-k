@@ -1,0 +1,26 @@
+a:link { color:navy; }
+a:visited { color:navy; }
+
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: medium; /* inherit; */
+  color: black;
+  padding: 0;
+  margin: 0;
+}
+
+/*
+  background: #f8f8f8;
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  margin-right: 10%;
+*/
+
+div.listingblock > div.content {
+  padding: 0.5em;
+  background: none;
+  border: none;
+  border-left: none;
+  margin-right: none;
+}
+

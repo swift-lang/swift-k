@@ -1,0 +1,1 @@
+for h in $(cat hosts.txt); do ssh $h hostname -f; done

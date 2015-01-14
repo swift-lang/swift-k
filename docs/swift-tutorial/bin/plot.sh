@@ -1,0 +1,68 @@
+#!/bin/bash
+
+#usage: ./plotswiftlogs.ketan <swift-logfile.log>
+
+SWIFTLOGFILE=$1
+
+#TMPDIR=`mktemp -d plotlog.XXX`
+
+grep -i ProgressTicker $SWIFTLOGFILE > swiftoutfile.out
+
+SWIFTOUTFILE=swiftoutfile.out
+
+#extract start time
+TMPDATE=`grep -i progress $SWIFTOUTFILE 2>/dev/null | head -n 1 | cut -f1-2 -d ' '`
+START_TIME=`date +%s -d "$TMPDATE"`
+
+#extract end time
+TMPDATE=`grep -i progress $SWIFTOUTFILE 2>/dev/null | tail -n 1 | cut -f1-2 -d ' '`
+END_TIME=`date +%s -d "$TMPDATE"`
+
+#duration
+DIFFTIME=$((END_TIME - START_TIME))
+
+#extract active runs in a file
+(grep -o -i "Active:[0-9]*" $SWIFTOUTFILE 2>/dev/null | awk -F: '{print $2}' >active.txt)
+
+#extract successful completions in a file
+(grep -o -i "Successfully:[0-9]*" $SWIFTOUTFILE 2>/dev/null | awk -F: '{print $2}' > cumulative.txt)
+
+#prepare tics
+activelines=`wc -l active.txt | awk '{print $1}'`
+cumulines=`wc -l cumulative.txt | awk '{print $1}'`
+
+if [ $activelines -ne 0 ]
+then
+  activelinespertic=`echo "scale=5 ; $DIFFTIME / $activelines" | bc`
+fi
+
+seq 0 $activelinespertic $DIFFTIME > activetics.txt
+
+if [ $cumulines -ne 0 ]
+then
+    cumulinespertic=`echo "scale=5 ; $DIFFTIME / $cumulines" | bc`
+fi
+
+seq 0 $cumulinespertic $DIFFTIME > cumultics.txt
+
+#final plot data
+paste activetics.txt active.txt > plot_active.txt
+paste cumultics.txt cumulative.txt > plot_cumulative.txt
+
+cat << EOF1 > plotit.gp
+set terminal png enhanced
+set nokey
+set output "cumulativeplot.png"
+set xlabel "Time in sec"
+set ylabel "number of completed apps"
+set title "Cumulative Apps Completed"
+plot "plot_cumulative.txt" using 1:2 with lines
+set output "activeplot.png"
+set xlabel "Time in sec"
+set ylabel "number of active apps"
+set title "Active Apps"
+plot "plot_active.txt" using 1:2 with line
+EOF1
+
+gnuplot plotit.gp 2>/dev/null
+rm swiftoutfile.out plotit.gp active.txt cumulative.txt activetics.txt plot_active.txt plot_cumulative.txt cumultics.txt
