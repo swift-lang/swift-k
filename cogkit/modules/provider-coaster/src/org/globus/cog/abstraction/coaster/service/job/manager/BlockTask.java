@@ -179,14 +179,17 @@ public class BlockTask extends TaskImpl {
         // The problem re-surfaced on beagle, where PBS picks the head node ~/
         // as directory if not otherwise specified. This leads to a failure.
         // Since this choice of directory doesn't matter for the worker, one can
-        // always pick "/", which should be valid on all machines
-        
+        // always pick "/", which should be valid on all machines.
+        // Some care needs to be taken when staging is involved, since
+        // the worker script needs to be staged to a writeable directory
+                
         //if (settings.getProvider().equals("cobalt") && settings.getDirectory() == null) {
+        if (!staging) {
             js.setDirectory("/");
-        //}
-        //else {
-        //    js.setDirectory(settings.getDirectory());
-        //}
+        }
+        else {
+            js.setDirectory(settings.getDirectory());
+        }
     
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
