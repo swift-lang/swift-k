@@ -175,12 +175,18 @@ public class BlockTask extends TaskImpl {
         // If $CWD happens to be /scratch/something it has a filter in place
         // that rejects the job with the warning that /scratch/something is not accessible
         // on the worker node. And we don't care about the $CWD for the worker.
-        if (settings.getProvider().equals("cobalt") && settings.getDirectory() == null) {
+        
+        // The problem re-surfaced on beagle, where PBS picks the head node ~/
+        // as directory if not otherwise specified. This leads to a failure.
+        // Since this choice of directory doesn't matter for the worker, one can
+        // always pick "/", which should be valid on all machines
+        
+        //if (settings.getProvider().equals("cobalt") && settings.getDirectory() == null) {
             js.setDirectory("/");
-        }
-        else {
-            js.setDirectory(settings.getDirectory());
-        }
+        //}
+        //else {
+        //    js.setDirectory(settings.getDirectory());
+        //}
     
         js.addArgument(join(settings.getCallbackURIs(), ","));
         js.addArgument(block.getId());
