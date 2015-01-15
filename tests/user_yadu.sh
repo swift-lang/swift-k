@@ -6,6 +6,8 @@ export BLUES_USERNAME="yadunand"
 export FUSION_USERNAME="yadunand"
 export COMM_USERNAME="yadunandb"
 export BRID_USERNAME="yadunandb"
+export SWAN_USERNAME="p01953"
+export RAVEN_USERNAME="p01953"
 export FROM_MAIL="Test-Engine@midway001"
 export TO_MAIL="yadudoc1729@gmail.com"
 
