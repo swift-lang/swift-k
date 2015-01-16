@@ -2,6 +2,7 @@ export BEAGLE_USERNAME="yadunandb"
 export MIDWAY_USERNAME="yadunand"
 export MCS_USERNAME="yadunand"
 export UC3_USERNAME="yadunand"
+export OSGC_USERNAME="yadunand"
 export BLUES_USERNAME="yadunand"
 export FUSION_USERNAME="yadunand"
 export COMM_USERNAME="yadunandb"
@@ -18,6 +19,7 @@ export COG_OPTS=-Dtcp.channel.log.io.performance=true
 
 # To run swift from a tar ball set following variable
 export SWIFT_TAR_FILE="/scratch/midway/yadunand/swift-trunk.tar"
+export SWIFT_GIT_REPO="https://github.com/swift-lang/swift-k.git"
 
 #export RUN_TYPE="daily"
 export RUN_TYPE="test"
