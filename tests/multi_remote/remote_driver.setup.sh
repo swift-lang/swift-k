@@ -21,31 +21,62 @@ BASE=$PWD
 # Make clean checkout if no swift dir is present or
 # Clean checkout requested
 
-[ -f "$SWIFT_TAR_FILE" ] && cp $SWIFT_TAR_FILE ./swift.tar
+#[ -f "$SWIFT_TAR_FILE" ] && cp $SWIFT_TAR_FILE ./swift.tar
 
-if [ "$REMOTE_DRIVER_FASTSETUP" == "true" ]
+if [[ "$CLEAN_CHECKOUT" == "yes" ]]
 then
     echo "FASTSETUP: Skipping git update and rebuild"
 else
+<<<<<<< HEAD
 	rm -rf swift &> /dev/null
     git clone $GIT_REPO swift
 	cd swift
+=======
+    if [ "$CLEAN_CHECKOUT" == "true" ]
+    then
+	    echo "Cleaning and making fresh checkout"
+	    rm -rf swift &> /dev/null
+        git clone $GIT_REPO swift
+	    cd swift
+    else
+        echo "CLEAN_CHECKOUT not enabled. Cannot proceed"
+    fi
+
+>>>>>>> c999bb9b84155b6c6335bb48cb2a374ac9d54482
     echo "$PWD : Starting compile"
     ant redist | tee $BASE/compile.log
     if [ "$?" != "0" ]
     then
-	    echo "Swift compile failed. Cannot proceed"
-	    exit 1
+        echo "Failed to clone the GIT repository"
+        exit -1
     fi
+    cd swift
+    ant redist
+    cd ..
+    tar -cf swift.tar.tmp swift && mv swift.tar.tmp ./swift.tar && echo "Tarred successfully"
 
-    cd $BASE
-    if [ -d "swift" ]
+elif [[ -d "$SWIFT_LOCAL_REPO" ]]
+then
+    echo "Found Local repo $SWIFT_LOCAL_REPO"
+    # check dist
+    if [[ ! -d "$SWIFT_LOCAL_REPO/dist/swift-svn/bin" ]]
     then
-	    tar -cf swift.tar.tmp ./swift && mv swift.tar.tmp swift.tar && echo "Tarred successfully"
-    else
-	    echo "Could not find swift folder to tar"
-    fi;
+        echo "No dist/bin folder found"
+        echo "Building !"
+        pushd .
+        cd $SWIFT_LOCAL_REPO
+        ant redist
+        popd
+    fi
+    echo "Copying to local folder"
+    cp -R $SWIFT_LOCAL_REPO /tmp/swift
+    tar -cf /tmp/swift.tar.tmp /tmp/swift && mv /tmp/swift.tar.tmp ./swift.tar && echo "Tarred successfully"
+    echo "Removing local copy"
+    rm -rf /tmp/swift
+else
+    echo "$SWIFT_LOCAL_REPO not found"
 fi
+
 
 # Wrapper is the script that gets executed on the remote nodes
 # The outputs go to the out directory
@@ -79,17 +110,8 @@ else
 fi;
 
 cd $BASENAME;
-cd cog/modules/swift/
 
-#type ant   2>&1
-#if [ "$?" != "0" ]
-#then
-#    echo "Ant not found. Cannot build. Exiting!.."
-#    exit 0
-#fi
-
-#ant redist 2>&1 > tee $RUN_HOME/swift_build.log
-if [ ! -x "$PWD/dist/swift-svn/bin/swift" ] 
+if [ ! -x "$PWD/dist/swift-svn/bin/swift" ]
 then
     echo "No executable swift binary... Cannot proceed"
     exit 0

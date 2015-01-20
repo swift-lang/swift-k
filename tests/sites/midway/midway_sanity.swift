@@ -2,7 +2,7 @@ type file;
 
 app (file out, file err) remote_driver ()
 {
-    date stdout=@filename(out) stderr=@filename(err);
+    date stdout=filename(out) stderr=filename(err);
 }
 
 file driver_out <simple_mapper; prefix="sanity", suffix=".out">;

@@ -96,12 +96,12 @@ mailx -s "Test results from $HOSTNAME" -r $FROM_MAIL ${TO_MAIL[*]}  < $MAIL
 
 cp -R $folder $PUBLISH_LOCATION/$VERSION/$RUN_DIR-$DATE &
 
-echo "Publishing links to CI from $MAIL"
-grep -o "http.*" $MAIL | tee result_links.txt
+#echo "Publishing links to CI from $MAIL"
+#grep -o "http.*" $MAIL | tee result_links.txt
 
-DATE=$(date +%Y-%m-%d)
-echo "Posting result_links.txt to /ci/www/projects/swift/tests/$VERSION/run-$DATE/"
-cat result_links.txt
-scp result_links.txt ci:/ci/www/projects/swift/tests/$VERSION/run-$DATE/
+#DATE=$(date +%Y-%m-%d)
+#echo "Posting result_links.txt to /ci/www/projects/swift/tests/$VERSION/run-$DATE/"
+#cat result_links.txt
+#scp result_links.txt ci:/ci/www/projects/swift/tests/$VERSION/run-$DATE/
 
 exit 0

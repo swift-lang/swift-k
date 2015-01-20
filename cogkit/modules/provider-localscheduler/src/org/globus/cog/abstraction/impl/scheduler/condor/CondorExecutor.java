@@ -155,7 +155,7 @@ public class CondorExecutor extends AbstractExecutor {
 	    		wr.write(attributeName[1] + " = " + spec.getAttribute(a) + '\n');
 	    	}
 	    }
-	    
+
 		wr.write("notification = Never\n");
 		wr.write("leave_in_queue = TRUE\n");
 		wr.write("queue\n");

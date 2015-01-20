@@ -69,7 +69,8 @@ GROUPLIST=( $TESTDIR/language/working \
             # Local cluster tests.
             $TESTDIR/stress/local_cluster \
             $TESTDIR/stress/random_fail \
-            $TESTDIR/stress/jobs_per_node \
+            #jobs_per_node test is not working correctly
+            #$TESTDIR/stress/jobs_per_node \
 
        	    # Recursive Test invocation
 	        $TESTDIR/multi_remote
