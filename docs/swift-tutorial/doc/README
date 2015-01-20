@@ -29,11 +29,16 @@ you may have access to such as clouds (Amazon Web Services), Cray HPC systems,
 clusters etc, and see how more complex workflows can be expressed
 with Swift scripts.
 
-Running the tutorial on you local machine
------------------------------------------
+Running the tutorial
+--------------------
 
-If you are running the swift-cloud-tutorial on your local machine, ensure that
-you have swift-0.95-RC6 or greater installed.
+To run the swift-tutorial, ensure that java (1.7+) and swift-0.96 is installed
+on the machine you would be using to run the tutorials on.
+
+Swift modules are available on Beagle, Midway and OSGConnect. If a module
+is not available the following steps describe the installation procedure.
+
+[red]#TODO: Ensure latest modules are available on Beagle/Midway/OSGConnect#
 
 Swift installation
 ~~~~~~~~~~~~~~~~~~
@@ -47,6 +52,7 @@ tar xfz swift-0.96.tar.gz
 # Add swift to the PATH environment variable
 export PATH=$PATH:/path/to/swift-0.96/bin
 -----
+
 
 Get the swift-tutorial repository
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -73,7 +79,7 @@ Simple "science applications" for the workflow tutorial
 -------------------------------------------------------
 
 This tutorial is based on two intentionally trivial example programs,
-`simulation.sh` and `stats.sh`, (implemented as bash shell scripts)
+`simulate.sh` and `stats.sh`, (implemented as bash shell scripts)
 that serve as easy-to-understand proxies for real science
 applications. These "programs" behave as follows.
 
@@ -102,20 +108,6 @@ $
 -----
 
 All of thess arguments are optional, with default values indicated above as `[n]`.
-
-////
-.simulation.sh arguments
-[width="80%",cols="^2,10",options="header"]
-
-|=======================
-|Argument|Short|Description
-|1    |runtime: sets run time of simulation.sh in seconds
-|2    |range: limits generated values to the range [0,range-1]
-|3    |biasfile: add the integer contained in this file to each value generated
-|4    |scale: multiplies each generated value by this integer
-|5    |count: number of values to generate in the simulation
-|=======================
-////
 
 With no arguments, simulate.sh prints 1 number in the range of
 1-100. Otherwise it generates n numbers of the form (R*scale)+bias
@@ -278,36 +270,12 @@ which is located in the tutorial PATH:
 $ cleanup
 -----
 
-NOTE: You'll also find two Swift configuration files in each `partNN`
-directory of this tutorial.  These specify the environment-specific
-details of where to find application programs (file `apps`) and where
-to run them (file `sites.xml`).  These files will be explained in more
+NOTE: You'll also find a Swift configuration files in each `partNN`
+directory of this tutorial. These specify the environment-specific
+details of target computational resources where the application programs would be execute.
+These swift configuration file will be explained in more
 detail in parts 4-6, and can be ignored for now.
 
-////
-It defines
-things like the work directory, the scheduler to use, and how to
-control parallelism. The sites.xml file below will tell Swift to run
-on the local machine only, and run just 1 task at a time.
-
-.swift.properties
------
-sys::[cat ../part01/swift.properties]
------
-
- In this case, it
-indicates that the app "simulate" (the first token in the command line
-declaration of the function `simulation`, at line NNN) is located in the file
-simulate.sh and (since the path `simulate.sh` is specified with no
-directory components) Swift expects that the `simulate.sh` executable
-will be available in your $PATH.
-
-.apps
------
-sys::[cat ../part01/apps]
------
-
-////
 
 Part 2: Running an ensemble of many apps in parallel with a "foreach" loop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -27,17 +27,9 @@ if [ "$REMOTE_DRIVER_FASTSETUP" == "true" ]
 then
     echo "FASTSETUP: Skipping git update and rebuild"
 else
-
-    if [ "$CLEAN_CHECKOUT" == "true" ]
-    then
-	    echo "Cleaning and making fresh checkout"
-	    rm -rf swift &> /dev/null
-        git clone $GIT_REPO swift
-	    cd swift
-    else
-        echo "CLEAN_CHECKOUT not enabled. Cannot proceed"
-    fi
-
+	rm -rf swift &> /dev/null
+    git clone $GIT_REPO swift
+	cd swift
     echo "$PWD : Starting compile"
     ant redist | tee $BASE/compile.log
     if [ "$?" != "0" ]
