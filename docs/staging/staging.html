@@ -832,39 +832,38 @@ generally improves performance significantly.</p></div>
 <div class="sect3">
 <h4 id="_example_configs">Example configs</h4>
 <div class="listingblock">
-<div class="content">
-<pre><code>sites: midway
-site.midway {
-    execution {
-        type: "coaster"
-        URL: "swift.rcc.uchicago.edu"
-        jobManager: "ssh-cl:slurm"  # Client connects remotely to the login node.
-        options {
-            nodeGranularity: 1
-            maxNodesPerJob: 1
-            jobQueue: "sandyb"
-            maxJobs: 1
-            tasksPerNode: 1
-            maxJobTime: "00:08:20"
-        }
-    }
-    staging: "local"
-    workDirectory: "/tmp/"${env.USER}
-    app.date {
-        executable: "/bin/date"
-        maxWallTime: "00:05:00"
-    }
-}</code></pre>
-</div></div>
-</div>
-<div class="sect3">
-<h4 id="_analysing_logs">Analysing logs</h4>
-<div class="paragraph"><p>TODO</p></div>
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+    execution <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+        URL<span style="color: #990000">:</span> <span style="color: #FF0000">"swift.rcc.uchicago.edu"</span>
+        jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"ssh-cl:slurm"</span>  <span style="font-style: italic"><span style="color: #9A1900"># Client connects remotely to the login node.</span></span>
+        options <span style="color: #990000">{</span>
+            nodeGranularity<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxNodesPerJob<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            jobQueue<span style="color: #990000">:</span> <span style="color: #FF0000">"sandyb"</span>
+            maxJobs<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            tasksPerNode<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxJobTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:08:20"</span>
+        <span style="color: #990000">}</span>
+    <span style="color: #990000">}</span>
+    staging<span style="color: #990000">:</span> <span style="color: #FF0000">"local"</span>
+    workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"/tmp/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span>
+    app<span style="color: #990000">.</span>date <span style="color: #990000">{</span>
+        executable<span style="color: #990000">:</span> <span style="color: #FF0000">"/bin/date"</span>
+        maxWallTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:05:00"</span>
+    <span style="color: #990000">}</span>
+<span style="color: #990000">}</span></tt></pre></div></div>
 </div>
 <div class="sect3">
 <h4 id="_performance">Performance</h4>
 <div class="paragraph"><p>All data-flow is over the network links from the client node and service node in this staging method
-and as a result, the network capacity is a potential limiting factor for large data voluems.</p></div>
+and as a result, the network capacity of the client node is a potential limiting factor for large data
+volumes.</p></div>
 <div class="paragraph"><p>When several small files are involved, or with sufficiently large files, the
 filesystem on the client node can become a bottleneck.</p></div>
 <div class="paragraph"><p>There are performance limitations to the the staging/transport mechanism that swift uses, which could
@@ -873,7 +872,7 @@ limit transfer throughputs. [TODO: Data to support this would be very nice]</p><
 <div class="sect3">
 <h4 id="_notes">Notes:</h4>
 <div class="paragraph"><p>When running using local coasters (local instead of ssh-cl), the client and service run on the same node.
-In this case, the network links are between the service and workers.</p></div>
+    In this case, the network links are between the service and workers.</p></div>
 </div>
 </div>
 <div class="sect2">
@@ -888,7 +887,7 @@ In this case, the network links are between the service and workers.</p></div>
 </span></p></div>
 <div class="sect3">
 <h4 id="_summary_2">Summary</h4>
-<div class="paragraph"><p>The direct staging mode is designed for computational resources with shared-filesystems.
+<div class="paragraph"><p>The direct staging mode is designed for computational resources with High-Performance shared-filesystems.
 This mode requires that a shared filesystem such as NFS, Lustre, or even FUSE-mounted-S3
 is mounted across the nodes where the client, service, and the workers are executing.
 Instead of Swift managing network transfers, the network transfers are implicitly
@@ -923,31 +922,33 @@ mechanisms for sandboxing tasks.</p></div>
 The apps which are executed on the workers resolve the file variables to absolute paths
 to the input and output files on the shared-filesystem.</p></div>
 <div class="listingblock">
-<div class="content">
-<pre><code>sites: midway
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
 
-site.midway {
-    execution {
-        type: "coaster"
-        URL: "swift.rcc.uchicago.edu"
-        jobManager: "local:slurm"
-        options {
-            nodeGranularity: 1
-            maxNodesPerJob: 1
-            jobQueue: "sandyb"
-            maxJobs: 1
-            tasksPerNode: 1
-            maxJobTime: "00:08:20"
-        }
-    }
-    staging: direct
-    workDirectory: "/tmp/"${env.USER}"/swiftwork"
-    app.bash {
-        executable: "/bin/bash"
-        maxWallTime: "00:05:00"
-    }
-}</code></pre>
-</div></div>
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+    execution <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+        URL<span style="color: #990000">:</span> <span style="color: #FF0000">"swift.rcc.uchicago.edu"</span>
+        jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"local:slurm"</span>
+        options <span style="color: #990000">{</span>
+            nodeGranularity<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxNodesPerJob<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            jobQueue<span style="color: #990000">:</span> <span style="color: #FF0000">"sandyb"</span>
+            maxJobs<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            tasksPerNode<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxJobTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:08:20"</span>
+        <span style="color: #990000">}</span>
+    <span style="color: #990000">}</span>
+    staging<span style="color: #990000">:</span> direct
+    workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"/tmp/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/swiftwork"</span>
+    app<span style="color: #990000">.</span>bash <span style="color: #990000">{</span>
+        executable<span style="color: #990000">:</span> <span style="color: #FF0000">"/bin/bash"</span>
+        maxWallTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:05:00"</span>
+    <span style="color: #990000">}</span>
+<span style="color: #990000">}</span></tt></pre></div></div>
 <div class="paragraph"><p>The following is an example for the direct staging mode.</p></div>
 <div class="ulist"><ul>
 <li>
@@ -971,47 +972,46 @@ In the context of user-application the file variables will resolve to absolute p
 Before the workers start the execution of user tasks, the workers will copy the input files from the shared-filesystem to the
 scratch directory, and after execution will copy out the output files from the scratch directory to the shared-filesystem.</p></div>
 <div class="listingblock">
-<div class="content">
-<pre><code>sites: midway
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
 
-site.midway {
-    execution {
-        type: "coaster"
-        URL: "swift.rcc.uchicago.edu"
-        jobManager: "local:slurm"
-        options {
-            nodeGranularity: 1
-            maxNodesPerJob: 1
-            jobQueue: "sandyb"
-            maxJobs: 1
-            tasksPerNode: 1
-            maxJobTime: "00:08:20"
-        }
-    }
-    staging: direct
-    workDirectory: "/tmp/"${env.USER}"/swiftwork"
-    scratch: "/scratch/local/"${env.USER}"/work/"
-    app.bash {
-        executable: "/bin/bash"
-        maxWallTime: "00:05:00"
-    }
-}
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+    execution <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+        URL<span style="color: #990000">:</span> <span style="color: #FF0000">"swift.rcc.uchicago.edu"</span>
+        jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"local:slurm"</span>
+        options <span style="color: #990000">{</span>
+            nodeGranularity<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxNodesPerJob<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            jobQueue<span style="color: #990000">:</span> <span style="color: #FF0000">"sandyb"</span>
+            maxJobs<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            tasksPerNode<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxJobTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:08:20"</span>
+        <span style="color: #990000">}</span>
+    <span style="color: #990000">}</span>
+    staging<span style="color: #990000">:</span> direct
+    workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"/tmp/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/swiftwork"</span>
+    scratch<span style="color: #990000">:</span> <span style="color: #FF0000">"/scratch/local/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/work/"</span>
+    app<span style="color: #990000">.</span>bash <span style="color: #990000">{</span>
+        executable<span style="color: #990000">:</span> <span style="color: #FF0000">"/bin/bash"</span>
+        maxWallTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:05:00"</span>
+    <span style="color: #990000">}</span>
+<span style="color: #990000">}</span>
 
-TCPPortRange: "50000,51000"
-lazyErrors: false
-executionRetries: 0
-keepSiteDir: true
-providerStagingPinSwiftFiles: false
-alwaysTransferWrapperLog: true</code></pre>
-</div></div>
+TCPPortRange<span style="color: #990000">:</span> <span style="color: #FF0000">"50000,51000"</span>
+lazyErrors<span style="color: #990000">:</span> false
+executionRetries<span style="color: #990000">:</span> <span style="color: #993399">0</span>
+keepSiteDir<span style="color: #990000">:</span> true
+providerStagingPinSwiftFiles<span style="color: #990000">:</span> false
+alwaysTransferWrapperLog<span style="color: #990000">:</span> true</tt></pre></div></div>
 </div>
 <div class="sect3">
 <h4 id="_notes_2">Notes:</h4>
 <div class="paragraph"><p>TODO : Details of the filename behavior in apps and within swiftscript body.</p></div>
 <div class="paragraph"><p>When this configuration is used, the worker copies the input files from the shared-filesystem to the scratch directory, and the user application will get the path to the file on scratch when the filename(&lt;file_variable&gt;) and it&#8217;s shorthand @&lt;file_variable&gt; primitives are used in the app definition. The filename and @ primitives when used outside of the app definitions will point at the files on the shared-filesystem.</p></div>
-</div>
-<div class="sect3">
-<h4 id="_analysing_logs_2">Analysing logs</h4>
 </div>
 <div class="sect3">
 <h4 id="_performance_2">Performance</h4>
@@ -1067,9 +1067,45 @@ You want to use a non-coaster execution provider.
 </div>
 <div class="sect3">
 <h4 id="_example_configs_3">Example configs</h4>
-</div>
-<div class="sect3">
-<h4 id="_analysing_logs_3">Analysing logs</h4>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
+
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+    execution <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+        URL<span style="color: #990000">:</span> <span style="color: #FF0000">"swift.rcc.uchicago.edu"</span>
+        jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"local:slurm"</span>
+        options <span style="color: #990000">{</span>
+            nodeGranularity<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxNodesPerJob<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            jobQueue<span style="color: #990000">:</span> <span style="color: #FF0000">"sandyb"</span>
+            maxJobs<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            tasksPerNode<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxJobTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:08:20"</span>
+        <span style="color: #990000">}</span>
+    <span style="color: #990000">}</span>
+    filesystem <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"local"</span>
+        URL<span style="color: #990000">:</span>  <span style="color: #FF0000">"localhost"</span>
+    <span style="color: #990000">}</span>
+    staging<span style="color: #990000">:</span> direct
+    workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"/scratch/midway/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/swiftwork"</span>
+    app<span style="color: #990000">.</span>bash <span style="color: #990000">{</span>
+        executable<span style="color: #990000">:</span> <span style="color: #FF0000">"/bin/bash"</span>
+        maxWallTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:05:00"</span>
+    <span style="color: #990000">}</span>
+<span style="color: #990000">}</span>
+
+TCPPortRange<span style="color: #990000">:</span> <span style="color: #FF0000">"50000,51000"</span>
+lazyErrors<span style="color: #990000">:</span> false
+executionRetries<span style="color: #990000">:</span> <span style="color: #993399">0</span>
+keepSiteDir<span style="color: #990000">:</span> true
+providerStagingPinSwiftFiles<span style="color: #990000">:</span> false
+alwaysTransferWrapperLog<span style="color: #990000">:</span> true</tt></pre></div></div>
 </div>
 <div class="sect3">
 <h4 id="_performance_3">Performance</h4>
@@ -1086,18 +1122,46 @@ don&#8217;t need coasters to use it and it&#8217;s supported in a lot of cases.<
 </span></p></div>
 <div class="sect3">
 <h4 id="_summary_4">Summary</h4>
+<div class="paragraph"><p>The wrapper staging method relies on a wrapper script used to stage files to and from the swift workers.
+Currently the wrapper staging method supports fetching files over HTTP and between the client filesystem.
+The wrapper staging method provides a flexible interface to add support for third party transfer mechanisms
+to the swift worker.</p></div>
+<div class="paragraph"><p>TODO: Is <strong>guc</strong> supported ?</p></div>
 </div>
 <div class="sect3">
 <h4 id="_when_to_use_this_mode_4">When to use this mode</h4>
+<div class="paragraph"><p>The repository for the input or output data can be accessed over a supported tranfer mechanism.</p></div>
+<div class="paragraph"><p>The data can be accessed only by an exotic tranfer mechanism, which could be incorporated into
+the supported methods for wrapper staging.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_example_configs_4">Example configs</h4>
-</div>
-<div class="sect3">
-<h4 id="_analysing_logs_4">Analysing logs</h4>
-</div>
-<div class="sect3">
-<h4 id="_performance_4">Performance</h4>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
+
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+        execution <span style="color: #990000">{</span>
+                type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+                jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"local:local"</span>
+                URL<span style="color: #990000">:</span> <span style="color: #FF0000">"localhost"</span>
+        <span style="color: #990000">}</span>
+        filesystem <span style="color: #990000">{</span>
+                type<span style="color: #990000">:</span> local
+        <span style="color: #990000">}</span>
+        staging<span style="color: #990000">:</span> <span style="color: #FF0000">"wrapper"</span>
+        scratch<span style="color: #990000">:</span> <span style="color: #FF0000">"/tmp/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/swift-scratch"</span>
+        workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"swiftwork"</span>
+
+        app<span style="color: #990000">.</span>ALL <span style="color: #990000">{</span>
+                executable<span style="color: #990000">:</span> <span style="color: #FF0000">"*"</span>
+        <span style="color: #990000">}</span>
+<span style="color: #990000">}</span>
+
+wrapperStagingLocalServer<span style="color: #990000">:</span> <span style="color: #FF0000">"file://"</span></tt></pre></div></div>
 </div>
 </div>
 </div>
@@ -1106,7 +1170,7 @@ don&#8217;t need coasters to use it and it&#8217;s supported in a lot of cases.<
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-12-30 17:48:17 CST
+Last updated 2015-01-23 11:27:08 CST
 </div>
 </div>
 </body>
