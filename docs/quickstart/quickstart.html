@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.9" />
-<title></title>
+<title>Swift Quickstart</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -753,200 +753,57 @@ install: function(toclevels) {
 }
 
 }
-asciidoc.install(2);
+asciidoc.install();
 /*]]>*/
 </script>
 </head>
 <body class="article" style="max-width:800px">
 <div id="header">
-<div id="toc">
-  <div id="toctitle">Table of Contents</div>
-  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
-</div>
+<h1>Swift Quickstart</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_swift_tutorial_for_the_cloud">Swift Tutorial for the Cloud</h2>
+<h2 id="_get_java">Get Java</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>//// This tutorial is viewable at:
-&lt;TODO&gt; <a href="http://swiftlang.org/tutorials/cloud">http://swiftlang.org/tutorials/cloud</a> &lt;FIX&gt;</p></div>
-<div class="tableblock">
-<table rules="all"
-width="80%"
-frame="border"
-cellspacing="0" cellpadding="4">
-<caption class="title">Table 1. simulation.sh arguments</caption>
-<col width="16%" />
-<col width="83%" />
-<thead>
-<tr>
-<th align="center" valign="top">Argument</th>
-<th align="left" valign="top">Short</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="center" valign="top"><p class="table">Description</p></td>
-<td align="left" valign="top"><p class="table">1</p></td>
-</tr>
-<tr>
-<td align="center" valign="top"><p class="table">runtime: sets run time of simulation.sh in seconds</p></td>
-<td align="left" valign="top"><p class="table">2</p></td>
-</tr>
-<tr>
-<td align="center" valign="top"><p class="table">range: limits generated values to the range [0,range-1]</p></td>
-<td align="left" valign="top"><p class="table">3</p></td>
-</tr>
-<tr>
-<td align="center" valign="top"><p class="table">biasfile: add the integer contained in this file to each value generated</p></td>
-<td align="left" valign="top"><p class="table">4</p></td>
-</tr>
-<tr>
-<td align="center" valign="top"><p class="table">scale: multiplies each generated value by this integer</p></td>
-<td align="left" valign="top"><p class="table">5</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="paragraph"><p>It defines
-things like the work directory, the scheduler to use, and how to
-control parallelism. The sites.xml file below will tell Swift to run
-on the local machine only, and run just 1 task at a time.</p></div>
-<div class="listingblock">
-<div class="title">sites.xml</div>
-<div class="content">
-<pre><code></code></pre>
-</div></div>
-<div class="literalblock">
-<div class="content">
-<pre><code> In this case, it
-indicates that the app "simulate" (the first token in the command line
-declaration of the function `simulation`, at line NNN) is located in the file
-simulate.sh and (since the path `simulate.sh` is specified with no
-directory components) Swift expects that the `simulate.sh` executable
-will be available in your $PATH.</code></pre>
-</div></div>
-<div class="listingblock">
-<div class="title">apps</div>
-<div class="content">
-<pre><code></code></pre>
-</div></div>
-<div class="paragraph"><p>FIXME: need to revise this figure: drop prog:</p></div>
-<div class="paragraph"><p>, making the parallel portion of the script behave like this:</p></div>
-<div class="imageblock" style="text-align:center;">
-<div class="content">
-<img src="part04.png" alt="part04.png" />
+<div class="paragraph"><p>Since Swift is written in Java, Java Runtime Environment 1.7 or greater is a required by Swift.
+We recommend Oracle Java, which can be downloaded from the Oracle <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">website</a>.</p></div>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">p4.swift</div>
-<div class="content">
-<pre><code>type file;
-
-app (file out, file log) simulation (int sim_steps, int sim_range, int sim_values, file sim_script)
-{
-  bash "simulate.sh" "--timesteps" sim_steps "--range" sim_range "--nvalues" sim_values stdout=@out stderr=@log;
-}
-
-app (file out, file log) analyze (file s[], file stat_script)
-{
-  bash "stats.sh" filenames(s) stdout=@out stderr=@log;
-}
-
-int nsim   = toInt(arg("nsim",   "10"));
-int steps  = toInt(arg("steps",  "1"));
-int range  = toInt(arg("range",  "100"));
-int values = toInt(arg("values", "5"));
-
-file simulate_script &lt;"simulate.sh"&gt;;
-file stats_script &lt;"stats.sh"&gt;;
-
-file sims[];
-
-foreach i in [0:nsim-1] {
-  file simout &lt;single_file_mapper; file=strcat("output/sim_",i,".out")&gt;;
-  file simlog &lt;single_file_mapper; file=strcat("output/sim_",i,".log")&gt;;
-  (simout,simlog) = simulation(steps,range,values,simulate_script);
-  sims[i] = simout;
-}
-
-file stats_out&lt;"output/average.out"&gt;;
-file stats_log&lt;"output/average.log"&gt;;
-(stats_out, stats_log) = analyze(sims, stats_script);</code></pre>
-</div></div>
-<div class="paragraph"><p>To tell Swift to run the apps on compute nodes, we specify in the
-<code>apps</code> file that the apps should be executed on the <code>cloud</code> site
-(instead of the <code>localhost</code> site).  We can specify the location of
-each app in the third field of the <code>apps</code> file, with either an
-absolute pathname or the name of an executable to be located in
-<code>PATH</code>). Here we use the latter form:</p></div>
+<div class="sect1">
+<h2 id="_get_swift">Get Swift</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Download the latest packaged binaries from the swift downloads page. Untar the file, and export the path.
+Bash users could append their .bashrc file with the export statement to have swift in their path over multiple sessions.</p></div>
+<div class="paragraph"><p>The latest stable Swift release is Swift-0.96</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>$ cat apps
-cloud simulate simulate.sh
-cloud stats    stats.sh</code></pre>
+<pre><code>wget http://swiftlang.org/packages/swift-0.96.tar.gz.
+tar xfz swift-0.96.tar.gz
+export PATH=$PATH:/path/to/swift-0.96/bin</code></pre>
 </div></div>
-<div class="paragraph"><p>You can experiment, for example, with an alternate version of stats.sh by specfying that app&#8217;s location explicitly:</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_run_swift">Run Swift</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Example Swift scripts can be found in the swift-0.94.1/examples directory.
+Scripts have a .swift file extension. Run the following commands
+to launch a simple hello world application.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>$ cat apps
-cloud simulate simulate.sh
-cloud stats    /home/users/p01532/bin/my-alt-stats.sh</code></pre>
+<pre><code>cd swift-0.96/examples/
+swift hello.swift</code></pre>
 </div></div>
-<div class="paragraph"><p>We can see that when we run many apps requesting a larger set of nodes (6), we are indeed running on the compute nodes:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><code>$ swift p4.swift -nsim=1000 -steps=1
-Swift 0.94.1 RC2 swift-r6895 cog-r3765
-
-RunID: 20130827-1638-t23ax37a
-Progress:  time: Tue, 27 Aug 2013 16:38:11 -0500
-Progress:  time: Tue, 27 Aug 2013 16:38:12 -0500  Initializing:966
-Progress:  time: Tue, 27 Aug 2013 16:38:13 -0500  Selecting site:499  Submitting:500  Submitted:1
-Progress:  time: Tue, 27 Aug 2013 16:38:14 -0500  Selecting site:499  Stage in:1  Submitted:500
-Progress:  time: Tue, 27 Aug 2013 16:38:16 -0500  Selecting site:499  Submitted:405  Active:95  Stage out:1
-Progress:  time: Tue, 27 Aug 2013 16:38:17 -0500  Selecting site:430  Submitted:434  Active:66  Stage out:1  Finished successfully:69
-Progress:  time: Tue, 27 Aug 2013 16:38:18 -0500  Selecting site:388  Submitted:405  Active:95  Stage out:1  Finished successfully:111
-...
-Progress:  time: Tue, 27 Aug 2013 16:38:30 -0500  Stage in:1  Submitted:93  Active:94  Finished successfully:812
-Progress:  time: Tue, 27 Aug 2013 16:38:31 -0500  Submitted:55  Active:95  Stage out:1  Finished successfully:849
-Progress:  time: Tue, 27 Aug 2013 16:38:32 -0500  Active:78  Stage out:1  Finished successfully:921
-Progress:  time: Tue, 27 Aug 2013 16:38:34 -0500  Active:70  Stage out:1  Finished successfully:929
-Progress:  time: Tue, 27 Aug 2013 16:38:37 -0500  Stage in:1  Finished successfully:1000
-Progress:  time: Tue, 27 Aug 2013 16:38:38 -0500  Stage out:1  Finished successfully:1000
-Final status: Tue, 27 Aug 2013 16:38:38 -0500  Finished successfully:1001
-
-$ grep "on node:" output/*log | head
-output/sim_0.log:Running on node: nid00063
-output/sim_100.log:Running on node: nid00060
-output/sim_101.log:Running on node: nid00061
-output/sim_102.log:Running on node: nid00032
-output/sim_103.log:Running on node: nid00060
-output/sim_104.log:Running on node: nid00061
-output/sim_105.log:Running on node: nid00032
-output/sim_106.log:Running on node: nid00060
-output/sim_107.log:Running on node: nid00061
-output/sim_108.log:Running on node: nid00062
-
-$ grep "on node:" output/*log | awk '{print $4}' | sort | uniq -c
-    158 nid00032
-    156 nid00033
-    171 nid00060
-    178 nid00061
-    166 nid00062
-    171 nid00063
-$ hostname
-raven
-$ hostname -f
-nid00008</code></pre>
-</div></div>
+<div class="paragraph"><p>When you run this application, it should create a file called hello.txt.</p></div>
+<div class="paragraph"><p>More documentation on how to run Swift can be found at
+<a href="http://www.ci.uchicago.edu/swift/docs/index.php">http://www.ci.uchicago.edu/swift/docs/index.php</a>.</p></div>
 </div>
 </div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-06-25 01:12:51 CDT
+Last updated 2015-01-20 15:05:52 CST
 </div>
 </div>
 </body>

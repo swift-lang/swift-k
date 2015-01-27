@@ -1,2 +1,0 @@
-rm -rf *.log *.rlog *.d p?-*-*-* *.kml *.swiftx *.out output outdir logs hi.* _concurrent .swift/tmp run???
-

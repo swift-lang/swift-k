@@ -1,1 +1,0 @@
-../app/simulate.sh

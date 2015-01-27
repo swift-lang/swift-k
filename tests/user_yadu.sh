@@ -3,6 +3,9 @@ export MIDWAY_USERNAME="yadunand"
 export MCS_USERNAME="yadunand"
 export UC3_USERNAME="yadunand"
 export OSGC_USERNAME="yadunand"
+export RAVEN_USERNAME="p01953"
+export SWAN_USERNAME="p01953"
+export GODZILLA_USERNAME="yadunand"
 export BLUES_USERNAME="yadunand"
 export FUSION_USERNAME="yadunand"
 export GODZILLA_USERNAME="yadunand"
@@ -18,7 +21,7 @@ export FROM_MAIL="Test-Engine@midway001"
 export TO_MAIL="yadudoc1729@gmail.com hategan@mcs.anl.gov wilde@mcs.anl.gov"
 
 export REMOTE_DRIVER_FASTSETUP="false"
-#export REMOTE_DRIVER_FASTSETUP="true"
+
 export SWIFT_TAR_FILE="/scratch/midway/yadunand/swift-trunk.tar"
 
 export SWIFT_LOCAL_REPO="/scratch/midway/yadunand/swift-k"

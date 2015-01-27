@@ -27,6 +27,11 @@ if [[ "$CLEAN_CHECKOUT" == "yes" ]]
 then
     echo "FASTSETUP: Skipping git update and rebuild"
 else
+<<<<<<< HEAD
+	rm -rf swift &> /dev/null
+    git clone $GIT_REPO swift
+	cd swift
+=======
     if [ "$CLEAN_CHECKOUT" == "true" ]
     then
 	    echo "Cleaning and making fresh checkout"
@@ -37,6 +42,7 @@ else
         echo "CLEAN_CHECKOUT not enabled. Cannot proceed"
     fi
 
+>>>>>>> c999bb9b84155b6c6335bb48cb2a374ac9d54482
     echo "$PWD : Starting compile"
     ant redist | tee $BASE/compile.log
     if [ "$?" != "0" ]
