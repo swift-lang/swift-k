@@ -107,7 +107,7 @@ if [ "$AAMD5" != "$EMD5" ]; then
 fi
 echo "JAVA=$JAVA" >>$L
 if [ -x $JAVA ]; then
-	CMD="$WR $JAVA -Djava=\"$JAVA\" -DGLOBUS_TCP_PORT_RANGE=\"$GLOBUS_TCP_PORT_RANGE\" -DX509_USER_PROXY=\"$X509_USER_PROXY\" -DX509_CERT_DIR=\"$X509_CERT_DIR\" -DGLOBUS_HOSTNAME=\"$H\" -Duser.home=\"$HO\" -jar $DJ $BS $LS $ID"
+	CMD="$WR $JAVA -Djava=\"$JAVA\" -Xmx64M -DGLOBUS_TCP_PORT_RANGE=\"$GLOBUS_TCP_PORT_RANGE\" -DX509_USER_PROXY=\"$X509_USER_PROXY\" -DX509_CERT_DIR=\"$X509_CERT_DIR\" -DGLOBUS_HOSTNAME=\"$H\" -Duser.home=\"$HO\" -jar $DJ $BS $LS $ID"
 	echo $CMD >>$L
 	eval $CMD >>$L
 	EC=$?

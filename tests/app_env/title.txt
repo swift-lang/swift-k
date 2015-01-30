@@ -1,0 +1,1 @@
+Test for passing env variables to app from conf

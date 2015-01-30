@@ -257,7 +257,7 @@ IFS="|"
 logstate "CREATE_INPUTDIR"
 for D in $DIRS ; do
 	if [ _$D != _ ]; then
-		mkdir -p "$D" 2>&1 >>"$INFO"
+		mkdir -p "$D" 2>&1 >& "$INFO"
 	fi
 	checkError 254 "Failed to create input directory $D"
 	log "Created output directory: $D"

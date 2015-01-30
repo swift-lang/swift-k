@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.FileNameExpander;
+import org.griphyn.vdl.karajan.FileNameExpander.Transform;
 
 public class ExpandArguments extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(ExpandArguments.class);
@@ -48,7 +49,11 @@ public class ExpandArguments extends SwiftFunction {
 	    List<Object> ret = new ArrayList<Object>();
 	    for (Object a : args) {
 	        if (a instanceof FileNameExpander) {
-	            ((FileNameExpander) a).toString(ret, direct);
+	            FileNameExpander ex = (FileNameExpander) a;
+	            if (direct) {
+	                ex.setTransform(Transform.ABSOLUTE);
+	            }
+	            ex.toString(ret);
 	        }
 	        else {
 	            ret.add(a);

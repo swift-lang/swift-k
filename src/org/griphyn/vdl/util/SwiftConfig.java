@@ -40,6 +40,7 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
+import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
@@ -529,13 +530,13 @@ public class SwiftConfig implements Cloneable {
                 
                 for (String key : c.getLeafPaths()) {
                     if (key.equals("jobProject")) {
-                        app.addProperty("project", c.get(key));
+                        app.addProperty("project", getString(c, key));
                     }
                     else if (key.equals("jobQueue")) {
-                        app.addProperty("queue", c.get(key));
+                        app.addProperty("queue", getString(c, key));
                     }
                     else {
-                        app.addProperty(key, c.get(key));
+                        app.addProperty(key, getString(c, key));
                     }
                 }
             }
@@ -740,6 +741,7 @@ public class SwiftConfig implements Cloneable {
         }
         
         s.setProvider(provider);
+        s.setIdentity(new IdentityImpl());
         if (url != null) {
             ServiceContact contact = new ServiceContactImpl(url);
             s.setServiceContact(contact);

@@ -25,15 +25,28 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/functions \
 
             # Site testing test-group
-            $TESTDIR/sites/beagle \
-            $TESTDIR/sites/mcs    \
-            $TESTDIR/sites/midway \
-            $TESTDIR/sites/osgconnect    \
-	        # Frisbee will fail due to Bug 1030
-            $TESTDIR/sites/mac-frisbee  \
-            $TESTDIR/sites/blues  \
-            $TESTDIR/sites/fusion \
-            $TESTDIR/sites/raven  \
+            $TESTDIR/sites/beagle      \
+            $TESTDIR/sites/blacklight  \
+            $TESTDIR/sites/blues       \
+            $TESTDIR/sites/bridled     \
+            $TESTDIR/sites/communicado \
+            $TESTDIR/sites/ec2         \
+            $TESTDIR/sites/fusion      \
+            $TESTDIR/sites/gce         \
+            $TESTDIR/sites/godzilla    \
+            $TESTDIR/sites/local       \
+            $TESTDIR/sites/local-coasters   \
+            $TESTDIR/sites/mac-frisbee \
+            $TESTDIR/sites/mcs         \
+            $TESTDIR/sites/midway      \
+            $TESTDIR/sites/multiple_coaster_pools  \
+            $TESTDIR/sites/osgconnect  \
+            $TESTDIR/sites/raven       \
+            $TESTDIR/sites/ssh-cl-coasters  \
+
+            # Stampede test does not work
+            #$TESTDIR/sites/stampede \
+            $TESTDIR/sites/swan  \
 
  	        # Remote-cluster IO tests
 	        $TESTDIR/stress/IO/beagle \
@@ -56,7 +69,8 @@ GROUPLIST=( $TESTDIR/language/working \
             # Local cluster tests.
             $TESTDIR/stress/local_cluster \
             $TESTDIR/stress/random_fail \
-            $TESTDIR/stress/jobs_per_node \
+            #jobs_per_node test is not working correctly
+            #$TESTDIR/stress/jobs_per_node \
 
        	    # Recursive Test invocation
 	        $TESTDIR/multi_remote

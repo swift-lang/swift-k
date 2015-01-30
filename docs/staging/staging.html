@@ -1,0 +1,1177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.9" />
+<title></title>
+<style type="text/css">
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+h5 {
+  font-size: 1.0em;
+}
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
+
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
+  padding: 0;
+  margin: 0;
+}
+pre {
+  white-space: pre-wrap;
+}
+
+#author {
+  color: #527bbd;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+#email {
+}
+#revnumber, #revdate, #revremark {
+}
+
+#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #f0f0f0;
+  color: #888;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; vertical-align: text-bottom; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
+}
+
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
+  margin-bottom: 2.5em;
+}
+
+#toctitle {
+  color: #527bbd;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel0, div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+div.unbreakable { page-break-inside: avoid; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+/*
+ * html5 specific
+ *
+ * */
+
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
+  text-align: right;
+}
+
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
+}
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
+}
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
+}
+
+
+/*
+ * manpage specific
+ *
+ * */
+
+body.manpage h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 2px solid silver;
+  border-bottom: 2px solid silver;
+}
+body.manpage h2 {
+  border-style: none;
+}
+body.manpage div.sectionbody {
+  margin-left: 3em;
+}
+
+@media print {
+  body.manpage div#toc { display: none; }
+}
+
+
+a:link { color:navy; }
+a:visited { color:navy; }
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([1-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
+  var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
+}
+
+}
+asciidoc.install();
+/*]]>*/
+</script>
+</head>
+<body class="article" style="max-width:750px">
+<div id="header">
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_data_flow_and_staging_methods">Data flow and staging methods</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview">Overview</h3>
+<div class="paragraph"><p>The execution components involved in a Swift workflow are the client, the swift
+service and the workers. The client is the program that executes the workflow
+described in a swift script and is invoked by the swift command. The service
+may be started separately or automatically by the swift client and is responsible
+for provisioning resources from clouds, clusters or HPC systems. The workers are
+launched by the swift-service and are responsible for controlling the execution
+of the user&#8217;s application on the compute nodes.</p></div>
+<div class="paragraph"><p>Different clusters, HPC systems, and cloud vendors may have shared file-systems,
+varying network characteristics and local-disks available which can be utilized
+differently to marshal data efficiently within a workflow. Data flow refers to
+this movement of data within a workflow. On distributed systems with varying
+levels of shared resources, the Swift client and service coordinates the flow of
+data among the worker-nodes such that the data required for computation is available
+to the worker prior to the execution of the users&#8217;s application as well as ensuring
+that the computed results are captured once tasks run to completion.</p></div>
+<div class="paragraph"><p>There are 6 different staging methods that are supported by Swift. They are:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Local
+</p>
+</li>
+<li>
+<p>
+Direct
+</p>
+</li>
+<li>
+<p>
+Wrapper
+</p>
+</li>
+<li>
+<p>
+Swift
+</p>
+</li>
+<li>
+<p>
+Shared-fs
+</p>
+</li>
+<li>
+<p>
+Service-local
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>These staging methods are explained in detail in the following sections.</p></div>
+<div class="paragraph"><p>Legend for the following sections:
+<span class="image">
+<img src="figs/legend.png" alt="Legend" />
+</span></p></div>
+</div>
+<div class="sect2">
+<h3 id="_staging_method_local">Staging method : local</h3>
+<div class="paragraph"><p>Data flow in local staging:
+<span class="image">
+<img src="figs/local.png" alt="Local staging" />
+</span></p></div>
+<div class="sect3">
+<h4 id="_summary">Summary</h4>
+<div class="paragraph"><p>The local staging method is designed for shared-nothing architectures such as
+clusters and clouds with no shared file-systems. The data originates on the
+node where the client runs and all data transfers are done explicity over the network.
+This method avoids using a shared-filesystem to transfer the files over the network,
+as in many cases the shared-filesystem is a shared among multiple users which adds
+congestion and it also could just be unsuitable for certain file access patterns.
+The client and service need not be on the same machine, which allows a client running on a local workstation to channel
+data through a service on the headnode of a Cluster1 to compute nodes provisioned
+from Cluster1. The is the default file staging method as this works on all computational
+resources. Since all the data is transferred via the swift-service the network
+bandwidth of the service could bottleneck the data flow. Similarly if the swift
+client is running remotely, the network links between the client and the service
+could potentially become a bottleneck for large volumes of data.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_when_to_use_this_mode">When to use this mode</h4>
+<div class="paragraph"><p>The data volumes that need to be transferred to and from the workers to the client per worker
+are not more that hundreds of MB. As data sizes approach GBs of data per task, other transport
+mechanisms such as Globus transfers are worth considering.</p></div>
+<div class="paragraph"><p>When each task either consumes or generates a large number of small files, shared-filesystem
+based copies can be very slow. The local staging method is an ideal candidate for this scenario.
+However, when there are large number of files involved the filesystem of the system on which
+the client is executing could become a bottleneck. Using a faster non-disk filesystem when available
+generally improves performance significantly.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_example_configs">Example configs</h4>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+    execution <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+        URL<span style="color: #990000">:</span> <span style="color: #FF0000">"swift.rcc.uchicago.edu"</span>
+        jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"ssh-cl:slurm"</span>  <span style="font-style: italic"><span style="color: #9A1900"># Client connects remotely to the login node.</span></span>
+        options <span style="color: #990000">{</span>
+            nodeGranularity<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxNodesPerJob<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            jobQueue<span style="color: #990000">:</span> <span style="color: #FF0000">"sandyb"</span>
+            maxJobs<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            tasksPerNode<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxJobTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:08:20"</span>
+        <span style="color: #990000">}</span>
+    <span style="color: #990000">}</span>
+    staging<span style="color: #990000">:</span> <span style="color: #FF0000">"local"</span>
+    workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"/tmp/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span>
+    app<span style="color: #990000">.</span>date <span style="color: #990000">{</span>
+        executable<span style="color: #990000">:</span> <span style="color: #FF0000">"/bin/date"</span>
+        maxWallTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:05:00"</span>
+    <span style="color: #990000">}</span>
+<span style="color: #990000">}</span></tt></pre></div></div>
+</div>
+<div class="sect3">
+<h4 id="_performance">Performance</h4>
+<div class="paragraph"><p>All data-flow is over the network links from the client node and service node in this staging method
+and as a result, the network capacity of the client node is a potential limiting factor for large data
+volumes.</p></div>
+<div class="paragraph"><p>When several small files are involved, or with sufficiently large files, the
+filesystem on the client node can become a bottleneck.</p></div>
+<div class="paragraph"><p>There are performance limitations to the the staging/transport mechanism that swift uses, which could
+limit transfer throughputs. [TODO: Data to support this would be very nice]</p></div>
+</div>
+<div class="sect3">
+<h4 id="_notes">Notes:</h4>
+<div class="paragraph"><p>When running using local coasters (local instead of ssh-cl), the client and service run on the same node.
+    In this case, the network links are between the service and workers.</p></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_staging_method_direct">Staging method : Direct</h3>
+<div class="paragraph"><p>Data flow with Direct staging:
+<span class="image">
+<img src="figs/direct.png" alt="Direct staging" />
+</span></p></div>
+<div class="paragraph"><p>Data flow with Direct staging and a scratch directory:
+<span class="image">
+<img src="figs/direct_with_scratch.png" alt="Direct staging with scratch directory" />
+</span></p></div>
+<div class="sect3">
+<h4 id="_summary_2">Summary</h4>
+<div class="paragraph"><p>The direct staging mode is designed for computational resources with High-Performance shared-filesystems.
+This mode requires that a shared filesystem such as NFS, Lustre, or even FUSE-mounted-S3
+is mounted across the nodes where the client, service, and the workers are executing.
+Instead of Swift managing network transfers, the network transfers are implicitly
+managed by the shared-filesystem.
+The apps run in sandbox directories created under the workDirectory, but the tasks
+themselves will receive absolute paths for the input and output files. For applications
+that are IO bound, writing directly to the shared-filesystem can adversely affect the
+shared filesystem performance. To avoid this there is an option to specify a “scratch”
+folder on a local disk on the compute nodes.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_when_to_use_this_mode_2">When to use this mode</h4>
+<div class="paragraph"><p>Large volumes of data are either consumed or generated by the application and a High Performance
+shared-filesystem is available across the nodes. On systems which have shared-filesystems, with
+I/O bandwidth that exceeds the network links between the headnode and the worker nodes, using
+the network to transfer data to the compute nodes could be sub-optimal.</p></div>
+<div class="paragraph"><p>When a high-performance shared filesystem is available, such as the case on many supercomputing
+systems, there is sufficient I/O bandwidth to support several applications reading and writing
+to the filesystem in parallel.</p></div>
+<div class="paragraph"><p>Another scenario is when the shared-filesystem is sensitive to creation and deletion
+of small files and directories. The swift workers create a sandbox directory for each
+task, which is (3 : TODO:confirm this with Mihael) levels deep. Using the direct mode
+with the workDirectory on a local disk (say /tmp) could avoid the overhead from swift&#8217;s
+mechanisms for sandboxing tasks.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_example_configs_2">Example configs</h4>
+<div class="paragraph"><p>The following is an example for the direct staging mode.
+* Staging method is set to “direct”.
+* workDirectory may be set to the shared filesystem or a local filesystem.</p></div>
+<div class="paragraph"><p>In this case, Swift assumes that file variables point at files on the shared filesystem.
+The apps which are executed on the workers resolve the file variables to absolute paths
+to the input and output files on the shared-filesystem.</p></div>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
+
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+    execution <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+        URL<span style="color: #990000">:</span> <span style="color: #FF0000">"swift.rcc.uchicago.edu"</span>
+        jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"local:slurm"</span>
+        options <span style="color: #990000">{</span>
+            nodeGranularity<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxNodesPerJob<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            jobQueue<span style="color: #990000">:</span> <span style="color: #FF0000">"sandyb"</span>
+            maxJobs<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            tasksPerNode<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxJobTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:08:20"</span>
+        <span style="color: #990000">}</span>
+    <span style="color: #990000">}</span>
+    staging<span style="color: #990000">:</span> direct
+    workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"/tmp/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/swiftwork"</span>
+    app<span style="color: #990000">.</span>bash <span style="color: #990000">{</span>
+        executable<span style="color: #990000">:</span> <span style="color: #FF0000">"/bin/bash"</span>
+        maxWallTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:05:00"</span>
+    <span style="color: #990000">}</span>
+<span style="color: #990000">}</span></tt></pre></div></div>
+<div class="paragraph"><p>The following is an example for the direct staging mode.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Staging method is set to “direct”
+</p>
+</li>
+<li>
+<p>
+workDirectory may be set to the shared filesystem or a local filesystem.
+</p>
+</li>
+<li>
+<p>
+Scratch is set to a directory on the local disks of the workers.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Since the staging method is set to “direct”, swift will assume that file are on a shared file-system.
+In the context of user-application the file variables will resolve to absolute paths of the input/output files on the scratch directory.
+Before the workers start the execution of user tasks, the workers will copy the input files from the shared-filesystem to the
+scratch directory, and after execution will copy out the output files from the scratch directory to the shared-filesystem.</p></div>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
+
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+    execution <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+        URL<span style="color: #990000">:</span> <span style="color: #FF0000">"swift.rcc.uchicago.edu"</span>
+        jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"local:slurm"</span>
+        options <span style="color: #990000">{</span>
+            nodeGranularity<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxNodesPerJob<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            jobQueue<span style="color: #990000">:</span> <span style="color: #FF0000">"sandyb"</span>
+            maxJobs<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            tasksPerNode<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxJobTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:08:20"</span>
+        <span style="color: #990000">}</span>
+    <span style="color: #990000">}</span>
+    staging<span style="color: #990000">:</span> direct
+    workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"/tmp/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/swiftwork"</span>
+    scratch<span style="color: #990000">:</span> <span style="color: #FF0000">"/scratch/local/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/work/"</span>
+    app<span style="color: #990000">.</span>bash <span style="color: #990000">{</span>
+        executable<span style="color: #990000">:</span> <span style="color: #FF0000">"/bin/bash"</span>
+        maxWallTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:05:00"</span>
+    <span style="color: #990000">}</span>
+<span style="color: #990000">}</span>
+
+TCPPortRange<span style="color: #990000">:</span> <span style="color: #FF0000">"50000,51000"</span>
+lazyErrors<span style="color: #990000">:</span> false
+executionRetries<span style="color: #990000">:</span> <span style="color: #993399">0</span>
+keepSiteDir<span style="color: #990000">:</span> true
+providerStagingPinSwiftFiles<span style="color: #990000">:</span> false
+alwaysTransferWrapperLog<span style="color: #990000">:</span> true</tt></pre></div></div>
+</div>
+<div class="sect3">
+<h4 id="_notes_2">Notes:</h4>
+<div class="paragraph"><p>TODO : Details of the filename behavior in apps and within swiftscript body.</p></div>
+<div class="paragraph"><p>When this configuration is used, the worker copies the input files from the shared-filesystem to the scratch directory, and the user application will get the path to the file on scratch when the filename(&lt;file_variable&gt;) and it&#8217;s shorthand @&lt;file_variable&gt; primitives are used in the app definition. The filename and @ primitives when used outside of the app definitions will point at the files on the shared-filesystem.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_performance_2">Performance</h4>
+<div class="paragraph"><p>"Direct" is theoretically the optimal way to use the shared-filesystem. There are no unnecessary copies, and the application
+that requires the file alone access the data.</p></div>
+<div class="paragraph"><p>If the data access pattern of the application involves random seeks or creation of several intermediate small files, the "scratch"
+option allows you to offload sub-optimal file access patterns to a local disk/memory. This avoids costly accesses on the
+shared-filesystem and indirectly the network.</p></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_staging_method_swift">Staging method : Swift</h3>
+<div class="paragraph"><p>Data flow with staging method Swift:
+<span class="image">
+<img src="figs/swift.png" alt="Swift staging" />
+</span></p></div>
+<div class="sect3">
+<h4 id="_summary_3">Summary</h4>
+<div class="paragraph"><p>Swift staging, involves the client accessing file over a supported method like
+ssh or a local-filesystem access, and making the inputs available to the workers
+over a work-directory on a shared filesystem. This staging method uses
+an intermediate staging location that is on a shared-FS so each files is,
+in addition to being read from the initial location, written to and read from a
+shared FS, both of each are overhead. The only advantage to this is that you don&#8217;t
+need coasters to use it and it&#8217;s supported on a large number of computational resources.</p></div>
+<div class="paragraph"><p>This is the default staging mechanism used if no staging method is defined in the
+swift config file.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_when_to_use_this_mode_3">When to use this mode</h4>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+You can access data using one of the supported methods like:
+    local filesystem access
+    ssh - Use scp to access files
+    GSIFTP
+    GridFTP
+</p>
+</li>
+<li>
+<p>
+A shared-FS is present, that works well for your data access patterns.
+</p>
+</li>
+<li>
+<p>
+You want to use a non-coaster execution provider.
+</p>
+</li>
+</ol></div>
+<div class="paragraph"><p>The GSIFTP and GridFTP are not actively tested, and are not guaranteed to work.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_example_configs_3">Example configs</h4>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
+
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+    execution <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+        URL<span style="color: #990000">:</span> <span style="color: #FF0000">"swift.rcc.uchicago.edu"</span>
+        jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"local:slurm"</span>
+        options <span style="color: #990000">{</span>
+            nodeGranularity<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxNodesPerJob<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            jobQueue<span style="color: #990000">:</span> <span style="color: #FF0000">"sandyb"</span>
+            maxJobs<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            tasksPerNode<span style="color: #990000">:</span> <span style="color: #993399">1</span>
+            maxJobTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:08:20"</span>
+        <span style="color: #990000">}</span>
+    <span style="color: #990000">}</span>
+    filesystem <span style="color: #990000">{</span>
+        type<span style="color: #990000">:</span> <span style="color: #FF0000">"local"</span>
+        URL<span style="color: #990000">:</span>  <span style="color: #FF0000">"localhost"</span>
+    <span style="color: #990000">}</span>
+    staging<span style="color: #990000">:</span> direct
+    workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"/scratch/midway/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/swiftwork"</span>
+    app<span style="color: #990000">.</span>bash <span style="color: #990000">{</span>
+        executable<span style="color: #990000">:</span> <span style="color: #FF0000">"/bin/bash"</span>
+        maxWallTime<span style="color: #990000">:</span> <span style="color: #FF0000">"00:05:00"</span>
+    <span style="color: #990000">}</span>
+<span style="color: #990000">}</span>
+
+TCPPortRange<span style="color: #990000">:</span> <span style="color: #FF0000">"50000,51000"</span>
+lazyErrors<span style="color: #990000">:</span> false
+executionRetries<span style="color: #990000">:</span> <span style="color: #993399">0</span>
+keepSiteDir<span style="color: #990000">:</span> true
+providerStagingPinSwiftFiles<span style="color: #990000">:</span> false
+alwaysTransferWrapperLog<span style="color: #990000">:</span> true</tt></pre></div></div>
+</div>
+<div class="sect3">
+<h4 id="_performance_3">Performance</h4>
+<div class="paragraph"><p>The Swift staging method uses an intermediate staging location that is on a shared FS,
+each files is, in addition to being read from the initial location, written to and read
+from a shared FS, both of each are overhead. The only advantage to this is that you
+don&#8217;t need coasters to use it and it&#8217;s supported in a lot of cases.</p></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_staging_method_wrapper">Staging method : Wrapper</h3>
+<div class="paragraph"><p><span class="image">
+<img src="figs/wrapper.png" alt="Wrapper staging" />
+</span></p></div>
+<div class="sect3">
+<h4 id="_summary_4">Summary</h4>
+<div class="paragraph"><p>The wrapper staging method relies on a wrapper script used to stage files to and from the swift workers.
+Currently the wrapper staging method supports fetching files over HTTP and between the client filesystem.
+The wrapper staging method provides a flexible interface to add support for third party transfer mechanisms
+to the swift worker.</p></div>
+<div class="paragraph"><p>TODO: Is <strong>guc</strong> supported ?</p></div>
+</div>
+<div class="sect3">
+<h4 id="_when_to_use_this_mode_4">When to use this mode</h4>
+<div class="paragraph"><p>The repository for the input or output data can be accessed over a supported tranfer mechanism.</p></div>
+<div class="paragraph"><p>The data can be accessed only by an exotic tranfer mechanism, which could be incorporated into
+the supported methods for wrapper staging.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_example_configs_4">Example configs</h4>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.6
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>sites<span style="color: #990000">:</span> midway
+
+site<span style="color: #990000">.</span>midway <span style="color: #990000">{</span>
+        execution <span style="color: #990000">{</span>
+                type<span style="color: #990000">:</span> <span style="color: #FF0000">"coaster"</span>
+                jobManager<span style="color: #990000">:</span> <span style="color: #FF0000">"local:local"</span>
+                URL<span style="color: #990000">:</span> <span style="color: #FF0000">"localhost"</span>
+        <span style="color: #990000">}</span>
+        filesystem <span style="color: #990000">{</span>
+                type<span style="color: #990000">:</span> local
+        <span style="color: #990000">}</span>
+        staging<span style="color: #990000">:</span> <span style="color: #FF0000">"wrapper"</span>
+        scratch<span style="color: #990000">:</span> <span style="color: #FF0000">"/tmp/"</span>$<span style="color: #990000">{</span>env<span style="color: #990000">.</span>USER<span style="color: #990000">}</span><span style="color: #FF0000">"/swift-scratch"</span>
+        workDirectory<span style="color: #990000">:</span> <span style="color: #FF0000">"swiftwork"</span>
+
+        app<span style="color: #990000">.</span>ALL <span style="color: #990000">{</span>
+                executable<span style="color: #990000">:</span> <span style="color: #FF0000">"*"</span>
+        <span style="color: #990000">}</span>
+<span style="color: #990000">}</span>
+
+wrapperStagingLocalServer<span style="color: #990000">:</span> <span style="color: #FF0000">"file://"</span></tt></pre></div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2015-01-23 11:27:08 CST
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,2 @@
+Shared-fs staging test
+Local site : ANY

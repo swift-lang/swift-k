@@ -63,7 +63,7 @@ public class FileName extends SwiftFunction {
         DSHandle result;
         if (inAppInvocation) {
             result = NodeFactory.newRoot(Field.GENERIC_ANY, 
-                new FileNameExpander(var, MultiMode.COMBINED, Transform.RELATIVE));
+                new FileNameExpander(var, MultiMode.COMBINED, Transform.REMOTE));
         }
         else {
             result = NodeFactory.newRoot(Field.GENERIC_STRING, 

@@ -30,22 +30,22 @@ namespace(providerStaging) {
 		)
 	}
 
-	readErrorFiles := function(dir, jobid, stdout, stderr) {
+	readErrorFiles := function(dir, jobid, stdout, stdouts, stderr, stderrs) {
 		concat(
 			if(file:exists("{dir}/{jobid}.error")) {
 				str:strip(file:read("{dir}/{jobid}.error"))
 				file:remove("{dir}/{jobid}.error")
 			}
-			stderr := if(stderr == null, "{dir}/{jobid}.stderr", stderr)
-			stdout := if(stdout == null, "{dir}/{jobid}.stdout", stdout)
-			if(file:exists(stderr)) {
+			stderrs := if(stderr == null, "{dir}/{jobid}.stderr", stderrs)
+			stdouts := if(stdout == null, "{dir}/{jobid}.stdout", stdouts)
+			if(file:exists(stderrs)) {
 				"\n\n------- Application STDERR --------\n"
-				str:strip(file:read(stderr))
+				str:strip(file:read(stderrs))
 				"\n-----------------------------------\n"
 			}
-			else if(file:exists(stdout)) {
+			else if(file:exists(stdouts)) {
 				"\n\n------- Application STDOUT --------\n"
-				str:strip(file:read(stdout))
+				str:strip(file:read(stdouts))
 				"\n-----------------------------------\n"
 			}
 		)
@@ -60,7 +60,7 @@ namespace(providerStaging) {
 			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 			
 			wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
-			tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)				
+			tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
 			
 			sm := siteProfile(rhost, "stagingMethod", default="file"),
 			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout, defaultScheme = sm),
@@ -157,7 +157,7 @@ namespace(providerStaging) {
 					throw(prev)
 				}
 				else {
-					exception := try(exception(readErrorFiles(DEBUG_DIR, jobid, stdouts, stderrs), prev), prev)
+					exception := try(exception(readErrorFiles(DEBUG_DIR, jobid, stdout, stdouts, stderr, stderrs), prev), prev)
 					setProgress(progress, "Failed but can retry")
 					log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 				
