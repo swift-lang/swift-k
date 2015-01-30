@@ -530,13 +530,13 @@ public class SwiftConfig implements Cloneable {
                 
                 for (String key : c.getLeafPaths()) {
                     if (key.equals("jobProject")) {
-                        app.addProperty("project", c.get(key));
+                        app.addProperty("project", getString(c, key));
                     }
                     else if (key.equals("jobQueue")) {
-                        app.addProperty("queue", c.get(key));
+                        app.addProperty("queue", getString(c, key));
                     }
                     else {
-                        app.addProperty(key, c.get(key));
+                        app.addProperty(key, getString(c, key));
                     }
                 }
             }
