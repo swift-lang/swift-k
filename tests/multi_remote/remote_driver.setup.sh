@@ -18,64 +18,19 @@
 export GLOBUS_HOSTNAME="swift.rcc.uchicago.edu"
 
 BASE=$PWD
-# Make clean checkout if no swift dir is present or
-# Clean checkout requested
 
-#[ -f "$SWIFT_TAR_FILE" ] && cp $SWIFT_TAR_FILE ./swift.tar
-
-if [[ "$CLEAN_CHECKOUT" == "yes" ]]
+rm -rf swift &> /dev/null
+git clone $GIT_REPO swift
+cd swift
+echo "$PWD : Starting compile"
+ant redist | tee $BASE/compile.log
+if [ "$?" != "0" ]
 then
-    echo "FASTSETUP: Skipping git update and rebuild"
-else
-<<<<<<< HEAD
-	rm -rf swift &> /dev/null
-    git clone $GIT_REPO swift
-	cd swift
-=======
-    if [ "$CLEAN_CHECKOUT" == "true" ]
-    then
-	    echo "Cleaning and making fresh checkout"
-	    rm -rf swift &> /dev/null
-        git clone $GIT_REPO swift
-	    cd swift
-    else
-        echo "CLEAN_CHECKOUT not enabled. Cannot proceed"
-    fi
-
->>>>>>> c999bb9b84155b6c6335bb48cb2a374ac9d54482
-    echo "$PWD : Starting compile"
-    ant redist | tee $BASE/compile.log
-    if [ "$?" != "0" ]
-    then
-        echo "Failed to clone the GIT repository"
-        exit -1
-    fi
-    cd swift
-    ant redist
-    cd ..
-    tar -cf swift.tar.tmp swift && mv swift.tar.tmp ./swift.tar && echo "Tarred successfully"
-
-elif [[ -d "$SWIFT_LOCAL_REPO" ]]
-then
-    echo "Found Local repo $SWIFT_LOCAL_REPO"
-    # check dist
-    if [[ ! -d "$SWIFT_LOCAL_REPO/dist/swift-svn/bin" ]]
-    then
-        echo "No dist/bin folder found"
-        echo "Building !"
-        pushd .
-        cd $SWIFT_LOCAL_REPO
-        ant redist
-        popd
-    fi
-    echo "Copying to local folder"
-    cp -R $SWIFT_LOCAL_REPO /tmp/swift
-    tar -cf /tmp/swift.tar.tmp /tmp/swift && mv /tmp/swift.tar.tmp ./swift.tar && echo "Tarred successfully"
-    echo "Removing local copy"
-    rm -rf /tmp/swift
-else
-    echo "$SWIFT_LOCAL_REPO not found"
+    echo "Failed to clone the GIT repository"
+    exit -1
 fi
+cd $BASE
+tar -cf swift.tar.tmp swift && mv swift.tar.tmp ./swift.tar && echo "Tarred successfully"
 
 
 # Wrapper is the script that gets executed on the remote nodes
