@@ -81,7 +81,6 @@ public class Sprintf extends SwiftFunction {
         Channel<AbstractDataNode> args = c_vargs.get(stack);
         waitForAll(this, args);
         String spec = (String) hspec.getValue();
-        logger.warn("spec : " + spec);
         String msg = format(spec, args);
         if (logger.isDebugEnabled()) {
             logger.debug("generated: " + msg);
@@ -129,8 +128,6 @@ public class Sprintf extends SwiftFunction {
         if (arg >= vars.size()) {
             throw new IllegalArgumentException("tracef(): too many specifiers!");
         }
-        logger.warn("type : " + vars.get(arg).getType() + "\n" );
-
 
         if (c == 'M') {
             append_M(vars.get(arg), output);
