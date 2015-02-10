@@ -538,6 +538,12 @@ public class SwiftConfig implements Cloneable {
                     else if (key.equals("count")) {
                         app.addProperty("count", getObject(c, key));
                     }
+                    else if (key.equals("depth")) {
+                        app.addProperty("depth", getObject(c, key));
+                    }
+                    else if (key.equals("ppn")) {
+                        app.addProperty("ppb", getObject(c, key));
+                    }
                     else {
                         app.addProperty(key, getString(c, key));
                     }
