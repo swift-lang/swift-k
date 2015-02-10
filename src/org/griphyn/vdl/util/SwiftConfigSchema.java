@@ -47,6 +47,7 @@ public class SwiftConfigSchema {
     
     public static class Info {
         public ConfigPropertyType<?> type;
+        public String typeSpec;
         public Object value;
         public boolean optional;
         public String doc;
@@ -109,6 +110,7 @@ public class SwiftConfigSchema {
                     type = type.substring(1);
                 }
                 i.type = getTypeInstance(type, e.getValue());
+                i.typeSpec = type;
             }
             if (defaultValue != null) {
                 i.value = defaultValue;
@@ -367,5 +369,9 @@ public class SwiftConfigSchema {
 
     public Info getInfo(String key) {
         return info.get(key);
+    }
+    
+    public ConfigTree<Info> getInfoTree() {
+        return info;
     }
 }

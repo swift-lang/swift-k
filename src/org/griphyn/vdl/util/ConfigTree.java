@@ -212,6 +212,10 @@ public class ConfigTree<T> {
             value = v;
             return old;
         }
+        
+        public boolean isLeaf() {
+            return nodes == null;
+        }
 
         public Set<Map.Entry<String, Node<T>>> entrySet() {
             if (nodes == null) {

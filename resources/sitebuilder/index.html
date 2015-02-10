@@ -1,0 +1,616 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>Swift Site Builder</title>
+		<script src="js/jquery-1.9.1.js"></script>
+		<script src="js/jquery-ui-1.10.3.custom.js"></script>
+		<script src="js/jquery.jeditable.js"></script>
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+  		<link href="css/theme-light.css" rel="stylesheet" type="text/css" />
+		<link href="css/theme-light/jquery-ui-1.10.3.custom.css" rel="stylesheet" />
+		<link href="css/skin-win8/ui.fancytree.css" rel="stylesheet"/>
+		<script src="js/jquery.fancytree.js"></script>
+		<script src="js/jquery.fancytree.glyph.js"></script>
+		<script src="js/jquery.fancytree.edit.js"></script>
+		<script src="js/jquery.fancytree.wide.js"></script>
+		<style>
+			.fancytree-container.fancytree-treefocus span.fancytree-active span.fancytree-title.nohl {
+				background-color: transparent;
+			}
+			
+			.fancytree-container.fancytree-treefocus span.fancytree-node span.fancytree-title.nohl {
+				background-color: transparent;
+			}
+			
+			.fancytree-container.fancytree-treefocus span.fancytree-node:hover span.fancytree-title.nohl {
+				background-color: transparent;
+				border-color: transparent;
+			}
+			
+			.fancytree-node {
+				height: 20pt;
+			}
+			
+			.fancytree-container.fancytree-treefocus span.fancytree-node.fancytree-selected span.fancytree-title {
+ 				background-color: transparent;
+			}
+			
+			.fancytree-container.fancytree-treefocus span.fancytree-node.fancytree-active span.fancytree-title {
+  				background-color: transparent;
+  				border-color: transparent;
+			}
+			
+			span.fancytree-node:hover span.fancytree-title.nohl {
+				background-color: transparent;
+				border-color: transparent;
+			}
+			
+			.button {
+				font-size: 8pt;
+			}
+			
+			#add-site-dialog {
+				width: 600px;
+			}
+			
+			#add-site-dialog-site {
+				width: 200px;
+				padding: 8px;
+			}
+			
+			#add-site-dialog-description {
+				width: 200px;
+				padding: 8px;
+			}
+			
+			.button-bar {
+				padding-top: 16px;
+				text-align: right;
+			}
+			
+			.constant {
+				border-radius: 3px;
+				border: thin solid #a0a0a0;
+				background-color: #e0e0e0;
+				padding-left: 2px;
+				padding-right: 2px;
+			}
+			
+			.editable-string {
+				border-radius: 2px;
+				border: thin solid #a0a0f0;
+				background: linear-gradient(to bottom, #f8f8f8, #f0f0f0, #e0e0e0, #f8f8f8);
+				padding-left: 4px;
+				padding-right: 4px;
+				font-size: 10pt;
+				vertical-align: middle;
+			}
+			
+			.editable-string form, .editable-choice form {
+				display: inline;
+			}
+			
+			.editable-choice {
+				border-radius: 2px;
+				border: thin solid #a0a0f0;
+				background: linear-gradient(to bottom, #f8f8f8, #f0f0f0, #e0e0e0, #f8f8f8);
+				padding-left: 2px;
+				padding-right: 2px;
+				padding-top: 0px;
+				padding-bottom: 0px;
+				margin: 0px;
+				height: 18px;
+				font-size: 10pt;
+			}
+			
+			.elabel {
+				font-weight: bold;
+				color: black;
+			}
+			
+			.fancytree-container>li>span {
+				background-color: #c7c7c7;
+			}
+			
+			.fancytree-container>li>ul>li>span>span {
+				margin-top: 3px;
+			}
+			
+			.fancytree-container>li>ul>li {
+				border-left: thin solid #c7c7c7;
+			}
+			
+			.fancytree-container>li>ul>li>span {
+				background-color: #e7e7e7;
+			}
+			
+			.eh1 {
+				font-size: 140%;
+			}
+			
+			.eh2 {
+				font-size: 120%;
+			}
+			
+			.eswitch input[type=checkbox] {
+				visibility: hidden;
+			}
+			
+			
+			.eswitch {
+				border: thin solid #a0a0f0;
+				border-radius: 3px;
+				box-shadow: inset 0px 1px 1px rgba(0,0,0,0.5), 0px 1px 0px rgba(255,255,255,0.2);
+				padding: 0px;
+				margin: -4px 0px 0px 0px;
+				width: 58px;
+				height: 15px;
+				position: relative;
+				background-color: #f0f0f0;
+				display: inline-block;
+				top: 8px;
+			}
+			
+			.eswitch:after {
+				content: "OFF";
+				font-size: 80%;
+				font-weight: bold;
+				color: #a0a0a0;
+				position: absolute;
+				right: 4px;
+				top: -1px;
+				z-index: 0;
+			}
+			
+			.eswitch:before {
+				content: "ON";
+				font-size: 80%;
+				font-weight: bold;
+				color: #60cf00;
+				position: absolute;
+				left: 4px;
+				top: -1px;
+				z-index: 0;
+			}
+			
+			.eswitch label {
+				display: block;
+				width: 28px;
+				height: 13px;
+
+				border-radius: 2px;
+				transition: all .2s ease;
+				cursor: pointer;
+				position: absolute;
+				top: 0px;
+				left: 0px;
+				z-index: 1;
+
+				box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.3);
+				border: thin solid #a0a0a0;
+				background: #a0a0a0;
+
+				background: linear-gradient(to bottom, #f8f8f8, #f0f0f0, #e0e0e0, #f8f8f8);
+			}
+			
+			.eswitch input[type=checkbox]:checked + label {
+				left: 28px;
+			}
+			
+			.remove-button {
+				width: 18px;
+				height: 18px;
+				background-image: url("icons/delete-gray.png");
+				background-size: contain;
+				display: inline-block;
+				margin-top: 0px;
+				float: right;
+				margin-left: 8px;
+			}
+			
+			.remove-button:hover {
+				background-image: url("icons/delete.png");
+			}
+			
+			.ui-spinner {
+				width: 60px;
+				height: 18px;
+			}
+			
+			.ui-spinner .ui-spinner-input {
+				margin: 0px;
+				width: 60px;
+				height: 18px;
+			}
+			
+		</style>
+	</head>
+	<body>
+<span class="editable-string">test</span>
+		Tree:
+		<div id="tree"></div>
+		<script>
+DEFINED_SITES = [];
+DEFINED_SITES["Empty Site"] = {_id: "<id>", execution: {type: "<select>"}, workDirectory: "<select>"};
+DEFINED_SITES["local/Plain"] = {_id: "local", execution: {type: "local"}, filesystem: {type: "local"}, 
+		workDirectory: "swiftwork", staging: "swift", app: {"ALL": {executable: "*"}}};
+DEFINED_SITES["local/Coasters"] = {};
+DEFINED_SITES["uchicago/ci/Beagle"] = {};
+DEFINED_SITES["anl/alcf/Intrepid"] = {};
+SCHEMA = {};
+OVERLAY_SCHEMA = {
+	site: {
+		"*": {
+			execution: {
+				_icon: "icons/execution.png"
+			},
+			filesystem: {
+				_icon: "icons/fs.png"
+			}
+		}
+	}
+}
+
+COMMON_OPTIONS = [
+	{name: "Common Options", 
+		opts: ["lazyErrors", "executionRetries", "statusMode"]},
+	{name: "Debugging Options",
+		opts: ["keepSiteDir", "alwaysTransferWrapperLog", "mappingCheckerEnabled", "tracingEnabled"]},
+	{name: "Throttling Options",
+		opts: ["jobSubmitThrottle", "hostJobSubmitThrottle", "fileTransfersThrottle", "fileOperationsThrottle", 
+		       "siteScoreThrottlingFactor", "maxForeachThreads", "maxThreads"]},
+	{name: "Replication Options",
+		opts: ["replicationEnabled", "replicationMinQueueTime", "replicationLimit"]}
+];
+		
+function start(schema) {
+	console.log(schema);
+	SCHEMA = schema;
+	addOptions();
+}
+
+$.ajax({url: 'swift.conf.schema.json', type: 'get', dataType: 'json', cache: false,
+	success: start, error: function(msg, exc) {window.alert("Err: " + msg); throw(exc);}, async: true});
+
+$("#tree").fancytree({
+	extensions: ["edit"],
+	checkbox: true,
+	keyboard: false,
+	toggleEffect: { effect: "drop", options: {direction: "left"}, duration: 100 },
+	source: [
+	    {title: '<span class="eh1">Sites</span>', key: "sites", folder: true, expanded: true, hideCheckbox: true, icon: "icons/sites.png", children: 
+	    	[
+				{title: '<a href="#add-site" id="add-site" class="button uify">Add Site...</a>', key: "add-site", hideCheckbox: true, icon: false},
+			]
+	    },
+	    {title: '<span class="eh1" id="options">Options</span>', key: "options", folder: true, expanded: true, hideCheckbox: true, icon: "icons/options.png"}
+	],
+	expand: function(event, data) {
+		initButtons();
+		uify();
+	}
+});
+
+function updateSiteDetailText() {
+	var text = $("#add-site-dialog-site>option:selected").attr("help");
+	$("#add-site-dialog-description").html(text);
+}
+
+function cancelAddSite() {
+	$("#add-site-dialog").dialog("close");
+}
+
+function isLeaf(obj) {
+	return typeof(obj) != "object";
+}
+
+function startsWith(str, sub) {
+	return str.lastIndexOf(sub, 0) === 0;
+}
+
+function findInfoRecursive(els, index, node) {
+	if (index == els.length) {
+		return node;
+	}
+	else if (node[els[index]]) {
+		// exact match
+		return findInfoRecursive(els, index + 1, node[els[index]]);
+	}
+	else if (node["*"]) {
+		// wildcard match
+		return findInfoRecursive(els, index + 1, node["*"]);
+	}
+	else {
+		return null;
+	}
+}
+
+function findInfo(path) {
+	var a = path.split(".");
+	console.log(a);
+	var info1 = findInfoRecursive(a, 0, SCHEMA);
+	var info2 = findInfoRecursive(a, 0, OVERLAY_SCHEMA);
+	return $.extend({}, info1, info2);
+}
+
+function isWildcardRecursive(els, index, node, lastWasWildcard) {
+	if (index == els.length) {
+		return lastWasWildcard;
+	}
+	else if (node[els[index]]) {
+		// exact match
+		return isWildcardRecursive(els, index + 1, node[els[index]], false);
+	}
+	else if (node["*"]) {
+		// wildcard match
+		return isWildcardRecursive(els, index + 1, node["*"], true);
+	}
+	else {
+		return false;
+	}
+}
+
+function isWildcard(path) {
+	var a = path.split(".");
+	return isWildcardRecursive(a, 0, SCHEMA, false);
+}
+
+function getIcon(info) {
+	if (info["_icon"]) {
+		return info["_icon"];
+	}
+	else if (info.type) {
+		return "icons/option.png";
+	}
+	else {
+		return false;
+	}
+}
+
+function parentIsWildcard(path) {
+	return isWildcard(path.substring(0, path.lastIndexOf(".") + 1));
+}
+
+function isTrue(v) {
+	return v == "true";
+}
+
+function makeNode(key, value, path, selectable, expanded, removable) {
+	if (expanded == null) {
+		expanded = true;
+	}
+	if (removable == null) {
+		removable = false;
+	}
+	console.log("key: " + key + ", value: " + value);
+	console.log(path);
+	var info = findInfo(path);
+	if (value == null) {
+		if (info.value != null) {
+			value = info.value;
+		}
+	}
+	console.log(info);
+	var title;
+	if (key == null) {
+		if (isWildcard(path)) {
+			title = '<span class="editable-string uify" id="' + path + '">' + value + '</span>';
+		}
+		else {
+			title = '<span class="name">' + value + '</span>';
+		}
+	}
+	else {
+		if (info.type == null) {
+			title = '<span class="elabel">' + key + "</span>: " + value;
+		}
+		else if (info.type == "String") {
+			title = '<span class="elabel">' + key + '</span>: <span class="editable-string uify" id="' + path + '">' + value + '</span>';
+		}
+		else if (startsWith(info.type, "Choice")) {
+			var start = info.type.indexOf("[");
+			var end = info.type.indexOf("]");
+			var choices = info.type.substring(start + 1, end).split(/[,\s]/);
+			var s = '<select class="editable-choice uify" name="' + path + '" id="' + path + '">';
+			for (c in choices) {
+				if (choices[c] != "") {
+					s = s + "<option>" + choices[c] + "</option>";
+				}
+			}
+			s = s + "</select>";
+			title = '<span class="elabel">' + key + '</span>: ' + s;
+		}
+		else if (info.type == "Boolean") {
+			title = '<span class="elabel">' + key + '</span>: <div class="eswitch uify"><input type="checkbox" id="' + path + '"' + 
+				(isTrue(value) ? ' checked="true"' : '') + '/><label for="' + path + '"></label></div>';
+		}
+		else if (info.type == "PositiveInt") {
+			title = '<span class="elabel">' + key + '</span>: <span class="espinner uify" min="0" max="null" type="int" id="' + path + '">' + value + '</span>';
+		}
+		else if (info.type == "StrictlyPositiveInt") {
+			title = '<span class="elabel">' + key + '</span>: <span class="espinner uify" min="1" max="null" type="int" id="' + path + '">' + value + '</span>';
+		}
+		else if (info.type == "Throttle") {
+			title = '<span class="elabel">' + key + '</span>: <span class="espinner uify" min="0" max="null" type="int" id="' + path + '">' + value + '</span>';
+		}
+		else if (info.type == "PositiveFloat") {
+			title = '<span class="elabel">' + key + '</span>: <span class="espinner uify" min="0" max="null" type="float" id="' + path + '">' + value + '</span>';
+		}
+		else {
+			title = '<span class="elabel">' + key + '</span>: ' + value;
+		}
+	}
+	if ((info.optional && !selectable) || parentIsWildcard(path)) {
+		removable = true;
+	}
+	if (removable) {
+		title = title + '<span class="remove-button" onClick="removeNode(\'' + path + '\')"></span>';
+	}
+	return {title: title, expanded: expanded, hideCheckbox: !selectable, icon: getIcon(info), key: path};
+}
+
+function addRecursive(first, selectable, container, obj, title, path, removable) {
+	if (!title) {
+		title = obj["_id"];
+	}
+	if (!title) {
+		title = "";
+	}
+	if (!path) {
+		path = title;
+	}
+	else {
+		path = path + "." + title;
+	}
+	var node = container.addNode(makeNode(null, title, path, selectable, true, removable), first ? "firstChild" : "child");
+	if (isLeaf(obj)) {
+		return node;
+	}
+	for (var key in obj) {
+		if (!startsWith(key, "_")) {
+			if (isLeaf(obj[key])) {
+				node.addNode(makeNode(key, obj[key], path + "." + key, false), "child");			
+			}
+			else {
+				addRecursive(false, false, node, obj[key], key, path);
+			}
+		}
+	}
+	return node;
+}
+
+function getSelectChoices(el) {
+	console.log(el);
+	var strs = el.attr("choices").split(/[,\s]/);
+	console.log(strs);
+	var ret = "{";
+	var a = [];
+	var first = true;
+	for (s in strs) {
+		if (strs[s] != "") {
+			if (!first) {
+				ret = ret + ", ";
+			}
+			first = false;
+			ret = ret + '"' + strs[s] + '": ' + '"' + strs[s] + '"';
+			a[strs[s]] = strs[s];
+		}
+	}
+	ret = ret + "}";
+	console.log(ret);
+	return ret;
+}
+
+function uify() {
+	$(".editable-string").editable(function(value, settings) {return value;}, {type: "text", height: "18px"});
+	$(".espinner").each(function() {
+		console.log("Spinner: " + this);
+		var type = $(this).attr("type");
+		var min = $(this).attr("type");
+		var max = $(this).attr("type");
+		if (type == "int") {
+			var nmin = parseInt(min);
+			var nmax = max == "null" ? null : parseInt(max);
+			$(this).spinner({min: nmin, max: nmax});
+		}
+		else if (type == "float") {
+			var nmin = parseFloat(min);
+			var nmax = max == "null" ? null : parseFloat(max);
+			$(this).spinner({min: nmin, max: nmax});
+		}
+	});
+	$(".uify").each(function() {
+		$(this).removeClass("uify");
+	});
+}
+
+function doAddSite() {
+	var text = $("#add-site-dialog-site>option:selected").text();
+	var site = DEFINED_SITES[text];
+	
+	var rootNode = $("#tree").fancytree("getRootNode");
+	var sites = rootNode.children[0];
+	var node = addRecursive(true, true, sites, site, site["_id"], "site", true);
+	node.setSelected(true);
+	uify();
+	cancelAddSite();
+}
+
+function addOptions2(container, o, expanded) {
+	var added = [];
+	var title = '<span class="eh2">' + o.name + '</span>';
+	var node = container.addNode({title: title, expanded: expanded, hideCheckbox: true, icon: "icons/options.png"}, "child");
+	for (var i in o.opts) {
+		node.addNode(makeNode(o.opts[i], "", o.opts[i], true), "child");
+		added.push(o.opts[i]);
+	}
+	return added;
+}
+
+function addOptions() {
+	var rootNode = $("#tree").fancytree("getRootNode");
+	var opts = rootNode.children[1];
+	var added = [];
+	for (var i in COMMON_OPTIONS) {
+		added.concat(added, addOptions2(opts, COMMON_OPTIONS[i], i == 0));
+	}
+	
+	opts.addNode({title: '<a href="#add-option" id="add-option" class="button uify">Add Custom Option...</a>', 
+		key: "add-option", hideCheckbox: true, icon: false}, "child");
+	uify("#options");
+	$("#add-option").button();
+}
+
+function displayAddSiteDialog() {
+	$("#add-site-dialog").removeClass("hidden");
+	$("#add-site-dialog").dialog({width: "440px"});
+	if (!$("#add-site-dialog").hasClass("dialog-initialized")) {
+		$("#add-site-dialog-cancel").button().click(cancelAddSite);
+		$("#add-site-dialog-ok").button().click(doAddSite);
+		$("#add-site-dialog-site").change(updateSiteDetailText);
+		$("#add-site-dialog").addClass("dialog-initialized");
+	}
+}
+
+function initButtons() {
+	$("#add-site").button();
+	$("#add-site").button().click(function(event) {
+		displayAddSiteDialog();
+	});
+	$(".button").parent().addClass("nohl");
+}
+
+function removeNode(id) {
+	var node = $("#tree").fancytree("getNodeByKey", id);
+	node.remove();
+}
+
+initButtons();
+		</script>
+		<div id="add-site-dialog" class="hidden" title="Add Site">
+			<table border="0" width="100%">
+				<tr>
+					<td>
+						<select id="add-site-dialog-site" size="10" name="site">
+							<option help="Creates a fully customizable empty site">Empty Site</option>
+							<option help="Run jobs on local machine through plain fork()">local/Plain</option>
+							<option help="Run jobs on local machine through Swift Coasters">local/Coasters</option>
+							<option help="The Beagle cluster at University of Chicago's Computation Institute">uchicago/ci/Beagle</option>
+							<option help="Blabla">anl/alcf/Intrepid</option>
+						</select>
+					</td>
+					<td>
+						<p id="add-site-dialog-description">
+							-
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<td class="align-right button-bar" colspan="2">
+						<span id="add-site-dialog-cancel" class="button uify">Cancel</span>
+						<span id="add-site-dialog-ok" class="button uify">Add Site</span>
+					</td>
+				</tr>
+		</div>
+	</body>
+</html>
