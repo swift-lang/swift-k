@@ -452,7 +452,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
      * Blocks with the least amount of size left are suspended first.
      *
      * Blocks are only suspended if both the above size condition is true
-     * and they have not see any work withing a certain time interval. This
+     * and they have not seen any work within a certain time interval. This
      * is done to dampen the effects of transients in the submission
      * pattern.
      *
