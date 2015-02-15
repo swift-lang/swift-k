@@ -31,6 +31,7 @@ import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.util.Pair;
 import org.globus.swift.catalog.site.Application;
 import org.globus.swift.catalog.site.SwiftContact;
 import org.griphyn.vdl.engine.Warnings;
@@ -51,6 +52,12 @@ public class TCProfile extends SwiftFunction {
     private VarRef<Object> r_jobType;
     private VarRef<Object> r_attributes;
     private VarRef<Map<String, String>> r_environment;
+    
+    private Map<Pair<Application, SwiftContact>, Map<String, Object>> cachedCombinedAttrs;
+    
+    public TCProfile() {
+        cachedCombinedAttrs = new HashMap<Pair<Application, SwiftContact>, Map<String, Object>>();
+    }
     
     private enum Attr {
         COUNT, JOB_TYPE;
@@ -91,8 +98,9 @@ public class TCProfile extends SwiftFunction {
 		
 		Map<String, Object> dynamicAttributes = this.attributes.getValue(stack);
 		Map<String, Object> attrs = null;
+		Map<String, Object> appProps = getCombinedAttributes(app, bc);
 		
-		attrs = combineAttributes(stack, attrs, app.getProperties());
+		attrs = combineAttributes(stack, attrs, appProps);
 		attrs = combineAttributes(stack, attrs, dynamicAttributes);
 		
 		checkWalltime(stack, attrs, tr);
@@ -100,7 +108,21 @@ public class TCProfile extends SwiftFunction {
 		return null;
 	}
 
-	private void addEnvironment(Stack stack, Map<String, String> env) {
+	private Map<String, Object> getCombinedAttributes(Application app, SwiftContact bc) {
+	    Pair<Application, SwiftContact> key = new Pair<Application, SwiftContact>(app, bc);
+	    synchronized (cachedCombinedAttrs) {
+	        Map<String, Object> attrs = cachedCombinedAttrs.get(key);
+	        if (attrs == null) {
+	            attrs = new HashMap<String, Object>();
+	            attrs.putAll(bc.getProperties());
+	            attrs.putAll(app.getProperties());
+	            cachedCombinedAttrs.put(key, attrs);
+	        }
+	        return attrs;
+	    }
+    }
+
+    private void addEnvironment(Stack stack, Map<String, String> env) {
 	    r_environment.setValue(stack, env);
     }
 
