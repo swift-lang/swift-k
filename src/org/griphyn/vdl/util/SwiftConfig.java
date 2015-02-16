@@ -535,17 +535,8 @@ public class SwiftConfig implements Cloneable {
                     else if (key.equals("jobQueue")) {
                         app.addProperty("queue", getString(c, key));
                     }
-                    else if (key.equals("count")) {
-                        app.addProperty("count", getObject(c, key));
-                    }
-                    else if (key.equals("depth")) {
-                        app.addProperty("depth", getObject(c, key));
-                    }
-                    else if (key.equals("ppn")) {
-                        app.addProperty("ppn", getObject(c, key));
-                    }
                     else {
-                        app.addProperty(key, getString(c, key));
+                        app.addProperty(key, getObject(c, key));
                     }
                 }
             }
