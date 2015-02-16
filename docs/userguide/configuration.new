@@ -539,7 +539,42 @@ be used to indicate that the executable has the same name as the application
 name. This is useful in conjunction with +app.ALL+ to essentially declare
 that a site can be used to execute any application from a Swift script. If the
 executable is not an absolute path, it will be searched using the +PATH+ 
-envirnoment variable on the remote site. 
+envirnoment variable on the remote site.
+
+The following example illustrates how options are inherited:
+
+------
+    # global app options
+    app.ALL {
+        options {
+            # use "ProjectX" on all sites
+            project: "ProjectX"
+        }
+    }
+    
+    app.myapp1 {
+        options {
+            # this applies to all instances of myapp1
+            # unless overriden on specific sites
+            count: 2
+        }
+    }
+    
+    site.s1 {
+        ...
+        app.ALL {
+            # use a default ppn of 4 for apps on this site
+            ppn: 4
+        }
+        
+        app.myapp1 {
+            # use a ppn of 2 for this specific app on this site
+            ppn: 2
+        }
+        ...
+    }
+}
+------
 
 Environment variables can be defined as follows:
 
@@ -758,7 +793,9 @@ Execution Mechanisms
 Swift allows application execution through a number of mechanisms (or execution 
 providers). The choice of each mechanism is dependent on the software installed
 on a certain compute cluster. The following sub-sections list the available
-choices together with their supported options.
+choices together with their supported options as well as the available app
+options when using the respective execution type.
+
 
 Local
 ^^^^^
@@ -780,7 +817,7 @@ Options
 
 N/A
 
-Job Options
+App Options
 +++++++++++
 
 [options="header",cols="3, 3, 3, 10"]
@@ -840,7 +877,7 @@ Options
 
 N/A
 
-Job Options
+App Options
 +++++++++++
 
 For a complete list and description of these options, please see the 
@@ -904,7 +941,7 @@ Options
 
 N/A
 
-Job Options
+App Options
 +++++++++++
 
 N/A
@@ -942,7 +979,7 @@ Options
 
 N/A
 
-Job Options
+App Options
 +++++++++++
 
 N/A
@@ -980,7 +1017,7 @@ Options
 
 N/A
 
-Job Options
+App Options
 +++++++++++
 
 [options="header",cols="3, 3, 3, 10"]
@@ -1045,7 +1082,7 @@ Options
 
 N/A
 
-Job Options
+App Options
 +++++++++++
 
 [options="header",cols="3, 3, 3, 10"]
@@ -1091,7 +1128,8 @@ General Configuration
 | Job Manager     | +"em1:em2"+, where +em1+ is an execution mechanism used to
                     start the Coaster Service and +em2+ is an execution mechanism
                     used by the Coaster Service to start jobs. If +em1+ requires
-                    an URL, then the URL is required.
+                    an URL, then the URL is required. Options specific to +em2+
+                    can be specified using +options.jobOptions+.
 | Staging methods | swift, wrapper, local, service-local, shared-fs, direct
 |==========================================================================
 
@@ -1143,6 +1181,11 @@ Options
                                                         seldom necessary.
 | +jobQueue+      | String            |             - | The LRM queue to submit the jobs to
 | +jobProject+    | String            |             - | A LRM project to associate the job with
+| +jobOptions.*+  | Object            |             - | Any number of LRM options used to start the Coaster jobs.
+                                                        These options correspond to the execution mechanism specified
+                                                        by +em2+ in the job manager setting and are described in the
+                                                        *App Options* sections of the corresponding section of 
+                                                        <<section-execution-mechanisms, Execution Mechanisms>>.
 | +workerLoggingLevel+| +"ERROR"+, +"WARN"+, +"INFO"+, +"DEBUG"+, +"TRACE"+, or none
                                       |          none | If specified, the Coaster Workers produce a log file 
 | +workerLoggingDirectory+ | String   | "~/.globus/coasters" | The directory where the worker logs will be created.
@@ -1152,7 +1195,7 @@ Options
 |==========================================================================
 
 
-Job Options
+App Options
 +++++++++++
 
 N/A
