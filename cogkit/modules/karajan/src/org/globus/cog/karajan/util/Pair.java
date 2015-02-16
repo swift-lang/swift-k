@@ -40,20 +40,4 @@ public class Pair<S, T> {
 	public String toString() {
 		return "(" + s + ", " + t + ")";
 	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (o instanceof Pair) {
-		    Pair<?, ?> p = (Pair<?, ?>) o;
-		    return s.equals(p.s) && t.equals(p.t);
-		}
-		else {
-		    return false;
-		}
-	}
-
-	@Override
-	public int hashCode() {
-		return (s.hashCode() << 4) ^ (t.hashCode());
-	}
 }
