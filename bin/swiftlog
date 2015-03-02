@@ -9,7 +9,7 @@ import datetime
 
 if len(sys.argv) == 2:
     log_directory = os.path.normpath(sys.argv[1])
-    log_filename = os.path.join(log_directory, os.path.basename(log_directory) + ".log")
+    log_filename = os.path.join(log_directory, "swift.log")
     log_directory = os.path.normpath(sys.argv[1])
     importProv=False
 elif len(sys.argv) == 3:
@@ -17,14 +17,14 @@ elif len(sys.argv) == 3:
         sys.exit("Usage: %s -import-provenance <run_directory>" % sys.argv[0])
     else:
         log_directory = os.path.normpath(sys.argv[2])
-        log_filename = os.path.join(log_directory, os.path.basename(log_directory) + ".log")
+        log_filename = os.path.join(log_directory, "swift.log")
         log_directory = os.path.normpath(sys.argv[2])
         importProv=True
 else:
     sys.exit("Usage:\n%s <run_directory>\nor\n%s -import-provenance <run_directory>" % (sys.argv[0], sys.argv[0]))
 
 # Open log file
-log_filename = os.path.join(log_directory, os.path.basename(log_directory) + ".log")
+#log_filename = os.path.join(log_directory, os.path.basename(log_directory) + ".log")
 log_file = open(log_filename, "r")
 swiftHomeDir = os.path.split(os.path.dirname(sys.argv[0]))[0]
 
@@ -151,11 +151,8 @@ for line in iter(log_file):
         scriptRunDir=line.split()[5].rstrip('/.')
 
     if 'VERSION' in line:
-        versionLine=line.split()
-        swiftVersion=versionLine[7].strip('swift-r')
-        for s in iter(versionLine):
-            if 'cog-r' in s:
-                cogVersion=s.strip('cog-r')
+        versionLine=line.split(" VERSION ")
+        swiftVersion=versionLine[1].strip()
                 
     if 'JOB_START' in line:
         taskid          = getValue(line, "jobid")
@@ -281,9 +278,9 @@ if importProv:
     
     if runIsNewSQLite:        
         print "Provenance import: importing run into SQLite " + runId
-        c.execute('INSERT INTO script_run VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+        c.execute('INSERT INTO script_run VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
                   (runId, scriptFileName, log_filename, hostname, scriptRunDir, 
-                  swiftVersion, cogVersion, finalState, scriptStartTime, scriptDuration))
+                  swiftVersion, finalState, scriptStartTime, scriptDuration))
 
     if runIsNewPgSQL:
         print "Provenance import: importing run into PostgreSQL " + runId
@@ -293,7 +290,6 @@ if importProv:
                                                                      '\'' + hostname + '\', ' +
                                                                      '\'' + scriptRunDir + '\', ' +
                                                                      '\'' + swiftVersion + '\', ' +
-                                                                     '\'' + cogVersion + '\', ' +
                                                                      '\'' + finalState + '\', ' +
                                                                      '\'' + scriptStartTime + '\', ' +
                                                                      '\'' + str(scriptDuration) + '\');"')

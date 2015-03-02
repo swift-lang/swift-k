@@ -5,7 +5,6 @@ create table script_run (
 	hostname	   text,
 	script_run_dir	   text,
         swift_version      text,
-        cog_version        text,
         final_state        text,
         start_time         text,
         duration           real
