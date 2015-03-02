@@ -30,7 +30,6 @@ package org.globus.cog.abstraction.impl.scheduler.condor;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -193,53 +192,6 @@ public class CondorExecutor extends AbstractExecutor {
             wr.write("\n");
         }
     }
-
-    private static final boolean[] TRIGGERS;
-
-    static {
-        TRIGGERS = new boolean[128];
-        TRIGGERS[' '] = true;
-        TRIGGERS['\n'] = true;
-        TRIGGERS['\t'] = true;
-        TRIGGERS['\\'] = true;
-        TRIGGERS['>'] = true;
-        TRIGGERS['<'] = true;
-        TRIGGERS['"'] = true;
-    }
-
-    protected String quote(String s) {
-        if ("".equals(s)) {
-            return "";
-        }
-        boolean quotes = false;
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c < 128 && TRIGGERS[c]) {
-                quotes = true;
-                break;
-            }
-        }
-        if (!quotes) {
-            return s;
-        }
-        StringBuffer sb = new StringBuffer();
-        if (quotes) {
-            sb.append('\\');
-            sb.append('"');
-        }
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c == '"' || c == '\\') {
-                sb.append('\\');
-            }
-            sb.append(c);
-        }
-        if (quotes) {
-            sb.append('\\');
-            sb.append('"');
-        }
-        return sb.toString();
-    }
     
 	protected String getName() {
 		return "Condor";
@@ -322,10 +274,5 @@ public class CondorExecutor extends AbstractExecutor {
 		catch (Exception e) {
 			logger.warn("Failed to cancel job " + jobid, e);
 		}
-	}
-	
-	public static void main(String[] args) {
-	    String[] s = "a/b/c/d".split("/");
-	    System.out.println(Arrays.asList(s));
 	}
 }

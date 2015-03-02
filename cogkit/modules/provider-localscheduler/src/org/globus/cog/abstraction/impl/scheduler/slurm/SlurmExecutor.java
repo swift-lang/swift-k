@@ -4,12 +4,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
-import org.globus.cog.abstraction.impl.scheduler.slurm.Properties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
@@ -20,8 +18,6 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class SlurmExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(SlurmExecutor.class);
 
-	// Number of program invocations
-	private int count = 1;
 	private static NumberFormat IDF = new DecimalFormat("000000");
 
 	// Used for task name generation
@@ -93,22 +89,23 @@ public class SlurmExecutor extends AbstractExecutor {
 			logger.debug("Slurm name: for: " + task.getIdentity() + " is: " + name);
 		}
 	}
-
-	/**
-	 * Verify that an object contains a valid int
-	 * 
-	 * @param obj
-	 * @param name
-	 * @return
-	 */
-	private int parseAndValidateInt(Object obj, String name) {
-		try {
-			assert (obj != null);
-			return Integer.parseInt(obj.toString());
-		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("Illegal value for " + name + ". Must be an integer.");
-		}
-	}
+	
+	@Override
+	protected RunMode getRunMode(String jobType) {
+        if (jobType == null) {
+            return RunMode.SRUN_OR_IBRUN;
+        }
+        if (jobType.equals("single")) {
+            return RunMode.PLAIN;
+        }
+        if (jobType.equals("multiple")) {
+            return RunMode.SSH;
+        }
+        if (jobType.equals("MPI")) {
+            return RunMode.SRUN;
+        }
+        throw new IllegalArgumentException("Unknown job type: " + jobType);
+    }
 
 	@Override
 	protected void writeScript(Writer wr, String exitcodefile, String stdout, String stderr) 
@@ -117,12 +114,24 @@ public class SlurmExecutor extends AbstractExecutor {
 		Task task = getTask();
 		JobSpecification spec = getSpec();
 		Properties properties = Properties.getProperties();
-		boolean exclusive_defined = false;
+		boolean exclusiveDefined = false;
 
 		validate(task);
 		writeHeader(wr);
 
-		String type = (String) spec.getAttribute("jobType");
+		String sJobType = (String) spec.getAttribute("jobType");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Job type: " + sJobType);
+        }
+        RunMode runMode = getRunMode(sJobType);
+        
+        if (spec.getAttribute("slurm.srun") != null) {
+            runMode = RunMode.SRUN;
+        }
+        if (spec.getAttribute("slurm.ibrun") != null) {
+            runMode = RunMode.IBRUN;
+        }
+        
 		Object countValue = getSpec().getAttribute("count");
 		
 		if (countValue != null) {
@@ -137,9 +146,10 @@ public class SlurmExecutor extends AbstractExecutor {
 		writeNonEmptyAttr("queue", "--partition", wr);
 		writeWallTime(wr);
 		
-	    if("single".equalsIgnoreCase(type)) {
+	    if ("single".equalsIgnoreCase(sJobType)) {
 			writeNonEmptyAttr("ppn", "--ntasks-per-node", wr);
-	    } else { 
+	    } 
+	    else { 
 	    	wr.write("#SBATCH --ntasks-per-node=1\n");
 	    	writeNonEmptyAttr("jobsPerNode", "--cpus-per-task", wr);
 	    }
@@ -149,13 +159,15 @@ public class SlurmExecutor extends AbstractExecutor {
 			if (a != null && a.startsWith("slurm.")) {
 				String attributeName[] = a.split("slurm.");
 				if (attributeName[1].equals("exclusive")) {
-					exclusive_defined = true;
+					exclusiveDefined = true;
 					if (spec.getAttribute(a).equals("true")) {
 						wr.write("#SBATCH --exclusive");
-					} else {
+					} 
+					else {
 						wr.write("#SBATCH --share");
 					}
-				} else {
+				} 
+				else {
 					wr.write("#SBATCH --" + attributeName[1] + "="
 							+ spec.getAttribute(a) + '\n');
 				}
@@ -163,7 +175,7 @@ public class SlurmExecutor extends AbstractExecutor {
 		}
 
 		// Default to exclusive mode
-		if (!exclusive_defined) {
+		if (!exclusiveDefined) {
 			wr.write("#SBATCH --exclusive\n");
 		}
 
@@ -174,57 +186,27 @@ public class SlurmExecutor extends AbstractExecutor {
 					+ quote(spec.getEnvironmentVariable(name)) + '\n');
 		}
 
-		// Determine wrapper
-		if (type != null) {
-			String wrapper = properties.getProperty("wrapper." + type);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Wrapper: " + wrapper);
-			}
-
-			if (wrapper != null) {
-				wrapper = replaceVars(wrapper);
-				wr.write(wrapper);
-				wr.write(' ');
-			}
-
-			if (logger.isDebugEnabled()) {
-				logger.debug("Wrapper after variable substitution: " + wrapper);
-			}
-		}
-
-		// Don't use srun for MPI jobs
-		if("single".equalsIgnoreCase(type)) {
-			wr.write("/bin/bash -c \'");
-		} else {
-			wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
-			wr.write("$RUNCOMMAND /bin/bash -c \'");			
-		}
+		if (sJobType != null) {
+            writeWrapper(wr, sJobType);
+        }
 		
-		if (spec.getDirectory() != null) {
-			wr.write("cd " + quote(spec.getDirectory()) + " && ");
-		}
+		writePreamble(wr, runMode, null, exitcodefile);
+        writeCDAndCommand(wr, runMode);     
+        writePostamble(wr, runMode, exitcodefile, stdout, stderr);
 
-		wr.write(quote(spec.getExecutable()));
-		writeQuotedList(wr, spec.getArgumentsAsList());
-
-		if (spec.getStdInput() != null) {
-			wr.write(" < " + quote(spec.getStdInput()));
-		}
-
-		if ("multiple".equals(type)) {
-			wr.write("; /bin/echo $? >" + exitcodefile + ".$SLURM_PROCID\'\n");
-		} else {
-			wr.write("; /bin/echo $? >" + exitcodefile + "\'\n");
-		}
 		wr.close();
 	}
 
-	void writeHeader(Writer writer) throws IOException {
-		writer.write("#!/bin/bash\n\n");
-		writer.write("#CoG This script generated by CoG\n");
-		writer.write("#CoG   by class: " + SlurmExecutor.class + '\n');
-		writer.write("#CoG   on date: " + new Date() + "\n\n");
-	}
+	@Override
+    protected void writeSSHPreamble(Writer wr, String nodeFile, String exitcodefile) throws IOException {
+	    // SLURM has no node files but some strange environment variable
+	    wr.write("NODES=`scontrol show hostname $SLURM_NODELIST`\n");
+        wr.write("ECF=" + exitcodefile + "\n");
+        wr.write("INDEX=0\n");
+        wr.write("for NODE in $NODES; do\n");
+        wr.write("  echo \"N\" >$ECF.$INDEX\n");
+        wr.write("  ssh $NODE ");
+    }
 
 	@Override
 	protected String getName() {

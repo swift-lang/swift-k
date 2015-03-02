@@ -32,9 +32,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
@@ -50,21 +47,10 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class PBSExecutor extends AbstractExecutor {
 	public static final Logger logger = Logger.getLogger(PBSExecutor.class);
 
-
-	/**
-	   Number of program invocations
-	 */
-	int count = 1;
-
 	/**
 	   PBS processes-per-node
 	 */
 	int ppn = 1;
-
-	/**
-       PBS mppdepth: number of available threads per node
-	 */
-	int depth = 1;
 
 	/**
 	   Unique number for automatic task names
@@ -133,16 +119,6 @@ public class PBSExecutor extends AbstractExecutor {
 					+ WallTime.normalize(walltime.toString(), "pbs-native")
 					+ '\n');
 		}
-	}
-
-	private int parseAndValidateInt(Object obj, String name) {
-	    try {
-	        assert(obj != null);
-	        return Integer.parseInt(obj.toString());
-	    }
-	    catch (NumberFormatException e) {
-	        throw new IllegalArgumentException("Illegal value for " + name + ". Must be an integer.");
-	    }
 	}
 
 	/**
@@ -226,19 +202,6 @@ public class PBSExecutor extends AbstractExecutor {
 	    return multiple;
 	}
 
-	/*
-	private boolean parseAndValidateBool(Object obj, String name)
-	{
-	    try {
-	        return Boolean.parseBoolean(obj.toString());
-	    }
-	    catch (NumberFormatException e) {
-	        throw new IllegalArgumentException
-	        ("Illegal value for " + name + ". Must be true/false.");
-	    }
-	}
-	*/
-
 	private boolean getBoolean(Object v) {
         if (v == null) {
             return false;
@@ -253,9 +216,9 @@ public class PBSExecutor extends AbstractExecutor {
     }
 
     @Override
-	protected void writeScript(Writer wr, String exitcodefile, String stdout,
-	                           String stderr) 
-	throws IOException {
+	protected void writeScript(Writer wr, String exitcodefile, String stdout, String stderr) 
+	        throws IOException {
+        
 		Task task = getTask();
 		JobSpecification spec = getSpec();
 		Properties properties = Properties.getProperties();
@@ -265,11 +228,24 @@ public class PBSExecutor extends AbstractExecutor {
         validate(task);
         writeHeader(wr);
         
+        String sJobType = (String) spec.getAttribute("jobType");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Job type: " + sJobType);
+        }
+        RunMode runMode = getRunMode(sJobType);
+        
+        // aprun option specifically for Cray Beagle, Franklin
+        // backwards compatibility
+        if (spec.getAttribute("pbs.aprun") != null) {
+            runMode = RunMode.APRUN;
+        }
+        
 		wr.write("#PBS -S /bin/bash\n");
 		wr.write("#PBS -N " + task.getName() + '\n');
 		wr.write("#PBS -m n\n");
 		writeNonEmptyAttr("project", "-A ", wr);
-		boolean multiple = writeCountAndPPN(spec, wr);
+		writeCountAndPPN(spec, wr);
+
 		writeWallTime(wr);
 		writeNonEmptyAttr("queue", "-q ", wr);
 		wr.write("#PBS -o " + quote(stdout) + '\n');
@@ -285,7 +261,7 @@ public class PBSExecutor extends AbstractExecutor {
 		}
 
 		if (spec.getEnvironmentVariableNames().size() > 0) {
-		    wr.write("#PBS -v " + makeList(spec.getEnvironmentVariableNames()) + '\n');
+		    wr.write("#PBS -v " + join(spec.getEnvironmentVariableNames(), ", ") + '\n');
 		}
 
 		String resources =
@@ -295,115 +271,31 @@ public class PBSExecutor extends AbstractExecutor {
 		        logger.debug("pbs.resource_list: " + resources);
 		    wr.write("#PBS -l " + resources + '\n');
 		}
-
-		// aprun option specifically for Cray Beagle, Franklin
-		boolean aprun = false;
-		if (spec.getAttribute("pbs.aprun") != null) {
-		    aprun = true;
-		}
-
-		String type = (String) spec.getAttribute("jobType");
-		if (logger.isDebugEnabled()) {
-			logger.debug("Job type: " + type);
-		}
-		if ("multiple".equals(type)) { 
-		    multiple = true;
-		}
-		else if ("single".equals(type)) {
-		    multiple = false;
-		}
-		if (aprun) { 
-			multiple = false;
-		}
-		if (multiple) {
-            writeMultiJobPreamble(wr, exitcodefile);
-		}
-
-		if (type != null) {
-			String wrapper =
-			    properties.getProperty("wrapper." + type);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Wrapper: " + wrapper);
-			}
-			if (wrapper != null) {
-				wrapper = replaceVars(wrapper);
-				wr.write(wrapper);
-				wr.write(' ');
-			}
-			if (logger.isDebugEnabled()) {
-				logger.debug("Wrapper after variable substitution: " + wrapper);
-			}
-		}
-		if (spec.getDirectory() != null) {
-			wr.write("cd " + quote(spec.getDirectory()) + " && ");
-		}
-
-		if (aprun)
-		    wr.write("aprun -n " + count + " -N 1 -cc none -d " +
-		             depth + " -F exclusive /bin/sh -c '");
-
-		wr.write(quote(spec.getExecutable()));
-		writeQuotedList(wr, spec.getArgumentsAsList());
-
-		if (aprun)
-            wr.write("'");
-
-		if (spec.getStdInput() != null) {
-            wr.write(" < " + quote(spec.getStdInput()));
+		
+		if (sJobType != null) {
+            writeWrapper(wr, sJobType);
         }
-		if (multiple) {
-		    writeMultiJobPostamble(wr, stdout, stderr);
-		}
-		else {
-		    wr.write('\n');
-		    wr.write("/bin/echo $? >" + exitcodefile + '\n');
-		}
+
+		writePreamble(wr, runMode, "$PBS_NODEFILE", exitcodefile);
+		writeCDAndCommand(wr, runMode);		
+	    writePostamble(wr, runMode, exitcodefile, stdout, stderr);
+		
 		wr.close();
 	}
 
-	void writeHeader(Writer writer)	
-	throws IOException {
-		writer.write("#CoG This script generated by CoG\n");
-		writer.write("#CoG   by class: " + PBSExecutor.class + '\n');
-		writer.write("#CoG   on date: " + new Date() + "\n\n");
-	}
-	
-	
-	private String makeList(Collection<String> names) {
-        StringBuilder sb = new StringBuilder();
-        Iterator<String> i = names.iterator();
-        while (i.hasNext()) {
-        	sb.append(i.next());
-        	if (i.hasNext()) {
-        		sb.append(", ");
-        	}
-        }
-        return sb.toString();
-    }
-
-	protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
-            throws IOException {
-        wr.write("NODES=`cat $PBS_NODEFILE`\n");
-        wr.write("ECF=" + exitcodefile + "\n");
-        wr.write("INDEX=0\n");
-        wr.write("for NODE in $NODES; do\n");
-        wr.write("  echo \"N\" >$ECF.$INDEX\n");
-        wr.write("  ssh $NODE /bin/bash -c \\\" \"");
-    }
-
 
 	@Override
-  protected String getName() {
+	protected String getName() {
 		return "PBS";
 	}
 
 	@Override
-  protected AbstractProperties getProperties() {
+	protected AbstractProperties getProperties() {
 		return Properties.getProperties();
 	}
 
 	@Override
-  protected Job createJob(String jobid, String stdout,
+	protected Job createJob(String jobid, String stdout,
 			FileLocation stdOutputLocation, String stderr,
 			FileLocation stdErrorLocation, String exitcode,
 			AbstractExecutor executor) {
@@ -414,8 +306,8 @@ public class PBSExecutor extends AbstractExecutor {
 	private static QueuePoller poller;
 
 	@Override
-  protected AbstractQueuePoller getQueuePoller() {
-		synchronized(PBSExecutor.class) {
+	protected AbstractQueuePoller getQueuePoller() {
+		synchronized (PBSExecutor.class) {
 			if (poller == null) {
 				poller = new QueuePoller(getProperties());
 				poller.start();

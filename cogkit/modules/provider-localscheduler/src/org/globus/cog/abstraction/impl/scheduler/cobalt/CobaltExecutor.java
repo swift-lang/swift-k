@@ -196,30 +196,6 @@ public class CobaltExecutor extends AbstractExecutor {
 	}
 
 	@Override
-	protected String quote(String s) {
-		boolean quotes = false;
-		if (s.indexOf(' ') != -1) {
-			quotes = true;
-		}
-		StringBuffer sb = new StringBuffer();
-		if (quotes) {
-			sb.append('"');
-		}
-		for (int i = 0; i < s.length(); i++) {
-			char c = s.charAt(i);
-			if (c == '"' || c == '\\') {
-				sb.append('\\');
-				break;
-			}
-			sb.append(c);
-		}
-		if (quotes) {
-			sb.append('"');
-		}
-		return sb.toString();
-	}
-
-	@Override
 	protected void cleanup() {
 		super.cleanup();
 		new File(getStdout()).delete();

@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -64,6 +66,17 @@ public abstract class AbstractExecutor implements ProcessListener {
         TRIGGERS['\\'] = true;
         TRIGGERS['>'] = true;
         TRIGGERS['<'] = true;
+        TRIGGERS['\"'] = true;
+    }
+    
+    public static enum RunMode {
+        PLAIN, // run directly on the node on which the LRM starts the job
+        SSH, // ssh to each node in the nodefile
+        MPIRUN, // run using mpirun
+        APRUN, // run using aprun
+        SRUN, // SLURM specific
+        IBRUN,
+        SRUN_OR_IBRUN; 
     }
 
     protected File script;
@@ -72,6 +85,17 @@ public abstract class AbstractExecutor implements ProcessListener {
     protected final Task task;
     protected final ProcessListener listener;
     protected Job job;
+    
+    /**
+       Number of program invocations
+     */
+    protected int count = 1;
+    
+    /**
+       depth: number of available threads per node
+     */
+    protected int depth = 1;
+
 
     protected AbstractExecutor(Task task, ProcessListener listener) {
         this.task = task;
@@ -286,6 +310,125 @@ public abstract class AbstractExecutor implements ProcessListener {
 
     protected abstract void writeScript(Writer wr, String exitcode,
             String stdout, String stderr) throws IOException;
+    
+    
+    /**
+     * Figures out how to start the job (i.e. mpirun, ssh to nodes, etc.)
+     * based on the jobType.
+     * 
+     * The general idea is this:
+     *  jobType = "single":
+     *      just run the command (hoping that you got dropped on some lead-node rather than the login node)
+     *  
+     *  jobType = "multiple:
+     *      ssh to each node in the node file and run the command
+     *  
+     *  jobType = "MPI":
+     *      use mpirun
+     *      
+     */
+    protected RunMode getRunMode(String jobType) {
+        if (jobType == null) {
+            return RunMode.SSH;
+        }
+        if (jobType.equals("single")) {
+            return RunMode.PLAIN;
+        }
+        if (jobType.equals("multiple")) {
+            return RunMode.SSH;
+        }
+        if (jobType.equals("MPI")) {
+            return RunMode.MPIRUN;
+        }
+        throw new IllegalArgumentException("Unknown job type: " + jobType);
+    }
+
+    protected void writePreamble(Writer wr, RunMode runMode, String nodeFile, String exitcodefile) throws IOException {
+        switch (runMode) {
+            case SSH:
+                writeSSHPreamble(wr, nodeFile, exitcodefile);
+                break;
+            case PLAIN:
+                break;
+            case MPIRUN:
+                wr.write("mpirun -n " + count + " -hostfile " + nodeFile + " ");
+                String mpiOpts = (String) spec.getAttribute("mpiOptions");
+                if (mpiOpts != null) {
+                    wr.write(mpiOpts);
+                    wr.write(" ");
+                }
+                break;
+            case APRUN:
+                wr.write("aprun -n " + count + " -N 1 -cc none -d " +
+                     depth + " -F ");
+                break;
+            case IBRUN:
+                wr.write("ibrun ");
+                break;
+            case SRUN:
+                wr.write("srun ");
+                break;
+            case SRUN_OR_IBRUN:
+                wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
+                wr.write("$RUNCOMMAND ");
+                break;
+        }
+        wr.write("/bin/bash -c \"");
+    }
+    
+    protected void writeCDAndCommand(Writer wr, RunMode runMode) throws IOException {
+        int quotingLevel = getQuotingLevel(runMode);
+        if (spec.getDirectory() != null) {
+            wr.write("cd " + quote(spec.getDirectory(), quotingLevel) + " && ");
+        }
+
+        wr.write(quote(spec.getExecutable(), quotingLevel));
+        writeQuotedList(wr, spec.getArgumentsAsList(), quotingLevel);
+
+        if (spec.getStdInput() != null) {
+            wr.write(" < " + quote(spec.getStdInput(), quotingLevel));
+        }
+    }
+    
+    protected void writePostamble(Writer wr, RunMode runMode, String exitCodeFile, String stdout, String stderr) throws IOException {
+        switch (runMode) {
+            case SSH:
+                writeRedirects(wr, "$ECF.$INDEX", stdout, stderr);
+                break;
+            default:
+                writeRedirects(wr, exitCodeFile, stdout, stderr);
+        }
+        switch (runMode) {
+            case SSH:
+                writeSSHPostamble(wr);
+                break;
+            default:
+                // nothing
+        }
+    }
+    
+    private void writeRedirects(Writer wr, String exitCodeFile, String stdout, String stderr) throws IOException {
+        wr.write("; echo \\$? > " + exitCodeFile + "\" ");
+        wr.write(" 1>>");
+        wr.write(quote(stdout, 1));
+        wr.write(" 2>>");
+        wr.write(quote(stderr, 1));
+    }
+
+    protected void writeWrapper(Writer wr, String sJobType) throws IOException {
+        String wrapper = getProperties().getProperty("wrapper." + sJobType);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Wrapper: " + wrapper);
+        }
+        if (wrapper != null) {
+            wrapper = replaceVars(wrapper);
+            wr.write(wrapper);
+            wr.write(' ');
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Wrapper after variable substitution: " + wrapper);
+        }
+    }
 
     protected JobSpecification getSpec() {
         return spec;
@@ -382,10 +525,31 @@ public abstract class AbstractExecutor implements ProcessListener {
     public Job getJob() {
         return job;
     }
-
+    
+    protected int getQuotingLevel(RunMode runMode) {
+        return 1;
+    }
+    
     protected String quote(String s) {
+        return quote(s, 0);
+    }
+        
+    protected String quote(String s, int level) {
+        switch (level) {
+            case 0:
+                return quote(s, "");
+            case 1:
+                return quote(s, "\\");
+            case 2:
+                return quote(s, "\\\\\\");    
+            default:
+                throw new IllegalArgumentException("Unknown quoting level: " + level);
+        }
+    }
+
+    protected String quote(String s, String outerQ) {
         if ("".equals(s)) {
-            return "\"\"";
+            return outerQ + "\"" + outerQ + "\"";
         }
         boolean quotes = false;
         for (int i = 0; i < s.length(); i++) {
@@ -400,17 +564,21 @@ public abstract class AbstractExecutor implements ProcessListener {
         }
         StringBuffer sb = new StringBuffer();
         if (quotes) {
-            sb.append('"');
+            sb.append(outerQ);
+            sb.append("\"");
         }
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             if (c == '"' || c == '\\') {
-                sb.append('\\');
+                sb.append(outerQ);
+                sb.append(outerQ);
+                sb.append("\\");
             }
             sb.append(c);
         }
         if (quotes) {
-            sb.append('"');
+            sb.append(outerQ);
+            sb.append("\"");
         }
         return sb.toString();
     }
@@ -419,15 +587,16 @@ public abstract class AbstractExecutor implements ProcessListener {
        @param list May be null or empty
        @throws IOException
     */
-    protected void writeQuotedList(Writer writer, List<String> list) throws IOException
-    {
+    protected void writeQuotedList(Writer writer, List<String> list, int quotingLevel) throws IOException {
         if (list != null && list.size() > 0) {
             writer.write(' ');
             Iterator<String> it = list.iterator();
             while (it.hasNext()) {
-                writer.write(quote(it.next()));
-                if (it.hasNext())
+                String a = it.next();
+                writer.write(quote(a, quotingLevel));
+                if (it.hasNext()) {
                     writer.write(' ');
+                }
             }
         }
     }
@@ -475,13 +644,17 @@ public abstract class AbstractExecutor implements ProcessListener {
         }
         return sb.toString();
     }
+    
+    protected void writeSSHPreamble(Writer wr, String nodeFile, String exitcodefile) throws IOException {
+        wr.write("NODES=`cat " + nodeFile + "`\n");
+        wr.write("ECF=" + exitcodefile + "\n");
+        wr.write("INDEX=0\n");
+        wr.write("for NODE in $NODES; do\n");
+        wr.write("  echo \"N\" >$ECF.$INDEX\n");
+        wr.write("  ssh $NODE ");
+    }
 
-    protected void writeMultiJobPostamble(Writer wr, String stdout, String stderr) throws IOException {
-        wr.write("; echo \\\\\\$? > $ECF.$INDEX \" \\\" ");
-        wr.write("1>>");
-        wr.write(quote(stdout));
-        wr.write(" 2>>");
-        wr.write(quote(stderr));
+    protected void writeSSHPostamble(Writer wr) throws IOException {
         wr.write(" &\n");
         wr.write("  INDEX=$((INDEX + 1))\n");
         wr.write("done\n");
@@ -505,5 +678,34 @@ public abstract class AbstractExecutor implements ProcessListener {
         wr.write("  INDEX=$((INDEX + 1))\n");
         wr.write("done\n");
         wr.write("echo $EC > $ECF\n");
+    }
+    
+    protected String join(Collection<String> names, String separator) {
+        StringBuilder sb = new StringBuilder();
+        Iterator<String> i = names.iterator();
+        while (i.hasNext()) {
+            sb.append(i.next());
+            if (i.hasNext()) {
+                sb.append(separator);
+            }
+        }
+        return sb.toString();
+    }
+    
+    protected final int parseAndValidateInt(Object obj, String name) {
+        try {
+            assert(obj != null);
+            return Integer.parseInt(obj.toString());
+        }
+        catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Illegal value for " + name + ". Must be an integer.");
+        }
+    }
+
+    protected final void writeHeader(Writer writer) throws IOException {
+        writer.write("#!/bin/bash\n\n");
+        writer.write("#CoG This script generated by CoG\n");
+        writer.write("#CoG   by class: " + getClass() + '\n');
+        writer.write("#CoG   on date: " + new Date() + "\n\n");
     }
 }

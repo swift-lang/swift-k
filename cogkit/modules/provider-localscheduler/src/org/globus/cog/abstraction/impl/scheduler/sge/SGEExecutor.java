@@ -32,7 +32,6 @@ import java.io.Writer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Iterator;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -221,18 +220,18 @@ public class SGEExecutor extends AbstractExecutor {
     	poller = (QueuePoller) getQueuePoller();
     	JobSpecification spec = getSpec();
         String queue = (String) spec.getAttribute("queue");
-        if(queue == null) {
+        if (queue == null) {
         	logger.error("Error: No queue defined");
         	return;
         }
 
     	QueueInformation qi = poller.getQueueInformation(queue);
-    	String error="";
+    	String error = "";
         
         // Verify the queue is available
-    	if(!poller.isValidQueue(queue)) {
+    	if (!poller.isValidQueue(queue)) {
     		error = "Invalid queue \"" + queue + "\"\nAvailable queues are: ";
-    		for(String s : poller.getAllQueues()) {
+    		for (String s : poller.getAllQueues()) {
     			error += s + " ";
     		}
     		logger.error(error);
@@ -241,14 +240,14 @@ public class SGEExecutor extends AbstractExecutor {
     	                
         // Check that pe is defined
         String pe = (String) spec.getAttribute("pe");
-        if(pe == null) {
+        if (pe == null) {
         	error = "Error: No parallel environment specified";
         	logger.error(error);
         	return;
         }
         
         // Check that pe is available for the queue
-        if(!qi.getPe_list().contains(pe)) {
+        if (!qi.getPe_list().contains(pe)) {
         	error = "Parallel environment " + pe + " is not valid for " + queue + " queue\n";
         	error += "Valid PEs are: ";
         	for(String s : qi.getPe_list()) {
@@ -260,12 +259,12 @@ public class SGEExecutor extends AbstractExecutor {
      
         // Check that requested walltime fits into time limits
         String maxWalltimeAttribute = (String) spec.getAttribute("maxwalltime");
-        if(maxWalltimeAttribute != null) {
+        if (maxWalltimeAttribute != null) {
         	int requestedWalltimeSeconds = WallTime.timeToSeconds(maxWalltimeAttribute);
         	String queueWalltimeString = qi.getWalltime();
-        	if(!queueWalltimeString.equalsIgnoreCase("INFINITY")) {
+        	if (!queueWalltimeString.equalsIgnoreCase("INFINITY")) {
         		int queueWalltime = WallTime.timeToSeconds(queueWalltimeString);
-        		if(requestedWalltimeSeconds > queueWalltime) {
+        		if (requestedWalltimeSeconds > queueWalltime) {
         			error = "Requested wall time of " + requestedWalltimeSeconds
         				+ " seconds is greater than queue limit of " + queueWalltime;
         		}
@@ -274,10 +273,10 @@ public class SGEExecutor extends AbstractExecutor {
         
         // Give a warning if CPUs are being underutilized (this may be intentional due to memory restrictions)
         Object jobsPerNodeAttribute = spec.getAttribute("jobsPerNode");
-        if(jobsPerNodeAttribute != null) {
+        if (jobsPerNodeAttribute != null) {
         	String jobsPerNode = String.valueOf(jobsPerNodeAttribute);
-        	if(Integer.valueOf(jobsPerNode) < qi.getSlots()) {
-        		if(logger.isInfoEnabled()) {
+        	if (Integer.valueOf(jobsPerNode) < qi.getSlots()) {
+        		if (logger.isInfoEnabled()) {
         			logger.info("Requesting only " + jobsPerNode + "/" + qi.getSlots() + " CPUs per node");
         		}
         	}
@@ -323,23 +322,6 @@ public class SGEExecutor extends AbstractExecutor {
     }
 
     /**
-     * writeMultiJobPreamble - Add multiple jobs to a single submit file
-     * @param wr Writer A Writer object representing the submit file
-     * @param exitcodefile Filename where application exit code should be written
-     * @throws IOException
-     */
-    protected void writeMultiJobPreamble(Writer wr, String exitcodefile)
-            throws IOException {
-        wr.write("NODES=`cat $PE_HOSTFILE | awk '{print $1}'`\n");
-        wr.write("ECF=" + exitcodefile + "\n");
-        wr.write("INDEX=0\n");
-        wr.write("for NODE in $NODES; do\n");
-        wr.write("  echo \"N\" >$ECF.$INDEX\n");
-        wr.write("  ssh $NODE /bin/bash -c \\\" \"");
-    }
-
-
-    /**
      * writeScript - Write the SGE submit script
      * @param wr A Writer object representing the submit file
      * @param exitcodefile Filename where exit code will be written
@@ -352,14 +334,14 @@ public class SGEExecutor extends AbstractExecutor {
 
     	Task task = getTask();
         JobSpecification spec = getSpec();
-		
-        String type = (String) spec.getAttribute("jobType");
-        boolean multiple = false;
-        if ("multiple".equals(type)) {
-            multiple = true;
+
+        String sJobType = (String) spec.getAttribute("jobType");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Job type: " + sJobType);
         }
+        RunMode runMode = getRunMode(sJobType);
         
-        int count = Integer.valueOf(getAttribute(spec, "count", "1"));
+        count = Integer.valueOf(getAttribute(spec, "count", "1"));
         String queue = (String)spec.getAttribute("queue");
         
         int coresPerNode = Integer.valueOf(getAttribute(spec, "coresPerNode", 
@@ -401,26 +383,6 @@ public class SGEExecutor extends AbstractExecutor {
             wr.write('\n');
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Job type: " + type);
-        }
-        
-        if (type != null) {
-            String wrapper = Properties.getProperties().getProperty(
-                "wrapper." + type);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Wrapper: " + wrapper);
-            }
-            if (wrapper != null) {
-                wrapper = replaceVars(wrapper);
-                wr.write(wrapper);
-                wr.write(' ');
-            }
-            if (logger.isDebugEnabled()) {
-                logger.debug("Wrapper after variable substitution: " + wrapper);
-            }
-        }
-
         wr.write("\nwrite_exitcode()\n");
         wr.write("{\n");
         wr.write("echo $1 > " + exitcodefile + "\n");
@@ -434,39 +396,15 @@ public class SGEExecutor extends AbstractExecutor {
         wr.write("   trap \"echo Received signal $SIGNAL; write_exitcode $SIGNAL\" $SIGNAL\n");
         wr.write("   (( SIGNAL+=1 ))\n");
         wr.write("done\n\n");
-
-        if (spec.getDirectory() != null) {
-            wr.write("cd " + quote(spec.getDirectory()) + " && ");
-        }
-
-        if (multiple) {
-            writeMultiJobPreamble(wr, exitcodefile);
-        }
         
-        wr.write(quote(spec.getExecutable()));
-        List<String> args = spec.getArgumentsAsList();
-        if (args != null && args.size() > 0) {
-            wr.write(' ');
-            Iterator<String> i = args.iterator();
-            while (i.hasNext()) {
-                wr.write(quote((String) i.next()));
-                if (i.hasNext()) {
-                    wr.write(' ');
-                }
-            }
+        if (sJobType != null) {
+            writeWrapper(wr, sJobType);
         }
 
-        if (spec.getStdInput() != null) {
-            wr.write(" < " + quote(spec.getStdInput()));
-        }
-
-        if (multiple) {
-            writeMultiJobPostamble(wr, stdout, stderr);
-        } else {
-            wr.write(" &\n");
-            wr.write("wait $!\n");
-            wr.write("write_exitcode $?\n");
-        }
+        writePreamble(wr, runMode, "$PE_HOSTFILE", exitcodefile);
+        writeCDAndCommand(wr, runMode);     
+        writePostamble(wr, runMode, exitcodefile, stdout, stderr);
+        
         wr.close();
     }
  
