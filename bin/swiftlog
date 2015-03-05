@@ -206,8 +206,7 @@ scriptEndTime=getISOTime(os.popen("tail -1 " + log_filename).read())
 logFileTailCksum=(os.popen("tail -1000 " + log_filename +" | cksum ").read()).split()[0]
 scriptDuration=computeDuration(scriptStartTime, scriptEndTime) 
 runDirName=log_filename.split('/')[0]
-runId=scriptFileName.rstrip('.swift') + "-" + runDirName + "-" + logFileTailCksum
-
+runId=os.path.splitext(scriptFileName)[0] + "-" + runDirName + "-" + logFileTailCksum
 
 if importProv:
     
