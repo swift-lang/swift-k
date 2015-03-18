@@ -22,6 +22,7 @@ package org.griphyn.vdl.mapping.nodes;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -154,6 +155,9 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
             if (value instanceof Throwable) {
                 sb.append(value.getClass().getName());
             }
+            else if (type.isArray()) {
+            	ppArray(sb, getArrayValue());
+            }
             else {
                 sb.append(value);
             }
@@ -167,6 +171,43 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         return sb.toString();
     }
     
+    private void ppArray(StringBuilder sb, Map<Comparable<?>, DSHandle> v) {
+    	sb.append("[");
+    	try {
+    		int count = 0;
+    		Iterator<Map.Entry<Comparable<?>, DSHandle>> i = v.entrySet().iterator();
+    		while (i.hasNext()) {
+    			Map.Entry<Comparable<?>, DSHandle> e = i.next();
+    			sb.append(e.getKey());
+    			sb.append(": ");
+    			Type t = e.getValue().getType();
+    			if (t.isArray()) {
+    				sb.append("<array>");
+    			}
+    			else if (t.isComposite()) {
+    				sb.append("<struct>");
+    			}
+    			else if (t.isPrimitive()) {
+    				sb.append(e.getValue());
+    			}
+    			else {
+    				sb.append("<file>");
+    			}
+    			if (i.hasNext()) {
+    				sb.append(", ");
+        			count++;
+        			if (count > 10) {
+        				sb.append("...");
+        			}
+    			}
+    		}
+    	}
+    	catch (Exception e) {
+    		sb.append("<exception>");
+    	}
+    	sb.append("]");
+    }
+
     protected abstract Object getRawValue();
     
     protected int arraySize() {
