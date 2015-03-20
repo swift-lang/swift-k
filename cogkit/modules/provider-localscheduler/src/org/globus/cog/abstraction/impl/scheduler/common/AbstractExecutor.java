@@ -360,7 +360,7 @@ public abstract class AbstractExecutor implements ProcessListener {
                 break;
             case APRUN:
                 wr.write("aprun -n " + count + " -N 1 -cc none -d " +
-                     depth + " -F ");
+                     depth + " -F exclusive ");
                 break;
             case IBRUN:
                 wr.write("ibrun ");
