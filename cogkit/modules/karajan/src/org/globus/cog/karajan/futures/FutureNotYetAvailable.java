@@ -28,11 +28,10 @@
  */
 package org.globus.cog.karajan.futures;
 
-import k.rt.ConditionalYield;
 import k.rt.Future;
 
 
-public class FutureNotYetAvailable extends ConditionalYield {
+public class FutureNotYetAvailable extends FutureFault {
 	private static final long serialVersionUID = -6211457624313265733L;
 
 	public FutureNotYetAvailable(Future f) {
