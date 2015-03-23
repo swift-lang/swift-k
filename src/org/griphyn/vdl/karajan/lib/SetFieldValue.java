@@ -49,6 +49,7 @@ import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
 
 public class SetFieldValue extends SwiftFunction {
@@ -84,7 +85,7 @@ public class SetFieldValue extends SwiftFunction {
 	    }
 	    
 	    public void it(Object it) {
-	        this.it= it;
+	        this.it = it;
 	    }
 	    
 	    @SuppressWarnings("unchecked")
@@ -93,7 +94,7 @@ public class SetFieldValue extends SwiftFunction {
         }
         
         public void value(Object value) {
-            this.value= value;
+            this.value = value;
         }
 	}
 	
@@ -104,19 +105,12 @@ public class SetFieldValue extends SwiftFunction {
     }
 
     @Override
-    public Node compile(WrapperNode w, Scope scope)
-            throws CompilationException {
-        Node fn = super.compile(w, scope);
-        if (_traceline.getValue() != null) {
-        	setLine(_traceline.getValue());
-        }
-        tracer = Tracer.getTracer(this);
-        return fn;
-    }
-
-    @Override
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
+        if (_traceline.getValue() != null) {
+            setLine(_traceline.getValue());
+        }
+        tracer = Tracer.getTracer(this);
     	if (this.getClass() == SetFieldValue.class && var.isStatic() && path.isStatic() && value.isStatic()) {
     		// it's safe to optimize assignments in the main block
     		if (getParent().getParent().getParent().getType().equals("swift:mainp")) {
@@ -128,6 +122,17 @@ public class SetFieldValue extends SwiftFunction {
                     if (value.isClosed()) {
                         State state = new State();
                         deepCopy(leaf, value, state, 0);
+                        if (tracer.isEnabled()) {
+                            String mdst = this.dst;
+                        
+                            if (mdst == null) {
+                                mdst = Tracer.getVarName(var);
+                                if (var.getParent() == null) {
+                                    this.dst = mdst;
+                                }
+                            }
+                            logStatic(leaf, value, mdst);
+                        }
                         return null;
                     }
         		}
@@ -191,6 +196,10 @@ public class SetFieldValue extends SwiftFunction {
     private void log(DSHandle leaf, DSHandle value, LWThread thr, String dest) throws VariableNotFoundException {
         tracer.trace(thr, dest + " = " + Tracer.unwrapHandle(value));
     }
+    
+    private void logStatic(DSHandle leaf, DSHandle value, String dest) throws VariableNotFoundException {
+        tracer.trace("[static]", dest + " = " + Tracer.unwrapHandle(value));
+    }
 
 	String unpackHandles(DSHandle handle, Map<Comparable<?>, DSHandle> handles) { 
 	    StringBuilder sb = new StringBuilder();
@@ -212,14 +221,14 @@ public class SetFieldValue extends SwiftFunction {
 	}
 	
     protected void deepCopy(DSHandle dest, DSHandle source, Stack stack) throws InvalidPathException {
-	    // don't create a state if only a non-composite is copied
         try {
             ((AbstractDataNode) source).waitFor(this);
         }
         catch (DataDependentException e) {
-            dest.setValue(new DataDependentException(dest, e));
+            setDeep(dest, new DataDependentException(dest, e));
             return;
         }
+        // don't create a state if only a non-composite is copied
         if (source.getType().isPrimitive()) {
             dest.setValue(source.getValue());
         }
@@ -236,6 +245,27 @@ public class SetFieldValue extends SwiftFunction {
         }
 	}
 	
+    private void setDeep(DSHandle dest, DataDependentException ex) {
+        Type t = dest.getType();
+        if (!t.isComposite()) {
+            dest.setValue(ex);
+        }
+        else if (t.isArray()) {
+            dest.setValue(ex);
+        }
+        else {
+            // struct
+            for (Field f : t.getFields()) {
+                try {
+                    setDeep(dest.getField(f.getId()), ex);
+                }
+                catch (NoSuchFieldException e) {
+                    throw new ExecutionException(this, e);
+                }
+            }
+        }
+    }
+
     /** make dest look like source - if its a simple value, copy that
 	    and if its an array then recursively copy 
      * @throws InvalidPathException */
@@ -319,41 +349,38 @@ public class SetFieldValue extends SwiftFunction {
     private static void copyNonComposite(DSHandle dest, DSHandle source, State state, int level) throws InvalidPathException {
         Path dpath = dest.getPathFromRoot();
         Mapper dmapper = dest.getMapper();
-        if (dmapper.canBeRemapped(dpath)) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Remapping " + dest + " to " + source);
+        
+        StateEntry se = getStateEntry(state, level);
+        FileCopier fc = se.value();
+        if (fc != null) {
+            if (!fc.isClosed()) {
+                throw new FutureNotYetAvailable(fc);
             }
-            dmapper.remap(dpath, source.getMapper(), source.getPathFromRoot());
+            else {
+                if (fc.getException() != null) {
+                    throw new ExecutionException("Failed to copy " + source + " to " + dest, fc.getException());
+                }
+            }
             dest.setValue(AbstractDataNode.FILE_VALUE);
         }
         else {
-            StateEntry se = getStateEntry(state, level);
-            FileCopier fc = se.value();
-            if (fc != null) {
-                if (!fc.isClosed()) {
-                    throw new FutureNotYetAvailable(fc);
+            fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
+                dmapper.map(dpath), !dmapper.isPersistent(dpath));
+            se.value(fc);
+            try {
+                if (fc.start()) {
+                    // immediate operation
+                    dest.setValue(AbstractDataNode.FILE_VALUE);
+                    popStateEntry(state);
+                    return;
                 }
-                else {
-                    if (fc.getException() != null) {
-                        throw new ExecutionException("Failed to copy " + source + " to " + dest, fc.getException());
-                    }
-                }
-                dest.setValue(AbstractDataNode.FILE_VALUE);
             }
-            else {
-                fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
-                    dmapper.map(dpath));
-                se.value(fc);
-                try {
-                    fc.start();
-                }
-                catch (Exception e) {
-                    throw new ExecutionException("Failed to start file copy", e);
-                }
-                throw new FutureNotYetAvailable(fc);
+            catch (Exception e) {
+                throw new ExecutionException("Failed to start file copy", e);
             }
-            popStateEntry(state);
+            throw new FutureNotYetAvailable(fc);
         }
+        popStateEntry(state);
     }
 
     private void copyArray(DSHandle dest, DSHandle source, State state, int level) throws InvalidPathException {
@@ -377,7 +404,7 @@ public class SetFieldValue extends SwiftFunction {
                 field = dest.getField(lhs);
             }
             catch (NoSuchFieldException ipe) {
-                throw new ExecutionException("Could not get destination field",ipe);
+                throw new ExecutionException("Could not get destination field", ipe);
             }
             deepCopy(field, rhs, state, level + 1);
             se.value(null);
