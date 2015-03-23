@@ -226,9 +226,13 @@ public class FileResourceImpl extends AbstractFileResource {
     /** remove a file */
     public void deleteFile(String fileName) throws FileResourceException {
         File localFile = resolve(fileName);
-        if (!localFile.exists()) {
+        /*
+         * exists() is funny when there is a broken symbolic link. It returns
+         * false. But we want this method to also delete broken symbolic links. 
+         */
+        /*if (!localFile.exists()) {
             throw new FileNotFoundException(fileName + " not found.");
-        }
+        }*/
         if (isDirectory(fileName) == true) {
             throw new FileResourceException("File is a directory ");
         }
