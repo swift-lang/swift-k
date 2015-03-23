@@ -36,7 +36,7 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.type.Field;
 
-public class FutureMappedSingleDataNode extends AbstractFutureNonCompositeDataNode {
+public class FutureMappedSingleDataNode extends AbstractFutureMappedSingleDataNode {
     private RootHandle root;
     private AbstractDataNode parent;
     private Path pathFromRoot;
@@ -63,16 +63,6 @@ public class FutureMappedSingleDataNode extends AbstractFutureNonCompositeDataNo
     @Override
     public Path getPathFromRoot() {
         return pathFromRoot;
-    }
-    
-    @Override
-    protected void getFringePaths(List<Path> list, Path myPath) throws HandleOpenException {
-        list.add(myPath);
-    }
-
-    @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
-        list.add(this);
     }
     
     @Override
