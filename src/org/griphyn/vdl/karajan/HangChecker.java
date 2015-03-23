@@ -47,6 +47,7 @@ import org.globus.cog.karajan.analyzer.VariableNotFoundException;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.grid.SchedulerNode;
 import org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler;
+import org.griphyn.vdl.karajan.lib.FileCopier;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
@@ -107,16 +108,18 @@ public class HangChecker extends TimerTask {
             WeightedHostScoreScheduler s = (WeightedHostScoreScheduler) context.getAttribute(SchedulerNode.CONTEXT_ATTR_NAME);
             if (s != null) {
                 int running = s.getRunning();
+                running += FileCopier.getRunning();
                 boolean allOverloaded = s.allOverloaded();
                 if (running == 0 && !Scheduler.getScheduler().isAnythingRunning() && !allOverloaded) {
                     boolean found = false;
                     lastHandledSequenceNumber = crtSequenceNumber;
-                    logger.warn("No events in " + (CHECK_INTERVAL / 1000) + "s.");
+                    logger.warn("No events in " + (CHECK_INTERVAL / 1000) + "s. Details dumped to log.");
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     PrintStream ps = new PrintStream(os);
                     dumpThreads(ps);
                     try {
                         Graph g = buildGraph();
+                        //g.write(ps);
                         if (!found) {
                             found = findCycles(ps, g);
                         }
@@ -133,8 +136,8 @@ public class HangChecker extends TimerTask {
                     if (!found) {
                         dumpJVMThreads(ps);
                     }
-                    logger.warn(os.toString());
                     ps.close();
+                    logger.info(os.toString());
                     if (found) {
                         boolean debugging;
                         try {
@@ -258,17 +261,47 @@ public class HangChecker extends TimerTask {
     public static void dumpThreads(PrintStream pw) {
         pw.println("\nWaiting threads:");
         Map<LWThread, DSHandle> c = WaitingThreadsMonitor.getAllThreads();
+        Map<LWThread, List<DSHandle>> ot = WaitingThreadsMonitor.getOutputs();
         for (Map.Entry<LWThread, DSHandle> e : c.entrySet()) {
-            dumpThread(pw, e.getKey(), e.getValue());
+            dumpThread(pw, e.getKey(), e.getValue(), ot);
+            pw.println();
+        }
+        pw.println("----");
+    }
+    
+    public static void dumpThreadsShort(PrintStream pw) {
+        pw.println("\nWaiting threads:");
+        Map<LWThread, DSHandle> c = WaitingThreadsMonitor.getAllThreads();
+        Map<String, Integer> counts = new HashMap<String, Integer>();
+        for (Map.Entry<LWThread, DSHandle> e : c.entrySet()) {
+            inc(counts, varWithLine(e.getValue()));
+        }
+        for (Map.Entry<String, Integer> e : counts.entrySet()) {
+            pw.println("\t" + e.getValue() + " threads waiting on " + e.getKey());
             pw.println();
         }
         pw.println("----");
     }
 
-    public static void dumpThread(PrintStream pw, LWThread thr, DSHandle handle) {
+    private static void inc(Map<String, Integer> counts, String key) {
+        Integer i = counts.get(key);
+        if (i == null) {
+            counts.put(key, 1);
+        }
+        else {
+            counts.put(key, i + 1);
+        }
+    }
+
+    public static void dumpThread(PrintStream pw, LWThread thr, DSHandle handle, Map<LWThread, List<DSHandle>> ot) {
+        List<DSHandle> outputs = null;
+        if (ot != null) {
+            outputs = ot.get(thr);
+        }
         try {
             pw.println("Thread: " + SwiftFunction.getThreadPrefix(thr) 
-                + (handle == null ? "" : ", waiting on " + varWithLine(handle)));
+                + (handle == null ? "" : ", waiting on " + varWithLine(handle))
+                + (outputs == null ? "" : ", producing: " + varsWithLine(outputs)));
 
             for (String t : getSwiftTrace(thr)) {
                 pw.println("\t" + t);
@@ -279,6 +312,15 @@ public class HangChecker extends TimerTask {
         }
     }
     
+    private static String varsWithLine(List<DSHandle> vars) {
+        StringBuilder sb = new StringBuilder();
+        for (DSHandle h : vars) {
+            sb.append("\n\t\t");
+            sb.append(varWithLine(h));
+        }
+        return sb.toString();
+    }
+
     public static String varWithLine(DSHandle value) {
         Integer line = null;
         String dbgname = null;
@@ -288,6 +330,17 @@ public class HangChecker extends TimerTask {
         return dbgname + 
             (value == value.getRoot() ? "" : (path.isArrayIndex(0) ? path : "." + path)) + 
             (line == null ? "" : " (declared on line " + line + ")");
+    }
+    
+    public static String varWithLineShort(DSHandle value) {
+        Integer line = null;
+        String dbgname = null;
+        line = value.getRoot().getLine();
+        dbgname = value.getName();
+        Path path = value.getPathFromRoot();
+        return dbgname + 
+            (value == value.getRoot() ? "" : (path.isArrayIndex(0) ? path : "." + path)) + 
+            (line == null ? "" : " (" + line + ")");
     }
     
     public static String getLastCall(LWThread thr) {
@@ -350,16 +403,23 @@ public class HangChecker extends TimerTask {
                 loners.remove(e.to);
             }
         }
+        dumpThreadsToBlame(ps, loners, wt);
+        if (loners.size() < 10) {
+            dumpThreadsToBlame(System.out, loners, wt);
+        }
+        return !loners.isEmpty();
+    }
+
+    private void dumpThreadsToBlame(PrintStream ps, Set<LWThread> loners, Map<LWThread, DSHandle> wt) {
         if (!loners.isEmpty()) {
             ps.println();
             ps.println("The following threads are independently hung:");
             for (LWThread s : loners) {
-                dumpThread(ps, s, wt.get(s));
+                dumpThread(ps, s, wt.get(s), null);
                 ps.println();
             }
             ps.println("----");
         }
-        return !loners.isEmpty();
     }
 
     private Graph buildGraph() throws VariableNotFoundException {
@@ -390,7 +450,7 @@ public class HangChecker extends TimerTask {
             }
             
             
-            LWThread tc = e.getKey(); 
+            LWThread tc = e.getKey();
             for (LWThread stk : ot.keySet()) {
                 if (isStrictlyChildOf(tc, stk)) {
                     g.addEdge(e.getKey(), stk, null);
@@ -427,7 +487,6 @@ public class HangChecker extends TimerTask {
             cycle.clear();
             findLoop(t, g, seen, cycle, cycles);
         }
-        System.out.println();
         
         if (cycles.size() == 1) {
             ps.println("Dependency loop found:");
@@ -476,6 +535,12 @@ public class HangChecker extends TimerTask {
         // TODO: fail the loops
         if (cycles.size() > 0) {
         	ps.println("----");
+        }
+        if (cycles.isEmpty()) {
+            System.out.print(" none found");
+        }
+        else {
+            System.out.print(" " + cycles.size() + " loops found");
         }
         return !cycles.isEmpty();
     }
@@ -584,6 +649,34 @@ public class HangChecker extends TimerTask {
         }
         
         private Map<LWThread, List<Edge>> outEdges = new HashMap<LWThread, List<Edge>>();
+        
+        public void write(PrintStream ps) {
+            Set<String> boxes = new HashSet<String>();
+            ps.println("Thread Graph:");
+            ps.println("digraph Dependencies {");
+            for (Map.Entry<LWThread, List<Edge>> e : outEdges.entrySet()) {
+                for (Edge d : e.getValue()) {
+                    String var = varWithLineShort(d.contents);
+                    ps.print("\t\"");
+                    ps.print(SwiftFunction.getThreadPrefix(e.getKey()));
+                    ps.print("\" -> \"");
+                    ps.print(var);
+                    ps.println("\"");
+                    ps.print("\t\"");
+                    ps.print(var);
+                    ps.print("\" -> \"");
+                    ps.print(SwiftFunction.getThreadPrefix(d.to));
+                    ps.println("\"");
+                    if (!boxes.contains(var)) {
+                        ps.print("\"");
+                        ps.print(var);
+                        ps.println("\" [shape=box]");
+                        boxes.add(var);
+                    }
+                }
+            }
+            ps.println("}");
+        }
 
         public void addEdge(LWThread from, LWThread to, DSHandle contents) {
             List<Edge> l = outEdges.get(from);
