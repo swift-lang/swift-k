@@ -246,9 +246,15 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             
             /*
              * If the process exited because of a cancel() request,
-             * then don't stage out or clean up
+             * then don't stage out
              */
             if (killed) {
+                try {
+                    cleanUp(spec, dir);
+                }
+                catch (Exception e) {
+                    logger.info("Cleanup failed", e);
+                }
                 return;
             }
 
@@ -436,6 +442,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             os.write(buffer, 0, len);
             len = is.read(buffer);
         }
+        os.close();
+        is.close();
         
         FileResourceCache.getDefault().releaseResource(sres);
         FileResourceCache.getDefault().releaseResource(dres);
