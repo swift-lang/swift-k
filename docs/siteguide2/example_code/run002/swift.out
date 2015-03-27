@@ -1,0 +1,61 @@
+Swift trunk git-rev: d8176f80adceb6c5714b35f0b1f513c6c9819365 heads/master 6268 (modified locally)
+RunID: run002
+Progress: Fri, 27 Mar 2015 13:31:02-0500
+Progress: Fri, 27 Mar 2015 13:31:03-0500  Submitting:4
+Progress: Fri, 27 Mar 2015 13:31:33-0500  Submitting:4
+Progress: Fri, 27 Mar 2015 13:31:43-0500  Submitting:3  Failed:1
+
+Execution failed:
+Exception in echo:
+    Arguments: [Hello World!]
+    Host: midway
+    Directory: hello-run002/jobs/e/echo-2cynri6m
+	exception @ swift-int-staging.k, line: 165
+Caused by: 
+	exception @ swift-int-staging.k, line: 160
+Caused by: null
+Caused by: org.globus.cog.abstraction.impl.common.task.TaskSubmissionException: Could not submit job
+Caused by: org.globus.cog.abstraction.impl.common.task.TaskSubmissionException: Could not start coaster service
+Caused by: org.globus.cog.abstraction.impl.common.task.TaskSubmissionException: Task ended before registration was received. 
+Failed to download bootstrap jar from http://borgmachine:43369
+
+
+ * keychain 2.7.1 ~ http://www.funtoo.org
+ * Found existing ssh-agent: 5768
+ * Found existing gpg-agent: 5793
+ * Known ssh key: /home/yadunand/.ssh/id_rsa
+
+
+ * keychain 2.7.1 ~ http://www.funtoo.org
+ * Found existing ssh-agent: 5768
+ * Found existing gpg-agent: 5793
+ * Known ssh key: /home/yadunand/.ssh/id_rsa
+
+
+	k:assign @ swift.k, line: 174
+Caused by: Exception in echo:
+    Arguments: [Hello World!]
+    Host: midway
+    Directory: hello-run002/jobs/e/echo-2cynri6m
+	exception @ swift-int-staging.k, line: 165
+Caused by: 
+	exception @ swift-int-staging.k, line: 160
+Caused by: null
+Caused by: org.globus.cog.abstraction.impl.common.task.TaskSubmissionException: Could not submit job
+Caused by: org.globus.cog.abstraction.impl.common.task.TaskSubmissionException: Could not start coaster service
+Caused by: org.globus.cog.abstraction.impl.common.task.TaskSubmissionException: Task ended before registration was received. 
+Failed to download bootstrap jar from http://borgmachine:43369
+
+
+ * keychain 2.7.1 ~ http://www.funtoo.org
+ * Found existing ssh-agent: 5768
+ * Found existing gpg-agent: 5793
+ * Known ssh key: /home/yadunand/.ssh/id_rsa
+
+
+ * keychain 2.7.1 ~ http://www.funtoo.org
+ * Found existing ssh-agent: 5768
+ * Found existing gpg-agent: 5793
+ * Known ssh key: /home/yadunand/.ssh/id_rsa
+
+

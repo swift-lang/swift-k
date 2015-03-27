@@ -1,0 +1,106 @@
+Stampede (x86 cluster)
+----------------------
+Stampede is a cluster managed by the Texas Advanced Computing Center (TACC). It
+is a part of the XSEDE project. For more information about how to request an
+account, a project, how to log in and manage SSH keys, please see the
+More information about the system can be found in the 
+https://portal.xsede.org/web/guest/tacc-stampede[Stampede User Guide].
+
+Downloading and building Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The most recent versions of Swift can be found at
+http://swiftlang.org/downloads/index.php[the Swift downloads page]. Follow the instructions
+provided on that site to download and build Swift.
+
+Overview of How to Run
+~~~~~~~~~~~~~~~~~~~~~~
+You will need to do the following steps in order to run.
+
+1. Connect to a system that has the Globus myproxy-init command. This will be
+   the system where Swift runs and from where Swift submits jobs to Stampede.
+2. Obtain a grid certificate.
+3. Run Swift with configuration files that define how to start remote jobs to
+   Stampede via gram.
+
+Verify System Requirements and Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The system where you run Swift needs to have the myproxy-init tool installed.
+Ideally it should also have globus-job-run for testing purposes.
+
+Swift uses two environment variables in order for remote job execution to work.
+They are $GLOBUS_HOSTNAME and $GLOBUS_TCP_PORT_RANGE. 
+
+GLOBUS_HOSTNAME should contain the full hostname of the system where you are 
+running. It may also contain the IP address of the machine.
+
+GLOBUS_TCP_PORT_RANGE defines a range of ports to which a remote system may
+connect. You will likely need this defined if you are behind a firewall with
+somewhat restricted access.
+
+Obtain a Grid Certificate
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Once you have verified you have everything you need on the submit host where
+you are running, you can obtain an XSEDE grid certificate with following 
+command:
+
+-----
+$ myproxy-logon -l username -s myproxy.teragrid.org
+-----
+
+Create sites.xml file
+~~~~~~~~~~~~~~~~~~~~~
+You may use the following example as a guide to run on Stampede. You will
+likely need to make a few modifications, as described below.
+-----
+<config>
+  <pool handle="stampede">
+    <execution provider="coaster" jobmanager="gt2:gt2:slurm" url="login5.stampede.tacc.utexas.edu:2119/jobmanager-slurm"/>
+    <filesystem provider="gsiftp" url="gsiftp://gridftp.stampede.tacc.utexas.edu:2811"/>
+    <profile namespace="globus"  key="jobsPerNode">16</profile>
+    <profile namespace="globus"  key="ppn">16</profile>
+    <profile namespace="globus"  key="maxTime">3600</profile>
+    <profile namespace="globus"  key="maxwalltime">00:05:00</profile>
+    <profile namespace="globus"  key="lowOverallocation">100</profile>
+    <profile namespace="globus"  key="highOverallocation">100</profile>
+    <profile namespace="globus"  key="queue">normal</profile>
+    <profile namespace="globus"  key="nodeGranularity">1</profile>
+    <profile namespace="globus"  key="maxNodes">1</profile>
+    <profile namespace="globus"  key="project">yourproject</profile>
+    <profile namespace="karajan" key="jobThrottle">.3199</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>/scratch/01503/yourusername</workdirectory>
+  </pool>
+</config>
+-----
+
+You will need to modify the XSEDE project name to the match the name that has 
+been allocated to you. In most cases you'll want to set the work directory to
+your Stampede scratch directory. This is defined, on Stampede, in the
+environment variable $SCRATCH.
+
+Running Swift
+~~~~~~~~~~~~~
+You may now run your Swift script exactly as you have before.
+
+-----
+$ swift -sites.file sites.xml -tc.file tc -config cf myscript.swift
+-----
+
+Debugging
+~~~~~~~~~
+If you are having problems getting this working correctly, there are a few 
+places where you may look to help you debug. Since this configuration is
+slightly more complicated, there are several log files produced.
+
+1. The standard swift log, created in your current working directory on the
+   machine where you are running from. This will be named something along the
+   lines of myscript-<datestring>.log.
+2. The bootstrap log. These are located on Stampede in your home directory and
+   have the name coaster-bootstrap-<datestring>.log.
+3. The coaster log. This is located on Stampede in your $HOME/.globus/coasters/coasters.log.
+4. The gram log. This is located on Stamped in $HOME/gram-<datestring>.log.
+
+For help in getting this configuration working, feel free to contact the Swift 
+support team at swift-support@ci.uchicago.edu.
+
+

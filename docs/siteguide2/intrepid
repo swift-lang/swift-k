@@ -1,0 +1,203 @@
+Intrepid (Blue Gene/P)
+---------------------
+Intrepid is an IBM Blue Gene/P (BG/p) supercomputer located at the Argonne
+Leadership Computing Facility. More information on Intrepid can be found at
+http://www.alcf.anl.gov. Surveyor and Challenger are similar, smaller
+machines.
+
+Requesting Access
+~~~~~~~~~~~~~~~~~
+If you do not already have an account on Intrepid, you can request one
+link:https://accounts.alcf.anl.gov/accounts/request.php[here]. More information
+about this process and requesting allocations for your project can be found
+link:http://www.alcf.anl.gov/support/gettingstarted/index.php[here].
+
+SSH Keys
+~~~~~~~~
+Accessing the Intrepid via SSH can be done with any SSH software package.
+Before logging in, you will need to generate an SSH public key and send it to
+support@alcf.anl.gov for verification and installation.
+
+Cryptocard
+~~~~~~~~~~
+This security token uses one-time passwords for controlled access to the BG/P login systems.
+
+Connecting to a login node
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+When you gain access to Intrepid, you should receive a cryptocard and a temporary PIN.
+You must have a working cryptocard, know your PIN, and have your SSH key in place before
+you may login.
+
+You can connect to Intrepid with the following command:
+
+-----
+ssh yourusername@intrepid.alcf.anl.gov
+-----
+
+You will be presented with a password prompt. The first part of your password is your PIN. Enter you PIN,
+press the Cryptocard button, and then enter the password your crypocard generates. If this is the first
+time you are logging in, you will be prompted to change your PIN.
+
+Downloading and building Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The most recent versions of Swift can be found at
+http://swiftlang.org/downloads/index.php. Follow the instructions
+provided on that site to download and build Swift.
+
+Adding Swift to your PATH
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Once you have installed Swift, add the Swift binary to your PATH so you can
+easily run it from any directory.
+
+In your home directory, edit the file ".bashrc".
+
+If you have installed Swift via a source repository, add the following line
+at the bottom of .bashrc.
+
+-----
+export PATH=$PATH:$HOME/cog/modules/swift/dist/swift-svn/bin
+-----
+
+If you have installed Swift via a binary package, add this line:
+
+-----
+export PATH=$PATH:$HOME/swift-<version>/bin
+-----
+
+Replace <version> with the actual name of the swift directory in the example above.
+
+What You Need To Know Before Running Swift
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note that on Intrepid, the compute nodes can not create or write to a /home filesystem. Consequently, in order for Swift to interface correctly from login node to the compute nodes, Swift must write all internal and intermediate files to /intrepid-fs0, which is writable by the compute nodes. In order to accomplish this, export the environment variable SWIFT_USERHOME as follows:
+
+----
+export SWIFT_USERHOME=/intrepid-fs0/users/`whoami`/scratch
+----
+
+Before you can create a Swift configuration file, there are some things
+you will need to know.
+
+Swift Work Directory
+^^^^^^^^^^^^^^^^^^^^
+The Swift work directory is a directory which Swift uses for processing work.
+This directory needs to be writable. Common options for this are:
+
+-----
+/home/username/swiftwork
+/home/username/work
+/tmp/swift.work
+-----
+
+Which project(s) are you a member of?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Intrepid requires that you are a member of a project. You can determine this by
+running the following command:
+
+-----
+$ projects
+HTCScienceApps
+-----
+
+If you are not a member of a project, you must first request access
+to a project. More information on this process can be found at
+https://wiki.alcf.anl.gov/index.php/Discretionary_Allocations
+
+Determine your Queue
+^^^^^^^^^^^^^^^^^^^^
+
+Intrepid has several different queues you can submit jobs to depending on
+the type of work you will be doing. The command "qstat -q" will print
+the most up to date list of this information.
+
+.Intrepid Queues
+[options="header"]
+|=========================================================
+|User Queue|Queue|Nodes|Time (hours)|User Maxrun|Project maxrun
+|prod-devel|prod-devel|64-512|0-1|5|20
+|prod|prod-short|512-4096|0-6|5|20
+|prod|prod-long|512-4096|6-12|5|20
+|prod|prod-capability|4097-32768|0-12|2|20
+|prod|prod-24k|16385-24576|0-12|2|20
+|prod|prod-bigrun|32769-40960|0-12|2|20
+|prod|backfill|512-8192|0-6|5|10
+|============================================================
+
+Generating Configuration Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now that you know what queue to use, your project, and your work
+directory, it is time to set up Swift. Swift uses a configuration file
+called sites.xml to determine how it should run. There are two
+methods you can use for creating this file. You can manually edit the
+configuration file, or generate it with a utility called +gensites+.
+
+Manually Editing sites.xml
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Below is the template that is used by Swift's test suite for running
+on Intrepid.
+
+-----
+include::../../tests/providers/intrepid/sites.template.xml[]
+-----
+
+Copy and paste this template, replace the values, and call it
++sites.xml+.
+
+The values to note here are the ones that are listed between
+underscores. In the example above, they are +\_HOST_+, +\_PROJECT_+,
++\_QUEUE_+, and +\_WORK_+.
+
++HOST+:: The IP address on which Swift runs and to which workers must
+connect.  To obtain this, run +ifconfig+ and select the IP address
+that starts with +172+.
+
++PROJECT+:: The project to use.
+
++QUEUE+:: The queue to use.
+
++WORK+:: The Swift work directory.
+
+Manually Editing tc.data
+~~~~~~~~~~~~~~~~~~~~~~~~
+Below is the tc.data file used by Swift's test suite.
+
+-----
+include::../../tests/providers/intrepid/tc.template.data[]
+------
+
+Copy these commands and save it as tc.data.
+
+Catsn.swift
+~~~~~~~~~~~
+The swift script we will run is called catsn.swift. It simply cats a file and
+saves the result. This is a nice simple test to ensure jobs are running
+correctly. Create a file called data.txt which contains some simple input - a
+"hello world" will do the trick.
+
+-----
+include::../../examples/misc/catsn.swift[]
+-----
+
+Running Swift
+~~~~~~~~~~~~~
+Now that everything is in place, run Swift with the following command:
+
+-----
+swift -sites.file sites.xml -tc.file tc.data catsn.swift -n=10
+-----
+
+You should see several new files being created, called catsn.0001.out,
+catsn.0002.out, etc. Each of these files should contain the contents of what
+you placed into data.txt. If this happens, your job has run successfully!
+
+More Help
+~~~~~~~~~
+The best place for additional help is the Swift user mailing list. You can
+subscribe to this
+link:https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user[list].
+When submitting information, send your sites.xml file, your tc.data, and any
+Swift log files that were created during your attempt.
+
+

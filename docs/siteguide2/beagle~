@@ -1,0 +1,112 @@
+Beagle (Cray XE6)
+----------------
+
+Beagle is a Cray XE6 supercomputer at UChicago. It employs a batch-oriented
+computational model where-in a PBS schedular accepts user's jobs and queues
+them in the queueing system for execution.
+
+The computational model requires a user to prepare the submit files, track job
+submissions, chackpointing, managing input/output data and handling exceptional
+conditions manually.  Running Swift under Beagle can accomplish the above tasks
+with least manual user intervention and maximal oppurtunistic computation time
+on Beagle queues. In the following sections, we discuss more about specifics
+of running Swift on Beagle. A more detailed information about Swift and its
+workings can be found on the link:http://swiftlang.org/docs/index.php[Swift documentation page]
+
+More information on Beagle can be found on link:http://beagle.ci.uchicago.edu[UChicago Beagle website]
+If you do not already have a Computation Institute (CI) account, you can request one at
+https://www.ci.uchicago.edu/accounts/. This page will give you a list of resources you can request access to.
+
+
+Running Swift on Beagle
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Follow the steps outlined below to get started with Swift on Beagle:
+
+*step 1.* Load the Swift and Sun-java module on Beagle as follows: +module load swift sun-java+
+
+*step 2.* Create and change to a directory where your Swift related work will
+stay. (say, +mkdir swift-lab+, followed by, +cd swift-lab+)
+
+*step 3.* To get started, here's a simple example that prints "Hello World!" into N files:
+
+[source,python]
+-----
+sys::[cat ../example_code/hello.swift]
+-----
+
+*step 4.*  The next step is to create a swift.conf file. An example configuration file is given below
+
+[source, python]
+-----
+sys::[cat ./configs/beagle1.conf]
+-----
+
+*step 6.* Run the example using following commandline:
+-----
+swift catsn.swift -n=1
+-----
+
+You can further change the value of +-n+ to any arbitrary number to run that
+many number of concurrent +cat+
+
+*step 7.* Swift will show a status message as "done" after the job has completed its run in the queue. Check the output in the generated +outdir+ directory (+ls outdir+)
+
+----
+Swift 0.96
+TODO: Get results from actual run
+----
+
+Larger Runs on Beagle
+~~~~~~~~~~~~~~~~~~~~~
+A key factor in scaling up Swift runs on Beagle is to setup the swift.conf parameters.
+The following swift.conf parameters must be set to scale that is intended for a large run:
+
+ * *maxJobs* : This parameter specifies the maximum number of pbs jobs/blocks that the coaster scheduler will have running at any given time. On Beagle, this number will determine how many qsubs swift will submit for your run. Typical values range between 40 and 60 for large runs.
+ * *nodeGranularity* : Determines the number of nodes per job. It restricts the number of nodes in a job to a multiple of this value. The total number of workers will then be a multiple of tasksPerNode * nodeGranularity. For Beagle, jobsPerNode value is 24 corresponding to its 24 cores per node.
+ * *maxNodesPerJob* : Determines the maximum number of nodes a job must pack into its qsub. This parameter determines the largest single job that your run will submit.
+ * *maxParallelTasks* : A factor that determines the number of tasks dispatched simultaneously. The intended number of simultaneous tasks must match the number of cores targeted. The number of tasks is calculated from the jobThrottle factor is as follows:
+
+----
+Number of Tasks = (JobThrottle x 100) + 1
+----
+
+Following is an example sites.xml for a 50 slots run with each slot occupying 4 nodes (thus, a 200 node run):
+
+[source, python]
+-----
+sys::[cat ./configs/beagle2.conf]
+-----
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+In this section we will discuss some of the common issues and remedies while using Swift on Beagle. The origin of these issues can be Swift or the Beagle's configuration, state and user configuration among other factors. We try to identify maximum known issues and address them here:
+
+* Command not found: Swift is installed on Beagle as a module. If you see the following error message:
+
+-----
+If 'swift' is not a typo you can run the following command to lookup the package that contains the binary:
+    command-not-found swift
+-bash: swift: command not found
+-----
+
+The most likely cause is the module is not loaded. Do the following to load the Swift module:
+
+-----
+$ module load swift sun-java
+Swift version swift-0.93 loaded
+sun-java version jdk1.7.0_02 loaded
+-----
+
+* Failed to transfer wrapperlog for job cat-nmobtbkk and/or Job failed with an exit code of 254. Check the <workdirectory> element on the sites.xml file.
+
+-----
+<workdirectory >/home/ketan/swift.workdir</workdirectory>
+-----
+
+It is likely that it is set to a path where the compute nodes can not write, e.g. your /home directory. The remedy for this error is to set your workdirectory to the /lustre path where swift could write from compute nodes.
+
+----
+<workdirectory >/lustre/beagle/ketan/swift.workdir</workdirectory>
+----

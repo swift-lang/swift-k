@@ -1,0 +1,68 @@
+SSH-CL
+------
+This section describes how to use the SSH command line provider (ssh-cl) to 
+connect to remote sites.
+
+Verify you can connect to the remote site
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The first step of this process is to verify that you can connect to a remote
+site without being prompted for a password or passphrase.
+
+-----
+$ ssh my.site.com
+-----
+
+Typically to make this work you will need to add your SSH public key to the
+$HOME/.ssh/authorized_keys file on the remote system.
+
+This SSH connection must work without specifying a username on the command line.
+If your username differs on your local machine and the remote machine, you will 
+need to add an entry like this to your local $HOME/.ssh/config:
+
+-----
+Host my.site.com
+  Hostname my.site.com
+  User myusername
+----
+
+Create a sites.xml file
+~~~~~~~~~~~~~~~~~~~~~~~
+Once you have verified that you can connect without prompt to the remote machine,
+you will need to create a sites.xml file that contains the host information. The
+example below will assume there is no scheduler on the remote system - it simply
+connects to the remote machine and runs work there.
+
+-----
+<config>
+  <pool handle="mysite">
+    <execution provider="coaster" jobmanager="ssh-cl:local" url="my.site.com"/>
+    <profile namespace="globus" key="jobsPerNode">1</profile>
+    <profile namespace="globus" key="lowOverAllocation">100</profile>
+    <profile namespace="globus" key="highOverAllocation">100</profile>
+    <profile namespace="karajan" key="jobThrottle">1</profile>
+    <profile namespace="karajan" key="initialScore">10000</profile>
+    <workdirectory>/home/username/work</workdirectory>
+  </pool>
+</config>
+-----
+
+NOTE: This requires that the remote site can connect back to the machine where
+you are running Swift. If a firewall is configured to block incoming connections, 
+this will not work correctly.
+
+Enabling coaster provider staging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If there is a shared filesystem between the two machines, you can set this as your
+work directory and skip this step. Otherwise, you will need to enable coaster provider 
+staging.
+
+To do this, add the following line to your "cf" file:
+-----
+use.provider.staging=true
+-----
+
+To run swift, then:
+-----
+swift -sites.file sites.xml -tc.file tc.data -config cf script.swift
+-----
+ 
