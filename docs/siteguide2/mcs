@@ -1,0 +1,60 @@
+MCS Compute Servers (x86 workstations)
+-------------------------------------
+
+This sections describes how to use the general use compute servers for
+the MCS division of Argonne National Laboratory. Swift is available as a soft package on mcs machines. Add +swift to your .soft and run resoft command.
+
+----
+$ resoft
+----
+
+Create a coaster-service.conf
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To begin, copy the text below and paste it into your Swift distribution's etc
+directory. Name the file coaster-service.conf.
+
+-----
+include::../../tests/providers/mcs/coaster-service.conf[]
+-----
+
+Starting the Coaster Service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Change directories to the location you would like to run a
+Swift script and start the coaster service with this
+command:
+
+-----
+start-coaster-service
+-----
+
+This will create a configuration file that Swift needs
+called sites.xml.
+
+WARNING: Any existing sites.xml files in this directory
+will be overwritten. Be sure to make a copy of any
+custom configuration files you may have.
+
+Run Swift
+~~~~~~~~~
+
+Next, run Swift. If you do not have a particular script
+in mind, you can test Swift by using a Swift script in
+the examples/ directory.
+
+Run the following command to run the script:
+-----
+swift -sites.file sites.xml -tc.file tc.data yourscript.swift
+-----
+
+Stopping the Coaster Service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The coaster service will run indefinitely. The stop-coaster-service
+script will terminate the coaster service.
+
+-----
+$ stop-coaster-service
+-----
+
+This will kill the coaster service and kill the worker scripts on remote systems.
+

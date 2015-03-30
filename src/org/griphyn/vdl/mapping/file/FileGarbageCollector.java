@@ -109,6 +109,17 @@ public class FileGarbageCollector implements Runnable {
         }
     }
     
+    public void clean() {
+        synchronized(this) {
+            for (Map.Entry<PhysicalFormat, Integer> e : usageCount.entrySet()) {
+                if (!persistent.contains(e.getKey())) {
+                    queue.add(e.getKey());
+                }
+            }
+            notify();
+        }
+    }
+    
     public void run() {
         try {
             while (true) {

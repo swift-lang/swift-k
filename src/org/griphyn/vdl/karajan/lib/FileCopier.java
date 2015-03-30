@@ -17,9 +17,12 @@
 
 package org.griphyn.vdl.karajan.lib;
 
+import java.io.File;
+
 import k.rt.AbstractFuture;
 import k.rt.Future;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.FileTransferSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.FileTransferTask;
@@ -38,31 +41,24 @@ import org.globus.cog.abstraction.interfaces.TaskHandler;
 import org.globus.cog.karajan.futures.FutureEvaluationException;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.file.SymLinker;
 
 public class FileCopier extends AbstractFuture implements Future, StatusListener {
+    private static final Logger logger = Logger.getLogger(FileCopier.class);
+    
+    private static final boolean canLink = SymLinker.canSymLink();
     private static final TaskHandler fth = new FileTransferTaskHandler();
 
+    private AbsFile fsrc, fdst;
     private FileTransferTask task;
     private Exception exception;
-    private boolean closed;
+    private boolean closed, destIsTemporary;
+    private static int running;
 
-    public FileCopier(PhysicalFormat src, PhysicalFormat dst) {
-        AbsFile fsrc = (AbsFile) src;
-        AbsFile fdst = (AbsFile) dst;
-        FileTransferSpecification fts = new FileTransferSpecificationImpl();
-        fts.setDestinationDirectory(fdst.getDirectory());
-        fts.setDestinationFile(fdst.getName());
-        fts.setSourceDirectory(fsrc.getDirectory());
-        fts.setSourceFile(fsrc.getName());
-        fts.setThirdPartyIfPossible(true);
-        task = new FileTransferTask();
-        task.setSpecification(fts);
-        task.setService(Service.FILE_TRANSFER_SOURCE_SERVICE, new ServiceImpl(
-            fsrc.getProtocol(), new ServiceContactImpl(fsrc.getHost()), null));
-        task.setService(Service.FILE_TRANSFER_DESTINATION_SERVICE,
-            new ServiceImpl(fdst.getProtocol(), new ServiceContactImpl(fdst
-                .getHost()), null));
-        task.addStatusListener(this);
+    public FileCopier(PhysicalFormat src, PhysicalFormat dst, boolean destIsTemporary) {
+        fsrc = (AbsFile) src;
+        fdst = (AbsFile) dst;
+        this.destIsTemporary = destIsTemporary;
     }
 
     public void fail(FutureEvaluationException e) {
@@ -78,20 +74,78 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
         return closed;
     }
 
-    public void start() throws IllegalSpecException,
+    public boolean start() throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        fth.submit(task);
+        if (!destIsTemporary || !tryLink(fsrc, fdst)) {
+            FileTransferSpecification fts = new FileTransferSpecificationImpl();
+            fts.setDestinationDirectory(fdst.getDirectory());
+            fts.setDestinationFile(fdst.getName());
+            fts.setSourceDirectory(fsrc.getDirectory());
+            fts.setSourceFile(fsrc.getName());
+            fts.setThirdPartyIfPossible(true);
+            task = new FileTransferTask();
+            task.setSpecification(fts);
+            task.setService(Service.FILE_TRANSFER_SOURCE_SERVICE, new ServiceImpl(
+                fsrc.getProtocol("file"), new ServiceContactImpl(fsrc.getHost("localhost")), null));
+            task.setService(Service.FILE_TRANSFER_DESTINATION_SERVICE,
+                new ServiceImpl(fdst.getProtocol("file"), new ServiceContactImpl(fdst
+                    .getHost("localhost")), null));
+            task.addStatusListener(this);
+            synchronized(FileCopier.class) {
+                running++;
+            }
+            fth.submit(task);
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+
+    private boolean tryLink(AbsFile fsrc, AbsFile fdst) {
+        if (!canLink) {
+            return false;
+        }
+        if (!isLocal(fsrc) || !isLocal(fdst)) {
+            return false;
+        }
+        try {
+            // delete destination; the behavior of a file copy would be 
+            // destructive, and we want that
+            String dstPath = fdst.getAbsolutePath();
+            new File(dstPath).delete();
+            String srcPath = fsrc.getAbsolutePath();
+            if (logger.isDebugEnabled()) {
+                logger.debug("LINK src=" + srcPath + " dst=" + dstPath);
+            }
+            SymLinker.symLink(srcPath, dstPath);
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isLocal(AbsFile f) {
+        return "file".equals(f.getProtocol("file"));
     }
 
     public void close() {
         closed = true;
         notifyListeners();
     }
+    
+    public static int getRunning() {
+        return running;
+    }
 
     public void statusChanged(StatusEvent event) {
         Status s = event.getStatus();
         if (s.isTerminal()) {
+            synchronized(FileCopier.class) {
+                running--;
+            }
             if (s.getStatusCode() == Status.COMPLETED) {
                 close();
             }

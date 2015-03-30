@@ -35,7 +35,7 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.mapping.RootHandle;
 
-public class ConcurrentMapper extends AbstractFileMapper {	
+public class ConcurrentMapper extends AbstractFileMapper {		
     private Map<Path, PhysicalFormat> remappedPaths;
     private LWThread thread;
 
@@ -92,7 +92,7 @@ public class ConcurrentMapper extends AbstractFileMapper {
 
     @Override
     public boolean canBeRemapped(Path path) {
-        return true;
+        return false;
     }
 
     @Override

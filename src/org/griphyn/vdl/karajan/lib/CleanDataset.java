@@ -42,6 +42,7 @@ public class CleanDataset extends SwiftFunction {
 	        // signals that everything is done and the main program should wait for the
 	        // garbage collector to finish everything
 	        try {
+	            FileGarbageCollector.getDefault().clean();
                 FileGarbageCollector.getDefault().waitFor();
             }
             catch (InterruptedException e) {

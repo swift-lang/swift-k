@@ -1,0 +1,232 @@
+2015-03-27 11:25:25,628-0500 INFO  Loader JAVA Oracle Corporation Java HotSpot(TM) 64-Bit Server VM 1.7.0_25
+2015-03-27 11:25:25,629-0500 INFO  Loader VERSION Swift trunk git-rev: d8176f80adceb6c5714b35f0b1f513c6c9819365 heads/master 6268 (modified locally)
+2015-03-27 11:25:25,629-0500 INFO  Loader RUN_ID run001
+2015-03-27 11:25:25,629-0500 INFO  Loader ARGUMENTS [-runid, run001, -logfile, /home/yadu/src/swift-k/docs/siteguide2/example_code/run001/swift.log, -config, midway.conf, hello.swift]
+2015-03-27 11:25:25,629-0500 INFO  Loader MAX_HEAP 954466304
+2015-03-27 11:25:25,629-0500 INFO  Loader GLOBUS_HOSTNAME borgmachine
+2015-03-27 11:25:25,629-0500 INFO  Loader CWD /home/yadu/src/swift-k/docs/siteguide2/example_code/.
+2015-03-27 11:25:25,631-0500 DEBUG Loader SWIFT_CONFIGURATION 
+[D] /home/yadu/src/swift-k/dist/swift-svn/etc/swift.conf
+[R] midway.conf
+[C] <Command Line>
+{
+	TCPPortRange: "50000,51000"                                # [R] line 27
+	alwaysTransferWrapperLog: true                             # [R] line 32
+	executionRetries: 0                                        # [R] line 29
+	fileOperationsThrottle: 8                                  # [D] line 121
+	fileTransfersThrottle: 4                                   # [D] line 107
+	hostJobSubmitThrottle: 2                                   # [D] line 95
+	jobSubmitThrottle: 4                                       # [D] line 83
+	keepSiteDir: true                                          # [R] line 30
+	lazyErrors: false                                          # [R] line 28
+	logProvenance: false                                       # [D] line 200
+	maxForeachThreads: 16384                                   # [D] line 194
+	providerStagingPinSwiftFiles: false                        # [R] line 31
+	replicationEnabled: false                                  # [D] line 146
+	replicationLimit: 3                                        # [D] line 157
+	replicationMinQueueTime: 60                                # [D] line 153
+	site {
+		local {
+			app.ALL.executable: "*"                                  # [D] line 232
+			execution.type: "local"                                  # [D] line 223
+			filesystem.type: "local"                                 # [D] line 226
+			workDirectory: "swiftwork"                               # [D] line 229
+		}
+		midway {
+			app.ALL.executable: "*"                                  # [R] line 24
+			execution {
+				URL: "swift.rcc.uchicago.edu"                           # [R] line 9
+				jobManager: "ssh-cl:slurm"                              # [R] line 10
+				options {
+					jobQueue: "sandyb"                                     # [R] line 16
+					maxJobTime: "00:25:00"                                 # [R] line 17
+					maxJobs: 1                                             # [R] line 12
+					maxNodesPerJob: 1                                      # [R] line 14
+					nodeGranularity: 1                                     # [R] line 13
+					tasksPerNode: 1                                        # [R] line 15
+				}
+				type: "coaster"                                         # [R] line 8
+			}
+			initialParallelTasks: 100                                # [R] line 23
+			maxParallelTasks: 101                                    # [R] line 22
+			staging: "local"                                         # [R] line 20
+			workDirectory: "/tmp/yadunand"                           # [C]
+		}
+	}
+	sites: [midway]                                            # [R] line 1
+	tracingEnabled: false                                      # [D] line 51
+}
+
+2015-03-27 11:25:25,631-0500 DEBUG textfiles BEGIN SWIFTSCRIPT:
+type file;
+
+app (file out) echoToFile (string str)
+{
+    echo str stdout=@out;
+}
+
+int count = toInt(arg("N", "4"));
+
+file output[] <simple_mapper; location="outputs", prefix="hello.", suffix=".out">;
+
+foreach index in [1:count]
+{
+    output[index] = echoToFile ("Hello World!");
+}
+
+
+
+2015-03-27 11:25:25,631-0500 DEBUG textfiles END SWIFTSCRIPT:
+2015-03-27 11:25:25,631-0500 INFO  Loader hello.swift: source file is new. Recompiling.
+2015-03-27 11:25:26,726-0500 INFO  Loader RUN_START
+2015-03-27 11:25:26,730-0500 INFO  SwiftExecutor swift.home = /home/yadu/src/swift-k/dist/swift-svn
+2015-03-27 11:25:26,752-0500 INFO  AbstractScheduler Setting resources to: {midway=midway}
+2015-03-27 11:25:26,764-0500 INFO  GlobalSubmitQueue No global submit throttle set. Using default (1024)
+2015-03-27 11:25:26,785-0500 INFO  LateBindingScheduler jobs queued: 0
+2015-03-27 11:25:26,786-0500 INFO  LateBindingScheduler jobs queued: 0
+2015-03-27 11:25:26,787-0500 INFO  LateBindingScheduler jobs queued: 0
+2015-03-27 11:25:26,800-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 124387328, UsedHeap: 21909952, JVMThreads: 16
+2015-03-27 11:25:26,800-0500 INFO  RuntimeStats$ProgressTicker 
+2015-03-27 11:25:26,807-0500 DEBUG swift FOREACH_IT_START line=12 thread=R-4-0
+2015-03-27 11:25:26,807-0500 DEBUG swift SCOPE thread=R-4-0
+2015-03-27 11:25:26,807-0500 DEBUG swift FOREACH_IT_START line=12 thread=R-4-2
+2015-03-27 11:25:26,807-0500 DEBUG swift SCOPE thread=R-4-2
+2015-03-27 11:25:26,807-0500 DEBUG swift PROCEDURE line=3 thread=R-4-2 name=echoToFile
+2015-03-27 11:25:26,807-0500 DEBUG swift PROCEDURE line=3 thread=R-4-0 name=echoToFile
+2015-03-27 11:25:26,808-0500 DEBUG swift FOREACH_IT_START line=12 thread=R-4-3
+2015-03-27 11:25:26,808-0500 DEBUG swift SCOPE thread=R-4-3
+2015-03-27 11:25:26,808-0500 DEBUG swift FOREACH_IT_START line=12 thread=R-4-1
+2015-03-27 11:25:26,808-0500 DEBUG swift SCOPE thread=R-4-1
+2015-03-27 11:25:26,808-0500 DEBUG swift PROCEDURE line=3 thread=R-4-3 name=echoToFile
+2015-03-27 11:25:26,808-0500 DEBUG swift PROCEDURE line=3 thread=R-4-1 name=echoToFile
+2015-03-27 11:25:26,809-0500 DEBUG swift JOB_INIT jobid=echo-cf6nmi6m tr=echo
+2015-03-27 11:25:26,809-0500 DEBUG swift JOB_INIT jobid=echo-ef6nmi6m tr=echo
+2015-03-27 11:25:26,809-0500 DEBUG swift JOB_INIT jobid=echo-ff6nmi6m tr=echo
+2015-03-27 11:25:26,809-0500 DEBUG swift JOB_INIT jobid=echo-df6nmi6m tr=echo
+2015-03-27 11:25:26,809-0500 DEBUG swift JOB_SITE_SELECT jobid=echo-df6nmi6m
+2015-03-27 11:25:26,809-0500 DEBUG swift JOB_SITE_SELECT jobid=echo-ef6nmi6m
+2015-03-27 11:25:26,809-0500 DEBUG swift JOB_SITE_SELECT jobid=echo-ff6nmi6m
+2015-03-27 11:25:26,809-0500 DEBUG swift JOB_SITE_SELECT jobid=echo-cf6nmi6m
+2015-03-27 11:25:26,813-0500 DEBUG swift THREAD_ASSOCIATION jobid=echo-df6nmi6m thread=R-4-2 host=midway replicationGroup=null
+2015-03-27 11:25:26,813-0500 DEBUG swift THREAD_ASSOCIATION jobid=echo-cf6nmi6m thread=R-4-3 host=midway replicationGroup=null
+2015-03-27 11:25:26,813-0500 DEBUG swift THREAD_ASSOCIATION jobid=echo-ef6nmi6m thread=R-4-1 host=midway replicationGroup=null
+2015-03-27 11:25:26,813-0500 DEBUG swift THREAD_ASSOCIATION jobid=echo-ff6nmi6m thread=R-4-0 host=midway replicationGroup=null
+2015-03-27 11:25:26,814-0500 DEBUG swift JOB_START jobid=echo-df6nmi6m tr=echo arguments=[Hello World!] tmpdir=hello-run001/jobs/e/echo-df6nmi6m host=midway
+2015-03-27 11:25:26,814-0500 DEBUG swift JOB_START jobid=echo-ef6nmi6m tr=echo arguments=[Hello World!] tmpdir=hello-run001/jobs/e/echo-ef6nmi6m host=midway
+2015-03-27 11:25:26,814-0500 DEBUG swift JOB_START jobid=echo-cf6nmi6m tr=echo arguments=[Hello World!] tmpdir=hello-run001/jobs/e/echo-cf6nmi6m host=midway
+2015-03-27 11:25:26,814-0500 DEBUG swift JOB_START jobid=echo-ff6nmi6m tr=echo arguments=[Hello World!] tmpdir=hello-run001/jobs/e/echo-ff6nmi6m host=midway
+2015-03-27 11:25:26,817-0500 INFO  Execute JOB_TASK jobid=echo-df6nmi6m taskid=urn:R-4-2-1427473525634 exec=/bin/bash dir=hello-run001/jobs/e/echo-df6nmi6m args=_swiftwrap.staging -e echo -out outputs/hello.0003.out -err stderr.txt -i -d outputs -if  -of outputs/hello.0003.out -cf  -cdmfile  -status provider -a Hello World!
+2015-03-27 11:25:26,817-0500 INFO  Execute JOB_TASK jobid=echo-cf6nmi6m taskid=urn:R-4-3-1427473525636 exec=/bin/bash dir=hello-run001/jobs/e/echo-cf6nmi6m args=_swiftwrap.staging -e echo -out outputs/hello.0004.out -err stderr.txt -i -d outputs -if  -of outputs/hello.0004.out -cf  -cdmfile  -status provider -a Hello World!
+2015-03-27 11:25:26,817-0500 INFO  Execute JOB_TASK jobid=echo-ff6nmi6m taskid=urn:R-4-0-1427473525635 exec=/bin/bash dir=hello-run001/jobs/e/echo-ff6nmi6m args=_swiftwrap.staging -e echo -out outputs/hello.0001.out -err stderr.txt -i -d outputs -if  -of outputs/hello.0001.out -cf  -cdmfile  -status provider -a Hello World!
+2015-03-27 11:25:26,817-0500 INFO  Execute JOB_TASK jobid=echo-ef6nmi6m taskid=urn:R-4-1-1427473525637 exec=/bin/bash dir=hello-run001/jobs/e/echo-ef6nmi6m args=_swiftwrap.staging -e echo -out outputs/hello.0002.out -err stderr.txt -i -d outputs -if  -of outputs/hello.0002.out -cf  -cdmfile  -status provider -a Hello World!
+2015-03-27 11:25:26,822-0500 INFO  Execute TASK_STATUS_CHANGE taskid=urn:R-4-2-1427473525634 status=8
+2015-03-27 11:25:26,822-0500 INFO  Execute TASK_STATUS_CHANGE taskid=urn:R-4-0-1427473525635 status=8
+2015-03-27 11:25:26,844-0500 INFO  LocalService Started local service: 127.0.1.1:47861
+2015-03-27 11:25:26,848-0500 INFO  BootstrapService Socket bound. URL is http://borgmachine:56258
+2015-03-27 11:25:26,854-0500 INFO  ServiceManager No standard proxy found. Using AutoCA.
+2015-03-27 11:25:26,957-0500 INFO  AutoCA Shared proxies are disabled. Creating new certificate: /home/yadu/.globus/coasters/proxy.0.pem
+2015-03-27 11:25:26,957-0500 INFO  AutoCA Generating CA key pair
+2015-03-27 11:25:27,212-0500 INFO  AutoCA Self-signing CA certificate
+2015-03-27 11:25:27,229-0500 INFO  AutoCA Generating user key pair
+2015-03-27 11:25:27,264-0500 INFO  AutoCA Signing user certificate
+2015-03-27 11:25:27,272-0500 INFO  AutoCA Generating proxy certificate
+2015-03-27 11:25:27,401-0500 INFO  AutoCA Writing keys, certificates, and proxy
+2015-03-27 11:25:27,801-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 37865632, JVMThreads: 36
+2015-03-27 11:25:27,801-0500 INFO  RuntimeStats$ProgressTicker   Submitting:4
+2015-03-27 11:25:28,801-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 37866112, JVMThreads: 36
+2015-03-27 11:25:29,802-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 37866592, JVMThreads: 36
+2015-03-27 11:25:30,802-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 37867072, JVMThreads: 36
+2015-03-27 11:25:31,802-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 37867552, JVMThreads: 36
+2015-03-27 11:25:32,803-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 37868032, JVMThreads: 36
+2015-03-27 11:25:33,803-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 37868512, JVMThreads: 36
+2015-03-27 11:25:34,803-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 37868992, JVMThreads: 36
+2015-03-27 11:25:35,803-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38032032, JVMThreads: 36
+2015-03-27 11:25:36,804-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38032512, JVMThreads: 36
+2015-03-27 11:25:37,282-0500 INFO  SSHCLProxyForwarder Cleaning up old proxies
+2015-03-27 11:25:37,804-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38065776, JVMThreads: 36
+2015-03-27 11:25:38,804-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38066256, JVMThreads: 36
+2015-03-27 11:25:39,804-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38066736, JVMThreads: 36
+2015-03-27 11:25:40,805-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38067216, JVMThreads: 36
+2015-03-27 11:25:41,805-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38067696, JVMThreads: 36
+2015-03-27 11:25:42,805-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38068176, JVMThreads: 36
+2015-03-27 11:25:43,805-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38231216, JVMThreads: 36
+2015-03-27 11:25:44,806-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38231696, JVMThreads: 36
+2015-03-27 11:25:45,806-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38232176, JVMThreads: 36
+2015-03-27 11:25:46,301-0500 INFO  SSHCLProxyForwarder Removing [/home/yadunand/.globus/sshCAcert-1044707400-1427432568.pem, /home/yadunand/.globus/sshCAcert-1044707400-1427432568.signing_policy, /home/yadunand/.globus/sshproxy-1044707400-1427432568]
+2015-03-27 11:25:46,806-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38452704, JVMThreads: 36
+2015-03-27 11:25:47,807-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38453184, JVMThreads: 36
+2015-03-27 11:25:48,807-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38453664, JVMThreads: 36
+2015-03-27 11:25:49,807-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38454144, JVMThreads: 36
+2015-03-27 11:25:50,808-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38617296, JVMThreads: 36
+2015-03-27 11:25:51,808-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38617776, JVMThreads: 36
+2015-03-27 11:25:52,808-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38618256, JVMThreads: 36
+2015-03-27 11:25:53,808-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38618736, JVMThreads: 36
+2015-03-27 11:25:54,809-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38619216, JVMThreads: 36
+2015-03-27 11:25:55,345-0500 INFO  SSHCLProxyForwarder Copying proxy
+2015-03-27 11:25:55,809-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38953232, JVMThreads: 36
+2015-03-27 11:25:56,809-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38953712, JVMThreads: 36
+2015-03-27 11:25:57,809-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38954192, JVMThreads: 36
+2015-03-27 11:25:57,810-0500 INFO  RuntimeStats$ProgressTicker   Submitting:4
+2015-03-27 11:25:58,810-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 38954672, JVMThreads: 36
+2015-03-27 11:25:59,810-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39117760, JVMThreads: 36
+2015-03-27 11:26:00,810-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39118240, JVMThreads: 36
+2015-03-27 11:26:01,811-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39118720, JVMThreads: 36
+2015-03-27 11:26:02,811-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39119200, JVMThreads: 36
+2015-03-27 11:26:03,714-0500 INFO  SSHCLProxyForwarder Copying certificate
+2015-03-27 11:26:03,811-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39453048, JVMThreads: 36
+2015-03-27 11:26:04,811-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39453528, JVMThreads: 36
+2015-03-27 11:26:05,812-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39454008, JVMThreads: 36
+2015-03-27 11:26:06,812-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39454488, JVMThreads: 36
+2015-03-27 11:26:07,812-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39617576, JVMThreads: 36
+2015-03-27 11:26:08,812-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39618056, JVMThreads: 36
+2015-03-27 11:26:09,813-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39618536, JVMThreads: 36
+2015-03-27 11:26:10,813-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39619016, JVMThreads: 36
+2015-03-27 11:26:11,683-0500 INFO  SSHCLProxyForwarder Copying signing policy file
+2015-03-27 11:26:11,813-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39652280, JVMThreads: 36
+2015-03-27 11:26:12,813-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39652760, JVMThreads: 36
+2015-03-27 11:26:13,814-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39653240, JVMThreads: 36
+2015-03-27 11:26:14,814-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39653720, JVMThreads: 36
+2015-03-27 11:26:15,814-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39816760, JVMThreads: 36
+2015-03-27 11:26:16,815-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39817240, JVMThreads: 36
+2015-03-27 11:26:17,815-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39817720, JVMThreads: 36
+2015-03-27 11:26:18,815-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39818200, JVMThreads: 36
+2015-03-27 11:26:19,816-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 39818680, JVMThreads: 36
+2015-03-27 11:26:20,022-0500 INFO  JobSubmissionTaskHandler SSH-CL cmd-array: [ssh, swift.rcc.uchicago.edu, /bin/bash, -s]
+2015-03-27 11:26:20,816-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 40023176, JVMThreads: 36
+2015-03-27 11:26:21,816-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 40186264, JVMThreads: 36
+2015-03-27 11:26:22,816-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 40186744, JVMThreads: 36
+2015-03-27 11:26:23,816-0500 INFO  RuntimeStats$ProgressTicker HeapMax: 954466304, CrtHeap: 156893184, UsedHeap: 40187224, JVMThreads: 36
+2015-03-27 11:26:24,582-0500 INFO  ServiceManager Service task Task(type=JOB_SUBMISSION, identity=urn:cog-1427473525638) terminated. Removing service.
+2015-03-27 11:26:24,699-0500 INFO  Execute TASK_STATUS_CHANGE taskid=urn:R-4-3-1427473525636 status=8
+2015-03-27 11:26:24,699-0500 INFO  Execute TASK_STATUS_CHANGE taskid=urn:R-4-2-1427473525634 status=1
+2015-03-27 11:26:24,699-0500 INFO  Execute TASK_STATUS_CHANGE taskid=urn:R-4-2-1427473525634 status=2
+2015-03-27 11:26:24,700-0500 INFO  Execute TASK_STATUS_CHANGE taskid=urn:R-4-2-1427473525634 status=5
+2015-03-27 11:26:24,701-0500 INFO  LateBindingScheduler jobs queued: 0
+2015-03-27 11:26:24,702-0500 INFO  LateBindingScheduler jobs queued: 0
+2015-03-27 11:26:24,702-0500 INFO  ServiceManager Standard proxy file found. Disabling AutoCA.
+2015-03-27 11:26:24,702-0500 INFO  JobSubmissionTaskHandler SSH-CL cmd-array: [ssh, swift.rcc.uchicago.edu, /bin/bash, -s]
+2015-03-27 11:26:24,702-0500 INFO  LateBindingScheduler jobs queued: 0
+2015-03-27 11:26:24,703-0500 DEBUG swift APPLICATION_EXCEPTION jobid=echo-df6nmi6m - Application exception: 
+	exception @ swift-int-staging.k, line: 160
+Caused by: null
+Caused by: org.globus.cog.abstraction.impl.common.task.TaskSubmissionException: Could not submit job
+Caused by: org.globus.cog.abstraction.impl.common.task.TaskSubmissionException: Could not start coaster service
+Caused by: org.globus.cog.abstraction.impl.common.task.TaskSubmissionException: Task ended before registration was received. 
+Failed to download bootstrap jar from http://borgmachine:56258
+
+
+ * keychain 2.7.1 ~ http://www.funtoo.org
+ * Found existing ssh-agent: 5768
+ * Found existing gpg-agent: 5793
+ * Known ssh key: /home/yadunand/.ssh/id_rsa
+
+
+ * keychain 2.7.1 ~ http://www.funtoo.org
+ * Found existing ssh-agent: 5768
+ * Found existing gpg-agent: 5793
+ * Known ssh key: /home/yadunand/.ssh/id_rsa
+
+
+2015-03-27 11:26:24,703-0500 INFO  swift END_FAILURE thread=R-4-2 tr=echo
+2015-03-27 11:26:24,704-0500 INFO  Loader Swift finished with errors
+2015-03-27 11:26:24,705-0500 INFO  ServiceManager Cleaning up...

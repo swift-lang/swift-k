@@ -63,9 +63,19 @@ public abstract class AbstractFileNameElementMapper implements FileNameElementMa
 
     private String encode(byte[] buf) {
         buf = Base64.encode(buf);
-        char[] c = new char[buf.length];
-        for (int i = 0; i < buf.length; i++) {
+        int len;
+        if (buf[buf.length - 1] == '=') {
+            len = buf.length - 1;
+        }
+        else {
+            len = buf.length;
+        }
+        char[] c = new char[len];
+        for (int i = 0; i < len; i++) {
             c[i] = (char) buf[i];
+            if (c[i] == '/') {
+                c[i] = '-';
+            }
         }
         return String.copyValueOf(c);
     }

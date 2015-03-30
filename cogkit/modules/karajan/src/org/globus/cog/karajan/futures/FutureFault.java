@@ -29,26 +29,20 @@
 package org.globus.cog.karajan.futures;
 
 import k.rt.ConditionalYield;
-import k.rt.FutureValue;
+import k.rt.Future;
 
 public class FutureFault extends ConditionalYield {
 	private static final long serialVersionUID = -6674574531012966783L;
 	
-	private FutureValue fv;
 	public static long count;
 
-	public FutureFault(FutureValue f) {
+	public FutureFault(Future f) {
 		this(f, null);
 		count++;
 	}
 	
-	public FutureFault(FutureValue f, String op) {
+	public FutureFault(Future f, String op) {
 		super(f);
-		this.fv = f;
 		count++;
-	}
-	
-	public FutureValue getFutureValue() {
-		return fv;
 	}	
 }
