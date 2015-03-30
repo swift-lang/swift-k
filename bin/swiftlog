@@ -50,6 +50,10 @@ class Config:
     key = ''
     value = ''
 
+class File:
+    fileId     = ''
+    fileName   = ''
+    
 # Dictionary containing all tasks
 tasks = {}
 taskCounter = 1
@@ -322,8 +326,8 @@ if importProv:
                 direction="IN"
                 fileName=string.replace(canonicalFileName(f), 'file://localhost/', '')
                 insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId, runIsNewSQLite, runIsNewPgSQL)
-                
-            for f in iter(t.stageOut.split(" ")):
+
+            for f in iter(t.stageOut.split()):
                 direction="OUT"
                 fileName=canonicalFileName(f)
                 insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId, runIsNewSQLite, runIsNewPgSQL)
@@ -338,7 +342,7 @@ if importProv:
                                                                               '\'' + a.strip() + '\');"')
             # Extracts resource usage information from wrapper logs
             noWrapperLog=False
-            wrapperLogFileName=runDirName + "/" + scriptFileName.rstrip('.swift') + "-" + runDirName + ".d/" + t.workdir.split('/')[3] + "-info"
+            wrapperLogFileName=runDirName + "/" + os.path.splitext(scriptFileName)[0] + "-" + runDirName + ".d/" + t.workdir.split('/')[3] + "-info"
             if not(os.path.exists(wrapperLogFileName)):
                 noWrapperLog=True
             else:
