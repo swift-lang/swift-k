@@ -1,3 +1,6 @@
 [submodule "docs/swift-tutorial"]
 	path = docs/swift-tutorial
 	url = git@github.com:swift-lang/swift-tutorial.git
+[submodule "cogkit/modules/provider-localscheduler/libexec/radical-pilot-provider"]
+	path = cogkit/modules/provider-localscheduler/libexec/radical-pilot-provider
+	url = git@github.com:radical-cybertools/aimes.swiftrp.git
