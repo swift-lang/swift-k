@@ -2,7 +2,7 @@ type file;
 
 app (file out, file err) remote_driver (file wrapper)
 {
-    bash @wrapper stdout=@filename(out) stderr=@filename(err);
+    bash @wrapper stdout=@out stderr=@err;
 }
 
 file driver_out[] <simple_mapper; prefix="sanity", suffix=".out">;
