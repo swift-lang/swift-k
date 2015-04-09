@@ -114,6 +114,11 @@
             <fileset dir="${cog.dir}/modules/provider-localscheduler/libexec/gce-cloud-provider"/>
         </copy>
 
+        <mkdir dir="${dist.dir}/libexec/radical-pilot-provider"/>
+        <copy todir="${dist.dir}/libexec/radical-pilot-provider">
+            <fileset dir="${cog.dir}/modules/provider-localscheduler/libexec/radical-pilot-provider"/>
+        </copy>
+
 
 		<copy todir="${dist.dir}/bin">
 			<fileset dir="${module.dir}/bin"/>
@@ -283,6 +288,11 @@
         <chmod perm="+x" file="${dist.dir}/libexec/gce-cloud-provider/stsubmit.sh"/>
         <chmod perm="+x" file="${dist.dir}/libexec/gce-cloud-provider/ststat.sh"/>
         <chmod perm="+x" file="${dist.dir}/libexec/gce-cloud-provider/stcancel.sh"/>
+
+        <chmod perm="+x" file="${dist.dir}/libexec/radical-pilot-provider/stsubmit"/>
+        <chmod perm="+x" file="${dist.dir}/libexec/radical-pilot-provider/ststat"/>
+        <chmod perm="+x" file="${dist.dir}/libexec/radical-pilot-provider/stcancel"/>
+
 	</target>
 
 	<target name="antlr">

@@ -34,9 +34,16 @@ app."*" {
 		ppn: "?StrictlyPositiveInt"
 		pbs.properties: "?String"
 		condor: "?Object"
+        radical-pilot{
+            mongodb: "?String"
+                 resource: "?String"
+                runtime : "?StrictlyPositiveInt"
+                cores   : "?StrictlyPositiveInt"
+                cleanup : "?Boolean"
+                "*"     : "?Object"
+        }
 		"*": "?Object"
 	}
-
 	env."*": "String"
 }
 
@@ -101,13 +108,15 @@ site."*" {
 			workerLoggingLevel: "?Choice[ERROR, WARN, INFO, DEBUG, TRACE]"
 			workerLoggingDirectory: "?String"
 			softImage: "?String"
+
+            # jobOptions only apply to coaster jobs
 			jobOptions {
 				"*": "?Object"
 				# known things
 				pbs {
 					"*": "?Object"
 					aprun: "?Boolean"
-					mpp: "?Boolean"	
+					mpp: "?Boolean"
 					properties: "?String"
 				}
 				depth: "?StrictlyPositiveInt"
@@ -115,7 +124,6 @@ site."*" {
 				condor {
 					"*": "?Object"
 				}
-
                 # Required ec2 configs :
                 ec2CredentialsFile: "?String"
                 ec2WorkerImage: "?String"
@@ -155,7 +163,7 @@ site."*" {
 			pbs {
 				"*": "?Object"
 				aprun: "?Boolean"
-				mpp: "?Boolean"	
+				mpp: "?Boolean"
 				properties: "?String"
 			}
 			depth: "?StrictlyPositiveInt"
@@ -163,7 +171,15 @@ site."*" {
 			condor {
 				"*": "?Object"
 			}
-			"*": "?Object"
+            radical-pilot{
+                mongodb: "?String"
+                resource: "?String"
+                runtime : "?StrictlyPositiveInt"
+                cores   : "?StrictlyPositiveInt"
+                cleanup : "?Boolean"
+                "*"     : "?Object"
+            }
+            "*": "?Object"
 		}
 
 		env."*": "String"
