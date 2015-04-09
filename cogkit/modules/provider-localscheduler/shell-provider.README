@@ -202,10 +202,10 @@ an error should be produced.
 	1 - always: stage out the file whether the job succeeds or 
 	not. If the file cannot be staged out, produce an error
 	2 - if present: stage out the file only if it can be found
-	3 - on error: only attempt to stage out the file if the job
+	4 - on error: only attempt to stage out the file if the job
 	fails; produce an error if the job failed and the file cannot
 	be staged-out
-	4 - on success: like "on error" except if the job succeeds.
+	8 - on success: like "on error" except if the job succeeds.
 
 *cleanup=<path>
 	A list of files and or directories to be deleted after the
