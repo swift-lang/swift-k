@@ -301,6 +301,16 @@ public final class NativeParser {
             lex.nextChar();
         }
     }
+    
+    private void skipCaseInsensitive(String str) throws ParsingException {
+        for (int i = 0; i < str.length(); i++) {
+            char l = lex.peekChar();
+            if (Character.toLowerCase(str.charAt(i)) != Character.toLowerCase(l)) {
+                throw buildException("Expected " + str);
+            }
+            lex.nextChar();
+        }
+    }
 
     private boolean match(char c) {
         char l = lex.peekChar();
@@ -554,13 +564,13 @@ public final class NativeParser {
         if (lex.peekChar() == '.') {
             fractionalPart();
         }
-        if (lex.peekChar() == 'e') {
+        if (lex.peekChar() == 'e' || lex.peekChar() == 'E') {
             exponent();
         }
     }
 
     private void exponent() throws ParsingException {
-        skip("e");
+        skipCaseInsensitive("e");
         char c = lex.peekChar();
         if (c == '-' || c == '+') {
             signedIntegerLiteral();
