@@ -30,6 +30,7 @@ package org.globus.cog.karajan.parser;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -183,8 +184,9 @@ public final class WrapperNode {
 	public Node compile(Node parent, Scope scope) throws CompilationException {
 		try {
 			if (compiled) {
-				throw new CompilationException(this ,"Already compiled");
+				throw new CompilationException(this, "Already compiled");
 			}
+			setPropertiesFromArgs();
 			compiled = true;
 			Node self = scope.resolve(this.getNodeType());
 			self.setParent(parent);
@@ -196,6 +198,43 @@ public final class WrapperNode {
 		}
 	}
 	
+	private void setPropertiesFromArgs() throws CompilationException {
+		Iterator<WrapperNode> i = nodes.iterator();
+		while (i.hasNext()) {
+			WrapperNode c = i.next();
+			if (c.getNodeType().equals("k:named")) {
+				if (checkProperty(c)) {
+					i.remove();
+				}
+			}
+		}
+	}
+
+	private boolean checkProperty(WrapperNode c) throws CompilationException {
+    	WrapperNode name = c.getNode(0);
+    	String k = (String) name.getProperty(WrapperNode.TEXT);
+    	if (k != null && k.startsWith("#")) {
+    		WrapperNode value = c.getNode(1);
+    		setProperty(k.substring(1), getValue(value));
+    		return true;
+    	}
+    	else {
+    		return false;
+    	}
+	}
+	
+	private Object getValue(WrapperNode n) throws CompilationException {
+		if (n.getNodeType().equals("k:num")) {
+			return Integer.parseInt((String) n.getProperty(WrapperNode.TEXT));
+		}
+		else if (n.getNodeType().equals("k:str")) {
+			return n.getProperty(WrapperNode.TEXT);
+		}
+		else {
+			throw new CompilationException(n, "Can't handle property node " + n.getNodeType());
+		}
+	}
+
 	public String getText() {
 		return (String) getProperty(TEXT);
 	}
