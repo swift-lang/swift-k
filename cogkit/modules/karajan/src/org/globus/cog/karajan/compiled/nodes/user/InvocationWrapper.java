@@ -89,6 +89,7 @@ public class InvocationWrapper extends InternalFunction {
                             runBody(thr);
                         }
                         catch (ExecutionException e) {
+                        	e.push(this);
                             throw e;
                         }
                         catch (RuntimeException e) {
