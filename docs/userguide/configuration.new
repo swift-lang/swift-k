@@ -5,6 +5,7 @@ Swift is mainly configured using a configuration file, typically called *swift.c
 This file contains configuration properties and site descriptions. A simple 
 configuration file may look like this:
 
+[listing,swiftconf]
 -----
 site.mysite {
     execution {
@@ -46,6 +47,7 @@ represent other values: +true+, +false+, +null+, and numbers.
 Comments can be introduced by starting a line with a hash symbol (+#+) or using
 a double slash (+//+):
 
+[listing,swiftconf]
 -----
 # This is a comment
 // This is also a comment
@@ -62,6 +64,7 @@ by a quoted string containing the path to the target file. The path may contain
 references to environment variables or system properties using the substitution
 syntax explained above. For example:
 
+[listing,swiftconf]
 -----
 # an absolute path name
 include "/home/joedoe/swift-config/site1.conf"
@@ -81,6 +84,7 @@ If two properties with the same name are present in a configuration file, they a
 merged or the latter one overrides the earlier one. This depends on the type of property.
 Simple values are always overridden, while objects are merged. For example:
 
+[listing,swiftconf]
 -----
 key: 1
 key: 2
@@ -103,6 +107,7 @@ those sites. For example, assume +swift-local.conf+ includes a definition for a 
 +local+ that can be used to run applications on the Swift client side. If you wanted to override 
 only the work directory, the following +swift.conf+ could be used:
 
+[listing,swiftconf]
 -----
 include "swift-local.conf"
 
@@ -115,6 +120,7 @@ site.local {
 If, on the other hand, you want to fully override the definition of +site.local+, you could
 set it to +null+ first and then provide your own definition:
 
+[listing,swiftconf]
 -----
 include "swift-local.conf"
 
@@ -151,6 +157,7 @@ the +-configpath+ command line argument. The value passed to +-configpath+ must 
 list of paths pointing to various configuration files, separated by the standard
 operating system path separator (+':'+ on Linux and +';'+ on Windows). For example:
 
+[listing,shell]
 -----
 swift -configpath /etc/swift/swift.conf:~/swift-configs/s1.conf:swift.conf
 -----
@@ -180,6 +187,7 @@ Swift site declarations are specified using the +site.<name>+ property, where te
 inside angle brackets is to be interpreted as a generic label for user-specified
 content, whereas content between square brackets is optional:
 
+[listing,swiftconf]
 -----
 site.<name> {
     execution {...}
@@ -195,6 +203,7 @@ site.<name> {
 A site name can be any string. If the string contains special characters, it must be 
 quoted:
 
+[listing,swiftconf]
 -----
 site."My-$pecial-$ite" {...}
 -----
@@ -206,6 +215,7 @@ Once sites are declared, they must be explicitly enabled for Swift to use them. 
 can be achieved with the +sites+ option, which accepts either an array or a comma-separated
 list of site names:
 
+[listing,swiftconf]
 -----
 sites: ["site1", "site2"]
 
@@ -216,6 +226,7 @@ sites: "site1, site2"
 
 The +sites+ option can also be specified on the Swift command line:
 
+[listing,shell]
 -----
 swift -sites site1,site2 script.swift
 -----
@@ -225,6 +236,7 @@ Execution Mechanism
 
 The +execution+ property tells Swift how applications should be executed on a site:
 
+[listing,swiftconf]
 -----
     execution {
         type: <string>
@@ -291,6 +303,7 @@ on application should be executed. They depend on the chosen mechanism and are d
 Coasters options, such as +nodeGranularity+ or +softImage+, would
 be specified. Example:
 
+[listing,swiftconf]
 -----
 execution {
     type: "coaster"
@@ -496,6 +509,7 @@ Application Declarations
 Applications can either be declared globally, outside of a site declaration,
 or specific to a site, inside a site declaration:
 
+[listing,swiftconf]
 ------
 app.(<appName>|ALL) {
     # global application
@@ -522,6 +536,7 @@ application on other sites.
 
 An application declaration takes the following form:
 
+[listing,swiftconf]
 -----
 app.<appName> {
     executable: (<string>|"*")
@@ -543,6 +558,7 @@ envirnoment variable on the remote site.
 
 The following example illustrates how options are inherited:
 
+[listing,swiftconf]
 ------
     # global app options
     app.ALL {
@@ -578,12 +594,14 @@ The following example illustrates how options are inherited:
 
 Environment variables can be defined as follows:
 
+[listing,swiftconf]
 -----
     env.<name>: <value>
 -----
 
 For example:
 
+[listing,swiftconf]
 -----
     env.LD_LIBRARY_PATH: "/home/joedoe/lib"
 -----
@@ -829,6 +847,7 @@ App Options
 Example
 +++++++
 
+[listing,swiftconf]
 ------
     site.local {
         execution {
@@ -901,6 +920,7 @@ For a complete list and description of these options, please see the
 Example
 +++++++
 
+[listing,swiftconf]
 ------
     site.example {
         execution {
@@ -949,6 +969,7 @@ N/A
 Example
 +++++++
 
+[listing,swiftconf]
 ------
     site.example {
         execution {
@@ -987,6 +1008,7 @@ N/A
 Example
 +++++++
 
+[listing,swiftconf]
 ------
     site.example {
         execution {
@@ -1045,6 +1067,7 @@ App Options
 Example
 +++++++
 
+[listing,swiftconf]
 ------
     site.pbs {
         execution {
@@ -1099,6 +1122,7 @@ App Options
 Example
 +++++++
 
+[listing,swiftconf]
 ------
     site.condor {
         execution {
@@ -1203,6 +1227,7 @@ N/A
 Example
 +++++++
 
+[listing,swiftconf]
 ------
     site.condor {
         execution {

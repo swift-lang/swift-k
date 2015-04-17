@@ -1,2 +1,191 @@
 a:link { color:navy; }
 a:visited { color:navy; }
+
+body {
+	position: relative;
+	margin-right: auto;
+	margin-left: auto;
+	margin-bottom: 0;
+	margin-top: 0;
+	width: 980px;
+	background-color: #e7e7e7;
+}
+
+#toctitle {
+	display: none;
+	visibility: hidden;
+}
+
+#toc {
+	position: fixed;
+	top: 36px;
+	bottom: 0px;
+	overflow: auto;
+	width: 230px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 0;
+	margin-top: 0;
+	font-family: myriad-pro-1, myriad-pro-2, Arial, Helvetica, sans-serif;
+	/*font-family: Helvetica;*/
+	background-color: #ffffff;
+}
+
+#toc a {
+	text-decoration: none;
+	font-size: 80%;
+	line-height: 150%;
+}
+
+.toclevel1 {
+	padding-left: 4px;
+	font-weight: bold;
+	padding-top: 8px;
+	padding-bottom: 4px;
+}
+
+.toclevel2 {
+	padding-left: 12px;
+}
+
+#toc .toclevel1 a {
+	color: #808080;
+}
+
+#toc .toclevel2 a {
+	color: #808080;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+#toc .toclevel1 a.active {
+	color: #000000;
+}
+
+#toc .toclevel2 a.active {
+	color: #000000;
+	background-color: #d0d0ff;
+	border-radius: 4px;
+	padding-bottom: 1px;
+	padding-top: 3px;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+#header {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	padding: 0px 0px 0px 0px;
+	background: url("http://swift-lang.org/images/bg_page.png") repeat-x;
+	background-size: 1px 180px;
+	height: 36px;
+	width: 100%;
+	z-index: 1;
+}
+
+#header #hcontainer {
+	position: relative;
+	display: block;
+	top: 0px;
+	margin-left: auto;
+	margin-right: auto;
+	width: 970px;
+}
+
+#header h1 {
+	position: absolute;
+	left: 100px;
+	top: 0px;
+	display: block;
+	font-size: 100%;
+	font-weight: 400;
+	font-family: myriad-pro-1, myriad-pro-2, Arial, Helvetica, sans-serif;
+	color: white;
+	z-index: 2;
+}
+
+#header img {
+	position: absolute;
+	top: 0px;
+	height: 36px;
+	display: block;
+	left: -20px;
+}
+
+#content {
+	position: absolute;
+	top: 33px;
+	padding-top: 33px;
+	padding-left: 16px;
+	padding-right: 16px;
+	margin-left: 232px;
+	width: 720px;
+	overflow: auto;
+	margin-right: auto;
+	font-family: myriad-pro-1, myriad-pro-2, Arial, Helvetica, sans-serif;
+	/*font-family: Helvetica;*/
+	font-size: 90%;
+	background-color: #ffffff;
+	min-height: calc(100% - 173px);
+	min-height: -moz-calc(100% - 173px);
+	min-height: -webkit-calc(100% - 173px);
+	min-height: -o-calc(100% - 173px);
+	line-height: 140%;
+}
+
+#content .sect2 .paragraph {
+	color: #404040;
+}
+
+#content .listingblock code {
+	margin-left: 32px;
+	line-height: 140%;
+	padding: 8px;
+	background-color: #f7f7f7;
+	border: thin solid #d0d0d0;
+	border-radius: 3px;
+	width: 520px;
+	display: block;
+}
+
+#content h2 {
+	font-weight: 500;
+}
+
+#content h3 {
+	font-weight: 500;
+	margin-top: 32pt;
+}
+
+#footnotes {
+	position: fixed;
+	bottom: 12px;
+	left: 250px;
+}
+
+#footer {
+	display: none;
+	visibility: hidden;
+}
+
+.sect1 {
+	display: none;
+	visibility: hidden;
+	padding-bottom: 128px;
+}
+
+.nav-prev {
+	padding-top: 32px;
+	float: left;
+}
+
+.nav-next {
+	padding-top: 32px;
+	float: right;
+}
+
+.nav-prev a, .nav-next a {
+	text-decoration: none;
+}

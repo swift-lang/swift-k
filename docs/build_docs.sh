@@ -61,6 +61,14 @@ if [ ! -d "$INSTALLATION_DIRECTORY" ]; then
    chmod $CHMOD_DIRECTORY_MODE $INSTALLATION_DIRECTORY > /dev/null 2>&1
 fi
 
+mkdir -p tmp
+
+rm -f tmp/asciidoc.js
+rm -f tmp/asciidoc.css
+
+cat `ls scripts/*.js` > tmp/asciidoc.js
+cat stylesheets/*.css > tmp/asciidoc.css
+
 unamestr=`\uname`
 if [[ "$unamestr" == 'Linux' ]]; then
    pushd $(dirname $(readlink -f $0)) > /dev/null 2>&1
@@ -70,8 +78,9 @@ fi
 
 # Gather version information
 pushd .. > /dev/null 2>&1
-VERSION=`svn info |grep URL|awk -F / '{print $NF}'`
+VERSION=`libexec/svn-revision |awk '{print $1}'`
 popd > /dev/null 2>&1
+echo Version is $VERSION
 echo Installing docs into $INSTALLATION_DIRECTORY
 
 # Convert files
@@ -81,15 +90,18 @@ do
    FILES=`ls -1 *.txt 2>/dev/null`
    for file in $FILES
    do
-      echo Converting $directory"$file" to HTML
+      echo Converting "$directory/$file" to HTML
       asciidoc -a toc -a toclevels=2                            \
                -a max-width=750px                               \
                -a textwidth=80                                  \
-               -a stylesheet=$(pwd)/../stylesheets/asciidoc.css \
+               -a source-highlighter=$(pwd)/../tools/hlfilter   \
+               -a stylesdir=$(pwd)/../tmp/                      \
+               -a scriptsdir=$(pwd)/../tmp/                     \
+               -f $(pwd)/../asciidoc.conf                       \
                $file
       if (( MAKE_PDF ))
       then
-        echo Converting $directory"$file" to PDF
+        echo Converting "$directory/$file" to PDF
         a2x --format=pdf --no-xmllint $file
       fi
    done
@@ -116,3 +128,5 @@ popd > /dev/null 2>&1
 
 find $INSTALLATION_DIRECTORY/$VERSION -type f -exec chgrp $GROUP {} \; -exec chmod $CHMOD_FILE_MODE {} \; > /dev/null 2>&1
 find $INSTALLATION_DIRECTORY/$VERSION -type d -exec chgrp $GROUP {} \; -exec chmod $CHMOD_DIRECTORY_MODE {} \; > /dev/null 2>&1
+
+rm -rf tmp
