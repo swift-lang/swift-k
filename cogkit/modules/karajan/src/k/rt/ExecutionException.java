@@ -32,8 +32,8 @@ import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-
 
 import org.globus.cog.karajan.compiled.nodes.Node;
 
@@ -169,6 +169,10 @@ public class ExecutionException extends RuntimeException {
 				sb.append('\n');
 			}
 		}
+	}
+	
+	public List<Node> getTrace() {
+		return trace;
 	}
 
 	private void appendJavaException(StringBuffer sb, Throwable cause) {
