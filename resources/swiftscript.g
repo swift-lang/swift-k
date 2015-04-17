@@ -761,7 +761,7 @@ predictProcedurecallStatAssignManyReturnParam:
 ;
 
 predictProcedurecallStatAssignManyReturnOutput {StringTemplate s;}:
-	ID (ASSIGN s=expression)?
+	ID (ID)? (ASSIGN s=expression)?
 ;
 
 procedurecallStatAssignManyReturnParam [StringTemplate s]
