@@ -318,6 +318,41 @@ arrayInitializer returns [StringTemplate code=template("arrayInit")]
     RBRACK
     ;
 
+// there are two places where this can be used. One is
+// structure initializers and the other is sparse array initializers.
+// they differ based on the key type, which are identifiers for structs
+// and expressions for arrays.
+// The empty struct/array "{}" is ambiguous, so the determination
+// of whether this is a struct initializer or sparse array initializer
+// is made by the compiler rather than the parser 
+structInitializer returns [StringTemplate code = template("structInit")]
+	{
+		StringTemplate key = null, expr = null;
+		code.setAttribute("sourcelocation", "line " + swiftLexer.getLine());
+	}
+    :    
+    	LCURLY
+    	(
+    		key = expression COLON expr = expression
+    		{
+    			StringTemplate fieldInit = template("structFieldInit");
+    			fieldInit.setAttribute("key", key);
+    			fieldInit.setAttribute("value", expr);
+    			code.setAttribute("fields", fieldInit);
+    		}
+    	)?
+    	( 
+    		COMMA key = expression COLON expr = expression
+    		{
+    			StringTemplate fieldInit = template("structFieldInit");
+    			fieldInit.setAttribute("key", key);
+    			fieldInit.setAttribute("value", expr);
+    			code.setAttribute("fields", fieldInit);
+    		}
+    	)*
+    	RCURLY
+    ;
+
 mappingdecl returns [StringTemplate code=template("mapping")]
 {StringTemplate p=null, d=null;}
     :  d=declarator {code.setAttribute("descriptor",d);} SEMI
@@ -1156,6 +1191,7 @@ constant returns [StringTemplate code=null]
         code.setAttribute("value", f.getText());
       }
     | code=arrayInitializer
+    | code=structInitializer
     ;
 
 // TODO ^^^^^^ array literal -- rename and rearrange the methods

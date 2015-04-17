@@ -368,6 +368,22 @@ swift:createArray(
 )
 >>
 
+newStruct(fields, var, field, datatype) ::= <<
+swift:createStruct($if(field)$field=$field$$endif$$if(var)$var=$var$$endif$
+	$fields;separator = "\n"$
+)
+>>
+
+makeField(key, value) ::= <<
+	makeField($key$, $value$)
+>>
+
+newSparseArray(fields, var, field, datatype) ::= <<
+swift:createSparseArray($if(field)$field=$field$$endif$$if(var)$var=$var$$endif$
+	$fields;separator = "\n"$
+)
+>>
+
 range(from, to, step, datatype) ::= <<
 sequential(
 	tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$)

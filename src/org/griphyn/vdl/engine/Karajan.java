@@ -1429,6 +1429,7 @@ public class Karajan {
 	static final QName RANGE_EXPR = new QName(SWIFTSCRIPT_NS, "range");
 	static final QName FUNCTION_EXPR = new QName(SWIFTSCRIPT_NS, "function");
 	static final QName CALL_EXPR = new QName(SWIFTSCRIPT_NS, "call");
+	static final QName STRUCT_EXPR = new QName(SWIFTSCRIPT_NS, "struct");
 	
 	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope) throws CompilationException {
 	    return expressionToKarajan(expression, scope, false, null);
@@ -1744,21 +1745,155 @@ public class Karajan {
 		    
 		    if (proceduresMap.containsKey(name)) {
 		        return callExpr(c, scope, expectedType);
+		else if (expressionQName.equals(STRUCT_EXPR)) {
+		    Struct s = (Struct) expression;
+		    // distringuish between a struct or sparse array
+		    // expr by looking at the keys. If they are identifiers,
+		    // then struct, if expressions
+		    // if there are no kv pairs, then this is a sparse array expression
+		    boolean sparseArray;
+		    if (s.sizeOfFieldArray() == 0) {
+		        sparseArray = true;
 		    }
 		    else {
-		        if (functionsMap.containsKey(name)) {
-		            return functionExpr(c, scope);
+    		    StructField f = s.getFieldArray(0);
+    		    QName keyType = getQName(f.getAbstractExpressionArray(0).getDomNode());
+    		    if (keyType.equals(VARIABLE_REFERENCE_EXPR)) {
+    		        sparseArray = false;
+    		    }
+    		    else {
+    		        sparseArray = true;
+    		    }
+		    }
+		    if (isLvalue) {
+		        if (sparseArray) {
+		            throw new CompilationException("Array initializer cannot be an lvalue");
 		        }
 		        else {
-		            throw new CompilationException("No function or procedure '" + name + "' found.");
+		            throw new CompilationException("Structure initializer cannot be an lvalue");
 		        }
 		    }
-		} else {
-			throw new CompilationException("unknown expression implemented by class "+expression.getClass()+" with node name "+expressionQName +" and with content "+expression);
+		    if (sparseArray) {
+		        return sparseArrayInitializer(s, scope, lvalue, expectedType);
+		    }
+		    else {
+		        return structInitializer(s, scope, lvalue, expectedType);
+		    }
+		}
 		}
 		// perhaps one big throw catch block surrounding body of this method
 		// which shows Compiler Exception and line number of error
 	}
+
+    private StringTemplate structInitializer(Struct s, VariableScope scope, StringTemplate lvalue, Type expectedType) 
+            throws CompilationException {
+        StringTemplate st = template("newStruct");
+        if (expectedType == null) {
+            throw new CompilationException("Cannot infer destination type in structure initializer");
+        }
+        if (lvalue != null) {
+            st.setAttribute("var", lvalue);
+        }
+        else {
+            st.setAttribute("field", addInternedField("$structexpr", expectedType));
+        }
+        if (!expectedType.isComposite() || expectedType.isArray()) {
+            throw new CompilationException("Cannot assign a structure to a non-structure");
+        }
+        Set<String> seen = new HashSet<String>();
+        for (int i = 0; i < s.sizeOfFieldArray(); i++) {
+            st.setAttribute("fields", structField(s.getFieldArray(i), scope, expectedType, seen));
+        }
+        if (expectedType.getFields().size() != seen.size()) {
+            throw new CompilationException("Missing fields in structure initializer: " + getMissingFields(seen, expectedType));
+        }
+        st.setAttribute("datatype", expectedType.toString());
+        if (lvalue != null) {
+            scope.appendStatement(st);
+            return null;
+        }
+        else {
+            return st;
+        }
+    }
+
+    private StringTemplate structField(StructField field, VariableScope scope, Type expectedType, Set<String> seen) 
+            throws CompilationException {
+        XmlObject xkey = field.getAbstractExpressionArray(0);
+        Node key = xkey.getDomNode();
+        if (!getQName(key).equals(VARIABLE_REFERENCE_EXPR)) {
+            // TODO better error message
+            throw new CompilationException("Invalid field name " + key.getLocalName());
+        }
+        XmlString var = (XmlString) xkey;
+        String name = var.getStringValue();
+        if (seen.contains(name)) {
+            throw new CompilationException("Duplicate field: '" + name + "'");
+        }
+        seen.add(name);
+        
+        StringTemplate st = template("makeField");
+        st.setAttribute("key", "\"" + name + "\"");
+        try {
+            st.setAttribute("value", expressionToKarajan(field.getAbstractExpressionArray(1), 
+                scope, false, null, expectedType.getField(name).getType()));
+        }
+        catch (NoSuchFieldException e) {
+            throw new CompilationException("Invalid field '" + name + "' for type '" + expectedType + "'");
+        }
+        return st;
+    }
+
+    private String getMissingFields(Set<String> seen, Type t) {
+        List<String> missing = new ArrayList<String>();
+        for (String f : t.getFieldNames()) {
+            if (!seen.contains(f)) {
+                missing.add(f);
+            }
+        }
+        return missing.toString();
+    }
+
+    private StringTemplate sparseArrayInitializer(Struct s, VariableScope scope, StringTemplate lvalue, Type expectedType) 
+            throws CompilationException {
+        StringTemplate st = template("newSparseArray");
+        if (lvalue != null) {
+            st.setAttribute("var", lvalue);
+        }
+        else {
+            if (expectedType == null) {
+                throw new CompilationException("Could not infer type in sparse array initializer");
+            }
+            st.setAttribute("field", addInternedField("$arrayexpr", expectedType));
+        }
+        if (!expectedType.isArray()) {
+            throw new CompilationException("Cannot assign an array to a non-array");
+        }
+        for (int i = 0; i < s.sizeOfFieldArray(); i++) {
+            st.setAttribute("fields", sparseArrayField(s.getFieldArray(i), scope, expectedType));
+        }
+        st.setAttribute("datatype", expectedType.toString());
+        if (lvalue != null) {
+            scope.appendStatement(st);
+            return null;
+        }
+        else {
+            return st;
+        }
+    }
+    
+    private StringTemplate sparseArrayField(StructField field, VariableScope scope, Type expectedType) 
+            throws CompilationException {
+        Type keyType = expectedType.keyType();
+        Type itemType = expectedType.itemType();
+        
+        StringTemplate st = template("makeField");
+        st.setAttribute("key", expressionToKarajan(field.getAbstractExpressionArray(0), 
+            scope, false, null, keyType));
+        st.setAttribute("value", expressionToKarajan(field.getAbstractExpressionArray(1), 
+                scope, false, null, itemType));
+        return st;
+    }
 
     private String getRootVar(StringTemplate st) throws CompilationException {
         StringTemplate parent = (StringTemplate) st.getAttribute("parent");

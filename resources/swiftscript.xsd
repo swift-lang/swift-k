@@ -274,7 +274,26 @@
       <xs:element ref="abstractExpression"/>
     </xs:sequence>
   </xs:complexType>
-
+  
+  <xs:complexType name="StructField">
+  	<xs:annotation>
+  		<xs:documentation>represents a structure field initializer</xs:documentation>
+  	</xs:annotation>
+  	<xs:sequence>
+		<xs:element ref="abstractExpression" minOccurs="2" maxOccurs="2" />
+  	</xs:sequence>
+  </xs:complexType>
+  
+  
+  <xs:complexType name="Struct">
+  	<xs:annotation>
+  		<xs:documentation>represents a structure initializer</xs:documentation>
+  	</xs:annotation>
+  	<xs:sequence maxOccurs="unbounded" minOccurs="0">
+  		<xs:element name="field" type="StructField"/>
+  	</xs:sequence>
+  </xs:complexType>
+  
   <xs:complexType name="Range">
 
     <xs:annotation>
@@ -601,6 +620,7 @@ and it will absorb 'not' -->
       <xs:element name="arraySubscript" type="BinaryOperator" substitutionGroup="abstractExpression"/>
       <xs:element name="structureMember" type="StructureMember" substitutionGroup="abstractExpression"/>
       <xs:element name="array" type="Array" substitutionGroup="abstractExpression"/>
+      <xs:element name="struct" type="Struct" substitutionGroup="abstractExpression"/>
       <xs:element name="range" type="Range" substitutionGroup="abstractExpression"/>
       <xs:element name="function" type="Function" substitutionGroup="abstractExpression"/>
       <xs:element name="call" type="Call" substitutionGroup="abstractExpression"/>
