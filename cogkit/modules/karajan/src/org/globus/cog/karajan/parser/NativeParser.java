@@ -713,7 +713,7 @@ public final class NativeParser {
         return true;
     }
 
-    private void less() throws ParsingException {
+	private void less() throws ParsingException {
         switch (lex.peekNextChar()) {
             case '=':
                 binaryOperator("<=", "<=", 3);
@@ -843,7 +843,7 @@ public final class NativeParser {
         binaryOperator("=", "k:named", 8);
     }
 
-    private void invocation() throws ParsingException {
+	private void invocation() throws ParsingException {
         if (priorityCheck(1)) {
             return;
         }
