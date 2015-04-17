@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DIRECTORIES="cookbook designs documentation merged releasenotes siteguide staging stuff swift-tutorial tutorial userguide utils"
+
 # Usage: See usage() for usage
 
 # crash: Report a problem and exit
@@ -48,6 +50,10 @@ then
   exit 1
 fi
 
+if [[ "${INSTALLATION_DIRECTORY:0:1}" != "/" ]]; then
+   INSTALLATION_DIRECTORY=`pwd`/$INSTALLATION_DIRECTORY
+fi
+
 # Create installation directory if needed
 if [ ! -d "$INSTALLATION_DIRECTORY" ]; then
    mkdir $INSTALLATION_DIRECTORY || crash "Unable to create directory $INSTALLATION_DIRECTORY"
@@ -69,7 +75,6 @@ popd > /dev/null 2>&1
 echo Installing docs into $INSTALLATION_DIRECTORY
 
 # Convert files
-DIRECTORIES=`ls -d */ 2>/dev/null`
 for directory in $DIRECTORIES
 do
    pushd $directory > /dev/null 2>&1
