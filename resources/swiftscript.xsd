@@ -116,7 +116,7 @@
       </xs:choice>
     </xs:sequence>
 
-    <xs:attribute name="name" type="xs:NCName">
+    <xs:attribute name="name" type="xs:string">
       <xs:annotation>
         <xs:documentation>the name of the procedure</xs:documentation>
       </xs:annotation>
