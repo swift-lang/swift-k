@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIRECTORIES="cookbook designs documentation merged releasenotes siteguide staging stuff swift-tutorial tutorial userguide utils"
+DIRECTORIES="cookbook designs documentation merged releasenotes siteguide staging swift-tutorial tutorial userguide utils"
 
 # Usage: See usage() for usage
 
