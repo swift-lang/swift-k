@@ -56,6 +56,9 @@ namespace(swift) {
 	export(new, def("org.griphyn.vdl.karajan.lib.New"))
 	export(field, def("org.griphyn.vdl.karajan.lib.GetFieldConst"))
 	export(createArray, def("org.griphyn.vdl.karajan.lib.CreateArray"))
+	export(createStruct, def("org.griphyn.vdl.karajan.lib.CreateStruct"))
+	export(createSparseArray, def("org.griphyn.vdl.karajan.lib.CreateSparseArray"))
+	export(makeField, def("org.griphyn.vdl.karajan.lib.MakeField"))
 	/* used from VDL2 for arguments to apps and returns relative paths */
 	export(fileName, def("org.griphyn.vdl.karajan.lib.FileName"))
 
