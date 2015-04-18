@@ -114,7 +114,7 @@ public class SetFieldValue extends SwiftFunction {
             		Path path = parsePath(this.path.getValue());
                     DSHandle leaf = var.getField(path);
                     AbstractDataNode value = this.value.getValue();
-                    if (value.isClosed()) {
+                    if (value != null && value.isClosed()) {
                         State state = new State();
                         deepCopy(leaf, value, state, 0);
                         if (tracer.isEnabled()) {
