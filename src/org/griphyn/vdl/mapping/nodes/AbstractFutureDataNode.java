@@ -124,6 +124,10 @@ public abstract class AbstractFutureDataNode extends AbstractDataNode {
         if (logger.isDebugEnabled()) {
             logger.debug(this + " writeRefCount " + this.writeRefCount);
         }
+        if (variableTracer.isEnabled()) {
+            RootHandle root = getRoot();
+            variableTracer.trace(root.getThread(), root.getLine(), getDisplayableName() + " REF_COUNT " + delta + " -> " + this.writeRefCount);
+        }
         if (this.writeRefCount == 0) {
             if (variableTracer.isEnabled()) {
                 RootHandle root = getRoot();
