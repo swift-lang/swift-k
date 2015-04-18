@@ -32,6 +32,7 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.functions.BinaryOp;
 import org.globus.cog.karajan.parser.WrapperNode;
@@ -71,6 +72,11 @@ public abstract class SwiftBinaryOp extends BinaryOp<AbstractDataNode, DSHandle>
         }
         returnDynamic(scope);
         return this;
+    }
+    
+    @Override
+    protected Signature getSignature() {
+        return new Signature(params("v1", "v2"));
     }
 
     protected Field getReturnType() {

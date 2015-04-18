@@ -29,6 +29,7 @@ import javax.xml.namespace.QName;
 import org.griphyn.vdl.type.DuplicateFieldException;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 
 public class UnresolvedType implements Type {
 	private String name;
@@ -59,6 +60,10 @@ public class UnresolvedType implements Type {
 	public Type arrayType() {
 		throw new UnsupportedOperationException();
 	}
+	
+	public Type arrayType(Type keyType) {
+        throw new UnsupportedOperationException();
+    }
 	
 	public Type itemType() {
 		throw new UnsupportedOperationException();
@@ -177,6 +182,9 @@ public class UnresolvedType implements Type {
 			}
 			return ot.getName().equals(name);
 		}
+		else if (other instanceof String) {
+		    throw new RuntimeException("Internal error. Testing type equality with a string.");
+		}
 		else {
 			return false;
 		}
@@ -195,4 +203,24 @@ public class UnresolvedType implements Type {
 		sb.append(name);
 		return sb.toString();
 	}
+
+    @Override
+    public boolean canBeAssignedTo(Type type) {
+        if (type.equals(Types.ANY)) {
+            return true;
+        }
+        else {
+            return this.equals(type);
+        }
+    }
+
+    @Override
+    public boolean isAssignableFrom(Type type) {
+        if (this.equals(Types.ANY)) {
+            return true;
+        }
+        else {
+            return this.equals(type);
+        }
+    }
 }

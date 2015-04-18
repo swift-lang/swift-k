@@ -25,6 +25,11 @@ GROUPLIST=( $TESTDIR/language/working \
             $TESTDIR/language-behaviour/strings \
 	    $TESTDIR/language-behaviour/variables \
 	    $TESTDIR/language-behaviour/cleanup \
+	    $TESTDIR/stdlib-v2/math \
+	    $TESTDIR/stdlib-v2/stats \
+	    $TESTDIR/stdlib-v2/conversion \
+	    $TESTDIR/stdlib-v2/strings \
+	    $TESTDIR/stdlib-v2/io \
 	    $TESTDIR/bugs \
 	    $TESTDIR/documentation/tutorial \
             $TESTDIR/functions \

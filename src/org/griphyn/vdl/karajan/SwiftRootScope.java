@@ -35,6 +35,7 @@ import k.rt.Context;
 import org.globus.cog.karajan.analyzer.RootScope;
 import org.globus.cog.karajan.util.KarajanProperties;
 import org.griphyn.vdl.mapping.DuplicateMappingChecker;
+import org.griphyn.vdl.type.Types;
 import org.griphyn.vdl.util.SwiftConfig;
 
 public class SwiftRootScope extends RootScope {
@@ -49,5 +50,6 @@ public class SwiftRootScope extends RootScope {
         addVar("SWIFT:RUN_ID", context.getAttribute("SWIFT:RUN_ID"));
         addVar("SWIFT:SCRIPT_NAME", context.getAttribute("SWIFT:SCRIPT_NAME"));
         addVar("SWIFT:DEBUG_DIR_PREFIX", context.getAttribute("SWIFT:DEBUG_DIR_PREFIX"));
+        addVar("#types", new Types(Types.BUILT_IN_TYPES));
     }
 }

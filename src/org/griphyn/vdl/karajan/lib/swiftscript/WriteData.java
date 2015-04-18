@@ -26,10 +26,12 @@ import java.util.TreeMap;
 
 import k.rt.ExecutionException;
 import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -43,11 +45,20 @@ import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
 
-public class WriteData extends SwiftFunction {
+public class WriteData extends SwiftFunction implements SwiftSerializer {
 	public static final Logger logger = Logger.getLogger(WriteData.class);
 
 	private ArgRef<AbstractDataNode> dest;
     private ArgRef<AbstractDataNode> src;
+    
+    @SuppressWarnings("unchecked")
+    private <T> T getOption(String name, Map<String, Object> opts) {
+        Object o = opts.get(name);
+        if (o == null) {
+            o = ReadData.DEFAULT_OPTIONS.get(name);
+        }
+        return (T) o;
+    }
 
     @Override
     protected Signature getSignature() {
@@ -65,7 +76,7 @@ public class WriteData extends SwiftFunction {
 		AbstractDataNode src = this.src.getValue(stack);
 
 		try {
-            src.waitFor(this);
+            SwiftFunction.waitDeep(LWThread.currentThread(), src, this);
         }
         catch (DependentException e) {
         	if (logger.isInfoEnabled()) {
@@ -76,7 +87,7 @@ public class WriteData extends SwiftFunction {
         }
 
 		if (dest.getType().equals(Types.STRING)) {
-			writeData((String)dest.getValue(), src);
+			writeData((String)dest.getValue(), src, this, ReadData.DEFAULT_OPTIONS);
 		}
 		else {
 			PhysicalFormat pf = dest.map();
@@ -85,7 +96,7 @@ public class WriteData extends SwiftFunction {
 				if (!af.getProtocol("file").equalsIgnoreCase("file")) {
 					throw new ExecutionException("writeData only supports local files");
 				}
-				writeData(af.getPath(), src);
+				writeData(af.getPath(), src, this, ReadData.DEFAULT_OPTIONS);
 			}
 			else {
 				throw new ExecutionException("writeData only supports writing to files");
@@ -95,22 +106,28 @@ public class WriteData extends SwiftFunction {
 		return null;
 	}
 
-	private void writeData(String path, DSHandle src) throws ExecutionException {
+	@Override
+    public void checkParamType(Type type, Node owner) {
+	    // all types accepted
+    }
+
+    public void writeData(String path, DSHandle src, Node owner, Map<String, Object> options) {
+        options = processOptions(options);
 		File f = new File(path);
 		try {
 			BufferedWriter br = new BufferedWriter(new FileWriter(f));
 			try {
 				if (src.getType().isArray()) {
 					// each line is an item
-					writeArray(br, src);
+					writeArray(br, src, options);
 				}
 				else if (src.getType().isPrimitive()) {
 					writePrimitive(br, src);
 				}
 				else {
 					// struct
-					writeStructHeader(src.getType(), br);
-					writeStruct(br, src);
+					writeStructHeader(src.getType(), br, options);
+					writeStruct(br, src, options);
 				}
 			}
 			finally {
@@ -127,17 +144,21 @@ public class WriteData extends SwiftFunction {
 		}
 	}
 
-	private void writePrimitive(BufferedWriter br, DSHandle src) throws IOException,
+	private Map<String, Object> processOptions(Map<String, Object> options) {
+	    return options;
+    }
+
+    private void writePrimitive(BufferedWriter br, DSHandle src) throws IOException,
 			ExecutionException {
 		br.write(src.getValue().toString());
 	}
 
-	private void writeArray(BufferedWriter br, DSHandle src) throws IOException, ExecutionException {
+	private void writeArray(BufferedWriter br, DSHandle src, Map<String, Object> opts) throws IOException {
 		if (src.getType().itemType().isPrimitive()) {
 			writePrimitiveArray(br, src);
 		}
 		else {
-			writeStructArray(br, src);
+			writeStructArray(br, src, opts);
 		}
 	}
 
@@ -153,33 +174,33 @@ public class WriteData extends SwiftFunction {
 		}
 	}
 
-	private void writeStructArray(BufferedWriter br, DSHandle src) throws IOException,
+	private void writeStructArray(BufferedWriter br, DSHandle src, Map<String, Object> opts) throws IOException,
 			ExecutionException {
-		writeStructHeader(src.getType().itemType(), br);
+		writeStructHeader(src.getType().itemType(), br, opts);
 		Map<Comparable<?>, DSHandle> m = ((AbstractDataNode) src).getArrayValue();
 		Map<Comparable<?>, DSHandle> c = new TreeMap<Comparable<?>, DSHandle>();
 		c.putAll(m);
 		for (DSHandle h : c.values()) {
-			writeStruct(br, h);
+			writeStruct(br, h, opts);
 		}
 	}
 
-
-	private void writeStructHeader(Type type, BufferedWriter br) throws ExecutionException,
-			IOException {
+	private void writeStructHeader(Type type, BufferedWriter br, Map<String, Object> opts) throws IOException {
+	    String sep = getOption("separator", opts);
 		for (String name : type.getFieldNames()) {
 			br.write(name);
-			br.write(" ");
+			br.write(sep);
 		}
 		br.newLine();
 	}
 
-	private void writeStruct(BufferedWriter br, DSHandle struct) throws IOException, ExecutionException {
+	private void writeStruct(BufferedWriter br, DSHandle struct, Map<String, Object> opts) throws IOException {
 		try {
+		    String sep = getOption("separator", opts);
 		    for (String name : struct.getType().getFieldNames()) {
 				DSHandle child = struct.getField(Path.EMPTY_PATH.addLast(name));
 				br.write(child.getValue().toString());
-				br.write(" ");
+				br.write(sep);
 			}
 			br.newLine();
 		} catch(InvalidPathException e) {

@@ -38,7 +38,6 @@ import org.griphyn.vdl.type.Field;
 
 public abstract class AbstractSingleValuedSwiftFunction extends AbstractSingleValuedFunction {
 
-    
     @Override
     public void runBody(LWThread thr) {
         Stack stack = thr.getStack();

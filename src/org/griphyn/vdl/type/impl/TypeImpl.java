@@ -127,6 +127,10 @@ public class TypeImpl extends UnresolvedType {
 	public Type arrayType() {
 		return new Array(this, Types.INT);
 	}
+	
+	public Type arrayType(Type keyType) {
+        return new Array(this, keyType);
+    }
 
 	public Type itemType() {
 		return this;
@@ -237,5 +241,20 @@ public class TypeImpl extends UnresolvedType {
 		public Type keyType() {
 		    return keyType;
 		}
+
+        @Override
+        public boolean canBeAssignedTo(Type type) {
+            if (type.equals(Types.ANY)) {
+                return true;
+            }
+            else {
+                return itemType().canBeAssignedTo(type.itemType()) && keyType().canBeAssignedTo(type.keyType());
+            }
+        }
+
+        @Override
+        public boolean isAssignableFrom(Type type) {
+            return itemType().isAssignableFrom(type.itemType()) && keyType().isAssignableFrom(type.keyType());
+        }
 	}
 }

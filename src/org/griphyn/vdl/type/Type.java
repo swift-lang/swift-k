@@ -157,6 +157,8 @@ public interface Type {
 	 */
 	Type arrayType();
 	
+	Type arrayType(Type keyType);
+	
 	/** 
 	 * This method, if invoked on an array type, returns the type of each item.
 	 * If t is a type, t == t.arrayType().itemType();
@@ -192,4 +194,8 @@ public interface Type {
     public boolean hasMappedComponents();
     
     public boolean hasArrayComponents();
+
+    public boolean canBeAssignedTo(Type type);
+
+    public boolean isAssignableFrom(Type type);
 }

@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Map;
 
 import k.rt.ExecutionException;
 import k.rt.Stack;
@@ -31,6 +32,7 @@ import k.rt.Stack;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -42,7 +44,7 @@ import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
-public class ReadStructured extends SwiftFunction {
+public class ReadStructured extends SwiftFunction implements SwiftDeserializer {
 	public static final Logger logger = Logger.getLogger(ReadStructured.class);
 
 	private ArgRef<AbstractDataNode> dest;
@@ -54,7 +56,6 @@ public class ReadStructured extends SwiftFunction {
     }
 
 	public static boolean warning;
-
 
 	@Override
     public Object function(Stack stack) {
@@ -69,7 +70,7 @@ public class ReadStructured extends SwiftFunction {
         }
         Type st = src.getType();
 		if (st.equals(Types.STRING)) {
-			readData(dest, (String) src.getValue());
+			readData(dest, (String) src.getValue(), this, null);
 			dest.closeDeep();
 		}
 		else if (st.isPrimitive() || st.isComposite()) {
@@ -83,7 +84,7 @@ public class ReadStructured extends SwiftFunction {
 				if (!af.getProtocol().equalsIgnoreCase("file")) {
 					throw new ExecutionException("readData2 only supports local files");
 				}
-				readData(dest, af.getPath());
+				readData(dest, af.getPath(), this, null);
 				dest.closeDeep();
 			}
 			else {
@@ -92,13 +93,18 @@ public class ReadStructured extends SwiftFunction {
 		}
 		return null;
 	}
+	
+	@Override
+    public void checkReturnType(Type type, Node owner) {
+        // all types OK
+    }
 
-	private void readData(DSHandle dest, String path) throws ExecutionException {
+	public void readData(DSHandle dest, String path, Node owner, Map<String, Object> options) {
 		File f = new File(path);
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(f));
 			try {
-				readLines(dest, br, path);
+				readLines(dest, br, path, owner);
 			}
 			finally {
 				try {
@@ -114,8 +120,8 @@ public class ReadStructured extends SwiftFunction {
 		}
 	}
 
-	private void readLines(DSHandle dest, BufferedReader br, String path)
-			throws ExecutionException, IOException {
+	private void readLines(DSHandle dest, BufferedReader br, String path, Node owner)
+			throws IOException {
 		int count = 1;
 		String line = br.readLine();
 		while (line != null) {
@@ -123,10 +129,10 @@ public class ReadStructured extends SwiftFunction {
 			if (!line.startsWith("#") && !line.equals("")) {
 				try {
 					String[] sp = line.split("=", 2);
-					setValue(dest.getField(Path.parse(sp[0].trim())), sp[1].trim());
+					setValue(dest.getField(Path.parse(sp[0].trim())), sp[1].trim(), owner);
 				}
 				catch (Exception e) {
-					throw new ExecutionException(e.getMessage() + " in " + path + ", line " + count
+					throw new ExecutionException(owner, e.getMessage() + " in " + path + ", line " + count
 							+ ": " + line, e);
 				}
 			}
@@ -135,7 +141,7 @@ public class ReadStructured extends SwiftFunction {
 		}
 	}
 
-	private void setValue(DSHandle dest, String s) throws ExecutionException {
+	private void setValue(DSHandle dest, String s, Node owner) {
 		try {
 			if (dest.getType().equals(Types.INT)) {
 				dest.setValue(Integer.valueOf(s.trim()));
@@ -150,12 +156,12 @@ public class ReadStructured extends SwiftFunction {
 				dest.setValue(s);
 			}
 			else {
-				throw new ExecutionException("Don't know how to read type " + dest.getType()
+				throw new ExecutionException(owner, "Don't know how to read type " + dest.getType()
 						+ " for path " + dest.getPathFromRoot());
 			}
 		}
 		catch (NumberFormatException e) {
-			throw new ExecutionException("Could not convert value to number: " + s);
+			throw new ExecutionException(owner, "Could not convert value to number: " + s);
 		}
 	}
 }

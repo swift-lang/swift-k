@@ -26,7 +26,6 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.futures.FutureFault;
-import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.mapping.file.ConcurrentMapper;
 import org.griphyn.vdl.mapping.nodes.RootClosedArrayDataNode;
@@ -36,6 +35,7 @@ import org.griphyn.vdl.type.Type;
 public class CreateArray extends SetFieldValue {
 	public static final Logger logger = Logger.getLogger(CreateArray.class);
 	
+	private ArgRef<Field> field;
 	private ArgRef<Object> value;
 
 	@Override
@@ -44,17 +44,16 @@ public class CreateArray extends SetFieldValue {
     }
 
     public Object function(Stack stack) {
+        Field field = this.field.getValue(stack);
 		Object value = this.value.getValue(stack);
 		try {
-
 			if (!(value instanceof List)) {
 				throw new RuntimeException("An array variable can only be initialized with a list of values");
 			}
 
-			Type type = checkTypes((List<?>) value);
+			Type type = field.getType();
 			
-			RootHandle handle = new RootClosedArrayDataNode(Field.Factory.getImmutableField("arrayexpr", type.arrayType()), 
-			    (List<?>) value, null);
+			RootHandle handle = new RootClosedArrayDataNode(field, (List<?>) value, null);
 			if (type.hasMappedComponents()) {
 			    handle.init(new ConcurrentMapper());
 			}
@@ -75,30 +74,4 @@ public class CreateArray extends SetFieldValue {
 			throw new ExecutionException(this, e);
 		}
 	}
-
-    private Type checkTypes(List<?> value) {
-        Type type = null;
-        
-        for (Object o : value) {            
-            if (o instanceof DSHandle) {
-                DSHandle d = (DSHandle)o;
-                Type thisType = d.getType();
-                if(type == null) {
-                    // this first element
-                    type = thisType;
-                } else {
-                    // other elements, when we have a type to expect
-                    if(!(type.equals(thisType))) {
-                        throw new RuntimeException(
-                            "Expecting all array elements to have SwiftScript type " + 
-                            type + " but found an element with type "+thisType);
-                    }
-                }
-            }
-            else {
-                throw new RuntimeException("An array variable can only be initialized by a list of DSHandle values.");
-            }
-        }
-        return type;
-    }
 }
