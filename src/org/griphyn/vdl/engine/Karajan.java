@@ -43,9 +43,9 @@ import org.antlr.stringtemplate.StringTemplateGroup;
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlBoolean;
 import org.apache.xmlbeans.XmlCursor;
+import org.apache.xmlbeans.XmlDouble;
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
-import org.apache.xmlbeans.XmlFloat;
 import org.apache.xmlbeans.XmlInt;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
@@ -78,12 +78,12 @@ public class Karajan {
 
 	Map<String,String> stringInternMap = new HashMap<String,String>();
 	Map<Integer,String> intInternMap = new HashMap<Integer,String>();
-	Map<Float,String> floatInternMap = new HashMap<Float,String>();
 	Map<String,ProcedureSignature> proceduresMap = 
 	    new HashMap<String,ProcedureSignature>();
 	Map<String,ProcedureSignature> functionsMap = 
 	    new HashMap<String,ProcedureSignature>();
 	Map<String, Type> typesMap = new HashMap<String, Type>();
+	Map<Double, String> floatInternMap = new HashMap<Double, String>();
 	Set<String> nonMappedTypes = new HashSet<String>();
 	
 	private class InternedField {
@@ -1499,15 +1499,17 @@ public class Karajan {
 			st.setAttribute("var", internedID);
 			st.setAttribute("datatype", "int");
 			return st;
-		} else if (expressionQName.equals(FLOAT_EXPR)) {
-			XmlFloat xmlFloat = (XmlFloat) expression;
-			float f = xmlFloat.getFloatValue();
-			Float fobj = new Float(f);
+		} 
+		else if (expressionQName.equals(FLOAT_EXPR)) {
+			XmlDouble xmlFloat = (XmlDouble) expression;
+			double f = xmlFloat.getDoubleValue();
+			Double fobj = new Double(f);
 			String internedID;
-			if(floatInternMap.get(fobj) == null) {
+			if (floatInternMap.get(fobj) == null) {
 				internedID = "swift.float." + (internedIDCounter++);
 				floatInternMap.put(fobj, internedID);
-			} else {
+			} 
+			else {
 				internedID = floatInternMap.get(fobj);
 			}
 			StringTemplate st = template("id");

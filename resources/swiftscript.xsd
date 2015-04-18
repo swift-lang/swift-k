@@ -609,7 +609,7 @@ be used directly... but other things should substitute for it.
 <!-- TODO is this int or integer? (general question really about the
 space of integers in SwiftScript -->
       <xs:element name="stringConstant" type="xs:string" substitutionGroup="abstractExpression"/>
-      <xs:element name="floatConstant" type="xs:float" substitutionGroup="abstractExpression"/>
+      <xs:element name="floatConstant" type="xs:double" substitutionGroup="abstractExpression"/>
       <xs:element name="cond" type="LabelledBinaryOperator" substitutionGroup="abstractExpression"/>
       <xs:element name="arith" type="LabelledBinaryOperator" substitutionGroup="abstractExpression"/>
       <xs:element name="unaryNegation" type="UnlabelledUnaryOperator" substitutionGroup="abstractExpression"/>
