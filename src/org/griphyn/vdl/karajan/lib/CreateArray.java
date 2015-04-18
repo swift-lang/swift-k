@@ -40,7 +40,7 @@ public class CreateArray extends SetFieldValue {
 
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("value", optional("_traceline", null)));
+        return new Signature(params("field", "value"));
     }
 
     public Object function(Stack stack) {

@@ -29,8 +29,7 @@ public class AppendArray extends SetFieldValue {
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("var", "value", optional("_traceline", null)));
-        // _traceline is used by SetFieldValue
+        return new Signature(params("var", "value"));
     }
 
     @Override

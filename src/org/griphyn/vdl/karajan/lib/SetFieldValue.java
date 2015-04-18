@@ -59,11 +59,9 @@ public class SetFieldValue extends SwiftFunction {
 	protected ArgRef<Object> path;
 	protected ArgRef<AbstractDataNode> value;
 	
-	protected ArgRef<Integer> _traceline;
-
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("var", "value", optional("path", Path.EMPTY_PATH), optional("_traceline", null)));
+        return new Signature(params("var", "value", optional("path", Path.EMPTY_PATH)));
     }
 
     private String dst;
@@ -107,9 +105,6 @@ public class SetFieldValue extends SwiftFunction {
     @Override
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
-        if (_traceline.getValue() != null) {
-            setLine(_traceline.getValue());
-        }
         tracer = Tracer.getTracer(this);
     	if (this.getClass() == SetFieldValue.class && var.isStatic() && path.isStatic() && value.isStatic()) {
     		// it's safe to optimize assignments in the main block
