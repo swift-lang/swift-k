@@ -37,7 +37,7 @@ public class SwiftExecutor extends Executor {
 		super(root);
 	}
 
-	protected void printFailure(ExecutionException e) {
+	protected void printFailure(Exception e) {
 		if (logger.isDebugEnabled()) {
 			logger.debug(e.getMessage(), e);
 		}
