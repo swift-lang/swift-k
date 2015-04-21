@@ -3,12 +3,13 @@ group Karajan;
 // TODO can move progress ticker start into vdl:mains so karajan files
 // are smaller
 
-program(types,procedures,declarations,statements,constants,buildversion,cleanups) ::= <<
+program(types,procedures,declarations,statements,constants,buildversion,stdlibversion,cleanups) ::= <<
 // CACHE ID $buildversion$
 import(sys)
 import(scheduler)
 import(rlog)
 import(swift)
+importStdlib($stdlibversion$)
 
 $if(types)$
 types(
@@ -191,13 +192,13 @@ $endif$
 // that calls a function in the 'swiftscript' namespace.
 
 function(name, args, datatype, line) ::= <<
-swiftscript:$name$(
+swiftscript:$name$(#_line=$line$
 	$if(args)$$args;separator=", "$$endif$
 )
 >>
 
 iterate(declarations, statements, cond, var, refs, cleanups, trace, line) ::= <<
-swift:while($var$$if(trace)$, _traceline=$line$$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$) {
+swift:while($var$$if(trace)$, #_line=$line$$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$) {
 	$declarations;separator="\n"$
 	if (!swift:getFieldValue($cond$)) {
 		$sub_comp(statements=statements, cleanups=cleanups)$
@@ -207,7 +208,7 @@ swift:while($var$$if(trace)$, _traceline=$line$$endif$$if(refs)$, refs="$refs;se
 >>
 
 foreach(var, in, indexVar, indexVarField, declarations, statements, line, refs, selfClose, cleanups) ::= <<
-swift:tParallelFor(\$, _traceline=$line$$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
+swift:tParallelFor(\$, #_line=$line$$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
 $! The iterator !$
 	getArrayIterator($in$)) {
 	(\$\$, $var$) := each(\$)
@@ -232,8 +233,8 @@ $endif$
 
 callInternal(func, outputs, inputs, line, serialize, partialClose) ::= <<
 sequential(
-	swift:unitStart("INTERNALPROC", name="$func$", outputs="$outputs:list();separator=","$")
-	$func$(
+	swift:unitStart("INTERNALPROC", name="$func$", outputs="$outputs;separator=","$")
+	$func$(#_line=$line$
 		$if(!serialize)$parallel($endif$
     	$outputs:callInternal_log_output();separator="\n"$
     	$inputs:callInternal_log_input();separator="\n"$
@@ -262,7 +263,7 @@ callUserDefined(func, outputs, inputs, line, serialize, partialClose) ::= <<
 $if(partialClose)$
 sequential(
 $endif$
-$func$(
+$func$(#_line=$line$
 	$if(!serialize)$parallel($endif$
 	$outputs;separator=", "$
 	$inputs;separator=", "$
@@ -326,7 +327,7 @@ assign(var, value, line, partialClose) ::= <<
 $if(partialClose)$
 sequential(
 $endif$
-swift:setFieldValue($if(line)$_traceline=$line$$endif$
+swift:setFieldValue($if(line)$#_line=$line$$endif$
 	$var$
 	$value$
 )
@@ -360,11 +361,27 @@ sequential(
 )
 >>
 
-array(elements, datatype) ::= <<
-swift:createArray(
+array(elements, datatype, field) ::= <<
+swift:createArray($field$,
 	list(
 		$elements;separator="\n"$
 	)
+)
+>>
+
+newStruct(fields, var, field, datatype) ::= <<
+swift:createStruct($if(field)$field=$field$$endif$$if(var)$var=$var$$endif$
+	$fields;separator = "\n"$
+)
+>>
+
+makeField(key, value) ::= <<
+	makeField($key$, $value$)
+>>
+
+newSparseArray(fields, var, field, datatype) ::= <<
+swift:createSparseArray($if(field)$field=$field$$endif$$if(var)$var=$var$$endif$
+	$fields;separator = "\n"$
 )
 >>
 

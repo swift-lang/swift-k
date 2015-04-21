@@ -33,6 +33,7 @@ import org.antlr.stringtemplate.StringTemplate;
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlObject;
 import org.griphyn.vdl.karajan.CompilationException;
+import org.griphyn.vdl.type.Type;
 
 
 public class VariableScope {
@@ -108,14 +109,15 @@ public class VariableScope {
     private VariableScope thenScope;
     
     private static class Variable {
-        public final String name, type;
+        public final String name;
+        public final Type type;
         public final XmlObject src;
         public final AccessType accessType;
         public final VariableOrigin origin;
         private XmlObject foreachSrc;
         public boolean unused;
         
-        public Variable(String name, String type, AccessType accessType, VariableOrigin origin, XmlObject src) {
+        public Variable(String name, Type type, AccessType accessType, VariableOrigin origin, XmlObject src) {
             this.name = name;
             this.type = type;
             this.src = src;
@@ -252,7 +254,7 @@ public class VariableScope {
 	    declaration already exists. Perhaps error in same scope and
 	    warning if it shadows an outer scope? */
 
-	public void addVariable(String name, String type, String context, 
+	public void addVariable(String name, Type type, String context, 
 	        VariableOrigin origin, XmlObject src) throws CompilationException {
 		addVariable(name, type, context, AccessType.LOCAL, origin, src);
 	}
@@ -341,7 +343,7 @@ public class VariableScope {
 		}
 	}
 
-	public void addVariable(String name, String type, String context, 
+	public void addVariable(String name, Type type, String context, 
 	        AccessType accessType, VariableOrigin origin, XmlObject src) throws CompilationException {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Adding variable " + name + " of type " + type + " to scope " + hashCode());
@@ -379,7 +381,7 @@ public class VariableScope {
 	 * Does pretty much the same as addVariable() except it doesn't throw
 	 * an exception if the variable is defined in a parent scope
 	 */
-	public void addInternalVariable(String name, String type, XmlObject src) throws CompilationException {
+	public void addInternalVariable(String name, Type type, XmlObject src) throws CompilationException {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Adding internal variable " + name + " of type " + type + " to scope " + hashCode());
 	    }
@@ -491,7 +493,7 @@ public class VariableScope {
         }
 	}
 
-	public String getVariableType(String name) {
+	public Type getVariableType(String name) {
 	    Variable var = lookup(name);
 	    if (var != null) {
 	        return var.type;
@@ -1103,8 +1105,8 @@ public class VariableScope {
         List<String> cleanups = new ArrayList<String>();
         for (String var : getLocallyDeclaredVariableNames()) {
             Variable v = lookup(var);
-            String type = v.type;
-            if (!org.griphyn.vdl.type.Types.isPrimitive(type) && !v.unused) {
+            Type type = v.type;
+            if (!type.isPrimitive() && !v.unused) {
                 cleanups.add(var);
             }
         }
@@ -1148,7 +1150,7 @@ public class VariableScope {
                 stack.peek().lastWriter = this;
             }
             
-            if (fullyRead && org.griphyn.vdl.type.Types.isPrimitive(getVariableType(name))) {
+            if (fullyRead && getVariableType(name).isPrimitive()) {
                 stack.peek().lastReader = this;
             }
         }
@@ -1220,7 +1222,7 @@ public class VariableScope {
             access.remove(name);
         }
         if (u.lastReader != null && u.lastWriter == null) {
-            throw new CompilationException("Uninitalized variable: " + name);
+            throw new CompilationException("Uninitialized variable: " + name);
         }
     }
 }

@@ -59,22 +59,18 @@ public class While extends InternalFunction {
     
     private VarRef<Object> var;
     
-    private ArgRef<Integer> _traceline;
     private List<StaticRefCount> srefs;
     private Tracer tracer;
     private ArgRef<String> refs;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params(identifier("name"), optional("refs", null), optional("_traceline", null), block("body")));
+        return new Signature(params(identifier("name"), optional("refs", null), block("body")));
     }
     
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
         srefs = StaticRefCount.build(scope, this.refs.getValue());
-        if (_traceline.getValue() != null) {
-            setLine(_traceline.getValue());
-        }
         tracer = Tracer.getTracer(this);
         return super.compileBody(w, argScope, scope);
     }

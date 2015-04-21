@@ -25,7 +25,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import k.rt.ExecutionException;
@@ -34,6 +37,7 @@ import k.rt.Stack;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -44,8 +48,24 @@ import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
 
-public class ReadData extends SwiftFunction {
+public class ReadData extends SwiftFunction implements SwiftDeserializer {
 	public static final Logger logger = Logger.getLogger(ReadData.class);
+	
+	public static final Map<String, Object> DEFAULT_OPTIONS;
+	
+	static {
+	    DEFAULT_OPTIONS = new HashMap<String, Object>();
+	    DEFAULT_OPTIONS.put("separator", " ");
+	}
+	
+	@SuppressWarnings("unchecked")
+    private <T> T getOption(String name, Map<String, Object> opts) {
+	    Object o = opts.get(name);
+	    if (o == null) {
+	        o = DEFAULT_OPTIONS.get(name);
+	    }
+	    return (T) o;
+	}
 	
 	private ArgRef<AbstractDataNode> dest;
 	private ArgRef<AbstractDataNode> src;
@@ -70,7 +90,7 @@ public class ReadData extends SwiftFunction {
 		}
 		Type st = src.getType();
 		if (st.equals(Types.STRING)) {
-			readData(dest, (String) src.getValue());
+			readData(dest, (String) src.getValue(), this, DEFAULT_OPTIONS);
 		}
 		else if (st.isPrimitive() || st.isComposite()) {
 		    throw new ExecutionException(this, "invalid argument of type '" + st + 
@@ -83,7 +103,7 @@ public class ReadData extends SwiftFunction {
 				if (!af.getProtocol("file").equals("file")) {
 					throw new ExecutionException(this, "readData only supports local files");
 				}
-				readData(dest, af.getPath());
+				readData(dest, af.getPath(), this, DEFAULT_OPTIONS);
 			}
 			else {
 				throw new ExecutionException("readData only supports reading from files");
@@ -92,21 +112,27 @@ public class ReadData extends SwiftFunction {
 		return null;
 	}
 
-	private void readData(DSHandle dest, String path) throws ExecutionException {
+	@Override
+    public void checkReturnType(Type type, Node owner) {
+	    // all types OK
+    }
+
+    public void readData(DSHandle dest, String path, Node owner, Map<String, Object> options) {
+        options = processOptions(options);
 		File f = new File(path);
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(f));
 			try {
 				if (dest.getType().isArray()) {
 					// each line is an item
-					readArray(dest, br);
+					readArray(dest, br, owner, options);
 				}
 				else if (dest.getType().isPrimitive()) {
-					readPrimitive(dest, br);
+					readPrimitive(dest, br, owner);
 				}
 				else {
 					// struct
-					readStruct(dest, br);
+					readStruct(dest, br, owner, options);
 				}
 				dest.closeDeep();
 			}
@@ -124,8 +150,25 @@ public class ReadData extends SwiftFunction {
 		}
 	}
 
-	private void readPrimitive(DSHandle dest, BufferedReader br) throws IOException,
-			ExecutionException {
+	private Map<String, Object> processOptions(Map<String, Object> options) {
+	    String sep = getOption("separator", options);
+	    String _sep;
+	    if (sep.equals(" ")) {
+	        _sep = "[ ]+";
+	    }
+	    else if (sep.equals("\t")) {
+	        _sep = "\\t+";
+	    }
+	    else if (sep.equals(",")) {
+	        _sep = "\\s*,\\s*";
+	    }
+	    else {
+	        _sep = sep;
+	    }
+	    return Collections.singletonMap("_separator", (Object) _sep);
+    }
+
+    private void readPrimitive(DSHandle dest, BufferedReader br, Node owner) throws IOException {
 		StringBuffer sb = new StringBuffer();
 		String line = br.readLine();
 		while (line != null) {
@@ -133,38 +176,38 @@ public class ReadData extends SwiftFunction {
 			line = br.readLine();
 		}
 		String s = sb.toString();
-		setValue(dest, s);
+		setValue(dest, s, owner);
 	}
 
-	private void readArray(DSHandle dest, BufferedReader br) throws IOException, ExecutionException {
+	private void readArray(DSHandle dest, BufferedReader br, Node owner, Map<String, Object> opts) 
+	        throws IOException {
 		if (dest.getType().itemType().isPrimitive()) {
-			readPrimitiveArray(dest, br);
+			readPrimitiveArray(dest, br, owner);
 		}
 		else {
-			readStructArray(dest, br);
+			readStructArray(dest, br, owner, opts);
 		}
 	}
 
-	private void readPrimitiveArray(DSHandle dest, BufferedReader br) throws IOException,
-			ExecutionException {
+	private void readPrimitiveArray(DSHandle dest, BufferedReader br, Node owner) throws IOException {
 		int index = 0;
 		String line = br.readLine();
 		try {
 			while (line != null) {
 				DSHandle child = dest.getField(index);
-				setValue(child, line);
+				setValue(child, line, owner);
 				line = br.readLine();
 				index++;
 			}
 		}
 		catch (NoSuchFieldException e) {
-			throw new ExecutionException(this, e);
+			throw new ExecutionException(owner, e);
 		}
 	}
 
-	private void readStructArray(DSHandle dest, BufferedReader br) throws IOException,
-			ExecutionException {
-		String[] header = readStructHeader(dest.getType().itemType(), br);
+	private void readStructArray(DSHandle dest, BufferedReader br, Node owner, 
+	        Map<String, Object> opts) throws IOException {
+		String[] header = readStructHeader(dest.getType().itemType(), br, owner, opts);
 		int index = 0;
 		String line = br.readLine();
 		try {
@@ -172,33 +215,34 @@ public class ReadData extends SwiftFunction {
 				line = line.trim();
 				if (!line.equals("")) {
 					DSHandle child = dest.getField(index);
-					readStruct(child, line, header);
+					readStruct(child, line, header, owner, opts);
 					index++;
 				}
 				line = br.readLine();
 			}
 		}
 		catch (NoSuchFieldException e) {
-			throw new ExecutionException(this, e);
+			throw new ExecutionException(owner, e);
 		}
 	}
 
-	private String[] readStructHeader(Type type, BufferedReader br) throws ExecutionException,
-			IOException {
+	private String[] readStructHeader(Type type, BufferedReader br, Node owner, 
+	        Map<String, Object> opts) throws IOException {
 		String line = br.readLine();
 		if (line == null) {
-			throw new ExecutionException("Missing header");
+			throw new ExecutionException(owner, "Missing header");
 		}
 		else {
-			String[] header = line.split("\\s+");
+		    String sep = getOption("_separator", opts);
+			String[] header = line.split(sep);
 			Set<String> t = new HashSet<String>(type.getFieldNames());
 			Set<String> h = new HashSet<String>(Arrays.asList(header));
 			if (t.size() != h.size()) {
-				throw new ExecutionException("File header does not match type. " + "Expected "
+				throw new ExecutionException(owner, "File header does not match type. " + "Expected "
 						+ t.size() + " whitespace separated items. Got " + h.size() + " instead.");
 			}
 			if (!t.equals(h)) {
-				throw new ExecutionException("File header does not match type. "
+				throw new ExecutionException(owner, "File header does not match type. "
 						+ "Expected the following whitespace separated header items: " + t
 						+ ". Instead, the header was: " + h);
 			}
@@ -206,39 +250,40 @@ public class ReadData extends SwiftFunction {
 		}
 	}
 
-	private void readStruct(DSHandle dest, String line, String[] header) throws ExecutionException {
-		String[] cols = line.split("\\s+");
+	private void readStruct(DSHandle dest, String line, String[] header, Node owner, Map<String, Object> opts) {
+	    String sep = getOption("_separator", opts);
+		String[] cols = line.split(sep);
 		try {
 			if (cols.length != header.length) {
-				throw new ExecutionException("Column count for line \"" + line
+				throw new ExecutionException(owner, "Column count for line \"" + line
 						+ "\" does not match the header column count of " + header.length);
 			}
 			else {
 
 				for (int i = 0; i < cols.length; i++) {
 					DSHandle child = dest.getField(header[i]);
-					setValue(child, cols[i]);
+					setValue(child, cols[i], owner);
 				}
 			}
 		}
 		catch (NoSuchFieldException e) {
-			throw new ExecutionException(this, e);
+			throw new ExecutionException(owner, e);
 		}
 	}
 
-	private void readStruct(DSHandle dest, BufferedReader br) throws ExecutionException,
-			IOException {
-		String[] header = readStructHeader(dest.getType(), br);
+	private void readStruct(DSHandle dest, BufferedReader br, Node owner, Map<String, Object> opts) 
+	        throws IOException {
+		String[] header = readStructHeader(dest.getType(), br, owner, opts);
 		String line = br.readLine();
 		if (line == null) {
 			throw new ExecutionException("Missing values");
 		}
 		else {
-			readStruct(dest, line, header);
+			readStruct(dest, line, header, owner, opts);
 		}
 	}
 
-	private void setValue(DSHandle dest, String s) throws ExecutionException {
+	private void setValue(DSHandle dest, String s, Node owner) {
 		try {
 
 			if (dest.getType().equals(Types.INT)) {
@@ -254,11 +299,11 @@ public class ReadData extends SwiftFunction {
 				dest.setValue(s);
 			}
 			else {
-				throw new ExecutionException("Don't know how to read type " + dest.getType());
+				throw new ExecutionException(owner, "Don't know how to read type " + dest.getType());
 			}
 		}
 		catch (NumberFormatException e) {
-			throw new ExecutionException("Could not convert value to number: " + s);
+			throw new ExecutionException(owner, "Could not convert value to number: " + s);
 		}
 	}
 }

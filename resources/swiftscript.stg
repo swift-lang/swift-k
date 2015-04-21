@@ -105,6 +105,19 @@ $else$
 $endif$
 >>
 
+structInit(fields, sourcelocation) ::= <<
+	<struct>
+		$fields; separator="\n"$
+	</struct>
+>>
+
+structFieldInit(key, value, sourcelocation) ::= <<
+	<field>
+		$key$
+		$value$
+	</field>
+>>
+
 range(from, to, step, sourcelocation) ::= <<
 <range>
   $from$

@@ -124,7 +124,7 @@ public abstract class InternalFunction extends Sequential {
 		return p;
 	}
 	
-	protected Param optional(String name, Object value) {
+	public static Param optional(String name, Object value) {
 		if (name == null) {
 			throw new IllegalArgumentException("Null parameter name");
 		}

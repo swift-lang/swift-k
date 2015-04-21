@@ -14,7 +14,7 @@ SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
 SWIFT:HOME := contextAttribute("SWIFT:HOME")
 SITEDIR_KEEP := configProperty("keepSiteDir")
 
-namespace(swift) {	
+namespace(swift) {
 	export(stageIn, def("org.griphyn.vdl.karajan.lib.Stagein"))
 	export(stageOut, def("org.griphyn.vdl.karajan.lib.Stageout"))
 

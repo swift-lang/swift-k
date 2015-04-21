@@ -39,6 +39,7 @@ import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
@@ -55,7 +56,9 @@ import org.griphyn.vdl.type.impl.UnresolvedType;
  */
 public class XS {
     
-    public static class Schema extends InternalFunction {        
+    public static class Schema extends InternalFunction {
+        private VarRef<Types> types;
+        
         @Override
         protected Signature getSignature() {
             return new Signature(params());
@@ -68,8 +71,9 @@ public class XS {
 
         @Override
         protected Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
+            types = scope.getVarRef("#types");
             try {
-                Types.resolveTypes();
+                types.getValue().resolveTypes();
             }
             catch (NoSuchTypeException e) {
                 throw new CompilationException(w, "Cannot resolve types", e);
@@ -81,6 +85,7 @@ public class XS {
     public static class SimpleType extends InternalFunction {
         private ArgRef<String> name;
         private ArgRef<String> type;
+        private VarRef<Types> types;
         
         @Override
         protected Signature getSignature() {
@@ -93,16 +98,17 @@ public class XS {
         }
 
         @Override
-        protected Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {            
+        protected Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
+            types = scope.getVarRef("#types");
             Type t = new TypeImpl(name.getValue());
             try {
-                t.setBaseType(Types.getType(type.getValue()));
+                t.setBaseType(types.getValue().getType(type.getValue()));
             }
             catch (NoSuchTypeException e) {
                 throw new CompilationException(w, "Unknown type: '" + type.getValue() + "'");
             }
             
-            Types.addType(t);
+            types.getValue().addType(t);
             
             return null;
         }
@@ -140,6 +146,7 @@ public class XS {
     public static class ComplexType extends InternalFunction {
         private ArgRef<String> name;
         private ChannelRef<Object> c_vargs;
+        private VarRef<Types> types;
         
         @Override
         protected Signature getSignature() {
@@ -179,7 +186,8 @@ public class XS {
                 }
             }
             
-            Types.addType(t);
+            types = scope.getVarRef("#types");
+            types.getValue().addType(t);
             
             return null;
         }

@@ -139,21 +139,22 @@ public class ProcessBulkErrors extends AbstractFunction {
 			    CharArrayWriter caw = new CharArrayWriter();
 			    e.printStackTrace(new PrintWriter(caw));
 			    msg = caw.toString();
-
+			}
+			else if (e instanceof ExecutionException) {
+			    msg = getMsgAndTrace((ExecutionException) e);
 			}
 			else {
 			    msg = e.getMessage();
-			    if(msg != null){
-			    lastmsg = msg;
+			    if (msg != null) {
+			        lastmsg = msg;
 			    }
-
 			}
 			if (msg != null && (prev == null || prev.indexOf(msg) == -1)) {
 			    if (!first) {
-				sb.append("\nCaused by:\n\t");
+			        sb.append("\nCaused by:\n\t");
 			    }
 			    else {
-				first = false;
+			        first = false;
 			    }
 			    sb.append(msg);
 			    lastmsg = msg;
@@ -163,4 +164,64 @@ public class ProcessBulkErrors extends AbstractFunction {
 		}
 		return sb.toString();
 	}
+
+    private static String getMsgAndTrace(ExecutionException e) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(e.getMessage());
+        sb.append('\n');
+        if (e.getTrace() != null) {
+            for (Node n : e.getTrace()) {
+                sb.append("\t");
+                demangle(sb, n.getTextualName());
+                String fn = n.getFileName();
+                if (fn != null) {
+                    fn = fn.substring(1 + fn.lastIndexOf('/'));
+                    sb.append(" @ ");
+                    sb.append(fn);
+        
+                    if (n.getLine() != 0) {
+                        sb.append(", line: ");
+                        sb.append(n.getLine());
+                    }
+                }
+                sb.append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    private static void demangle(StringBuilder sb, String name) {
+        boolean seenParams = false;
+        boolean inArray = false;
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            switch (c) {
+                case '$':
+                    if (i == name.length() - 1) {
+                        if (inArray) {
+                            sb.append("]");
+                        }
+                        sb.append(")");
+                    }
+                    else if (seenParams) {
+                        if (inArray) {
+                            sb.append("]");
+                            inArray = false;
+                        }
+                        sb.append(", ");
+                    }
+                    else {
+                        sb.append("(");
+                        seenParams = true;
+                    }
+                    break;
+                case '#':
+                    sb.append("[");
+                    inArray = true;
+                    break;
+                default:
+                    sb.append(c);
+            }
+        }
+    }
 }

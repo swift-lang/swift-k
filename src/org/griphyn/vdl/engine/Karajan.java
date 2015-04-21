@@ -43,9 +43,9 @@ import org.antlr.stringtemplate.StringTemplateGroup;
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlBoolean;
 import org.apache.xmlbeans.XmlCursor;
+import org.apache.xmlbeans.XmlDouble;
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
-import org.apache.xmlbeans.XmlFloat;
 import org.apache.xmlbeans.XmlInt;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
@@ -57,8 +57,6 @@ import org.globus.swift.language.ImportsDocument.Imports;
 import org.globus.swift.language.ProgramDocument.Program;
 import org.globus.swift.language.Switch.Case;
 import org.globus.swift.language.Switch.Default;
-import org.globus.swift.language.TypesDocument.Types;
-import org.globus.swift.language.TypesDocument.Types.Type;
 import org.globus.swift.language.Variable.Mapping;
 import org.globus.swift.language.Variable.Mapping.Param;
 import org.griphyn.vdl.engine.VariableScope.AccessType;
@@ -69,27 +67,31 @@ import org.griphyn.vdl.karajan.CompilationException;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.mapping.MapperFactory;
 import org.griphyn.vdl.toolkit.VDLt2VDLx;
+import org.griphyn.vdl.type.DuplicateFieldException;
 import org.griphyn.vdl.type.NoSuchTypeException;
+import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
 import org.safehaus.uuid.UUIDGenerator;
 import org.w3c.dom.Node;
 
 public class Karajan {
 	public static final Logger logger = Logger.getLogger(Karajan.class);
+	
+	public static final String STDLIB_V2 = "stdlib.v2";
+	public static final String STDLIB_V1 = "stdlib.v1";
 
-	Map<String,String> stringInternMap = new HashMap<String,String>();
-	Map<Integer,String> intInternMap = new HashMap<Integer,String>();
-	Map<Float,String> floatInternMap = new HashMap<Float,String>();
-	Map<String,ProcedureSignature> proceduresMap = 
-	    new HashMap<String,ProcedureSignature>();
-	Map<String,ProcedureSignature> functionsMap = 
-	    new HashMap<String,ProcedureSignature>();
-	Map<String, Type> typesMap = new HashMap<String, Type>();
+	Map<String, String> stringInternMap = new HashMap<String, String>();
+	Map<Integer, String> intInternMap = new HashMap<Integer, String>();
+	Map<Double, String> floatInternMap = new HashMap<Double, String>();
+	private FunctionsMap functionsMap;
+	Types types = new Types(Types.BUILT_IN_TYPES);
 	Set<String> nonMappedTypes = new HashSet<String>();
 	
 	private class InternedField {
-	    public final String name, type;
+	    public final String name;
+	    public final Type type;
 	    
-	    public InternedField(String name, String type) {
+	    public InternedField(String name, Type type) {
 	        this.name = name;
 	        this.type = type;
 	    }
@@ -128,6 +130,7 @@ public class Karajan {
 		matter. */
 
 	StringTemplateGroup m_templates;
+	private boolean newStdLib;
 
 	public static void main(String[] args) throws Exception {
 		if (args.length < 1) {
@@ -152,7 +155,8 @@ public class Karajan {
 		        override.setSuperGroup(main);
 		        templates = override;
 		    }
-		} catch(IOException ioe) {
+		} 
+		catch(IOException ioe) {
 			throw new CompilationException("Unable to load karajan source templates",ioe);
 		}
 
@@ -190,30 +194,27 @@ public class Karajan {
 		    throw new IllegalArgumentException("Don't know how to parse a " + in.getClass().getName());
 		}
 
-		if(programDoc.validate(options)) {
+		if (programDoc.validate(options)) {
 			logger.debug("Validation of XML intermediate file was successful");
-		} else {
+		} 
+		else {
 			logger.warn("Validation of XML intermediate file failed.");
 			logger.warn("Validation errors:");
-			for (XmlError error : errors)
+			for (XmlError error : errors) {
 				logger.warn(error.toString());
+			}
 			System.exit(3);
 		}
 		return programDoc;
 	}
 
 	public Karajan() {
-		// Built-in procedures
-		proceduresMap = ProcedureSignature.makeProcedureSignatures();
-		// Built-in functions
-		functionsMap = ProcedureSignature.makeFunctionSignatures();
-		
 		// used by some templates
-		addInternedField("temp", "int");
-		addInternedField("const", "int");
-		addInternedField("const", "float");
-		addInternedField("const", "string");
-		addInternedField("const", "boolean");
+		addInternedField("temp", Types.INT);
+		addInternedField("const", Types.INT);
+		addInternedField("const", Types.FLOAT);
+		addInternedField("const", Types.STRING);
+		addInternedField("const", Types.BOOLEAN);
 	}
 
 	void setTemplateGroup(StringTemplateGroup tempGroup) {
@@ -225,120 +226,163 @@ public class Karajan {
 	}
 
     private void processImports(Program prog) throws CompilationException {
-
 		Imports imports = prog.getImports();
-		if(imports!=null) {
+		if (imports!=null) {
 			logger.debug("Processing SwiftScript imports");
             // process imports in reverse order
-			for(int i = imports.sizeOfImportArray() - 1 ;  i >=0 ; i--) {
+			for (int i = imports.sizeOfImportArray() - 1 ;  i >=0 ; i--) {
 				String moduleToImport = imports.getImportArray(i);
 				logger.debug("Importing module "+moduleToImport);
-				if(!importedNames.contains(moduleToImport)) {
-
-					// TODO PATH/PERL5LIB-style path handling
-					//String swiftfilename = "./"+moduleToImport+".swift";
-					//String xmlfilename = "./"+moduleToImport+".xml";
-				    String lib_path = System.getenv("SWIFT_LIB");
-					String swiftfilename = moduleToImport+".swift";
-					String xmlfilename = moduleToImport+".swiftx";
-
-					File local = new File(swiftfilename);
-					if( !( lib_path == null || local.exists() ) )
-					{
-					    String[] path = lib_path.split(":");
-					    for(String entry : path)
-					    {
-					        String lib_script_location = entry + "/" + swiftfilename;
-					        File file = new File(lib_script_location);
-					        
-					        if(file.exists())
-					        {
-					            swiftfilename = entry + "/" + swiftfilename;
-
-					            moduleToImport = entry + "/" + moduleToImport;
-					            break;
-					        }
-					    }
-					}
-
-					try {
-        	    		VDLt2VDLx.compile(new FileInputStream(swiftfilename),new PrintStream(new FileOutputStream(xmlfilename)));
-						logger.debug("Compiled. Now reading in compiled XML for "+moduleToImport);
-						Program importedProgram = parseProgramXML(new File(xmlfilename)).getProgram();
-						logger.debug("Read in compiled XML for "+moduleToImport);
-						importList.addFirst(importedProgram);
-						importedNames.add(moduleToImport);
-						logger.debug("Added "+moduleToImport+" to import list. Processing imports from that.");
-						processImports(importedProgram);
-					} catch(Exception e) {
-						throw new CompilationException("When processing import "+moduleToImport, e);
-					}
-				} else {
+				if (!importedNames.contains(moduleToImport)) {
+				    if (moduleToImport.equals(STDLIB_V2)) {
+				        newStdLib = true;
+				    }
+				    else if (moduleToImport.equals(STDLIB_V1)) {
+                        newStdLib = false;
+                    }
+				    else {
+				        processImport(moduleToImport);
+				    }
+				} 
+				else {
 					logger.debug("Skipping repeated import of "+moduleToImport);
 				}
 			}
 		}
 	}
 
-	private void processTypes(Program prog, VariableScope scope) throws CompilationException {
-	    Types types = prog.getTypes();
-		if (types != null) {
-			for (int i = 0; i < types.sizeOfTypeArray(); i++) {
-				Type theType = types.getTypeArray(i);
+	private void processImport(String moduleToImport) throws CompilationException {
+	    // TODO PATH/PERL5LIB-style path handling
+        //String swiftfilename = "./"+moduleToImport+".swift";
+        //String xmlfilename = "./"+moduleToImport+".xml";
+        String lib_path = System.getenv("SWIFT_LIB");
+        String swiftfilename = moduleToImport + ".swift";
+        String xmlfilename = moduleToImport + ".swiftx";
+
+        File local = new File(swiftfilename);
+        if (!(lib_path == null || local.exists())) {
+            String[] path = lib_path.split(":");
+            for(String entry : path) {
+                String lib_script_location = entry + "/" + swiftfilename;
+                File file = new File(lib_script_location);
+                
+                if(file.exists()) {
+                    swiftfilename = entry + "/" + swiftfilename;
+                    moduleToImport = entry + "/" + moduleToImport;
+                    break;
+                }
+            }
+        }
+
+        try {
+            VDLt2VDLx.compile(new FileInputStream(swiftfilename),new PrintStream(new FileOutputStream(xmlfilename)));
+            logger.debug("Compiled. Now reading in compiled XML for "+moduleToImport);
+            Program importedProgram = parseProgramXML(new File(xmlfilename)).getProgram();
+            logger.debug("Read in compiled XML for "+moduleToImport);
+            importList.addFirst(importedProgram);
+            importedNames.add(moduleToImport);
+            logger.debug("Added "+moduleToImport+" to import list. Processing imports from that.");
+            processImports(importedProgram);
+        } 
+        catch(Exception e) {
+            throw new CompilationException("When processing import "+moduleToImport, e);
+        }
+    }
+
+    private void processTypes(Program prog, VariableScope scope) throws CompilationException {
+	    TypesDocument.Types progTypes = prog.getTypes();
+		if (progTypes != null) {
+			for (int i = 0; i < progTypes.sizeOfTypeArray(); i++) {
+				TypesDocument.Types.Type theType = progTypes.getTypeArray(i);
 				String typeName = theType.getTypename();
 				String typeAlias = theType.getTypealias();
 
-				logger.debug("Processing type "+typeName);
-
-				typesMap.put(typeName, theType);
+				logger.debug("Processing type " + typeName);
 
 				StringTemplate st = template("typeDef");
 				st.setAttribute("name", typeName);
 				if (typeAlias != null && !typeAlias.equals("") && !typeAlias.equals("string")) {
-					checkIsTypeDefined(typeAlias);
-					st.setAttribute("type", typeAlias);
+				    addTypeAlias(typeName, typeAlias, st);
 				}
-
-				TypeStructure ts = theType.getTypestructure();
-				boolean allPrimitive = ts.sizeOfMemberArray() > 0;
-				for (int j = 0; j < ts.sizeOfMemberArray(); j++) {
-					TypeRow tr = ts.getMemberArray(j);
-
-					StringTemplate stMember = template("memberdefinition");
-					stMember.setAttribute("name", tr.getMembername());
-					stMember.setAttribute("type", tr.getMembertype());
-					if (!isPrimitiveOrArrayOfPrimitive(tr.getMembertype())) {
-						allPrimitive = false;
-					}
-
-					st.setAttribute("members", stMember);
-				}
-				if (allPrimitive) {
-					nonMappedTypes.add(typeName);
+				else {
+				    addStructType(typeName, theType, st);
 				}
 				scope.bodyTemplate.setAttribute("types", st);
 			}
 		}
+		try {
+            types.resolveTypes();
+        }
+        catch (NoSuchTypeException e) {
+            throw new CompilationException("Cannot resolve types", e);
+        }
 	}
 
-	private void processProcedures(Program prog, VariableScope scope) throws CompilationException {
+	private void addStructType(String typeName, TypesDocument.Types.Type theType, StringTemplate st) 
+	        throws CompilationException {
+	    
+	    Type type = Type.Factory.createType(typeName, false);
+	    TypeStructure ts = theType.getTypestructure();
+        boolean allPrimitive = ts.sizeOfMemberArray() > 0;
+        for (int j = 0; j < ts.sizeOfMemberArray(); j++) {
+            TypeRow tr = ts.getMemberArray(j);
+
+            StringTemplate stMember = template("memberdefinition");
+            String fieldName = tr.getMembername();
+            org.griphyn.vdl.type.Type fieldType;
+            try {
+                fieldType = findType(tr.getMembertype());
+                type.addField(fieldName, fieldType);
+                if (!isPrimitiveOrArrayOfPrimitives(fieldType)) {
+                    allPrimitive = false;
+                }
+            }
+            catch (DuplicateFieldException e) {
+                throw new CompilationException("Re-definition of field '" + 
+                    fieldName + "' in type '" + typeName + "'");
+            }
+            stMember.setAttribute("name", tr.getMembername());
+            stMember.setAttribute("type", tr.getMembertype());
+
+            st.setAttribute("members", stMember);
+        }
+        if (allPrimitive) {
+            nonMappedTypes.add(typeName);
+        }
+        types.addType(type);
+    }
+
+    private void addTypeAlias(String typeName, String typeAlias, StringTemplate st) 
+            throws CompilationException {
+        
+	    Type type = Type.Factory.createType(typeName, false);
+        type.setBaseType(findType(typeAlias));
+        types.addType(type);
+        st.setAttribute("type", typeAlias);
+    }
+
+    private void processProcedures(Program prog, VariableScope scope) throws CompilationException {
 		Map<String, Procedure> names = new HashMap<String, Procedure>();
 		// Keep track of declared procedures
 	    // Check for redefinitions of existing procedures
-	    Set<String> procsDefined = new HashSet<String>() ;	    
 		for (int i = 0; i < prog.sizeOfProcedureArray(); i++) {
 			Procedure proc = prog.getProcedureArray(i);
 			String procName = proc.getName();
-			if (procsDefined.contains(procName)){
+			if (functionsMap.find(procName, proc.getInputArray()) != null) {
 			    // We have a redefinition error
-			    throw new CompilationException("Illegal redefinition of procedure attempted for " + procName );
+			    throw new CompilationException("Illegal redefinition of procedure attempted for " + procName);
 			}
-			procsDefined.add(procName);
-			ProcedureSignature ps = new ProcedureSignature(procName);
-			ps.setInputArgs(proc.getInputArray());
-			ps.setOutputArgs(proc.getOutputArray());
-			proceduresMap.put(procName, ps);
-			names.put(procName, proc);
+			Signature ps = new Signature(procName);
+			try {
+                ps.setInputArgs(proc.getInputArray(), types);
+                ps.setOutputArgs(proc.getOutputArray(), types);
+            }
+            catch (NoSuchTypeException e) {
+                throw new CompilationException("Type not found", e);
+            }
+			functionsMap.addUserProcedure(procName, ps);
+			proc.setName(ps.getMangledName());
+			names.put(ps.getMangledName(), proc);
 		}
 		
 		List<Procedure> sorted = new ArrayList<Procedure>();
@@ -408,15 +452,31 @@ public class Karajan {
 
 		importList.addFirst(prog);
 		processImports(prog);
+		Map<String, Object> constants;
+		if (newStdLib) {
+		    functionsMap = StandardLibrary.NEW.getFunctionSignatures();
+		    constants = StandardLibrary.NEW.getConstants();
+		    scope.bodyTemplate.setAttribute("stdlibversion", "2");
+		}
+		else {
+            functionsMap = StandardLibrary.LEGACY.getFunctionSignatures();
+            constants = StandardLibrary.LEGACY.getConstants();
+            scope.bodyTemplate.setAttribute("stdlibversion", "1");
+		}
 
-		for (Program program : importList)
+		addConstants(prog, scope, constants);
+		for (Program program : importList) {
 		    processTypes(program, scope);
-		for (Program program : importList)
+		}
+		for (Program program : importList) {
             statementsForSymbols(program, scope);
-        for (Program program : importList)
+		}
+        for (Program program : importList) {
             processProcedures(program, scope);
-        for (Program program : importList)
+        }
+        for (Program program : importList) {
             statements(program, scope);
+        }
 		
         generateInternedFields(scope.bodyTemplate);
 		generateInternedConstants(scope.bodyTemplate);
@@ -428,6 +488,31 @@ public class Karajan {
 		return scope.bodyTemplate;
 	}
 	
+    private void addConstants(Program prog, VariableScope scope, Map<String, Object> constants) 
+            throws CompilationException {
+        
+        for (Map.Entry<String, Object> e : constants.entrySet()) {
+            org.griphyn.vdl.type.Type type = inferTypeFromValue(e.getValue());
+            scope.addVariable(e.getKey(), type, "Variable", AccessType.GLOBAL, 
+                VariableOrigin.INTERNAL, prog);
+            scope.addWriter(e.getKey(), WriteType.FULL, prog, null);
+            // actual value will be defined by importStdlib
+        }
+    }
+
+    private org.griphyn.vdl.type.Type inferTypeFromValue(Object value) throws CompilationException {
+        if (value instanceof Double) {
+            return Types.FLOAT;
+        }
+        if (value instanceof Integer) {
+            return Types.INT;
+        }
+        if (value instanceof String) {
+            return Types.STRING;
+        }
+        throw new CompilationException("Could not infer constant type for value '" + value + "'");
+    }
+
     public void procedure(Procedure proc, VariableScope containingScope) throws CompilationException {
 		VariableScope outerScope = new VariableScope(this, containingScope, EnclosureType.PROCEDURE, proc);
 		VariableScope innerScope = new VariableScope(this, outerScope, EnclosureType.NONE, proc);
@@ -435,23 +520,26 @@ public class Karajan {
 		containingScope.bodyTemplate.setAttribute("procedures", procST);
 		procST.setAttribute("line", getLine(proc));
 		procST.setAttribute("name", proc.getName());
+		
 		for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
 			FormalParameter param = proc.getOutputArray(i);
 			StringTemplate paramST = parameter(param, innerScope);
+			Type type = findType(param.getType().getLocalPart());
 			procST.setAttribute("outputs", paramST);
-			if (!this.isPrimitiveOrArrayOfPrimitive(param.getType().getLocalPart())) {
+			if (!isPrimitiveOrArrayOfPrimitives(type)) {
                 procST.setAttribute("stageouts", paramST);
             }
-			addArg(procST, param, paramST, true, innerScope);		
+			addArg(procST, param, type, paramST, true, innerScope);		
 		}
 		for (int i = 0; i < proc.sizeOfInputArray(); i++) {
 			FormalParameter param = proc.getInputArray(i);
 			StringTemplate paramST = parameter(param, outerScope);
+			Type type = findType(param.getType().getLocalPart());
 			procST.setAttribute("inputs", paramST);
-			if (!this.isPrimitiveOrArrayOfPrimitive(param.getType().getLocalPart())) {
+			if (!this.isPrimitiveOrArrayOfPrimitives(type)) {
 			    procST.setAttribute("stageins", paramST);
 			}
-			addArg(procST, param, paramST, false, outerScope);
+			addArg(procST, param, type, paramST, false, outerScope);
 			outerScope.addWriter(param.getName(), WriteType.FULL, proc, procST);
 		}
 		
@@ -469,15 +557,15 @@ public class Karajan {
 	}
 
     private void addArg(StringTemplate procST, FormalParameter param,
-            StringTemplate paramST, boolean returnArg, VariableScope scope) throws CompilationException {
+            Type type, StringTemplate paramST, boolean returnArg, VariableScope scope) 
+                throws CompilationException {
+        
         if (!param.isNil()) {
             procST.setAttribute("optargs", paramST);
         }
         else {
             procST.setAttribute("arguments", paramST);
         }
-        String type = normalize(param.getType().getLocalPart());
-        checkIsTypeDefined(type);
         scope.addVariable(param.getName(), type, returnArg ? "Return value" : "Parameter", 
                 AccessType.LOCAL, VariableOrigin.INTERNAL, param);
         
@@ -488,31 +576,32 @@ public class Karajan {
         }
     }
     
-  
     public StringTemplate parameter(FormalParameter param, VariableScope scope) throws CompilationException {
 		StringTemplate paramST = new StringTemplate("parameter");
 		StringTemplate typeST = new StringTemplate("type");
+		Type type = findType(param.getType().getLocalPart());
 		paramST.setAttribute("name", param.getName());
-		typeST.setAttribute("name", normalize(param.getType().getLocalPart()));
+		typeST.setAttribute("name", type.toString());
 		typeST.setAttribute("namespace", param.getType().getNamespaceURI());
 		paramST.setAttribute("type", typeST);
 		if(!param.isNil()) {
-			paramST.setAttribute("default",expressionToKarajan(param.getAbstractExpression(), scope));
+			paramST.setAttribute("default", expressionToKarajan(param.getAbstractExpression(), scope));
 		}
 		return paramST;
 	}
 
 	public void variableForSymbol(Variable var, VariableScope scope) throws CompilationException {
-		checkIsTypeDefined(var.getType().getLocalPart());
-		scope.addVariable(var.getName(), var.getType().getLocalPart(), "Variable", 
+		Type type = findType(var.getType().getLocalPart());
+		scope.addVariable(var.getName(), type, "Variable", 
 		    var.getIsGlobal() ? AccessType.GLOBAL : AccessType.LOCAL, VariableOrigin.USER, var);
 	}
 
 	public void variable(Variable var, VariableScope scope) throws CompilationException {
 		StringTemplate variableST = template("variable");
 		variableST.setAttribute("name", var.getName());
-		variableST.setAttribute("type", var.getType().getLocalPart());
-		variableST.setAttribute("field", addInternedField(var.getName(), var.getType().getLocalPart()));
+		Type type = findType(var.getType().getLocalPart());
+		variableST.setAttribute("type", type.toString());
+		variableST.setAttribute("field", addInternedField(var.getName(), type));
 		variableST.setAttribute("isGlobal", Boolean.valueOf(var.getIsGlobal()));
 		variableST.setAttribute("line", getLine(var));
 		variables.add(variableST);
@@ -548,8 +637,9 @@ public class Karajan {
 			}
    		}
 		else {
-			// add temporary mapping info if not primitive or array of primitive	    
-			if (!isPrimitiveOrArrayOfPrimitive(var.getType().getLocalPart())) {
+			// add temporary mapping info if not primitive or array of primitive
+		   
+			if (!isPrimitiveOrArrayOfPrimitives(type)) {
     			StringTemplate mappingST = new StringTemplate("mapping");
     			mappingST.setAttribute("descriptor", "ConcurrentMapper");
     			StringTemplate paramST = template("swift_parameter");
@@ -588,10 +678,7 @@ public class Karajan {
     private StringTemplate mappingParameter(Param param, VariableScope scope) throws CompilationException {
         StringTemplate paramST = template("swift_parameter");
         paramST.setAttribute("name", param.getName());
-        Node expressionDOM = param.getAbstractExpression().getDomNode();
-        String namespaceURI = expressionDOM.getNamespaceURI();
-        String localName = expressionDOM.getLocalName();
-        QName expressionQName = new QName(namespaceURI, localName);
+        QName expressionQName = getQName(param.getAbstractExpression());
         if (expressionQName.equals(VARIABLE_REFERENCE_EXPR))     {
             paramST.setAttribute("expr", expressionToKarajan(param.getAbstractExpression(), scope));
         } 
@@ -611,7 +698,7 @@ public class Karajan {
             variableDeclarationST.setAttribute("name", parameterVariableName);
             scope.bodyTemplate.setAttribute("declarations", variableDeclarationST);
             StringTemplate paramValueST=expressionToKarajan(param.getAbstractExpression(),scope);
-            String paramValueType = datatype(paramValueST);
+            Type paramValueType = datatype(paramValueST);
             scope.addVariable(parameterVariableName, paramValueType, "Variable", VariableOrigin.INTERNAL, param);
             variableDeclarationST.setAttribute("type", paramValueType);
             variableDeclarationST.setAttribute("field", addInternedField(parameterVariableName, paramValueType));
@@ -633,27 +720,9 @@ public class Karajan {
         }
         return paramST;
     }
-
-    void checkIsTypeDefined(String type) throws CompilationException {
-	    if (!org.griphyn.vdl.type.Types.isValidType(type, typesMap.keySet())) {
-	        throw new CompilationException("Type " + type + " is not defined.");
-	    }
-	}
     
-    private boolean isPrimitiveOrArrayOfPrimitive(String type) {
-        org.griphyn.vdl.type.Type t;
-        try {
-            t = org.griphyn.vdl.type.Types.getType(type);
-            return t.isPrimitive() || (t.isArray() && t.itemType().isPrimitive());
-        }
-        catch (NoSuchTypeException e) {
-            if (nonMappedTypes.contains(type)) {
-            	return true;
-            }
-            else {
-            	return false;
-            }
-        }
+    private boolean isPrimitiveOrArrayOfPrimitives(Type t) {
+        return t.isPrimitive() || (t.isArray() && t.itemType().isPrimitive());
     }
     
 	public void assign(Assign assign, VariableScope scope) throws CompilationException {
@@ -668,19 +737,23 @@ public class Karajan {
             }
             else {
     			StringTemplate assignST = template("assign");
-    			StringTemplate varST = expressionToKarajan(assign.getAbstractExpressionArray(0), scope, true);
-    			String lValueType = datatype(varST);
+    			StringTemplate varST = expressionToKarajan(assign.getAbstractExpressionArray(0), scope, true, null);
+    			Type lValueType = datatype(varST);
     			
-    			
-    			StringTemplate valueST = expressionToKarajan(assign.getAbstractExpressionArray(1), scope, false, lValueType);
+    			String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
+                scope.addWriter(rootvar, getRootVariableWriteType(assign.getAbstractExpressionArray(0)), assign, assignST);
+                
+    			StringTemplate valueST = expressionToKarajan(assign.getAbstractExpressionArray(1), scope, false, varST, lValueType);
+    			if (valueST == null) {
+    			    // the expression will handle the assignment
+    			    return;
+    			}
     			
     			checkOrInferReturnedType(varST, valueST);
     			
     			assignST.setAttribute("var", varST);
     			assignST.setAttribute("value", valueST);
     			assignST.setAttribute("line", getLine(assign));
-    			String rootvar = abstractExpressionToRootVariable(assign.getAbstractExpressionArray(0));
-    			scope.addWriter(rootvar, getRootVariableWriteType(assign.getAbstractExpressionArray(0)), assign, assignST);
     			scope.appendStatement(assignST);
             }
 		} catch(CompilationException re) {
@@ -689,10 +762,10 @@ public class Karajan {
 	}
 
     private void checkOrInferReturnedType(StringTemplate varST, StringTemplate valueST) throws CompilationException {
-        String lValueType = datatype(varST);
-        String rValueType = datatype(valueST);
-        if (isAnyType(lValueType)) {
-            if (isAnyType(rValueType)) {
+        Type lValueType = datatype(varST);
+        Type rValueType = datatype(valueST);
+        if (lValueType.equals(Types.ANY)) {
+            if (rValueType.equals(Types.ANY)) {
                 // any <- any
             }
             else {
@@ -701,14 +774,17 @@ public class Karajan {
             }
         }
         else {
-            if (isAnyType(rValueType)) {
+            if (rValueType.equals(Types.ANY)) {
                 // someType <- any
                 // only expressions that are allowed to return 'any' are procedures
                 // for example readData(ret, file). These are special procedures that
                 // need to look at the return type at run-time.
             }
+            else if (lValueType.equals(Types.FLOAT) && rValueType.equals(Types.INT)) {
+                // widening
+            }
             else if (!lValueType.equals(rValueType)){
-                throw new CompilationException("You cannot assign value of type " + rValueType +
+                throw new CompilationException("Cannot assign a value of type " + rValueType +
                     " to a variable of type " + lValueType);
             }
         }
@@ -716,16 +792,11 @@ public class Karajan {
 
     private boolean isProcedureCall(XmlObject value) {
         if (value instanceof Call) {
-            Call call = (Call) value;
-            return proceduresMap.get(call.getProc().getLocalPart()) != null;
+            return true;
         }
         else {
             return false;
         }
-    }
-
-    private boolean isAnyType(String type) {
-        return ProcedureSignature.ANY.equals(type);
     }
     
     public void append(Append append, VariableScope scope) throws CompilationException {
@@ -733,13 +804,13 @@ public class Karajan {
             StringTemplate appendST = template("append");
             StringTemplate array = expressionToKarajan(append.getAbstractExpressionArray(0),scope);
             StringTemplate value = expressionToKarajan(append.getAbstractExpressionArray(1),scope);
-            String indexType = org.griphyn.vdl.type.Types.getArrayInnerIndexTypeName(datatype(array));
-            if (!"auto".equals(indexType)) {
-                throw new CompilationException("You can only append to an array with " +
-                		"'auto' index type. Current index type: " + indexType);
+            Type arrayType = datatype(array);
+            if (!arrayType.keyType().equals(Types.AUTO)) {
+                throw new CompilationException("Illegal append to an array of type '" + arrayType + 
+                    "'. Array must have 'auto' key type.");
             }
-            if (!datatype(value).equals(org.griphyn.vdl.type.Types.getArrayInnerItemTypeName(datatype(array)))) {
-                throw new CompilationException("You cannot append value of type " + datatype(value) +
+            if (!datatype(value).equals(arrayType.itemType())) {
+                throw new CompilationException("Cannot append value of type " + datatype(value) +
                         " to an array of type " + datatype(array));
             }
             appendST.setAttribute("array", array);
@@ -748,8 +819,10 @@ public class Karajan {
             // an append is always a partial write
             scope.addWriter(rootvar, WriteType.PARTIAL, append, appendST);
             scope.appendStatement(appendST);
-        } catch(CompilationException re) {
-            throw new CompilationException("Compile error in assignment at "+append.getSrc()+": "+re.getMessage(),re);
+        } 
+        catch(CompilationException re) {
+            throw new CompilationException("Compile error in assignment at " + 
+                append.getSrc() + ": " + re.getMessage(), re);
         }
     }
 
@@ -783,7 +856,7 @@ public class Karajan {
 			|| child instanceof If
 			|| child instanceof Switch
 			|| child instanceof Procedure
-			|| child instanceof Types
+			|| child instanceof TypesDocument.Types
 			|| child instanceof FormalParameter
 			|| child instanceof Imports) {
 			// ignore these - they're expected but we don't need to
@@ -817,7 +890,7 @@ public class Karajan {
 		} else if (child instanceof Switch) {
 			switchStat((Switch) child, scope);
 		} else if (child instanceof Procedure
-			|| child instanceof Types
+			|| child instanceof TypesDocument.Types
 			|| child instanceof FormalParameter
 			|| child instanceof Imports) {
 			// ignore these - they're expected but we don't need to
@@ -826,252 +899,184 @@ public class Karajan {
 			throw new CompilationException("Unexpected element in XML. Implementing class "+child.getClass()+", content "+child);
 		}
 	}
+	
+	protected ActualParameters getActualParameters(Call call, VariableScope scope) throws CompilationException {
+	    ActualParameters actuals = new ActualParameters();
+	    Set<String> seen = new HashSet<String>();
+	    for (ActualParameter ap : call.getInputArray()) {
+	        checkDuplicate(seen, ap.getBind(), "parameter");
+	        // TODO do partial matching to infer type
+	        StringTemplate argST = actualParameter(ap, scope);
+	        actuals.addParameter(ap, argST, datatype(argST));
+	    }
+	    seen.clear();
+	    for (ActualParameter ar : call.getOutputArray()) {
+	        checkDuplicate(seen, ar.getBind(), "return");
+            StringTemplate retST = actualParameter(ar, scope);
+            actuals.addReturn(ar, retST, datatype(retST));
+        }
+	    return actuals;
+	}
+	
+	private void checkDuplicate(Set<String> seen, String name, String what) throws CompilationException {
+	    if (name == null) {
+	        return;
+	    }
+	    if (seen.contains(name)) {
+	        throw new CompilationException("Duplicate " + what + ": '" + name + "'");
+	    }
+	    seen.add(name);
+    }
+
+    protected ActualParameters getActualParameters(Function f, VariableScope scope, Type expectedType) 
+            throws CompilationException {
+        return getActualParameters(f.getAbstractExpressionArray(), scope, expectedType);
+    }
+	
+	protected ActualParameters getActualParameters(XmlObject[] params, VariableScope scope, Type expectedType) throws CompilationException {
+        ActualParameters actuals = new ActualParameters();
+        for (XmlObject param : params) {
+            StringTemplate exprST = expressionToKarajan(param, scope, false, null);
+            actuals.addParameter(param, exprST, datatype(exprST));
+        }
+        if (expectedType != null) {
+            actuals.addReturn(null, null, expectedType);
+        }
+        else {
+            actuals.addReturn(null, null, Types.ANY);
+        }
+        return actuals;
+    }
 
 
 	public StringTemplate call(Call call, VariableScope scope, boolean inhibitOutput) 
-	throws CompilationException {
+	        throws CompilationException {
 		try {
+		    // first we figure out actual parameter types
+		    ActualParameters actualParams = getActualParameters(call, scope);
+		    
 			// Check is called procedure declared previously
 			String procName = call.getProc().getLocalPart();
-			if (proceduresMap.get(procName) == null) {
-			    if (functionsMap.containsKey(procName)) {
-                    StringTemplate st = functionAsCall(call, scope);
-                    if (!inhibitOutput) {
-                        scope.appendStatement(st);
-                    }
-                    return st;
-                }
-				throw new CompilationException("No function or procedure '" + procName + "' found.");
-			}
-
-			// Check procedure arguments
-			int noOfOptInArgs = 0;
-			Map<String, FormalArgumentSignature> inArgs = 
-			    new HashMap<String, FormalArgumentSignature>();
-			Map<String, FormalArgumentSignature> outArgs = 
-			    new HashMap<String, FormalArgumentSignature>();
-
-			ProcedureSignature proc = proceduresMap.get(procName);
-			
-			if (proc.isDeprecated()) {
-			    Warnings.warn(Warnings.Type.DEPRECATION, 
-			        call, "Procedure " + procName + " is deprecated");
+			Signature proc = functionsMap.find(procName, actualParams, false);
+			if (proc == null) {
+			    throw noFunctionOrProcedure(procName, actualParams, false);
 			}
 			
-			StringTemplate callST;
-			if(proc.getInvocationMode() == ProcedureSignature.INVOCATION_USERDEFINED) {
-				callST = template("callUserDefined");
-			} else if(proc.getInvocationMode() == ProcedureSignature.INVOCATION_INTERNAL) {
-				callST = template("callInternal");
-			} else {
-				throw new CompilationException
-				("Unknown procedure invocation mode "+proc.getInvocationMode());
+			if (proc.isProcedure()) {
+			    return call(call, scope, proc, actualParams, inhibitOutput);
 			}
-			callST.setAttribute("func", procName);
-			callST.setAttribute("line", getLine(call));
-			/* Does number of input arguments match */
-			for (int i = 0; i < proc.sizeOfInputArray(); i++) {
-				if (proc.getInputArray(i).isOptional())
-					noOfOptInArgs++;
-				inArgs.put(proc.getInputArray(i).getName(), proc.getInputArray(i));
-			}
-			if (!proc.getAnyNumOfInputArgs() && (call.sizeOfInputArray() < proc.sizeOfInputArray() - noOfOptInArgs ||
-
-				                                 call.sizeOfInputArray() > proc.sizeOfInputArray()))
-				throw new CompilationException("Wrong number of procedure input arguments: specified " + call.sizeOfInputArray() +
-						" and should be " + proc.sizeOfInputArray());
-
-			/* Does number of output arguments match - no optional output args */
-			for (int i = 0; i < proc.sizeOfOutputArray(); i++) {
-				outArgs.put(proc.getOutputArray(i).getName(), proc.getOutputArray(i));
-			}
-			if (!proc.getAnyNumOfOutputArgs() && (call.sizeOfOutputArray() != proc.sizeOfOutputArray()))
-				throw new CompilationException("Wrong number of procedure output arguments: specified " + call.sizeOfOutputArray() +
-						" and should be " + proc.sizeOfOutputArray());
-
-
-			boolean keywordArgsInput = true;
-			for (int i = 0; i < call.sizeOfInputArray(); i++) {
-				if (!call.getInputArray(i).isSetBind()) {
-					keywordArgsInput = false;
-					break;
-				}
-			}
-			if (proc.getAnyNumOfInputArgs()) {
-				/* If procedure can have any number of input args, we don't do typechecking */
-				for (int i = 0; i < call.sizeOfInputArray(); i++) {
-					ActualParameter input = call.getInputArray(i);
-					StringTemplate argST = actualParameter(input, scope);
-					callST.setAttribute("inputs", argST);
-				}
-			} else if (keywordArgsInput) {
-			    /* if ALL arguments are specified by name=value */
-                /* Re-order all (which re-orders positionals), then pass optionals by keyword */
-                ActualParameter[] actuals = new ActualParameter[proc.sizeOfInputArray()];
-                for (int i = 0; i < call.sizeOfInputArray(); i++) {
-                    ActualParameter actual = call.getInputArray(i);
-                    boolean found = false;
-                    for (int j = 0; j < proc.sizeOfInputArray(); j++) {
-                        FormalArgumentSignature formal = proc.getInputArray(j);
-                        if (actual.getBind().equals(formal.getName())) {
-                            actuals[j] = actual;
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        throw new CompilationException("Formal argument " + actual.getBind() + " doesn't exist");
-                    }
+			else {
+			    StringTemplate st = functionAsCall(call, scope, proc, actualParams, 
+			        actualParams.getReturn(0).getType());
+                if (!inhibitOutput) {
+                    scope.appendStatement(st);
                 }
-                
-                int noOfMandArgs = 0;
-                for (ActualParameter actual : actuals) {
-                    if (actual == null) {
-                        // an optional formal parameter with no actual parameter
-                        continue;
-                    }
-					FormalArgumentSignature formal = inArgs.get(actual.getBind());
-					String formalType = formal.getType();
-					
-					StringTemplate argST;
-					if (formal.isOptional()) {
-                        argST = actualParameter(actual, formal.getName(), scope, false, formalType);
-                    }
-                    else {
-                        argST = actualParameter(actual, null, scope, false, formalType);
-                    }
-					callST.setAttribute("inputs", argST);
-
-					String actualType = datatype(argST);
-					if (!formal.isAnyType() && !actualType.equals(formalType))
-						throw new CompilationException("Wrong type for '" + formal.getName() + "' parameter;" +
-								" expected " + formalType + ", got " + actualType);
-
-					if (!formal.isOptional()) {
-						noOfMandArgs++;
-					}
-				}
-				if (!proc.getAnyNumOfInputArgs() && noOfMandArgs < proc.sizeOfInputArray() - noOfOptInArgs) {
-					throw new CompilationException("Mandatory argument missing");
-				}
-			} else { /* Positional arguments */
-				/* Checking types of mandatory arguments */
-				for (int i = 0; i < proc.sizeOfInputArray() - noOfOptInArgs; i++) {
-					ActualParameter input = call.getInputArray(i);
-					FormalArgumentSignature formalArg = proceduresMap.get(procName).getInputArray(i);
-					StringTemplate argST = actualParameter(input, null, scope, false, formalArg.getType());
-					callST.setAttribute("inputs", argST);
-
-					String formalType = formalArg.getType();
-					String actualType = datatype(argST);
-					if (!formalArg.isAnyType() && !actualType.equals(formalType))
-						throw new CompilationException("Wrong type for parameter number " + i +
-								", expected " + formalType + ", got " + actualType);
-				}
-				/* Checking types of optional arguments */
-				for (int i = proc.sizeOfInputArray() - noOfOptInArgs; i < call.sizeOfInputArray(); i++) {
-					ActualParameter input = call.getInputArray(i);
-
-					String formalName = input.getBind();
-					if (!inArgs.containsKey(formalName))
-						throw new CompilationException("Formal argument " + formalName + " doesn't exist");
-					FormalArgumentSignature formalArg = inArgs.get(formalName);
-					String formalType = formalArg.getType();
-					
-					StringTemplate argST = actualParameter(input, formalArg.getName(), scope, false, formalType);
-                    callST.setAttribute("inputs", argST);
-					
-					String actualType = datatype(argST);
-					if (!formalArg.isAnyType() && !actualType.equals(formalType))
-						throw new CompilationException("Wrong type for parameter " + formalName +
-								", expected " + formalType + ", got " + actualType);
-				}
+                return st;
 			}
-
-			boolean keywordArgsOutput = true;
-			for (int i = 0; i < call.sizeOfOutputArray(); i++) {
-				if (!call.getOutputArray(i).isSetBind()) {
-					keywordArgsOutput = false;
-					break;
-				}
-			}
-			if (proc.getAnyNumOfOutputArgs()) {
-				/* If procedure can have any number of output args, we don't do typechecking */
-				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
-					ActualParameter output = call.getOutputArray(i);
-					StringTemplate argST = actualParameter(output, scope);
-					callST.setAttribute("outputs", argST);
-					addWriterToScope(scope, call.getOutputArray(i).getAbstractExpression(), call, callST);
-				}
-			}
-			if (keywordArgsOutput) {
-				/* if ALL arguments are specified by name=value */
-			    /* Re-order to match the formal output args */
-			    ActualParameter[] actuals = new ActualParameter[proc.sizeOfOutputArray()];
-			    for (int i = 0; i < call.sizeOfOutputArray(); i++) {
-			        ActualParameter actual = call.getOutputArray(i);
-			        boolean found = false;
-			        for (int j = 0; j < proc.sizeOfOutputArray(); j++) {
-			            FormalArgumentSignature formal = proc.getOutputArray(j);
-			            if (actual.getBind().equals(formal.getName())) {
-			                actuals[j] = actual;
-			                found = true;
-			                break;
-			            }
-			        }
-			        if (!found) {
-			            throw new CompilationException("Formal argument " + actual.getBind() + " doesn't exist");
-			        }
-			    }
-				for (ActualParameter actual : actuals) {
-                    if (!outArgs.containsKey(actual.getBind()))
-                        throw new CompilationException("Formal argument " + actual.getBind() + " doesn't exist");
-                    FormalArgumentSignature formalArg = outArgs.get(actual.getBind());
-                    String formalType = formalArg.getType();
-
-					StringTemplate argST = actualParameter(actual, null, scope, false, formalType);
-					callST.setAttribute("outputs", argST);
-
-					String actualType = datatype(argST);
-					if (!formalArg.isAnyType() && !actualType.equals(formalType))
-						throw new CompilationException("Wrong type for output parameter '" + actual.getBind() +
-								"', expected " + formalType + ", got " + actualType);
-
-					addWriterToScope(scope, actual.getAbstractExpression(), call, callST);
-				}
-			} else { /* Positional arguments */
-				for (int i = 0; i < call.sizeOfOutputArray(); i++) {
-					ActualParameter output = call.getOutputArray(i);
-					FormalArgumentSignature formalArg = proceduresMap.get(procName).getOutputArray(i);
-					String formalType = formalArg.getType();
-					
-					StringTemplate argST = actualParameter(output, null, scope, true, formalType);
-					callST.setAttribute("outputs", argST);
-
-					/* type check positional output args */
-					String actualType = datatype(argST);
-					if (!formalArg.isAnyType() && !actualType.equals(formalType))
-						throw new CompilationException("Wrong type for parameter number " + i +
-								", expected " + formalType + ", got " + actualType);
-
-					addWriterToScope(scope, call.getOutputArray(i).getAbstractExpression(), call, callST);
-				}
-			}
-
-			if (!inhibitOutput) {
-			    scope.appendStatement(callST);
-			}
-			if (allVariables(callST.getAttribute("outputs")) && allVariables(callST.getAttribute("inputs"))) {
-			    callST.setAttribute("serialize", Boolean.TRUE);
-			}
-			return callST;
 		} 
 		catch (CompilationException ce) {
 			throw new CompilationException("Compile error in procedure invocation at " + call.getSrc(), ce);
 		}
 	}
 
-	private static final Set<String> VAR_TYPES;
+	private StringTemplate call(Call call, VariableScope scope, Signature sig,
+            ActualParameters actualParams, boolean inhibitOutput) throws CompilationException {
+
+	    if (sig.isDeprecated()) {
+            Warnings.warn(Warnings.Type.DEPRECATION, 
+                call, "Procedure " + sig.getName() + " is deprecated");
+        }
+                    
+        StringTemplate callST;
+        if (sig.getType() == Signature.InvocationType.USER_DEFINED) {
+            callST = template("callUserDefined");
+        } 
+        else if (sig.getType() == Signature.InvocationType.INTERNAL) {
+            callST = template("callInternal");
+        } 
+        else {
+            throw new CompilationException("Unhandled procedure invocation mode " +
+                sig.getType());
+        }
+        callST.setAttribute("func", sig.getMangledName());
+        callST.setAttribute("line", getLine(call));
+        
+        // type checking is done during the search, so at this
+        // point we can assume that the actual parameters are legitimate
+        // the binding process goes as follows:
+        // - go over outputs and re-order to match signature
+        // - iterate over arguments and assign to positionals in order until
+        //   we either run out of positionals or we hit a keyword actual
+        // - all actuals must be keyword from now on (except for varargs)
+        // - assign to positionals and optionals as needed
+        // - if there are varargs and there are remaining positionals,
+        //   assign to varargs
+    
+        
+        // generate code for returns
+        // should have been re-ordered during type checking
+        for (int i = 0; i < actualParams.returnCount(); i++) {
+            StringTemplate compiled = actualParams.getReturn(i).getParamST();
+            compiled.removeAttribute("bind");
+            callST.setAttribute("outputs", compiled);
+            addWriterToScope(scope, call.getOutputArray(i).getAbstractExpression(), call, callST);
+        }
+                    
+        // parameters
+        setParameters(callST, "inputs", actualParams);
+        
+        if (!inhibitOutput) {
+            scope.appendStatement(callST);
+        }
+        if (allVariables(callST.getAttribute("outputs")) && allVariables(callST.getAttribute("inputs"))) {
+            callST.setAttribute("serialize", Boolean.TRUE);
+        }
+
+        return callST;
+    }
+
+    private CompilationException noFunctionOrProcedure(String name, ActualParameters actualParams, boolean fnContext) {
+        List<Signature> all = functionsMap.findAll(name);
+        if (all.size() == 0) {
+            return new CompilationException("No function or procedure '" + name + "' found");
+        }
+        try {
+            // for debugging purposes, if I forget to remove it
+            functionsMap.find(name, actualParams, fnContext);
+        }
+        catch (CompilationException e) {
+        }
+        if (all.size() == 1) {
+            return new CompilationException("Parameter type mismatch: " + 
+                actualParams.toString(name) + "\n\tExpected: " + all.get(0));
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Signature sig : all) {
+            sb.append("\t");
+            sb.append(sig);
+            sb.append("\n\n");
+        }
+        return new CompilationException("No function or procedure found matching signature:\n\t" + 
+            actualParams.toString(name) + "\n\nPossible candidates:\n" + sb.toString());
+    }
+
+    private void setParameters(StringTemplate st, String attrName, ActualParameters actualParams) {
+	    for (int i = 0; i < actualParams.positionalCount(); i++) {
+            StringTemplate compiled = actualParams.getPositionalST(i);
+            compiled.removeAttribute("bind");
+            st.setAttribute(attrName, compiled);
+        }
+        for (int i = 0; i < actualParams.optionalCount(); i++) {
+            StringTemplate compiled = actualParams.getOptionalST(i);
+            st.setAttribute(attrName, compiled);
+        }
+        for (int i = 0; i < actualParams.varargCount(); i++) {
+            StringTemplate compiled = actualParams.getVarargST(i);
+            st.setAttribute(attrName, compiled);
+        }
+    }
+
+    private static final Set<String> VAR_TYPES;
 	
 	static {
 	    VAR_TYPES = new HashSet<String>();
@@ -1119,7 +1124,7 @@ public class Karajan {
 		VariableScope loopScope = new VariableScope(this, scope, EnclosureType.ALL, iterate);
 		VariableScope innerScope = new VariableScope(this, loopScope, EnclosureType.LOOP, iterate);
 
-		loopScope.addVariable(iterate.getVar(), "int", "Iteration variable", 
+		loopScope.addVariable(iterate.getVar(), Types.INT, "Iteration variable", 
 		    VariableOrigin.USER, iterate);
 
 		StringTemplate iterateST = template("iterate");
@@ -1157,19 +1162,17 @@ public class Karajan {
                 innerScope.setForeachSourceVar((String) inST.getAttribute("var"), foreach);
             }
 
-			String inType = datatype(inST);
-			String itemType = org.griphyn.vdl.type.Types.getArrayInnerItemTypeName(inType);
-			String keyType = org.griphyn.vdl.type.Types.getArrayInnerIndexTypeName(inType);
-			if (itemType == null) {
+			Type inType = datatype(inST);
+			if (!inType.isArray()) {
 			    throw new CompilationException("You can iterate through an array structure only");
 			}
-			innerScope.addVariable(foreach.getVar(), itemType, "Iteration variable", 
+			innerScope.addVariable(foreach.getVar(), inType.itemType(), "Iteration variable", 
 			    VariableOrigin.USER, foreach);
 			innerScope.addWriter(foreach.getVar(), WriteType.FULL, foreach, foreachST);
 			foreachST.setAttribute("indexVar", foreach.getIndexVar());
 			if (foreach.getIndexVar() != null) {
-			    foreachST.setAttribute("indexVarField", addInternedField(foreach.getIndexVar(), keyType));
-				innerScope.addVariable(foreach.getIndexVar(), keyType, "Iteration variable", 
+			    foreachST.setAttribute("indexVarField", addInternedField(foreach.getIndexVar(), inType.keyType()));
+				innerScope.addVariable(foreach.getIndexVar(), inType.keyType(), "Iteration variable", 
 				    VariableOrigin.USER, foreach);
 				innerScope.addWriter(foreach.getIndexVar(), WriteType.FULL, foreach, foreachST);
 			}
@@ -1195,8 +1198,9 @@ public class Karajan {
 		StringTemplate conditionST = expressionToKarajan(ifstat.getAbstractExpression(), scope);
 		ifST.setAttribute("condition", conditionST.toString());
 		ifST.setAttribute("line", getLine(ifstat));
-		if (!datatype(conditionST).equals("boolean"))
+		if (!datatype(conditionST).equals(Types.BOOLEAN)) {
 			throw new CompilationException ("Condition in if statement has to be of boolean type.");
+		}
 
 		Then thenstat = ifstat.getThen();
 		Else elsestat = ifstat.getElse();
@@ -1241,7 +1245,7 @@ public class Karajan {
 		switchST.setAttribute("condition", conditionST.toString());
 
 		/* TODO can switch statement can be anything apart from int and float ? */
-		if (!datatype(conditionST).equals("int") && !datatype(conditionST).equals("float"))
+		if (!datatype(conditionST).equals(Types.INT) && !datatype(conditionST).equals(Types.FLOAT))
 			throw new CompilationException("Condition in switch statements has to be of numeric type.");
 
 		for (int i=0; i< switchstat.sizeOfCaseArray(); i++) {
@@ -1270,7 +1274,7 @@ public class Karajan {
 	}
 	
 	public StringTemplate actualParameter(ActualParameter arg, VariableScope scope) throws CompilationException {
-        return actualParameter(arg, null, scope, false, null);
+        return actualParameter(arg, arg.getBind(), scope, false, null);
     }
 	
 	public StringTemplate actualParameter(ActualParameter arg, String bind, VariableScope scope) throws CompilationException {
@@ -1282,9 +1286,9 @@ public class Karajan {
     }
 
 	public StringTemplate actualParameter(ActualParameter arg, String bind, VariableScope scope, 
-	        boolean lvalue, String expectedType) throws CompilationException {
+	        boolean lvalue, Type expectedType) throws CompilationException {
 		StringTemplate argST = template("call_arg");
-		StringTemplate expST = expressionToKarajan(arg.getAbstractExpression(), scope, lvalue, expectedType);
+		StringTemplate expST = expressionToKarajan(arg.getAbstractExpression(), scope, lvalue, null, expectedType);
 		if (bind != null) {
 		    argST.setAttribute("bind", arg.getBind());
 		}
@@ -1299,7 +1303,10 @@ public class Karajan {
 		if ((app = bind.getApplication()) != null) {
 			bindST.setAttribute("application", application(app, scope));
 			procST.setAttribute("binding", bindST);
-		} else throw new CompilationException("Unknown binding: "+bind);
+		} 
+		else {
+		    throw new CompilationException("Unknown binding: " + bind);
+		}
 	}
 
 	public StringTemplate application(ApplicationBinding app, VariableScope scope) throws CompilationException {
@@ -1308,10 +1315,10 @@ public class Karajan {
 			appST.setAttribute("exec", app.getExecutable());
 			for (int i = 0; i < app.sizeOfAbstractExpressionArray(); i++) {
 				XmlObject argument = app.getAbstractExpressionArray(i);
-				StringTemplate argumentST = expressionToKarajan(argument, scope);
-				String type = datatype(argumentST);
-				String base = org.griphyn.vdl.type.Types.getArrayInnerItemTypeName(type);
-				String testType;
+				StringTemplate argumentST = expressionToKarajan(argument, scope, false, null, Types.ANY);
+				Type type = datatype(argumentST);
+				Type base = type.itemType();
+				Type testType;
 				// if array then use the array item type for testing
 				if (base != null) {
 				    testType = base;
@@ -1319,33 +1326,41 @@ public class Karajan {
 				else {
 				    testType = type;
 				}
-				if (org.griphyn.vdl.type.Types.isPrimitive(testType)) {
+				if (testType.isPrimitive()) {
 				    appST.setAttribute("arguments", argumentST);
 				} 
 				else {
-					throw new CompilationException("Cannot pass type '"+type+"' as a parameter to application '"+app.getExecutable()+"'");
+					throw new CompilationException("Cannot pass type '" + type + 
+					    "' as a parameter to application '" + app.getExecutable() + "'");
 				}
 			}
-			if(app.getStdin()!=null)
-				appST.setAttribute("stdin", expressionToKarajan(app.getStdin().getAbstractExpression(), scope));
-			if(app.getStdout()!=null)
-				appST.setAttribute("stdout", expressionToKarajan(app.getStdout().getAbstractExpression(), scope));
-			if(app.getStderr()!=null)
-				appST.setAttribute("stderr", expressionToKarajan(app.getStderr().getAbstractExpression(), scope));
+			if (app.getStdin() != null) {
+				appST.setAttribute("stdin", 
+				    expressionToKarajan(app.getStdin().getAbstractExpression(), scope));
+			}
+			if (app.getStdout() != null) {
+				appST.setAttribute("stdout", 
+				    expressionToKarajan(app.getStdout().getAbstractExpression(), scope));
+			}
+			if (app.getStderr() != null) {
+				appST.setAttribute("stderr", 
+				    expressionToKarajan(app.getStderr().getAbstractExpression(), scope));
+			}
 			addProfiles(app, scope, appST);
 			return appST;
-		} catch(CompilationException e) {
-			throw new CompilationException(e.getMessage()+" in application "+app.getExecutable()+" at "+app.getSrc(),e);
+		} 
+		catch (CompilationException e) {
+			throw new CompilationException(e.getMessage() + 
+			    " in application " + app.getExecutable() + " at " + app.getSrc(), e);
 		}
 	}
 
-	private void addProfiles(ApplicationBinding app, 
-	                         VariableScope scope,
-	                         StringTemplate appST) 
-	throws CompilationException {
+	private void addProfiles(ApplicationBinding app, VariableScope scope, StringTemplate appST) 
+	        throws CompilationException {
 		Profile[] profiles = app.getProfileArray();
-		if (profiles.length == 0) 
+		if (profiles.length == 0) { 
 			return;
+		}
 		StringTemplate attributes = template("swift_attributes");
 		for (Profile profile : profiles) { 
 			XmlObject xmlKey   = profile.getAbstractExpressionArray(0);
@@ -1368,49 +1383,30 @@ public class Karajan {
 	  * that happens.
 	  */
 
-	public StringTemplate function(XmlObject func, String name, XmlObject[] arguments, VariableScope scope) 
+	public StringTemplate function(XmlObject func, String name, XmlObject[] arguments, VariableScope scope, Type expectedType) 
 	        throws CompilationException {
-		StringTemplate funcST = template("function");
-		funcST.setAttribute("name", name);
-		funcST.setAttribute("line", getLine(func));
-		ProcedureSignature funcSignature = functionsMap.get(name);
-		if (funcSignature == null) {
-			throw new CompilationException("Unknown function: @" + name);
-		}
-		int noOfOptInArgs = 0;
-		for (int i = 0; i < funcSignature.sizeOfInputArray(); i++) {
-			if (funcSignature.getInputArray(i).isOptional())
-				noOfOptInArgs++;
-		}
-		if (!funcSignature.getAnyNumOfInputArgs() &&
-			(arguments.length < funcSignature.sizeOfInputArray() - noOfOptInArgs ||
-			 arguments.length > funcSignature.sizeOfInputArray()))
-			throw new CompilationException("Wrong number of function input arguments: specified " +
-					arguments.length + " and should be " + funcSignature.sizeOfInputArray());
-
-		for(int i = 0; i < arguments.length; i++ ) {
-		    String type = null;
-		    if (!funcSignature.getAnyNumOfInputArgs()) {
-		        funcSignature.getInputArray(i).getType();
-		    }
-			StringTemplate exprST = expressionToKarajan(arguments[i], scope, false, type);
-			funcST.setAttribute("args", exprST);
-
-			/* Type check of function arguments */
-			if (!funcSignature.getAnyNumOfInputArgs()) {
-				String actualType = datatype(exprST);
-				FormalArgumentSignature fas = funcSignature.getInputArray(i);
-				if (!fas.isAnyType() && !fas.getType().equals(actualType))
-					throw new CompilationException("Wrong type for parameter " + i +
-					    (fas.getName() == null ? "" : "('" + fas.getName() + "')") + 
-							"; expected " + fas.getType() + ", got " + actualType);
-				}
-		}
-
-		return funcST;
+	    ActualParameters actual = getActualParameters(arguments, scope, expectedType);
+	    Signature funcSignature = functionsMap.find(name, actual, true);
+        if (funcSignature == null) {
+            throw new CompilationException("Unknown function: '" + name + "'");
+        }
+	    
+        return function(func, scope, funcSignature, actual);
 	}
 
-	static final String SWIFTSCRIPT_NS = "http://ci.uchicago.edu/swift/2009/02/swiftscript";
+	private StringTemplate function(XmlObject func, VariableScope scope, Signature funcSignature,
+            ActualParameters actual) {
+	    
+        StringTemplate funcST = template("function");
+        funcST.setAttribute("line", getLine(func));
+        
+        funcST.setAttribute("name", funcSignature.getMangledName());
+        setParameters(funcST, "args", actual);
+
+        return funcST;
+    }
+
+    static final String SWIFTSCRIPT_NS = "http://ci.uchicago.edu/swift/2009/02/swiftscript";
 
 	static final QName OR_EXPR = new QName(SWIFTSCRIPT_NS, "or");
 	static final QName AND_EXPR = new QName(SWIFTSCRIPT_NS, "and");
@@ -1429,28 +1425,33 @@ public class Karajan {
 	static final QName RANGE_EXPR = new QName(SWIFTSCRIPT_NS, "range");
 	static final QName FUNCTION_EXPR = new QName(SWIFTSCRIPT_NS, "function");
 	static final QName CALL_EXPR = new QName(SWIFTSCRIPT_NS, "call");
+	static final QName STRUCT_EXPR = new QName(SWIFTSCRIPT_NS, "struct");
 	
-	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope) throws CompilationException {
-	    return expressionToKarajan(expression, scope, false, null);
+	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope) 
+            throws CompilationException {
+        return expressionToKarajan(expression, scope, false, null, null);
+    }
+	
+	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope, StringTemplate lvalue) 
+	        throws CompilationException {
+	    return expressionToKarajan(expression, scope, false, lvalue, null);
     }
 	
 	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope, 
-            boolean lvalue) throws CompilationException {
-	    return expressionToKarajan(expression, scope, lvalue, null);
+            boolean isLvalue, StringTemplate lvalue) throws CompilationException {
+	    return expressionToKarajan(expression, scope, isLvalue, lvalue, null);
 	}
 
 	/** converts an XML intermediate form expression into a
 	 *  Karajan expression.
 	 */
 	public StringTemplate expressionToKarajan(XmlObject expression, VariableScope scope, 
-	        boolean lvalue, String expectedType) throws CompilationException {
+	        boolean isLvalue, StringTemplate lvalue, Type expectedType) throws CompilationException {
 	    
 		Node expressionDOM = expression.getDomNode();
-		String namespaceURI = expressionDOM.getNamespaceURI();
-		String localName = expressionDOM.getLocalName();
-		QName expressionQName = new QName(namespaceURI, localName);
+		QName expressionQName = getQName(expressionDOM);
 
-		if(expressionQName.equals(OR_EXPR))	{
+		if (expressionQName.equals(OR_EXPR))	{
 			StringTemplate st = template("binaryop");
 			BinaryOperator o = (BinaryOperator)expression;
 			StringTemplate leftST = expressionToKarajan(o.getAbstractExpressionArray(0), scope);
@@ -1458,12 +1459,15 @@ public class Karajan {
 			st.setAttribute("op","||");
 			st.setAttribute("left", leftST);
 			st.setAttribute("right", rightST);
-			if (datatype(leftST).equals("boolean") && datatype(rightST).equals("boolean"))
+			if (datatype(leftST).equals(Types.BOOLEAN) && datatype(rightST).equals(Types.BOOLEAN)) {
 				st.setAttribute("datatype", "boolean");
-			else
+			}
+			else {
 				throw new CompilationException("Or operation can only be applied to parameters of type boolean.");
+			}
 			return st;
-		} else if (expressionQName.equals(AND_EXPR)) {
+		} 
+		else if (expressionQName.equals(AND_EXPR)) {
 			StringTemplate st = template("binaryop");
 			BinaryOperator o = (BinaryOperator)expression;
 			StringTemplate leftST = expressionToKarajan(o.getAbstractExpressionArray(0), scope);
@@ -1471,63 +1475,73 @@ public class Karajan {
 			st.setAttribute("op","&amp;&amp;");
 			st.setAttribute("left", leftST);
 			st.setAttribute("right", rightST);
-			if (datatype(leftST).equals("boolean") && datatype(rightST).equals("boolean"))
+			if (datatype(leftST).equals(Types.BOOLEAN) && datatype(rightST).equals(Types.BOOLEAN)) {
 				st.setAttribute("datatype", "boolean");
-			else
+			}
+			else {
 				throw new CompilationException("And operation can only be applied to parameters of type boolean.");
+			}
 			return st;
-		} else if (expressionQName.equals(BOOL_EXPR)) {
+		} 
+		else if (expressionQName.equals(BOOL_EXPR)) {
 			XmlBoolean xmlBoolean = (XmlBoolean) expression;
 			boolean b = xmlBoolean.getBooleanValue();
 			StringTemplate st = template("bConst");
 			st.setAttribute("value",""+b);
 			st.setAttribute("datatype", "boolean");
 			return st;
-		} else if (expressionQName.equals(INT_EXPR)) {
+		} 
+		else if (expressionQName.equals(INT_EXPR)) {
 			XmlInt xmlInt = (XmlInt) expression;
 			int i = xmlInt.getIntValue();
 			Integer iobj = Integer.valueOf(i);
 			String internedID;
-			if(intInternMap.get(iobj) == null) {
+			if (intInternMap.get(iobj) == null) {
 				internedID = "swift.int." + i;
 				intInternMap.put(iobj, internedID);
-			} else {
+			} 
+			else {
 				internedID = intInternMap.get(iobj);
 			}
 			StringTemplate st = template("id");
 			st.setAttribute("var", internedID);
 			st.setAttribute("datatype", "int");
 			return st;
-		} else if (expressionQName.equals(FLOAT_EXPR)) {
-			XmlFloat xmlFloat = (XmlFloat) expression;
-			float f = xmlFloat.getFloatValue();
-			Float fobj = new Float(f);
+		} 
+		else if (expressionQName.equals(FLOAT_EXPR)) {
+			XmlDouble xmlFloat = (XmlDouble) expression;
+			double f = xmlFloat.getDoubleValue();
+			Double fobj = new Double(f);
 			String internedID;
-			if(floatInternMap.get(fobj) == null) {
+			if (floatInternMap.get(fobj) == null) {
 				internedID = "swift.float." + (internedIDCounter++);
 				floatInternMap.put(fobj, internedID);
-			} else {
+			} 
+			else {
 				internedID = floatInternMap.get(fobj);
 			}
 			StringTemplate st = template("id");
 			st.setAttribute("var",internedID);
 			st.setAttribute("datatype", "float");
 			return st;
-		} else if (expressionQName.equals(STRING_EXPR)) {
+		} 
+		else if (expressionQName.equals(STRING_EXPR)) {
 			XmlString xmlString = (XmlString) expression;
 			String s = xmlString.getStringValue();
 			String internedID;
 			if (stringInternMap.get(s) == null) {
 				internedID = "swift.string." + (internedIDCounter++);
 				stringInternMap.put(s, internedID);
-			} else {
+			} 
+			else {
 				internedID = stringInternMap.get(s);
 			}
 			StringTemplate st = template("id");
 			st.setAttribute("var", internedID);
 			st.setAttribute("datatype", "string");
 			return st;
-		} else if (expressionQName.equals(COND_EXPR)) {
+		} 
+		else if (expressionQName.equals(COND_EXPR)) {
 			StringTemplate st = template("binaryop");
 			LabelledBinaryOperator o = (LabelledBinaryOperator) expression;
 			StringTemplate leftST = expressionToKarajan(o.getAbstractExpressionArray(0), scope);
@@ -1538,7 +1552,8 @@ public class Karajan {
 
 			checkTypesInCondExpr(o.getOp(), datatype(leftST), datatype(rightST), st);
 			return st;
-		} else if (expressionQName.equals(ARITH_EXPR)) {
+		} 
+		else if (expressionQName.equals(ARITH_EXPR)) {
 			LabelledBinaryOperator o = (LabelledBinaryOperator) expression;
 			StringTemplate st = template("binaryop");
 			st.setAttribute("op", o.getOp());
@@ -1549,56 +1564,63 @@ public class Karajan {
 
 			checkTypesInArithmExpr(o.getOp(), datatype(leftST), datatype(rightST), st);
 			return st;
-		} else if (expressionQName.equals(UNARY_NEGATION_EXPR)) {
+		} 
+		else if (expressionQName.equals(UNARY_NEGATION_EXPR)) {
 			UnlabelledUnaryOperator e = (UnlabelledUnaryOperator) expression;
 			StringTemplate st = template("unaryNegation");
 			StringTemplate expST = expressionToKarajan(e.getAbstractExpression(), scope);
 			st.setAttribute("exp", expST);
-			if (!(datatype(expST).equals("float")) && !(datatype(expST).equals("int")))
+			if (!(datatype(expST).equals(Types.FLOAT)) && !(datatype(expST).equals(Types.INT))) {
 				throw new CompilationException("Negation operation can only be applied to parameter of numeric types.");
+			}
 			st.setAttribute("datatype", datatype(expST));
 			return st;
-		} else if (expressionQName.equals(NOT_EXPR)) {
+		} 
+		else if (expressionQName.equals(NOT_EXPR)) {
 			// TODO not can probably merge with 'unary'
 			UnlabelledUnaryOperator e = (UnlabelledUnaryOperator)expression;
 			StringTemplate st = template("not");
 			StringTemplate expST = expressionToKarajan(e.getAbstractExpression(), scope);
 			st.setAttribute("exp", expST);
-			if (datatype(expST).equals("boolean"))
+			if (datatype(expST).equals(Types.BOOLEAN)) {
 				st.setAttribute("datatype", "boolean");
-			else
+			}
+			else {
 				throw new CompilationException("Not operation can only be applied to parameter of type boolean.");
+			}
 			return st;
-		} else if (expressionQName.equals(VARIABLE_REFERENCE_EXPR)) {
+		} 
+		else if (expressionQName.equals(VARIABLE_REFERENCE_EXPR)) {
 			XmlString xmlString = (XmlString) expression;
 			String s = xmlString.getStringValue();
-			if(!scope.isVariableDefined(s)) {
+			if (!scope.isVariableDefined(s)) {
 				throw new CompilationException("Variable " + s + " was not declared in this scope.");
 			}
 									
-			if (!lvalue) {
+			if (!isLvalue) {
 			    scope.addReader(s, false, expression);
 			}
 			StringTemplate st = template("id");
 			st.setAttribute("var", s);
-			String actualType;
 
-			actualType = scope.getVariableType(s);
-			st.setAttribute("datatype", actualType);
+			Type actualType = scope.getVariableType(s);
+			st.setAttribute("datatype", actualType.toString());
 			return st;
-		} else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
+		} 
+		else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
 			BinaryOperator op = (BinaryOperator) expression;
 			StringTemplate arrayST = expressionToKarajan(op.getAbstractExpressionArray(1), scope);
-			StringTemplate parentST = expressionToKarajan(op.getAbstractExpressionArray(0), scope, true);
+			StringTemplate parentST = expressionToKarajan(op.getAbstractExpressionArray(0), scope, true, null);
 
-			String indexType = datatype(arrayST);
-			String declaredIndexType = org.griphyn.vdl.type.Types.getArrayOuterIndexTypeName(datatype(parentST));
+			Type indexType = datatype(arrayST);
+			Type declaredArrayType = datatype(parentST);
+			Type declaredIndexType = declaredArrayType.keyType();
 			// the index type must match the declared index type,
 			// unless the declared index type is *
 			
 			// and really, at this point type checking should be delegated to the type system
 			// instead of the ad-hoc string comparisons
-			if (datatype(arrayST).equals("string")) {
+			if (indexType.equals(Types.STRING)) {
 			    XmlObject var = op.getAbstractExpressionArray(1);
 			    // make sure this is array["somestring"] rather than array[otherExpressionOfTypeString]
 			    if (var instanceof XmlString) {
@@ -1621,53 +1643,52 @@ public class Karajan {
 			StringTemplate newst = template("extractarrayelement");
 			newst.setAttribute("arraychild", arrayST);
 			newst.setAttribute("parent", parentST);
-			newst.setAttribute("datatype", org.griphyn.vdl.type.Types.getArrayOuterItemTypeName(datatype(parentST)));
+			newst.setAttribute("datatype", declaredArrayType.itemType().toString());
 
 			return newst;
-		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
+		}
+		else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
 			StructureMember sm = (StructureMember) expression;
-			StringTemplate parentST = expressionToKarajan(sm.getAbstractExpression(), scope, true);
+			StringTemplate parentST = expressionToKarajan(sm.getAbstractExpression(), scope, true, null);
 
-			String parentType = datatype(parentST);
+			Type parentType = datatype(parentST);
+			Type arrayType = parentType;
+			boolean arrayMode = false;
 
 			// if the parent is an array, then check against
 			// the base type of the array
-			
-			String baseType = org.griphyn.vdl.type.Types.getArrayInnerItemTypeName(parentType);
-			String indexType = org.griphyn.vdl.type.Types.getArrayInnerIndexTypeName(parentType);
-			String arrayType = parentType;
-
-			boolean arrayMode = false;
-			if (baseType != null) {
-				arrayMode = true;
-				parentType = baseType;
+			if (parentType.isArray()) {
+			    parentType = parentType.itemType();
+			    arrayMode = true;
 			}
 
-			// TODO this should be a map lookup of some kind?
-
-			Type t = typesMap.get(parentType);
-			
-			if (t == null) {
+			if (!parentType.isComposite() || parentType.isArray()) {
 			    // this happens when trying to access a field of a built-in type
 			    // which cannot currently be a structure
 			    throw new CompilationException("Type " + parentType + " is not a structure");
 			}
-			
-			TypeStructure ts = t.getTypestructure();
-			
-			String actualType = null;
-			for (int j = 0; j < ts.sizeOfMemberArray(); j++) {
-				if (ts.getMemberArray(j).getMembername().equals(sm.getMemberName())) 	{
-					actualType = ts.getMemberArray(j).getMembertype();
-					break;
-				}
-			}
-			if (actualType == null) {
+
+			Type actualType;
+			try {
+                actualType = parentType.getField(sm.getMemberName()).getType();
+            }
+            catch (NoSuchFieldException e) {
                 throw new CompilationException("No member " + sm.getMemberName() + " in type " + parentType);
-			}
+            }
 			StringTemplate newst;
-			if(arrayMode) {
-			    actualType = actualType + "[" + indexType + "]";
+			if (arrayMode) {
+			    /*
+			     *  this is when we have a situation like this:
+			     *    type s {int a, b;};
+			     *    s[] foo;
+			     *    ...
+			     *    foo.a
+			     *  This basically means foo[*].a
+			     *  With parametrized types:
+			     *  (S[K]).(F) -> (F[K]) 
+			     */
+			    
+			    actualType = actualType.arrayType(arrayType.keyType());
 				newst = template("slicearray");
 			}
 			else {
@@ -1677,29 +1698,53 @@ public class Karajan {
 			scope.addReader(getRootVar(parentST), true, expression);
 			newst.setAttribute("parent", parentST);
 			newst.setAttribute("memberchild", sm.getMemberName());
-            newst.setAttribute("datatype", actualType);
+            newst.setAttribute("datatype", actualType.toString());
             return newst;
 			// TODO the template layout for this and ARRAY_SUBSCRIPT are
 			// both a bit convoluted for historical reasons.
 			// should be straightforward to tidy up.
-		} else if (expressionQName.equals(ARRAY_EXPR)) {
+		}
+		else if (expressionQName.equals(ARRAY_EXPR)) {
 			Array array = (Array)expression;
 			StringTemplate st = template("array");
-			String elemType = "";
+			Type elemType = null;
 			for (int i = 0; i < array.sizeOfAbstractExpressionArray(); i++) {
 				XmlObject expr = array.getAbstractExpressionArray(i);
-				StringTemplate elemST = expressionToKarajan(expr, scope);
-				if (i == 0)
-					elemType = datatype(elemST);
-				else if (!elemType.equals(datatype(elemST)))
-					throw new CompilationException("Wrong array element type.");
+				StringTemplate elemST = expressionToKarajan(expr, scope, false, null, 
+				    expectedType == null ? null : expectedType.itemType());
+				Type newType = datatype(elemST);
+				if (i == 0) {
+					elemType = newType;
+				}
+				else if (!elemType.equals(newType)) {
+					throw new CompilationException("Heterogeneous arrays are not supported");
+				}
 				st.setAttribute("elements", elemST);
 			}
-			if (elemType.equals(""))
-				logger.warn("WARNING: Empty array constant");
-			st.setAttribute("datatype", elemType + "[int]");
+			if (expectedType != null) {
+    			if (!expectedType.isArray()) {
+    			    throw new CompilationException("Type error. Array used where non-array " +
+    			    		"type is expected (" + expectedType + ")");
+    			}
+    			if (!expectedType.keyType().equals(Types.INT)) {
+    			    throw new CompilationException("Type error. Array expressions have " +
+    			    		"integer key types, but expected type has non-integer keys (" + 
+    			    		expectedType + ")");
+    			}
+    			if (elemType == null) {
+    			    elemType = expectedType.itemType();
+    			}
+			}
+			else {
+			    if (elemType == null) {
+			        throw new CompilationException("Cannot infer type of empty array");
+			    }
+			}
+		    st.setAttribute("datatype", elemType + "[int]");
+		    st.setAttribute("field", addInternedField("$arrayexpr", elemType.arrayType()));
 			return st;
-		} else if (expressionQName.equals(RANGE_EXPR)) {
+		}
+		else if (expressionQName.equals(RANGE_EXPR)) {
 			Range range = (Range)expression;
 			StringTemplate st = template("range");
 			StringTemplate fromST = expressionToKarajan(range.getAbstractExpressionArray(0), scope);
@@ -1712,8 +1757,8 @@ public class Karajan {
 				st.setAttribute("step", stepST);
 			}
 
-			String fromType = datatype(fromST);
-			String toType = datatype(toST);
+			Type fromType = datatype(fromST);
+			Type toType = datatype(toST);
 			if (!fromType.equals(toType)) {
 			    throw new CompilationException("To and from range values must have the same type");
             }
@@ -1721,44 +1766,211 @@ public class Karajan {
 			    throw new CompilationException("Step (" + datatype(stepST) + 
 			            ") must be of the same type as from and to (" + toType + ")");
 			}
-			if (stepST == null && (!fromType.equals("int") || !toType.equals("int"))) {
+			if (stepST == null && (!fromType.equals(Types.INT) || !toType.equals(Types.INT))) {
 				throw new CompilationException("Step in range specification can be omitted only when from and to types are int");
 			}
-			else if (fromType.equals("int") && toType.equals("int")) {
+			else if (fromType.equals(Types.INT) && toType.equals(Types.INT)) {
 				st.setAttribute("datatype", "int[int]");
 			}
-			else if (fromType.equals("float") && toType.equals("float") &&
-					datatype(stepST).equals("float")) {
+			else if (fromType.equals(Types.FLOAT) && toType.equals(Types.FLOAT) &&
+					datatype(stepST).equals(Types.FLOAT)) {
 				st.setAttribute("datatype", "float[int]");
 			}
 			else {
 				throw new CompilationException("Range can only be specified with numeric types");
 			}
 			return st;
-		} else if (expressionQName.equals(FUNCTION_EXPR)) {
+		} 
+		else if (expressionQName.equals(FUNCTION_EXPR)) {
 			Function f = (Function) expression;
-			return functionExpr(f, scope);
-		} else if (expressionQName.equals(CALL_EXPR)) {
+			return functionExpr(f, scope, expectedType);
+		}
+		else if (expressionQName.equals(CALL_EXPR)) {
 		    Call c = (Call) expression;
 		    String name = c.getProc().getLocalPart();
-		    
-		    if (proceduresMap.containsKey(name)) {
-		        return callExpr(c, scope, expectedType);
+		    ActualParameters actual = getActualParameters(c, scope);
+		    if (expectedType == null) {
+		        actual.addReturn(null, null, Types.ANY);
 		    }
 		    else {
-		        if (functionsMap.containsKey(name)) {
-		            return functionExpr(c, scope);
-		        }
-		        else {
-		            throw new CompilationException("No function or procedure '" + name + "' found.");
+		        actual.addReturn(null, null, expectedType);
+		    }
+		    if (functionsMap.isDefined(name)) {
+		        Signature sig = functionsMap.find(name, actual, true);
+		        if (sig != null) {
+    		        if (sig.isProcedure()) {
+    		            return callExpr(c, scope, expectedType, sig, actual, lvalue);
+    		        }
+    		        else {
+    		            return functionExpr(c, scope, sig, actual);
+    		        }
 		        }
 		    }
-		} else {
-			throw new CompilationException("unknown expression implemented by class "+expression.getClass()+" with node name "+expressionQName +" and with content "+expression);
+            throw noFunctionOrProcedure(name, actual, true);
+		}
+		else if (expressionQName.equals(STRUCT_EXPR)) {
+		    Struct s = (Struct) expression;
+		    // distringuish between a struct or sparse array
+		    // expr by looking at the keys. If they are identifiers,
+		    // then struct, if expressions
+		    // if there are no kv pairs, then this is a sparse array expression
+		    boolean sparseArray;
+		    if (s.sizeOfFieldArray() == 0) {
+		        sparseArray = true;
+		    }
+		    else {
+    		    StructField f = s.getFieldArray(0);
+    		    QName keyType = getQName(f.getAbstractExpressionArray(0).getDomNode());
+    		    if (keyType.equals(VARIABLE_REFERENCE_EXPR)) {
+    		        sparseArray = false;
+    		    }
+    		    else {
+    		        sparseArray = true;
+    		    }
+		    }
+		    if (isLvalue) {
+		        if (sparseArray) {
+		            throw new CompilationException("Array initializer cannot be an lvalue");
+		        }
+		        else {
+		            throw new CompilationException("Structure initializer cannot be an lvalue");
+		        }
+		    }
+		    if (sparseArray) {
+		        return sparseArrayInitializer(s, scope, lvalue, expectedType);
+		    }
+		    else {
+		        return structInitializer(s, scope, lvalue, expectedType);
+		    }
+		}
+		else {
+			throw new CompilationException("unknown expression implemented by class " + 
+			    expression.getClass() + " with node name " + expressionQName + 
+			    " and with content " + expression);
 		}
 		// perhaps one big throw catch block surrounding body of this method
 		// which shows Compiler Exception and line number of error
 	}
+
+    private QName getQName(Node node) {
+        String namespaceURI = node.getNamespaceURI();
+        String localName = node.getLocalName();
+        return new QName(namespaceURI, localName);
+    }
+    
+    private QName getQName(XmlObject obj) {
+        return getQName(obj.getDomNode());
+    }
+
+    private StringTemplate structInitializer(Struct s, VariableScope scope, StringTemplate lvalue, Type expectedType) 
+            throws CompilationException {
+        StringTemplate st = template("newStruct");
+        if (expectedType == null) {
+            throw new CompilationException("Cannot infer destination type in structure initializer");
+        }
+        if (lvalue != null) {
+            st.setAttribute("var", lvalue);
+        }
+        else {
+            st.setAttribute("field", addInternedField("$structexpr", expectedType));
+        }
+        if (!expectedType.isComposite() || expectedType.isArray()) {
+            throw new CompilationException("Cannot assign a structure to a non-structure");
+        }
+        Set<String> seen = new HashSet<String>();
+        for (int i = 0; i < s.sizeOfFieldArray(); i++) {
+            st.setAttribute("fields", structField(s.getFieldArray(i), scope, expectedType, seen));
+        }
+        if (expectedType.getFields().size() != seen.size()) {
+            throw new CompilationException("Missing fields in structure initializer: " + getMissingFields(seen, expectedType));
+        }
+        st.setAttribute("datatype", expectedType.toString());
+        if (lvalue != null) {
+            scope.appendStatement(st);
+            return null;
+        }
+        else {
+            return st;
+        }
+    }
+
+    private StringTemplate structField(StructField field, VariableScope scope, Type expectedType, Set<String> seen) 
+            throws CompilationException {
+        XmlObject xkey = field.getAbstractExpressionArray(0);
+        Node key = xkey.getDomNode();
+        if (!getQName(key).equals(VARIABLE_REFERENCE_EXPR)) {
+            // TODO better error message
+            throw new CompilationException("Invalid field name " + key.getLocalName());
+        }
+        XmlString var = (XmlString) xkey;
+        String name = var.getStringValue();
+        if (seen.contains(name)) {
+            throw new CompilationException("Duplicate field: '" + name + "'");
+        }
+        seen.add(name);
+        
+        StringTemplate st = template("makeField");
+        st.setAttribute("key", "\"" + name + "\"");
+        try {
+            st.setAttribute("value", expressionToKarajan(field.getAbstractExpressionArray(1), 
+                scope, false, null, expectedType.getField(name).getType()));
+        }
+        catch (NoSuchFieldException e) {
+            throw new CompilationException("Invalid field '" + name + "' for type '" + expectedType + "'");
+        }
+        return st;
+    }
+
+    private String getMissingFields(Set<String> seen, Type t) {
+        List<String> missing = new ArrayList<String>();
+        for (String f : t.getFieldNames()) {
+            if (!seen.contains(f)) {
+                missing.add(f);
+            }
+        }
+        return missing.toString();
+    }
+
+    private StringTemplate sparseArrayInitializer(Struct s, VariableScope scope, StringTemplate lvalue, Type expectedType) 
+            throws CompilationException {
+        StringTemplate st = template("newSparseArray");
+        if (lvalue != null) {
+            st.setAttribute("var", lvalue);
+        }
+        else {
+            if (expectedType == null) {
+                throw new CompilationException("Could not infer type in sparse array initializer");
+            }
+            st.setAttribute("field", addInternedField("$arrayexpr", expectedType));
+        }
+        if (!expectedType.isArray()) {
+            throw new CompilationException("Cannot assign an array to a non-array");
+        }
+        for (int i = 0; i < s.sizeOfFieldArray(); i++) {
+            st.setAttribute("fields", sparseArrayField(s.getFieldArray(i), scope, expectedType));
+        }
+        st.setAttribute("datatype", expectedType.toString());
+        if (lvalue != null) {
+            scope.appendStatement(st);
+            return null;
+        }
+        else {
+            return st;
+        }
+    }
+    
+    private StringTemplate sparseArrayField(StructField field, VariableScope scope, Type expectedType) 
+            throws CompilationException {
+        Type keyType = expectedType.keyType();
+        Type itemType = expectedType.itemType();
+        
+        StringTemplate st = template("makeField");
+        st.setAttribute("key", expressionToKarajan(field.getAbstractExpressionArray(0), 
+            scope, false, null, keyType));
+        st.setAttribute("value", expressionToKarajan(field.getAbstractExpressionArray(1), 
+                scope, false, null, itemType));
+        return st;
+    }
 
     private String getRootVar(StringTemplate st) throws CompilationException {
         StringTemplate parent = (StringTemplate) st.getAttribute("parent");
@@ -1774,25 +1986,28 @@ public class Karajan {
         }
     }
 
-    private StringTemplate callExpr(Call c, VariableScope scope, String expectedType) throws CompilationException {
+    private StringTemplate callExpr(Call c, VariableScope scope, Type expectedType, Signature sig, 
+            ActualParameters actual, StringTemplate lvalue) 
+            throws CompilationException {
         c.addNewOutput();
         VariableScope subscope = new VariableScope(this, scope, c);
         VariableReferenceDocument ref = VariableReferenceDocument.Factory.newInstance();
         ref.setVariableReference("swift.callintermediate");
         c.getOutputArray(0).set(ref);
-        String name = c.getProc().getLocalPart();
-        ProcedureSignature funcSignature = proceduresMap.get(name);
 
-        if (funcSignature.sizeOfOutputArray() != 1) {
-            throw new CompilationException("Procedure " + name + " must have exactly one " +
+        if (sig.getReturns().size() != 1) {
+            throw new CompilationException("Procedure '" + sig.getName() + "' must have exactly one " +
                     "return value to be used in an expression.");
         }
         
         StringTemplate call = template("callexpr");
+        if (lvalue != null) {
+            call.setAttribute("outputs", lvalue.getAttribute("var"));
+        }
 
-        String type = funcSignature.getOutputArray(0).getType();
+        Type type = sig.getReturnType();
         
-        if (isAnyType(type)) {
+        if (type.equals(Types.ANY)) {
             if (expectedType != null) {
                 type = expectedType;
             }
@@ -1801,41 +2016,37 @@ public class Karajan {
             }
         }
         
-        if (!isPrimitiveOrArrayOfPrimitive(type)) {
+        if (!isPrimitiveOrArrayOfPrimitives(type)) {
         	call.setAttribute("mapping", true);
         }
         
         subscope.addInternalVariable("swift.callintermediate", type, null);
-
-        call.setAttribute("datatype", type);
+        
+        actual.getReturn(0).setParamST(actualParameter(c.getOutputArray(0), subscope));
+        call.setAttribute("datatype", type.toString());
         call.setAttribute("field", addInternedField("swift.callintermediate", type));
-        call.setAttribute("call", call(c, subscope, true));
-        if (!isPrimitiveOrArrayOfPrimitive(type)) {
+        call.setAttribute("call", call(c, subscope, sig, actual, true));
+        if (!isPrimitiveOrArrayOfPrimitives(type)) {
             call.setAttribute("prefix", UUIDGenerator.getInstance().generateRandomBasedUUID().toString());
         }
         return call;
     }
     
-    private StringTemplate functionExpr(Call c, VariableScope scope) throws CompilationException {
-        String name = c.getProc().getLocalPart();
-        ProcedureSignature funcSignature = functionsMap.get(name);
-        if (funcSignature == null) {
-            throw new CompilationException("Function " + name + " is not defined.");
-        }
-        
-        StringTemplate st = function(c, name, getCallParams(c), scope);
+    private StringTemplate functionExpr(Call c, VariableScope scope, Signature sig, ActualParameters actual) 
+            throws CompilationException {
+        StringTemplate st = function(c, scope, sig, actual);
         /* Set function output type */
         /* Functions have only one output parameter */
-        st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
-        if (funcSignature.isDeprecated()) {
+        st.setAttribute("datatype", sig.getReturnType().toString());
+        if (sig.isDeprecated()) {
             Warnings.warn(Warnings.Type.DEPRECATION, 
-                c, "Function " + name + " is deprecated");
+                c, "Function " + sig.getName() + " is deprecated");
         }
         
         return st;
     }
 
-    private StringTemplate functionExpr(Function f, VariableScope scope) throws CompilationException {
+    private StringTemplate functionExpr(Function f, VariableScope scope, Type expectedType) throws CompilationException {
         String name = f.getName();
         if (name.equals("")) {
             name = "filename";
@@ -1845,14 +2056,16 @@ public class Karajan {
             Warnings.warn(Warnings.Type.DEPRECATION, 
                 "The @ syntax for function invocation is deprecated");
         }
-        ProcedureSignature funcSignature = functionsMap.get(name);
+        
+        ActualParameters actual = getActualParameters(f, scope, expectedType);
+        Signature funcSignature = functionsMap.find(name, actual, true);
         if (funcSignature == null) {
-            throw new CompilationException("Function " + name + " is not defined.");
+            throw noFunctionOrProcedure(name, actual, true);
         }
-        StringTemplate st = function(f, name, f.getAbstractExpressionArray(), scope);
+        StringTemplate st = function(f, scope, funcSignature, actual);
         /* Set function output type */    
         /* Functions have only one output parameter */
-        st.setAttribute("datatype", funcSignature.getOutputArray(0).getType());
+        st.setAttribute("datatype", funcSignature.getReturnType().toString());
         
         if (funcSignature.isDeprecated()) {
             Warnings.warn(Warnings.Type.DEPRECATION, 
@@ -1864,13 +2077,13 @@ public class Karajan {
     
     /**
      * Translates a call(output, params) into a output = function(params) form.
+     * @param actualParams 
+     * @param proc 
      */
-    private StringTemplate functionAsCall(Call call, VariableScope scope) throws CompilationException {
+    private StringTemplate functionAsCall(Call call, VariableScope scope, Signature proc, 
+            ActualParameters actualParams, Type expectedType) throws CompilationException {
+        
         String name = call.getProc().getLocalPart();
-        ProcedureSignature sig = functionsMap.get(name);
-        if (sig == null) {
-            throw new CompilationException("Function " + name + " is not defined.");
-        }
         if (call.getOutputArray().length == 0) {
             throw new CompilationException("Call to a function that does not return a value");
         }
@@ -1878,11 +2091,11 @@ public class Karajan {
             throw new CompilationException("Cannot assign multiple values with a function invocation");
         }
         
-        StringTemplate value = function(call, name, getCallParams(call), scope);
-        value.setAttribute("datatype", sig.getOutputArray(0).getType());
+        StringTemplate value = function(call, name, getCallParams(call), scope, expectedType);
+        value.setAttribute("datatype", proc.getReturnType().toString());
         StringTemplate assign = assignFromCallReturn(call, value, scope);
         
-        if (sig.isDeprecated()) {
+        if (proc.isDeprecated()) {
             Warnings.warn(Warnings.Type.DEPRECATION, call, "Function " + name + " is deprecated");
         }
     
@@ -1901,8 +2114,8 @@ public class Karajan {
             throws CompilationException {
         StringTemplate assignST = template("assign");
         XmlObject var = call.getOutputArray(0).getAbstractExpression();
-        StringTemplate varST = expressionToKarajan(var, scope, true);
-        if (! (datatype(varST).equals(datatype(valueST)) || datatype(valueST).equals("java"))) {
+        StringTemplate varST = expressionToKarajan(var, scope, true, null);
+        if (!datatype(varST).equals(datatype(valueST))) {
             throw new CompilationException("You cannot assign value of type " + datatype(valueST) +
                     " to a variable of type " + datatype(varST));
         }
@@ -1915,25 +2128,38 @@ public class Karajan {
     }
 
 
-    void checkTypesInCondExpr(String op, String left, String right, StringTemplate st)
+    // TODO: this ad-hoc type checking bothers me
+    void checkTypesInCondExpr(String op, Type left, Type right, StringTemplate st)
 			throws CompilationException {
-		if (left.equals(right))
+        if (left.equals(Types.FLOAT) && right.equals(Types.INT)) {
+            // widening
+            right = Types.FLOAT;
+        }
+        if (right.equals(Types.FLOAT) && left.equals(Types.INT)) {
+            // widening
+            left = Types.FLOAT;
+        }
+		if (left.equals(right)) {
 			st.setAttribute("datatype", "boolean");
-		else
+		}
+		else {
 			throw new CompilationException("Conditional operator can only be applied to parameters of same type.");
+		}
 
-		if ((op.equals("==") || op.equals("!=")) && !left.equals("int") && !left.equals("float")
-				                                 && !left.equals("string") && !left.equals("boolean"))
+		if ((op.equals("==") || op.equals("!=")) && !left.equals(Types.INT) && !left.equals(Types.FLOAT)
+				                                 && !left.equals(Types.STRING) && !left.equals(Types.BOOLEAN)) {
 			throw new CompilationException("Conditional operator " + op +
 					" can only be applied to parameters of type int, float, string and boolean.");
+		}
 
 		if ((op.equals("<=") || op.equals(">=") || op.equals(">") || op.equals("<"))
-				&& !left.equals("int") && !left.equals("float") && !left.equals("string"))
+				&& !left.equals(Types.INT) && !left.equals(Types.FLOAT) && !left.equals(Types.STRING)) {
 			throw new CompilationException("Conditional operator " + op +
-			" can only be applied to parameters of type int, float and string.");
+			        " can only be applied to parameters of type int, float and string.");
+		}
 	}
 
-	void checkTypesInArithmExpr(String op, String left, String right, StringTemplate st)
+	void checkTypesInArithmExpr(String op, Type left, Type right, StringTemplate st)
 			throws CompilationException {
 	    /* 
 	     * +, -, /, * : int, int -> int
@@ -1953,14 +2179,14 @@ public class Karajan {
 	    
 	    switch (op.charAt(0)) {
 	        case '+':
-	            if (left.equals("string")) {
-	                if (!right.equals("string") && !right.equals("int") && !right.equals("float")) {
+	            if (left.equals(Types.STRING)) {
+	                if (!right.equals(Types.STRING) && !right.equals(Types.INT) && !right.equals(Types.FLOAT)) {
 	                    throw new CompilationException("Operator '+' cannot be applied to 'string'  and '" + right + "'");
 	                }
 	                st.setAttribute("datatype", "string");
 	            }
-	            else if (right.equals("string")) {
-	                if (!left.equals("string") && !left.equals("int") && !left.equals("float")) {
+	            else if (right.equals(Types.STRING)) {
+	                if (!left.equals(Types.STRING) && !left.equals(Types.INT) && !left.equals(Types.FLOAT)) {
                         throw new CompilationException("Operator '+' cannot be applied to '" + left + "'  and 'string'");
                     }
 	                st.setAttribute("datatype", "string");
@@ -1982,7 +2208,7 @@ public class Karajan {
 	    }
 	}
 
-	private void checkTypesInType1ArithmExpr(String op, String left, String right, StringTemplate st) 
+	private void checkTypesInType1ArithmExpr(String op, Type left, Type right, StringTemplate st) 
 	        throws CompilationException {
 	    /* 
          * int, int -> int
@@ -1990,18 +2216,18 @@ public class Karajan {
          * int, float -> float
          * float, int -> float
          */
-	    if (left.equals("int")) {
-	        if (right.equals("int")) {
+	    if (left.equals(Types.INT)) {
+	        if (right.equals(Types.INT)) {
 	            st.setAttribute("datatype", "int");
 	            return;
 	        }
-	        else if (right.equals("float")) {
+	        else if (right.equals(Types.FLOAT)) {
 	            st.setAttribute("datatype", "float");
 	            return;
 	        }
 	    }
-	    else if (left.equals("float")) {
-	        if (right.equals("int") || right.equals("float")) {
+	    else if (left.equals(Types.FLOAT)) {
+	        if (right.equals(Types.INT) || right.equals(Types.FLOAT)) {
 	            st.setAttribute("datatype", "float");
 	            return;
             }
@@ -2009,46 +2235,46 @@ public class Karajan {
 	    throw new CompilationException("Operator '" + op + "' cannot be applied to '" + left + "' and '" + right + "'");
     }
 
-    private void checkTypesInType2ArithmExpr(String op, String left, String right, StringTemplate st) 
+    private void checkTypesInType2ArithmExpr(String op, Type left, Type right, StringTemplate st) 
             throws CompilationException {
-        if (!left.equals("int") || !right.equals("int")) {
+        if (!left.equals(Types.INT) || !right.equals(Types.INT)) {
             throw new CompilationException("Operator '" + op + "' can only be applied to 'int' and 'int'");
         }
         st.setAttribute("datatype", "int");
     }
 
     public String abstractExpressionToRootVariable(XmlObject expression) throws CompilationException {
-		Node expressionDOM = expression.getDomNode();
-		String namespaceURI = expressionDOM.getNamespaceURI();
-		String localName = expressionDOM.getLocalName();
-		QName expressionQName = new QName(namespaceURI, localName);
+		QName expressionQName = getQName(expression);
 		if (expressionQName.equals(VARIABLE_REFERENCE_EXPR)) {
 			XmlString xmlString = (XmlString) expression;
 			String s = xmlString.getStringValue();
 			return s;
-		} else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
+		} 
+		else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
 			BinaryOperator op = (BinaryOperator) expression;
 			return abstractExpressionToRootVariable(op.getAbstractExpressionArray(0));
-		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
+		} 
+		else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
 			StructureMember sm = (StructureMember) expression;
 			return abstractExpressionToRootVariable(sm.getAbstractExpression());
-		} else {
+		} 
+		else {
 			throw new CompilationException("Could not find root for abstract expression.");
 		}
 	}
 
 	public WriteType getRootVariableWriteType(XmlObject expression) {
-		Node expressionDOM = expression.getDomNode();
-		String namespaceURI = expressionDOM.getNamespaceURI();
-		String localName = expressionDOM.getLocalName();
-		QName expressionQName = new QName(namespaceURI, localName);
+		QName expressionQName = getQName(expression);
 		if (expressionQName.equals(VARIABLE_REFERENCE_EXPR)) {
 			return WriteType.FULL;
-		} else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
+		} 
+		else if (expressionQName.equals(ARRAY_SUBSCRIPT_EXPR)) {
 			return WriteType.PARTIAL;
-		} else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
+		} 
+		else if (expressionQName.equals(STRUCTURE_MEMBER_EXPR)) {
 			return WriteType.PARTIAL;
-		} else {
+		} 
+		else {
 			throw new RuntimeException("Could not find root for abstract expression.");
 		}
 	}
@@ -2072,14 +2298,14 @@ public class Karajan {
     }
 	
 	private int fieldCounter = 1;
-	private String addInternedField(String name, String type) {
+	private String addInternedField(String name, Type type) {
 	    String v = internedFieldName(name, type);
 	    usedFields.put(new InternedField(name, type), v);
 	    return v;
     }
 	
-	public static String internedFieldName(String name, String type) {
-	    return "swift.field." + name + "." + type.replace("[", ".array.").replace("]", "");
+	public static String internedFieldName(String name, Type type) {
+	    return "swift.field." + name + "." + type.toString().replace("[", ".array.").replace("]", "");
 	}
 
     public void generateInternedConstants(StringTemplate programTemplate) {
@@ -2128,26 +2354,32 @@ public class Karajan {
 	    }
         return sb.toString();
     }
-	
-	public static String normalize(String type) {
-	    return org.griphyn.vdl.type.Types.normalize(type);
-	}
-	
+		
 	public static String lineNumber(String src) {
 	    return src.substring(src.indexOf(' ') + 1);
 	}
 
-	String datatype(StringTemplate st) {
-	    try {
-	        return normalize(st.getAttribute("datatype").toString());
-	    }
-	    catch (Exception e) {
-	        throw new RuntimeException("Not typed properly: " + st);
-	    }
+	private Type datatype(StringTemplate st) throws CompilationException {
+	    return findType(st.getAttribute("datatype").toString());
 	}
 	
-	protected void setDatatype(StringTemplate st, String type) {
+	protected void setDatatype(StringTemplate st, org.griphyn.vdl.type.Type type) {
 	    st.removeAttribute("datatype");
-	    st.setAttribute("datatype", type);
+	    st.setAttribute("datatype", type.toString());
+	}
+	
+	private Type findType(String typeName) throws CompilationException {
+	    try {
+            return types.getType(typeName);
+        }
+        catch (NoSuchTypeException e) {
+            throw new CompilationException("Invalid type '" + typeName + "'", e);
+        }
+	}
+	
+	private void assertTrue(boolean condition, String message) throws CompilationException {
+	    if (!condition) {
+	        throw new CompilationException(message);
+	    }
 	}
 }

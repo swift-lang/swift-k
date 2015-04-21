@@ -52,7 +52,6 @@ public class ThrottledParallelFor extends UParallelFor {
 	private ArgRef<String> refs;
 	private ArgRef<String> _kvar;
 	private ArgRef<String> _vvar;
-	private ArgRef<Integer> _traceline;
 	
 	private boolean sc;
 	    
@@ -62,7 +61,7 @@ public class ThrottledParallelFor extends UParallelFor {
             params(
                 identifier("name"), "in", 
                 optional("selfClose", Boolean.FALSE), optional("refs", null),
-                optional("_kvar", null), optional("_vvar", null), optional("_traceline", null),
+                optional("_kvar", null), optional("_vvar", null),
                 block("body")
             )
         );
@@ -76,9 +75,6 @@ public class ThrottledParallelFor extends UParallelFor {
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
         srefs = StaticRefCount.build(scope, this.refs.getValue());
-        if (_traceline.getValue() != null) {
-            setLine(_traceline.getValue());
-        }
         forTracer = Tracer.getTracer(this, "FOREACH");
         iterationTracer = Tracer.getTracer(this, "ITERATION");
         sc = selfClose.getValue();

@@ -1,0 +1,68 @@
+/*
+
+Visual Studio-like style based on original C# coloring by Jason Diamond <jason@diamond.name>
+
+*/
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: white;
+  color: black;
+  -webkit-text-size-adjust: none;
+}
+
+.hljs-comment,
+.hljs-annotation,
+.hljs-chunk {
+  color: #808080;
+}
+
+.hljs-keyword,
+.hljs-id,
+.hljs-built_in,
+.bash .hljs-variable {
+  color: #b833a1;
+}
+
+.hljs-string,
+.hljs-title,
+.hljs-parent,
+.hljs-addition,
+.hljs-flow,
+.hljs-stream {
+  color: #008312
+}
+
+.hljs-decorator,
+.hljs-filter .hljs-argument,
+.hljs-localvars,
+.hljs-array,
+.hljs-attr_selector,
+.hljs-pseudo,
+.hljs-pi,
+.hljs-doctype,
+.hljs-deletion,
+.hljs-envvar,
+.hljs-shebang,
+.hljs-preprocessor,
+.hljs-pragma,
+.userType,
+.hljs-prompt {
+  color: #2b91af;
+}
+
+.hljs-phpdoc,
+.hljs-dartdoc,
+.hljs-javadoc,
+.hljs-xmlDocTag {
+  color: #808080;
+}
+
+.hljs-type,
+.hljs-typename { font-weight: bold; }
+
+.hljs-literal, 
+.hljs-number { 
+  color: #1c00cf; 
+}

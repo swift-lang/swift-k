@@ -29,6 +29,7 @@ Atomic types such as string, int, float and double work the same way as in
 C-like programming languages. A variable of such atomic types can be defined as
 follows:
 
+[listing,swift]
 ----
 string astring = "hello";
 ----
@@ -36,8 +37,9 @@ string astring = "hello";
 A struct variable is defined using the _type_ keyword as discussed above.
 Following is an example of a variable holding employee data:
 
+[listing,swift]
 ----
-type Employee{
+type Employee {
     string name;
     int id;
     string loc;
@@ -47,11 +49,12 @@ type Employee{
 The members of the structure defined above can be accessed using the dot
 notation. An example of a variable of type Employee is as follows:
 
+[listing,swift]
 ----
 Employee emp;
-emp.name="Thomas";
-emp.id=2222;
-emp.loc="Chicago";
+emp.name = "Thomas";
+emp.id = 2222;
+emp.loc = "Chicago";
 ----
 
 Arrays of structures are allowed in Swift. A convenient way of populating
@@ -63,6 +66,7 @@ dataset. For example, the following line declares a variable named
 photo with type image. It additionally declares that the data for
 this variable is stored in a single file named shane.jpg.
 
+[listing,swift]
 ----
 image photo <"shane.jpg">;  
 ----
@@ -76,14 +80,16 @@ For example, the following example lists a procedure which makes use of
 the ImageMagick <http://www.imagemagick.org/> convert command to
 rotate a supplied image by a specified angle:
 
+[listing,swift]
 ----
 app (image output) rotate(image input) {  
-  convert "-rotate" angle @input @output;  
+    convert "-rotate" angle @input @output;  
 }  
 ----
 
 A procedure is invoked using the familiar syntax:
 
+[listing,swift]
 ----
 rotated = rotate(photo, 180);  
 ----
@@ -98,6 +104,7 @@ The examples above have used the type image without any definition of
 that type. We can declare it as a marker type which has no structure
 exposed to Swift script:
 
+[listing,swift]
 ----
 type image;  
 ----
@@ -110,19 +117,22 @@ With mechanisms to declare types, map variables to data files, and
 declare and invoke procedures, we can build a complete (albeit simple)
 script:
 
+[listing,swift]
 ----
 type image;  
 image photo <"shane.jpg">;  
 image rotated <"rotated.jpg">;  
   
 app (image output) rotate(image input, int angle) {  
-   convert "-rotate" angle @input @output;  
+    convert "-rotate" angle @input @output;  
 }  
   
 rotated = rotate(photo, 180);  
 ----
 
 This script can be invoked from the command line:
+
+[listing,shell]
 ----
   $ ls *.jpg
   shane.jpg
@@ -148,6 +158,7 @@ Arrays and Parallel Execution
 Arrays of values can be declared using the [] suffix. Following is an example
 of an array of strings:
 
+[listing,swift]
 ----
 string pets[] = ["shane", "noddy", "leo"];
 ----
@@ -156,24 +167,28 @@ An array may be mapped to a collection of files, one element per file, by using 
 different form of mapping expression. For example, the filesys_mapper 
 maps all files matching a particular unix glob pattern into an array:
 
+[listing,swift]
 ----
-file frames[] <filesys_mapper; pattern="*.jpg">;  
+file frames[] <filesys_mapper; pattern = "*.jpg">;  
 ----
 
 The foreach construct can be used to apply the same block of code to
 each element of an array:
 
+[listing,swift]
 ----
-foreach f,ix in frames {  
-  output[ix] = rotate(f, 180);  
+foreach f, ix in frames {  
+    output[ix] = rotate(f, 180);
+}
 ----
 
 Sequential iteration can be expressed using the iterate construct:
 
+[listing,swift]
 ----
 step[0] = initialCondition();  
 iterate ix {  
-  step[ix] = simulate(step[ix-1]);  
+    step[ix] = simulate(step[ix - 1]);  
 }  
 ----
 
@@ -187,6 +202,7 @@ By default, array keys are integers. However, other primitive types are also
 allowed as array keys. The syntax for declaring an array with a key type different
 than the default is:
 
+[listing,swift]
 ----
 <valueType>[<keyType>] array;
 ----
@@ -194,6 +210,7 @@ than the default is:
 For example, the following code declares and assigns items to an array with string 
 keys and float values:
 
+[listing,swift]
 ----
 float[string] a;
 a["one"] = 0.2;
@@ -203,21 +220,23 @@ a["two"] = 0.4;
 In addition to primitive types, a special type named *auto* can be used to 
 declare an array for which an additional *append* operation is available:
 
+[listing,swift]
 ----
 int[auto] array;
 
 foreach i in [1:100] {
-  array << (i*2) ;
+    array << (i * 2);
 }
 
 foreach v in array {
-  trace(v);
+    trace(v);
 }
 ----
 
 Items in an array with *auto* keys cannot be accessed directly using a primitive
 type. The following example results in a compile-time error:
 
+[listing,swift]
 ----
 int[auto] array;
 array[0] = 1;
@@ -225,6 +244,7 @@ array[0] = 1;
 
 However, it is possible to use *auto* key values from one array to access another:
 
+[listing,swift]
 ----
 int[auto] a;
 int[auto] b;
@@ -233,7 +253,7 @@ a << 1;
 a << 2;
 
 foreach v, k in a {
-  b[k] = a[k] * 2;
+    b[k] = a[k] * 2;
 }
 ----
 
@@ -253,17 +273,19 @@ can proceed in parallel.
 In this fragment, execution of procedures p and q can happen in
 parallel:
 
+[listing,swift]
 ----
-y=p(x);  
-z=q(x);  
+y = p(x);  
+z = q(x);  
 ----
 
 while in this fragment, execution is serialised by the variable y,
 with procedure p executing before q.
 
+[listing,swift]
 ----
-y=p(x);  
-z=q(y);  
+y = p(x);  
+z = q(y);  
 ----
 
 Arrays in Swift are more monotonic - a generalisation of being
@@ -280,11 +302,13 @@ statement will apply its body to elements of an array as they become
 known. It will not wait until the array is closed.
 
 Consider this script:
+
+[listing,swift]
 ----
-file a[];  
-file b[];  
-foreach v,i in a {  
-  b[i] = p(v);  
+file[] a;  
+file[] b;  
+foreach v, i in a {  
+    b[i] = p(v);  
 }  
 a[0] = r();  
 a[1] = s();  
@@ -305,11 +329,12 @@ Swift script can be defined. These differ from the previously
 mentioned procedures declared with the app keyword, as they invoke
 other Swift procedures rather than a component program.
 
+[listing,swift]
 ----
-(file output) process (file input) {  
-  file intermediate;  
-  intermediate = first(input);  
-  output = second(intermediate);  
+(file output) process(file input) {  
+    file intermediate;  
+    intermediate = first(input);  
+    output = second(intermediate);  
 }  
   
 file x <"x.txt">;  
@@ -323,13 +348,16 @@ anonymously connecting the first and second procedures.
 Ordering of execution is generally determined by execution of app
 procedures, not by any containing compound procedures. In this code block:
 
+[listing,swift]
 ----
 (file a, file b) A() {  
   a = A1();  
   b = A2();  
 }  
+
 file x, y, s, t;  
-(x,y) = A();  
+
+(x, y) = A();  
 s = S(x);  
 t = S(y);  
 ----
@@ -367,17 +395,19 @@ There are a number of primitive types:
 
 Complex types may be defined using the type keyword:
 
+[listing,swift]
 ----
 type headerfile;  
 type voxelfile;  
 type volume {  
-  headerfile h;  
-  voxelfile v;  
+    headerfile h;  
+    voxelfile v;  
 }  
 ----
 
 Members of a complex type can be accessed using the . operator:
 
+[listing,swift]
 ----
 volume brain;  
 o = p(brain.h);  
@@ -395,15 +425,16 @@ substantial responsibility to component programs, in exchange for
 allowing arbitrary data storage and access methods to be plugged in to
 scripts.
 
+[listing,swift]
 ----
 type file;  
   
 app (external o) populateDatabase() {  
-  populationProgram;  
+    populationProgram;  
 }  
   
 app (file o) analyseDatabase(external i) {  
-  analysisProgram @o;  
+    analysisProgram @o;  
 }  
   
 external database;  
@@ -457,6 +488,7 @@ optionally assign a value to them or map those variables to on-disk files.
 
 Declaration statements have the general form:
 
+[listing,swift]
 ----
 typename variablename (<mapping> | = initialValue ) ;
 ----
@@ -475,6 +507,7 @@ Assignment statements assign values to previously declared variables.
 Assignments may only be made to variables that have not already been
 assigned. Assignment statements have the general form:
 
+[listing,swift]
 ----
 variable = value;
 ----
@@ -497,8 +530,11 @@ and output parameters. Swift script procedures can take multiple inputs
 and produce multiple outputs. Inputs are specified to the right of the
 function name, and outputs are specified to the left. For example:
 
+[listing,swift]
 ----
-(type3 out1, type4 out2) myproc (type1 in1, type2 in2)
+(type3 out1, type4 out2) myproc(type1 in1, type2 in2) {
+    ....
+}
 ----
 
 The above example declares a procedure called myproc, which has two
@@ -512,19 +548,23 @@ provided that all optional parameters are declared after the required
 parameters and any optional parameter is bound using keyword parameter
 passing. For example, if myproc1 is defined as:
 
+[listing,swift]
 ----
-(binaryfile bf) myproc1 (int i, string s="foo")
+(binaryfile bf) myproc1(int i, string s = "foo")
 ----
 
-Then that procedure can be called like this, omitting the optional
+Then that procedure can be called like this, omitting the optional parameters:
+
+[listing,swift]
 ----
-parameter s:
 binaryfile mybf = myproc1(1);
 ----
 
-or like this supplying a value for the optional parameter s:
+or like this supplying a value for the optional parameters:
+
+[listing,swift]
 ----
-binaryfile mybf = myproc1 (1, s="bar");
+binaryfile mybf = myproc1(1, s = "bar");
 ----
 
 Atomic procedures
@@ -534,9 +574,10 @@ program, and how logical data types are mapped to command line arguments.
 
 Atomic procedures are defined with the app keyword:
 
+[listing,swift]
 ----
-app (binaryfile bf) myproc (int i, string s="foo") {
-    myapp i s @filename(bf);
+app (binaryfile bf) myproc(int i, string s = "foo") {
+    myapp i s filename(bf);
 }
 ----
 
@@ -549,8 +590,9 @@ Compound procedures
 ^^^^^^^^^^^^^^^^^^^
 A compound procedure contains a set of Swift script statements:
 
+[listing,swift]
 ----
-(type2 b) foo_bar (type1 a) {
+(type2 b) foobar(type1 a) {
     type3 c;
     c = foo(a);    // c holds the result of foo
     b = bar(c);    // c is an input to bar
@@ -568,8 +610,9 @@ foreach
 The foreach construct is used to apply a block of statements to each
 element in an array. For example:
 
+[listing,swift]
 ----
-check_order (file a[]) {
+checkOrder (file[] a) {
     foreach f in a {
         compute(f);
     }
@@ -578,9 +621,10 @@ check_order (file a[]) {
 
 foreach statements have the general form:
 
+[listing,swift]
 ----
-foreach controlvariable (,index) in expression {
-    statements
+foreach <controlvariable> [,<index>] in <expression> {
+    <statements>
 }
 ----
 
@@ -596,11 +640,13 @@ The if statement allows one of two blocks of statements to be
 executed, based on a boolean predicate. if statements generally have
 the form:
 
+[listing,swift]
 ----
-if(predicate) {
-    statements
-} else {
-    statements
+if (<condition>) {
+    <statements>
+} 
+else {
+    <statements>
 }
 ----
 
@@ -612,15 +658,16 @@ switch expressions allow one of a selection of blocks to be chosen
 based on the value of a numerical control expression. switch
 statements take the general form:
 
+[listing,swift]
 ----
-switch(controlExpression) {
-    case n1:
-        statements2
-    case n2:
-        statements2
+switch (<controlExpression>) {
+    case <n1>:
+        <statements1>
+    case <n2>:
+        <statements2>
     [...]
     default:
-        statements
+        <statements>
 }
 ----
 
@@ -635,20 +682,22 @@ end of each block.
 
 Following is an example of a switch expression in Swift:
 
+[listing,swift]
 ----
-int score=60;
-switch (score){
-case 100:
-    tracef("%s\n", "Bravo!");
-case 90:
-    tracef("%s\n", "very good");
-case 80:
-    tracef("%s\n", "good");
-case 70:
-    tracef("%s\n", "fair");
-default:
-    tracef("%s\n", "unknown grade");
-    }
+int score = 60;
+
+switch (score) {
+    case 100:
+        tracef("%s\n", "Bravo!");
+    case 90:
+        tracef("%s\n", "very good");
+    case 80:
+        tracef("%s\n", "good");
+    case 70:
+        tracef("%s\n", "fair");
+    default:
+        tracef("%s\n", "unknown grade");
+}
 ----
 
 iterate
@@ -658,10 +707,11 @@ with an iteration variable being incremented after each iteration.
 
 The general form is:
 
+[listing,swift]
 ----
-iterate var {
-    statements;
-} until (terminationExpression);
+iterate <var> {
+    <statements>
+} until (<terminationExpression>);
 ----
 
 Here _var_ is the iteration variable. Its initial value is 0. After each iteration,
@@ -671,6 +721,7 @@ the body will never be executed while the termination expression is true.
 
 Example:
 
+[listing,swift]
 ----
 iterate i {
     trace(i); // will print 0, 1, and 2
@@ -681,6 +732,7 @@ Variables declared inside the body of _iterate_ can be used in the termination e
 However, their values will reflect the values calculated as part of the last invocation
 of the body, and may not reflect the incremented value of the iteration variable:
 
+[listing,swift]
 ----
 iterate i {
     trace(i);
@@ -723,6 +775,7 @@ Swift file.
 
 For example, a Swift script might contain this:
 
+[listing,swift]
 ----
 import "defs";
 file f;
@@ -730,12 +783,15 @@ file f;
 
 which would import the content of defs.swift:
 
+[listing,swift]
 ----
 type file;
 ----
 
 Imported files are read from two places. They are either read from
 the path that is specified from the import command, such as:
+
+[listing,swift]
 ----
 import "definitions/file/defs";
 ----
@@ -744,6 +800,8 @@ or they are read from the environment variable SWIFT_LIB. This
 environment variable is used just like the PATH environment
 variable. For example, if the command below was issued to the bash
 shell:
+
+[listing,shell]
 ----
 export SWIFT_LIB=${HOME}/Swift/defs:${HOME}/Swift/functions
 ----
@@ -752,6 +810,8 @@ then the import command will check for the file defs.swift in both
 the path that was specified in the import command.
 
 Other valid imports:
+
+[listing,swift]
 ----
 import "../functions/func"
 import "/home/user/Swift/definitions/defs"
@@ -795,11 +855,15 @@ The single_file_mapper maps a single physical file to a dataset.
 |=================
 
 Example:
+
+[listing,swift]
 ----
 file f <single_file_mapper;file="plot_outfile_param">;
 ----
 
 There is a simplified syntax for this mapper:
+
+[listing,swift]
 ----
 file f <"plot_outfile_param">;
 ----
@@ -822,9 +886,10 @@ all file names that contain foo. When this mapper is used to specify
 output filenames, pattern is ignored.
 |====================
 
+[listing,swift]
 ----
 type file;
-file f <simple_mapper;prefix="foo", suffix=".txt">;
+file f <SimpleMapper; prefix = "foo", suffix = ".txt">;
 ----
 
 The above maps all filenames that start with foo and have an extension
@@ -835,16 +900,16 @@ The above maps all filenames that start with foo and have an extension
 |Swift variable|Filename
 |f|foo.txt
 |=================
+
+[listing,swift]
 ----
 type messagefile;
 
-(messagefile t) greeting(string m) {.
-    app {
-        echo m stdout=@filename(t);
-    }
+app (messagefile t) greeting(string m) {.
+    echo m stdout = filename(t);
 }
 
-messagefile outfile <simple_mapper;prefix="foo",suffix=".txt">;
+messagefile outfile <SimpleMapper; prefix = "foo", suffix = ".txt">;
 
 outfile = greeting("hi");
 ----
@@ -854,16 +919,16 @@ This will output the string 'hi' to the file foo.txt.
 The simple_mapper can be used to map arrays. It will map the array
 index into the filename between the prefix and suffix.
 
+[listing,swift]
 ----
 type messagefile;
 
-(messagefile t) greeting(string m) {
-    app {
-        echo m stdout=@filename(t);
-    }
+app (messagefile t) greeting(string m) {
+    echo m stdout = filename(t);
 }
 
-messagefile outfile[] <simple_mapper;prefix="baz",suffix=".txt", padding=2>;
+messagefile outfile[] <simple_mapper; prefix = "baz", suffix = ".txt", 
+        padding = 2>;
 
 outfile[0] = greeting("hello");
 outfile[1] = greeting("middle");
@@ -881,21 +946,20 @@ outfile[2] = greeting("goodbye");
 simple_mapper can be used to map structures. It will map the name of
 the structure member into the filename, between the prefix and the suffix.
 
+[listing,swift]
 ----
 type messagefile;
 
 type mystruct {
-  messagefile left;
-  messagefile right;
+    messagefile left;
+    messagefile right;
 };
 
-(messagefile t) greeting(string m) {
-    app {
-        echo m stdout=@filename(t);
-    }
+app (messagefile t) greeting(string m) {
+    echo m stdout = filename(t);
 }
 
-mystruct out <simple_mapper;prefix="qux",suffix=".txt">;
+mystruct out <SimpleMapper; prefix = "qux", suffix = ".txt">;
 
 out.left = greeting("hello");
 out.right = greeting("goodbye");
@@ -931,9 +995,11 @@ output filenames, pattern is ignored.
 |=================
 
 Example:
+
+[listing,swift]
 ----
 file f1;
-file f2 <concurrent_mapper;prefix="foo", suffix=".txt">;
+file f2 <ConcurrentMapper; prefix = "foo", suffix = ".txt">;
 ----
 The above example would use concurrent mapper for f1 and f2, and
 generate f2 filename with prefix "foo" and extension ".txt"
@@ -961,8 +1027,10 @@ all file names that contain foo.
 |======================
 
 Example:
+
+[listing,swift]
 ----
-file texts[] <filesys_mapper;prefix="foo", suffix=".txt">;
+file[] texts <FilesysMapper; prefix = "foo", suffix = ".txt">;
 ----
 
 The above example would map all filenames that start with "foo" and
@@ -992,8 +1060,10 @@ comma or colon
 
 Example:
 
+[listing,swift]
 ----
-file texts[] <fixed_array_mapper;files="file1.txt, fileB.txt, file3.txt">;
+file[] texts <FixedArrayMapper; 
+        files = "file1.txt, fileB.txt, file3.txt">;
 ----
 
 would cause a mapping like this:
@@ -1017,10 +1087,12 @@ The array_mapper maps from an array of strings into a file
 |==============
 
 Example:
-----
-string s[] = [ "a.txt", "b.txt", "c.txt" ];
 
-file f[] <array_mapper;files=s>;
+[listing,swift]
+----
+string s[] = ["a.txt", "b.txt", "c.txt"];
+
+file f[] <ArrayMapper; files = s>;
 ----
 
 This will establish the mapping:
@@ -1052,10 +1124,12 @@ reference the group matched.
 |==========
 
 Example:
+
+[listing,swift]
 ----
 file s <"picture.gif">;
-file f <regexp_mapper; source=s,
-  match="(.*)gif", transform="\\1jpg">;
+file f <RegexpMapper; source = s,
+        match = "(.*)gif", transform = "\\1jpg">;
 ----
 
 This example transforms a file ending gif into one ending jpg and
@@ -1087,11 +1161,13 @@ reference the group matched.
 |==========
 
 Example:
-----
-file s[] <filesys_mapper; pattern="*.gif">;
 
-file f[] <structured_regexp_mapper; source=s,
-          match="(.*)gif", transform="\\1jpg">;
+[listing,swift]
+----
+file[] s <FilesysMapper; pattern = "*.gif">;
+
+file[] f <StructuredRegexpMapper; source = s,
+          match = "(.*)gif", transform = "\\1jpg">;
 ----
 
 This example transforms all files in a list that end in gif to end in jpg and maps
@@ -1105,11 +1181,12 @@ defined to conform to the column names in the file. For instance, if the
 file contains columns: name age GPA then the type needs to have member
 elements like this:
 
+[listing,swift]
 ----
 type student {
-  file name;
-  file age;
-  file GPA;
+    file name;
+    file age;
+    file GPA;
 }
 ----
 
@@ -1128,8 +1205,10 @@ default is 0.
 |=============
 
 Example:
+
+[listing,swift]
 ----
-student stus[] <csv_mapper;file="stu_list.txt">;
+student stus[] <CSVMapper; file = "stu_list.txt">;
 ----
 
 The above example would read a list of student info from file
@@ -1137,6 +1216,7 @@ The above example would read a list of student info from file
 should contain a header line specifying the names of the columns. If
 stu_list.txt contains the following:
 
+[listing,text]
 ----
 name,age,gpa
 101-name.txt, 101-age.txt, 101-gpa.txt
@@ -1192,6 +1272,7 @@ scalars, arrays and structs.
 
 Example: With the following in mapper.sh,
 
+[listing,shell]
 ----
 #!/bin/bash
 echo "[2] qux"
@@ -1201,8 +1282,9 @@ echo "[1] bar"
 
 then a mapping statement:
 
+[listing,swift]
 ----
-student stus[] <ext;exec="mapper.sh">;
+student[] stus <Ext; exec = "mapper.sh">;
 ----
 
 would map
@@ -1222,46 +1304,48 @@ the said directory are identified by their names appended by a number between
 filename while the second index of the array maps to the second part of the
 filename.
 
+[listing,shell]
 ----
 #!/bin/sh
 
 #take care of the mapper args
 while [ $# -gt 0 ]; do
-  case $1 in
-    -location)          location=$2;;
-    -padding)           padding=$2;;
-    -prefix)            prefix=$2;;
-    -suffix)            suffix=$2;;
-    -mod_index)         mod_index=$2;;
-    -outer_index)       outer_index=$2;;
-    *) echo "$0: bad mapper args" 1>&2
-       exit 1;;
-  esac
-  shift 2
+    case $1 in
+        -location)
+            location=$2;;
+        -padding)
+            padding=$2;;
+        -prefix)
+            prefix=$2;;
+        -suffix)
+            suffix=$2;;
+        -mod_index)
+            mod_index=$2;;
+        -outer_index)
+            outer_index=$2;;
+        *) 
+            echo "$0: bad mapper args" 1>&2
+            exit 1;;
+    esac
+    shift 2
 done
 
-for i in `seq 0 ${outer_index}`
-do
- for j in `seq -w 000 ${mod_index}`
- do
-  fj=`echo ${j} | awk '{print $1 +0}'` #format j by removing leading zeros
-  echo "["${i}"]["${fj}"]" ${location}"/"${prefix}${j}${suffix}
- done
+for i in `seq 0 ${outer_index}`; do
+    for j in `seq -w 000 ${mod_index}`; do
+        #format j by removing leading zeros
+        fj=`echo ${j} | awk '{print $1 +0}'` 
+        echo "["${i}"]["${fj}"]" ${location}"/"${prefix}${j}${suffix}
+    done
 done
 ----
 
 The mapper definition is as follows:
 
+[listing,swift]
 ----
-file_dat dat_files[][] < ext;
-                              exec="mapper.sh",
-                              padding=3,
-                              location="output",
-                              prefix=@strcat( str_root, "_" ),
-                              suffix=".dat",
-                              outer_index=pid,
-                              mod_index=n >;
-
+fileDat[][] datFiles <Ext; exec = "mapper.sh", padding = 3,
+        location = "output", prefix = strcat(strRoot, "_"),
+        suffix = ".dat", outer_index = pid, mod_index = n>;
 ----
 
 Assuming there are 4 files with name aaa, bbb, ccc, ddd and a mod_index of 10,
@@ -1301,11 +1385,12 @@ in the next section.
 
 In this section, this example Swift script is used for reference:
 
+[listing,swift]
 ----
 type file;
 
 app (file o) count(file i) {
-  wc @i stdout=@o;
+    wc @i stdout = @o;
 }
 
 file q <"input.txt">;
@@ -1536,11 +1621,13 @@ hyphen and need to be positioned after the script name.
 
 For example:
 
+[listing,swift]
 ----
 trace(arg("myparam"));
 trace(arg("optionalparam", "defaultvalue"));
 ----
 
+[listing,shell]
 ----
 $ swift arg.swift -myparam=hello
 Swift v0.3-dev r1674 (modified locally)
@@ -1591,18 +1678,20 @@ heading row listing structure member names separated by whitespace. There
 should be one row for each element of the array, with structure member elements
 listed in the same order as the header row and separated by whitespace. The following example shows how readData() can be used to populate an array of Swift struct-like complex type:
 
+[listing,swift]
 ----
-type Employee{
+type Employee {
     string name;
     int id;
     string loc;
 }
 
-Employee emps[] = readData("emps.txt");
+Employee[] emps = readData("emps.txt");
 ----
 
 Where the contents of the "emps.txt" file are:
 
+[listing,swift]
 ----
 name id loc
 Thomas 2222 Chicago
@@ -1612,9 +1701,11 @@ Anne 4444 Houston
 
 This will result in the array "emps" with 3 members. This can be processed within a Swift script using the foreach construct as follows:
 
+[listing,swift]
 ----
 foreach emp in emps{
-    tracef("Employee %s lives in %s and has id %d", emp.name, emp.loc, emp.id);
+    tracef("Employee %s lives in %s and has id %d", 
+        emp.name, emp.loc, emp.id);
 }
 ----
 
@@ -1627,6 +1718,7 @@ ext mapper.
 Input files should list, one per line, a path into a Swift structure,
 and the value for that position in the structure:
 
+[listing,text]
 ----
 rows[0].columns[0] = 0
 rows[0].columns[1] = 2
@@ -1638,13 +1730,14 @@ rows[1].columns[2] = 5
 
 which can be read into a structure defined like this:
 
+[listing,swift]
 ----
 type vector {
-        int columns[];
+    int[] columns;
 }
 
 type matrix {
-        vector rows[];
+    vector[] rows;
 }
 
 matrix m;
@@ -1661,8 +1754,9 @@ substitution using the Java java.util.regexp API
 <http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html>.
 For example:
 
+[listing,swift]
 ----
-string v =  regexp("abcdefghi", "c(def)g","monkey");
+string v =  regexp("abcdefghi", "c(def)g", "monkey");
 ----
 
 will assign the value "abmonkeyhi" to the variable v.
@@ -1670,6 +1764,8 @@ will assign the value "abmonkeyhi" to the variable v.
 sprintf
 ^^^^^^^
 sprintf(spec, variable list) will generate a string based on the specified format.
+
+[listing,swift]
 -----
 Example: string s = sprintf("\t%s\n", "hello");
 -----
@@ -1704,6 +1800,8 @@ pattern parameter against the supplied input string and return the
 section that matches the first matching parenthesised group.
 
 For example:
+
+[listing,swift]
 ----
 string t = "my name is John and i like puppies.";
 string name = strcut(t, "my name is ([^ ]*) ");
@@ -1721,9 +1819,13 @@ passed to strjoin must be of a primitive type (string, int, float,
 or boolean). It will not join the contents of an array of files.
 
 Example:
+
+[listing,swift]
 ----
-string test[] = ["this", "is", "a", "test" ];
+string[] test = ["this", "is", "a", "test"];
+
 string mystring = strjoin(test, " ");
+
 tracef("%s\n", mystring);
 ----
 
@@ -1735,9 +1837,13 @@ strsplit(input,pattern) will split the input string based on
 separators that match the given pattern and return a string array.
 
 Example:
+
+[listing,swift]
 ----
 string t = "my name is John and i like puppies.";
-string words[] = strsplit(t, "\\s");
+
+string[] words = strsplit(t, "\\s");
+
 foreach word in words {
     trace(word);
 }
@@ -1778,6 +1884,8 @@ the specifiers arguments against the variable list and allows for
 certain escape characters.
 
 Example:
+
+[listing,swift]
 ----
 int i = 3;
 tracef("%s: %i\n", "the value is", i);
@@ -1811,6 +1919,7 @@ writeData
 writeData will write out data structures in the format described for
 readData. The following example demonstrates how one can write a string "foo" into a file "writeDataPrimitive.out":
 
+[listing,swift]
 ----
 include::../../tests/language-behaviour/IO/writeDataPrimitive.swift[]
 ----

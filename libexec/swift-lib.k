@@ -1,48 +1,3 @@
-namespace(swiftscript) {
-	export(extractInt, def("org.griphyn.vdl.karajan.lib.swiftscript.ExtractInt"))
-	export(extractFloat, def("org.griphyn.vdl.karajan.lib.swiftscript.ExtractFloat"))
-	export(readData, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadData"))
-	export(readData2, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"))
-	export(readStructured, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"))
-	export(writeData, def("org.griphyn.vdl.karajan.lib.swiftscript.WriteData"))
-	export(strcat, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$StrCat"))
-	export(strcut, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$StrCut"))
-	export(strstr, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$StrStr"))
-	export(strsplit, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$StrSplit"))
-	export(system, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$ExecSystem"))
-    export(strjoin, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$StrJoin"))
-	export(regexp, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Regexp"))
-	export(toInt, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$ToInt"))
-	export(toFloat, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$ToFloat"))
-	export(format, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Format"))
-	export(pad, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Pad"))
-	export(sprintf, def("org.griphyn.vdl.karajan.lib.swiftscript.Sprintf"))
-	export(toString, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$ToString"))
-	export(assert, def("org.griphyn.vdl.karajan.lib.swiftscript.Assert"))
-	export(trace, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Trace"))
-	export(tracef, def("org.griphyn.vdl.karajan.lib.swiftscript.Tracef"))
-	export(printf, def("org.griphyn.vdl.karajan.lib.swiftscript.Printf"))
-	export(fprintf, def("org.griphyn.vdl.karajan.lib.swiftscript.Fprintf"))
-
-	/* included for backwards compatibility */
-	export(readdata, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadData"))
-	export(readdata2, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"))
-	export(readstructured, def("org.griphyn.vdl.karajan.lib.swiftscript.ReadStructured"))
-	export(writedata, def("org.griphyn.vdl.karajan.lib.swiftscript.WriteData"))
-	export(toint, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$ToInt"))
-	export(tofloat, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$ToFloat"))
-	export(tostring, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$ToString"))
-
-	export(java, def("org.griphyn.vdl.karajan.lib.swiftscript.Java"))
-	export(filename, def("org.griphyn.vdl.karajan.lib.swiftscript.FileName"))
-	export(filenames, def("org.griphyn.vdl.karajan.lib.swiftscript.FileNames"))
-	export(dirname, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Dirname"))
-	export(length, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Length"))
-	export(exists, def("org.griphyn.vdl.karajan.lib.swiftscript.Misc$Exists"))
-	export(arg, def("org.griphyn.vdl.karajan.lib.swiftscript.FnArg"))
-	export(args, def("org.griphyn.vdl.karajan.lib.swiftscript.FnArgs"))
-}
-
 namespace(swift) {
 	import(sys)
 	export(SWIFT_CONFIG, contextAttribute("SWIFT:CONFIG"))
@@ -56,6 +11,9 @@ namespace(swift) {
 	export(new, def("org.griphyn.vdl.karajan.lib.New"))
 	export(field, def("org.griphyn.vdl.karajan.lib.GetFieldConst"))
 	export(createArray, def("org.griphyn.vdl.karajan.lib.CreateArray"))
+	export(createStruct, def("org.griphyn.vdl.karajan.lib.CreateStruct"))
+	export(createSparseArray, def("org.griphyn.vdl.karajan.lib.CreateSparseArray"))
+	export(makeField, def("org.griphyn.vdl.karajan.lib.MakeField"))
 	/* used from VDL2 for arguments to apps and returns relative paths */
 	export(fileName, def("org.griphyn.vdl.karajan.lib.FileName"))
 
@@ -146,6 +104,8 @@ namespace(swift) {
 	export(getURLPrefix, def("org.griphyn.vdl.karajan.lib.GetURLPrefix"))
 	
 	export(generateJobId, def("org.griphyn.vdl.karajan.lib.GenerateJobId"))
+	
+	export(importStdlib, def("org.griphyn.vdl.karajan.lib.ImportStdlib"))
 }
 
 namespace(cdm) {

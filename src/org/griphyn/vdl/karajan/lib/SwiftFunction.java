@@ -17,7 +17,10 @@
 
 package org.griphyn.vdl.karajan.lib;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import k.rt.Channel;
 import k.rt.Context;
@@ -25,6 +28,7 @@ import k.rt.ExecutionException;
 import k.rt.MemoryChannel;
 import k.rt.Stack;
 import k.thr.LWThread;
+import k.thr.Yield;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.CompilationException;
@@ -38,6 +42,7 @@ import org.griphyn.vdl.karajan.AssertFailedException;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
+import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.InvalidPathException;
 import org.griphyn.vdl.mapping.Path;
@@ -139,6 +144,11 @@ public abstract class SwiftFunction extends AbstractFunction {
 			return pathOnly((String) f);
 		}
 	}
+	
+	protected DuplicateMappingChecker getDMChecker(Stack stack) {
+        Context ctx = this.context.getValue(stack);
+        return (DuplicateMappingChecker) ctx.getAttribute("SWIFT:DM_CHECKER");
+    }
 
 	protected static String pathOnly(String file) {
 	    AbsFile af = new AbsFile(file);
@@ -225,8 +235,70 @@ public abstract class SwiftFunction extends AbstractFunction {
         }
         return mc;
     }
+		
+	public static void waitDeep(LWThread thr, AbstractDataNode n, Node who) {
+	    Type t = n.getType();
+	    if (!t.isComposite()) {
+	        n.waitFor(who);
+	    }
+	    else if (t.isArray()) {
+	        n.waitFor(who);
+	        waitDeepForArray(thr, n, who);
+	    }
+	    else {
+	        waitDeepForStruct(thr, n, who);
+	    }
+	}
 	
-	@SuppressWarnings("unchecked")
+	private static void waitDeepForStruct(LWThread thr, AbstractDataNode n, Node who) {
+	    Type t = n.getType();
+	    List<String> fieldNames = t.getFieldNames();
+	    int i = thr.popIntState();
+	    try {
+    	    for (; i < fieldNames.size(); i++) {
+    	        waitDeep(thr, (AbstractDataNode) n.getField(fieldNames.get(i)), who);
+    	    }
+	    }
+	    catch (NoSuchFieldException e) {
+	        throw new ExecutionException(who, 
+	            "Internal error: node and type do not agree on fields ('" + 
+	            fieldNames.get(i) + "'");
+	    }
+	    catch (Yield y) {
+	        y.getState().push(i);
+	        throw y;
+	    }
+    }
+
+    private static void waitDeepForArray(LWThread thr, AbstractDataNode n, Node who) {
+	    @SuppressWarnings("unchecked")
+            Iterator<Map.Entry<Comparable<?>, DSHandle>> it = 
+                (Iterator<Entry<Comparable<?>, DSHandle>>) thr.popState();
+            AbstractDataNode crt = (AbstractDataNode) thr.popState();
+            if (it == null) {
+                it = n.getArrayValue().entrySet().iterator();
+            }
+            try {
+                while (true) {
+                    if (crt != null) {
+                        waitDeep(thr, crt, who);
+                    }
+                    if (it.hasNext()) {
+                        crt = (AbstractDataNode) it.next().getValue();
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+            catch (Yield y) {
+                y.getState().push(crt);
+                y.getState().push(it);
+                throw y;
+            }
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T> T unwrap(Node who, AbstractDataNode n) throws ExecutionException {
         n.waitFor(who);
         return (T) n.getValue();

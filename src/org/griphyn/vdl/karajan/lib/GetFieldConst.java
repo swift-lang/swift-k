@@ -27,6 +27,7 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.compiled.nodes.functions.AbstractFunction;
 import org.globus.cog.karajan.parser.WrapperNode;
@@ -37,6 +38,7 @@ import org.griphyn.vdl.type.Types;
 public class GetFieldConst extends AbstractFunction {
     private ArgRef<String> name;
     private ArgRef<String> type;
+    private VarRef<Types> types;
 
     @Override
     protected Signature getSignature() {
@@ -45,10 +47,11 @@ public class GetFieldConst extends AbstractFunction {
     
     @Override
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope) throws CompilationException {
+        types = scope.getVarRef("#types");
         String name = this.name.getValue();
         String type = this.type.getValue();
         try {
-            staticReturn(scope, Field.Factory.getImmutableField(name, Types.getType(type)));
+            staticReturn(scope, Field.Factory.getImmutableField(name, types.getValue().getType(type)));
         }
         catch (NoSuchTypeException e) {
             throw new ExecutionException("No such type: " + name, e);
@@ -62,7 +65,7 @@ public class GetFieldConst extends AbstractFunction {
         String name = this.name.getValue(stack);
         String type = this.type.getValue(stack);
 		try {
-            return Field.Factory.getImmutableField(name, Types.getType(type));
+            return Field.Factory.getImmutableField(name, Types.BUILT_IN_TYPES.getType(type));
         }
         catch (NoSuchTypeException e) {
             throw new ExecutionException("No such type: " + name, e);

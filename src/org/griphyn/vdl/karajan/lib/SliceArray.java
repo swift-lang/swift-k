@@ -26,7 +26,9 @@ import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.griphyn.vdl.karajan.PairSet;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.InvalidPathException;
@@ -43,14 +45,23 @@ public class SliceArray extends SwiftFunction {
     private ArgRef<AbstractDataNode> var;
     private ArgRef<String> path;
     private ArgRef<String> type;
+    private VarRef<Types> types;
 
 	@Override
     protected Signature getSignature() {
         return new Signature(params("var", "path", "type"));
     }
 
-
 	@Override
+    protected void addLocals(Scope scope) {
+        super.addLocals(scope);
+        types = scope.getVarRef("#types");
+    }
+
+
+
+
+    @Override
     public Object function(Stack stack) {
         // TODO for now, this insists the the array be closed entirely before we
         // execute. This may cause overserialisation; and worse, will break when
@@ -76,7 +87,7 @@ public class SliceArray extends SwiftFunction {
     		}
     
     		String destinationTypeName = this.type.getValue(stack);
-    		Type destinationType = Types.getType(destinationTypeName);
+    		Type destinationType = types.getValue().getType(destinationTypeName);
     		RootFutureArrayDataNode destinationArray = new RootFutureArrayDataNode(sourceArray.getField(), null);
     
     

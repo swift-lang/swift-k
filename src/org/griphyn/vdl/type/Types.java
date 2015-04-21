@@ -19,34 +19,28 @@ package org.griphyn.vdl.type;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
+import org.griphyn.vdl.type.impl.TypeImpl;
 import org.griphyn.vdl.type.impl.TypeImpl.Array;
 
-public abstract class Types {
+public class Types {
     
     public static final String DEFAULT_ARRAY_KEY_TYPE_NAME = "int";
 
 	//TODO: check namespace references in type definitions
-	private static Map<String, Type> types = 
-	    new HashMap<String, Type>();
+	private Map<String, Type> types;
+	private Types prev;
 	
-	public synchronized static boolean isValidType(String name, Set<String> validTypes) {
-	    if (validTypes.contains(name) || types.containsKey(name)) {
-	        return true;
-	    }
-	    else {
-	        String[] names = getArrayInnerTypeNames(name);
-	        if (names == null) {
-	            return false;
-	        }
-	        else {
-	            return isValidType(names[0], validTypes) && isValidType(names[1], validTypes);
-	        }
-	    }
+	public Types() {
+	    types = new HashMap<String, Type>();
 	}
 	
-	private static String[] getArrayInnerTypeNames(String name) {
+	public Types(Types prev) {
+	    this();
+	    this.prev = prev;
+	}
+	
+	private String[] getArrayInnerTypeNames(String name) {
 	    if(name.endsWith("]")) {
             int index = name.lastIndexOf('[');
             if (index == -1) {
@@ -64,7 +58,7 @@ public abstract class Types {
 	    }
 	}
 	
-	private static String[] getArrayOuterTypeNames(String name) {
+	private String[] getArrayOuterTypeNames(String name) {
 	    int index = name.indexOf('[');
 	    if (index >= 0) {
 	        int i2 = name.indexOf(']');
@@ -85,7 +79,7 @@ public abstract class Types {
 	    }
     }
 	
-	private static String getArrayInnerComponentTypeName(String name, int index) {
+	private String getArrayInnerComponentTypeName(String name, int index) {
 	    String[] names = getArrayInnerTypeNames(name);
         if (names == null) {
             return null;
@@ -95,7 +89,7 @@ public abstract class Types {
         }
 	}
 	
-	private static String getArrayOuterComponentTypeName(String name, int index) {
+	private String getArrayOuterComponentTypeName(String name, int index) {
         String[] names = getArrayOuterTypeNames(name);
         if (names == null) {
             return null;
@@ -104,57 +98,11 @@ public abstract class Types {
             return names[index];
         }
     }
-	
-	public static String normalize(String t) {
-        String[] names = getArrayInnerTypeNames(t);
-        if (names == null) {
-            return t;
-        }
-        else {
-            return normalize(names[0]) + "[" + names[1] + "]";
-        }
-    }
-	
-	/**
-     * Returns the inner item type name for an array. That is, if
-     * a is of type t[tk1][tk2]...[tkN], then the inner item type name
-     * is t[tk1][tk2]...[tk(N-1)]
-     */
-	public static String getArrayInnerItemTypeName(String name) {
-	    return getArrayInnerComponentTypeName(name, 0);
-	}
-	
-	/**
-     * Returns the inner key type name for an array. That is, if
-     * a is of type t[tk1][tk2]...[tkN], then the inner key type name
-     * is tkN
-     */
-	public static String getArrayInnerIndexTypeName(String name) {
-        return getArrayInnerComponentTypeName(name, 1);
-    }
-	
-	/**
-     * Returns the outer key type name for an array. That is, if
-     * a is of type t[tk1][tk2]...[tkN], then the outer key type name
-     * is tk1
-     */
-	public static String getArrayOuterIndexTypeName(String name) {
-        return getArrayOuterComponentTypeName(name, 1);
-    }
-	
-	/**
-     * Returns the outer item type name for an array. That is, if
-     * a is of type t[tk1][tk2]...[tkN], then the outer key type name
-     * is t[tk2]...[tkN]
-     */
-    public static String getArrayOuterItemTypeName(String name) {
-        return getArrayOuterComponentTypeName(name, 0);
-    }
-
-	public synchronized static Type getType(String name) throws NoSuchTypeException {
+		
+	public synchronized Type getType(String name) throws NoSuchTypeException {
 		Type type = types.get(name);
 		if (type == null) {
-		    String[] names = getArrayInnerTypeNames(name);
+		    String[] names = getArrayOuterTypeNames(name);
 		    if (names != null) {
 				Type baseType = getType(names[0]);
 				Type keyType = getType(names[1]);
@@ -165,7 +113,10 @@ public abstract class Types {
 				addType(arrayType);
 				return arrayType;
 			}
-			else {
+			else if (prev != null) {
+			    return prev.getType(name);
+			}
+			else {   
                 throw new NoSuchTypeException(name);
             }
 		}
@@ -174,43 +125,45 @@ public abstract class Types {
 		}
 	}
 		
-	public static boolean isPrimitive(String name) {
-	    try {
-	        Type t = getType(name);
-	        return t.isPrimitive();
-	    }
-	    catch (NoSuchTypeException e) {
-	        return false;
-	    }
-	}
-
 	//TODO: check duplicate type?
-	public synchronized static void addType(Type type) {
+	public synchronized void addType(Type type) {
 		types.put(type.getName(), type);
 	}
 
-	private static Type addPrimitiveType(String name) {
+	private Type addPrimitiveType(String name) {
 		Type type = Type.Factory.createType(name, true);
 		addType(type);
 		return type;
 	}
+	
+	public static final Types BUILT_IN_TYPES = new Types();
 
 	public static final Type INT, STRING, FLOAT, BOOLEAN, ANY, EXTERNAL, AUTO;
 
 	// add built-in primitive types
 	static {
-		STRING = addPrimitiveType("string");
-		INT = addPrimitiveType("int");
-		FLOAT = addPrimitiveType("float");
-		BOOLEAN = addPrimitiveType("boolean");
-		ANY = addPrimitiveType("any");
-		EXTERNAL = addPrimitiveType("external");
-		AUTO = addPrimitiveType("auto");
+		STRING = BUILT_IN_TYPES.addPrimitiveType("string");
+		INT = BUILT_IN_TYPES.addPrimitiveType("int");
+		FLOAT = BUILT_IN_TYPES.addPrimitiveType("float");
+		BOOLEAN = BUILT_IN_TYPES.addPrimitiveType("boolean");
+		ANY = new TypeImpl("any", true) {
+            @Override
+            public boolean canBeAssignedTo(Type type) {
+                return type.equals(this);
+            }
+
+            @Override
+            public boolean isAssignableFrom(Type type) {
+                return true;
+            }
+        }; 
+		BUILT_IN_TYPES.addType(ANY);
+		EXTERNAL = BUILT_IN_TYPES.addPrimitiveType("external");
+		AUTO = BUILT_IN_TYPES.addPrimitiveType("auto");
 	}
 
-	public synchronized static void resolveTypes() throws NoSuchTypeException {
-		Map<String, Type> typesCopy = 
-		    new HashMap<String, Type>(types);
+	public synchronized void resolveTypes() throws NoSuchTypeException {
+		Map<String, Type> typesCopy = new HashMap<String, Type>(types);
 		for (Map.Entry<String, Type> e : typesCopy.entrySet()) {
 			Type type = e.getValue();
 			for (Field field : type.getFields()) {

@@ -23,7 +23,6 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.Collections;
 import java.util.List;
 
-import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
@@ -37,7 +36,6 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 import org.griphyn.vdl.mapping.GenericMappingParamSet;
 import org.griphyn.vdl.mapping.InvalidMapperException;
 import org.griphyn.vdl.mapping.Mapper;
@@ -69,8 +67,8 @@ public class New extends SwiftFunction {
 	private ArgRef<Boolean> input;
 	private ArgRef<Integer> _defline;
 	
-	private VarRef<Context> context;
-	private VarRef<String> cwd; 
+	private VarRef<String> cwd;
+	private VarRef<Types> types;
 	
 	@Override
 	protected Signature getSignature() {
@@ -83,8 +81,8 @@ public class New extends SwiftFunction {
     @Override
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
-        context = scope.getVarRef("#context");
         cwd = scope.getVarRef("CWD");
+        types = scope.getVarRef("#types");
     }
    
     @Override
@@ -300,17 +298,12 @@ public class New extends SwiftFunction {
         }
         else {
             try {
-                return Types.getType(typename);
+                return types.getValue().getType(typename);
             }
             catch (NoSuchTypeException e) {
                 throw new ExecutionException("Unknown type: " + typename, e);
             }
         }
-    }
-
-    private DuplicateMappingChecker getDMChecker(Stack stack) {
-        Context ctx = this.context.getValue(stack);
-        return (DuplicateMappingChecker) ctx.getAttribute("SWIFT:DM_CHECKER");
     }
 
     private String formatList(List<?> value) {

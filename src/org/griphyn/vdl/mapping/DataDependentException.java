@@ -37,4 +37,9 @@ public class DataDependentException extends DependentException {
 	public String getMessage() {
 		return getVariableInfo() + " not derived due to errors in data dependencies";
 	}
+
+    @Override
+    public String toString() {
+        return "<DependencyException>";
+    }
 }
