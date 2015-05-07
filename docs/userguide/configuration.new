@@ -25,6 +25,23 @@ sites: [mysite]
 lazy.errors: false
 -----
 
+NOTE: Swift 0.95 and older used an older configuration system that used sites.xml,
+swift.properties and tc.file. These configuration files can be converted to the new
+configuration format using the *swift-convert-config* utility that comes with the
+Swift-0.96 package.
+
+-----
+# To get help from swift-convert-config
+swift-convert-config -help
+
+# To convert a sites.xml, tc.data and swift.properties file to a swift.conf file:
+swift-convert-config -sites.file sites.xml -config swift.properties \
+    -tc.file tc.data -out swift.conf
+-----
+
+
+
+
 Configuration Syntax
 ~~~~~~~~~~~~~~~~~~~~
 
