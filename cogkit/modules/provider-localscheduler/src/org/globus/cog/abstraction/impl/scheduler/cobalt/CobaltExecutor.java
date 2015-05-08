@@ -173,6 +173,7 @@ public class CobaltExecutor extends AbstractExecutor {
 		addAttr("queue", "-q", result);
 		//addAttr("kernelprofile", "-k", result);
 		addAttr("kernelprofile", "--kernel", result);
+		addAttr("cobalt.disablePreboot", "--disable_preboot", result);
 		// cqsub seems to require both the node count and time args
 		// qsub seems to require both the node count and time args
 		addAttr("maxwalltime", "-t", result, "10");
