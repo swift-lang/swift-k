@@ -124,6 +124,9 @@ site."*" {
 				condor {
 					"*": "?Object"
 				}
+				cobalt {
+					"*": "?Object"
+				}
                 # Required ec2 configs :
                 ec2CredentialsFile: "?String"
                 ec2WorkerImage: "?String"
