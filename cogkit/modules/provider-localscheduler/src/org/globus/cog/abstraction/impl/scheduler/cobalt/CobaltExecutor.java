@@ -114,6 +114,25 @@ public class CobaltExecutor extends AbstractExecutor {
 	protected void addAttr(String attrName, String option, List<String> l, String defval) {
 		addAttr(attrName, option, l, defval, false);
 	}
+	
+	protected void addFlag(String attrName, String option, List<String> l) {
+	    Object value = getSpec().getAttribute(attrName);
+        if (value != null) {
+            Boolean b;
+            if (value instanceof Boolean) {
+                b = (Boolean) value;
+            }
+            else if (value instanceof String) {
+                b = Boolean.valueOf((String) value);
+            }
+            else {
+                b = Boolean.FALSE;
+            }
+            if (b.booleanValue()) {
+                l.add(option);
+            }
+        }
+	}
 
 	protected void addAttr(String attrName, String option, List<String> l,
 			String defval, boolean round) {
@@ -173,7 +192,7 @@ public class CobaltExecutor extends AbstractExecutor {
 		addAttr("queue", "-q", result);
 		//addAttr("kernelprofile", "-k", result);
 		addAttr("kernelprofile", "--kernel", result);
-		addAttr("cobalt.disablePreboot", "--disable_preboot", result);
+		addFlag("cobalt.disablePreboot", "--disable_preboot", result);
 		// cqsub seems to require both the node count and time args
 		// qsub seems to require both the node count and time args
 		addAttr("maxwalltime", "-t", result, "10");
