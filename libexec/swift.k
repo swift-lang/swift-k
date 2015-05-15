@@ -1,14 +1,13 @@
 import(sys)
 import(task)
 import(rlog)
-import('swift-operators', export = true)
 import('swift-lib', export = true)
-import('swift-xs', export = true)
 
 import('swift-int')
 import('swift-int-staging')
 import('swift-int-wrapper-staging')
 
+SWIFT_CONFIG := contextAttribute("SWIFT:CONFIG")
 SWIFT:SCRIPT_NAME := contextAttribute("SWIFT:SCRIPT_NAME")
 SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
 SWIFT:HOME := contextAttribute("SWIFT:HOME")
