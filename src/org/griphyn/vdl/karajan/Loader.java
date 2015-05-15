@@ -59,15 +59,15 @@ import org.globus.cog.karajan.util.KarajanProperties;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.TextFileLoader;
 import org.globus.swift.data.Director;
+import org.globus.swift.parsetree.Program;
 import org.griphyn.vdl.engine.Karajan;
 import org.griphyn.vdl.karajan.lib.Execute;
 import org.griphyn.vdl.karajan.lib.Log;
 import org.griphyn.vdl.karajan.lib.New;
 import org.griphyn.vdl.karajan.monitor.MonitorAppender;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
-import org.griphyn.vdl.toolkit.VDLt2VDLx;
-import org.griphyn.vdl.toolkit.VDLt2VDLx.IncorrectInvocationException;
-import org.griphyn.vdl.toolkit.VDLt2VDLx.ParsingException;
+import org.griphyn.vdl.toolkit.SwiftParser;
+import org.griphyn.vdl.toolkit.SwiftParser.ParsingException;
 import org.griphyn.vdl.util.SwiftConfig;
 import org.griphyn.vdl.util.SwiftConfigSchema;
 import org.swift.util.logging.LazyFileAppender;
@@ -114,7 +114,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         CMD_LINE_OPTIONS.add("maxForeachThreads");
         CMD_LINE_OPTIONS.add("CDMFile");
     }
-
+    
     public static String buildVersion;
 
     public static void main(String[] argv) {
@@ -225,7 +225,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
             Main root = compileKarajan(tree, context);
             root.setFileName(projectName);
-
+            
             SwiftExecutor ec = new SwiftExecutor(root);
             
             List<String> arguments = ap.getArguments();
@@ -419,14 +419,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
     }
     
     public static String compile(String project) throws FileNotFoundException,
-            ParsingException, IncorrectInvocationException,
-            CompilationException, IOException {
+            ParsingException, CompilationException, IOException {
         return compile(project, false, false);
     }
 
     public static String compile(String project, boolean forceRecompile, boolean provenanceEnabled) throws FileNotFoundException,
-            ParsingException, IncorrectInvocationException,
-            CompilationException, IOException {
+            ParsingException, CompilationException, IOException {
         File swiftscript = new File(project);
         debugText("SWIFTSCRIPT", swiftscript);
         int extIndex = project.lastIndexOf('.');
@@ -437,7 +435,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
         else {
             projectBase = project.substring(0, extIndex);
         }
-        File xml = new File(projectBase + ".swiftx");
         File kml = new File(projectBase + ".kml");
 
         loadBuildVersion(provenanceEnabled);
@@ -483,12 +480,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
 
         if (recompile) {
-            VDLt2VDLx.compile(new FileInputStream(swiftscript),
-                new PrintStream(new FileOutputStream(xml)));
+            Program prog = SwiftParser.parse(new FileInputStream(swiftscript));
 
             try {
                 FileOutputStream f = new FileOutputStream(kml);
-                Karajan.compile(new File(xml.getAbsolutePath()), new PrintStream(f), provenanceEnabled);
+                Karajan.compile(prog, new PrintStream(f), provenanceEnabled);
                 f.close();
             }
             catch (Error e) {
@@ -518,17 +514,14 @@ public class Loader extends org.globus.cog.karajan.Loader {
     }
     
     public static String compileString(String source, boolean provenanceEnabled) throws
-            ParsingException, IncorrectInvocationException,
-            CompilationException, IOException {
+            ParsingException, CompilationException, IOException {
         debugText("SWIFTSCRIPT", source);
 
-        ByteArrayOutputStream swiftx = new ByteArrayOutputStream();
-        VDLt2VDLx.compile(new ByteArrayInputStream(source.getBytes()),
-            new PrintStream(swiftx));
+        Program prog = SwiftParser.parse(new ByteArrayInputStream(source.getBytes()));
 
         ByteArrayOutputStream kml = new ByteArrayOutputStream();
         try {
-            Karajan.compile(swiftx.toString(), new PrintStream(kml), provenanceEnabled);
+            Karajan.compile(prog, new PrintStream(kml), provenanceEnabled);
         }
         catch (Error e) {
             throw e;

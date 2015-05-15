@@ -25,25 +25,26 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.antlr.stringtemplate.StringTemplate;
-import org.apache.xmlbeans.XmlObject;
-import org.globus.swift.language.ActualParameter;
+import org.globus.swift.parsetree.ActualParameter;
+import org.globus.swift.parsetree.Node;
+import org.globus.swift.parsetree.ReturnParameter;
 import org.griphyn.vdl.type.Type;
 
 public class ActualParameters {
     public static class Entry {
-        private final XmlObject param;
+        private final Node param;
         private final String binding;
         private StringTemplate paramST;
         private final Type type;
         
-        public Entry(XmlObject param, String binding, StringTemplate paramST, Type type) {
+        public Entry(Node param, String binding, StringTemplate paramST, Type type) {
             this.param = param;
             this.binding = binding;
             this.paramST = paramST;
             this.type = type;
         }
 
-        public XmlObject getParam() {
+        public Node getParam() {
             return param;
         }
 
@@ -84,7 +85,7 @@ public class ActualParameters {
     // how many positionals are passed by position
     private int passedPositionallyCount;
     
-    private void addParameter(XmlObject param, String binding, StringTemplate exprST, Type type) {
+    private void addParameter(Node param, String binding, StringTemplate exprST, Type type) {
         if (params == null) {
             params = new ArrayList<Entry>();
         }
@@ -92,21 +93,21 @@ public class ActualParameters {
     }
     
     public void addParameter(ActualParameter arg, StringTemplate argST, Type type) {
-        addParameter(arg, arg.getBind(), argST, type);
+        addParameter(arg, arg.getBinding(), argST, type);
     }
     
-    public void addParameter(XmlObject arg, StringTemplate argST, Type type) {
+    public void addParameter(Node arg, StringTemplate argST, Type type) {
         addParameter(arg, null, argST, type);
     }
     
-    public void addReturn(ActualParameter ret, StringTemplate retST, Type type) {
+    public void addReturn(ReturnParameter ret, StringTemplate retST, Type type) {
         if (returns == null) {
             returns = new ArrayList<Entry>();
         }
-        if (ret != null && ret.getBind() != null) {
+        if (ret != null && ret.getBinding() != null) {
             someReturnsHaveNames = true;
         }
-        returns.add(new Entry(ret, ret == null ? null : ret.getBind(), retST, type));
+        returns.add(new Entry(ret, ret == null ? null : ret.getBinding(), retST, type));
     }
 
     public List<Entry> getReturnEntries() {

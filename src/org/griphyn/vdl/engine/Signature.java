@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.globus.swift.language.FormalParameter;
+import org.globus.swift.parsetree.FormalParameter;
 import org.griphyn.vdl.type.NoSuchTypeException;
 import org.griphyn.vdl.type.Type;
 import org.griphyn.vdl.type.Types;
@@ -227,20 +227,22 @@ public class Signature {
     }
 
 
-	public void setInputArgs(FormalParameter[] fp, Types types) throws NoSuchTypeException {
-		for (int i = 0; i < fp.length; i++) {
-		    Type t = getType(types, fp[i].getType().getLocalPart());
-			Parameter fas = new Parameter(t, fp[i].getName());
-			boolean optional = !fp[i].isNil();
+	public void setInputArgs(List<FormalParameter> fp, Types types) throws NoSuchTypeException {
+		for (int i = 0; i < fp.size(); i++) {
+		    FormalParameter p = fp.get(i); 
+		    Type t = getType(types, p.getType());
+			Parameter fas = new Parameter(t, p.getName());
+			boolean optional = p.getDefaultValue() != null;
 			fas.setOptional(optional);
 			this.addInputArg(fas);
 		}
 	}
 
-	public void setOutputArgs(FormalParameter[] fp, Types types) throws NoSuchTypeException {
-		for (int i = 0; i < fp.length; i++) {
-		    Type t = getType(types, fp[i].getType().getLocalPart());
-		    String name = fp[i].getName();
+	public void setOutputArgs(List<FormalParameter> fp, Types types) throws NoSuchTypeException {
+		for (int i = 0; i < fp.size(); i++) {
+		    FormalParameter p = fp.get(i);
+		    Type t = getType(types, p.getType());
+		    String name = p.getName();
 			Parameter fas = new Parameter(t, name);
 			this.addOutputArg(fas);
 		}

@@ -97,7 +97,7 @@
 		</copy>
 	</target>
 
-	<target name="dist" depends="generateVersion, antlr, compileSchema, compileParams">
+	<target name="dist" depends="generateVersion, antlr, compileParams">
 		<ant antfile="${main.buildfile}" target="dist"/>
 		<mkdir dir="${dist.dir}/libexec"/>
 		<copy todir="${dist.dir}/libexec">
@@ -303,21 +303,6 @@
 			<classpath>
 				<pathelement location="${module.dir}/lib/antlr-2.7.5.jar"/>
 				<pathelement location="${module.dir}/lib/stringtemplate.jar"/>
-			</classpath>
-		</java>
-	</target>
-
-	<target name="compileSchema">
-		<java classname="org.apache.xmlbeans.impl.tool.SchemaCompiler" fork="true" failonerror="true">
-			<arg value="-src"/><arg value="${module.dir}/src"/>
-			<arg value="-javasource"/><arg value="1.4"/>
-			<arg value="-out"/><arg value="${module.dir}/lib/vdldefinitions.jar"/>
-			<arg value="${module.dir}/resources/swiftscript.xsd"/>
-			<arg value="${module.dir}/resources/swiftscript.xsdconfig"/>
-			<classpath>
-				<pathelement location="${module.dir}/lib/xbean.jar"/>
-				<pathelement location="${module.dir}/lib/resolver.jar"/>
-				<pathelement location="${module.dir}/lib/jsr173_1.0_api.jar"/>
 			</classpath>
 		</java>
 	</target>

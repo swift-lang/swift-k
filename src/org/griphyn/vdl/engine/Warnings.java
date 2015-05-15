@@ -33,7 +33,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.apache.xmlbeans.XmlObject;
+import org.globus.swift.parsetree.Node;
 
 public class Warnings {
     public static final Logger logger = Logger.getLogger(Warnings.class);
@@ -56,11 +56,11 @@ public class Warnings {
         enabledWarnings.add(Type.UNUSED);
     }
     
-    public static void warn(Type type, XmlObject obj, String msg) {
+    public static void warn(Type type, Node obj, String msg) {
         if (enabledWarnings.contains(type)) {
             if (!warnings.contains(msg)) {
                 warnings.add(msg);
-                msg = "Warning: " + msg + ", line " + CompilerUtils.getLine(obj.getDomNode());
+                msg = "Warning: " + msg + ", line " + obj.getLine();
                 logger.info(msg);
                 System.err.println(msg);
             }

@@ -31,7 +31,7 @@ import java.util.Stack;
 
 import org.antlr.stringtemplate.StringTemplate;
 import org.apache.log4j.Logger;
-import org.apache.xmlbeans.XmlObject;
+import org.globus.swift.parsetree.Node;
 import org.griphyn.vdl.karajan.CompilationException;
 import org.griphyn.vdl.type.Type;
 
@@ -87,7 +87,7 @@ public class VariableScope {
 	private List<String> outputs = new ArrayList<String>();
 	private Set<String> inhibitClosing;
 	private List<VariableScope> children = new LinkedList<VariableScope>();
-	private XmlObject src;
+	private Node src;
 	
 	/** List of templates to be executed in sequence after the present
         in-preparation statement is outputted. */
@@ -111,13 +111,13 @@ public class VariableScope {
     private static class Variable {
         public final String name;
         public final Type type;
-        public final XmlObject src;
+        public final Node src;
         public final AccessType accessType;
         public final VariableOrigin origin;
-        private XmlObject foreachSrc;
+        private Node foreachSrc;
         public boolean unused;
         
-        public Variable(String name, Type type, AccessType accessType, VariableOrigin origin, XmlObject src) {
+        public Variable(String name, Type type, AccessType accessType, VariableOrigin origin, Node src) {
             this.name = name;
             this.type = type;
             this.src = src;
@@ -134,9 +134,9 @@ public class VariableScope {
         scope. Should probably get used for dataset marking eventually. */
     private static class VariableUsage {
         private final String name;
-        private XmlObject fullWritingLoc, foreachSourceVar;
-        private List<XmlObject> partialWritingLoc;
-        private List<XmlObject> fullReadingLoc;
+        private Node fullWritingLoc, foreachSourceVar;
+        private List<Node> partialWritingLoc;
+        private List<Node> fullReadingLoc;
         private boolean partiallyRead;
         private int referenceCount;
         
@@ -144,10 +144,10 @@ public class VariableScope {
             this.name = name;
         }
         
-        public boolean addWritingStatement(XmlObject loc, WriteType writeType) throws CompilationException {
+        public boolean addWritingStatement(Node loc, WriteType writeType) throws CompilationException {
             if (writeType == WriteType.PARTIAL) {
                 if (partialWritingLoc == null) {
-                    partialWritingLoc = new LinkedList<XmlObject>();
+                    partialWritingLoc = new LinkedList<Node>();
                 }
                 if (!partialWritingLoc.contains(loc)) {
                     partialWritingLoc.add(loc);
@@ -173,9 +173,9 @@ public class VariableScope {
             return fullWritingLoc != null || (partialWritingLoc != null && partialWritingLoc.size() > 0);
         }
 
-        public void addFullReadingStatement(XmlObject where) {
+        public void addFullReadingStatement(Node where) {
             if (fullReadingLoc == null) {
-                fullReadingLoc = new LinkedList<XmlObject>();
+                fullReadingLoc = new LinkedList<Node>();
             }
             fullReadingLoc.add(where);
         }
@@ -188,20 +188,20 @@ public class VariableScope {
             return partiallyRead || (fullReadingLoc != null && fullReadingLoc.size() > 0);
         }
 
-        public XmlObject getForeachSourceVar() {
+        public Node getForeachSourceVar() {
             return foreachSourceVar;
         }
 
-        public void setForeachSourceVar(XmlObject foreachSourceVar) {
+        public void setForeachSourceVar(Node foreachSourceVar) {
             this.foreachSourceVar = foreachSourceVar;
         }
 
-        public void addPartialReadingStatement(XmlObject where) {
+        public void addPartialReadingStatement(Node where) {
             this.partiallyRead = true;
         }
     }
 
-	public VariableScope(Karajan c, VariableScope parent, XmlObject src) {
+	public VariableScope(Karajan c, VariableScope parent, Node src) {
 		this(c, parent, EnclosureType.ALL, src);
 	}
 
@@ -212,7 +212,7 @@ public class VariableScope {
 		@param a specifies how assignments to variables made in enclosing
 			scopes will be handled.
 	*/
-	public VariableScope(Karajan c, VariableScope parent, EnclosureType a, XmlObject src) {
+	public VariableScope(Karajan c, VariableScope parent, EnclosureType a, Node src) {
 	    if (logger.isDebugEnabled()) {
     		if (parentScope != null) {
     			logger.debug("New scope " + hashCode() + " with parent scope " + parentScope.hashCode());
@@ -255,7 +255,7 @@ public class VariableScope {
 	    warning if it shadows an outer scope? */
 
 	public void addVariable(String name, Type type, String context, 
-	        VariableOrigin origin, XmlObject src) throws CompilationException {
+	        VariableOrigin origin, Node src) throws CompilationException {
 		addVariable(name, type, context, AccessType.LOCAL, origin, src);
 	}
 	
@@ -324,7 +324,7 @@ public class VariableScope {
 	    return u;
 	}
 	
-	public void setForeachSourceVar(String name, XmlObject src) {
+	public void setForeachSourceVar(String name, Node src) {
 	    getUsageForUpdate(name).setForeachSourceVar(src);
     }
 	
@@ -344,14 +344,14 @@ public class VariableScope {
 	}
 
 	public void addVariable(String name, Type type, String context, 
-	        AccessType accessType, VariableOrigin origin, XmlObject src) throws CompilationException {
+	        AccessType accessType, VariableOrigin origin, Node src) throws CompilationException {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Adding variable " + name + " of type " + type + " to scope " + hashCode());
 	    }
 		
 		if(isVariableDefined(name)) {
 			throw new CompilationException("Variable " + name + ", on line " 
-			    + CompilerUtils.getLine(src) + ", was already defined on line " + getDeclarationLine(name));
+			    + src.getLine() + ", was already defined on line " + getDeclarationLine(name));
 		}
 
 		// TODO does this if() ever fire? or is it always taken
@@ -359,7 +359,7 @@ public class VariableScope {
 		// be replaced by is locally defined test.
 		if(parentScope != null && parentScope.isVariableDefined(name)) {
 		    Warnings.warn(Warnings.Type.SHADOWING,  
-		        context + " " + name + ", on line " + CompilerUtils.getLine(src)
+		        context + " " + name + ", on line " + src.getLine()
 		        + ", shadows variable of same name on line " + parentScope.getDeclarationLine(name));
 		}
 
@@ -381,21 +381,21 @@ public class VariableScope {
 	 * Does pretty much the same as addVariable() except it doesn't throw
 	 * an exception if the variable is defined in a parent scope
 	 */
-	public void addInternalVariable(String name, Type type, XmlObject src) throws CompilationException {
+	public void addInternalVariable(String name, Type type, Node src) throws CompilationException {
 	    if (logger.isDebugEnabled()) {
 	        logger.debug("Adding internal variable " + name + " of type " + type + " to scope " + hashCode());
 	    }
 		
 		if(isVariableLocallyDefined(name)) {
 			throw new CompilationException("Variable " + name + ", on line " 
-			    + CompilerUtils.getLine(src) + ", was already defined on line " + getDeclarationLine(name));
+			    + src.getLine() + ", was already defined on line " + getDeclarationLine(name));
 		}
 
 		getVariablesMap().put(name, new Variable(name, type, AccessType.LOCAL, VariableOrigin.INTERNAL, src));
 	}
 	
-	public String getDeclarationLine(String name) {
-	    XmlObject src;
+	public int getDeclarationLine(String name) {
+	    Node src;
 	    if (rootScope.isGlobalDefined(name)) {
 	        src = rootScope.getGlobalSrc(name);
 	    }
@@ -403,10 +403,10 @@ public class VariableScope {
 	        src = getSrcRecursive(name);
 	    }
 	    if (src != null) {
-	        return CompilerUtils.getLine(src);
+	        return src.getLine();
 	    }
 	    else {
-	        return "unknown";
+	        return -1;
 	    }
 	}
 
@@ -446,7 +446,7 @@ public class VariableScope {
 	    }
 	}
 	
-	private XmlObject getSrcRecursive(String name) {
+	private Node getSrcRecursive(String name) {
 	    Variable var = lookup(name);
 	    if (var == null) {
 	        throw new IllegalArgumentException("Variable " + name + " is not visible in this scope");
@@ -483,7 +483,7 @@ public class VariableScope {
 	    return var != null && var.isGlobal();
 	}
 	
-	public XmlObject getGlobalSrc(String name) {
+	public Node getGlobalSrc(String name) {
 	    Variable var = rootScope.lookup(name);
         if (var != null && var.isGlobal()) {
             return var.src;
@@ -636,7 +636,7 @@ public class VariableScope {
 	    writes to the variable so that the scope-embedding code (such as
 	    the foreach compiler) can handle appropriately. */
 	public void addWriter(String variableName, WriteType writeType, 
-	        XmlObject where, StringTemplate out) throws CompilationException {
+	        Node where, StringTemplate out) throws CompilationException {
 		if (!isVariableDefined(variableName)) {
 			throw new CompilationException("Variable " + variableName + " is not defined");
 		}
@@ -654,7 +654,7 @@ public class VariableScope {
 		}
 	}
 	
-	public void partialClose(String name, XmlObject src, StringTemplate out) {
+	public void partialClose(String name, Node src, StringTemplate out) {
 	    if (inhibitClosing == null || !inhibitClosing.contains(name)) {
 	        StringTemplate decl = getExistingDeclaration(name);
 	        if (decl != null) {
@@ -867,7 +867,7 @@ public class VariableScope {
         }
     }
 
-    public void addReader(String name, boolean partial, XmlObject where) throws CompilationException {
+    public void addReader(String name, boolean partial, Node where) throws CompilationException {
 	    setVariableReadInThisScope(name, partial, where);
 	    if (!partial) {
 	        if (logger.isDebugEnabled()) {
@@ -876,7 +876,7 @@ public class VariableScope {
 	    }
 	}
 	
-	private void setVariableWrittenToInThisScope(String name, WriteType writeType, XmlObject where, StringTemplate out)
+	private void setVariableWrittenToInThisScope(String name, WriteType writeType, Node where, StringTemplate out)
 	throws CompilationException {
 	    VariableUsage variable = getUsageForUpdate(name);
 	    boolean added = variable.addWritingStatement(where, writeType);
@@ -894,7 +894,7 @@ public class VariableScope {
 	    }
     }
 
-    private void setVariableReadInThisScope(String name, boolean partial, XmlObject where)
+    private void setVariableReadInThisScope(String name, boolean partial, Node where)
     throws CompilationException {
 	    if (partial) {
 	        getUsageForUpdate(name).addPartialReadingStatement(where);
@@ -933,7 +933,7 @@ public class VariableScope {
         return v != null && v.hasFullReaders();
     }
 	
-	private XmlObject getFirstFullRead(String name) {
+	private Node getFirstFullRead(String name) {
         VariableUsage v = getExistingUsage(name);
         if (v == null) {
             return null;
@@ -947,7 +947,7 @@ public class VariableScope {
         return v.fullReadingLoc.get(0);
     }
 	
-	private XmlObject getFirstWrite(String name) {
+	private Node getFirstWrite(String name) {
         VariableUsage v = getExistingUsage(name);
         if (v == null) {
             return null;
@@ -964,7 +964,7 @@ public class VariableScope {
         return v.partialWritingLoc.get(0);
     }
 	
-	private List<XmlObject> getAllWriters(String name) {
+	private List<Node> getAllWriters(String name) {
 	    VariableUsage v = getExistingUsage(name);
 	    if (v == null) {
 	        throw new IllegalArgumentException("Variable " + name + " is not written to in this scope");

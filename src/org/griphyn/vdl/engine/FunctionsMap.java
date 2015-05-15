@@ -25,7 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.globus.swift.language.FormalParameter;
+import org.globus.swift.parsetree.FormalParameter;
 import org.griphyn.vdl.engine.ActualParameters.Entry;
 import org.griphyn.vdl.engine.Signature.Parameter;
 import org.griphyn.vdl.karajan.CompilationException;
@@ -330,7 +330,7 @@ public class FunctionsMap {
     }
 
     public Object find(String procName, FormalParameter[] inputArray) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public List<Signature> findAll(String name) {

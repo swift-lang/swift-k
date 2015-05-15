@@ -1,7 +1,7 @@
 header {
 package org.globus.swift.parser;
 
-import org.antlr.stringtemplate.*;
+import org.globus.swift.parsetree.*;
 import java.util.List;
 import java.util.Iterator;
 import antlr.Token;
@@ -14,309 +14,327 @@ options {
     k=2;
     codeGenMakeSwitchThreshold = 2;
     codeGenBitsetTestThreshold = 3;
-    defaultErrorHandler=false;
+    defaultErrorHandler = false;
 }
 
 {
-protected StringTemplateGroup m_templates=null;
-protected String currentFunctionName=null;
-protected SwiftScriptLexer swiftLexer=null;
+	protected SwiftScriptLexer swiftLexer = null;
+	protected Program program;
 
-public void setTemplateGroup(StringTemplateGroup tempGroup) {
-    m_templates = tempGroup;
-}
+	/** TODO this can perhaps be extracted from the superclass, but I don't
+    	have javadocs available at the time of writing. */
+	public void setSwiftLexer(SwiftScriptLexer sl) {
+    	swiftLexer = sl;
+	}
 
-/** TODO this can perhaps be extracted from the superclass, but I don't
-    have javadocs available at the time of writing. */
-public void setSwiftLexer(SwiftScriptLexer sl) {
-    swiftLexer = sl;
-}
-
-StringTemplate template(String name) {
-    StringTemplate t = m_templates.getInstanceOf(name);
-    t.setAttribute("sourcelocation","line "+swiftLexer.getLine());
-    return t;
-}
-
-StringTemplate text(String t) {
-    return new StringTemplate(m_templates,t);
-}
-
-String escape(String s) {
-    String s1 = s.replaceAll("&", "&amp;");
-    String s2 = s1.replaceAll("<", "&lt;");
-    String s3 = s2.replaceAll(">", "&gt;");
-    return s3;
-}
-
-String quote(String s) {
-    return s.replaceAll("\\\\\"", "&quot;");
-}
-
+	<T extends AbstractNode> T setLine(T node) {
+		node.setLine(swiftLexer.getLine());
+		return node;
+	} 
 }
 
 // The specification for a SwiftScript program
-program returns [StringTemplate code=template("program")]
-    :
-    (nsdecl[code])*        //namespace declaration
-    (importStatement[code])*
-    (topLevelStatement[code])*
+program returns [Program program = setLine(new Program())]
+{
+	this.program = program;
+}
+:
+    (importStatement[program])*
+    (topLevelStatement[program])*
     EOF
-    ;
+;
 
-nsdecl [StringTemplate code]
-{StringTemplate ns=template("nsDef");}
-    :   "namespace" (prefix:ID{ns.setAttribute("prefix", prefix.getText());})? uri:STRING_LITERAL SEMI
-    {
-      ns.setAttribute("uri", uri.getText());
-      code.setAttribute("namespaces", ns);
-      if (ns.getAttribute("prefix") == null)
-         code.setAttribute("targetNS", ns.getAttribute("uri"));
-    }
-    ;
-
-importStatement [StringTemplate code]
+importStatement [Program program]
     : "import" name:STRING_LITERAL SEMI {
-        StringTemplate i = template("import");
-        i.setAttribute("target", name.getText());
-        code.setAttribute("imports", i);
+    	Import i = setLine(new Import());
+    	i.setTarget(name.getText());
+    	program.addImport(i);
     }
     ;
 
-typedecl [StringTemplate code]
-{StringTemplate r=template("typeDef");
- StringTemplate t=null;}
-    :    "type" id:ID {    r.setAttribute("name", id.getText()); }
+typedecl [Program program]
+{
+	TypeDeclaration r = setLine(new TypeDeclaration());
+ 	String t = null;
+}
+:    
+	"type" 
+	id:ID {    
+		r.setName(id.getText()); 
+    }
     (
         SEMI
-        |
-        (t=type
-        {
-           r.setAttribute("type", t);
-        }
-        SEMI
+        | 
+        (
+        	t = type { 
+        		r.setTypeAlias(t); 
+        	} 
+        	SEMI
         )
-        | structdecl[r]
-    )
-    {code.setAttribute("types", r);}
-    ;
+        | 
+        structdecl[r]
+    ) {
+    	program.addType(r);
+    }
+;
 
-structdecl [StringTemplate code]
-{StringTemplate e=null, e1=null, t=null; String thisType = null;}
-    :   LCURLY
-    (t=type id:ID
-    {
-    thisType = (String) t.getAttribute("name");
-    e=template("memberdefinition");
-    e.setAttribute("name", id.getText());
-    }
-    (LBRACK RBRACK { thisType = thisType + "[]"; })*
-    {
-      StringTemplate thisTypeTemplate;
-      thisTypeTemplate=template("type");
-      thisTypeTemplate.setAttribute("name", thisType);
-      e.setAttribute("type", thisTypeTemplate);
-      code.setAttribute("members", e);
-    }
+structdecl [TypeDeclaration td]
+{
+	TypeMemberDeclaration mdef = null, mdef2 = null; 
+	String t = null; String thisType = null;
+}
+:   
+	LCURLY
     (
-        COMMA
-        id1:ID
-        {
-        thisType = (String) t.getAttribute("name");
-        e1=template("memberdefinition");
-        e1.setAttribute("name", id1.getText());
-        }
-        (LBRACK RBRACK { thisType = thisType + "[]"; })*
-        {
-           StringTemplate thisTypeTemplate;
-           thisTypeTemplate=template("type");
-           thisTypeTemplate.setAttribute("name", thisType);
-           e1.setAttribute("type", thisTypeTemplate);
-           code.setAttribute("members", e1);
-         }
-    )*
-    SEMI
+    	t = type id:ID {
+    		thisType = t;
+    		mdef = setLine(new TypeMemberDeclaration());
+    		mdef.setName(id.getText());
+    	}
+    	(LBRACK RBRACK { thisType = thisType + "[]"; })* {
+      		mdef.setType(thisType);
+      		td.addMember(mdef);
+    	}
+    	(
+        	COMMA
+        	id1:ID {
+        		thisType = t;
+        		mdef2 = setLine(new TypeMemberDeclaration());
+        		mdef2.setName(id1.getText());
+        	}
+        	(LBRACK RBRACK { thisType = thisType + "[]"; })* {
+           		mdef2.setType(thisType);
+           		td.addMember(mdef2);
+         	}
+    	)*
+    	SEMI
     )*
     RCURLY
-    (options {
-       warnWhenFollowAmbig = false;
-     }
-    :SEMI
-    )?
-    ;
-
-topLevelStatement[StringTemplate code]
-{StringTemplate d=null; }
-   :
-
-// these are ll(1) and easy to predict
-
-      typedecl[code]
-    | d=ll1statement
-       {
-        code.setAttribute("statements",d);
-       }
-
-// these are non-declaration assign-like statements
-
-    |   (predictAssignStat) => d=assignStat
-       {
-        code.setAttribute("statements",d);
-       }
-
-// these are non-declaration append-associative array statements
-
-	|   (predictAppendStat) => d=appendStat
-		{
-		 code.setAttribute("statements",d);
-		}
-
-// they all begin with (id name)
-    | (predictDeclaration) => declaration[code]
-	| (predictProceduredecl) => d=proceduredecl {code.setAttribute("functions", d);}
-// more complicated function invocations
-// note that function invocations can happen in above statements too
-// this section is just the remaining more specialised invocations
-
-    |   (predictProcedurecallCode) => d=procedurecallCode
-       {
-        code.setAttribute("statements",d);
-       }
-
-    |   (predictProcedurecallStatAssignManyReturnParam) => procedurecallStatAssignManyReturnParam[code]
-
-// this is a declaration, but not sorted out the predications yet to
-// group it into a decl block
-    | ("app") => d=appproceduredecl {code.setAttribute("functions",d);}
-    ;
-
-predictDeclaration {StringTemplate x,y;} : ("global") | (x=type y=declarator) ;
-
-declaration [StringTemplate code]
-{StringTemplate t=null;
- boolean isGlobal = false;}
-    : ("global" {isGlobal = true;})?
-      t=type
-      declpart[code, t, isGlobal]
-      (COMMA declpart[code, t, isGlobal])*
-      SEMI
-    ;
-
-declpart [StringTemplate code, StringTemplate t, boolean isGlobal]
-    {
-        StringTemplate n=null;
-        StringTemplate thisTypeTemplate=null;
-        String thisType = (String) t.getAttribute("name");
-        StringTemplate variable=null;
-        StringTemplate m = null;
-        StringTemplate sTemp = null;
-		String sType = "";
-    }
-    :
-     n=declarator
-	(LBRACK
-	(sTemp=type {sType = (String) sTemp.getAttribute("name") ;} )?
-	RBRACK {thisType = thisType + "[" + sType + "]" ; sType = ""; } )*
-     {
-        thisTypeTemplate=template("type");
-        thisTypeTemplate.setAttribute("name", thisType);
-        variable = template("variable");
-        variable.setAttribute("name", n);
-        variable.setAttribute("type", thisTypeTemplate);
-        variable.setAttribute("global", ""+isGlobal);
-        code.setAttribute("statements", variable);
-    }
-
-    (LT (m=mappingdecl | f:STRING_LITERAL) GT
-    {
-       if (m!=null)
-           variable.setAttribute("mapping", m);
-       else
-           variable.setAttribute("lfn", quote(f.getText()));
-    })?
-
-// TODO: mapping does here...
-// which means construction of the variable template goes here, rather than
-// in variableDecl
-
     (
-      variableDecl[code, thisTypeTemplate, n, variable]
-// nice to lose this distinction entirely...
-//    | (predictDatasetdecl) => datasetdecl[code, thisTypeTemplate, n]
-// TODO can shorten variableDecl predictor now we dont' need to
-//  distinguish it from datasetdecl?
-    )
-    ;
+    	options {
+			warnWhenFollowAmbig = false;
+		}
+    	:SEMI
+    )?
+;
 
-variableDecl [StringTemplate code, StringTemplate t, StringTemplate d, StringTemplate v1]
-{StringTemplate i1=null, m=null;
-
+topLevelStatement[Program program]
+{
+	Statement d = null;
+	FunctionDeclaration f = null;
 }
-    :
+:
 
-    (i1=varInitializer
-    {
+	// these are ll(1) and easy to predict
 
-        if (i1 != null) {
-          StringTemplate valueAssignment = template("assign");
-          StringTemplate vr = template("variableReference");
-          vr.setAttribute("name",d);
-          valueAssignment.setAttribute("lhs",vr);
-          valueAssignment.setAttribute("rhs",i1);
-          code.setAttribute("statements", valueAssignment);
-        }
-    })?
-    ;
+    typedecl[program]
+    | 
+    d = ll1statement {
+    	program.addStatement(d);
+    }
 
-declarator returns [StringTemplate code=null]
-    :   id:ID {code=text(id.getText());}
-    ;
+	// these are non-declaration assign-like statements
 
-appDeclarator returns [StringTemplate code=null]
-    :   id:ID {code=text(id.getText());}
-    |	s:STRING_LITERAL {code=text(s.getText());}
-    ;
+    | 
+    (predictAssignStat) => d = assignStat {
+		program.addStatement(d);
+    }
+
+	// these are non-declaration append-associative array statements
+
+	| 
+	(predictAppendStat) => d = appendStat {
+		program.addStatement(d);
+	}
+
+	// they all begin with (id name)
+    | 
+    (predictDeclaration) => declaration[program.getBody()]
+	| 
+	(predictProceduredecl) => f = proceduredecl {
+		program.addFunctionDeclaration(f);
+	}
+	// more complicated function invocations
+	// note that function invocations can happen in above statements too
+	// this section is just the remaining more specialised invocations
+
+    | 
+    (predictProcedurecallCode) => d = procedurecallCode {
+    	program.addStatement(d);
+    }
+
+    | 
+    (predictProcedurecallStatAssignManyReturnParam) => procedurecallStatAssignManyReturnParam[program.getBody()]
+
+	// this is a declaration, but not sorted out the predications yet to
+	// group it into a decl block
+    | 
+    ("app") => f = appproceduredecl {
+    	program.addFunctionDeclaration(f);
+    }
+;
+
+predictDeclaration 
+{
+	Object dummy = null;
+}
+:
+		("global") | (dummy = type dummy = declarator) 
+;
+
+declaration [StatementContainer scope]
+{
+	String t = null; 
+	boolean isGlobal = false;
+}
+: 
+	(
+		"global" {
+			isGlobal = true;
+		}
+	)?
+	t = type
+	declpart[scope, t, isGlobal]
+	(COMMA declpart[scope, t, isGlobal])*
+	SEMI
+;
+
+declpart [StatementContainer scope, String thisType, boolean isGlobal]
+{
+    VariableDeclaration vdecl = null;
+    String keyType = "";
+    String name = null;
+    MappingDeclaration mdecl = null;
+}
+:
+	name = declarator
+	(
+		LBRACK
+		(keyType = type)?
+		RBRACK {
+			thisType = thisType + "[" + keyType + "]" ; keyType = "";
+		} 
+	)* {
+     	vdecl = setLine(new VariableDeclaration());
+     	vdecl.setName(name);
+     	vdecl.setType(thisType);
+     	vdecl.setGlobal(isGlobal);
+        scope.addVariableDeclaration(vdecl);
+    }
+	(
+		LT 
+		(mdecl = mappingdecl | f:STRING_LITERAL) GT {
+   			if (mdecl != null) {
+       			vdecl.setMapping(mdecl);
+       		}
+   			else {
+       			vdecl.setLFN(f.getText());
+       		}
+		}
+	)?
+
+	// TODO: mapping does here...
+	// which means construction of the variable template goes here, rather than
+	// in variableDecl
+
+	(
+		variableDecl[scope, thisType, name, vdecl]
+		// nice to lose this distinction entirely...
+		//    | (predictDatasetdecl) => datasetdecl[scope, thisType, name]
+		// TODO can shorten variableDecl predictor now we dont' need to
+		//  distinguish it from datasetdecl?
+	)
+;
+
+variableDecl [StatementContainer scope, String vtype, String name, VariableDeclaration vdecl]
+{
+	Expression value = null;
+}
+:
+    (
+    	value = varInitializer {
+        	if (value != null) {
+        		Assignment assign = setLine(new Assignment());
+        		assign.setLhs(new VariableReference(name));
+        		assign.setRhs(value);
+        		scope.addStatement(assign);
+        	}
+    	}
+    )?
+;
+
+declarator returns [String name = null] 
+:   
+	id:ID {
+		name = id.getText();
+	}
+;
+
+appDeclarator returns [String app = null]
+:       
+    id:ID {
+    	app = id.getText();
+    }
+    | 
+    s:STRING_LITERAL {
+    	app = s.getText();
+    }
+;
 
 
-varInitializer returns [StringTemplate code=null]
-    :   ASSIGN code=expression
-    ;
+varInitializer returns [Expression value = null]
+:   
+	ASSIGN value = expression
+;
 
 // This is an initializer used to set up an array.
 // currently does not support nested array.
-arrayInitializer returns [StringTemplate code=template("arrayInit")]
-{StringTemplate e=null,from=null,to=null,step=null;}
-    :    LBRACK
+arrayInitializer returns [ArrayInitializer ai = null]
+{
+	Expression e = null;
+	Expression from = null;
+	Expression to = null;
+	Expression step = null;
+	ai = setLine(new ArrayInitializer());
+}
+: 
+	LBRACK
     (
-     (expression COLON) =>
-     (
-      from=expression COLON to=expression (COLON step=expression)?
-      {
-        StringTemplate range=template("range");
-        range.setAttribute("from", from);
-        range.setAttribute("to", to);
-        if (step != null)
-        range.setAttribute("step", step);
-        code.setAttribute("range", range);
-      }
-     )
-     |
-     (
-      e=expression {code.setAttribute("elements", e);}
-      (
-        // CONFLICT: does a COMMA after an initializer start a new
-      //           initializer or start the option ',' at end?
-      //           ANTLR generates proper code by matching
-      //             the comma as soon as possible.
-        options {
-          warnWhenFollowAmbig = false;
-        } : COMMA e=expression {code.setAttribute("elements", e);}
-      )*
-      (COMMA)?
-     )
+		(expression COLON) => (
+      		from = expression COLON to = expression (COLON step = expression)?
+      		{
+      			ai.setType(ArrayInitializer.Type.RANGE);
+      			ArrayInitializer.Range range = new ArrayInitializer.Range();
+      			range.setFrom(from);
+      			range.setTo(to);
+        		if (step != null) {
+        			range.setStep(step);
+        		}
+        		ai.setRange(range);
+      		}
+     	)
+     	|
+     	(
+     		{ ai.setType(ArrayInitializer.Type.ITEMS); }
+      		e = expression {
+      			ai.addItem(e);
+      		}
+      		(
+        		// CONFLICT: does a COMMA after an initializer start a new
+      			//           initializer or start the option ',' at end?
+      			//           ANTLR generates proper code by matching
+      			//             the comma as soon as possible.
+        		options {
+          			warnWhenFollowAmbig = false;
+        		} : COMMA e = expression {
+        			ai.addItem(e);
+        		}
+      		)*
+      		(COMMA)?
+     	)
     )?
     RBRACK
-    ;
+;
 
 // there are two places where this can be used. One is
 // structure initializers and the other is sparse array initializers.
@@ -325,55 +343,70 @@ arrayInitializer returns [StringTemplate code=template("arrayInit")]
 // The empty struct/array "{}" is ambiguous, so the determination
 // of whether this is a struct initializer or sparse array initializer
 // is made by the compiler rather than the parser 
-structInitializer returns [StringTemplate code = template("structInit")]
-	{
-		StringTemplate key = null, expr = null;
-		code.setAttribute("sourcelocation", "line " + swiftLexer.getLine());
-	}
-    :    
-    	LCURLY
-    	(
-    		key = expression COLON expr = expression
-    		{
-    			StringTemplate fieldInit = template("structFieldInit");
-    			fieldInit.setAttribute("key", key);
-    			fieldInit.setAttribute("value", expr);
-    			code.setAttribute("fields", fieldInit);
-    		}
-    	)?
-    	( 
-    		COMMA key = expression COLON expr = expression
-    		{
-    			StringTemplate fieldInit = template("structFieldInit");
-    			fieldInit.setAttribute("key", key);
-    			fieldInit.setAttribute("value", expr);
-    			code.setAttribute("fields", fieldInit);
-    		}
-    	)*
-    	RCURLY
-    ;
+structInitializer returns [StructInitializer si = null]
+{
+	Expression key = null;
+	Expression expr = null;
+	si = setLine(new StructInitializer());
+}
+:    
+   	LCURLY
+   	(
+   		key = expression COLON expr = expression {
+   			si.addFieldInitializer(new FieldInitializer(key, expr));
+   		}
+   	)?
+   	( 
+   		COMMA key = expression COLON expr = expression {
+   			si.addFieldInitializer(new FieldInitializer(key, expr));
+   		}
+   	)*
+   	RCURLY
+;
 
-mappingdecl returns [StringTemplate code=template("mapping")]
-{StringTemplate p=null, d=null;}
-    :  d=declarator {code.setAttribute("descriptor",d);} SEMI
-       mapparamdecl[code]
-    ;
+mappingdecl returns [MappingDeclaration mdecl = null]
+{
+	mdecl = setLine(new MappingDeclaration());
+	String descriptor = null;
+}
+:  
+	descriptor = declarator {
+		mdecl.setDescriptor(descriptor);
+	} 
+	SEMI
+    mapparamdecl[mdecl]
+;
 
-mapparamdecl [StringTemplate code]
-{StringTemplate p=null;}
-    :  (  p=mapparam {code.setAttribute("params", p);}
-          ( COMMA p=mapparam {code.setAttribute("params", p);} )*
-       )?
-    ;
+mapparamdecl [MappingDeclaration mdecl]
+{
+	MappingParameter mparam = null;
+}
+:
+	(  
+		mparam = mapparam {
+			mdecl.addParameter(mparam);
+		}
+        ( 
+        	COMMA 
+        	mparam = mapparam {
+        		mdecl.addParameter(mparam);
+        	} 
+        )*
+	)?
+;
 
-mapparam returns [StringTemplate code=template("mapParam")]
-{StringTemplate n=null, v=null;}
-    :  n=declarator ASSIGN v=mappingExpr
-    {
-        code.setAttribute("name", n);
-        code.setAttribute("value", v);
+mapparam returns [MappingParameter mparam = null]
+{
+	mparam = setLine(new MappingParameter());
+	String name = null;
+	Expression value = null;
+}
+:  
+	name = declarator ASSIGN value = mappingExpr {
+    	mparam.setName(name);
+    	mparam.setValue(value);
     }
-    ;
+;
 
 // This predicts in two different ways.
 // The first choice is procedures with no return parameters. For these,
@@ -383,409 +416,497 @@ mapparam returns [StringTemplate code=template("mapParam")]
 // predict as far as the bracket after the procedure name. We have to
 // predict on the return parameters, which means we won't get good
 // error reporting when there is a syntax error in there.
-predictProceduredecl
-{StringTemplate f=null;}
-    : ( id:ID LPAREN
-        ( f=formalParameter (COMMA f=formalParameter)* )?
+predictProceduredecl 
+{
+	FormalParameter f = null;
+}
+: 
+    ( 
+    	id:ID LPAREN
+        (f = formalParameter (COMMA f = formalParameter)* )?
         RPAREN
         LCURLY
-      )
-      |
-      (
+     )
+     |
+     (
         LPAREN
-        f=formalParameter
-        (   COMMA f=formalParameter
-        )*
+        f = formalParameter
+        (COMMA f = formalParameter)*
         RPAREN ID LPAREN
-      )
-    ;
+     )
+;
 
-proceduredecl returns [StringTemplate code=template("function")]
-{StringTemplate f=null;}
-    :  ( LPAREN
-        f=formalParameter
-        {
-        f.setAttribute("outlink", "true");
-        code.setAttribute("outputs", f);
+proceduredecl returns [FunctionDeclaration fdecl = null]
+{
+	fdecl = setLine(new FunctionDeclaration());
+	AppDeclaration appdecl = null;
+	FormalParameter param = null;
+}
+:  
+    ( 
+    	LPAREN
+        param = formalParameter {
+        	fdecl.addReturn(param);
         }
-        (   COMMA f=formalParameter
-            {
-            f.setAttribute("outlink", "true");
-            code.setAttribute("outputs", f);
+        (   
+        	COMMA param = formalParameter {
+        		fdecl.addReturn(param);
             }
         )*
         RPAREN )?
-        id:ID {currentFunctionName=id.getText();} LPAREN
-        (   f=formalParameter
-            {
-            code.setAttribute("inputs", f);
+        id:ID {fdecl.setName(id.getText());} LPAREN
+        (   
+        	param = formalParameter {
+        		fdecl.addParameter(param);
             }
-            (   COMMA f=formalParameter
-                {
-                code.setAttribute("inputs", f);
+            (   
+            	COMMA param = formalParameter {
+                	fdecl.addParameter(param);
                 }
             )*
         )?
         RPAREN
-         LCURLY
+        LCURLY
         (
-        atomicBody[code]
-        |
-        compoundBody[code]
+        	(predictAtomicBody) => {
+        		appdecl = new AppDeclaration(fdecl);
+        		fdecl = appdecl;
+        	}
+        	atomicBody[appdecl]
+        	|
+        	compoundBody[fdecl.getBody()]
         )
         RCURLY
-        {
-        code.setAttribute("name", id.getText());
-        currentFunctionName=null;
-        }
-    ;
+;
 
-appproceduredecl returns [StringTemplate code=template("function")]
-{StringTemplate f=null;
- StringTemplate app=template("app");
- StringTemplate exec=null; }
-    :   "app"
-        ( LPAREN
-        f=formalParameter
-        {
-        f.setAttribute("outlink", "true");
-        code.setAttribute("outputs", f);
-        }
-        (   COMMA f=formalParameter
-            {
-            f.setAttribute("outlink", "true");
-            code.setAttribute("outputs", f);
-            }
-        )*
-        RPAREN )?
-        id:ID {currentFunctionName=id.getText();} LPAREN
-        (   f=formalParameter
-            {
-            code.setAttribute("inputs", f);
-            }
-            (   COMMA f=formalParameter
-                {
-                code.setAttribute("inputs", f);
-                }
-            )*
-        )?
-        RPAREN
-        LCURLY
-        ( appProfile[app] )*
-        (exec=appDeclarator)
-        {
-       		app.setAttribute("exec", exec);
-        }
-        ( appArg[app] )* SEMI
-        {code.setAttribute("config",app);}
-        RCURLY
-        {
-        code.setAttribute("name", id.getText());
-        currentFunctionName=null;
-        }
-    ;
+predictAtomicBody
+:
+	"app"
+;
+    
+appproceduredecl returns [AppDeclaration app = null]
+{
+	app = setLine(new AppDeclaration());
+	FormalParameter param = null;
+	String exec = null;
+}
+: 
+	"app"
+	( 
+		LPAREN
+		param = formalParameter {
+        	app.addReturn(param);
+		}
+		(
+			COMMA param = formalParameter {
+				app.addReturn(param);
+			}
+		)*
+		RPAREN 
+	)?
+	id:ID {
+		app.setName(id.getText());
+	} 
+	LPAREN
+	(   
+		param = formalParameter {
+			app.addParameter(param);
+		}
+		(   
+			COMMA param = formalParameter {
+				app.addParameter(param);
+			}
+		)*
+	)?
+	RPAREN
+	LCURLY
+	(appProfile[app])*
+	(exec = appDeclarator) {
+		app.setExecutable(exec);
+	}
+    (appArg[app])* 
+    SEMI
+	RCURLY
+;
 
-appProfile [StringTemplate code]
-{   StringTemplate p=null;
-    StringTemplate k=null;
-    StringTemplate v=null;}
-    : "profile" k=expression ASSIGN v=expression SEMI
-        {
-            p=template("app_profile");
-            p.setAttribute("key", k);
-            p.setAttribute("value", v);
-            code.setAttribute("profiles", p);
-        }
-    ;
+appProfile [AppDeclaration app]
+{
+	Expression name = null;
+	Expression value = null;   
+}
+: 
+	"profile" name = expression 
+	ASSIGN 
+	value = expression SEMI {
+		app.addProfile(new AppProfile(name, value));
+    }
+;
 
 // TODO in here, why do we have an | between LBRACKBRACK and ASSIGN?
 // does this mean that we don't have array initialisation in formal
 // params? this wouldn't surprise me given the previous treatment
 // of arrays. investigate this and fix...
-formalParameter returns [StringTemplate code=template("parameter")]
-{StringTemplate t=null,d=null,v=null; String thisType = null; }
-    :   (t=type d=declarator
-        {
-        thisType = (String) t.getAttribute("name");
-        code.setAttribute("name", d);
-        }
-        (LBRACK RBRACK {thisType = thisType + "[]"; })*
-        (ASSIGN v=constant
-          {
-          String value = (String)v.getAttribute("value");
-          if (v.getName().equals("sConst")) {
-            v.removeAttribute("value");
-             v.setAttribute("value", quote(value));
-          }
-          code.setAttribute("defaultv", v);
-          }
-        )?) {
-          StringTemplate thisTypeTemplate;
-          thisTypeTemplate=template("type");
-          thisTypeTemplate.setAttribute("name", thisType);
-          code.setAttribute("type", thisTypeTemplate);
-        }
-    ;
+formalParameter returns [FormalParameter param = null]
+{
+	param = setLine(new FormalParameter());
+	String type_ = null;
+	String name = null;
+	Expression value = null;
+}
+:   
+	(
+    	type_ = type
+    	name = declarator {
+    		param.setName(name);
+	    }
+        (LBRACK RBRACK { type_ = type_ + "[]"; })*
+        (
+        	ASSIGN value = constant {
+        		param.setDefaultValue(value);
+        	}
+        )?
+	) {
+    	param.setType(type_);
+	}
+;
 
-type returns [ StringTemplate code = null ]
-	{ StringBuilder buf = new StringBuilder(); }
+type returns [String typeName = null]
+{ 
+	StringBuilder buf = new StringBuilder(); 
+}
 :
 	id:ID {
-		code = template("type");
 		buf.append(id.getText());
 	}
 	(typeSubscript[buf]) * {
-		code.setAttribute("name", buf.toString());
+		typeName = buf.toString();
 	}
 ;
 
-typeSubscript[StringBuilder buf] :
-	LBRACK { buf.append('['); }
-	(id:ID { buf.append(id.getText()); })?
-	RBRACK { buf.append(']'); }
+typeSubscript[StringBuilder buf] 
+:
+	LBRACK { 
+		buf.append('['); 
+	}
+	(
+		id:ID { 
+			buf.append(id.getText());
+		}
+	)?
+	RBRACK { 
+		buf.append(']'); 
+	}
 ;
 
-compoundStat[StringTemplate code]
-    :   LCURLY
-    ( innerStatement[code] )*
-        RCURLY
-    ;
+compoundStat[StatementContainer scope]
+:   
+   	LCURLY
+   	compoundBody[scope]
+    RCURLY
+;
 
-compoundBody[StringTemplate code]
-    :    ( innerStatement[code] )*
-    ;
-
-innerStatement[StringTemplate code]
-{StringTemplate s=null;}
-    : (predictDeclaration) => declaration[code]
+compoundBody[StatementContainer scope]
+:
+    (innerStatement[scope])*
+;
+    
+innerStatement[StatementContainer scope]
+{
+	Statement s;
+}
+: 
+	(predictDeclaration) => declaration[scope]
     |
-    ((
-       s=ll1statement
-    |  (procedurecallCode) => s=procedurecallCode
-    |  (predictAssignStat) => s=assignStat
-    |  (predictAppendStat) => s=appendStat
+    (
+    	(
+			s = ll1statement
+    		|  (procedurecallCode) => s = procedurecallCode
+    		|  (predictAssignStat) => s = assignStat
+    		|  (predictAppendStat) => s = appendStat
+    	) {
+			scope.addStatement(s);
+       	}
     )
-       {
-        code.setAttribute("statements",s);
-       })
-    |  (procedurecallStatAssignManyReturnParam[code]) => procedurecallStatAssignManyReturnParam[code]
-    ;
+    |
+    (procedurecallStatAssignManyReturnParam[scope]) => procedurecallStatAssignManyReturnParam[scope]
+;
 
-caseInnerStatement [StringTemplate statements]
-{ StringTemplate code = null; }
-    :
-    (  code=ll1statement
-    |  (procedurecallCode) => code=procedurecallCode
-    |  (predictAssignStat) => code=assignStat
-    |  (predictAppendStat) => code=appendStat
-    ) {statements.setAttribute("statements",code);}
-    |   (procedurecallStatAssignManyReturnParam[statements]) => procedurecallStatAssignManyReturnParam[statements]
-    ;
+caseInnerStatement [StatementContainer scope]
+{ 
+	Statement s = null; 
+}
+:
+    (  
+    	s = ll1statement
+    	|  
+    	(procedurecallCode) => s = procedurecallCode
+    	|  
+    	(predictAssignStat) => s = assignStat
+    	|  
+    	(predictAppendStat) => s = appendStat
+    ) {
+    	scope.addStatement(s);
+    }
+    |   
+    (procedurecallStatAssignManyReturnParam[scope]) => procedurecallStatAssignManyReturnParam[scope]
+;
 
 // These are the statements that we can predict with ll(1) grammer
 // i.e. with one token of lookahead
-ll1statement returns [StringTemplate code=null]
-    :
-    code=ifStat
-    | code=foreachStat
-    | code=switchStat
-    | code=iterateStat
-    ;
+ll1statement returns [Statement s = null]
+:
+    s = ifStat
+    | 
+    s = foreachStat
+    | 
+    s = switchStat
+    | 
+    s = iterateStat
+;
 
-ifStat returns [StringTemplate code=template("if")]
+ifStat returns [IfStatement s = null]
 {
-  StringTemplate cond=null;
-  StringTemplate body=template("statementList");
-  StringTemplate els=template("statementList");
+	s = setLine(new IfStatement());
+  	Expression cond = null;
+  	StatementContainer else_ = s.getElseScope();
 }
-    :  "if" LPAREN cond=expression RPAREN {
-        	code.setAttribute("cond", cond);
-        }
-        compoundStat[body] {code.setAttribute("body", body);}
-        (
-          options {
-              warnWhenFollowAmbig = false;
-          }
-          : "else" els = bodyOrIf {code.setAttribute("els", els);}
-        )?
-    ;
+:  
+	"if" LPAREN cond = expression RPAREN {
+		s.setCondition(cond);
+	}
+	compoundStat[s.getThenScope()]
+	(
+		options {
+			warnWhenFollowAmbig = false;
+		}
+        : "else" bodyOrIf[else_]
+	)?
+;
     
-bodyOrIf returns [StringTemplate stat] {stat = template("statementList");}:
-	stat = ifStat
-	| compoundStat[stat];
-
-foreachStat returns [StringTemplate code=template("foreach")]
+bodyOrIf [StatementContainer scope]
 {
-  StringTemplate ds=null;
-  StringTemplate body=template("statementList");
+	IfStatement ifs = null;
 }
-    :  "foreach" id:ID (COMMA indexId:ID)? "in" ds=expression
-    {
-        code.setAttribute("var", id.getText());
-        code.setAttribute("in", ds);
-        if (indexId != null) {
-           code.setAttribute("index", indexId.getText());
-        }
-    }
-    compoundStat[body] {code.setAttribute("body", body);}
-    ;
+:
+	ifs = ifStat {
+		scope.addStatement(ifs);
+	}
+	| 
+	compoundStat[scope]
+;
 
-iterateStat returns [StringTemplate code=template("iterate")]
+foreachStat returns [ForeachStatement fs = null]
 {
-  StringTemplate cond=null;
-  StringTemplate body=template("statementList");
+	fs = setLine(new ForeachStatement());
+	Expression inexp = null;
 }
-    :  "iterate" id:ID
-    compoundStat[body] {code.setAttribute("body", body);}
-    "until" LPAREN cond=expression RPAREN SEMI
-    {
-    code.setAttribute("var", id.getText());
-    code.setAttribute("cond", cond);
-    }
-    ;
+    :  "foreach" id:ID (COMMA indexId:ID)? "in" inexp = expression
+    	{
+    		fs.setVar(id.getText());
+        	fs.setInExpression(inexp);
+        	if (indexId != null) {
+        		fs.setIndexVar(indexId.getText());
+        	}
+    	}
+    	compoundStat[fs.getBody()]
+;
 
-switchStat returns [StringTemplate code=template("switch")]
+iterateStat returns [IterateStatement is]
 {
-  StringTemplate cond=null, b=null;
+	is = setLine(new IterateStatement());
+  	Expression cond = null;
 }
-    :    "switch" LPAREN cond=expression RPAREN
-    {code.setAttribute("cond", cond);}
-    LCURLY
-    ( b = casesGroup {code.setAttribute("cases", b);} )*
-    RCURLY
-    ;
+:
+	"iterate" id:ID
+	compoundStat[is.getBody()] 
+	"until" LPAREN cond = expression RPAREN SEMI {
+		is.setVar(id.getText());
+		is.setCondition(cond);
+	}
+;
 
-casesGroup returns [StringTemplate code=template("case")]
-{StringTemplate b=null;}
-    :    (    // CONFLICT: to which case group do the statements bind?
-            //           ANTLR generates proper code: it groups the
-            //           many "case"/"default" labels together then
-            //           follows them with the statements
-            options {
-                greedy = true;
-            }
-            :
-            aCase[code]
-        )
-        caseSList[code]
-    ;
+switchStat returns [SwitchStatement ss]
+{
+	ss = setLine(new SwitchStatement());
+	Expression cond = null;
+	SwitchCase case_ = null;
+}
+:    
+	"switch" LPAREN cond = expression RPAREN {
+    	ss.setCondition(cond);
+	}
+	LCURLY
+	( 
+		case_ = casesGroup {
+			ss.addCase(case_);
+		} 
+	)*
+	RCURLY
+;
 
-aCase [StringTemplate code]
-{StringTemplate v=null;}
-    :    (
-          "case" v=expression {code.setAttribute("value", v);}
-          | "default"
-                )
-        COLON
-    ;
+casesGroup returns [SwitchCase sc]
+{
+	sc = setLine(new SwitchCase());
+}
+:
+	(    
+		// CONFLICT: to which case group do the statements bind?
+		//           ANTLR generates proper code: it groups the
+		//           many "case"/"default" labels together then
+		//           follows them with the statements
+		options {
+			greedy = true;
+		}: aCase[sc]
+	)
+	caseSList[sc]
+;
 
-caseSList [StringTemplate code]
-{StringTemplate s=null;}
-    :    ( caseInnerStatement[code] )*
-    ;
+aCase [SwitchCase sc]
+{
+	Expression value = null;
+}
+:
+	(
+		"case" value = expression {
+			sc.setValue(value);
+		}
+      	| 
+      	"default" {
+      		sc.setIsDefault(true);
+		}
+	)
+	COLON
+;
+
+caseSList [SwitchCase sc]
+:    
+	(
+		caseInnerStatement[sc.getBody()]
+	)*
+;
 
 predictAssignStat
-{StringTemplate x=null;}
-    : x=identifier ASSIGN ;
+{
+	Object dummy = null;
+}
+: 
+	dummy = lvalue ASSIGN 
+;
 
 predictAppendStat
-{StringTemplate x=null;}
-    : x=identifier APPEND ;
-
-assignStat returns [StringTemplate code=null]
-{StringTemplate id=null;}
-    :
-    id=identifier
-    ASSIGN
-    code=variableAssign {
-		code.setAttribute("lhs",id);
-    }
+{
+	Object dummy = null;
+}
+: 
+	dummy = lvalue APPEND
 ;
 
-appendStat returns [ StringTemplate code = null ]
-	{ StringTemplate id=null; }
+assignStat returns [Assignment assign = null]
+{
+	assign = setLine(new Assignment());
+	LValue id = null;
+	Expression value = null;  
+}
 :
-    id=identifier
+	id = lvalue
+	ASSIGN
+	value = variableAssign {
+		assign.setLhs(id);
+		assign.setRhs(value);
+	}
+;
+
+appendStat returns [ Append append = null ]
+{
+	append = setLine(new Append()); 
+	LValue id = null;
+	Expression value = null; 
+}
+:
+    id = lvalue
     APPEND
-	code=arrayAppend {
-		code.setAttribute("array", id);
+	value = arrayAppend {
+		append.setLhs(id);
+		append.setRhs(value);
 	}
 ;
 
-arrayAppend returns [ StringTemplate code = null ]
-	{ StringTemplate a = null, e = null, id = null; }
+arrayAppend returns [Expression e = null]
 :
-	e = expression SEMI {
-		code = template("append");
-		code.setAttribute("value", e);
-	}
+	e = expression SEMI
 ;
 
 
-variableAssign returns [StringTemplate code=null]
-{StringTemplate a=null, e=null, id=null;}
-    :
-    e=expression SEMI
-        {
-            code=template("assign");
-            code.setAttribute("rhs", e);
-        }
-    ;
+variableAssign returns [Expression e = null]
+:
+	e = expression SEMI
+;
     
 predictProcedurecallCode:
 	ID LPAREN
 ;
 
-procedurecallCode returns [StringTemplate code=template("call")]
-{StringTemplate f=null;}
-    :
-        procedureInvocation[code]
-    ;
+procedurecallCode returns [Call call = setLine(new Call())]
+:
+	procedureInvocation[call]
+;
 
-procedureInvocation [StringTemplate code]
-    :
-        procedureInvocationWithoutSemi[code]
-        SEMI
-    ;
+procedureInvocation [Call call]
+:
+	procedureInvocationWithoutSemi[call]
+	SEMI
+;
 
-procedureInvocationWithoutSemi [StringTemplate code]
-{StringTemplate f=null;}
-    :
-        id:ID {code.setAttribute("func", id.getText());}
-        LPAREN 
-        (
-        	f=actualParameter {
-        		code.setAttribute("inputs", f);
+procedureInvocationWithoutSemi [Call call]
+{
+	ActualParameter param = null;
+}
+:
+    id:ID {
+    	call.setName(id.getText());
+    }
+    LPAREN 
+    (
+    	param = actualParameter {
+    		call.addParameter(param);
+    	}
+        ( 
+        	COMMA param = actualParameter {
+        		call.addParameter(param);
         	}
-            ( COMMA f=actualParameter {
-        		code.setAttribute("inputs", f);
-            })*
-        )?
-        RPAREN
-    ;
+        )*
+    )?
+    RPAREN
+;
 
-procedureInvocationExpr [StringTemplate code]
-{StringTemplate f=null;}
-    :
-        id:ID {code.setAttribute("func", id.getText());}
-        LPAREN (
-        	f=actualParameter {
-        		code.setAttribute("inputs", f);
+procedureInvocationExpr [Call call]
+{
+	ActualParameter param = null;
+}
+:
+    id:ID {
+    	call.setName(id.getText());
+    }
+    LPAREN (
+    	param = actualParameter {
+    		call.addParameter(param);
+    	}
+   		(
+   			COMMA param = actualParameter {
+    			call.addParameter(param);
         	}
-       		(
-       			COMMA f=actualParameter {
-        			code.setAttribute("inputs", f);
-            	}
-            )*
-        )?
-        RPAREN
-    ;
+        )*
+    )?
+    RPAREN
+;
 
-procedureCallExpr returns [StringTemplate code=template("call")]
-{StringTemplate f=null;}
-    :
-        procedureInvocationExpr[code]
-    ;
+procedureCallExpr returns [Call call = null]
+{
+	call = setLine(new Call());
+}
+:
+	procedureInvocationExpr[call]
+;
 
 predictProcedurecallStatAssignManyReturnParam:
 	LPAREN
@@ -795,326 +916,417 @@ predictProcedurecallStatAssignManyReturnParam:
     ASSIGN
 ;
 
-predictProcedurecallStatAssignManyReturnOutput {StringTemplate s;}:
-	ID (ID)? (ASSIGN s=expression)?
-;
-
-procedurecallStatAssignManyReturnParam [StringTemplate s]
-{ StringTemplate code=template("call"); }
-    :
-        LPAREN
-        procedurecallStatAssignManyReturnOutput[s,code]
-        (   COMMA procedurecallStatAssignManyReturnOutput[s,code] )*
-        RPAREN
-        ASSIGN
-        procedureInvocation[code]
-        {
-            s.setAttribute("statements",code);
-        }
-    ;
-
-procedurecallStatAssignManyReturnOutput [StringTemplate s, StringTemplate code]
-{StringTemplate var = null, f = null; }
-    :
-        f=returnParameter
-        {
-            code.setAttribute("outputs", f);
-            var = template("variable");
-            if(f.getAttribute("type") != null) {
-                StringTemplate nameST = (StringTemplate)f.getAttribute("name");
-                var.setAttribute("name",nameST.getAttribute("name"));
-                var.setAttribute("type",f.getAttribute("type"));
-                var.setAttribute("global", Boolean.FALSE);
-
-                s.setAttribute("statements",var);
-            }
-        }
-    ;
-
-returnParameter returns [ StringTemplate code = template("returnParam") ]
-	{ StringTemplate t = null, id = null, d = null; StringBuilder buf = new StringBuilder(); }
+predictProcedurecallStatAssignManyReturnOutput 
+{
+	Expression dummy = null;
+}
 :
-	t = identifier { buf.append(t.getAttribute("name")); }
-	(typeSubscript[buf])*
-	( id = identifier )?
-	{
-		if (id == null) {
-			code.setAttribute("name", t);
+	ID (ID)? (ASSIGN dummy = expression)?
+;
+
+procedurecallStatAssignManyReturnParam [StatementContainer scope]
+{ 
+	Call call = setLine(new Call()); 
+}
+:
+	LPAREN
+	procedurecallStatAssignManyReturnOutput[scope, call]
+	(
+		COMMA procedurecallStatAssignManyReturnOutput[scope, call] 
+	)*
+	RPAREN
+	ASSIGN
+	procedureInvocation[call] {
+		scope.addStatement(call);
+	}
+;
+
+procedurecallStatAssignManyReturnOutput [StatementContainer scope, Call call]
+{
+	ReturnParameter ret = null;
+}
+:
+	ret = returnParameter[scope] {
+		call.addReturn(ret);
+	}
+;
+
+returnParameter [StatementContainer scope] returns [ReturnParameter ret = null]
+{
+	ret = setLine(new ReturnParameter());
+}
+:
+	(predictReturnDeclaration) => returnDeclaration[ret, scope]
+	|
+	plainReturnParameter[ret]
+;
+
+predictReturnDeclaration
+{
+	Object dummy = null;
+}
+:
+	dummy = type dummy = identifier
+;
+
+returnDeclaration [ReturnParameter ret, StatementContainer scope]
+{
+	String type_ = null;
+	String id = null;
+	String binding = null;
+}
+:
+	type_ = type
+	id = identifier {
+		ret.setLValue(new VariableReference(id));
+		ret.setType(type_);
+		
+		// probably not the right place for this
+		VariableDeclaration decl = new VariableDeclaration();
+		decl.setName(id);
+		decl.setType(type_);
+               
+		scope.addVariableDeclaration(decl);
+	}
+	(
+		ASSIGN
+		binding = identifier {
+			ret.setBinding(binding);
 		}
-		else {
-			t = template("type");
-			t.setAttribute("name", buf.toString());
-			code.setAttribute("name", id);
-			code.setAttribute("type", t);
+	)?
+;
+
+plainReturnParameter [ReturnParameter ret]
+{
+	LValue lvalue_ = null;
+	String id = null;
+}
+:
+	lvalue_ = lvalue {
+		ret.setLValue(lvalue_);
+	}
+	(
+		ASSIGN
+		id = identifier {
+			ret.setBinding(id);
 		}
+	)?
+;
+
+actualParameter returns [ActualParameter param = setLine(new ActualParameter())]
+:
+	(predictNamedParam) => namedParam[param] 
+	| 
+	positionalParam[param]
+;
+
+predictNamedParam
+{
+	Object dummy = null;
+}
+:
+	dummy = declarator ASSIGN
+;
+
+namedParam[ActualParameter param] 
+{
+	String binding = null;
+}
+:
+	binding = declarator ASSIGN {
+		param.setBinding(binding);
 	}
-	((ASSIGN declarator) => (ASSIGN d=declarator) {
-		code.setAttribute("bind", d);
-	})?
+	positionalParam[param]
 ;
 
-actualParameter returns [StringTemplate code=template("actualParam")]:
-	(predictNamedParam) => namedParam[code] 
-	| positionalParam[code]
-;
-
-predictNamedParam {StringTemplate d = null;}:
-	d=declarator ASSIGN
-;
-
-namedParam[StringTemplate code] {StringTemplate d = null;}:
-	d=declarator ASSIGN {
-		code.setAttribute("bind", d);
-	}
-	positionalParam[code]
-;
-
-positionalParam[StringTemplate code] {StringTemplate id = null;}:
-	id=expression {
-		code.setAttribute("value", id);
+positionalParam[ActualParameter param] 
+{
+	Expression expr = null;
+}
+:
+	expr = expression {
+		param.setValue(expr);
 	}
 ;
 
-atomicBody [StringTemplate code]
-{StringTemplate app=null, svc=null;}
-    :      app=appSpec
-    {code.setAttribute("config",app);}
-    ;
+atomicBody [AppDeclaration app]
+:      
+	appSpec[app]
+;
 
 /* This is the deprecated format for app { } blocks */
-appSpec returns [StringTemplate code=template("app")]
-{StringTemplate exec=null;}
-    :  "app" LCURLY
-    exec=declarator
-    { code.setAttribute("exec", exec);}
+appSpec [AppDeclaration app]
+{
+	String exec = null;
+}
+:  
+	"app" LCURLY
+    exec = declarator { 
+    	app.setExecutable(exec);
+    }
     (
-      appArg[code]
+    	appArg[app]
     )*
     SEMI RCURLY
-    ;
+;
 
-appArg [StringTemplate code]
-{StringTemplate arg=null;}
-    :   arg=mappingExpr
-    {code.setAttribute("arguments", arg);}
+appArg [AppDeclaration app]
+{
+	Expression arg = null;
+}
+:   
+	arg = mappingExpr	{
+		app.addArgument(arg);
+	}
     |
-    stdioArg[code]
-    ;
+    stdioArg[app]
+;
 
-mappingExpr returns [StringTemplate code=null]
-{StringTemplate e=null;}
-    :
-    e = expression
-    {
-      code=template("mappingExpr");
-      code.setAttribute("expr", e);
-    }
-    ;
+mappingExpr returns [Expression arg = null]
+:
+    arg = expression
+;
 
-functionInvocation returns [StringTemplate code=template("functionInvocation")]
-{StringTemplate func=null, e=null;}
-    :   AT (
-    (declarator LPAREN) =>
-    (func=declarator
-     {
-       code.setAttribute("name", func);
-     }
-     LPAREN
-     (
-     functionInvocationArgument[code]
-     (
-       COMMA
-       functionInvocationArgument[code]
-     )*)?
-     RPAREN
+functionInvocation returns [FunctionInvocation fi = setLine(new FunctionInvocation())]
+{
+	String name = null;
+}
+:   
+	AT (
+		(declarator LPAREN) =>
+    		(
+    			name = declarator {
+    				fi.setName(name);
+     			}
+     			LPAREN
+     			(
+     				functionInvocationArgument[fi]
+     				(
+       					COMMA
+       					functionInvocationArgument[fi]
+     				)
+     			*)?
+     			RPAREN
+    		)
+    		|
+    		(name = identifier | (LPAREN name = identifier RPAREN)) {
+      			/*
+		       	* This is matched on expressions like @varname,
+		       	* which are a shortcut for filename(varname).
+		       	* The interpretation of what a function invocation
+		       	* with an empty file name means was moved to the swiftx -> ?
+		       	* compiler and allows that layer to distinguish between
+		       	* '@filename(x)' and '@(x)', the former of which 
+		       	* has been deprecated.
+		       	*/
+		       	fi.setName("");
+		       	ActualParameter param = new ActualParameter();
+		       	VariableReference var = new VariableReference(name);
+		       	param.setValue(var);
+		       	fi.addParameter(param);
+    		}
     )
-    |
-    (e=identifier | (LPAREN e=identifier RPAREN) )
-    {
-      /*
-       * This is matched on expressions like @varname,
-       * which are a shortcut for filename(varname).
-       * The interpretation of what a function invocation
-       * with an empty file name means was moved to the swiftx -> ?
-       * compiler and allows that layer to distinguish between
-       * '@filename(x)' and '@(x)', the former of which 
-       * has been deprecated.
-       */
-      code.setAttribute("name", "");
-      code.setAttribute("args", e);
-    }
-    )
-    ;
+;
 
-functionInvocationArgument [StringTemplate code]
-{StringTemplate e = null;}
-    :
-     e=expression
-     {
-      code.setAttribute("args", e);
+functionInvocationArgument [FunctionInvocation fi]
+{
+	Expression expr = null;
+}
+:
+     expr = expression {
+     	ActualParameter ap = new ActualParameter();
+     	ap.setValue(expr);
+     	fi.addParameter(ap);
      }
-     ;
+;
 
-stdioArg [StringTemplate code]
-{StringTemplate t=null,m=null; String name=null;}
-    :    ("stdin" {t=template("stdin"); name="stdin";}
-    |
-    "stdout" {t=template("stdout"); name="stdout";}
-    |
-    "stderr" {t=template("stderr"); name="stderr";}
+stdioArg [AppDeclaration app]
+{
+	Expression expr = null;
+	String name = null;
+}
+:    
+	(
+		"stdin" {name = "stdin";}
+    	|
+    	"stdout" {name="stdout";}
+    	|
+    	"stderr" {name="stderr";}
     )
     ASSIGN
-    m=mappingExpr
-    {
-        t.setAttribute("content", m);
-        code.setAttribute(name, t);
+    expr = mappingExpr {
+    	app.addRedirect(name, expr);
     }
-    ;
+;
 
-expression returns [StringTemplate code=null]
-    :   code=orExpr
-    ;
+expression returns [Expression expr = null]
+:   
+	expr = orExpr
+;
 
-orExpr returns [StringTemplate code=null]
-{StringTemplate a,b;}
-    :   code=andExpr
-        (   OR b=andExpr
-            {
-            a = code;
-            code=template("or");
-            code.setAttribute("left", a);
-            code.setAttribute("right", b);
-            }
-        )*
-    ;
-
-andExpr returns [StringTemplate code=null]
-{StringTemplate a,b;}
-    :   code=equalExpr
-        (   AND b=equalExpr
-            {
-            a = code;
-            code=template("and");
-            code.setAttribute("left", a);
-            code.setAttribute("right", b);
-            }
-        )*
-    ;
-
-equalExpr returns [StringTemplate code=null]
+orExpr returns [Expression expr = null]
 {
-StringTemplate a,b=null;
-Token op=null;
+	Expression a = null;
+	Expression b = null;
 }
-    :   code=condExpr
-        (
-           {op=LT(1);}
-            ( EQ | NE ) b=condExpr
-            {
-            a = code;
-            code=template("cond");
-            code.setAttribute("op", escape(op.getText()));
-            code.setAttribute("left", a);
-            code.setAttribute("right", b);
-            }
-        )?
-    ;
-
-condExpr returns [StringTemplate code=null]
-{
-StringTemplate a,b=null;
-Token op=null;
-}
-    :   code=additiveExpr
-        (
-        options {
-        greedy = true;
-        //warnWhenFollowAmbig = false;
+:   
+	expr = andExpr
+    (   
+    	OR b = andExpr {
+            a = expr;
+            expr = new BinaryOperator(Expression.Type.OR, a, b);
         }
-        :
-           {op=LT(1);}
-            ( LT | LE | GT | GE ) b=additiveExpr
-            {
-            a = code;
-            code=template("cond");
-            code.setAttribute("op", escape(op.getText()));
-            code.setAttribute("left", a);
-            code.setAttribute("right", b);
-            }
-        )?
-    ;
+    )*
+;
 
-additiveExpr returns [StringTemplate code=null]
+andExpr returns [Expression expr = null]
 {
-StringTemplate a,b=null;
-Token op=null;
+	Expression a = null;
+	Expression b = null;
 }
-    :   code=multiExpr
+:   
+	expr = equalExpr
+    (   
+    	AND b = equalExpr {
+            a = expr;
+            expr = new BinaryOperator(Expression.Type.AND, a, b);
+        }
+    )*
+;
+
+equalExpr returns [Expression expr = null]
+{
+	Expression a = null;
+	Expression b = null;
+	Token op = null;
+}
+:   
+	expr = condExpr
+    (
+    	{
+    		op = LT(1);
+    	}
+        ( EQ | NE ) b = condExpr {
+            a = expr;
+            expr = new BinaryOperator(op.getText(), a, b);
+        }
+    )?
+;
+
+condExpr returns [Expression expr = null]
+{
+	Expression a = null;
+	Expression b = null;
+	Token op = null;
+}
+:   
+	expr = additiveExpr
     (
         options {
-        greedy = true;
-        //warnWhenFollowAmbig = false;
+        	greedy = true;
+        	//warnWhenFollowAmbig = false;
         }
         :
-            {op=LT(1);}
-            ( PLUS | MINUS ) b=multiExpr
-            {
-            a = code;
-            code=template("arith");
-            code.setAttribute("op", escape(op.getText()));
-            code.setAttribute("left", a);
-            code.setAttribute("right", b);
-            }
-        )*
-    ;
+        {
+       		op=LT(1);
+       	}
+        ( LT | LE | GT | GE ) b = additiveExpr {
+        	a = expr;
+        	expr = new BinaryOperator(op.getText(), a, b);
+        }
+    )?
+;
 
-multiExpr returns [StringTemplate code=null]
+additiveExpr returns [Expression expr = null]
 {
-StringTemplate a,b=null;
-Token op=null;
+	Expression a = null;
+	Expression b = null;
+	Token op = null;
 }
-    :   code=unaryExpr
+:   
+	expr = multiExpr
     (
         options {
-        greedy = true;
-        //warnWhenFollowAmbig = false;
+        	greedy = true;
+        	//warnWhenFollowAmbig = false;
         }
         :
-            {op=LT(1);}
-            ( STAR | IDIV | FDIV | MOD ) b=unaryExpr
-            {
-            a = code;
-            code=template("arith");
-            code.setAttribute("op", escape(op.getText()));
-            code.setAttribute("left", a);
-            code.setAttribute("right", b);
-            }
-        )*
-    ;
+        {
+        	op = LT(1);
+        }
+        ( PLUS | MINUS ) b = multiExpr {
+            a = expr;
+            expr = new BinaryOperator(op.getText(), a, b);
+        }
+    )*
+;
 
-unaryExpr returns [StringTemplate code=null]
-{StringTemplate u=null;}
-    : MINUS u=unaryExpr
-      {code=template("unaryNegation"); code.setAttribute("exp", u);}
-    | PLUS u=unaryExpr // unary plus has no effect
-      {code=u;}
-    | NOT u=unaryExpr
-      {code=template("not"); code.setAttribute("exp", u);}
-    | code=primExpr
-    ;
+multiExpr returns [Expression expr = null]
+{
+	Expression a = null;
+	Expression b = null;
+	Token op = null;
+}
+:
+	expr = unaryExpr
+    (
+        options {
+        	greedy = true;
+        	//warnWhenFollowAmbig = false;
+        }
+        :
+        {
+        	op=LT(1);
+        }
+        ( STAR | IDIV | FDIV | MOD ) b = unaryExpr {
+        	a = expr;
+        	expr = new BinaryOperator(op.getText(), a, b);
+        }
+    )*
+;
 
-primExpr returns [StringTemplate code=null]
-{StringTemplate id=null, exp=null;}
-    : (predictProcedureCallExpr) => code=procedureCallExpr
-    | code=identifier
-    | LPAREN exp=orExpr RPAREN { code=template("paren");
-        code.setAttribute("exp", exp);}
-    | code=constant
-    | code=functionInvocation
-    ;
+unaryExpr returns [Expression expr = null]
+{
+	Expression arg = null;
+}
+: 
+    MINUS arg = unaryExpr {
+    	expr = new UnaryOperator(Expression.Type.NEGATION, arg);
+    }
+    | 
+    PLUS arg = unaryExpr {
+    	// unary plus has no effect 
+    	// do we decide here though?
+    	expr = arg;
+    }
+    | 
+    NOT arg = unaryExpr {
+    	expr = new UnaryOperator(Expression.Type.NEGATION, arg);
+    }
+    | 
+    expr = primExpr
+;
+
+primExpr returns [Expression expr = null]
+{
+	String var = null;
+}
+: 
+	(predictProcedureCallExpr) => expr = procedureCallExpr
+    | 
+    expr = lvalue
+    | 
+    LPAREN expr = orExpr RPAREN 
+    | 
+    expr = constant
+    | 
+    expr = functionInvocation
+;
 
 predictProcedureCallExpr
-    : ID LPAREN ;
+: 
+	ID LPAREN 
+;
 
 // TODO - redo identifier parsing to fit in with the XML style
 // that this patch introduces
@@ -1122,77 +1334,88 @@ predictProcedureCallExpr
 // specifically, need the base ID to be distinct from all the
 // other IDs
 
-identifier returns [StringTemplate code=null]
+lvalue returns [LValue lv = null]
 {
-  StringTemplate c=null;
-  code=template("variableReference");
+  	Expression index = null;
+  	String field = null;
 }
-    :
-    base:ID {code.setAttribute("name",base.getText());}
+:
+   	base:ID {
+   		lv = new VariableReference(base.getText());
+   	}
 
-    ( ( c=arrayIndex { c.setAttribute("array",code); code=c; } )
-      |
-      ( c=memberName {c.setAttribute("structure",code); code=c;} )
-    )*
-    ;
+   	( 
+   		(
+   			index = arrayIndex {
+   				lv = new ArrayReference(lv, index);
+   			} 
+   		)
+   		|
+   		( 
+   			field = memberName {
+   				lv = new StructReference(lv, field);
+   			} 
+   		)
+  	)*
+;
 
 
-arrayIndex returns [StringTemplate code=null]
-{StringTemplate e=null;}
-    :
-    LBRACK
-    (e=expression | s:STAR)
-    RBRACK
-    {
-      code=template("arraySubscript");
-      if(e != null) code.setAttribute("subscript",e);
-      if(s != null) {
-        StringTemplate st = template("sConst");
-        st.setAttribute("value","*");
-        code.setAttribute("subscript",st);
-      }
+arrayIndex returns [Expression ix = null]
+:
+	LBRACK
+	(ix = expression | s:STAR)
+	RBRACK {
+		if (ix == null) {
+			ix = new KleeneStar();
+		}
+	}
+;
+
+memberName returns [String field = null]
+:
+    d:DOT (f:ID | s:STAR) {
+    	if (f == null) {
+    		field = "*";
+    	}
+    	else {
+    		field = f.getText();
+    	}
     }
-    ;
+;
 
-memberName returns [StringTemplate code=null]
-    :
-    d:DOT (member:ID | s:STAR)
-    {
-      code=template("memberAccess");
-      if(member != null) code.setAttribute("name",member.getText());
-      if(s != null) code.setAttribute("name","*");
+identifier returns [String id = null]
+:
+	b:ID {
+		id = b.getText();
+	}
+;
+
+constant returns [Expression c = null]
+: 
+	i:INT_LITERAL {
+      	c = new IntegerConstant(i.getText());
     }
-    ;
-
-constant returns [StringTemplate code=null]
-    : i:INT_LITERAL
-      {
-        code=template("iConst");
-        code.setAttribute("value",i.getText());
-      }
-    | d:FLOAT_LITERAL
-      {
-        code=template("fConst");
-        code.setAttribute("value",d.getText());
-      }
-    | s:STRING_LITERAL
-      {
-        code=template("sConst");
-        code.setAttribute("value",quote(escape(s.getText())));
-      }
-    | t:"true"
-      {
-        code=template("bConst");
-        code.setAttribute("value", t.getText());
-      }
-    | f:"false"
-      {
-        code=template("bConst");
-        code.setAttribute("value", f.getText());
-      }
-    | code=arrayInitializer
-    | code=structInitializer
-    ;
+    | 
+    d:FLOAT_LITERAL {
+      	c = new FloatConstant(d.getText());
+    }
+    | 
+    s:STRING_LITERAL {
+    	c = new StringConstant(s.getText());
+    }
+    | 
+    t:"true" {
+      	c = new BooleanConstant(true);
+    }
+    | 
+    f:"false" {
+      	c = new BooleanConstant(false);
+    }
+    | 
+    c = arrayInitializer
+    | 
+    c = structInitializer
+;
 
 // TODO ^^^^^^ array literal -- rename and rearrange the methods
 
@@ -1232,94 +1455,127 @@ COMMA   :   ',' ;
 COLON    :   ':' ;
 STAR    :   '*' ;
 
-ID     options
-        {
-          paraphrase = "an identifier";
-          testLiterals = true;
-        }
-    :
-    ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*
-    ;
+
+ID	options {
+	paraphrase = "an identifier";
+	testLiterals = true;
+}
+:
+	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*
+;
 
 // string literals
 STRING_LITERAL
-//    :    '"'! (~('"'|'\n'|'\r'))* '"'!
-    :    '"'! (ESC|~('"'|'\\'|'\n'|'\r'))* '"'!
-    ;
+:
+	'"'! (ESC|~('"'|'\\'|'\n'|'\r'))* '"'!
+;
 
 NUMBER
-    :
-    ( INTPART {_ttype=INT_LITERAL; }
-      ('.' FLOATPART {_ttype=FLOAT_LITERAL; })?
-      (EXPONENT {_ttype=FLOAT_LITERAL; })?
+:
+	(
+		INTPART {
+			_ttype=INT_LITERAL;
+		}
+      	(
+      		'.' 
+      		FLOATPART {
+      			_ttype=FLOAT_LITERAL; 
+      		}
+      	)?
+		(
+			EXPONENT {
+				_ttype=FLOAT_LITERAL; 
+			}
+		)?
+	)
+	|
+    (
+    	'.' {
+    		_ttype=DOT; 
+    	}
+		(
+			(
+				FLOATPART {
+					_ttype=FLOAT_LITERAL; 
+				}
+			)
+			(EXPONENT)?
+		)?
     )
-    |
-    ( '.' { _ttype=DOT; }
-      ((FLOATPART {_ttype=FLOAT_LITERAL; })
-      (EXPONENT)?)?
-    )
-    ;
+;
 
-protected INTPART : (ANYDIGIT)+;
+protected INTPART: (ANYDIGIT)+;
 
-protected ANYDIGIT : ('0'..'9');
+protected ANYDIGIT: ('0'..'9');
 
-protected FLOATPART : (ANYDIGIT)+;
+protected FLOATPART: (ANYDIGIT)+;
 
-protected EXPONENT : ('e'|'E') ('+'|'-')? (ANYDIGIT)+ ;
+protected EXPONENT: ('e'|'E') ('+'|'-')? (ANYDIGIT)+;
 
 // white spaces
-WS  :   (   ' '
+WS:   
+	(   
+		' '
         |   '\t'
         |   '\r'
         |   '\n' {newline();}
-        )+
-        { $setType(Token.SKIP); }
-    ;
+	)+ { 
+		$setType(Token.SKIP); 
+	}
+;
 
 // Single-line comments, c style
 SL_CCOMMENT
-    :    "//"
-        (~('\n'|'\r'))* ('\n'|'\r'('\n')?)
-        {$setType(Token.SKIP); newline();}
-    ;
+:
+	"//"
+	(~('\n'|'\r'))* ('\n'|'\r'('\n')?) {
+		$setType(Token.SKIP);
+		newline();
+	}
+;
 
 // Single-line comments, shell style
 SL_SCOMMENT
-    :    "#"
-        (~('\n'|'\r'))* ('\n'|'\r'('\n')?)
-        {$setType(Token.SKIP); newline();}
-    ;
+:
+	"#"
+	(~('\n'|'\r'))* ('\n'|'\r'('\n')?) {
+		$setType(Token.SKIP); 
+		newline();
+	}
+;
 
 // multiple-line comments
 ML_COMMENT
-    :    "/*"
-        (
-        options {
-            generateAmbigWarnings=false;
+:    
+	"/*"
+	(
+		options {
+			generateAmbigWarnings=false;
+		}:
+		{ LA(2)!='/' }? '*'
+        |    
+        '\r' '\n' {
+        	newline();
         }
-        :
-            { LA(2)!='/' }? '*'
-        |    '\r' '\n'        {newline();}
-        |    '\r'            {newline();}
-        |    '\n'            {newline();}
-        |    ~('*'|'\n'|'\r')
-        )*
-        "*/"
-        {$setType(Token.SKIP);}
-    ;
+        |
+        '\r' {
+        	newline();
+        }
+        |
+        '\n' {
+        	newline();
+        }
+        |
+        ~('*'|'\n'|'\r')
+	)*
+	"*/" {
+		$setType(Token.SKIP);
+	}
+;
 
 // escape sequence
 protected
 ESC
-    :    '\\'
-    (    'n'
-    |    'r'
-    |    't'
-    |    'b'
-    |    'f'
-    |    '"'
-    |    '\\'
-    )
-    ;
-
+:    
+	'\\' ('n' | 'r' | 't' | 'b' | 'f' | '"' | '\\')
+;

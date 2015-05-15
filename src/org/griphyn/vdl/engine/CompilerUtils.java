@@ -28,37 +28,11 @@
  */
 package org.griphyn.vdl.engine;
 
-import org.apache.xmlbeans.XmlObject;
-import org.w3c.dom.Node;
+import org.globus.swift.parsetree.Node;
 
-public class CompilerUtils {
-    public static String getLine(Node n) {
-        if (n == null || n.getAttributes() == null) {
-            return "unknown";
-        }
-        Node src = n.getAttributes().getNamedItem("src");
-        if (src == null) {
-            return getLine(n.getParentNode());
-        }
-        else {
-            String loc = src.getNodeValue();
-            if (loc == null || loc.length() == 0) {
-                return "unknown";
-            }
-            else {
-                return loc.substring(loc.indexOf(' ') + 1);
-            }
-        }
-    }
 
-    public static String getLine(XmlObject src) {
-        if (src == null) {
-            return null;
-        }
-        return getLine(src.getDomNode());
-    }
-    
-    public static String info(XmlObject src) {
-        return src.getDomNode().getLocalName() + ", line " + getLine(src);
+public class CompilerUtils {    
+    public static String info(Node src) {
+        return src.getNodeName() + ", line " + src.getLine();
     }
 }
