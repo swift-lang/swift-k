@@ -18,3 +18,12 @@
 # Generated directories
 /src/org/globus/swift/language/
 /src/org/globus/swift/parser/
+
+# Eclipse build dir
+.build
+
+# Compiled docs
+/docs/compiled/
+
+# Personal stuff
+/run/
