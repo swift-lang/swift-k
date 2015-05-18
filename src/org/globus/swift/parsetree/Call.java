@@ -1,0 +1,74 @@
+/*
+ * Copyright 2012 University of Chicago
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * Created on Apr 19, 2015
+ */
+package org.globus.swift.parsetree;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Call extends Statement implements Expression {
+    
+    private String name;
+    private final List<ReturnParameter> returns;
+    private final List<ActualParameter> parameters;
+    
+    public Call() {
+        returns = new ArrayList<ReturnParameter>();
+        parameters = new ArrayList<ActualParameter>();
+    }
+
+    public void addReturn(ReturnParameter param) {
+        returns.add(param);
+    }
+    
+    public void addParameter(ActualParameter param) {
+        parameters.add(param);
+    }
+
+    public List<ReturnParameter> getReturns() {
+        return returns;
+    }
+
+    public List<ActualParameter> getParameters() {
+        return parameters;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public List<? extends Node> getSubNodes() {
+        return parameters;
+    }
+    
+    @Override
+    public String getNodeName() {
+        return "call (" + name + ")";
+    }
+    
+    @Override
+    public Expression.Type getExpressionType() {
+        return Expression.Type.CALL_EXPRESSION;
+    }
+}
