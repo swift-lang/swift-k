@@ -100,10 +100,17 @@ def canonicalFileName(entry):
 
 def insertFile(fName, sRunDir, hname, crs, direction, app_exec_id, useSQLite, usePgSQL):
     fileLocation=sRunDir + "/" + fName
-    fileStat = os.stat(fileLocation)
+    # files are temporary by default in the concurrent mapper 
+    if "_concurrent" in fName:
+        fileSize=0
+        fileModify=0
+    else:
+        fileStat = os.stat(fileLocation)
+        fileSize=fileStat.st_size
+        fileModify=fileStat.st_mtime
+
     fileHost=hname
-    fileSize=fileStat.st_size
-    fileModify=fileStat.st_mtime
+        
     fileId=fileHost + ":" + fName + ":" + str(fileSize) + ":" + str(fileModify)
     if useSQLite:
         crs.execute('SELECT COUNT(*) FROM file WHERE file_id=:fileId', {"fileId": fileId})
@@ -201,7 +208,8 @@ for line in iter(log_file):
         taskid         = getValue(line, "jobid")
         task           = getTask(taskid)
         file_out       = getValue(line, "srcname")
-        task.stageOut += file_out + " "
+        destdir        = getValue(line, "destdir")
+        task.stageOut += destdir + "/" + file_out + " "
 
 log_file.seek(0,0)
 scriptStartTime=getISOTime(log_file.readline())
