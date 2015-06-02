@@ -26,5 +26,14 @@ Use Swift/K if:
 * your workflows have time-varying resource demands
 * It is advantageous to break your resource requests into multiple smaller jobs
 
-
+#### Access
+Type the following commands to run a simple Swift/K script:
+```
+% module load swift
+% swift -config swift.conf myscript.swift
+```
+Type the following commands to run a simple Swift/T script:
+```
+% swift-t -m "cray" myscript.swift
+```
 
