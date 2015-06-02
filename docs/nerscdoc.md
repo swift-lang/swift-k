@@ -17,7 +17,7 @@ The names above derive from the underlying technology used: K for the Karajan wo
 #### When to use Swift/K vs Swift/T
 Use Swift/T if:
 * your tasks are short (seconds to subseconds)
-* your workflow fits well into a single PBS allocation
+* your workflow fits well into a single scheduler (e.g., PBS) job
 * you can optionally link your application code against the Swift/T framework.
  
 Use Swift/K if:
