@@ -36,4 +36,31 @@ Type the following commands to run a simple Swift/T script:
 ```
 % swift-t -m "cray" myscript.swift
 ```
+#### Using Swift on NERSC Systems
 
+##### A simple Swift/K script
+```
+type file;
+
+app (file o) cat (file i){
+  cat @i stdout=@o;
+}
+
+file out[]<simple_mapper; location="outdir", prefix="f.",suffix=".out">;
+
+foreach i in [0:9]{
+  file data<"data.txt">;
+  out[i] = cat(data);
+}
+```
+Swift/K uses a configuration file to interface with compute resource. See the tutorial link below for details about this configuration file. Assuming a swift.conf file is setup for the run, the above script could be run from the command line as:
+
+```
+% swift -config swift.conf catsn.swift
+```
+
+##### A simple Swift/T script
+```
+import io;
+printf("Hello world!");
+```
