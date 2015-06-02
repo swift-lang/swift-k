@@ -64,3 +64,14 @@ Swift/K uses a configuration file to interface with compute resource. See the tu
 import io;
 printf("Hello world!");
 ```
+Swift/T uses a shell wrapper provided as part of the installation to compile, generate and submit jobs to compute resources:
+```
+% swift-t -m cray hello.swift
+```
+### Documentation
+The documentation for [Swift/K](http://swift-lang.org/docs/index.php) and [Swift/T](http://swift-lang.org/Swift-T/guide.html) is available on-line. For further support, subscribe to the user discussion list for [Swift](https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user).
+
+### Tutorial
+A general hands-on [Swift/K tutorial](http://swift-lang.org/swift-tutorial/doc/tutorial.html) with site-specific examples for NERSC systems is available on the Swift Documentation page. A tutorial on [Swift/T](http://swift-lang.org/Swift-T/turbine-sites.html#_edison) for NERSC systems is available on-line.
+
+### Availability
