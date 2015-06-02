@@ -34,6 +34,7 @@ Type the following commands to run a simple Swift/K script:
 ```
 Type the following commands to run a simple Swift/T script:
 ```
+% module load swift
 % swift-t -m "cray" myscript.swift
 ```
 #### Using Swift on NERSC Systems
@@ -72,6 +73,6 @@ Swift/T uses a shell wrapper provided as part of the installation to compile, ge
 The documentation for [Swift/K](http://swift-lang.org/docs/index.php) and [Swift/T](http://swift-lang.org/Swift-T/guide.html) is available on-line. For further support, subscribe to the user discussion list for [Swift](https://lists.ci.uchicago.edu/cgi-bin/mailman/listinfo/swift-user).
 
 ### Tutorial
-A general hands-on [Swift/K tutorial](http://swift-lang.org/swift-tutorial/doc/tutorial.html) with site-specific examples for NERSC systems is available on the Swift Documentation page. A tutorial on [Swift/T](http://swift-lang.org/Swift-T/turbine-sites.html#_edison) for NERSC systems is available on-line.
+A general hands-on tutorial for [Swift/K](http://swift-lang.org/swift-tutorial/doc/tutorial.html) and [Swift/T](http://swift-lang.org/Swift-T/turbine-sites.html#_edison) with site-specific examples for NERSC systems is available on-line.
 
 ### Availability
