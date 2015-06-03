@@ -189,7 +189,7 @@ Sequential iteration can be expressed using the iterate construct:
 step[0] = initialCondition();  
 iterate ix {  
     step[ix] = simulate(step[ix - 1]);  
-}  
+} until (ix>length(step)); 
 ----
 
 This fragment will initialise the 0-th element of the step array to
