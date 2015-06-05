@@ -2026,7 +2026,8 @@ public class Karajan {
 	void checkTypesInArithmExpr(String op, Type left, Type right, StringTemplate st)
 			throws CompilationException {
 	    /* 
-	     * +, -, /, * : int, int -> int
+	     * +, -, * : int, int -> int
+	     * / : int, int -> float
 	     * +, -, /, *: float, float -> float
 	     * +, -, /, * : int, float -> float
 	     * +, -, /, * : float, int -> float
@@ -2043,16 +2044,7 @@ public class Karajan {
 	    
 	    switch (op.charAt(0)) {
 	        case '+':
-	            if (left.equals(Types.STRING)) {
-	                if (!right.equals(Types.STRING) && !right.equals(Types.INT) && !right.equals(Types.FLOAT)) {
-	                    throw new CompilationException("Operator '+' cannot be applied to 'string'  and '" + right + "'");
-	                }
-	                st.setAttribute("datatype", "string");
-	            }
-	            else if (right.equals(Types.STRING)) {
-	                if (!left.equals(Types.STRING) && !left.equals(Types.INT) && !left.equals(Types.FLOAT)) {
-                        throw new CompilationException("Operator '+' cannot be applied to '" + left + "'  and 'string'");
-                    }
+	            if (left.equals(Types.STRING) || right.equals(Types.STRING)) {
 	                st.setAttribute("datatype", "string");
 	            }
 	            else {
