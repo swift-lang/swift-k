@@ -259,9 +259,26 @@ public class Operators {
         
         @Override
         protected DSHandle value(AbstractDataNode v1, AbstractDataNode v2) {
-            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, v1.getValue().equals(v2.getValue()));
+            DSHandle r = NodeFactory.newRoot(Field.GENERIC_BOOLEAN, equals(v1.getValue(), v2.getValue()));
             logBinaryProvenance("eq", v1, v2, r);
             return r;
+        }
+
+        private boolean equals(Object v1, Object v2) {
+            if (v1 instanceof Integer && v2 instanceof Integer) {
+                return v1.equals(v2);
+            }
+            else if (v1 instanceof Number) {
+                if (v2 instanceof Number) {
+                    return ((Number) v1).doubleValue() == ((Number) v2).doubleValue();
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                return v1.equals(v2);
+            }
         }
     }
 	
