@@ -2194,9 +2194,6 @@ public class Karajan {
 	    for (int i = 0; i < in.length(); i++) {
 	        char c = in.charAt(i);
 	        switch (c) {
-	            case '"':
-	                sb.append("\\\"");
-	                break;
 	            case '{':
 	            	sb.append("\\{");
 	            	break;
