@@ -2182,7 +2182,7 @@ public class Karajan {
 	
 	private String toKarajanValue(Object o) {
 	    if (o instanceof String) {
-	        return (String) o;
+	        return escape((String) o);
 	    }
 	    else {
 	        return String.valueOf(o);
