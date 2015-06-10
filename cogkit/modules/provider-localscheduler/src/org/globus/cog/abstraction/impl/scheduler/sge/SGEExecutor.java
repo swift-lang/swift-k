@@ -402,7 +402,7 @@ public class SGEExecutor extends AbstractExecutor {
         }
 
         writePreamble(wr, runMode, "$PE_HOSTFILE", exitcodefile);
-        writeCDAndCommand(wr, runMode);     
+        writeCommand(wr, runMode);     
         writePostamble(wr, runMode, exitcodefile, stdout, stderr);
         
         wr.close();

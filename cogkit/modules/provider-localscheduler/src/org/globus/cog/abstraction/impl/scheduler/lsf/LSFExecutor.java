@@ -169,14 +169,14 @@ public class LSFExecutor extends AbstractExecutor {
         }
         		
 		writePreamble(wr, runMode, "$LSB_HOSTS", exitcodefile);
-        writeCDAndCommand(wr, runMode);     
+        writeCommand(wr, runMode);     
         writePostamble(wr, runMode, exitcodefile, stdout, stderr);
         
 		wr.close();
 	}
 	
 	@Override
-    protected void writeCDAndCommand(Writer wr, RunMode runMode) throws IOException {
+    protected void writeCommand(Writer wr, RunMode runMode) throws IOException {
 		int quotingLevel = getQuotingLevel(runMode);
         if (spec.getDirectory() != null) {
             wr.write("cd " + quote(spec.getDirectory(), quotingLevel) + " && ");

@@ -191,7 +191,7 @@ public class SlurmExecutor extends AbstractExecutor {
         }
 		
 		writePreamble(wr, runMode, null, exitcodefile);
-        writeCDAndCommand(wr, runMode);     
+        writeCommand(wr, runMode);     
         writePostamble(wr, runMode, exitcodefile, stdout, stderr);
 
 		wr.close();

@@ -344,6 +344,9 @@ public abstract class AbstractExecutor implements ProcessListener {
     }
 
     protected void writePreamble(Writer wr, RunMode runMode, String nodeFile, String exitcodefile) throws IOException {
+        if (spec.getDirectory() != null) {
+            wr.write("cd " + quote(spec.getDirectory(), 0) + " && ");
+        }
         switch (runMode) {
             case SSH:
                 writeSSHPreamble(wr, nodeFile, exitcodefile);
@@ -376,11 +379,8 @@ public abstract class AbstractExecutor implements ProcessListener {
         wr.write("/bin/bash -c \"");
     }
     
-    protected void writeCDAndCommand(Writer wr, RunMode runMode) throws IOException {
+    protected void writeCommand(Writer wr, RunMode runMode) throws IOException {
         int quotingLevel = getQuotingLevel(runMode);
-        if (spec.getDirectory() != null) {
-            wr.write("cd " + quote(spec.getDirectory(), quotingLevel) + " && ");
-        }
 
         wr.write(quote(spec.getExecutable(), quotingLevel));
         writeQuotedList(wr, spec.getArgumentsAsList(), quotingLevel);
