@@ -147,7 +147,10 @@ public class QueuePoller extends AbstractQueuePoller {
 										logger.debug("Status for "
 												+ currentJobID + " is C");
 									}
-									addDoneJob(currentJob.getJobID());
+									currentJob.setState(Job.STATE_DONE);
+                                    if (currentJob.getState() == Job.STATE_DONE) {
+                                        addDoneJob(currentJob.getJobID());
+                                    }
 									break;
 								}
 							}
