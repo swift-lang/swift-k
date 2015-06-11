@@ -553,7 +553,7 @@ public class Karajan {
 		   
 			if (!isPrimitiveOrArrayOfPrimitives(type)) {
     			StringTemplate mappingST = new StringTemplate("mapping");
-    			mappingST.setAttribute("descriptor", "ConcurrentMapper");
+    			mappingST.setAttribute("descriptor", "InternalMapper");
     			StringTemplate paramST = template("swift_parameter");
     			paramST.setAttribute("name", "prefix");
     			paramST.setAttribute("expr", "\"" + var.getName() + "-" + var.getLine() + "\"");
@@ -599,7 +599,7 @@ public class Karajan {
             StringTemplate variableDeclarationST = template("variable");
             // TODO factorise this and other code in variable()?
             StringTemplate pmappingST = new StringTemplate("mapping");
-            pmappingST.setAttribute("descriptor", "ConcurrentMapper");
+            pmappingST.setAttribute("descriptor", "InternalMapper");
             StringTemplate pparamST = template("swift_parameter");
             pparamST.setAttribute("name", "prefix");
             pparamST.setAttribute("expr", parameterVariableName + "-" + 
@@ -767,10 +767,10 @@ public class Karajan {
 		}
 		else if (child instanceof IfStatement) {
 			ifStat((IfStatement) child, scope);
-		} 
+		}
 		else if (child instanceof SwitchStatement) {
 			switchStat((SwitchStatement) child, scope);
-		} 
+		}
 		else {
 			throw new CompilationException("Unexpected element in parse tree. " +
 					"Implementing class " + child.getClass() + ", content " + child);

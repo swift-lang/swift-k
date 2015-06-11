@@ -113,17 +113,7 @@ public class ConcurrentMapper extends AbstractFileMapper {
     }
 
     @Override
-    public void clean(Path path) {
-        PhysicalFormat pf = map(path);
-        logger.info("Cleaning file " + pf);
-        FileGarbageCollector.getDefault().decreaseUsageCount(pf);
-    }
-
-    @Override
     public boolean isPersistent(Path path) {
-        // if the path has been remapped to a persistent file, then
-        // that actual file would already be marked as persistent in the
-        // garbage collector
-        return false;
+        return true;
     }
 }

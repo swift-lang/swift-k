@@ -32,6 +32,7 @@ import org.griphyn.vdl.mapping.file.ConcurrentMapper;
 import org.griphyn.vdl.mapping.file.ExternalMapper;
 import org.griphyn.vdl.mapping.file.FileSystemArrayMapper;
 import org.griphyn.vdl.mapping.file.FixedArrayFileMapper;
+import org.griphyn.vdl.mapping.file.InternalMapper;
 import org.griphyn.vdl.mapping.file.ROIMapper;
 import org.griphyn.vdl.mapping.file.RegularExpressionMapper;
 import org.griphyn.vdl.mapping.file.SimpleFileMapper;
@@ -57,6 +58,7 @@ public class MapperFactory {
 		registerMapper("SingleFileMapper", "single_file_mapper", SingleFileMapper.class);
 		registerMapper("FixedArrayMapper", "fixed_array_mapper", FixedArrayFileMapper.class);
 		registerMapper("ConcurrentMapper", "concurrent_mapper", ConcurrentMapper.class);
+		registerMapper("InternalMapper", "internal_mapper", InternalMapper.class);
 		registerMapper("FilesysMapper", "filesys_mapper", FileSystemArrayMapper.class);
 		registerMapper("RegexpMapper", "regexp_mapper", RegularExpressionMapper.class);
 		registerMapper("StructuredRegexpMapper", "structured_regexp_mapper",
