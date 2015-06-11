@@ -409,8 +409,8 @@ sub reconnect() {
 			}
 		}
 		if ($success) {
-			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 32768*8);
-			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768*8);
+			$SOCK->setsockopt(SOL_SOCKET, SO_RCVBUF, 32768*16);
+			$SOCK->setsockopt(SOL_SOCKET, SO_SNDBUF, 32768*16);
 			$SOCK->setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
 			wlog INFO, "Connected\n";
 			$SOCK->blocking(0);

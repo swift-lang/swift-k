@@ -43,7 +43,7 @@ import org.apache.log4j.Logger;
 public class Buffers extends Thread {
     public static final Logger logger = Logger.getLogger(Buffers.class);
 
-    public static final int ENTRY_SIZE = 32768;
+    public static final int ENTRY_SIZE = 65536;
     public static final int ENTRIES_PER_STREAM = 8;
     public static final int MAX_ENTRIES = 1024; // 32 MB
     public static final int PERFORMANCE_LOGGING_INTERVAL = 10000;
