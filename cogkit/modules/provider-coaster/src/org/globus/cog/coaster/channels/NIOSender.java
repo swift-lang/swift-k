@@ -138,38 +138,8 @@ class NIOSender extends Thread {
 					@SuppressWarnings("unchecked")
 					BlockingQueue<NIOSendEntry> q = (BlockingQueue<NIOSendEntry>) key.attachment();
 					
-					NIOSendEntry e = null;
-					synchronized(queues) {
-						e = q.peek();
-						if (e == null) {
-							queues.remove(c);
-							key.cancel();
-							registered.remove(c);
-							continue;
-						}
-					}
-					try {
-						write(c, e.crt);
-						if (logger.isTraceEnabled()) {
-						    logger.trace("Sent " + e.crt.position() + " bytes on " + e.channel);
-						}
-					}
-					catch (IOException ee) {
-						key.cancel();
-						e.channel.handleChannelException(ee);
-					}
-					if (!e.crt.hasRemaining() && !e.nextBuffer()) {
-						if (e.cb != null) {
-							try {
-								e.cb.dataSent();
-							}
-							catch (Exception ee) {
-								logger.warn("Callback threw exception", ee);
-							}
-						}
-						q.remove();
-					}
-					
+					sendAllEntries(q, c, key);
+							
 					i.remove();
 				}
 			}
@@ -179,7 +149,69 @@ class NIOSender extends Thread {
 		}
 	}
 	
-	private void write(WritableByteChannel c, ByteBuffer buf) throws IOException {
+	private void sendAllEntries(BlockingQueue<NIOSendEntry> q, WritableByteChannel c, SelectionKey key) {
+	    NIOSendEntry e = null;
+	    while (true) {
+	        // get one entry from queue
+            synchronized(queues) {
+                e = q.peek();
+                if (e == null) {
+                    queues.remove(c);
+                    key.cancel();
+                    registered.remove(c);
+                    return;
+                }
+            }
+            if (sendAllBuffers(e, c, key)) {
+                notifySender(e);
+                q.remove();
+            }
+            else {
+                return;
+            }
+	    }
+	}
+	
+    private void notifySender(NIOSendEntry e) {
+        if (e.cb != null) {
+            try {
+                e.cb.dataSent();
+            }
+            catch (Exception ee) {
+                logger.warn("Callback threw exception", ee);
+            }
+        }
+    }
+
+    private boolean sendAllBuffers(NIOSendEntry e, WritableByteChannel c, SelectionKey key) {
+        while (true) {
+            try {
+                write(c, e.crt);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Sent " + e.crt.position() + " bytes on " + e.channel);
+                }
+            }
+            catch (IOException ee) {
+                key.cancel();
+                e.channel.handleChannelException(ee);
+                return false;
+            }
+         
+            // not all bytes were sent; assume TCP buffer full and yield
+            if (e.crt.hasRemaining()) {
+                return false;
+            }
+            
+            // there are no more buffers in this entry, return to allow processing others
+            if (!e.nextBuffer()) {
+                return true;
+            }
+            
+            // there is another buffer, so loop to send it
+        }
+    }
+
+    private void write(WritableByteChannel c, ByteBuffer buf) throws IOException {
 		if (AbstractTCPChannel.logPerformanceData) {
 			PerformanceDiagnosticOutputStream.bytesWritten(c.write(buf));
 		}
