@@ -94,7 +94,9 @@ public class FileWrite extends InternalFunction {
 			throw y;
 		}
 		catch (RuntimeException e) {
-			closeStream(os);
+			if (os != null) {
+				closeStream(os);
+			}
 			throw e;
 		}
 	}
