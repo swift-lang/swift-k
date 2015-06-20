@@ -24,6 +24,8 @@ public class SymLinker {
     private static Class<?> clsFiles;
     private static Method methodPathsGet;
     private static Method methodFilesSymLink;
+    private static Method methodReadLink;
+    private static Method methodIsLink;
     
     static {
         if (init()) {
@@ -59,6 +61,8 @@ public class SymLinker {
             clsFiles = Class.forName("java.nio.file.Files");
             methodPathsGet = clsPaths.getMethod("get", new Class[] {String.class, String[].class});
             methodFilesSymLink = clsFiles.getMethod("createSymbolicLink", new Class[] {clsPath, clsPath, clsFileAttributeArray});
+            methodReadLink = clsFiles.getMethod("readSymbolicLink", new Class[] {clsPath});
+            methodIsLink = clsFiles.getMethod("isSymbolicLink", new Class[] {clsPath});
             return true;
         }
         catch (Exception e) {
@@ -99,7 +103,42 @@ public class SymLinker {
     public static void symLink(String file, String link) throws IOException {
         Object filePath = getPath(file);
         Object linkPath = getPath(link);
+        filePath = resolveLink(filePath);
         createLink(filePath, linkPath);
+    }
+
+    private static Object resolveLink(Object linkPath) throws IOException {
+        try {
+            Object[] linkPathArg = new Object[] {linkPath};
+            Boolean isLink = (Boolean) methodIsLink.invoke(null, linkPathArg);
+            if (isLink) {
+                return methodReadLink.invoke(null, linkPathArg);
+            }
+            else {
+                return linkPath;
+            }
+        }
+        catch (IllegalArgumentException e) {
+            throw new UnsupportedOperationException(e);
+        }
+        catch (IllegalAccessException e) {
+            throw new UnsupportedOperationException(e);
+        }
+        catch (InvocationTargetException e) {
+            Throwable t = e.getTargetException();
+            if (t instanceof UnsupportedOperationException) {
+                throw (UnsupportedOperationException) t;
+            }
+            else if (t instanceof IOException) {
+                throw (IOException) t;
+            }
+            else if (t instanceof SecurityException) {
+                throw new UnsupportedOperationException(t);
+            }
+            else {
+                throw new UnsupportedOperationException(t);
+            }
+        }
     }
 
     private static void createLink(Object file, Object link) throws IOException {

@@ -343,7 +343,7 @@ public class SetFieldValue extends SwiftFunction {
 
     private static void copyNonComposite(DSHandle dest, DSHandle source, State state, int level) throws InvalidPathException {
         Path dpath = dest.getPathFromRoot();
-        Mapper dmapper = dest.getMapper();
+        Mapper smapper = source.getMapper();
         
         StateEntry se = getStateEntry(state, level);
         FileCopier fc = se.value();
@@ -359,8 +359,9 @@ public class SetFieldValue extends SwiftFunction {
             dest.setValue(AbstractDataNode.FILE_VALUE);
         }
         else {
-            fc = new FileCopier(source.getMapper().map(source.getPathFromRoot()), 
-                dmapper.map(dpath), !dmapper.isPersistent(dpath));
+            Mapper dmapper = dest.getMapper();
+            fc = new FileCopier(smapper.map(source.getPathFromRoot()), 
+                dmapper.map(dpath), !smapper.isPersistent(dpath));
             se.value(fc);
             try {
                 if (fc.start()) {

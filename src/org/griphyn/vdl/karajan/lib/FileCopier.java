@@ -52,13 +52,13 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
     private AbsFile fsrc, fdst;
     private FileTransferTask task;
     private Exception exception;
-    private boolean closed, destIsTemporary;
+    private boolean closed, srcIsTemporary;
     private static int running;
 
-    public FileCopier(PhysicalFormat src, PhysicalFormat dst, boolean destIsTemporary) {
+    public FileCopier(PhysicalFormat src, PhysicalFormat dst, boolean srcIsTemporary) {
         fsrc = (AbsFile) src;
         fdst = (AbsFile) dst;
-        this.destIsTemporary = destIsTemporary;
+        this.srcIsTemporary = srcIsTemporary;
     }
 
     public void fail(FutureEvaluationException e) {
@@ -77,30 +77,38 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
     public boolean start() throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        if (!destIsTemporary || !tryLink(fsrc, fdst)) {
-            FileTransferSpecification fts = new FileTransferSpecificationImpl();
-            fts.setDestinationDirectory(fdst.getDirectory());
-            fts.setDestinationFile(fdst.getName());
-            fts.setSourceDirectory(fsrc.getDirectory());
-            fts.setSourceFile(fsrc.getName());
-            fts.setThirdPartyIfPossible(true);
-            task = new FileTransferTask();
-            task.setSpecification(fts);
-            task.setService(Service.FILE_TRANSFER_SOURCE_SERVICE, new ServiceImpl(
-                fsrc.getProtocol("file"), new ServiceContactImpl(fsrc.getHost("localhost")), null));
-            task.setService(Service.FILE_TRANSFER_DESTINATION_SERVICE,
-                new ServiceImpl(fdst.getProtocol("file"), new ServiceContactImpl(fdst
-                    .getHost("localhost")), null));
-            task.addStatusListener(this);
-            synchronized(FileCopier.class) {
-                running++;
+        boolean tryToLink = true;
+        if (srcIsTemporary) {
+            // if the source is a temporary file, don't link to it since it might
+            // disappear at any time after this operation
+            tryToLink = false;
+        }
+        if (tryToLink) {
+            if (tryLink(fsrc, fdst)) {
+                // success
+                return true;
             }
-            fth.submit(task);
-            return false;
         }
-        else {
-            return true;
+        
+        FileTransferSpecification fts = new FileTransferSpecificationImpl();
+        fts.setDestinationDirectory(fdst.getDirectory());
+        fts.setDestinationFile(fdst.getName());
+        fts.setSourceDirectory(fsrc.getDirectory());
+        fts.setSourceFile(fsrc.getName());
+        fts.setThirdPartyIfPossible(true);
+        task = new FileTransferTask();
+        task.setSpecification(fts);
+        task.setService(Service.FILE_TRANSFER_SOURCE_SERVICE, new ServiceImpl(
+            fsrc.getProtocol("file"), new ServiceContactImpl(fsrc.getHost("localhost")), null));
+        task.setService(Service.FILE_TRANSFER_DESTINATION_SERVICE,
+            new ServiceImpl(fdst.getProtocol("file"), new ServiceContactImpl(fdst
+                .getHost("localhost")), null));
+        task.addStatusListener(this);
+        synchronized(FileCopier.class) {
+            running++;
         }
+        fth.submit(task);
+        return false;
     }
 
     private boolean tryLink(AbsFile fsrc, AbsFile fdst) {
