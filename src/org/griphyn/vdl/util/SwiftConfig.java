@@ -396,6 +396,7 @@ public class SwiftConfig implements Cloneable {
         if (BUILD_CHECK) {
             checkKey("sites");
         }
+        ConfigOrigin sitesLoc = null;
         for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> e : tree.entrySet()) {
             if (e.getKey().equals("site")) {
                 for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> f : e.getValue().entrySet()) {
@@ -404,6 +405,8 @@ public class SwiftConfig implements Cloneable {
             }
             else if (e.getKey().equals("sites")) {
                 sites = (List<String>) getObject(e.getValue());
+                sitesLoc = e.getValue().get().loc;
+                
             }
             else if (e.getKey().equals("app")) {
                 SwiftContact dummy = new SwiftContact();
@@ -417,7 +420,11 @@ public class SwiftConfig implements Cloneable {
             throw new RuntimeException("No sites enabled");
         }
         for (String siteName : sites) {
-            this.sites.addContact((SwiftContact) definedSites.getContact(siteName));
+            SwiftContact site = (SwiftContact) definedSites.getContact(siteName);
+            if (site == null) {
+                throw new RuntimeException(location(sitesLoc) + ": unknown site '" + siteName + "'");
+            }
+            this.sites.addContact(site);
         }
         this.sites.getApplications().putAll(definedSites.getApplications());
         
@@ -425,6 +432,11 @@ public class SwiftConfig implements Cloneable {
             flat.put(leaf, tree.get(leaf).value);
         }
     }
+    
+    public static String location(ConfigOrigin loc) {
+        return loc.filename() + ":" + loc.lineNumber();
+    }
+    
 
     /**
      * Checks if a key is present in the schema. This is used when building

@@ -74,7 +74,7 @@ public abstract class ConfigPropertyType<T> {
     public abstract ConfigPropertyType<?> getBaseType();
     
     protected RuntimeException cannotConvert(ConfigOrigin loc, String propName, Object value, String toWhat) {
-        return new IllegalArgumentException(location(loc) + ":\n\tCannot convert value '" + value + "' for property '" + 
+        return new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tCannot convert value '" + value + "' for property '" + 
                 propName + "' to " + toWhat);
     }
         
@@ -105,7 +105,7 @@ public abstract class ConfigPropertyType<T> {
         @Override
         public Object checkValue(String propName, String value, ConfigOrigin loc) {
             if (!choices.contains(value)) {
-                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Valid values are: " + pp(choices));
             }
             return value;
@@ -160,7 +160,7 @@ public abstract class ConfigPropertyType<T> {
                 return value;
             }
             catch (Exception e) {
-                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'");
             }
         }
@@ -236,7 +236,7 @@ public abstract class ConfigPropertyType<T> {
         public Object checkValue(String propName, Object value, ConfigOrigin loc) {
             Integer ivalue = (Integer) super.checkValue(propName, value, loc);
             if (ivalue <= 0) {
-                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be a " + toString());
             }
             return ivalue;
@@ -253,7 +253,7 @@ public abstract class ConfigPropertyType<T> {
         public Object checkValue(String propName, Object value, ConfigOrigin loc) {
             Integer ivalue = (Integer) super.checkValue(propName, value, loc);
             if (ivalue < 0) {
-                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be a " + toString());
             }
             return ivalue;
@@ -286,7 +286,7 @@ public abstract class ConfigPropertyType<T> {
                     return i;
                 }
             }
-            throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+            throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be an " + toString());
         }
 
@@ -306,7 +306,7 @@ public abstract class ConfigPropertyType<T> {
         public Object checkValue(String propName, Object value, ConfigOrigin loc) {
             Double dvalue = (Double) super.checkValue(propName, value, loc);
             if (dvalue < 0) {
-                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                 propName + "'. Must be a " + toString());
             }
             return dvalue;
@@ -355,7 +355,7 @@ public abstract class ConfigPropertyType<T> {
         public Object checkValue(String propName, Object value, ConfigOrigin loc) {
             Double dvalue = (Double) super.checkValue(propName, value, loc);
             if (dvalue < l || dvalue > h) {
-                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Must be a " + toString());
             }
             return dvalue;
@@ -374,7 +374,7 @@ public abstract class ConfigPropertyType<T> {
                 WallTime.timeToSeconds(value);
             }
             catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid time value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid time value '" + value + "' for property '" + 
                     propName + "'. Mist be a " + toString());
             }
             return value;
@@ -404,7 +404,7 @@ public abstract class ConfigPropertyType<T> {
                 catch (NumberFormatException e) {
                 }
             }
-            throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+            throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Must be a " + toString());
         }
         
@@ -424,7 +424,7 @@ public abstract class ConfigPropertyType<T> {
         public Object checkValue(String propName, String value, ConfigOrigin loc) {
             File f = new File(value);
             if (!f.exists()) {
-                throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+                throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. File does not exist.");
             }
             return value;
@@ -478,7 +478,7 @@ public abstract class ConfigPropertyType<T> {
                 // also allow comma separated strings in a string
                 return Arrays.asList(((String) value).split(",\\s*"));
             }
-            throw new IllegalArgumentException(location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
+            throw new IllegalArgumentException(SwiftConfig.location(loc) + ":\n\tInvalid value '" + value + "' for property '" + 
                     propName + "'. Must be a " + toString());
         }
         
@@ -491,9 +491,5 @@ public abstract class ConfigPropertyType<T> {
         public String toString() {
             return "list of strings";
         }
-    }
-    
-    private static String location(ConfigOrigin loc) {
-        return loc.filename() + ":" + loc.lineNumber();
     }
 }
