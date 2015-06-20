@@ -105,7 +105,7 @@ public abstract class ChannelRef<T> {
 
 		@Override
 		public void set(Stack stack, Channel<T> value) {
-			throw new UnsupportedOperationException();
+			stack.getFrame(frame).set(index, value);
 		}
 
 		public int getFrame() {
