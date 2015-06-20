@@ -101,8 +101,10 @@ checkMissing() {
 checkparamfile() {
 	log "checking for paramfile"
 	if [ "$1" == "-p" ]; then
-		JOBDIR=$2
-		PARAMFILE=${WFDIR}/parameters/${JOBDIR}/param-${ID}
+		if [ ! -f _paramfile ]; then
+			fail 254 "-p specified but no '_paramfile' file found"
+		fi
+		PARAMFILE="_paramfile"
 		log "paramfile is: $PARAMFILE"
 	else
 		log "no paramfile: using command line arguments"

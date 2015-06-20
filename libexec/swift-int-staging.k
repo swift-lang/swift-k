@@ -60,11 +60,14 @@ namespace(providerStaging) {
 			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 			
 			wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
-			tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)
+			tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)			
+			
 			
 			sm := siteProfile(rhost, "stagingMethod", default="file"),
 			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout, defaultScheme = sm),
 			(stdins, stdouts, stderrs) := getStandardFilesInfo(stdin, stdout, stderr, defaultScheme = sm)
+						
+			wrapperMode := configProperty("wrapperParameterMode", host=rhost)
 
 			try {
 				eargs := expandArguments(arguments, stagingMethod = sm)
@@ -72,25 +75,55 @@ namespace(providerStaging) {
 					" tmpdir={tmpdir} host={rhost}")
 
 				setProgress(progress, "Submitting")
+				
+				wrapfile := "{DEBUG_DIR}/param-{jobid}"
+				
+				if (wrapperMode == "files") {
+					sys:file:write(wrapfile) {
+						"-scratch ", try(siteProfile(rhost, "scratch"), ""),
+						"\n-e ", executable(tr, rhost),
+						"\n-out ", stdouts,
+						"\n-err ", stderrs,
+						"\n-i ", if (stdin != null, stdins),
+						"\n-d ", remoteFileNames(fileDirs),
+						"\n-if ", remoteFileNames(inFiles),
+						"\n-of ", remoteFileNames(outFiles),
+						"\n-cf ", remoteFileNames(outCollect),
+						"\n-cdmfile ", cdm:file(),
+						"\n-status provider",
+						for(a, eargs) {
+							"\n-a ", a
+						}
+					}
+				}
 
 				swift:execute(
 					progress,
 					siteProfile(rhost, "wrapperInterpreter"),
-					list(
-						siteProfile(rhost, "wrapperInterpreterOptions"),
-						"_swiftwrap.staging",
-						"-e", executable(tr, rhost),
-						"-out", stdouts,
-						"-err", stderrs,
-						"-i", if (stdin != null, stdins),
-						"-d", remoteFileNames(fileDirs),
-						"-if", remoteFileNames(inFiles),
-						"-of", remoteFileNames(outFiles),
-						"-cf", remoteFileNames(outCollect),
-						"-cdmfile", CDM_FILE,
-						"-status", "provider"
-						"-a", if (arguments != null, each(eargs))
-					)
+					if (wrapperMode == "files") {
+						list(
+							siteProfile(rhost, "wrapperInterpreterOptions"),
+							"_swiftwrap.staging",
+							"-p", jobdir
+						)
+					}
+					else {
+						list(
+							siteProfile(rhost, "wrapperInterpreterOptions"),
+							"_swiftwrap.staging",
+							"-e", executable(tr, rhost),
+							"-out", stdouts,
+							"-err", stderrs,
+							"-i", if (stdin != null, stdins),
+							"-d", remoteFileNames(fileDirs),
+							"-if", remoteFileNames(inFiles),
+							"-of", remoteFileNames(outFiles),
+							"-cf", remoteFileNames(outCollect),
+							"-cdmfile", CDM_FILE,
+							"-status", "provider"
+							"-a", if (arguments != null, each(eargs))
+						)
+					}
 					directory = tmpdir
 					redirect = false
 					host = rhost
@@ -101,6 +134,10 @@ namespace(providerStaging) {
 					jobid = jobid
 
 					stageIn("{PIN}file://localhost/{SWIFT:HOME}/libexec/_swiftwrap.staging", "_swiftwrap.staging")
+					
+					if (wrapperMode == "files") {
+						stageIn("file://localhost/{wrapfile}", "_paramfile")
+					}
 
 					if (CDM_FILE != "") {
 						d := swift:dirname(CDM_FILE)
@@ -141,6 +178,9 @@ namespace(providerStaging) {
 					}
 				)
 				
+				if (wrapperMode == "files") {
+					file:remove(wrapfile)
+				}
 				
 				if (!isEmpty(outCollect)) {
 					readCollectList("{DEBUG_DIR}/{jobid}.collect")
