@@ -374,7 +374,7 @@ public class PathUtils {
      *
      */
     public static class SplitFileURL extends SwiftFunction {
-       private ArgRef<AbsFile> file;
+       private ArgRef<Object> file;
        private ArgRef<String> dir;
        private ArgRef<String> destdir;
        private ChannelRef<Object> cr_vargs;
@@ -391,7 +391,14 @@ public class PathUtils {
 
         @Override
         public Object function(Stack stack) {
-            AbsFile f = this.file.getValue(stack);
+            AbsFile f;
+            Object fo = this.file.getValue(stack);
+            if (fo instanceof AbsFile) {
+                f = (AbsFile) fo;
+            }
+            else {
+                f = new AbsFile((String) fo);
+            }
             String dir = this.dir.getValue(stack);
             String destdir = this.destdir.getValue(stack);
             Channel<Object> ret = cr_vargs.get(stack);
