@@ -148,8 +148,12 @@ getarg() {
 }
 
 openinfo() {
-	exec 3<> $1
+	if [ "$CRTINFO" != "" ]; then
+		mv $CRTINFO $1
+	fi
+	exec 3>> $1
 	INFO=3
+	CRTINFO=$1
 }
 
 closeinfo() {
