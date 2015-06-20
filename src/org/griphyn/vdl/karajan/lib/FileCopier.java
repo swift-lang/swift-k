@@ -18,6 +18,7 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.io.File;
+import java.io.IOException;
 
 import k.rt.AbstractFuture;
 import k.rt.Future;
@@ -83,14 +84,20 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
             tryToLink = false;
         }
         Object srcTarget = null;
-        if (tryToLink && srcIsTemporary) {
-            // if the source is a temporary file, only link if it is itself a link, which 
-            // must be to a permanent file
-            srcTarget = readSrcLink();
+        if (tryToLink) {
+            if (srcIsTemporary) {
+                // if the source is a temporary file, only link if it is itself a link, which 
+                // must be to a permanent file
+                srcTarget = readSrcLink();
+            }
+            else {
+                srcTarget = toPath(getSrcPath());
+            }
             if (srcTarget == null) {
                 tryToLink = false;
             }
         }
+        
         if (tryToLink) {
             if (tryLink(srcTarget, fdst)) {
                 // success
@@ -117,6 +124,15 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
         }
         fth.submit(task);
         return false;
+    }
+
+    private Object toPath(String srcPath) {
+        try {
+            return SymLinker.getPath(srcPath);
+        }
+        catch (IOException e) {
+            return null;
+        }
     }
 
     private Object readSrcLink() {

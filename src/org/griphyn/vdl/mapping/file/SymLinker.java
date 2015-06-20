@@ -211,7 +211,7 @@ public class SymLinker {
         }
     }
 
-    private static Object getPath(String file) throws IOException {
+    public static Object getPath(String file) throws IOException {
         try {
             return methodPathsGet.invoke(null, new Object[] {file, EMPTY_STRING_ARRAY});
         }
