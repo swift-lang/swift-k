@@ -81,7 +81,7 @@ public class SymLinker {
                 File g = File.createTempFile("symlinktest", "tmp");
                 try {
                     g.delete();
-                    symLink(f.getAbsolutePath(), g.getAbsolutePath());
+                    symLink(getPath(f.getAbsolutePath()), g.getAbsolutePath());
                     return true;
                 }
                 catch (Exception e) {
