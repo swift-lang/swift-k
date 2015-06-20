@@ -100,11 +100,50 @@ public class SymLinker {
         }
     }
 
-    public static void symLink(String file, String link) throws IOException {
-        Object filePath = getPath(file);
+    public static void symLink(Object target, String link) throws IOException {
+        Object filePath = target;
         Object linkPath = getPath(link);
         filePath = resolveLink(filePath);
         createLink(filePath, linkPath);
+    }
+    
+    /**
+     * Determines if a path is a symbolic link. If it is, it resolves it
+     * and returns the link target. If not, it returns <code>null</code>
+     */
+    public static Object readLink(String file) throws IOException {
+        try {
+            Object filePath = getPath(file);
+            Object[] linkPathArg = new Object[] {filePath};
+            Boolean isLink = (Boolean) methodIsLink.invoke(null, linkPathArg);
+            if (isLink) {
+                return methodReadLink.invoke(null, linkPathArg);
+            }
+            else {
+                return null;
+            }
+        }
+        catch (IllegalArgumentException e) {
+            throw new UnsupportedOperationException(e);
+        }
+        catch (IllegalAccessException e) {
+            throw new UnsupportedOperationException(e);
+        }
+        catch (InvocationTargetException e) {
+            Throwable t = e.getTargetException();
+            if (t instanceof UnsupportedOperationException) {
+                throw (UnsupportedOperationException) t;
+            }
+            else if (t instanceof IOException) {
+                throw (IOException) t;
+            }
+            else if (t instanceof SecurityException) {
+                throw new UnsupportedOperationException(t);
+            }
+            else {
+                throw new UnsupportedOperationException(t);
+            }
+        }
     }
 
     private static Object resolveLink(Object linkPath) throws IOException {

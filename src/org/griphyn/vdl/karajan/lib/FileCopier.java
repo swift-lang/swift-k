@@ -50,6 +50,7 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
     private static final TaskHandler fth = new FileTransferTaskHandler();
 
     private AbsFile fsrc, fdst;
+    private String cachedSrcPath;
     private FileTransferTask task;
     private Exception exception;
     private boolean closed, srcIsTemporary;
@@ -78,13 +79,20 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
         boolean tryToLink = true;
-        if (srcIsTemporary) {
-            // if the source is a temporary file, don't link to it since it might
-            // disappear at any time after this operation
+        if (!isLocal(fsrc)) {
             tryToLink = false;
         }
+        Object srcTarget = null;
+        if (tryToLink && srcIsTemporary) {
+            // if the source is a temporary file, only link if it is itself a link, which 
+            // must be to a permanent file
+            srcTarget = readSrcLink();
+            if (srcTarget == null) {
+                tryToLink = false;
+            }
+        }
         if (tryToLink) {
-            if (tryLink(fsrc, fdst)) {
+            if (tryLink(srcTarget, fdst)) {
                 // success
                 return true;
             }
@@ -111,11 +119,20 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
         return false;
     }
 
-    private boolean tryLink(AbsFile fsrc, AbsFile fdst) {
+    private Object readSrcLink() {
+        try {
+            return SymLinker.readLink(getSrcPath());
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+
+    private boolean tryLink(Object srcTarget, AbsFile fdst) {
         if (!canLink) {
             return false;
         }
-        if (!isLocal(fsrc) || !isLocal(fdst)) {
+        if (!isLocal(fdst)) {
             return false;
         }
         try {
@@ -123,16 +140,22 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
             // destructive, and we want that
             String dstPath = fdst.getAbsolutePath();
             new File(dstPath).delete();
-            String srcPath = fsrc.getAbsolutePath();
             if (logger.isDebugEnabled()) {
-                logger.debug("LINK src=" + srcPath + " dst=" + dstPath);
+                logger.debug("LINK src=" + getSrcPath() + " dst=" + dstPath);
             }
-            SymLinker.symLink(srcPath, dstPath);
+            SymLinker.symLink(srcTarget, dstPath);
             return true;
         }
         catch (Exception e) {
             return false;
         }
+    }
+
+    private String getSrcPath() {
+        if (cachedSrcPath == null) {
+            cachedSrcPath = fsrc.getAbsolutePath();
+        }
+        return cachedSrcPath;
     }
 
     private boolean isLocal(AbsFile f) {
