@@ -213,8 +213,12 @@ elif [ "$PARAMFILE" != "" ] ; then
 			CMDARGS=("$line")
 			FIRST=0
 		else
-			CMDARGS=("${CMDARGS[*]}" "$line")
+			CMDARGS=("${CMDARGS[@]}" "$line")
 		fi
+		log "count: ${#CMDARGS[@]}"
+		log "line: $line"
+		log "args: ${CMDARGS[@]}"
+		log ""
 	done < <(grep -E "^-a " $PARAMFILE | cut -d " " -f 2-)
 else
 	fail 254 "Missing arguments (-a option)"
