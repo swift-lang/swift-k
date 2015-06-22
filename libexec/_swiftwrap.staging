@@ -157,8 +157,6 @@ fi
 logstate "LOG_START"
 infosection "Wrapper (_swiftwrap.staging)"
 
-log $COMMANDLINE
-
 getarg "-e" "$@"
 EXEC=$VALUE
 shift $SHIFTCOUNT
