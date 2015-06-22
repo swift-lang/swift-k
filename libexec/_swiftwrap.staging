@@ -249,8 +249,8 @@ log "DIRS=$DIRS"
 log "INF=$INF"
 log "OUTF=$OUTF"
 log "COLLECT=$COLLECT"
-log "ARGS=$@"
-log "ARGC=$#"
+log "ARGS=${CMDARGS[@]}"
+log "ARGC=${#CMDARGS[@]}"
 
 IFS="|"
 
