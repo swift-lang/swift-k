@@ -56,6 +56,7 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
     private Exception exception;
     private boolean closed, srcIsTemporary;
     private static int running;
+    private static boolean warned;
 
     public FileCopier(PhysicalFormat src, PhysicalFormat dst, boolean srcIsTemporary) {
         fsrc = (AbsFile) src;
@@ -79,31 +80,39 @@ public class FileCopier extends AbstractFuture implements Future, StatusListener
     public boolean start() throws IllegalSpecException,
             InvalidSecurityContextException, InvalidServiceContactException,
             TaskSubmissionException {
-        boolean tryToLink = true;
-        if (!isLocal(fsrc)) {
-            tryToLink = false;
-        }
-        Object srcTarget = null;
-        if (tryToLink) {
-            if (srcIsTemporary) {
-                // if the source is a temporary file, only link if it is itself a link, which 
-                // must be to a permanent file
-                srcTarget = readSrcLink();
-            }
-            else {
-                srcTarget = toPath(getSrcPath());
-            }
-            if (srcTarget == null) {
+    	try {
+            boolean tryToLink = true;
+            if (!isLocal(fsrc)) {
                 tryToLink = false;
             }
-        }
-        
-        if (tryToLink) {
-            if (tryLink(srcTarget, fdst)) {
-                // success
-                return true;
+            Object srcTarget = null;
+            if (tryToLink) {
+                if (srcIsTemporary) {
+                    // if the source is a temporary file, only link if it is itself a link, which 
+                    // must be to a permanent file
+                    srcTarget = readSrcLink();
+                }
+                else {
+                    srcTarget = toPath(getSrcPath());
+                }
+                if (srcTarget == null) {
+                    tryToLink = false;
+                }
             }
-        }
+            
+            if (tryToLink) {
+                if (tryLink(srcTarget, fdst)) {
+                    // success
+                    return true;
+                }
+            }
+    	}
+    	catch (Exception e) {
+    		if (!warned) {
+    			logger.warn("Exception caught in sym-linking code", e);
+    			warned = true;
+    		}
+    	}
         
         FileTransferSpecification fts = new FileTransferSpecificationImpl();
         fts.setDestinationDirectory(fdst.getDirectory());
