@@ -57,7 +57,7 @@ public class Node implements Callback, ChannelListener {
         this.channel = channel;
         channel.addListener(this);
         this.concurrency = concurrency;
-        Settings settings = block.getAllocationProcessor().getSettings();
+        BaseSettings settings = block.getAllocationProcessor().getSettings();
         cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
 
         if (logger.isDebugEnabled()) {
@@ -72,7 +72,7 @@ public class Node implements Callback, ChannelListener {
         this.hostname = null;
         this.concurrency = 1;
         this.channel = channel;
-        Settings settings = block.getAllocationProcessor().getSettings();
+        BaseSettings settings = block.getAllocationProcessor().getSettings();
         cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
     }
 
@@ -142,7 +142,7 @@ public class Node implements Callback, ChannelListener {
         for (Cpu cpu : cpus) {
             cpu.taskFailed("Connection to worker lost", e);
         }
-        Settings settings = block.getAllocationProcessor().getSettings();
+        BaseSettings settings = block.getAllocationProcessor().getSettings();
         Block block = getBlock();
         block.removeNode(this);
         Block.totalActiveWorkers -= settings.getJobsPerNode();

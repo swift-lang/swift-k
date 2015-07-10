@@ -41,4 +41,6 @@ public interface QueueProcessor {
     boolean isShutDown(); 
 
     void setBroadcaster(Broadcaster b);
+    
+    AbstractSettings getSettings();
 }
