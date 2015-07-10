@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
+import org.globus.cog.util.json.JSONEncoder;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 

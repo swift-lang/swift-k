@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
+import org.globus.cog.util.json.JSONEncoder;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.common.DataSampler;
 import org.griphyn.vdl.karajan.monitor.common.DataSampler.Series;

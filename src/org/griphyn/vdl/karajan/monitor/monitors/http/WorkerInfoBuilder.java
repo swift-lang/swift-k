@@ -31,6 +31,7 @@ package org.griphyn.vdl.karajan.monitor.monitors.http;
 import java.util.List;
 import java.util.Map;
 
+import org.globus.cog.util.json.JSONEncoder;
 import org.griphyn.vdl.karajan.monitor.monitors.http.BrowserDataBuilder.WorkerData;
 import org.griphyn.vdl.karajan.monitor.processors.coasters.CoasterStatusItem.Block;
 import org.griphyn.vdl.karajan.monitor.processors.coasters.CoasterStatusItem.Worker;

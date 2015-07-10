@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.util.json.JSONEncoder;
 import org.griphyn.vdl.util.ConfigTree;
 import org.griphyn.vdl.util.ConfigTree.Node;
 import org.griphyn.vdl.util.SwiftConfigSchema;

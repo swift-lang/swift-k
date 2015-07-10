@@ -31,6 +31,7 @@ package org.griphyn.vdl.karajan.monitor.monitors.http;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
+import org.globus.cog.util.json.JSONEncoder;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
