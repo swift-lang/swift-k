@@ -24,13 +24,9 @@
 //----------------------------------------------------------------------
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
-import java.io.File;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -40,17 +36,12 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.coaster.rlog.RemoteLogger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
-import org.globus.cog.abstraction.coaster.service.RegistrationManager;
-import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
-import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.coaster.channels.CoasterChannel;
 
-public class BlockQueueProcessor extends AbstractQueueProcessor implements RegistrationManager, Runnable {
+public class BlockQueueProcessor extends AbstractBlockWorkerManager implements Runnable {
     public static final Logger logger = Logger.getLogger(BlockQueueProcessor.class);
 
     private Settings settings;
@@ -84,31 +75,16 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private final JobSet running;
 
     private List<Integer> sums;
-    private final Map<String, Block> blocks;
 
     private double allocsize;
 
     double medianSize, tsum;
 
-    private File script;
-
-    private String id;
-
-    private static final DateFormat DDF = new SimpleDateFormat("MMdd-mmhhss");
-
     private BQPMonitor monitor;
 
-    private Broadcaster broadcaster;
-
     private boolean done, planning, shuttingDown;
-
-    private final Metric metric;
-
-    private final RemoteLogger rlogger;
     
-    public static volatile int queuedJobs, runningJobs;
-    
-    private PullThread taskDispatcher;
+    public static volatile int queuedJobs, runningJobs; 
 
     /**
        Formatter for time-based variables in whole seconds
@@ -121,44 +97,24 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     */
     private static final NumberFormat SECONDS_3 =
     	new DecimalFormat("0.000");
-    
-    private static int sid;
-    
-    private synchronized static int nextSid() {
-    	return sid++;
-    }
 
-    public BlockQueueProcessor(LocalTCPService localService, Settings settings) {
-        super("Block Queue Processor", localService);
-        this.settings = settings;
+    public BlockQueueProcessor(LocalTCPService localService) {
+        super("Block Queue Processor", localService, new Settings(), null);
+        this.settings = (Settings) super.getSettings();
+        this.setMetric(new OverallocatedJobDurationMetric(this.settings));
         holding = new SortedJobSet();
-        blocks = new TreeMap<String, Block>();
         tl = new HashMap<Integer, List<Job>>();
-        id = DDF.format(new Date()) + nextSid();
         incoming = new ArrayList<Job>();
-        metric = new OverallocatedJobDurationMetric(settings);
-        queued = new SortedJobSet(metric);
-        running = new JobSet(metric);
-        rlogger = new RemoteLogger();
-        taskDispatcher = new PullThread(this);
-        taskDispatcher.start();
+        queued = new SortedJobSet(getMetric());
+        running = new JobSet(getMetric());
         if (logger.isInfoEnabled()) {
-            logger.info("Starting... id=" + id);
+            logger.info("Starting... id=" + this.getBQPId());
         }
-    }
-    
-    public PullThread getTaskDispatcher() {
-        return taskDispatcher;
-    }
-
-    public Metric getMetric() {
-    	return metric;
     }
 
     @Override
     public void run() {
         try {
-            script = ScriptManager.writeScript();
             int planTimeMillis = 1;
             while (!done && !shuttingDown) {
                 if (logger.isDebugEnabled()) {
@@ -185,10 +141,6 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         catch (Exception e) {
             CoasterService.error(13, "Exception caught in block processor", e);
         }
-    }
-
-    public File getScript() {
-        return script;
     }
 
     public void add(int time, List<Job> jobs) {
@@ -256,6 +208,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private void cleanDoneBlocks() {
         int count = 0;
         List<Block> snapshot;
+        Map<String, Block> blocks = getBlocks();
         synchronized (blocks) {
             snapshot = new ArrayList<Block>(blocks.values());
         }
@@ -276,6 +229,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private double lastAllocSize;
 
     private void updateAllocatedSize() {
+        Map<String, Block> blocks = getBlocks();
         synchronized (blocks) {
             allocsize = 0;
             for (Block b : blocks.values()) {
@@ -291,6 +245,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     }
 
     private boolean fits(Job j) {
+        Map<String, Block> blocks = getBlocks();
         synchronized (blocks) {
             for (Block b : blocks.values()) {
                 if (!b.isSuspended() && b.fits(j)) {
@@ -301,19 +256,12 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
-    public void addBlock(Block b) {
-        synchronized (blocks) {
-            blocks.put(b.getId(), b);
-        }
-        b.start();
-    }
-
     private void queueToExistingBlocks() {
         List<Job> remove = new ArrayList<Job>();
         double runningSize = getRunningSizeLeft();
         int count = 0;
         for (Job j : holding) {
-            if (allocsize - queued.getJSize() - runningSize > metric.getSize(j) && fits(j)) {
+            if (allocsize - queued.getJSize() - runningSize > getMetric().getSize(j) && fits(j)) {
                 queue(j);
                 remove.add(j);
                 count++;
@@ -386,7 +334,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         sums.add(0);
         int ps = 0;
         for (Job j : holding) {
-            ps += metric.getSize(j);
+            ps += getMetric().getSize(j);
             sums.add(new Integer(ps));
         }
     }
@@ -397,7 +345,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
     private int computeTotalRequestSize() {
         double sz = 0;
         for (Job j : holding) {
-            sz += metric.desiredSize(j);
+            sz += getMetric().desiredSize(j);
         }
         if (sz > 0) {
             if (sz < 1)
@@ -462,7 +410,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
      */
     protected void removeIdleBlocks() {
         SortedMap<Double, Block> sorted = new TreeMap<Double, Block>();
-        
+        Map<String, Block> blocks = getBlocks();
         synchronized (blocks) {
             for (Block b : blocks.values()) {
                 sorted.put(b.sizeLeft(), b);
@@ -487,6 +435,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
        allocating new Blocks for them
      */
     private void allocateBlocks(double tsum) {
+        Map<String, Block> blocks = getBlocks();
         List<Job> remove = new ArrayList<Job>();
         // Calculate chunkOfBlocks: how many blocks we may allocate
         //     in this particular call to allocateBlocks()
@@ -518,6 +467,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         //    |  |  |  |  |  |     ___|  |  |  |  |
         //    |__|__|__|__|__|     |__|__|__|__|__|
         // (where the total area =~ tsum in both cases)
+        Metric metric = getMetric();
         double size = metric.blockSize(newBlocks, chunkOfBlocks, tsum);
 
         String s = SECONDS.format(tsum);
@@ -603,7 +553,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 }
 
                 // create the actual block
-                Block b = new Block(width, TimeInterval.fromSeconds(h), this);
+                Block b = new Block(width, TimeInterval.fromSeconds(h), settings.getMaxWorkerIdleTime(), this);
                 getLocalService().registerBlock(b, this);
                 if (logger.isInfoEnabled()) {
                     logger.info("index: " + index + ", last: " + last + ", holding.size(): " + holding.size());
@@ -652,65 +602,6 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         }
     }
 
-    private boolean first = true;
-
-    private void updateSettings() throws PlanningException {
-        if (!first) {
-            return;
-        }
-        if (!holding.isEmpty()) {
-            Job j = holding.iterator().next();
-            Task t = j.getTask();
-            ExecutionService p = (ExecutionService) t.getService(0);
-            if (settings.getServiceContact() == null) {
-                settings.setServiceContact(p.getServiceContact());
-            }
-            if (settings.getJobManager() == null || settings.getProvider() == null) {
-                String jm = p.getJobManager();
-                if (jm == null) {
-                    if (settings.getProvider() == null) {
-                        holding.remove(j);
-                        j.fail("Don't know how to start blocks. " +
-                        		"Both the settings and the task are missing a provider", null);
-                        return;
-                    }
-                    else {
-                        // as long as there is a provider, the other things are optional
-                    }
-                }
-                else {
-                    int colon = jm.indexOf(':');
-                    // remove provider used to bootstrap coasters
-                    jm = jm.substring(colon + 1);
-                    colon = jm.indexOf(':');
-                    if (colon == -1) {
-                        settings.setProvider(jm);
-                    }
-                    else {
-                        settings.setJobManager(jm.substring(colon + 1));
-                        settings.setProvider(jm.substring(0, colon));
-                    }
-                }
-            }
-            if (p.getSecurityContext() != null) {
-                settings.setSecurityContext(p.getSecurityContext());
-            }
-            else {
-                try {
-                    settings.setSecurityContext(AbstractionFactory.getSecurityContext(settings.getProvider(), null));
-                }
-                catch (Exception e) {
-                    throw new PlanningException(e);
-                }
-            }
-            if (first) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("\n" + settings.toString());
-                }
-                first = false;
-            }
-        }
-    }
 
     private void commitNewJobs() {
         synchronized (incoming) {
@@ -764,8 +655,6 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         // If queued has too many Jobs, move some back to holding
         requeueNonFitting();
 
-        updateSettings();
-
         computeSums();
 
         tsum = computeTotalRequestSize();
@@ -813,6 +702,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         return job;
     }
 
+    @Override
     public void jobTerminated(Job job) {
         synchronized(running) {
         	runningJobs--;
@@ -840,34 +730,12 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         synchronized(holding) {
             shuttingDown = true;
         }
-        taskDispatcher.shutDown();
-        shutdownBlocks();
+        super.startShutdown();
         done = true;
-    }
-
-    private void shutdownBlocks() {
-        logger.info("Shutting down blocks");
-        List<Block> bl;
-        synchronized (blocks) {
-            bl = new ArrayList<Block>(blocks.values());
-        }
-        for (Block b : bl) {
-            b.shutdown(true);
-        }
     }
     
     public boolean isShutDown() {
-        return blocks.size() == 0;
-    }
-
-    public void blockTaskFinished(Block block) {
-        if (logger.isInfoEnabled()) {
-            logger.info("Removing block " + block + ". Blocks active: " + blocks.size());
-        }
-        synchronized (blocks) {
-            blocks.remove(block.getId());
-        }
-        getLocalService().unregisterBlock(block);
+        return getBlocks().size() == 0;
     }
 
     public Settings getSettings() {
@@ -878,33 +746,6 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         this.settings = settings;
     }
 
-    protected Block getBlock(String id) {
-        synchronized (blocks) {
-            Block b = blocks.get(id);
-            if (b != null) {
-                return b;
-            }
-            throw new IllegalArgumentException("No such block: " + id);
-        }
-    }
-
-    public String registrationReceived(String blockID, String workerID, String workerHostname,
-            CoasterChannel channel, Map<String, String> options) {
-        return getBlock(blockID).workerStarted(workerID, workerHostname, channel, options);
-    }
-
-    public String nextId(String id) {
-        return getBlock(id).nextId();
-    }
-
-    public String getBQPId() {
-        return id;
-    }
-
-    public void setBQPId(String id) {
-        this.id = id;
-    }
-
     public List<Job> getJobs() {
         return holding.getAll();
     }
@@ -913,19 +754,6 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         return queued;
     }
 
-    public Map<String, Block> getBlocks() {
-        return blocks;
-    }
-
-    public void setBroadcaster(Broadcaster b) {
-        this.broadcaster = b;
-        rlogger.setBroadcaster(b);
-    }
-
-    public Broadcaster getBroadcaster() {
-        return broadcaster;
-    }
-    
     public static void main(String[] args) {
         Settings s = new Settings();
         System.out.println(overallocatedSize(1, s));
@@ -937,28 +765,8 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
         System.out.println(overallocatedSize(100000, s));
     }
 
+    @Override
     public int getQueueSeq() {
         return queued.getSeq() + holding.getSeq();
-    }
-
-    public RemoteLogger getRLogger() {
-        return rlogger;
-    }
-
-    /**
-       Get the KarajanChannel for the worker with given id
-     */
-    public CoasterChannel getWorkerChannel(String blockID, String workerID) {        
-        Block b = getBlock(blockID);
-        if (b != null) {
-            Node n = b.findNode(workerID);
-            if (n != null) {
-                return n.getChannel();
-            }
-        }
-        return null;
-    }
-
-    public void nodeRemoved(Node node) {
     }
 }

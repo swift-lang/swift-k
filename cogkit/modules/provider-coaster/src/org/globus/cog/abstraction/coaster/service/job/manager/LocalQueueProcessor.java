@@ -122,4 +122,9 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
         }
         return s;
     }
+
+    @Override
+    public AbstractSettings getSettings() {
+        return null;
+    }
 }

@@ -103,7 +103,7 @@ public class PassiveQueueProcessor extends BlockQueueProcessor {
         synchronized(blocks) {
             b = blocks.get(id);
             if (b == null) {
-                b = new Block(id, 1, TimeInterval.FOREVER, this);
+                b = new Block(id, 1, TimeInterval.FOREVER, TimeInterval.FOREVER, this);
                 getLocalService().registerBlock(b, this);
                 b.setStartTime(Time.now());
                 b.setRunning(true);
