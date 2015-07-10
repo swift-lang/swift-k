@@ -157,6 +157,8 @@ public class CoasterPersistentService extends CoasterService {
         		"a client can be re-used by subsequent clients. The argument specifies a file that contains all " +
         		"the configuration options for the block allocator. Cannot be used with passive workers.", 
         		"config-file", ArgumentParser.OPTIONAL);
+        ap.addOption("controlPort", "If specified, starts a simple REST-like service that allows on-the-fly"
+        		+ "changes to the settings to be made in shared mode", "port", ArgumentParser.OPTIONAL);
         ap.addFlag("stats", "Show a table of various run-time information");
         ap.addFlag("help", "Displays usage information");
         ap.addAlias("help", "h");
@@ -253,6 +255,12 @@ public class CoasterPersistentService extends CoasterService {
             }
             else {
                 s.setDefaultQP("block");
+            }
+            if (ap.isPresent("controlPort")) {
+            	if (!ap.isPresent("shared")) {
+            		System.err.println("Cannot use -controlPort without -shared");
+            		System.exit(3);
+            	}
             }
             s.start();
             addShutdownHook(s);
