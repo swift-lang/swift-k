@@ -24,10 +24,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -123,17 +124,26 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(f));
 			try {
-				if (dest.getType().isArray()) {
-					// each line is an item
-					readArray(dest, br, owner, options);
-				}
-				else if (dest.getType().isPrimitive()) {
-					readPrimitive(dest, br, owner);
-				}
-				else {
-					// struct
-					readStruct(dest, br, owner, options);
-				}
+			    if (dest.getType().hasMappedComponents()) {
+                    throw new ExecutionException(owner, "Cannot serialize file-valued data");
+                }
+			    if (dest.getType().isComposite()) {
+    				if (dest.getType().isArray()) {
+    					// each line is an item
+    					readArray(dest, br, owner, options);
+    				}
+    				else {
+                        // struct
+                        readStruct(dest, br, owner, options);
+                    }
+			    }
+                else if (dest.getType().isPrimitive()) {
+                    readPrimitive(dest, br, owner);
+                }
+                else {
+                    throw new ExecutionException(owner, "Internal error. Cannot read file-valued data");
+                }
+
 				dest.closeDeep();
 			}
 			finally {
@@ -151,28 +161,15 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
 	}
 
 	private Map<String, Object> processOptions(Map<String, Object> options) {
-	    String sep = getOption("separator", options);
-	    String _sep;
-	    if (sep.equals(" ")) {
-	        _sep = "[ ]+";
-	    }
-	    else if (sep.equals("\t")) {
-	        _sep = "\\t+";
-	    }
-	    else if (sep.equals(",")) {
-	        _sep = "\\s*,\\s*";
-	    }
-	    else {
-	        _sep = sep;
-	    }
-	    return Collections.singletonMap("_separator", (Object) _sep);
+	    return options;
     }
 
     private void readPrimitive(DSHandle dest, BufferedReader br, Node owner) throws IOException {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		String line = br.readLine();
 		while (line != null) {
 			sb.append(line);
+			sb.append('\n');
 			line = br.readLine();
 		}
 		String s = sb.toString();
@@ -192,6 +189,7 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
 	private void readPrimitiveArray(DSHandle dest, BufferedReader br, Node owner) throws IOException {
 		int index = 0;
 		String line = br.readLine();
+		Type itemType = dest.getType().itemType();
 		try {
 			while (line != null) {
 				DSHandle child = dest.getField(index);
@@ -205,7 +203,7 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
 		}
 	}
 
-	private void readStructArray(DSHandle dest, BufferedReader br, Node owner, 
+    private void readStructArray(DSHandle dest, BufferedReader br, Node owner, 
 	        Map<String, Object> opts) throws IOException {
 		String[] header = readStructHeader(dest.getType().itemType(), br, owner, opts);
 		int index = 0;
@@ -233,8 +231,8 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
 			throw new ExecutionException(owner, "Missing header");
 		}
 		else {
-		    String sep = getOption("_separator", opts);
-			String[] header = line.split(sep);
+		    String sep = getOption("separator", opts);
+			String[] header = split(line, sep, owner);
 			Set<String> t = new HashSet<String>(type.getFieldNames());
 			Set<String> h = new HashSet<String>(Arrays.asList(header));
 			if (t.size() != h.size()) {
@@ -251,8 +249,8 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
 	}
 
 	private void readStruct(DSHandle dest, String line, String[] header, Node owner, Map<String, Object> opts) {
-	    String sep = getOption("_separator", opts);
-		String[] cols = line.split(sep);
+	    String sep = getOption("separator", opts);
+	    String[] cols = split(line, sep, owner);
 		try {
 			if (cols.length != header.length) {
 				throw new ExecutionException(owner, "Column count for line \"" + line
@@ -271,7 +269,63 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
 		}
 	}
 
-	private void readStruct(DSHandle dest, BufferedReader br, Node owner, Map<String, Object> opts) 
+	private String[] split(String line, String sep, Node owner) {
+	    List<String> l = new ArrayList<String>();
+        StringBuilder sb = new StringBuilder();
+        boolean inString = false;
+        int len = line.length();
+        int sepLen = sep.length();
+        for (int i = 0; i < len; i++) {
+            char c = line.charAt(i);
+            if (inString) {
+                if (c == '"') {
+                    if (i < len - 1 && line.charAt(i + 1) == '"') {
+                        sb.append('"');
+                        i += 2;
+                    }
+                    else {
+                        inString = false;
+                        i = line.indexOf(sep, i + 1) + 1;
+                        l.add(sb.toString());
+                        if (i == 0) {
+                            i = len;
+                            sb = null;
+                        }
+                        else {
+                            sb = new StringBuilder();
+                        }
+                    }
+                }
+                else {
+                    sb.append(c);
+                }
+            }
+            else {
+                if (line.indexOf(sep, i) == i) {
+                    // separator
+                    l.add(sb.toString());
+                    sb = new StringBuilder();
+                    i += sepLen;
+                }
+                else if (c == '"') {
+                    inString = true;
+                    if (!sb.toString().matches("\\s*")) {
+                        throw new ExecutionException(owner, "Illegal extra characters before string: '" + sb.toString() + "'");
+                    }
+                    sb = new StringBuilder();
+                }
+                else {
+                    sb.append(c);
+                }
+            }
+        }
+        if (sb != null) {
+            l.add(sb.toString());
+        }
+        return l.toArray(new String[0]);
+    }
+
+    private void readStruct(DSHandle dest, BufferedReader br, Node owner, Map<String, Object> opts) 
 	        throws IOException {
 		String[] header = readStructHeader(dest.getType(), br, owner, opts);
 		String line = br.readLine();
