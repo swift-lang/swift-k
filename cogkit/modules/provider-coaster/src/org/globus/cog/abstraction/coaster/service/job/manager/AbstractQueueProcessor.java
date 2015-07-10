@@ -28,10 +28,12 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import java.io.File;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.interfaces.Task;
 
@@ -40,6 +42,8 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
     private boolean shutdownFlag;
     private boolean wrap;
     private final LocalTCPService localService;
+    private int queueSeq;
+    private File script;
 
     public AbstractQueueProcessor(String name, LocalTCPService localService) {
         super(name);
@@ -56,6 +60,7 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
             throw new IllegalStateException("Queue is shut down");
         }
         q.offer(new AssociatedTask(t));
+        queueSeq++;
     }
 
     public void startShutdown() {
@@ -84,9 +89,23 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
 
     @Override
     public synchronized void start() {
+        try {
+            script = ScriptManager.writeScript();
+        }
+        catch (Exception e) {
+            CoasterService.error(19, "Cannot write worker script", e);
+        }
         if (this.isAlive()) {
             throw new RuntimeException(this.getName() + " already started");
         }
         super.start();
+    }
+    
+    public File getScript() {
+        return script;
+    }
+    
+    public int getQueueSeq() {
+        return queueSeq;
     }
 }
