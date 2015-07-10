@@ -243,6 +243,9 @@ public class StringFunctions {
         public StringBuilder sb;
     }
     
+    /*
+     * TODO: I suspect that this is nondeterministic
+     */
     public static class Join extends FTypes.ArrayReducerString<String, JoinState> {
         private ArgRef<String> delimiter;
 
@@ -459,7 +462,7 @@ public class StringFunctions {
         protected Object lastIndexOf(String s, String find, int start, Stack stack) {
             int end = this.end.getValue(stack);
             int index = s.lastIndexOf(find, start == -1 ? s.length() : start);
-            if (index < end) {
+            if (index <= end) {
                 return -1;
             }
             else {
