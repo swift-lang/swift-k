@@ -28,6 +28,7 @@
  */
 package org.globus.cog.abstraction.impl.execution.coaster;
 
+import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -38,7 +39,23 @@ public class ServiceConfigurationCommand extends Command {
         
     public ServiceConfigurationCommand(Task task) {
         super(NAME);
-        Service s = task.getService(0);
+        ExecutionService s = (ExecutionService) task.getService(0);
+        
+        String jm = s.getJobManager();
+        if (jm != null) {
+            int colon = jm.indexOf(':');
+            // remove provider used to bootstrap coasters
+            jm = jm.substring(colon + 1);
+            colon = jm.indexOf(':');
+            if (colon == -1) {
+                addOutData("provider=" + jm);
+            }
+            else {
+                addOutData("jobManager=" + jm.substring(colon + 1));
+                addOutData("provider=" + jm.substring(0, colon));
+            }
+            addOutData("serviceContact=" + s.getServiceContact());
+        }
         JobSpecification spec = (JobSpecification) task.getSpecification();
         for (String name : s.getAttributeNames()) {
             add(s, name);
