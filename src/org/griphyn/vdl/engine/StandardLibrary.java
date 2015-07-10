@@ -249,7 +249,13 @@ public abstract class StandardLibrary {
             addProc("fprintf", returns(), args(vargs(ANY)),
                 org.griphyn.vdl.karajan.lib.swiftscript.Fprintf.class);
             
-            addProc("assert", returns(), args(vargs(ANY)),
+            addProc("assert", returns(), args(BOOLEAN),
+                org.griphyn.vdl.karajan.lib.swiftscript.Assert.class);
+            addProc("assert", returns(), args(BOOLEAN, STRING),
+                org.griphyn.vdl.karajan.lib.swiftscript.Assert.class);
+            addProc("assert", returns(), args(INT),
+                org.griphyn.vdl.karajan.lib.swiftscript.Assert.class);
+            addProc("assert", returns(), args(INT, STRING),
                 org.griphyn.vdl.karajan.lib.swiftscript.Assert.class);
             
             // backwards compatible; to be removed in the future
@@ -307,9 +313,9 @@ public abstract class StandardLibrary {
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.ExecSystem.class);
             addFunc("strjoin", returns(STRING), args(ANY, STRING),
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.StrJoin.class);
-            addFunc("toInt", returns(INT), args(ANY),
+            addFunc("toInt", returns(INT), args(STRING),
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.ToInt.class);
-            addFunc("toFloat", returns(FLOAT), args(ANY),
+            addFunc("toFloat", returns(FLOAT), args(STRING),
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.ToFloat.class);
             addFunc("toString", returns(STRING), args(ANY),
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.ToString.class);
@@ -319,10 +325,11 @@ public abstract class StandardLibrary {
             addFunc("pad", returns(STRING), args(INT, INT),
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.Pad.class);
             
-            addFunc("java", returns(ANY), args(vargs(ANY)),
+            TypeParameter T = new TypeParameter("T");
+            addFunc("java", typeArgs(T), returns(T), args(STRING, STRING, vargs(ANY)),
                 org.griphyn.vdl.karajan.lib.swiftscript.Java.class);
     
-            addFunc("exists", returns(BOOLEAN), args(vargs(ANY)),
+            addFunc("exists", returns(BOOLEAN), args(ANY),
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.Exists.class);
             
             
