@@ -137,7 +137,7 @@ public class JobQueue {
             return new PassiveQueueProcessor(localService, localService.getContact());
         }
         else if (name.startsWith("class:")) {
-            return newQueueProcessorFromClassName(name.substring(7));
+            return newQueueProcessorFromClassName(name.substring(6));
         }
         else {
             throw new IllegalArgumentException("No such queue processor: " + name);
