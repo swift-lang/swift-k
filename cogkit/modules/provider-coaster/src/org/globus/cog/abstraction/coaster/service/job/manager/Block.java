@@ -66,7 +66,7 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     private int workers, activeWorkers;
-    private TimeInterval walltime;
+    private TimeInterval walltime, maxIdleTime;
     private Time endtime, starttime, deadline, creationtime;
     private final SortedMap<Cpu, Time> scpus;
     private final List<Cpu> cpus;
@@ -95,14 +95,15 @@ public class Block implements StatusListener, Comparable<Block> {
         nodes = new ArrayList<Node>();
     }
 
-    public Block(int workers, TimeInterval walltime, BlockQueueProcessor ap) {
-        this(ap.getBQPId() + "-" + IDF.format(nextSID()), workers, walltime, ap);
+    public Block(int workers, TimeInterval walltime, TimeInterval maxIdleTime, AbstractBlockWorkerManager ap) {
+        this(ap.getBQPId() + "-" + IDF.format(nextSID()), workers, walltime, maxIdleTime, ap);
     }
 
-    public Block(String id, int workers, TimeInterval walltime, BlockQueueProcessor ap) {
+    public Block(String id, int workers, TimeInterval walltime, TimeInterval maxIdleTime, AbstractBlockWorkerManager ap) {
         this(id);
         this.workers = workers;
         this.walltime = walltime;
+        this.maxIdleTime = maxIdleTime;
         this.bqp = ap;
         this.creationtime = Time.now();
         setDeadline(Time.now().add(ap.getSettings().getReserve()));
@@ -157,7 +158,7 @@ public class Block implements StatusListener, Comparable<Block> {
                 last = Time.now();
             }
             Time deadline = Time.min(starttime.add(walltime),
-                        last.add(bqp.getSettings().getMaxWorkerIdleTime()));
+                        last.add(maxIdleTime));
             setDeadline(deadline);
             return Time.now().isGreaterThan(deadline);
         }
@@ -229,13 +230,17 @@ public class Block implements StatusListener, Comparable<Block> {
         }
     }
 
-    public void shutdownIfEmpty(Cpu cpu) {
+    public boolean shutdownIfEmpty(Cpu cpu) {
         synchronized (cpus) {
             if (scpus.isEmpty()) {
                 if (logger.isInfoEnabled() && !shutdown) {
                     logger.info(this + ": all cpus are clear");
                 }
                 shutdown(false);
+                return true;
+            }
+            else {
+            	return false;
             }
         }
     }
@@ -406,6 +411,7 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public String workerStarted(String workerID, String workerHostname,
             CoasterChannel channel, Map<String, String> options) {
+    	running = true;
         int concurrency = 1;
         if (options.containsKey("concurrency")) {
             concurrency = Integer.parseInt(options.get("concurrency"));
@@ -569,7 +575,7 @@ public class Block implements StatusListener, Comparable<Block> {
     public int getDoneJobCount() {
         return doneJobCount;
     }
-
+    
     public void suspend() {
         synchronized(this) {
             suspended = true;
@@ -578,8 +584,15 @@ public class Block implements StatusListener, Comparable<Block> {
         shutdownIfEmpty(null);
     }
 
-    public synchronized boolean isSuspended() {
-        return suspended;
+    public boolean isSuspended() {
+    	boolean suspended;
+    	synchronized(this) {
+    	    suspended = this.suspended;
+    	}
+    	if (suspended) {
+    		shutdownIfEmpty(null);
+    	}
+    	return suspended;
     }
 
     public synchronized boolean isShutDown() {
