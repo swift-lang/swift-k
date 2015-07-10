@@ -48,6 +48,8 @@ import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
+import org.globus.cog.abstraction.interfaces.SecurityContext;
+import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
@@ -58,7 +60,7 @@ public class BlockTask extends TaskImpl {
     public static final Logger logger = Logger.getLogger(BlockTask.class);
 
     private final Block block;
-    private final Settings settings;
+    private final BaseSettings settings;
     private final BlockTaskSubmitter submitter;
 
     public BlockTask(Block block, BlockTaskSubmitter submitter) {
@@ -92,6 +94,7 @@ public class BlockTask extends TaskImpl {
         if (libraryPath != null)
             spec.addEnvironmentVariable("LD_LIBRARY_PATH",
                                         libraryPath);
+        // TODO: What is this?
         String workerCopies = settings.getWorkerCopies();
         if (workerCopies != null) {
             String workerCopiesFixed =
@@ -238,10 +241,19 @@ public class BlockTask extends TaskImpl {
 
     private ExecutionService buildService() {
         ExecutionService s = new ExecutionServiceImpl();
-        s.setServiceContact(settings.getServiceContact());
+        ServiceContact serviceContact = settings.getServiceContact();
+        if (serviceContact != null) {
+            s.setServiceContact(serviceContact);
+        }
         s.setProvider(settings.getProvider());
-        s.setJobManager(settings.getJobManager());
-        s.setSecurityContext(settings.getSecurityContext());
+        String jm = settings.getJobManager();
+        if (jm != null) {
+            s.setJobManager(jm);
+        }
+        SecurityContext sc = settings.getSecurityContext();
+        if (sc != null) {
+            s.setSecurityContext(sc);
+        }
         return s;
     }
 
