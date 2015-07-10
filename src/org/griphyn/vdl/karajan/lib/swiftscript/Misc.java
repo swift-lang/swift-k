@@ -287,6 +287,9 @@ public class Misc {
                 Matcher m = p.matcher(input);
                 m.find();
                 group = m.group(1);
+                if (group == null) {
+                    group = "";
+                }
             }
             catch (IllegalStateException e) {
                 throw new ExecutionException("@strcut could not match pattern " + pattern
