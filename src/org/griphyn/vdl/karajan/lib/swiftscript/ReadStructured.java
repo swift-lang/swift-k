@@ -102,6 +102,9 @@ public class ReadStructured extends SwiftFunction implements SwiftDeserializer {
 	public void readData(DSHandle dest, String path, Node owner, Map<String, Object> options) {
 		File f = new File(path);
 		try {
+		    if (dest.getType().hasMappedComponents()) {
+		        throw new ExecutionException(owner, "Cannot deserialize file-valued data.");
+		    }
 			BufferedReader br = new BufferedReader(new FileReader(f));
 			try {
 				readLines(dest, br, path, owner);
@@ -153,7 +156,13 @@ public class ReadStructured extends SwiftFunction implements SwiftDeserializer {
 				dest.setValue(Boolean.valueOf(s.trim()));
 			}
 			else if (dest.getType().equals(Types.STRING)) {
-				dest.setValue(s);
+			    if (!s.startsWith("\"")) {
+			        throw new ExecutionException("Invalid string value: '" + s + "'. Must begin with a quote.");
+			    }
+			    if (!s.endsWith("\"")) {
+			        throw new ExecutionException("Invalid string value: '" + s + "'. Must end with a quote.");
+			    }
+				dest.setValue(processEscapes(s, owner));
 			}
 			else {
 				throw new ExecutionException(owner, "Don't know how to read type " + dest.getType()
@@ -164,4 +173,52 @@ public class ReadStructured extends SwiftFunction implements SwiftDeserializer {
 			throw new ExecutionException(owner, "Could not convert value to number: " + s);
 		}
 	}
+
+    private String processEscapes(String s, Node owner) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\\') {
+                i++;
+                if (i == s.length()) {
+                    throw new ExecutionException(owner, "Unterminated escape sequence at the end of string '" + s + "'");
+                }
+                c = s.charAt(i);
+                switch (c) {
+                    case 'n':
+                        sb.append('\n');
+                        break;
+                    case 'r':
+                        sb.append('\r');
+                        break;
+                    case 't':
+                        sb.append('\t');
+                        break;
+                    case 'b':
+                        sb.append('\b');
+                        break;
+                    case 'f':
+                        sb.append('\f');
+                        break;
+                    case '"':
+                        sb.append('"');
+                        break;
+                    case '\\':
+                        sb.append('\\');
+                        break;
+                    default: 
+                        throw new ExecutionException(owner, "Invalid escape sequence '\\" + c + "' in string '" + s + "'");
+                }
+            }
+            else if (c == '"') {
+                if (i != s.length() - 1) {
+                    throw new ExecutionException(owner, "Unescaped quote in string literal '" + s + "'");
+                }
+            }
+            else {
+                sb.append(c);
+            }
+        }
+        return s.toString();
+    }
 }
