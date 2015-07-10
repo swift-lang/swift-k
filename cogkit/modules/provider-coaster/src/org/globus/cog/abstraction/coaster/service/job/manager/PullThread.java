@@ -34,7 +34,7 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-class PullThread extends Thread {
+public class PullThread extends Thread {
 
     Logger logger = Logger.getLogger(PullThread.class);
 
