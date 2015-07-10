@@ -2050,13 +2050,15 @@ public class Karajan {
 	                st.setAttribute("datatype", "string");
 	            }
 	            else {
-	                checkTypesInType1ArithmExpr(op, left, right, st);
+	                checkTypesInType1ArithmExpr(op, left, right, st, false);
 	            }
 	            break;
 	        case '-':
 	        case '/':
+	            checkTypesInType1ArithmExpr(op, left, right, st, true);
+	            break;
 	        case '*':
-	            checkTypesInType1ArithmExpr(op, left, right, st);
+	            checkTypesInType1ArithmExpr(op, left, right, st, false);
 	            break;
 	        case '%':
 	            checkTypesInType2ArithmExpr(op, left, right, st);
@@ -2066,7 +2068,7 @@ public class Karajan {
 	    }
 	}
 
-	private void checkTypesInType1ArithmExpr(String op, Type left, Type right, StringTemplate st) 
+	private void checkTypesInType1ArithmExpr(String op, Type left, Type right, StringTemplate st, boolean forceFloatReturn) 
 	        throws CompilationException {
 	    /* 
          * int, int -> int
@@ -2076,7 +2078,12 @@ public class Karajan {
          */
 	    if (left.equals(Types.INT)) {
 	        if (right.equals(Types.INT)) {
-	            st.setAttribute("datatype", "int");
+	            if (forceFloatReturn) {
+	                st.setAttribute("datatype", "float");
+	            }
+	            else {
+	                st.setAttribute("datatype", "int");
+	            }
 	            return;
 	        }
 	        else if (right.equals(Types.FLOAT)) {
