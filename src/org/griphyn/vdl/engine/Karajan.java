@@ -1491,9 +1491,11 @@ public class Karajan {
 	            Type declaredIndexType = declaredArrayType.keyType();
 	            // the index type must match the declared index type,
 	            // unless the declared index type is *
+	            if (declaredIndexType == null) {
+	                declaredIndexType = Types.INT;
+	            }
 						
 	            if (!indexType.equals(declaredIndexType) 
-	                    && declaredIndexType != null 
 	                    && !declaredIndexType.equals(Types.ANY)) {
 	                throw new CompilationException("Supplied array index type (" 
 			        + indexType + ") does not match the declared index type (" + declaredIndexType + ")");
