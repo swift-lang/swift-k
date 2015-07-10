@@ -117,18 +117,27 @@ public class WriteData extends SwiftFunction implements SwiftSerializer {
 		try {
 			BufferedWriter br = new BufferedWriter(new FileWriter(f));
 			try {
-				if (src.getType().isArray()) {
-					// each line is an item
-					writeArray(br, src, options);
-				}
-				else if (src.getType().isPrimitive()) {
-					writePrimitive(br, src);
-				}
-				else {
-					// struct
-					writeStructHeader(src.getType(), br, options);
-					writeStruct(br, src, options);
-				}
+			    if (src.getType().hasMappedComponents()) {
+			        throw new ExecutionException(owner, "Cannot serialize file-valued data");
+			    }
+			    if (src.getType().isComposite()) {
+    				if (src.getType().isArray()) {
+    					// each line is an item
+    					writeArray(br, src, options);
+    				}
+    				else {
+    					// struct
+    					writeStructHeader(src.getType(), br, options);
+    					writeStruct(br, src, options);
+    				}
+			    }
+                else if (src.getType().isPrimitive()) {
+                    writePrimitive(br, src);
+                }
+                else {
+                    // should have been caught by the first if above
+                    throw new ExecutionException(owner, "Internal error. Cannot serialize file-valued data");
+                }
 			}
 			finally {
 				try {
@@ -187,9 +196,16 @@ public class WriteData extends SwiftFunction implements SwiftSerializer {
 
 	private void writeStructHeader(Type type, BufferedWriter br, Map<String, Object> opts) throws IOException {
 	    String sep = getOption("separator", opts);
+	    boolean first = true;
 		for (String name : type.getFieldNames()) {
+	        if (first) {
+                first = false;
+            }
+            else {
+                br.write(sep);
+            }
+
 			br.write(name);
-			br.write(sep);
 		}
 		br.newLine();
 	}
@@ -197,14 +213,31 @@ public class WriteData extends SwiftFunction implements SwiftSerializer {
 	private void writeStruct(BufferedWriter br, DSHandle struct, Map<String, Object> opts) throws IOException {
 		try {
 		    String sep = getOption("separator", opts);
+		    boolean first = true;
 		    for (String name : struct.getType().getFieldNames()) {
+		        if (first) {
+		            first = false;
+		        }
+		        else {
+		            br.write(sep);
+		        }
 				DSHandle child = struct.getField(Path.EMPTY_PATH.addLast(name));
-				br.write(child.getValue().toString());
-				br.write(sep);
+				writeValue(br, child.getValue());
 			}
 			br.newLine();
 		} catch(InvalidPathException e) {
 			throw new ExecutionException("Unexpectedly invalid path", e);
 		}
 	}
+
+    private void writeValue(BufferedWriter br, Object value) throws IOException {
+        if (value instanceof String) {
+            String s = (String) value;
+            s = "\"" + s.replace("\"", "\"\"") + "\"";
+            br.write(s);
+        }
+        else {
+            br.write(value.toString());
+        }
+    }
 }
