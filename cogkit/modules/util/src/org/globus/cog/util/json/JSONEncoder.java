@@ -26,7 +26,7 @@
 /*
  * Created on Jul 30, 2013
  */
-package org.griphyn.vdl.karajan.monitor.monitors.http;
+package org.globus.cog.util.json;
 
 import java.util.Collection;
 import java.util.List;
