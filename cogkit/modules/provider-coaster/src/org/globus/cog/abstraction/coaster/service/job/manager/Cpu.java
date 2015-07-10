@@ -49,7 +49,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
     private final List<Job> done;
     private Job running;
     private Block block;
-    BlockQueueProcessor bqp;
+    private AbstractBlockWorkerManager bqp;
 
     private Node node;
     private Time starttime, endtime, timelast, donetime;

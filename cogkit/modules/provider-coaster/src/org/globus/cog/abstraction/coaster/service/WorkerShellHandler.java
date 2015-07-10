@@ -29,7 +29,7 @@
 package org.globus.cog.abstraction.coaster.service;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
+import org.globus.cog.abstraction.coaster.service.job.manager.AbstractBlockWorkerManager;
 import org.globus.cog.abstraction.impl.execution.coaster.WorkerShellCommand;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.CoasterChannel;
@@ -56,7 +56,7 @@ public class WorkerShellHandler extends RequestHandler implements Callback {
         int sep = id.indexOf(':');
         String blockID = id.substring(0, sep);
         String workerID = id.substring(sep + 1);
-        BlockQueueProcessor bqp = service.getLocalService().getQueueProcessor(blockID);
+        AbstractBlockWorkerManager bqp = service.getLocalService().getQueueProcessor(blockID);
         
         CoasterChannel worker = bqp.getWorkerChannel(blockID, workerID);
         if (worker == null) {

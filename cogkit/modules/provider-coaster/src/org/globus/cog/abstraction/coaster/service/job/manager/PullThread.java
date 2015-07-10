@@ -63,11 +63,11 @@ class PullThread extends Thread {
      */
     private long last;
     
-    private final BlockQueueProcessor bqp;
+    private final AbstractQueueProcessor bqp;
     
     private boolean done;
 
-    public PullThread(BlockQueueProcessor bqp) {
+    public PullThread(AbstractQueueProcessor bqp) {
         this.bqp = bqp;
         setName("PullThread");
         setDaemon(true);

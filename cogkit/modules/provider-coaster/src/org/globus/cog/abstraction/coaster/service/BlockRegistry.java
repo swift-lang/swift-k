@@ -31,29 +31,30 @@ package org.globus.cog.abstraction.coaster.service;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.globus.cog.abstraction.coaster.service.job.manager.AbstractBlockWorkerManager;
 import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class BlockRegistry implements RegistrationManager {
-    private Map<String, BlockQueueProcessor> managers;
+    private Map<String, AbstractBlockWorkerManager> managers;
     private BlockQueueProcessor singleQP; 
     
     public BlockRegistry() {
-        this.managers = new HashMap<String, BlockQueueProcessor>();
+        this.managers = new HashMap<String, AbstractBlockWorkerManager>();
     }
     
-    public void addBlock(String blockId, BlockQueueProcessor bqp) {
+    public void addBlock(String blockId, AbstractBlockWorkerManager bqp) {
         synchronized(managers) {
             managers.put(blockId, bqp);
         }
     }
     
-    private BlockQueueProcessor get(String blockId) {
+    private AbstractBlockWorkerManager get(String blockId) {
         if (singleQP != null) {
             return singleQP;
         }
         synchronized(managers) {
-            BlockQueueProcessor rm = managers.get(blockId);
+            AbstractBlockWorkerManager rm = managers.get(blockId);
             if (rm == null) {
                 throw new IllegalArgumentException("No such block registered with dispatcher: " + blockId);
             }
@@ -78,7 +79,7 @@ public class BlockRegistry implements RegistrationManager {
         return get(id).nextId(id);
     }
 
-    public BlockQueueProcessor getQueueProcessor(String blockID) {
+    public AbstractBlockWorkerManager getQueueProcessor(String blockID) {
         return get(blockID);
     }
 

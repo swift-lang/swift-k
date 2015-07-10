@@ -42,6 +42,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.AbstractBlockWorkerManager;
 import org.globus.cog.abstraction.coaster.service.job.manager.Block;
 import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.coaster.ConnectionHandler;
@@ -96,7 +97,7 @@ public class LocalTCPService implements Registering, Service, Runnable {
         return wid;
     }
     
-    public void registerBlock(Block block, BlockQueueProcessor bqp) {
+    public void registerBlock(Block block, AbstractBlockWorkerManager bqp) {
         blockRegistry.addBlock(block.getId(), bqp);
     }
     
@@ -104,7 +105,7 @@ public class LocalTCPService implements Registering, Service, Runnable {
         blockRegistry.removeBlock(block.getId());
     }
     
-    public BlockQueueProcessor getQueueProcessor(String blockId) {
+    public AbstractBlockWorkerManager getQueueProcessor(String blockId) {
         return blockRegistry.getQueueProcessor(blockId);
     }
 

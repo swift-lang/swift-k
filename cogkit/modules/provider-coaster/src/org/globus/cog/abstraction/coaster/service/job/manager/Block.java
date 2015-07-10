@@ -72,7 +72,7 @@ public class Block implements StatusListener, Comparable<Block> {
     private final List<Cpu> cpus;
     private final List<Node> nodes;
     private boolean running = false, failed, shutdown, suspended;
-    private BlockQueueProcessor bqp;
+    private AbstractBlockWorkerManager bqp;
     private BlockTask task;
     private final String id;
     private int doneJobCount;
@@ -130,7 +130,7 @@ public class Block implements StatusListener, Comparable<Block> {
         }
     }
 
-    public BlockQueueProcessor getAllocationProcessor() {
+    public AbstractBlockWorkerManager getAllocationProcessor() {
         return bqp;
     }
 
