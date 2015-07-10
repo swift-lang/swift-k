@@ -1,10 +1,15 @@
 var visibleSection = null;
 
+function getFirstSectionId() {
+	var content = document.getElementById("content");
+	return content.children[0].children[0].id;
+}
+
 function getCurrentSection() {
 	var loc = window.location.href;
 	var s = loc.split("#", 2);
 	if (s.length == 1) {
-		return "_overview";
+		return getFirstSectionId();
 	}
 	else {
 		var t = s[1].split("?");

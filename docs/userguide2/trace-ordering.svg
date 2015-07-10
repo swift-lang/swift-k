@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   version="1.1"
+   width="700"
+   height="280"
+   id="svg2">
+  <defs
+     id="defs4">
+    <linearGradient
+       id="linearGradient4453">
+      <stop
+         id="stop4455"
+         style="stop-color:#000000;stop-opacity:0"
+         offset="0" />
+      <stop
+         id="stop4461"
+         style="stop-color:#000000;stop-opacity:0.63003665"
+         offset="0" />
+      <stop
+         id="stop4459"
+         style="stop-color:#000000;stop-opacity:0.82417583"
+         offset="0.04" />
+      <stop
+         id="stop4457"
+         style="stop-color:#000000;stop-opacity:0"
+         offset="1" />
+    </linearGradient>
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       id="Arrow1Lend"
+       style="overflow:visible">
+      <path
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         id="path3843"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt" />
+    </marker>
+    <linearGradient
+       x1="409.5"
+       y1="87.5"
+       x2="565.5"
+       y2="87.5"
+       id="linearGradient4451"
+       xlink:href="#linearGradient4453"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.99892167,0,0,1.3636899,0.52568712,333.04935)" />
+    <linearGradient
+       x1="409.5"
+       y1="87.5"
+       x2="565.5"
+       y2="87.5"
+       id="linearGradient4451-3"
+       xlink:href="#linearGradient4453-3"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.99892167,0,0,1.3636899,0.52568712,333.04935)" />
+    <linearGradient
+       id="linearGradient4453-3">
+      <stop
+         id="stop4455-2"
+         style="stop-color:#000000;stop-opacity:0"
+         offset="0" />
+      <stop
+         id="stop4461-0"
+         style="stop-color:#000000;stop-opacity:0.63003665"
+         offset="0" />
+      <stop
+         id="stop4459-6"
+         style="stop-color:#000000;stop-opacity:0.82417583"
+         offset="0.04" />
+      <stop
+         id="stop4457-4"
+         style="stop-color:#000000;stop-opacity:0"
+         offset="1" />
+    </linearGradient>
+    <linearGradient
+       x1="409.5"
+       y1="87.5"
+       x2="565.5"
+       y2="87.5"
+       id="linearGradient4480"
+       xlink:href="#linearGradient4453-3"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.99892167,0,0,1.3636899,125.18432,292.88871)" />
+  </defs>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(0,-772.36218)"
+     id="layer1">
+    <rect
+       width="700"
+       height="280"
+       x="0"
+       y="0"
+       transform="translate(0,772.36218)"
+       id="rect4618"
+       style="fill:#ffffff;fill-opacity:1;stroke:none" />
+    <g
+       transform="translate(-100,415)"
+       id="g4589">
+      <path
+         d="m 260.48387,562.84605 458.87097,0"
+         id="path3066"
+         style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend)" />
+      <text
+         x="690"
+         y="592.36218"
+         id="text4280"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="690"
+           y="592.36218"
+           id="tspan4282"
+           style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Gill Sans;-inkscape-font-specification:Gill Sans">time</tspan></text>
+      <text
+         x="260"
+         y="542.36218"
+         id="text4284"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="260"
+           y="542.36218"
+           id="tspan4286"
+           style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;text-anchor:end;font-family:Gill Sans;-inkscape-font-specification:Gill Sans">a</tspan></text>
+      <text
+         x="260"
+         y="502.36218"
+         id="text4284-1"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="260"
+           y="502.36218"
+           id="tspan4286-8"
+           style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;text-anchor:end;font-family:Gill Sans;-inkscape-font-specification:Gill Sans">b</tspan></text>
+      <text
+         x="260"
+         y="462.36218"
+         id="text4284-1-0"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="260"
+           y="462.36218"
+           id="tspan4286-8-6"
+           style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;text-anchor:end;font-family:Gill Sans;-inkscape-font-specification:Gill Sans">trace(a)</tspan></text>
+      <text
+         x="260"
+         y="422.36218"
+         id="text4284-1-0-4"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="260"
+           y="422.36218"
+           id="tspan4286-8-6-1"
+           style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;text-anchor:end;font-family:Gill Sans;-inkscape-font-specification:Gill Sans">trace(b)</tspan></text>
+      <rect
+         width="130"
+         height="20"
+         x="280"
+         y="235"
+         transform="translate(0,287.36218)"
+         id="rect4359"
+         style="fill:#ff7c42;fill-opacity:1" />
+      <rect
+         width="258.2258"
+         height="20"
+         x="280.04443"
+         y="482.71802"
+         id="rect4359-7"
+         style="fill:#ff7c42;fill-opacity:1" />
+      <rect
+         width="289.42285"
+         height="20"
+         x="410.32257"
+         y="522.36218"
+         id="rect4359-3"
+         style="fill:#85d57c;fill-opacity:1" />
+      <rect
+         width="161.72755"
+         height="20"
+         x="538.40948"
+         y="482.70712"
+         id="rect4359-3-6"
+         style="fill:#85d57c;fill-opacity:1" />
+      <rect
+         width="420"
+         height="20"
+         x="280"
+         y="155"
+         transform="translate(0,287.36218)"
+         id="rect4415"
+         style="fill:none;stroke:#000000;stroke-opacity:1" />
+      <rect
+         width="420"
+         height="20"
+         x="280.44177"
+         y="402.2417"
+         id="rect4415-0"
+         style="fill:none;stroke:#000000;stroke-opacity:1" />
+      <rect
+         width="154.83286"
+         height="20.455349"
+         x="410.08356"
+         y="442.14453"
+         id="rect4435"
+         style="fill:url(#linearGradient4451);fill-opacity:1;stroke:none" />
+      <rect
+         width="154.83286"
+         height="20.455349"
+         x="534.74219"
+         y="401.98389"
+         id="rect4435-1"
+         style="fill:url(#linearGradient4480);fill-opacity:1;stroke:none" />
+      <text
+         x="410"
+         y="497.36218"
+         id="text4503"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="410"
+           y="497.36218"
+           id="tspan4505"
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Gill Sans;-inkscape-font-specification:Gill Sans">open</tspan></text>
+      <text
+         x="345"
+         y="537.36218"
+         id="text4503-4"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="345"
+           y="537.36218"
+           id="tspan4505-2"
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Gill Sans;-inkscape-font-specification:Gill Sans">open</tspan></text>
+      <text
+         x="620"
+         y="497.36218"
+         id="text4503-40"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="620"
+           y="497.36218"
+           id="tspan4505-6"
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Gill Sans;-inkscape-font-specification:Gill Sans">closed</tspan></text>
+      <text
+         x="565"
+         y="537.36218"
+         id="text4503-40-8"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="565"
+           y="537.36218"
+           id="tspan4505-6-2"
+           style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Gill Sans;-inkscape-font-specification:Gill Sans">closed</tspan></text>
+    </g>
+  </g>
+</svg>

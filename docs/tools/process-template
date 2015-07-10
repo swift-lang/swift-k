@@ -1,0 +1,279 @@
+#!/usr/bin/python
+
+import sys
+import traceback
+
+class Ref:
+	def __init__(self, name, ix):
+		self.name = name
+		self.ix = ix
+
+class State:
+	def __init__(self, outf, basename, inf):
+		self.basename = basename
+		self.inFnOrConst = False
+		self.inSubsection = False
+		self.outf = outf
+		self.allConstants = []
+		self.allFunctions = []
+		self.allMappers = []
+		self.functionsByTopic = {}
+		self.currentTopic = None
+		self.orderedTopics = []
+		self.ix = 1
+		self.inputStack = []
+		self.pushInput(inf)
+	
+	def pushInput(self, inf):
+		self.inf = inf
+		self.inputStack.append(inf)
+	
+	def popInput(self):
+		f = self.inf
+		self.inputStack.pop()
+		if len(self.inputStack) > 0:
+			self.inf = self.inputStack[-1]
+			f.close()
+			return True
+		else:
+			return False
+	
+	def process(self, line):
+		if line == "":
+			self.outf.write(line)
+		elif line[0] == "@":
+			tokenEnd = line.find(" ")
+			if tokenEnd == -1:
+				self.expand(line[1:].strip(), "\n")
+			else:
+				self.expand(line[1:tokenEnd], line[tokenEnd:].lstrip())
+		else:
+			self.outf.write(line)
+	
+	def endFnOrConst(self):
+		if self.inFnOrConst:
+			self.inFnOrConst = False
+			self.outf.write("\n====\n\n")
+	
+	def endSubsection(self):
+		self.endFnOrConst()
+		if self.inSubsection:
+			self.endBlock()
+			self.inSubsection = False
+	
+	def getConstantName(self, s):
+		semi = s.rfind(";")
+		if semi == -1:
+			raise ValueError("Missing semicolon in constant definition: '" + s + "'")
+		
+		afterSemi = s[semi + 1:];
+		if afterSemi.strip() != "":
+			raise ValueError("Spurious text after semicolon in constant definition: '" + afterSemi + "'")
+		
+		space = s.rfind(" ", 0, semi)
+		
+		if space == -1:
+			raise ValueError("Invalid constant definition: '" + s + "'. Format is: [<modifier>] <type> <name>;")
+		
+		return s[space + 1:semi]
+	
+	def getFunctionName(self, s):
+		paren = s.find("(")
+		if paren == -1:
+			raise ValueError("Missing '(' in: '" + s + "'")
+			
+		beforeParen = s[0:paren].strip()
+		
+		space = beforeParen.rfind(" ")
+		
+		return beforeParen[space + 1:]
+	
+	def getMapperName(self, s):
+		langle = s.find("<")
+		if langle == -1:
+			raise ValueError("Missing '<' in '" + s + "'")
+		
+		col = s.find(";")
+		if col == -1:
+			raise ValueError("Missing ';' in '" + s + "'")
+		return s[langle + 1:col]
+	
+	def startBlock(self, name):
+		self.outf.write("\n\n." + name + "\n****\n\n")
+	
+	def endBlock(self):
+		self.outf.write("\n\n****\n\n\n")
+		
+	def startSubsection(self, title):
+		self.endSubsection()
+		self.startBlock(title)
+		self.inSubsection = True
+		
+	
+	def setCurrentTopic(self, topic):
+		self.currentTopic = topic
+		self.orderedTopics.append(topic)
+	
+	def expand(self, token, rest):
+		if token == "SECTION":
+			self.startSubsection(rest.strip())
+		elif token == "CONSTANTS" or token == "FUNCTIONS":
+			self.endSubsection()
+			if token == "CONSTANTS":
+				self.startSubsection("Constants")
+			else:
+				pass
+		elif token == "CONST" or token == "FN" or token == "DEPRECATEDFN" or token == "MAPPER":
+			self.endFnOrConst()
+			io = None
+			if token == "CONST":
+				name = self.getConstantName(rest)
+			elif token == "MAPPER":
+				name = self.getMapperName(rest)
+				langle = rest.find("<")
+				io = rest[0:langle].strip()
+				rest = rest[langle:]
+			else:
+				name = self.getFunctionName(rest)
+			self.outf.write("[[" + self.basename + ":" + name + "-" + str(self.ix) + "]]\n")
+			if token == "DEPRECATEDFN":
+				self.outf.write("[caption=\"Deprecated: \"]\n")
+			else:
+				self.outf.write("[caption=\"\"]\n")
+			self.outf.write("." + name + "\n")
+			self.outf.write("====\n\n")
+			if io != None:
+				if io.find("I") != -1:
+					self.outf.write("image:input-mapper.svg[height=\"18\"] ")
+				if io.find("O") != -1:
+					self.outf.write("image:output-mapper.svg[height=\"18\"] ")
+				self.outf.write("\n\n")
+			self.outf.write("[listing, swiftdoc]\n")
+			self.outf.write("----\n")
+				
+			self.outf.write(rest.replace("\\n", "\n\t"))
+			self.outf.write("----\n\n")
+			self.inFnOrConst = True
+			self.ix = self.ix + 1
+		elif token == "TOPIC":
+			pass
+		elif token == "INCLUDE":
+			self.pushInput(open(rest.strip(), "r"))
+		else:
+			pass
+	
+	def scanForNames(self, line):
+		if line == "":
+			pass
+		elif line[0] == "@":
+			tokenEnd = line.find(" ")
+			if tokenEnd == -1:
+				self.scanLineForNames(line[1:], "\n")
+			else:
+				self.scanLineForNames(line[1:tokenEnd], line[tokenEnd:].lstrip())
+		else:
+			pass
+	
+	def scanLineForNames(self, token, rest):
+		if token == "SECTION":
+			self.setCurrentTopic(rest.strip())
+			self.functionsByTopic[self.currentTopic] = []
+		elif token == "CONST":
+			self.allConstants.append(Ref(self.getConstantName(rest), self.ix))
+			self.ix = self.ix + 1
+		elif token == "MAPPER":
+			self.allMappers.append(Ref(self.getMapperName(rest), self.ix))
+			self.ix = self.ix + 1
+		elif token == "FN" or token == "DEPRECATEDFN":
+			name = self.getFunctionName(rest)
+			ref = Ref(name, self.ix);
+			self.ix = self.ix + 1
+			self.allFunctions.append(ref)
+			self.functionsByTopic[self.currentTopic].append(ref)
+		elif token == "INCLUDE":
+			self.pushInput(open(rest.strip(), "r"))
+	
+	def outRefs(self, l, sort):
+		if sort:
+			l.sort(key = lambda ref: ref.name)
+		first = True
+		for c in l:
+			if first:
+				first = False
+			else:
+				self.outf.write(", ")
+			self.outf.write("<<" + self.basename + ":" + c.name + "-" + str(c.ix) + ", " + c.name + ">>")
+
+	def writeHeading(self, text, char):
+		text = text.strip()
+		self.outf.write("\n\n\n")
+		self.outf.write(text)
+		self.outf.write("\n")
+		for c in text:
+			self.outf.write(char)
+		self.outf.write("\n\n")
+	
+	def generateSummary(self):
+		self.writeHeading("Summary", "^")
+		if len(self.allConstants) > 0:
+			self.startSubsection("All constants")
+			self.outRefs(self.allConstants, True)
+		
+		if len(self.allFunctions) > 0:
+			self.startSubsection("All functions")
+			self.outRefs(self.allFunctions, True)
+		
+		if len(self.allMappers) > 0:
+			self.startSubsection("All mappers")
+			self.outRefs(self.allMappers, False)
+
+		if len(self.allFunctions) > 0:
+			self.startSubsection("Functions by topic")
+			for key in self.orderedTopics:
+				self.outf.write("\n" + key + ":: ")
+				self.outRefs(self.functionsByTopic[key], False)
+		self.endSubsection()
+		self.ix = 1
+	
+	def readLine(self):
+		line = self.inf.readline()
+		if line == "":
+			if self.popInput():
+				return self.readLine()
+			else:
+				return ""
+		else:
+			return line
+	
+	def run(self):
+		line = self.readLine()
+		while line != "":
+			self.scanForNames(line)
+			line = self.readLine()
+
+		self.generateSummary()
+
+		self.inf.seek(0)
+		self.pushInput(self.inf)
+
+		line = self.readLine()
+		while line != "":
+			self.process(line)
+			line = self.readLine()
+
+		self.endSubsection()
+
+		
+infn = sys.argv[1]
+
+basename = infn[:-4]
+outfn = basename + ".asc"
+
+inf = open(infn, "r")
+outf = open(outfn, "w")
+
+state = State(outf, basename, inf)
+state.run()
+
+inf.close()
+outf.close()

@@ -1,0 +1,12 @@
+Swift User Guide
+================
+
+:toc:
+:icons:
+:numbered:
+
+include::language.asc[]
+include::library.asc[]
+include::runtime.asc[]
+include::running.asc[]
+

@@ -1,0 +1,461 @@
+@CONSTANTS
+
+@CONST global float PI;
+
+The ratio of the circumference of a circle to its diameter, as accurately as
+can be represented by a Swift +float+.
+
+@CONST global float E;
+
+The base of the natural logarithm, as accurately as can be represented by a 
+Swift +float+.
+
+
+@FUNCTIONS
+
+@SECTION Trigonometric Functions
+
+@FN float sin(float a)
+Returns the sine of +a+ radians.
+
+@FN float cos(float a)
+Returns the cosine of +a+ radians.
+
+
+@FN float tan(float a)
+Returns the tangent of +a+ radians.
+
+@FN float asin(float x)
+Returns the arc sine of +x+. The result is in the interval 
+asciimath:[\[-pi/2, pi/2\]].
+
+@FN float acos(float x)
+Returns the arc cosine of +x+. The result is in the interval 
+asciimath:[\[0, pi\]]
+
+@FN float atan(float x)
+Returns the arc tangent of +x+. The result is in the interval 
+asciimath:[\[-pi/2, pi/2\]].
+
+@FN float atan2(float y, float x)
+Returns the polar angle of a point at coordinates asciimath:[(x, y)]. The
+returned value is in the interval asciimath:[\[-pi, pi\]].
+
+@SECTION Exponentials/Powers
+
+@FN float exp(float x)
+Returns asciimath:[e^x]
+
+@FN float ln(float x)
+Returns the natural logarithm of +x+. If +x+ is zero, the result is negative
+infinity. If +x+ is less than zero, the result is +NaN+.
+
+@FN float log(float x, float b)
+Returns the base +b+ logarithm of +x+. If +x+ is zero and +b+ is strictly 
+positive, the result is negative infinity. If +x+ or +b+ are less than zero, the
+result is +NaN+.
+
+@FN float log10(float x)
+Returns tbe base 10 logarithm of +x+. If +x+ is zero, the result is negative
+infinity. If +x+ is less than zero, the result is +NaN+.
+
+@FN pow(float base, float exponent)
+Returns asciimath:["base"^"exponent"]. If +base+ has a non-zero fractional
+part and is negative and if the exponent has a non-zero fractional part, then
+the result is +NaN+.
+
+@FN sqrt(float x)
+Returns the square root of +x+. If +x+ is less than zero, the result is +NaN+.
+
+@FN cbrt(float x)
+Returns the cube root of +x+.
+
+@SECTION Rounding
+
+@FN float ceil(float x)
+Returns the smallest number (closest to negative infinity) with a zero 
+fractional part that is larger than +x+.
+
+@FN float floor(float x)
+Returns the largest number (closest to positive infinity) with a zero fractional
+part that is smaller than +x+.
+
+@FN float round(float x)
+Returns the closest number to +x+ that has a zero fractional part. If two 
+numbers with a zero fractional part are equally close to +x+, the result is the
+largest of the two.
+
+@SECTION Other Math Functions
+
+@FN int min(int a, int b)
+Returns the smallest of +a+ and +b+
+
+@FN float min(float a, float b)
+Returns the smallest of +a+ and +b+
+
+@FN int max(int a, int b)
+Returns the largest of +a+ and +b+
+
+@FN float max(float a, float b)
+Returns the largest of +a+ and +b+
+
+@FN int abs(int z)
+Returns the absolute value of +z+
+
+@FN float abs(float z)
+Returns the absolute value of +z+
+
+@FN boolean isNaN(float x)
+Returns true if +x+ is +NaN+. Please note that if some +float+ variable +x+ 
+contains a +NaN+, then +x == x+ is +false+.
+
+@SECTION Random Numbers
+
+@FN int randomInt(int seed, int sequenceNum, int min, int max)
+Returns a uniformly distributed random +integer+ in the interval 
+asciimath:[\["min", "max"\]]. Each value of +seed+ generates a set of random
+integers, and +sequenceNum+ indexes this set. The value of +sequenceNum+ does
+not need to be positive. Swift guarantees that for a given version of the
+runtime, and a given set of parameters (+seed+, +sequenceNum+, +min+, 
++max+), the result of invoking this function will be the same.
+
+@FN float randomFloat(int seed, int sequenceNum, float min, float max)
+Returns a uniformly distributed random +float+ in the interval 
+asciimath:[\["min", "max"\]]. Each value of +seed+ generates a set of random
+numbers, and +sequenceNum+ indexes this set. The value of +sequenceNum+ does
+not need to be positive. Swift guarantees that for a given version of the
+runtime, and a given set of parameters (+seed+, +sequenceNum+, +min+, 
++max+), the result of invoking this function will be the same.
+
+@FN float randomGaussian(int seed, int sequenceNum)
+Returns a normally distributed +float+ with zero mean and variance equal to one.
+Each value of +seed+ generates a set of random
+numbers, and +sequenceNum+ indexes this set. The value of +sequenceNum+ does
+not need to be positive. Swift guarantees that for a given version of the
+runtime, and a given set of parameters (i.e. +seed+, +sequenceNum+), the result 
+of invoking this function will be the same.
+
+@SECTION Statistics
+
+@FN int sum(int[] a)
+Returns the sum of all the items in the array +a+
+
+@FN float sum(float[] a)
+Returns the sum of all the items in the array +a+
+
+@FN float avg(int[] a)
+Returns the average of all the items in the array +a+
+
+@FN float avg(float[] a)
+Returns the average of all the items in the array +a+
+
+@FN float moment(int[] a, int n, float center)
+Returns the n-th moment of the items in array +a+ about the +center+. The n-th 
+moment is defined as asciimath:[1/("length"(a)) sum_i (a\[i\] - "center")^n]
+
+@FN float moment(float[] a, int n, float center)
+Returns the n-th moment of the items in array +a+ about the +center+. The n-th 
+moment is defined as asciimath:[1/("length"(a)) sum_i (a\[i\] - "center")^n]
+
+@SECTION Conversion Functions
+
+@FN int toInt(float x)
+Converts a +float+ to an +int+ rounding up. In other words, it returns the 
+integer value that is closest to +x+. If there are two integer values that are
+equally close to +x+, +toInt+ returns the largest fo them.
+
+@FN float toFloat(int z)
+Converts an +int+ to a +float+
+
+@FN int parseInt(string s, int base = 10)
+Converts the string +s+ considered to be expressed in base +base+ to an integer.
+If the +base+ is less than two, it returns an error. If +s+ cannot be correctly
+interpreted as an integer in the given base, +parseInt+ returns an error.
+
+@FN float parseFloat(string s)
+Converts the string +s+ into a +float+. If +s+ does not hold a valid 
+representation of a floating point number, +parseFloat+ returns an error.
+
+@FN string toString(int z)
+Returns the +string+ representation of the integer +z+
+
+@FN string toString(float x)
+Returns the +string+ representation of the floating point number +x+
+
+@FN string toString(boolean b)
+Returns +"false"+ if +b+ is +false+ and +"true"+ otherwise.
+
+@SECTION String Functions
+
+For all the string functions, the indices are zero-based. That is, the first
+character in a string is located at index zero.
+
+@INCLUDE strcat.cdef
+
+@FN int length(string s)
+Returns the number of characters in the string +s+
+
+@FN string[] split(string s, string delimiter)
+Splits the string +s+ around +delimiter+. The delimiter is a plain string. If
+the delimiter cannot be found in +s+, it returns an array with a single item
+equal to +s+. Consecutive delimiters are merged (i.e. treated as a single
+delimiter).
+
+@FN string[] split(string s, string delimiter, int maxSplit)
+Like +split+ above, except that the splitting stops when the result reaches
++maxSplit+ items, in which case the last item in the result will contain the 
+entire remaining part of +s+. If +maxSplit+ is one or less, it returns an
+array of size one with the sole item containing the entire string +s+.
+
+@FN string[] splitRe(string s, string regexp)
+Splits +s+ around matches of the regular expression +regexp+ and returns the
+resulting array. If +regexp+ cannot be found in +s+, +splitRe+ returns an array
+of length one containing the entire string +s+. Consecutive delimiters are not
+explicitly merged, but the regular expression can contain quantifiers that 
+control this behaviour.
+
+@FN string[] splitRe(string s, string regexp, int maxSplit)
+Like +splitRe+ above, except that the splitting stops when the result reaches
++maxSplit+ items, in which case the last item in the result will contain the 
+entire remaining part of +s+. If +maxSplit+ is one or less, it returns an
+array of size one with the sole item containing the entire string +s+.
+
+@FN string trim(string s)
+Returns a copy of +s+ with leading and trailing whitespace removed.
+
+@FN string substring(string s, int start)
+Returns a substring of +s+ starting at index +start+ (inclusive) and continuing 
+until the end of +s+. If +start+ is negative or equal to or larger than the 
+length of +s+, +substring+ returns an error.
+
+@FN string substring(string s, int start, int end)
+Returns a substring of +s+ starting at index +start+ (inclusive) and
+ending at +end+ (exclusive). If +start+ or +end+ are negative, the result is an
+error. If +start+ is greater or equal than +end+, the result is an error. If 
++end+ is greater or equal than the length of +s+, the result is an error.
+
+@FN string toUpper(string s)
+Returns a copy of +s+ with all lower case characters replaced by the 
+corresponding upper case characters.
+
+@FN string toLower(string s)
+Returns a copy of +s+ with all upper case characters replaced by the 
+corresponding lower case characters.
+
+@FN string join(string[] sa, string delimiter)
+Returns a string formed by concatenating all the items in the array +sa+ in the
+order of their indices, separaed by +delimiter+. If the length of +sa+ is zero,
++join+ returns an empty string.
+
+@FN string replaceAll(string s, string find, string replacement)
+Returns a string formed by replacing all occurrences of +find+ in +s+ with 
++replacement+.
+
+@FN string replaceAll(string s, string find, string replacement, int start, int end)
+Returns a string formed by replacing all occurrences of +find+ in +s+ with 
++replacement+. The searches are only performed in the region of +s+ 
+contained between +start+ (inclusive) and +end+ (exclusive)
+
+@FN string replaceAllRe(string s, string findRe, string replacementRe)
+Returns a string formed by replacing all matches of +findRe+ in +s+ by
++replacementRe+. The +replacementRe+ can contain references to capture groups
+in +findRe+. References are introduced using the dollar sign (+$+) and can
+either be named references (e.g., +${groupName}+) or positional (e.g. $1, $2, 
+etc.). A literal dollar sign can be inserted in the replacement string by
+escaping it with a backslash: "\\$".
+
+@FN string replaceAllRe(string s, string findRe, string replacementRe, int start, int end)
+Like +replaceAllRe+ above, except only search for +findRe+ in the region of +s+
+between +start+ (inclusive) and +end+ (exclusive).
+
+@FN int indexOf(string s, string find, int start)
+Searches for the first occurrence of +find+ in +s+, starting at index +start+.
+If +find+ is not found in +s+, +indexOf+ returns +-1+. If +start+ is less than 
+zero or greater or equal to the length of +s+, an error is returned.
+
+@FN int indexOf(string s, string find, int start, int end)
+Searches for the first occurrence of +find+ in a region of +s+ starting at 
+index +start+ (inclusive) and ending at index +end+ (exclusive). If +find+ is 
+not found in +s+, +indexOf+ returns +-1+. If +start+ or +end+ are negative, the 
+result is an error. If +start+ is greater or equal than +end+, the result is an 
+error. If +end+ is greater or equal than the length of +s+, the result is an 
+error.
+
+@FN int lastIndexOf(string s, string find, int start)
+Searches backwards for the last occurrence of +find+ in +s+ starting at index
++start+ (inclusive) and going backwards. If +start+ is +-1+, +lastIndexOf+ 
+starts searching at the end of the string. If the search string is not found, 
++lastIndexOf+ returns +-1+. If +start+ is invalid (less than zero or equal to 
+or larger than the length of +s+), lastIndexOf returns an error.
+
+@FN int lastIndexOf(string s, string find, int start, int end)
+Searches backwards for the last occurrence of +find+ in +s+ starting at index
++start+ (inclusive) and going backwards down to index +end+ (exclusive). If 
++start+ is +-1+, +lastIndexOf+ starts searching at the end of the string. If the
+search string is not found in the search region, +lastIndexOf+ returns +-1+. If 
++start+ or +end+ are invalid (less than zero or equal to or larger than
+the length of +s+) or if end is larger than or equal to start, lastIndexOf 
+returns an error.
+
+@FN boolean matches(string s, string re)
+Returns +true+ if the string +s+ matches the regular expression +re+.
+
+@FN string[] findAllRe(string s, string re)
+Returns all capture groups that result from the search of +re+ in +s+ in an
+array. The first element of the array (with index zero) will contain the entire
+matched string.
+
+@SECTION Array Functions
+
+@FN int length(T[K] a)
+Returns the length of +a+, waiting for +a+ to be closed.
+
+@SECTION I/O Functions
+
+@FN <T> T read(file f, string format = "None", any[string] options = {})
+Reads data from +file+, which can either be a string representing a local 
+filesystem path or a <<language:mapped-value, mapped value>>. The valid formats
+are *None*, *FieldAndValue*, *FV*, and *CSV* and are explained below.
+
+*None*:: The contents of the file is a primitive value with the following 
+format:
++
+--
+int:::: an <<language:int-literal, int literal>>
+float:::: a <<language:float-literal, float literal>>
+boolean:::: +true+ or +false+
+string:::: anything; the entire content of the file will be read into the string
+
+If the return type is a composite type (array or struct) or if the return type
+is a mapped type, +read()+ returns an error.
+
+The +options+ parameter is ignored.
+--
+
+*FieldAndValue*:: The file is formatted as field value pairs separated by an 
+equal sign that is optionally surrounded by whitespace. The field is the 
+qualifying part of an <<language:lvalue, lvalue>> with array keys restricted to 
++int+, +float+ or +string+ primitive literals. If there is no qualifying part, 
+such as when reading a variable that is of a primitive type, the field must be
+the dollar sign (+$+). The allowed values are primitive literals. For example, 
+given the following Swift program:
++
+--
+[listing, swift]
+----
+type struct {
+    int a;
+    float b;
+    string c;
+    boolean d;
+}
+
+struct[] a = read("file1.dat", format = "FieldAndValue");
+int n = read("file2.dat", format = "FieldAndValue");
+----
+
+then +file1.dat+ could consist of the following:
+
+[listing, shell]
+----
+[0].a = 1
+[0].b = 2.3
+[0].c = "Some string\n"
+[0].d = false
+----
+
+while +file2.dat+ could have the following contents:
+
+[listing, shell]
+----
+$ = 10
+----
+
+If the return type +T+ is a mapped type or if +T+ is a type that contains
+fields or items that are of a mapped type, +read()+ returns an error.
+
+The +options+ parameter is ignored.
+--
+
+*FV*:: An alias for *FieldAndValue*
+
+*CSV*:: The format is a variation of the Comma-separated values format. The 
+default separator is a space character. Different choices can be specified 
+using +"separator"+ key for the +options+ (e.g. +options = {"separator": ","}+).
+The CSV format supports the following data types:
++
+--
++int+, +float+, +boolean+:::: The file contains a value literal
++string+:::: The entire contents of the file represents a string
+Arrays of primitive types:::: The file contains one primitive literal on each
+line. If the array is an array of strings, each line represents the value of
+the string without quotes
+Structures:::: The first line represents a header that must consist of the
+structure field names separated by the separator. The second line is a data
+line consisting of value literals separated by the separator. String value 
+literals should be double-quoted if they contain the separator. If a string 
+literal contains a double quote character, it must appear as a sequence of
+two double-quotes (e.g. +"A string with ""quotes"""+). If a string literal is
+quoted, whitespace between the separator and the starting and terminating quotes
+is ignored. If a string literal is not quoted, then whitespace is significant.
+Structure arrays:::: The first line represents a header as above. Subsequent 
+lines represent individual items in the array and must follow the format of the
+data lines in simple structures.
+
+If the return type +T+ is a mapped type or if +T+ is a type that contains 
+fields that are of a mapped type, +read()+ returns an error.
+--
+
+@FN file write(any data, string format = "None", any[string] options = {})
+Writes data to a file and returns a file value representing the written
+file. The +format+ and +options+ are as in <<library-v2:read, +read+>>
+
+@FN getEnv(string name)
+Returns the value of the environment variable represented by +name+. If the 
+environment variable is not defined, +getEnv+ returns an empty string.
+
+@FN trace(any... args)
+Waits for all +args+ to be closed and prints a string representation
+of the values of each of them.
+
+@INCLUDE filenames.cdef
+
+@INCLUDE arg-fns.cdef
+
+@SECTION Assertions
+
+Assertions provide a mechanism to check the correctness of Swift programs. If
+an assertion fails, the Swift program's execution is immediately terminated and
+the value of the +msg+ parameter is printed on the console.
+
+@FN assert(boolean condition, string msg = "assertion failed")
+Asserts that the value of +condition+ is +true+.
+
+@FN assertEqual(string v1, string v2, string msg = "assertion failed")
+Asserts that +v1+ is equal to +v2+
+
+@FN assertEqual(int v1, int v2, string msg = "assertion failed")
+Asserts that +v1+ is equal to +v2+
+
+@FN assertEqual(boolean v1, boolean v2, string msg = "assertion failed")
+Asserts that +v1+ is equal to +v2+
+
+@FN assertEqual(float v1, float v2, string msg = "assertion failed")
+Asserts that +v1+ is exactly equal to +v2+. It may be more suitable to use
+<<library-v2:assertAlmostEqual, +assertAlmostEqual+>> to make approximate
+floating point equality assertions.
+
+@FN assertAlmostEqual(float v1, float v2, float tolerance = 0.0, string msg = "assertion failed")
+Asserts that asciimath:[|v1 - v2| <= tolerance].
+
+@FN assertLT(int v1, int v2, string msg = "assertion failed")
+Asserts that +v1+ is strictly less than +v2+.
+
+@FN assertLT(float v1, float v2, string msg = "assertion failed")
+Asserts that +v1+ is strictly less than +v2+.
+
+@FN assertLTE(int v1, int v2, string msg = "assertion failed")
+Asserts that +v1+ is less than or equal to +v2+.
+
+@FN assertLTE(float v1, float v2, string msg = "assertion failed")
+Asserts that +v1+ is less than or equal to +v2+.

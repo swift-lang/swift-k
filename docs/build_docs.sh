@@ -1,6 +1,7 @@
 #!/bin/bash
 
-DIRECTORIES="cookbook designs documentation merged releasenotes siteguide staging swift-tutorial tutorial userguide utils"
+DIRECTORIES="cookbook designs documentation merged releasenotes siteguide staging swift-tutorial tutorial userguide2 utils"
+#DIRECTORIES="userguide2"
 
 # Usage: See usage() for usage
 
@@ -19,7 +20,7 @@ CHMOD_FILE_MODE="664"
 # Output group
 GROUP="vdl2-svn"
 # Make PDFs iff MAKE_PDF=1
-MAKE_PDF=1
+MAKE_PDF=0
 
 # See getopts loop below for options
 usage()
@@ -83,13 +84,24 @@ popd > /dev/null 2>&1
 echo Version is $VERSION
 echo Installing docs into $INSTALLATION_DIRECTORY
 
+# Copy graphics
+cp -R icons $INSTALLATION_DIRECTORY/$VERSION
+
 # Convert files
 for directory in $DIRECTORIES
 do
    pushd $directory > /dev/null 2>&1
+   for libtemplate in `ls -1 *.def 2>/dev/null`; do
+     $(pwd)/../tools/process-template $libtemplate
+     if [ "$?" != "0" ]; then
+     	echo "Error processing library template $libtemplate"
+     	exit 1
+     fi
+   done
    FILES=`ls -1 *.txt 2>/dev/null`
    for file in $FILES
    do
+      BN=`basename -s .txt $file`
       echo Converting "$directory/$file" to HTML
       asciidoc -a toc -a toclevels=2                            \
                -a max-width=750px                               \
@@ -97,12 +109,30 @@ do
                -a source-highlighter=$(pwd)/../tools/hlfilter   \
                -a stylesdir=$(pwd)/../tmp/                      \
                -a scriptsdir=$(pwd)/../tmp/                     \
+               -a asciimath                                     \
+               -a icons                                         \
+               -a iconsdir=../icons                             \
                -f $(pwd)/../asciidoc.conf                       \
                $file
       if (( MAKE_PDF ))
       then
         echo Converting "$directory/$file" to PDF
-        a2x --format=pdf --no-xmllint $file
+        #a2x --format=pdf --no-xmllint $file
+        asciidoc -a toc -a toclevels=2                            \
+                 -a asciimath                                     \
+                 -a icons                                         \
+                 -a iconsdir=../icons                             \
+                 -f $(pwd)/../latex.conf                          \
+                 -b latex                                         \
+                 $file
+        for svg in `ls -1 *.svg 2>/dev/null`; do
+        	SVGBN=`basename -s .svg $svg`
+        	convert $svg $SVGBN.pdf
+        done
+        sed 's/\.svg\}/.pdf}/' <$BN.tex >$BN.tex.new
+        rm $BN.tex
+        mv $BN.tex.new $BN.tex
+        pdflatex $BN.tex #2>&1 >$BN.texlog
       fi
    done
 

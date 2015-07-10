@@ -1,0 +1,9 @@
+@FN string strcat(any... s)
+Returns a string formed by concatenating all of the parameters. The parameters
+that are not already strings are converted to strings. Example:
+
+[listing, swift]
+----
+string result = strcat("One", "Two", 3); <1>
+----
+<1> +result+ is the string +"OneTwo3"+

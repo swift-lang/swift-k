@@ -1,0 +1,25 @@
+@FN string filename(any f)
+Returns the path(s) of the file(s) that +f+ is mapped to. If +f+ is a primitive
+value, or if +f+ is a composite type with any mapped components, +filename()+ 
+returns an error. If +f+ is a simple
+file value, then +filename+ returns one path. If +f+ is a composite type with
+multiple file-valued fields, +filename+ returns a space separated list of 
+the paths of all file-valued fields in +f+. The returned path(s) can 
+either be relative to the directory from which Swift was invoked or absolute. 
+If used in an <<language:application-function, application function>>, Swift 
+guarantees that the paths point to valid files in the application's sandbox 
+(see <<runtime:appfns, application function execution>>).
+
+@FN string[] filenames(any f)
+Returns the paths of the files that +f+ is mapped to. If +f+ is a primitive 
+value, or if +f+ is a composite type with any mapped components, +filenames()+
+returns an error. If +f+ is a simple 
+file value, then the returned array has one item. The returned path(s) can 
+either be relative to the directory from which Swift was invoked or absolute. 
+If used in an <<language:application-function, application function>>, Swift 
+guarantees that the paths point to valid files in the application's sandbox 
+(see <<runtime:appfns, application function execution>>).
+
+@FN string dirname(any f)
+Like <<stdlib-v2:filename, filename>>, except it returns the path of the
+directory(ies) in which the file(s) that +f+ is mapped to reside.

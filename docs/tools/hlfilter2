@@ -1,0 +1,7 @@
+#!/bin/bash
+
+VAL=`cat /dev/stdin`
+echo $@
+echo $VAL
+echo $PWD
+echo $VAL >>../log.txt

@@ -1,0 +1,261 @@
+@MAPPERS
+
+@MAPPER IO <SingleFileMapper; string file>
+
+Maps a single physical file to a file-valued variable.
+
+Parameters:
+
+file:: A relative or absolute path or a URL specifying the file location.
+
+Example:
+
+[listing, swift]
+----
+file f <SingleFileMapper; file = "input.txt">;
+----
+
+This is equivalent to:
+
+[listing, swift]
+----
+file f <"input.txt">;
+----
+
+@MAPPER IO <SimpleMapper; string location = ".", string prefix = "", string suffix = "",\n string pattern = "*", int padding = 4, string separator = "_">
+
+Allows mapping of variables of arbitrary types. The file names are detemined
+by concatenating the structure field names and array indices of a fully 
+qualified leaf value. Given a variable of some arbitrary type, a particular 
+leaf is referenced as:
+
+[listing, syntax]
+----
+<name> (<field> | <index>)*
+
+<field> := '.' <fieldName>
+<index> := '[' <indexValue> ']'
+----
+
+If the variable is mapped using the +SimpleMapper+, the file names will consist
+of some prefix followed by the relevant sequence of +<fieldName>+ or 
++<indexValue>+ separated by some separator and ending with a suffix.
+
+For example, given the following Swift code:
+
+[listing, swift]
+----
+type person {
+    string name;
+    file address;
+    file data;
+    int age;
+}
+
+person[] employees <SimpleMapper; prefix = "employee", separator = "-", 
+    suffix = ".txt">;
+----
+
+the mapping would be:
+
+[options="header"]
+|==================================================
+|Leaf | File
+|employees[1].address| "employee-0001-address.txt"
+|employees[1].data   | "employee-0001-data.txt"
+|employees[2].address| "employee-0002-address.txt"
+|employees[2].data   | "employee-0002-data.txt"
+|2> ...
+|==================================================
+
+Parameters:
+
++location+:: Represents a directory where the files are located.
++prefix+:: If specified, prepends a prefix to all file names mapped by this
+mapper
++suffix+:: If specified, appends a suffix to all file names mapped by this 
+mapper
++pattern+:: When used as an input mapper, this parameter represents an extended 
+glob pattern that can be used to restrict the files mapped by this mapper. The
+extended glob pattern recognizes the following special symbols:
+  +?+:::: Matches a single character
+  +*+:::: Matches any number of arbitrary characters within a single path 
+  element (directory name or file name)
+  +**+:::: Recursively matches all sub-directories
++padding+:: The minimum number of characters to use for integer indices. All
+index values whose string representation have fewer characters than the value
+of +padding+ will be zero-padded
++separator+:: A string used to separate consecutive field names or index values
+
+If the +SimpleMapper+ is used to map arrays whose indices are not integers, an
+unspecified string representation will be used for the portions of the file 
+names corresponding to the non-integer indices.
+
+@MAPPER IO <FixedArrayMapper; string[] files>
+
+Maps an array of file-valued items and integer keys using a list of files. The 
+array must not be sparse and the first index is zero. Using the 
++FixedArrayMapper+ closes the array (but not its items) and fixes its length.
+
+@MAPPER IO <FixedArrayMapper; string files>
+
+Similar to +FixedArrayMapper+ above, except the files are specified as a 
+comma-separated list (with optional whitespace) of files. Example:
+
+[listing, swift]
+----
+file[] texts <FixedArrayMapper; files = "file1.txt, fileB.txt, file3.txt">;
+----
+
+@MAPPER I <FilesysMapper; string location = ".", string prefix = "", string suffix = "",\n string pattern = "*">
+
+Maps an array of file-valued items and integer keys using a set of files 
+obtained from the filesystem. +FilesysMapper+ searches for files in a location
+based on a certain suffix, prefix and extended glob pattern an assigns the
+resulting list of files to the array starting at index zero.
+
+Parameters:
+
++location+:: Represents a directory where the files are located.
++prefix+:: If specified, only include files that have this prefix.
++suffix+:: If specified, only include files that have this suffix.
++pattern+:: An extended glob pattern used to filter the files. The
+extended glob pattern recognizes the following special symbols:
+  +?+:::: Matches a single character
+  +*+:::: Matches any number of arbitrary characters within a single path 
+  element (directory name or file name)
+  +**+:::: Recursively matches all sub-directories
+
+@MAPPER O <RegexpMapper; string source, string match, string transform>
+
+Uses a regular expression substitution to create a mapping from an existing one.
+The value of +source+ is transformed using the regular expression substitution 
+and the result is used to map a single file value.
+
+Parameters:
+
++source+:: A string (presumably representing an existing path)
++match+:: A regular expression
++transform+:: A string that can contain references to capture groups in the
+regular expression specified using the +match+ parameter. The capture group
+references are in the form +\\[0-9]+
+
+Example:
+
+[listing, swift]
+----
+file s <"picture.gif">;
+file f <RegexpMapper; source = filename(s), match="(.*)gif", 
+    transform="\\1jpg">;
+----
+
+@MAPPER IO <StructuredRegexpMapper; any source, string match, string transform>
+
+An extension of <<mappers:RegexpMapper, +RegexpMapper+>> that can be used for
+both single file values and complex types.
+
+Parameters:
+
++source+:: Can either be a +string+, in which case +StructuredRegexpMapper+ will
+behave as a <<mappers:RegexpMapper, RegexpMapper>>, or a an array with items 
+being either strings or file valued types, in which case 
++StructuredRegexpMapper+ will apply the regular expression substitution to 
+every item or the corresponding path that the item is mapped to.
++match+:: A regular expression
++transform+:: A string that can contain references to capture groups in the
+regular expression specified using the +match+ parameter. The capture group
+references are in the form +\\[0-9]+
+
+
+Example:
+
+[listing, swift]
+----
+file[] a <SimpleMapper; location = ".", prefix = "img", suffix = ".gif">;
+
+file[] b <StructuredRegexpMapper; source = a, match="(.*)gif", 
+    transform="\\1jpg">;
+----
+
+@MAPPER IO <CSVMapper; any file, boolean header = true, int skip = 0, string hdelim = " \t,", string delim = " \t,">
+
+The +CSVMapper+ allows mapping of arrays of structures according to a file 
+formatted using a custom *CSV*-like format. The lines in the file correspond
+to items in the array (starting at index zero) and the columns corerspond
+to structure fields. A header in the CSV file can be used to specify the 
+structure field names.
+
+Parameters:
+
++file+:: Can be a +string+ containing the path name of the CSV file or a 
+file-value that maps to the CSV file from which the data is read.
+
++header+:: If set to +true+, it indicates that the first line in the CSV file
+contains the names of the structure fields that are being mapped. If set to
++false+, the +CSVMapper+ assumes that the structure fields are named 
++"column1"+, +"column2"+, etc.
+
++skip+:: A value indicating an amount of lines to skip in the beginning of the 
+CSV file. If +header+ is set to +true+ the lines are skipped *after* reading the
+header.
+
++hdelim+:: A set of characters that delimit header coulmns. Any of the 
+characters are considered delimiters and they can be mixed. For example, if
++hdelim+ is set to +",;"+, then both of the following headers are valid and
+yield the same result: +"colname1,colname2,colname3"+, 
++"colname1;colname2,colname3"+.
+
++delim+:: Like +hdelim+, except it applies to data lines.
+
+
+@MAPPER IO <ArrayMapper; file[] files>
+
+TODO: There seems to be no difference between this and +FixedArrayMapper+.
+
+@MAPPER IO <Ext; string exec, *>
+
+The +Ext+ernal mapper invokes a sub-process to obtain mappings for arbitrary
+types. The output from the process must be formatted as field file name pairs separated by whitespace. The field is the qualifying part of an 
+<<language:lvalue, lvalue>> with array keys restricted to +int+, +float+ or 
++string+ primitive literals. If there is no qualifying part, such as when 
+reading the mapping for a non-composite file type, the field must be
+the dollar sign (+$+). The file names are strings without quotes.
+
+Parameters:
+
++exec+:: A path to an executable that will print, on its standard output stream,
+the mappings according to the format specified above.
+
++*+:: Any other parameters to the +Ext+ mapper will be passed to the mapping
+executable in the form +-<parameterName> <value>+.
+
+Example:
+
+[listing, swift]
+----
+file[] array <Ext; exec = "mapper.sh", suffix = ".txt">;
+----
+
+[listing, shell, mapper.sh]
+----
+#!/bin/bash
+
+SUFFIX=
+if [ "$1" == "-suffix" ]; then
+    SUFFIX=$2
+else
+    echo "Invalid parameter: $1"
+    exit 1
+fi
+
+echo "[0] array-0000$SUFFIX"
+echo "[1] array-0001$SUFFIX"
+echo "[2] array-0002$SUFFIX"
+----
+
+@MAPPER IO <ConcurrentMapper; string prefix, string suffix, string pattern, string location>
+
+The concurrent mapper is an extension to the 
+<<mappers:SimpleMapper, SimpleMapper>> that guarantees unique mappings for all
+variables declared in the same program, but does not specify exactly what the
+form of the mapping is.

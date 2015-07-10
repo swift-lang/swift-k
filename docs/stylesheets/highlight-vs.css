@@ -6,7 +6,7 @@ Visual Studio-like style based on original C# coloring by Jason Diamond <jason@d
 .hljs {
   display: block;
   overflow-x: auto;
-  padding: 0.5em;
+  padding: 0px;
   background: white;
   color: black;
   -webkit-text-size-adjust: none;
@@ -65,4 +65,18 @@ Visual Studio-like style based on original C# coloring by Jason Diamond <jason@d
 .hljs-literal, 
 .hljs-number { 
   color: #1c00cf; 
+}
+
+.hljs-placeholder {
+	color: #000080;
+	font-style: italic;
+}
+
+.listingblock.syntax .hljs-keyword {
+	font-weight: bold;
+	color: #f04040;
+}
+
+.listingblock.syntax .hljs-literal {
+	color: #406040;
 }

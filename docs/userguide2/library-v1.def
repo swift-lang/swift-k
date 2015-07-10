@@ -1,0 +1,319 @@
+@FUNCTIONS
+
+@SECTION String Functions
+
+@FN string regexp(string input, string pattern, string transform)
+
+Returns a string that is constructed by replacing the first occurrence of the 
+regular expression +pattern+ in +input+ by +transform+. The +transform+ string
+can contain references to capture groups in +pattern+. References are 
+introduced using the dollar sign (+$+) and can either be named references (e.g., +${groupName}+) or positional (e.g. $1, $2, etc.). A literal dollar sign can 
+be inserted in the replacement string by escaping it with a backslash: "\\$".
+
+@INCLUDE strcat.cdef
+
+@FN string strcut(string input, string pattern)
+
+Matches the regular expression in +pattern+ against +input+ and returns the
+first capture group that is not the full match. If the first capture group
+has no match in +input+, +strcut()+ returns an empty string. If +pattern+
+does not define a capture group, +strcut()+ returns an error.
+
+@FN int strstr(string input, string find)
+
+Returns the first index in +input+ at which the string +find+ appears. If
++find+ does not appear in +input+, the result is +-1+.
+
+@FN string[] strsplit(string input, string pattern)
+
+Splits +input+ around matches of the regular expression +pattern+ and returns 
+the resulting array. If +pattern+ cannot be found in +input+, +strsplit()+ 
+returns an array of length one containing the entire string +input+. 
+Consecutive delimiters are not explicitly merged, but the regular expression 
+can contain quantifiers that control this behaviour.
+
+@FN string strjoin(any[] array, string delim)
+
+Returns a string formed by concatenating all elements in +array+ with +delim+
+inserted between consecutive elements of +array+. The items in +array+ are
+converted to strings before being concatenated.
+
+@FN string format(string format, any...)
+
+Formats the parameters according to +format+ which must conform to the the 
+specification in
+<<http://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html#syntax, Java string formatter>> and returns the resulting string.
+
+@FN string pad(int size, int value)
+
+Returns a zero-padded string representation of +value+. The number of digits
+is controlled by the +size+ parameter. If the string representation of +value+ 
+naturally contains more than +size+ characters, +pad()+ returns that 
+representation without any padding. In other words, +pad()+ returns a string 
+that has at least +size+ characters, but possibly more.
+
+@FN string sprintf(string format, any...)
+
+Formats the parameters according to +format+ which is a string allowing the
+following format specifiers:
+
+* %%: the +'%'+ character.
+* %M: Filename output: waits for close
+* %p: String representation of an arbitrary value.
+* %b: A +boolean+ value.
+* %f: A +float+ value.
+* %i: An +int+ value.
+* %s: A +string+ value.
+* %k: Parameter is sKipped; no output.
+* %q: Format an array.
+
+@SECTION Conversion Functions
+
+@FN int toInt(string value)
+
+Parses +value+ as a +integer+ and returns the resulting value.
+
+@FN float toFloat(string value)
+
+Parses +value+ as a floating point number and returns the resulting value.
+
+@FN string toString(any value)
+
+Returns a string representation of +value+.
+
+@SECTION I/O Functions
+
+@FN <T> T readData(any f)
+
+Reads data from a file in a format that is a variation of the Comma-separated 
+values format. The separator is a space character. The format of the file 
+depends on the type of value stored in it and must be as follows:
++
+--
++int+, +float+, +boolean+:::: The file contains a value literal
++string+:::: The entire contents of the file represents a string
+Arrays of primitive types:::: The file contains one primitive literal on each
+line. If the array is an array of strings, each line represents the value of
+the string without quotes
+Structures:::: The first line represents a header that must consist of the
+structure field names separated by a space. The second line is a data
+line consisting of value literals separated by a space. String value 
+literals should be double-quoted if they contain spaces. If a string 
+literal contains a double quote character, it must appear as a sequence of
+two double-quotes (e.g. +"A string with ""quotes"""+). If a string literal is
+quoted, whitespace between the separator and the starting and terminating quotes
+is ignored. If a string literal is not quoted, then whitespace is significant.
+Structure arrays:::: The first line represents a header as above. Subsequent 
+lines represent individual items in the array and must follow the format of the
+data lines in simple structures.
+
+If the return type +T+ is a mapped type or if +T+ is a type that contains 
+fields that are of a mapped type, +read()+ returns an error.
+--
+
+@FN <T> T readStructured(any f)
+
+The file is formatted as field value pairs separated by an 
+equal sign that is optionally surrounded by whitespace. The field is the 
+qualifying part of an <<language:lvalue, lvalue>> with array keys restricted to 
++int+, +float+ or +string+ primitive literals. If there is no qualifying part, 
+such as when reading a variable that is of a primitive type, the field must be
+the dollar sign (+$+). The allowed values are primitive literals. For example, 
+given the following Swift program:
++
+--
+[listing, swift]
+----
+type struct {
+    int a;
+    float b;
+    string c;
+    boolean d;
+}
+
+struct[] a = read("file1.dat", format = "FieldAndValue");
+int n = read("file2.dat", format = "FieldAndValue");
+----
+
+then +file1.dat+ could consist of the following:
+
+[listing, shell]
+----
+[0].a = 1
+[0].b = 2.3
+[0].c = "Some string\n"
+[0].d = false
+----
+
+while +file2.dat+ could have the following contents:
+
+[listing, shell]
+----
+$ = 10
+----
+
+If the return type +T+ is a mapped type or if +T+ is a type that contains 
+fields that are of a mapped type, +read()+ returns an error.
+--
+
+@FN <T> T readData2(any f)
+
+An alias to <<library-v2:readStructured, readStructured()>>.
+
+@FN file writeData(any value)
+
+Writes the contents of +value+ into a file and returns a reference to the file.
+The format used by +writeData()+ matches the format accepted by 
+<<stdlib-v1:readData, +readData()+>>.
+
+@FN int extractInt(any f)
+
+Reads an integer from a file. Expects +f+ to be file-valued. The file must, on
+the first line, contain an integer literal. Subsequent lines are ignored.
+
+@FN float extractFloat(any f)
+
+Reads an +float+ from a file. Expects +f+ to be file-valued. The file must, on
+the first line, contain a +float+ literal. Subsequent lines are ignored.
+
+@FN trace(any... args)
+
+Prints, on the console, a representation of the values of +args+ waiting
+for each of them to be closed. The output is prefixed by the string 
++"SwiftScript trace: "+.
+
+@FN tracef(string format, any... args)
+
+Prints, on the console, a formatted representation of +args+ waiting
+for each of them to be closed. The format is as described in 
+<<stdlib-v1:sprintf, +sprintf()+>>.
+
+@FN printf(any... args)
+
+Like <<stdlib-v1:trace, +trace()+>>, except the output is not prefixed by 
+anything.
+
+@FN fprintf(string filename, string spec, any... args)
+
+Writes a formatted set of values to a file. The arguments, +args+, are 
+converted to a string according to +spec+ whose format is as in 
+<<stdlib-v1:sprintf, +sprintf()+>>. The resulting string is appended atomically
+to the file with name +filename+.
+
+@INCLUDE filenames.cdef
+
+@INCLUDE arg-fns.cdef
+
+@FN assert(boolean assertion)
+
+If +assertion+ is +false+, +assert()+ causes the program to abort with the 
+message "Assertion failed". If +assertion+ is +true+, this function does 
+nothing.
+
+@FN assert(boolean assertion, string message)
+
+If +assertion+ is +false+, +assert()+ causes the program to abort with 
+the message +message+. If +assertion+ is +true+, this function does 
+nothing.
+
+@FN assert(int assertion)
+
+Equivalent to <<stdlib-v1:assert1, +assert+>>+(assertion != 0)+.
+
+@FN assert(int assertion, string message)
+
+Equivalent to <<stdlib-v1:assert2, +assert+>>+(assertion != 0, message)+.
+
+@FN <T> T java(string cls, string method, any... args)
+
+Allows invocation of certain static Java methods. The string +cls+ contains
+a fully qualified class name and the string +method+ contains a method name.
+The +java()+ function searches the class +cls+ for a method +method+ that can be 
+invoked with the given +args+. If such a method is found, it is invoked and,
+if it returns a non-+null+ value that can be converted into a Swift value, then
++java()+ returns the corresponding Swift value, otherwise it returns +false+.
+
+The determination of whether a method can be invoked with the given +args+
+is made based on the types of +args+. All methods in the class hierarchy of
++cls+ matching the name +method+ are first enumerated. The implementation of
++java()+ then checks whether each of the +args+ can be converted to a Java type
+matching the respective method parameter and the first matching method is 
+invoked. The conversion rules that +java()+ supports are listed in the following
+table:
+
+[options="header"]
+|========================================
+|Java method parameter type| Swift type
+| +int+                    | +int+
+| +java.lang.Integer+      | +int+
+| +long+                   | +int+
+| +java.lang.Long+         | +int+
+| +float+                  | +float+
+| +java.lang.Float+        | +float+
+| +double+                 | +float+
+| +java.lang.Double+       | +float+
+| +boolean+                | +boolean+
+| +java.lang.Boolean+      | +boolean+
+| +java.lang.String+       | +string+
+| +java.lang.Object[]+     | +any[int]+
+| +java.util.Map+          | +any[string]+
+|========================================
+
+The Swift type returned also depends on the Java type returned by the method
+as follows:
+
+[options="header"]
+|========================================
+|Java method return type   | Swift return type
+| +int+                    | +int+
+| +java.lang.Integer+      | +int+
+| +double+                 | +float+
+| +java.lang.Double+       | +float+
+| +boolean+                | +boolean+
+| +java.lang.Boolean+      | +boolean+
+| +java.lang.String+       | +string+
+|========================================
+
+@FN string[] system(string cmd)
+
+
+
+@SECTION Miscelaneous Functions
+
+@FN int length(any[] array)
+
+Waits for +array+ to be closed and returns its length.
+
+@SECTION Deprecated Functions
+
+@DEPRECATEDFN <T> T readdata(any f)
+
+Deprecated capitalization for <<stdlib-v1:readData, +readData()+>>
+
+@DEPRECATEDFN <T> T readdata2(any f)
+
+Deprecated capitalization for <<stdlib-v1:readData2, +readData2()+>>
+
+@DEPRECATEDFN <T> T readstructured(any f)
+
+Deprecated capitalization for <<stdlib-v1:readStructured, +readStructured()+>>
+
+@DEPRECATEDFN file writedata(any f)
+
+Deprecated capitalization for <<stdlib-v1:writeData, +writeData()+>>
+
+@DEPRECATEDFN int extractint(any f)
+
+Deprecated capitalization for <<stdlib-v1:extractInt, +extractInt()+>>
+
+@DEPRECATEDFN int toint(any value)
+
+Deprecated capitalization for <<stdlib-v1:toInt, +toInt()+>>
+
+@DEPRECATEDFN float tofloat(any value)
+
+Deprecated capitalization for <<stdlib-v1:toFloat, +toFloat()+>>
+
+@DEPRECATEDFN string tostring(any value)
+
+Deprecated capitalization for <<stdlib-v1:toString, +toString()+>>

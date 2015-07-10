@@ -1,0 +1,45 @@
+@FN string arg(string argName)
+Returns the value of the command line argument +argName+. If there is no
+command line argument named +argName+, +arg()+ returns an error. Named 
+arguments to a Swift program are passed on the command line after the program 
+name (see <<running:invoking, invoking Swift>>) in the following format:
+[listing, shell]
+----
+swift <options> <swift program> [--<argName>=<argValue>]*
+----
+
+@FN string arg(string argName, string defaultValue)
+Returns the value of the command line argument named +argName+ as above. If 
+there is no command line argument named +name+, +arg()+ returns the value of +defaultValue+.
+
+@FN string[string] args(string format)
+Parses a Swift program's command line arguments according to +format+ and 
+returns an array representing the name/value pairs of the arguments. The values
+of the arguments are validated to conform to the types in the specification, but
+are left as strings. The +format+ is as follows:
+
+[listing, syntax]
+----
+<format> := <arg>*
+<arg> := <optional> | <mandatory>
+<optional> := '[' <mandatory> ']'
+<mandatory> := <key> [<sep> <typespec>]
+<key> := ('-' | '/' | '_' | '0'...'9' | 'a'...'z' | 'A...Z')+
+<sep> := ' ' | '=' | ':'
+<typespec> := '<' <type> [ ':' <defaultValue> ] '>'
+<type> := 'int' | 'string' | 'boolean' | 'float'
+<defaultValue> := <string>
+----
+
+Optional arguments without a separator and type specification are 
+considered to be flags. If they are present on the command line, their names
+will appear as keys in the returned array and their value will be set to 
++"true"+. Arguments with a default value are considered optional (without the
+need to enclose them between square brackets). If they are not present on the
+command line, the returned array will contain their respective default values.
+
+Example:
+[listing, swift]
+----
+string[string] args = args("-min:<int> -max:<int> -bins:<int:10> [-normalize]");
+----
