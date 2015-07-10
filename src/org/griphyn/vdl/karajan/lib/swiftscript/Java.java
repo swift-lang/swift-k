@@ -18,6 +18,7 @@
 package org.griphyn.vdl.karajan.lib.swiftscript;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -146,6 +147,7 @@ public class Java extends SwiftFunction {
         }
     }
 
+    private static final DSHandle FALSE = NodeFactory.newRoot(Types.BOOLEAN, false);
 
     @Override
     public Object function(Stack stack) {
@@ -164,7 +166,12 @@ public class Java extends SwiftFunction {
         Object[] p = convertInputs(method, args);
         Type type = returnType(method);
         Object value = invoke(method, p);
-        return NodeFactory.newRoot(type, value);
+        if (type != null) {
+            return NodeFactory.newRoot(type, value);
+        }
+        else {
+            return FALSE;
+        }
     }
 
     /**
@@ -264,7 +271,7 @@ public class Java extends SwiftFunction {
 
     private Class<?> checkWrapPrimitive(Class<?> pt, Class<?> expected) {
         if (pt.isPrimitive() || (pt.isArray() && pt.getComponentType().isPrimitive())) {
-            // for int, try both int.class and Integer.class
+            // for Swift int, try both int.class and Integer.class
             if (!expected.equals(pt)) {
                 return getWrappedType(pt);
             }
@@ -320,21 +327,34 @@ public class Java extends SwiftFunction {
         else if (t.equals(Types.STRING)) {
             return String.class;
         }
-        else if (t.equals(Types.FLOAT.arrayType())) {
-            return double[].class;
+        else if (t.isArray() && t.keyType().equals(Types.INT)) {
+            return arrayType(getJavaType(t.itemType()));
         }
-        else if (t.equals(Types.INT.arrayType())) {
-            return int[].class;
-        }
-        else if (t.equals(Types.BOOLEAN.arrayType())) {
-            return boolean[].class;
-        }
-        else if (t.equals(Types.STRING.arrayType())) {
-            return String[].class;
+        else if (t.isArray()) {
+            return java.util.Map.class;
         }
         else {
-            throw new RuntimeException("Cannot use @java with non-primitive types");
+            throw new RuntimeException("Cannot use @java with type " + t);
         }
+    }
+
+
+
+
+    private Class<?> arrayType(Class<?> javaType) {
+        if (javaType == double.class) {
+            return double[].class;
+        }
+        if (javaType == int.class) {
+            return int[].class;
+        }
+        if (javaType == boolean.class) {
+            return boolean[].class;
+        }
+        if (javaType == String.class) {
+            return String[].class;
+        }
+        throw new RuntimeException("Cannot use @java with non-primitive types");
     }
 
 
@@ -342,6 +362,7 @@ public class Java extends SwiftFunction {
        Convert the user args to a Java Object array.
     */
     private Object[] convertInputs(Method method, Channel<AbstractDataNode> args) {
+        Class<?>[] methodParamTypes = method.getParameterTypes();
         int n = method.getParameterTypes().length;
         Object[] result = new Object[n];
         boolean varargs = false;
@@ -411,11 +432,11 @@ public class Java extends SwiftFunction {
         Type result = null;
 
         Class<?> rt = method.getReturnType();
-        if (rt.equals(Double.TYPE))
+        if (rt.equals(Double.TYPE) || rt.equals(Double.class))
             result = Types.FLOAT;
-        else if (rt.equals(Integer.TYPE))
+        else if (rt.equals(Integer.TYPE) || rt.equals(Integer.class))
             result = Types.INT;
-        else if (rt.equals(Boolean.TYPE))
+        else if (rt.equals(Boolean.TYPE) || rt.equals(Boolean.class))
             result = Types.BOOLEAN;
         else if (rt.equals(String.class))
             result = Types.STRING;
@@ -429,7 +450,7 @@ public class Java extends SwiftFunction {
         catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Error attempting to invoke: " +
-                 method.getDeclaringClass() + "." + method);
+                 method);
         }
     }
 }
