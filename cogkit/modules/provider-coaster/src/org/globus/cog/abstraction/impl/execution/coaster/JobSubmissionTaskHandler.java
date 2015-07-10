@@ -147,23 +147,29 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             ProtocolException, IOException {
         String configId = checkConfigured(channel, task);
         if (configId == null) {
-            ServiceConfigurationCommand scc = new ServiceConfigurationCommand(task);
-            byte[] reply = scc.execute(channel);
-            configId = new String(reply);
-            
-            Object rt = task.getService(0).getAttribute("resource-tracker");
-            if (rt != null) {
-                if (rt instanceof CoasterResourceTracker) {
-                    LocalService ls = (LocalService) channel.getService();
-                    ls.addResourceTracker(channel, 
-                        task.getService(0), (CoasterResourceTracker) rt);
+            try {
+                ServiceConfigurationCommand scc = new ServiceConfigurationCommand(task);
+                byte[] reply = scc.execute(channel);
+                configId = new String(reply);
+                
+                Object rt = task.getService(0).getAttribute("resource-tracker");
+                if (rt != null) {
+                    if (rt instanceof CoasterResourceTracker) {
+                        LocalService ls = (LocalService) channel.getService();
+                        ls.addResourceTracker(channel, 
+                            task.getService(0), (CoasterResourceTracker) rt);
+                    }
+                    else {
+                        logger.warn("Invalid resource tracker specified: " + rt.getClass() 
+                            + " does not implement " + CoasterResourceTracker.class);
+                    }
                 }
-                else {
-                    logger.warn("Invalid resource tracker specified: " + rt.getClass() 
-                        + " does not implement " + CoasterResourceTracker.class);
-                }
+                setConfigured(channel, task, configId);
             }
-            setConfigured(channel, task, configId);
+            catch (Exception e) {
+                e.printStackTrace();
+                task.setStatus(new StatusImpl(Status.FAILED, "Failed to configure coaster service", e));
+            }
         }
         return configId;
     }
