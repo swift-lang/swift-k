@@ -420,6 +420,7 @@ public class CoasterService extends GSSService implements ChannelListener {
                 @Override
                 public void run() {
                     try {
+                        shutdown();
                         while (!done) {
                             Thread.sleep(50);
                         }
