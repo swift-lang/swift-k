@@ -39,7 +39,8 @@ public class WriteStructured implements SwiftSerializer {
         try {
             PrintStream ps = new PrintStream(new FileOutputStream(path));
             try {
-                writeData(ps, (AbstractDataNode) src, Path.EMPTY_PATH, owner);
+                AbstractDataNode n = (AbstractDataNode) src;
+                writeData(ps, n, Path.EMPTY_PATH, owner);
             }
             finally {
                 ps.close();
@@ -62,15 +63,26 @@ public class WriteStructured implements SwiftSerializer {
             writeStruct(ps, src, path, owner);
         }
         else {
-            throw new ExecutionException(owner, "Cannot handle mapped data");
+            throw new ExecutionException(owner, "Internal error. Cannot serialize file-valued data");
         }
     }
 
     private void writeStruct(PrintStream ps, AbstractDataNode src, Path path, Node owner) {
+        for (String fieldName : src.getType().getFieldNames()) {
+            try {
+                writeData(ps, (AbstractDataNode) src.getField(fieldName), path.addLast(fieldName), owner);
+            }
+            catch (NoSuchFieldException e) {
+                throw new ExecutionException(owner, "Internal error. Type inconsistency.");
+            }
+        }
     }
 
     private void writeArray(PrintStream ps, AbstractDataNode src, Path path, Node owner) {
         src.waitFor(owner);
+        for (Map.Entry<Comparable<?>, DSHandle> e : src.getArrayValue().entrySet()) {
+            writeData(ps, (AbstractDataNode) e.getValue(), path.addLast(e.getKey(), true), owner);
+        }
     }
 
     private void writePrimitive(PrintStream ps, AbstractDataNode src, Path path, Node owner) {
@@ -82,6 +94,8 @@ public class WriteStructured implements SwiftSerializer {
 
     @Override
     public void checkParamType(Type type, Node owner) {
-        // all types OK
+        if (type.hasMappedComponents()) {
+            throw new ExecutionException(owner, "Cannot serialize file-valued data");
+        }
     }
 }
