@@ -349,7 +349,7 @@ public class SubmitJobHandler extends RequestHandler {
                     case -1:
                     case '\n': {
                         if (key == null) {
-                            throw new ProtocolException("Invalid line: " + sb.toString());
+                            value = null;
                         }
                         else {
                             value = sb.toString();
