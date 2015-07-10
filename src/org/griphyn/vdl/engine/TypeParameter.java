@@ -53,4 +53,13 @@ public class TypeParameter extends TypeImpl {
     public boolean isAssignableFrom(Type type) {
         return tryBindOrMatch(type);
     }
+    
+    public String toString() {
+        if (binding != null) {
+            return binding.toString();
+        }
+        else {
+            return super.toString();
+        }
+    }
 }
