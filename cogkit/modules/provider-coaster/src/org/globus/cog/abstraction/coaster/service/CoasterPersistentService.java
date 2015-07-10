@@ -245,9 +245,11 @@ public class CoasterPersistentService extends CoasterService {
                 passive = true;
             }
             else if (ap.isPresent("shared")) {
-                s.setDefaultQP("block");
                 s.setShared(true);
-                loadSharedSettings(ap.getStringValue("shared"), s.getSharedQueue().getSettings());
+                AbstractSettings settings = loadSharedSettings(ap.getStringValue("shared"), s.getSharedQueue());
+                if (ap.isPresent("controlPort")) {
+                	new SettingsServer(settings, ap.getIntValue("controlPort")).start();
+                }
             }
             else {
                 s.setDefaultQP("block");
@@ -291,15 +293,20 @@ public class CoasterPersistentService extends CoasterService {
         }
     }
     
-    private static void loadSharedSettings(String fileName, Settings settings) throws IOException {
+    private static AbstractSettings loadSharedSettings(String fileName, JobQueue jobQueue) throws IOException {
         Properties props = new Properties();
         FileReader r = new FileReader(fileName);
         props.load(r);
         r.close();
         
+        jobQueue.initQueueProcessor(props.getProperty("workerManager"));
+        
+        AbstractSettings settings = jobQueue.getQueueProcessor().getSettings();
         for (String name : props.stringPropertyNames()) {
             settings.set(name, props.getProperty(name));
         }
+        jobQueue.startQueueProcessor();
+        return settings;
     }
 
     private static void disableConsoleLogging() {

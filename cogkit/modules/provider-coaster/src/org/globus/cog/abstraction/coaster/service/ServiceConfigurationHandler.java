@@ -28,11 +28,13 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.AbstractSettings;
 import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
-import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceConfigurationCommand;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.ChannelManager;
@@ -59,8 +61,7 @@ public class ServiceConfigurationHandler extends RequestHandler {
         }
         else {
             JobQueue q = service.createJobQueue(channel);
-            
-            Settings settings = q.getSettings();
+            Map<String, String> settings = new HashMap<String, String>();
     
             try {
                 List<byte[]> l = getInDataChunks();
@@ -68,10 +69,20 @@ public class ServiceConfigurationHandler extends RequestHandler {
                     for (byte[] b : l) {
                         String s = new String(b);
                         String[] p = s.split("=", 2);
-                        settings.set(p[0], p[1]);
+                        settings.put(p[0], p[1]);
+                        //settings.set(p[0], p[1]);
                     }
                 }
-                logger.debug(settings);
+                
+                q.initQueueProcessor(settings.get("workerManager"));
+                AbstractSettings s = q.getQueueProcessor().getSettings();
+                
+                for (Map.Entry<String, String> e : settings.entrySet()) {
+                    s.set(e.getKey(), e.getValue());
+                }
+                q.startQueueProcessor();
+                
+                logger.debug(s);
                 sendReply(q.getId());
             }
             catch (Exception e) {
