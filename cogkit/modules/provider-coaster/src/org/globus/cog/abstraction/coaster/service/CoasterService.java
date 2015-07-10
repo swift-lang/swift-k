@@ -219,6 +219,7 @@ public class CoasterService extends GSSService implements ChannelListener {
         for (JobQueue q : queuesToRemove) {
             logger.info("Waiting for queue " + q + " to shut down");
             q.waitForShutdown();
+            logger.info("Queue " + q + " shut down");
         }
     }
 
@@ -229,7 +230,8 @@ public class CoasterService extends GSSService implements ChannelListener {
         }
         q.start();
         if (defaultQP != null) {
-            q.ensureQueueProcessorInitialized(defaultQP);
+            q.initQueueProcessor(defaultQP);
+            q.startQueueProcessor();
         }
         addJobQueue(q);
         return q;

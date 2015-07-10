@@ -28,6 +28,7 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
+import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.util.Collection;
 
@@ -45,7 +46,6 @@ public class JobQueue {
     private static int sid;
     private String id;
     private QueueProcessor local, coaster;
-    private final Settings settings;
     private final LocalTCPService localService;
     private CoasterChannel clientChannel;
     private Broadcaster broadcaster;
@@ -56,7 +56,6 @@ public class JobQueue {
         synchronized(JobQueue.class) {
             id = String.valueOf(sid++);
         }
-        settings = new Settings();
         this.service = service;
         this.localService = localService;
         this.broadcaster = new Broadcaster();
@@ -64,13 +63,6 @@ public class JobQueue {
             broadcaster.addChannel(clientChannel);
         }
         this.clientChannel = clientChannel;
-        Collection<URI> addrs = settings.getLocalContacts(localService.getPort());
-        if (addrs == null) {
-            settings.setCallbackURI(localService.getContact());
-        }
-        else {
-            settings.setCallbackURIs(addrs);
-        }
     }
 
     public void start() {
@@ -92,7 +84,7 @@ public class JobQueue {
             if (logger.isDebugEnabled()) {
                 logger.debug("Adding task " + t + " to coaster queue");
             }
-            qp = getQueueProcessor(settings.getWorkerManager());
+            qp = getQueueProcessor();
         }
         else {
             if (logger.isDebugEnabled()) {
@@ -106,37 +98,64 @@ public class JobQueue {
     public synchronized void setQueueProcessor(QueueProcessor qp) {
         coaster = qp;
     }
+    
+    public void initQueueProcessor(String name) {
+        if (name == null) {
+            name = "block";
+        }
+        coaster = newQueueProcessor(name);
+        coaster.setBroadcaster(broadcaster);
+        AbstractSettings settings = coaster.getSettings();
+        Collection<URI> addrs = settings.getLocalContacts(localService.getPort());
+        if (addrs == null) {
+            settings.setCallbackURI(localService.getContact());
+        }
+        else {
+            settings.setCallbackURIs(addrs);
+        }
+    }
+    
+    public void startQueueProcessor() {
+        coaster.start();
+    }
 
-    public synchronized QueueProcessor getQueueProcessor(String name) {
+    public synchronized QueueProcessor getQueueProcessor() {
         if (coaster == null) {
-            coaster = newQueueProcessor(name);
-            coaster.setBroadcaster(broadcaster);
-            coaster.start();
+            throw new IllegalArgumentException("No worker manager initialized");
         }
         return coaster;
     }
     
-    public void ensureQueueProcessorInitialized(String name) {
-        getQueueProcessor(name);
-    }
-
     private QueueProcessor newQueueProcessor(String name) {
         if (name.equals("local")) {
             return new LocalQueueProcessor(localService);
         }
         else if (name.equals("block")) {
-            return new BlockQueueProcessor(localService, settings);
+            return new BlockQueueProcessor(localService);
         }
         else if (name.equals("passive")) {
             return new PassiveQueueProcessor(localService, localService.getContact());
+        }
+        else if (name.startsWith("class:")) {
+            return newQueueProcessorFromClassName(name.substring(7));
         }
         else {
             throw new IllegalArgumentException("No such queue processor: " + name);
         }
     }
+    
+    private static final Class<?>[] BQ_CONS_PARAM_TYPES = new Class[] {LocalTCPService.class};
 
-    public Settings getSettings() {
-        return settings;
+    private QueueProcessor newQueueProcessorFromClassName(String clsName) {
+        try {
+            @SuppressWarnings("unchecked")
+            Class<? extends QueueProcessor> cls = (Class<? extends QueueProcessor>) Class.forName(clsName);
+            Constructor<? extends QueueProcessor> cons = cls.getConstructor(BQ_CONS_PARAM_TYPES);
+            return cons.newInstance(localService);
+        }
+        catch (Exception e) {
+            throw new IllegalArgumentException("Error instantiating class for worker manager: '" + clsName + "'");
+        }
     }
 
     public void startShutdown() {
