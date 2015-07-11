@@ -61,7 +61,7 @@ public class RegularExpressionMapper extends AbstractMapper {
 		RegularExpressionMapperParams cp = getParams();
 		if (!cp.getSource().getType().isPrimitive()) {
             throw new IllegalArgumentException("Non-primitive value specified for 'source';" +
-            		" maybe you meant @filename(" + cp.getSource().toString() + ")?");
+            		" maybe you meant filename(" + cp.getSource().toString() + ")?");
         }
 		else if (!Types.STRING.equals(cp.getSource().getType())) {
 		    throw new IllegalArgumentException("'source' parameter must be a string");
