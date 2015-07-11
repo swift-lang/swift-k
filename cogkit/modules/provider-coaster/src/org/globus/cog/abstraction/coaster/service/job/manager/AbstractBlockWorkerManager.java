@@ -43,6 +43,8 @@ public abstract class AbstractBlockWorkerManager extends AbstractQueueProcessor 
     
     private static int sid;
     
+    public static volatile int queuedJobs, runningJobs;
+    
     private synchronized static int nextSid() {
         return sid++;
     }

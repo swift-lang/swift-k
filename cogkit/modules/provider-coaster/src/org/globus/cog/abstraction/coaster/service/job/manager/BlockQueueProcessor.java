@@ -82,9 +82,7 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
 
     private BQPMonitor monitor;
 
-    private boolean done, planning, shuttingDown;
-    
-    public static volatile int queuedJobs, runningJobs; 
+    private boolean done, planning, shuttingDown; 
 
     /**
        Formatter for time-based variables in whole seconds

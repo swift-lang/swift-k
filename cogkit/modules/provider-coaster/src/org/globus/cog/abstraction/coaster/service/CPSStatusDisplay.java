@@ -40,8 +40,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.globus.cog.abstraction.coaster.service.job.manager.AbstractBlockWorkerManager;
 import org.globus.cog.abstraction.coaster.service.job.manager.Block;
-import org.globus.cog.abstraction.coaster.service.job.manager.BlockQueueProcessor;
 import org.globus.cog.abstraction.coaster.service.job.manager.Cpu;
 import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
 import org.globus.cog.coaster.channels.PerformanceDiagnosticInputStream;
@@ -98,8 +98,8 @@ private static final String CLS = ((char) (27)) + "[2J";
         
         header(2, "Jobs", 16, "Queued", 32, "Active", 48, "Completed", 64, "Failed");
         tabbed(0, "", 
-               16, BlockQueueProcessor.queuedJobs, 
-               32, BlockQueueProcessor.runningJobs, 
+               16, AbstractBlockWorkerManager.queuedJobs, 
+               32, AbstractBlockWorkerManager.runningJobs, 
                48, Cpu.totalCompletedJobs, 
                64, Cpu.totalFailedJobs);
         
@@ -127,7 +127,7 @@ private static final String CLS = ((char) (27)) + "[2J";
         Map<String, Block> blocks = new HashMap<String, Block>();
         
         for (Map.Entry<String, JobQueue> e : s.getQueues().entrySet()) {
-            blocks.putAll(((BlockQueueProcessor) e.getValue().getCoasterQueueProcessor()).getBlocks());
+            blocks.putAll(((AbstractBlockWorkerManager) e.getValue().getCoasterQueueProcessor()).getBlocks());
         }
         List<Object[]> l = new ArrayList<Object[]>();
         try {
