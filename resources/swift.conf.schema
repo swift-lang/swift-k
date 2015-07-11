@@ -89,6 +89,7 @@ site."*" {
 		jobManager: "?String"
 		options {
 			# Coasters
+			workerManager: "?String"
 			maxJobs: "?StrictlyPositiveInt"
 			nodeGranularity: "?StrictlyPositiveInt"
 			tasksPerNode: "?StrictlyPositiveInt"
