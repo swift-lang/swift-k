@@ -307,7 +307,7 @@ public class Karajan {
             Set<FunctionDeclaration> tmp = new HashSet<FunctionDeclaration>();
             visit(null, unmarked.iterator().next(), unmarked, sorted, tmp, names);
         }
-        
+                
         for (FunctionDeclaration proc : sorted) {
 			procedure(proc, scope);
 		}
@@ -354,9 +354,7 @@ public class Karajan {
             if (s instanceof Call) {
             	l.add((Call) s);
             }
-            else {
-                getCalls((Node) s, l);
-            }
+            getCalls((Node) s, l);
         }
         return l;
     }
