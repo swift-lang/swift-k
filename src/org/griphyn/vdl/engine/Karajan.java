@@ -1287,6 +1287,7 @@ public class Karajan {
 	    ActualParameters actual = getActualParameters(arguments, scope, expectedType);
 	    Signature funcSignature = functionsMap.find(name, actual, true);
         if (funcSignature == null) {
+            funcSignature = functionsMap.find(name, actual, true);
             throw new CompilationException("Unknown function: '" + name + "'");
         }
 	    
@@ -2053,10 +2054,10 @@ public class Karajan {
 	                checkTypesInType1ArithmExpr(op, left, right, st, false);
 	            }
 	            break;
-	        case '-':
 	        case '/':
 	            checkTypesInType1ArithmExpr(op, left, right, st, true);
 	            break;
+            case '-':
 	        case '*':
 	            checkTypesInType1ArithmExpr(op, left, right, st, false);
 	            break;
