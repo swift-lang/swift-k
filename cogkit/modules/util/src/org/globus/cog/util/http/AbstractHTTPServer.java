@@ -172,6 +172,10 @@ public abstract class AbstractHTTPServer implements Runnable {
             return s;
         }
     }
+    
+    protected String getAllowedOrigin() {
+        return null;
+    }
 
     public String processTemplate(String s, String... ps) {
         for (int i = 0; i < ps.length; i++) {
@@ -179,6 +183,22 @@ public abstract class AbstractHTTPServer implements Runnable {
         }
         return s;
     }
+    
+    protected String getContentType(String file, String dct) {
+        if (file.endsWith(".js")) {
+            return "text/javascript";
+        }
+        if (file.endsWith(".html")) {
+            return "text/html";
+        }
+        if (file.endsWith(".css")) {
+            return "text/css";
+        }
+        else {
+            return dct;
+        }
+    }
+
     
     protected class ConnectionProcessor implements Runnable {
         private Map<SocketChannel, ConnectionState> channels;
@@ -292,11 +312,15 @@ public abstract class AbstractHTTPServer implements Runnable {
         }
         
         public DataLink(File file) {
+            this(file, null);
+        }
+                
+        public DataLink(File file, String contentType) {
             this.type = TYPE_FILE;
             this.file = file;
             this.url = null;
             this.buf = null;
-            this.contentType = null;
+            this.contentType = contentType;
         }
         
         public int getType() {
@@ -504,6 +528,10 @@ public abstract class AbstractHTTPServer implements Runnable {
             addReply(l, "Date: " + new Date() + "\n");
             addReply(l, "Content-Length: " + len + "\n");
             addReply(l, "Connection: close\n");
+            String allowedOrigin = getAllowedOrigin();
+            if (allowedOrigin != null) {
+                addReply(l, "Access-Control-Allow-Origin: " + allowedOrigin + "\n");
+            }
             addReply(l, "Content-Type: " + contentType + ";\n");
             addReply(l, "Cache-Control: no-cache, no-store, must-revalidate\n");
             addReply(l, "Pragma: no-cache\n");
@@ -547,18 +575,6 @@ public abstract class AbstractHTTPServer implements Runnable {
                     processTemplate(ERROR_INTERNAL, e.toString(), getStackTrace(e)));
                 e.printStackTrace();
                 return;
-            }
-        }
-
-        private String getContentType(String file, String dct) {
-            if (file.endsWith(".js")) {
-                return "text/javascript";
-            }
-            if (file.endsWith(".css")) {
-                return "text/css";
-            }
-            else {
-                return dct;
             }
         }
 
