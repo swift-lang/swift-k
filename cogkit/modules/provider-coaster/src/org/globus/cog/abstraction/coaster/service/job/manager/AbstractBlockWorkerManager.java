@@ -12,6 +12,7 @@ package org.globus.cog.abstraction.coaster.service.job.manager;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -191,5 +192,9 @@ public abstract class AbstractBlockWorkerManager extends AbstractQueueProcessor 
     public synchronized void start() {
         super.start();
         taskDispatcher.start();
+    }
+
+    public Map<String, Object> getMonitoringData() {
+        return Collections.emptyMap();
     }
 }
