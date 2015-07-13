@@ -73,6 +73,16 @@ public abstract class AbstractBlockWorkerManager extends AbstractQueueProcessor 
         return blocks;
     }
     
+    /**
+     * Returns a thread-safe list of blocks known at the time
+     * of the call to this function.
+     */
+    public List<Block> getAllBlocks() {
+        synchronized(blocks) {
+            return new ArrayList<Block>(blocks.values());
+        }
+    }
+    
     public void addBlock(Block b) {
         synchronized (blocks) {
             blocks.put(b.getId(), b);
