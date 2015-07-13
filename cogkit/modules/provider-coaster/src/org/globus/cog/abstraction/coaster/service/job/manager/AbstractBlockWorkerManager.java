@@ -175,7 +175,7 @@ public abstract class AbstractBlockWorkerManager extends AbstractQueueProcessor 
     public void jobTerminated(Job job) {
     }
     
-    public abstract Job request(TimeInterval ti, int cpus);
+    public abstract Job request(TimeInterval ti, int cpus, boolean allowShutdownSignal) throws BlockShutDownSignal;
 
     @Override
     public synchronized void start() {

@@ -192,7 +192,12 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
                                      "block=" + block.getId() +
                                      " id=" + getId() +
                                      " Cpus sleeping: " + cpus);
-                    running = bqp.request(time, cpus);
+                    try {
+                        running = bqp.request(time, cpus, true);
+                    }
+                    catch (BlockShutDownSignal s) {
+                        block.shutdownIfEmpty(null);
+                    }
                     if (running != null) {
                         block.jobPulled();
                         if (perfTraceInterval != -1 && (totalJobCount % perfTraceInterval == 0)) {
@@ -394,7 +399,12 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
                 }
                 TimeInterval time = endtime.subtract(Time.now());
                 int cpus = 1 + getPullThread(node.getBlock()).sleepers();
-                running = bqp.request(time, cpus);
+                try {
+                    running = bqp.request(time, cpus, false);
+                }
+                catch (BlockShutDownSignal s) {
+                    logger.warn("Unexpected shutdown signal", s);
+                }
                 // no listener is added to this task, so make sure
                 // it won't linger in the BQP running set
                 bqp.jobTerminated(running);
