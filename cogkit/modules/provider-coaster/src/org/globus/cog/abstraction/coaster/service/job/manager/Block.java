@@ -566,6 +566,12 @@ public class Block implements StatusListener, Comparable<Block> {
     public Collection<Cpu> getCpus() {
         return cpus;
     }
+    
+    public Collection<Cpu> getCpusSnapshot() {
+        synchronized(cpus) {
+            return new ArrayList<Cpu>(cpus);
+        }
+    }
 
     public boolean isRunning() {
         return running;
