@@ -19,13 +19,22 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.AbstractBlockWorkerManager;
 import org.globus.cog.abstraction.coaster.service.job.manager.AbstractSettings;
+import org.globus.cog.abstraction.coaster.service.job.manager.Block;
+import org.globus.cog.abstraction.coaster.service.job.manager.Cpu;
+import org.globus.cog.abstraction.coaster.service.job.manager.Job;
+import org.globus.cog.abstraction.coaster.service.job.manager.QueueProcessor;
+import org.globus.cog.abstraction.coaster.service.job.manager.Time;
 import org.globus.cog.util.http.AbstractHTTPServer;
 import org.globus.cog.util.json.JSONEncoder;
 
@@ -37,14 +46,24 @@ public class SettingsServer extends AbstractHTTPServer {
         valid.add("/get");
         valid.add("/set");
         valid.add("/list");
+        valid.add("/getAll");
+        valid.add("/wmInfo");
         valid.add("/index.html");
     }
     
     private AbstractSettings settings;
+    private AbstractBlockWorkerManager wm;
     
-    public SettingsServer(AbstractSettings settings, int port) {
+    public SettingsServer(QueueProcessor queueProcessor, int port) {
         super("Settings", port, null);
-        this.settings = settings;
+        this.settings = queueProcessor.getSettings();
+        if (queueProcessor instanceof AbstractBlockWorkerManager) {
+            this.wm = (AbstractBlockWorkerManager) queueProcessor;
+        }
+    }
+    
+    protected String getAllowedOrigin() {
+        return "*";
     }
 
     @Override
@@ -55,17 +74,103 @@ public class SettingsServer extends AbstractHTTPServer {
     @Override
     protected DataLink getDataLink(String url, Map<String, String> params) {
         if (url.equals("/get")) {
-            return new DataLink(get(params.get("name")), "application/json");
+            return new DataLink(get(params.get("name")), "text/json");
         }
         else if (url.equals("/set")) {
-            return new DataLink(set(params.get("name"), params.get("value")), "application/json");
+            return new DataLink(set(params.get("name"), params.get("value")), "text/json");
         }
         else if (url.equals("/list")) {
-            return new DataLink(list(), "application/json");
+            return new DataLink(list(), "text/json");
+        }
+        else if (url.equals("/getAll")) {
+            return new DataLink(getAll(), "text/json");
+        }
+        else if (url.equals("/wmInfo")) {
+            return new DataLink(getBlockInfo(), "text/json");
         }
         else {
             return new DataLink(makeIndexPage(), "text/html");
         } 
+    }
+
+    private ByteBuffer getBlockInfo() {
+        JSONEncoder e = new JSONEncoder();
+        e.beginMap();
+        if (wm == null) {
+            e.writeMapItem("supported", false);
+        }
+        else {
+            e.writeMapItem("supported", true);
+            Map<String, Object> wmData = wm.getMonitoringData();
+            e.writeMapItem("time", Time.now().getMilliseconds());
+            e.writeMapKey("wmdata");
+            e.writeMap(wmData);
+            List<Block> blocks = wm.getAllBlocks();
+            e.writeMapKey("blocks");
+            e.beginArray();
+            for (Block b : blocks) {
+                writeBlock(e, b);
+            }
+            e.endArray();
+        }
+        e.endMap();
+        return ByteBuffer.wrap(e.toString().getBytes());
+    }
+
+    private void writeBlock(JSONEncoder e, Block b) {
+        e.beginArrayItem();
+        e.beginMap();
+        e.writeMapItem("id", b.getId());
+        e.writeMapItem("running", b.isRunning());
+        e.writeMapItem("workerCount", b.getActiveWorkerCount());
+        e.writeMapItem("jobsCompleted", b.getDoneJobCount());
+        e.writeMapItem("walltime", b.getWalltime().getMilliseconds());
+        writeTime(e, "creationTime", b.getCreationTime());
+        writeTime(e, "startTime", b.getStartTime());
+        writeTime(e, "terminationTime", b.getTerminationTime());
+        writeTime(e, "endTime", b.getEndTime());
+        e.writeMapKey("cpus");
+        e.beginArray();
+        Collection<Cpu> cpus = b.getCpusSnapshot();
+        for (Cpu cpu : cpus) {
+            writeCpu(e, cpu);
+        }
+        e.endArray();
+        e.endMap();
+        e.endArrayItem();
+    }
+
+    private void writeCpu(JSONEncoder e, Cpu cpu) {
+        e.beginMap();
+        e.writeMapItem("id", cpu.getId());
+        e.writeMapItem("quality", cpu.getQuality());
+        Job job = cpu.getRunning();
+        if (job == null) {
+            e.writeMapItem("job", null);
+        }
+        else {
+            e.writeMapKey("job");
+            writeJob(e, job);
+        }
+        e.endMap();
+    }
+
+    private void writeJob(JSONEncoder e, Job job) {
+        e.beginMap();
+        e.writeMapItem("id", job.getTask().getIdentity().toString());
+        writeTime(e, "startTime", job.getStartTime());
+        writeTime(e, "endTime", job.getEndTime());
+        e.writeMapItem("walltime", job.getMaxWallTime().getMilliseconds());
+        e.endMap();
+    }
+
+    private void writeTime(JSONEncoder e, String key, Time t) {
+        if (t == null) {
+            e.writeMapItem(key, null);
+        }
+        else {
+            e.writeMapItem(key, t.getMilliseconds());
+        }
     }
 
     private ByteBuffer list() {
@@ -77,6 +182,31 @@ public class SettingsServer extends AbstractHTTPServer {
         e.beginArray();
         for (String name : settings.getNames()) {
             e.writeArrayItem(name);
+        }
+        e.endArray();
+        e.endMap();
+        return ByteBuffer.wrap(e.toString().getBytes());
+    }
+    
+    private ByteBuffer getAll() {
+        JSONEncoder e = new JSONEncoder();
+        e.beginMap();
+        e.writeMapItem("error", false);
+        e.writeMapItem("errorMessage", null);
+        e.writeMapKey("result");
+        e.beginArray();
+        for (String name : settings.getNames()) {
+            e.beginArrayItem();
+            e.beginMap();
+            e.writeMapItem("name", name);
+            try {
+                e.writeMapItem("value", settings.get(name));
+            }
+            catch (Exception ex) {
+                e.writeMapItem("value", "<error>");
+            }
+            e.endMap();
+            e.endArrayItem();
         }
         e.endArray();
         e.endMap();
