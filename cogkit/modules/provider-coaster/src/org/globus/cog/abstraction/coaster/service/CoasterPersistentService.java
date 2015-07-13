@@ -62,6 +62,7 @@ public class CoasterPersistentService extends CoasterService {
     
     private JobQueue sharedQueue;
     private boolean shared;
+    private int controlPort = -1;
 
     public CoasterPersistentService() throws IOException {
         super(false);
@@ -79,6 +80,19 @@ public class CoasterPersistentService extends CoasterService {
         super(secure, port, bindTo);
     }
     
+    @Override
+    public void start() {
+        if (controlPort != -1) {
+            try {
+                new SettingsServer(sharedQueue.getCoasterQueueProcessor(), controlPort).start();
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Failed to start settings server", e);
+            }
+        }
+        super.start();
+    }
+
     public void setShared(boolean shared) {
         this.shared = shared;
         if (shared) {
@@ -94,6 +108,14 @@ public class CoasterPersistentService extends CoasterService {
         return shared;
     }
     
+    public int getControlPort() {
+        return controlPort;
+    }
+
+    public void setControlPort(int controlPort) {
+        this.controlPort = controlPort;
+    }
+
     public JobQueue getSharedQueue() {
         if (!shared) {
             throw new IllegalStateException("Not in shared mode");
@@ -249,9 +271,6 @@ public class CoasterPersistentService extends CoasterService {
             else if (ap.isPresent("shared")) {
                 s.setShared(true);
                 AbstractSettings settings = loadSharedSettings(ap.getStringValue("shared"), s.getSharedQueue());
-                if (ap.isPresent("controlPort")) {
-                	new SettingsServer(settings, ap.getIntValue("controlPort")).start();
-                }
             }
             else {
                 s.setDefaultQP("block");
@@ -261,6 +280,7 @@ public class CoasterPersistentService extends CoasterService {
             		System.err.println("Cannot use -controlPort without -shared");
             		System.exit(3);
             	}
+            	s.setControlPort(ap.getIntValue("controlPort"));
             }
             s.start();
             addShutdownHook(s);
