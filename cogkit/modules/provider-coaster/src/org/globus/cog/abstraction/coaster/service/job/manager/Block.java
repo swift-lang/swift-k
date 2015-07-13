@@ -67,7 +67,7 @@ public class Block implements StatusListener, Comparable<Block> {
 
     private int workers, activeWorkers;
     private TimeInterval walltime, maxIdleTime;
-    private Time endtime, starttime, deadline, creationtime;
+    private Time endtime, starttime, deadline, creationtime, terminationtime;
     private final SortedMap<Cpu, Time> scpus;
     private final List<Cpu> cpus;
     private final List<Node> nodes;
@@ -508,6 +508,9 @@ public class Block implements StatusListener, Comparable<Block> {
                     running = false;
                     task = null;
                 }
+                if (terminationtime == null) {
+                    terminationtime = Time.now();
+                }
             }
             else if (s.getStatusCode() == Status.ACTIVE) {
                 starttime = Time.now();
@@ -538,6 +541,10 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public void setStartTime(Time t) {
         this.starttime = t;
+    }
+
+    public Time getTerminationTime() {
+        return terminationtime;
     }
 
     public Time getDeadline() {
