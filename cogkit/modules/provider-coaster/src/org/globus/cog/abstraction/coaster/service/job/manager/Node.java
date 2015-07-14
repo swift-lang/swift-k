@@ -48,6 +48,7 @@ public class Node implements Callback, ChannelListener {
     private final CoasterChannel channel;
     private boolean shutdown;
     private final String hostname;
+    private Time startTime;
 
     public Node(int id, Block block, String workerHostname,
                 CoasterChannel channel, int concurrency) {
@@ -59,7 +60,7 @@ public class Node implements Callback, ChannelListener {
         this.concurrency = concurrency;
         BaseSettings settings = block.getAllocationProcessor().getSettings();
         cpus = new ArrayList<Cpu>(settings.getJobsPerNode());
-
+        this.startTime = Time.now();
         if (logger.isDebugEnabled()) {
             logger.debug("new: " + this);
         }
@@ -156,5 +157,13 @@ public class Node implements Callback, ChannelListener {
 
     public int getConcurrency() {
         return concurrency;
+    }
+
+    public Time getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Time startTime) {
+        this.startTime = startTime;
     }
 }
