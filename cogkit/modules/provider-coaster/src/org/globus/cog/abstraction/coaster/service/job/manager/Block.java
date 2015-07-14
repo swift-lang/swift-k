@@ -404,6 +404,7 @@ public class Block implements StatusListener, Comparable<Block> {
         for (Cpu cpu : cpusToNotify) {
             cpu.taskFailed(msg, e);
         }
+        bqp.blockTaskFinished(this);
     }
 
     public String getId() {
