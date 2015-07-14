@@ -19,7 +19,6 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashSet;
@@ -33,6 +32,7 @@ import org.globus.cog.abstraction.coaster.service.job.manager.AbstractSettings;
 import org.globus.cog.abstraction.coaster.service.job.manager.Block;
 import org.globus.cog.abstraction.coaster.service.job.manager.Cpu;
 import org.globus.cog.abstraction.coaster.service.job.manager.Job;
+import org.globus.cog.abstraction.coaster.service.job.manager.Node;
 import org.globus.cog.abstraction.coaster.service.job.manager.QueueProcessor;
 import org.globus.cog.abstraction.coaster.service.job.manager.Time;
 import org.globus.cog.util.http.AbstractHTTPServer;
@@ -127,8 +127,16 @@ public class SettingsServer extends AbstractHTTPServer {
         e.writeMapItem("walltime", b.getWalltime().getMilliseconds());
         writeTime(e, "creationTime", b.getCreationTime());
         writeTime(e, "startTime", b.getStartTime());
+        writeTime(e, "shutdownTime", b.getShutdownTime());
         writeTime(e, "terminationTime", b.getTerminationTime());
         writeTime(e, "endTime", b.getEndTime());
+        e.writeMapKey("nodes");
+        e.beginArray();
+        Collection<Node> nodes = b.getNodes();
+        for (Node node : nodes) {
+            writeNode(e, node);
+        }
+        e.endArray();
         e.writeMapKey("cpus");
         e.beginArray();
         Collection<Cpu> cpus = b.getCpusSnapshot();
@@ -138,6 +146,13 @@ public class SettingsServer extends AbstractHTTPServer {
         e.endArray();
         e.endMap();
         e.endArrayItem();
+    }
+
+    private void writeNode(JSONEncoder e, Node node) {
+        e.beginMap();
+        e.writeMapItem("id", node.getId());
+        writeTime(e, "startTime", node.getStartTime());
+        e.endMap();
     }
 
     private void writeCpu(JSONEncoder e, Cpu cpu) {
