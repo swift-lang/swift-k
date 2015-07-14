@@ -67,7 +67,7 @@ public class Block implements StatusListener, Comparable<Block> {
 
     private int workers, activeWorkers;
     private TimeInterval walltime, maxIdleTime;
-    private Time endtime, starttime, deadline, creationtime, terminationtime;
+    private Time endTime, startTime, deadline, creationTime, terminationTime, shutdownTime;
     private final SortedMap<Cpu, Time> scpus;
     private final List<Cpu> cpus;
     private final List<Node> nodes;
@@ -105,7 +105,7 @@ public class Block implements StatusListener, Comparable<Block> {
         this.walltime = walltime;
         this.maxIdleTime = maxIdleTime;
         this.bqp = ap;
-        this.creationtime = Time.now();
+        this.creationTime = Time.now();
         setDeadline(Time.now().add(ap.getSettings().getReserve()));
         totalRequestedWorkers += workers;
     }
@@ -157,7 +157,7 @@ public class Block implements StatusListener, Comparable<Block> {
                 // initialize a partition
                 last = Time.now();
             }
-            Time deadline = Time.min(starttime.add(walltime),
+            Time deadline = Time.min(startTime.add(walltime),
                         last.add(maxIdleTime));
             setDeadline(deadline);
             return Time.now().isGreaterThan(deadline);
@@ -176,7 +176,7 @@ public class Block implements StatusListener, Comparable<Block> {
             // is smaller than the block's walltime
             return j.getMaxWallTime().isLessThan(walltime);
         }
-        else if (running && j.getMaxWallTime().isGreaterThan(endtime.subtract(Time.now()))) {
+        else if (running && j.getMaxWallTime().isGreaterThan(endTime.subtract(Time.now()))) {
             // if the block is running and the job's walltime is greater than
             // the blocks remaining walltime, then the job doesn't fit
             return false;
@@ -195,7 +195,7 @@ public class Block implements StatusListener, Comparable<Block> {
                 }
                 Cpu cpu = scpus.firstKey();
                 Time jobEndTime = scpus.get(cpu);
-                if (j.getMaxWallTime().isLessThan(endtime.subtract(jobEndTime))) {
+                if (j.getMaxWallTime().isLessThan(endTime.subtract(jobEndTime))) {
                     return true;
                 }
             }
@@ -254,7 +254,7 @@ public class Block implements StatusListener, Comparable<Block> {
         else if (running) {
             return bqp.getMetric().size(
                 workers,
-                (int) TimeInterval.max(endtime.subtract(Time.max(Time.now(), starttime)), NO_TIME).getSeconds());
+                (int) TimeInterval.max(endTime.subtract(Time.max(Time.now(), startTime)), NO_TIME).getSeconds());
         }
         else {
             return bqp.getMetric().size(workers, (int) walltime.getSeconds());
@@ -262,16 +262,16 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public Time getEndTime() {
-        if (starttime == null) {
+        if (startTime == null) {
             return Time.now().add(walltime);
         }
         else {
-            return starttime.add(walltime);
+            return startTime.add(walltime);
         }
     }
 
     public void setEndTime(Time t) {
-        this.endtime = t;
+        this.endTime = t;
     }
 
     public int getWorkerCount() {
@@ -302,6 +302,7 @@ public class Block implements StatusListener, Comparable<Block> {
             if (shutdown) {
                 return;
             }
+            this.shutdownTime = Time.now();
             shutdown = true;
             cpusToShutDown = new ArrayList<Cpu>(cpus);
             cpus.clear();
@@ -508,14 +509,14 @@ public class Block implements StatusListener, Comparable<Block> {
                     running = false;
                     task = null;
                 }
-                if (terminationtime == null) {
-                    terminationtime = Time.now();
+                if (terminationTime == null) {
+                    terminationTime = Time.now();
                 }
             }
             else if (s.getStatusCode() == Status.ACTIVE) {
-                starttime = Time.now();
-                endtime = starttime.add(walltime);
-                setDeadline(starttime.add(bqp.getSettings().getReserve()));
+                startTime = Time.now();
+                endTime = startTime.add(walltime);
+                setDeadline(startTime.add(bqp.getSettings().getReserve()));
                 running = true;
                 bqp.getRLogger().log("BLOCK_ACTIVE id=" + getId());
                 bqp.getSettings().getHook().blockActive(event);
@@ -536,15 +537,19 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public Time getStartTime() {
-        return starttime;
+        return startTime;
     }
 
     public void setStartTime(Time t) {
-        this.starttime = t;
+        this.startTime = t;
     }
 
     public Time getTerminationTime() {
-        return terminationtime;
+        return terminationTime;
+    }
+
+    public Time getShutdownTime() {
+        return shutdownTime;
     }
 
     public Time getDeadline() {
@@ -556,11 +561,11 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public synchronized Time getCreationTime() {
-        return creationtime;
+        return creationTime;
     }
 
     public void setCreationTime(Time t) {
-        this.creationtime = t;
+        this.creationTime = t;
     }
 
     public Collection<Cpu> getCpus() {
