@@ -675,7 +675,7 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
         return (int) (System.currentTimeMillis() - start);
     }
 
-    public Job request(TimeInterval ti, int cpus, boolean allowShutdownSignal) {
+    public Job request(Cpu who, TimeInterval ti, int cpus, boolean allowShutdownSignal) {
         Job job = queued.removeOne(ti, cpus);
         if (job == null) {
             synchronized(holding) {

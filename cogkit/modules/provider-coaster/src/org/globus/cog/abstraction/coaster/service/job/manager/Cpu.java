@@ -193,7 +193,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
                                      " id=" + getId() +
                                      " Cpus sleeping: " + cpus);
                     try {
-                        running = bqp.request(time, cpus, true);
+                        running = bqp.request(this, time, cpus, true);
                     }
                     catch (BlockShutDownSignal s) {
                         block.shutdownIfEmpty(null);
@@ -400,7 +400,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
                 TimeInterval time = endtime.subtract(Time.now());
                 int cpus = 1 + getPullThread(node.getBlock()).sleepers();
                 try {
-                    running = bqp.request(time, cpus, false);
+                    running = bqp.request(this, time, cpus, false);
                 }
                 catch (BlockShutDownSignal s) {
                     logger.warn("Unexpected shutdown signal", s);
