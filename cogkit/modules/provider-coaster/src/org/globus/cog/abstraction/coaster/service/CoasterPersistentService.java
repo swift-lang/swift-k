@@ -84,7 +84,9 @@ public class CoasterPersistentService extends CoasterService {
     public void start() {
         if (controlPort != -1) {
             try {
-                new SettingsServer(sharedQueue.getCoasterQueueProcessor(), controlPort).start();
+                SettingsServer ss = new SettingsServer(sharedQueue.getCoasterQueueProcessor(), controlPort);
+                ss.start();
+                System.out.println("Settings server URL: " + ss.getURL());
             }
             catch (Exception e) {
                 throw new RuntimeException("Failed to start settings server", e);
@@ -180,7 +182,10 @@ public class CoasterPersistentService extends CoasterService {
         		"the configuration options for the block allocator. Cannot be used with passive workers.", 
         		"config-file", ArgumentParser.OPTIONAL);
         ap.addOption("controlPort", "If specified, starts a simple REST-like service that allows on-the-fly"
-        		+ "changes to the settings to be made in shared mode", "port", ArgumentParser.OPTIONAL);
+        		+ "changes to the settings to be made in shared mode. If zero, the port will be picked "
+        		+ "automatically", "port", ArgumentParser.OPTIONAL);
+        ap.addOption("logdir", "A directory where the logs should go. If not specified, logs are created in the "
+                + "current working directory", "directory", ArgumentParser.OPTIONAL);
         ap.addFlag("stats", "Show a table of various run-time information");
         ap.addFlag("help", "Displays usage information");
         ap.addAlias("help", "h");
@@ -238,7 +243,12 @@ public class CoasterPersistentService extends CoasterService {
                 localport = 0;
             }
 
-            setupLogging();
+            if (ap.hasValue("logdir")) {
+                setupLogging(ap.getStringValue("logdir"));
+            }
+            else {
+                setupLogging(null);
+            }
             logger.info("Command line arguments: " + Arrays.asList(args));
             final CoasterPersistentService s;
             if (!secure) {
@@ -376,9 +386,9 @@ public class CoasterPersistentService extends CoasterService {
         });
     }
 
-    static void setupLogging() {
+    static void setupLogging(String dir) {
         String timestamp = Timestamp.YMDhms_dash();
-        String filename =  "cps-"+timestamp+".log";        
+        String filename = (dir == null ? "" : dir + "/") + "cps-" + timestamp + ".log";
         logger.warn("Switching log to: " + filename);
         Misc.setFileAppenderOutput(logger, filename);
     }
