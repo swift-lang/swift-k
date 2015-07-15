@@ -193,6 +193,7 @@ public class CoasterService extends GSSService implements ChannelListener {
                 ConnectionHandler handler = new ConnectionHandler("cps-" + sock.getPort(), this, sock,
                         COASTER_REQUEST_MANAGER);
                 handler.start();
+                handler.getChannel().addListener(this);
             }
             catch (Exception e) {
                 logger.warn("Could not start connection handler", e);
