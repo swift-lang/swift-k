@@ -40,6 +40,7 @@ import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class BlockQueueProcessor extends AbstractBlockWorkerManager implements Runnable {
     public static final Logger logger = Logger.getLogger(BlockQueueProcessor.class);
@@ -766,5 +767,24 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
     @Override
     public int getQueueSeq() {
         return queued.getSeq() + holding.getSeq();
+    }
+
+    @Override
+    public void cancelTasksForChannel(CoasterChannel channel) {
+        String id = channel.getID();
+        cancelTasks(holding, id);
+        cancelTasks(queued, id); 
+    }
+
+    private void cancelTasks(SortedJobSet s, String id) {
+        synchronized(s) {
+            List<Job> l = s.getAll();
+            for (Job j : l) {
+                String taskChannelId = (String) j.getTask().getAttribute("channelId");
+                if (id.equals(taskChannelId)) {
+                    s.remove(j);
+                }
+            }
+        }
     }
 }
