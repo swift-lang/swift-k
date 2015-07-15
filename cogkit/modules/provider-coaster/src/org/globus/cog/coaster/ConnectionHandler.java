@@ -85,4 +85,8 @@ public class ConnectionHandler {
 	    }
 		channel.start();
     }
+
+    public CoasterChannel getChannel() {
+        return channel;
+    }
 }
