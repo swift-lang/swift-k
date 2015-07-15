@@ -209,21 +209,16 @@ public class SettingsServer extends AbstractHTTPServer {
         e.writeMapItem("error", false);
         e.writeMapItem("errorMessage", null);
         e.writeMapKey("result");
-        e.beginArray();
+        e.beginMap();
         for (String name : settings.getNames()) {
-            e.beginArrayItem();
-            e.beginMap();
-            e.writeMapItem("name", name);
             try {
-                e.writeMapItem("value", settings.get(name));
+                e.writeMapItem(name, settings.get(name));
             }
             catch (Exception ex) {
-                e.writeMapItem("value", "<error>");
+                e.writeMapItem(name, "<error>");
             }
-            e.endMap();
-            e.endArrayItem();
         }
-        e.endArray();
+        e.endMap();
         e.endMap();
         return ByteBuffer.wrap(e.toString().getBytes());
     }
