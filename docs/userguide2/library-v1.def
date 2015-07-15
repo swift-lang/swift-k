@@ -86,8 +86,9 @@ Returns a string representation of +value+.
 @FN <T> T readData(any f)
 
 Reads data from a file in a format that is a variation of the Comma-separated 
-values format. The separator is a space character. The format of the file 
-depends on the type of value stored in it and must be as follows:
+values format. The separator is a white space (space or tab) character. The 
+format of the file depends on the type of value stored in it and must be as 
+follows:
 +
 --
 +int+, +float+, +boolean+:::: The file contains a value literal
@@ -96,13 +97,12 @@ Arrays of primitive types:::: The file contains one primitive literal on each
 line. If the array is an array of strings, each line represents the value of
 the string without quotes
 Structures:::: The first line represents a header that must consist of the
-structure field names separated by a space. The second line is a data
-line consisting of value literals separated by a space. String value 
+structure field names separated by white space. The second line is a data
+line consisting of value literals separated by white space. String value 
 literals should be double-quoted if they contain spaces. If a string 
 literal contains a double quote character, it must appear as a sequence of
-two double-quotes (e.g. +"A string with ""quotes"""+). If a string literal is
-quoted, whitespace between the separator and the starting and terminating quotes
-is ignored. If a string literal is not quoted, then whitespace is significant.
+two double-quotes (e.g. +"A string with ""quotes"""+). Consecutive white space
+is ignored.
 Structure arrays:::: The first line represents a header as above. Subsequent 
 lines represent individual items in the array and must follow the format of the
 data lines in simple structures.

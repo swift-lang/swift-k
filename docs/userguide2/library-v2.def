@@ -380,8 +380,8 @@ The +options+ parameter is ignored.
 *FV*:: An alias for *FieldAndValue*
 
 *CSV*:: The format is a variation of the Comma-separated values format. The 
-default separator is a space character. Different choices can be specified 
-using +"separator"+ key for the +options+ (e.g. +options = {"separator": ","}+).
+default separator is a white space character (space or tab). Different choices 
+can be specified using +"separator"+ key for the +options+ (e.g. +options = {"separator": ","}+).
 The CSV format supports the following data types:
 +
 --
@@ -396,14 +396,21 @@ line consisting of value literals separated by the separator. String value
 literals should be double-quoted if they contain the separator. If a string 
 literal contains a double quote character, it must appear as a sequence of
 two double-quotes (e.g. +"A string with ""quotes"""+). If a string literal is
-quoted, whitespace between the separator and the starting and terminating quotes
-is ignored. If a string literal is not quoted, then whitespace is significant.
+quoted, white space between the separator and the starting and terminating quotes
+is ignored. If a string literal is not quoted, then white space is significant 
+(unless the separator is white space). Consecutive separator characters are
+considered to be a single separator.
 Structure arrays:::: The first line represents a header as above. Subsequent 
 lines represent individual items in the array and must follow the format of the
 data lines in simple structures.
 
 If the return type +T+ is a mapped type or if +T+ is a type that contains 
 fields that are of a mapped type, +read()+ returns an error.
+
+Options:
+
+separator:: A string representing characters that are considered separators.
+Any of the characters in the string will be treated as separators.
 --
 
 @FN file write(any data, string format = "None", any[string] options = {})

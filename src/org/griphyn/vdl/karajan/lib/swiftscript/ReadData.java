@@ -56,7 +56,7 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
 	
 	static {
 	    DEFAULT_OPTIONS = new HashMap<String, Object>();
-	    DEFAULT_OPTIONS.put("separator", " ");
+	    DEFAULT_OPTIONS.put("separator", " \t");
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -301,17 +301,14 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
                 }
             }
             else {
-                if (line.indexOf(sep, i) == i) {
-                    // separator
-                    l.add(sb.toString());
-                    sb = new StringBuilder();
-                    i += sepLen;
+                if (isSeparator(c, sep)) {
+                    if (sb.length() != 0) {
+                        l.add(sb.toString());
+                        sb = new StringBuilder();
+                    }
                 }
                 else if (c == '"') {
                     inString = true;
-                    if (!sb.toString().matches("\\s*")) {
-                        throw new ExecutionException(owner, "Illegal extra characters before string: '" + sb.toString() + "'");
-                    }
                     sb = new StringBuilder();
                 }
                 else {
@@ -323,6 +320,15 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
             l.add(sb.toString());
         }
         return l.toArray(new String[0]);
+    }
+
+    private boolean isSeparator(char c, String sep) {
+        for (int i = 0; i < sep.length(); i++) {
+            if (c == sep.charAt(i)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void readStruct(DSHandle dest, BufferedReader br, Node owner, Map<String, Object> opts) 
