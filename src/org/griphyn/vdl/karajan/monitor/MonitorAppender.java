@@ -163,7 +163,9 @@ public class MonitorAppender implements Appender {
 	public void doAppend(LoggingEvent event) {
         try {
             state.setCurrentTime(event.getTimeStamp());
-        	updater.logEvent(event.getLevel(), event.getLogger().getName(),
+            String source = event.getLogger().getName();
+            source = source.substring(source.lastIndexOf('.') + 1);
+        	updater.logEvent(event.getLevel(), source,
         			event.getMessage(), event.getThrowableInformation());
         }
         catch (Exception e) {
