@@ -65,7 +65,7 @@ public class HTTPMonitor extends AbstractMonitor {
         server = new HTTPServer(port, password, getState());
         try {
             server.start();
-            System.out.println("HTTP montior URL: " + server.getURL());
+            System.out.println("HTTP monitor URL: " + server.getURL());
         }
         catch (IOException e) {
             logger.warn("Failed to start HTTP monitor server", e);
