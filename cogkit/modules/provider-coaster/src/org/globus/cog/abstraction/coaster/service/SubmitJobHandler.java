@@ -93,6 +93,7 @@ public class SubmitJobHandler extends RequestHandler {
             }
             task = p.task;
             new TaskNotifier(task, p.clientTaskId, channel);
+            task.setAttribute("channelId", channel.getID());
             service.getJobQueue(p.configId).enqueue(task);
             // make sure we'll have something to send notifications to
         }

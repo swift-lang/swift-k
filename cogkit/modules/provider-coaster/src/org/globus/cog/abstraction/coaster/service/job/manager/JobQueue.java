@@ -204,4 +204,9 @@ public class JobQueue {
     public Broadcaster getBroadcaster() {
         return broadcaster;
     }
+    
+    public void cancelTasksForChannel(CoasterChannel channel) {
+        local.cancelTasksForChannel(channel);
+        coaster.cancelTasksForChannel(channel);
+    }
 }

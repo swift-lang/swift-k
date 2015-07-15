@@ -34,7 +34,8 @@ import org.globus.cog.abstraction.interfaces.Task;
 
 public class AssociatedTask {
     public final Task task;
-    public final WallTime maxWallTime; 
+    public final WallTime maxWallTime;
+    private boolean canceled;
     
     public AssociatedTask(Task task) {
         this.task = task;
@@ -60,5 +61,13 @@ public class AssociatedTask {
     
     public WallTime getMaxWallTime() {
         return maxWallTime;
+    }
+
+    public boolean isCanceled() {
+        return canceled;
+    }
+
+    public void setCanceled(boolean canceled) {
+        this.canceled = canceled;
     }
 }

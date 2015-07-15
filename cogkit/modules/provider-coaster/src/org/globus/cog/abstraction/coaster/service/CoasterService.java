@@ -212,6 +212,9 @@ public class CoasterService extends GSSService implements ChannelListener {
             if (q.getClientChannel() == channel) {
                 queuesToRemove.add(q);
             }
+            else if (q.getClientChannel() == null) {
+                q.cancelTasksForChannel(channel);
+            }
         }
         for (JobQueue q : queuesToRemove) {
             q.startShutdown();

@@ -29,6 +29,7 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public interface QueueProcessor {
 
@@ -43,4 +44,6 @@ public interface QueueProcessor {
     void setBroadcaster(Broadcaster b);
     
     AbstractSettings getSettings();
+
+    void cancelTasksForChannel(CoasterChannel channel);
 }

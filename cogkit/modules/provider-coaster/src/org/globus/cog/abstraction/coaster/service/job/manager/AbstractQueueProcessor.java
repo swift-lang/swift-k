@@ -36,6 +36,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.coaster.channels.CoasterChannel;
 
 public abstract class AbstractQueueProcessor extends Thread implements QueueProcessor {
     private final BlockingQueue<AssociatedTask> q;
@@ -107,5 +108,19 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
     
     public int getQueueSeq() {
         return queueSeq;
+    }
+    
+    private static final AssociatedTask[] AT_ARRAY = new AssociatedTask[0];
+
+    @Override
+    public void cancelTasksForChannel(CoasterChannel channel) {
+        String id = channel.getID();
+        AssociatedTask[] ats = q.toArray(AT_ARRAY);
+        for (AssociatedTask at : ats) {
+            String taskChannelId = (String) at.task.getAttribute("channelId");
+            if (id.equals(taskChannelId)) {
+                at.setCanceled(true);
+            }
+        }
     }
 }
