@@ -104,7 +104,7 @@ $it.name$
 >>
 
 proc_oargs(args) ::= <<
-$args:proc_optarg()$
+$args:proc_optarg();separator=", "$
 >>
 
 proc_optarg() ::= <<
