@@ -33,7 +33,7 @@ public class SlurmExecutor extends AbstractExecutor {
 
 	/**
 	 * Write attribute if non-null
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	protected void writeAttr(String attrName, String arg, Writer wr)
@@ -137,12 +137,16 @@ public class SlurmExecutor extends AbstractExecutor {
 		writeNonEmptyAttr("queue", "--partition", wr);
 		writeWallTime(wr);
 		
+
+        wr.write("#SBATCH -n 32\n");
+        /*
 	    if("single".equalsIgnoreCase(type)) {
 			writeNonEmptyAttr("ppn", "--ntasks-per-node", wr);
 	    } else { 
 	    	wr.write("#SBATCH --ntasks-per-node=1\n");
 	    	writeNonEmptyAttr("jobsPerNode", "--cpus-per-task", wr);
 	    }
+        */
 
 		// Handle all slurm attributes specified by the user
 		for (String a : spec.getAttributeNames()) {
@@ -191,15 +195,19 @@ public class SlurmExecutor extends AbstractExecutor {
 				logger.debug("Wrapper after variable substitution: " + wrapper);
 			}
 		}
-
-		// Don't use srun for MPI jobs
-		if("single".equalsIgnoreCase(type)) {
+        // For MPI jobs handle MPI lauch in app wrappers
+        if("mpi".equalsIgnoreCase(type)) {
+            wr.write("/bin/bash -c \'");
+        } // Don't use srun for MPI jobs
+		else if("single".equalsIgnoreCase(type)) {
 			wr.write("/bin/bash -c \'");
 		} else {
-			wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
-			wr.write("$RUNCOMMAND /bin/bash -c \'");			
+            // DEBUG ONLY
+			//wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
+			//wr.write("$RUNCOMMAND /bin/bash -c \'");
+			wr.write("/bin/bash -c \'");
 		}
-		
+
 		if (spec.getDirectory() != null) {
 			wr.write("cd " + quote(spec.getDirectory()) + " && ");
 		}
