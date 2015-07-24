@@ -52,7 +52,7 @@ public class CoasterStatusItem extends AbstractStatefulItem {
         return StatefulItemClass.MISC;
     }
     
-    public synchronized void newBlock(String id, int cores, int coresPerWorker, int walltime) {
+    public synchronized void newBlock(String id, int cores, int coresPerWorker, long walltime) {
         Block b = new Block(id, cores, coresPerWorker, walltime);
         blocks.put(id, b);
         queuedBlocks++;
@@ -118,7 +118,10 @@ public class CoasterStatusItem extends AbstractStatefulItem {
     private Block getBlock(String blockId) {
         Block b = blocks.get(blockId);
         if (b == null) {
-            throw new IllegalArgumentException("Unknown block id: " + blockId);
+            // legitimate situation when dropping in on a persistent service 
+            // that has requested a block earlier
+            b = new Block(blockId, 0, 0, 0);
+            blocks.put(blockId, b);
         }
         return b;
     }
@@ -193,11 +196,11 @@ public class CoasterStatusItem extends AbstractStatefulItem {
         public final String id;
         public final int cores, coresPerWorker;
         public int activeCores;
-        public int walltime;
+        public long walltime;
         public long startTime;
         public Map<String, Worker> workers;
         
-        public Block(String id, int cores, int coresPerWorker, int walltime) {
+        public Block(String id, int cores, int coresPerWorker, long walltime) {
             this.id = id;
             this.cores = cores;
             this.coresPerWorker = coresPerWorker;
