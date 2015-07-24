@@ -130,6 +130,11 @@ public class Loader extends org.globus.cog.karajan.Loader {
             String project;
             String source;
             String projectName;
+            SwiftConfig config = loadConfig(ap, getCommandLineProperties(ap));
+            if (ap.isPresent(ARG_SITELIST)) {
+                printSiteList(config);
+                System.exit(0);
+            }
             if (ap.isPresent(ARG_EXECUTE)) {
                 project = "<string>";
                 projectName = "<string>";
@@ -139,17 +144,16 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 }
             }
             else {
+                if (!ap.hasValue(ArgumentParser.DEFAULT)) {
+                    System.out.println(loadVersion());
+                    error("No Swift script specified");
+                }
                 project = ap.getStringValue(ArgumentParser.DEFAULT);
                 checkValidProject(project);
                 projectName = projectName(project);
                 source = null;
             }
        
-            SwiftConfig config = loadConfig(ap, getCommandLineProperties(ap));
-            if (ap.isPresent(ARG_SITELIST)) {
-                printSiteList(config);
-                System.exit(0);
-            }
             setupLogging(ap, config, projectName, runID);
             logBasicInfo(argv, runID, config);
             
@@ -346,10 +350,6 @@ public class Loader extends org.globus.cog.karajan.Loader {
                     		"Must be one of 'files' or 'full'");
                     System.exit(1);
                 }
-            }
-            if (!ap.hasValue(ArgumentParser.DEFAULT) && !ap.isPresent(ARG_EXECUTE)) {
-                System.out.println(loadVersion());
-                error("No Swift script specified");
             }
             if (ap.isPresent(ARG_PAUSE_ON_START)) {
                 System.out.println("Press enter to continue...");
@@ -616,7 +616,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             ArgumentParser.OPTIONAL);
 
         ap.addFlag(ARG_HELP, "Display usage information");
-        ap.addFlag(ARG_VERSION, "Version:");
+        ap.addFlag(ARG_VERSION, "Displays the version of Swift");
         ap.addAlias(ARG_HELP, "h");
 
         ap.addFlag(ARG_RECOMPILE, 
@@ -679,7 +679,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             " The terminal must support standard ANSI/VT100 escape sequences. If a port is specified," +
             " the interface will also be available via telnet at the specified port." +
             "\n\t'http' - enables an http server allowing access to swift run-time information using a web browser",
-            "<summary|text|TUI[:port]|http[:[password@]port]>", ArgumentParser.OPTIONAL);
+            "summary|text|TUI[:port]|http[:[password@]port]", ArgumentParser.OPTIONAL);
         ap.addFlag(ARG_REDUCED_LOGGING, "Makes logging more terse by disabling provenance " +
             "information and low-level task messages");
         ap.addFlag(ARG_MINIMAL_LOGGING, "Makes logging much more terse: " +
