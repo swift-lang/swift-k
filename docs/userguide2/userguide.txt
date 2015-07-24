@@ -8,5 +8,5 @@ Swift User Guide
 include::language.asc[]
 include::library.asc[]
 include::runtime.asc[]
+include::configuration.asc[]
 include::running.asc[]
-

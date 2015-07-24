@@ -11,7 +11,7 @@ class Ref:
 class State:
 	def __init__(self, outf, basename, inf):
 		self.basename = basename
-		self.inFnOrConst = False
+		self.inItem = False
 		self.inSubsection = False
 		self.outf = outf
 		self.allConstants = []
@@ -50,13 +50,20 @@ class State:
 		else:
 			self.outf.write(line)
 	
-	def endFnOrConst(self):
-		if self.inFnOrConst:
-			self.inFnOrConst = False
+	def endItem(self):
+		if self.inItem:
+			self.inItem = False
 			self.outf.write("\n====\n\n")
 	
+	def startItem(self, name, caption = ""):
+		self.outf.write("[caption=\"" + caption + "\"]\n")
+		self.outf.write("." + name + "\n")
+		self.outf.write("====\n\n")
+		self.inItem = True
+		
+	
 	def endSubsection(self):
-		self.endFnOrConst()
+		self.endItem()
 		if self.inSubsection:
 			self.endBlock()
 			self.inSubsection = False
@@ -98,6 +105,16 @@ class State:
 			raise ValueError("Missing ';' in '" + s + "'")
 		return s[langle + 1:col]
 	
+	def getConfigPropInfo(self, s):
+		(name, sep, valid) = s.partition(" ")
+		default = None
+		nextLine = self.readLine()
+		if nextLine == "\n":
+			self.outf.write("\n")
+		else:
+			default = nextLine.strip()
+		return (name, valid, default)
+	
 	def startBlock(self, name):
 		self.outf.write("\n\n." + name + "\n****\n\n")
 	
@@ -124,7 +141,7 @@ class State:
 			else:
 				pass
 		elif token == "CONST" or token == "FN" or token == "DEPRECATEDFN" or token == "MAPPER":
-			self.endFnOrConst()
+			self.endItem()
 			io = None
 			if token == "CONST":
 				name = self.getConstantName(rest)
@@ -137,11 +154,9 @@ class State:
 				name = self.getFunctionName(rest)
 			self.outf.write("[[" + self.basename + ":" + name + "-" + str(self.ix) + "]]\n")
 			if token == "DEPRECATEDFN":
-				self.outf.write("[caption=\"Deprecated: \"]\n")
+				self.startItem(name, caption = "Deprecated: ")
 			else:
-				self.outf.write("[caption=\"\"]\n")
-			self.outf.write("." + name + "\n")
-			self.outf.write("====\n\n")
+				self.startItem(name)
 			if io != None:
 				if io.find("I") != -1:
 					self.outf.write("image:input-mapper.svg[height=\"18\"] ")
@@ -157,6 +172,24 @@ class State:
 			self.ix = self.ix + 1
 		elif token == "TOPIC":
 			pass
+		elif token == "CONFIGPROP":
+			self.endItem()
+			(name, valid, default) = self.getConfigPropInfo(rest)
+			self.startItem(name)
+			self.outf.write("[listing, swiftconf]\n")
+			self.outf.write("----\n")
+			self.outf.write(name + ": " + valid + "\n")
+			self.outf.write("----\n")
+			if default != None:
+				self.outf.write("Default value: +")
+				self.outf.write(default)
+				self.outf.write("+\n\n")
+		elif token == "EM":
+			self.endItem()
+			self.outf.write("[[" + "em-" + rest + "]]\n")
+			self.startItem(rest)
+		elif token == "END":
+			self.endItem()
 		elif token == "INCLUDE":
 			self.pushInput(open(rest.strip(), "r"))
 		else:
@@ -243,6 +276,8 @@ class State:
 			else:
 				return ""
 		else:
+			if line.endswith("\\\n"):
+				line = line[:-2] + "\n" + self.inf.readline()
 			return line
 	
 	def run(self):

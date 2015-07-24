@@ -234,6 +234,12 @@ code {
 	padding-left: 8px;
 }
 
+.exampleblock dt {
+	padding-top: 24px;
+	padding-bottom: 4px;
+	font-weight: bold;
+}
+
 #content .listingblock.swiftdoc {
 	padding: 0px;
 }
