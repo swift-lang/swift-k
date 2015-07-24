@@ -54,7 +54,7 @@ public class BootstrapService extends AbstractHTTPServer {
     private Map<String,String> checksums;
 
     public BootstrapService() {
-        super("Coaster Bootstrap", -1, null);
+        super("Coaster Bootstrap", 0, null);
         initWebDir();
         initList();
     }
@@ -151,10 +151,20 @@ public class BootstrapService extends AbstractHTTPServer {
     @Override
     protected ServerSocketChannel openChannel() throws IOException {
         ServerSocketChannel channel = PortManager.getDefault().openServerSocketChannel();
-        logger.info("Socket bound. URL is " + getURL());
         return channel;
     }
     
+    @Override
+    protected void bind(ServerSocket socket, int port) throws IOException {
+        // bound by port manager
+    }
+
+    @Override
+    public void start() throws IOException {
+        super.start();
+        logger.info("Socket bound. URL is " + getURL());
+    }
+
     public String getURL() {
         if (channel == null) {
             throw new IllegalThreadStateException(
