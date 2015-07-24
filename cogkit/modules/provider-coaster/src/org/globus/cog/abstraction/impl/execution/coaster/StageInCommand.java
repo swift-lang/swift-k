@@ -24,50 +24,17 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Aug 10, 2009
+ * Created on Feb 12, 2008
  */
-package org.globus.cog.abstraction.coaster.service.job.manager;
+package org.globus.cog.abstraction.impl.execution.coaster;
 
-public class JobCountMetric implements Metric {
+import org.globus.cog.abstraction.interfaces.StagingSet;
 
-    private Settings settings;
+public class StageInCommand extends StagingCommand {
+    public static final String NAME = "STAGEIN";
     
-    public JobCountMetric(Settings settings) {
-        this.settings = settings;
-    }
-
-    public double blockSize(int slot, int cslots, double tsum) {
-        double medianSize = tsum / cslots;
-        double minsize = medianSize * (1 - settings.getSpread());
-        double maxsize = medianSize * (1 + settings.getSpread());
-        if (cslots == 0) {
-            return 0;
-        }
-        else if (cslots == 1) {
-            return (int) tsum;
-        }
-        else {
-            return (int) Math.ceil(minsize + (maxsize - minsize) * slot / (cslots - 1));
-        }
-    }
-
-    public double getSize(Job j) {
-        return j.getCount();
-    }
     
-    public double getSizeLeft(Job j) {
-        return j.getCount();
-    }
-
-    public double desiredSize(Job j) {
-        return j.getCount();
-    }
-
-    public double size(int w, int h) {
-        return w;
-    }
-
-    public int width(int msz, int h) {
-        return msz;
+    public StageInCommand(StagingSet stagingSet) {
+        super(NAME, stagingSet);
     }
 }

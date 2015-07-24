@@ -28,9 +28,6 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
@@ -42,15 +39,6 @@ import org.globus.cog.abstraction.interfaces.Task;
 public class Job implements Comparable<Job> {
     public static final Logger logger = Logger.getLogger(Job.class);
 
-    public static final Set<String> SUPPORTED_ATTRIBUTES;
-
-    static {
-    	SUPPORTED_ATTRIBUTES = new HashSet<String>();
-    	SUPPORTED_ATTRIBUTES.add("mpi.processes");
-    	SUPPORTED_ATTRIBUTES.add("mpi.ppn");
-    	SUPPORTED_ATTRIBUTES.add("maxwalltime");
-    }
-
     private int id;
     private Task task;
 
@@ -58,17 +46,17 @@ public class Job implements Comparable<Job> {
        If not 1, number of MPI processes required (i.e., mpiexec -n)
        Set by JobSpecification attribute "mpi.processes"
      */
-    int mpiProcesses;
+    private int count;
 
     /**
        If not 1, number of MPI processes required (i.e., mpiexec -n)
        Set by JobSpecification attribute "mpi.processes"
      */
-    int mpiPPN;
+    private int mpiPPN;
 
     private TimeInterval walltime;
     private Time starttime, endtime;
-    private boolean done;
+    private boolean done, canceled;
 
     private static int sid;
 
@@ -86,39 +74,42 @@ public class Job implements Comparable<Job> {
 	public Job(Task task, int cpus) {
 		this();
         setTask(task);
-        this.mpiProcesses = cpus;
+        this.count = cpus;
     }
 
-    void setTask(Task task) {
+    private void setTask(Task task) {
         this.task = task;
+        if (task == null) {
+            return;
+        }
 
-        JobSpecification spec =
-            (JobSpecification) task.getSpecification();
+        JobSpecification spec = (JobSpecification) task.getSpecification();
 
         // Set walltime
-        Object tmp = spec.getAttribute("maxwalltime");
-        if (tmp == null) {
+        Object mwt = spec.getAttribute("maxwalltime");
+        if (mwt == null) {
             this.walltime = TimeInterval.fromSeconds(10 * 60);
         }
         else {
-            WallTime wt = new WallTime(tmp.toString());
+            WallTime wt = new WallTime(mwt.toString());
             this.walltime = TimeInterval.fromSeconds(wt.getSeconds());
         }
 
-        // MPI settings
-        tmp = spec.getAttribute("mpi.processes");
-        if (tmp == null)
-            mpiProcesses = 1;
+        
+        Object scount = spec.getAttribute("count");
+        if (scount == null) {
+            count = 1;
+        }
         else {
-            mpiProcesses = Integer.parseInt((String) tmp);
-            tmp = spec.getAttribute("mpi.ppn");
-            if (tmp == null)
+            count = Integer.parseInt((String) scount);
+            Object ppn = spec.getAttribute("mpi.ppn");
+            if (ppn == null) {
             	mpiPPN = 1;
-            else
-            	mpiPPN = Integer.parseInt((String) tmp);
-            logger.info("MPI Job: id=" + id +
-                         " mpi.processes=" + mpiProcesses +
-                         " mpi.ppn=" + mpiPPN);
+            }
+            else {
+            	mpiPPN = Integer.parseInt((String) ppn);
+            }
+            logger.info("MPI Job: id=" + id + " count=" + count + " mpi.ppn=" + mpiPPN);
         }
     }
 
@@ -178,9 +169,9 @@ public class Job implements Comparable<Job> {
         sb.append(id);
         sb.append(" ");
         sb.append(walltime);
-        if (mpiProcesses != 1) {
+        if (count != 1) {
             sb.append(" [");
-            sb.append(mpiProcesses);
+            sb.append(count);
             sb.append('/');
             sb.append(mpiPPN);
             sb.append("]");
@@ -208,6 +199,31 @@ public class Job implements Comparable<Job> {
     }
 
     public int getCpus() {
-        return mpiProcesses;
+        return count;
     }
+    
+    public boolean isCanceled() {
+        return canceled;
+    }
+
+    public void setCanceled(boolean canceled) {
+        this.canceled = canceled;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
+    public int getMpiPPN() {
+        return mpiPPN;
+    }
+
+    public void setMpiPPN(int mpiPPN) {
+        this.mpiPPN = mpiPPN;
+    }
+
 }

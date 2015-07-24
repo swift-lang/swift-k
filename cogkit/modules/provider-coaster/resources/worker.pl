@@ -155,6 +155,8 @@ my $SOFT_IMAGE_FIRST_IN_PROCESS = 1;
 # to signal all other workers on this node to fail and then quit 
 my $SOFT_IMAGE_JOB_ID;
 
+my $INTERNAL_ID_COUNTER = 0;
+
 use constant BUFSZ => 2048;
 use constant IOBUFSZ => 32768;
 use constant IOBLOCKSZ => 8;
@@ -285,6 +287,9 @@ my %HANDLERS = (
 	"REGISTER"  => \&registerHandler,
 	"HEARTBEAT" => \&heartbeatHandler,
 	"WORKERSHELLCMD" => \&workershellcmdHandler,
+	"STAGEIN" => \&stageinHandler,
+	"STAGEOUT" => \&stageoutHandler,
+	"CLEANUP" => \&cleanupHandler,
 );
 
 my @SENDQ = ();
@@ -1278,6 +1283,98 @@ sub workershellcmdHandler {
 	}
 }
 
+sub stageinHandler {
+	my ($tag, $timeout, $msgs) = @_;
+	
+	my $descref = $$msgs[0];
+	my $desc = $$descref;
+	my @lines = split(/\n/, $desc);
+	my $line;
+	my @STAGEIN = ();
+	my @STAGEIND = ();
+	foreach $line (@lines) {
+		$line =~ s/\\n/\n/g;
+		$line =~ s/\\\\/\\/g;
+		my @pp = split(/\n/, $line, 3);
+		push @STAGEIN, $pp[0];
+		push @STAGEIND, $pp[1];
+	}
+	
+	my $JOBID = "internal-$INTERNAL_ID_COUNTER";
+	$INTERNAL_ID_COUNTER++; 
+	
+	$JOBDATA{$JOBID} = {
+		stagein => \@STAGEIN,
+		stageind => \@STAGEIND,
+		stageindex => 0,
+		type => "stagein",
+		requestTag => $tag
+	};
+	
+	stagein($JOBID);
+}
+
+sub stageoutHandler {
+	my ($tag, $timeout, $msgs) = @_;
+	my $descref = $$msgs[0];
+	my $desc = $$descref;
+	my @lines = split(/\n/, $desc);
+	my $line;
+	my @STAGEOUT = ();
+	my @STAGEOUTD = ();
+	my @STAGEOUTM = ();
+	foreach $line (@lines) {
+		$line =~ s/\\n/\n/g;
+		$line =~ s/\\\\/\\/g;
+		my @pp = split(/\n/, $line, 3);
+		push @STAGEOUT, $pp[0];
+		push @STAGEOUTD, $pp[1];
+		push @STAGEOUTM, $pp[2];
+	}
+
+	my $JOBID = "internal-$INTERNAL_ID_COUNTER";
+	$INTERNAL_ID_COUNTER++; 
+	
+	$JOBDATA{$JOBID} = {
+		stageout => \@STAGEOUT,
+		stageoutd => \@STAGEOUTD,
+		stageoutm => \@STAGEOUTM,
+		stageindex => 0,
+		type => "stageout",
+		stageoutStatusSent => 1,
+		requestTag => $tag
+	};
+	
+	stageout($JOBID);
+}
+
+sub cleanupHandler {
+	my ($tag, $timeout, $msgs) = @_;
+	my $descref = $$msgs[0];
+	my $desc = $$descref;
+	my @lines = split(/\n/, $desc);
+	my $line;
+	my @CLEANUP = ();
+	foreach $line (@lines) {
+		$line =~ s/\\n/\n/g;
+		$line =~ s/\\\\/\\/g;
+		push @CLEANUP, $line;
+	}
+
+	my $JOBID = "internal-$INTERNAL_ID_COUNTER";
+	$INTERNAL_ID_COUNTER++; 
+	
+	$JOBDATA{$JOBID} = {
+		cleanup => \@CLEANUP,
+		type => "cleanup",
+		requestTag => $tag,
+		exitcode => 0
+	};
+	
+	cleanup($JOBID);
+}
+
+
 sub urisplit {
 	my ($name) = @_;
 
@@ -1357,15 +1454,12 @@ sub getFileCBDataInIndirect {
 		if (processCBError($state, $replyref, $flags)) {
 			my $msg = getErrorMessage($state);
 			wlog DEBUG, "$jobid getFileCBDataInIndirect error: $msg\n";
-			queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_RECEIVE, 
-				"Error staging in file: $msg", getErrorDetail($state));
-			delete($JOBDATA{$jobid});	
+			stageinFailed($jobid, ERROR_STAGEIN_RECEIVE, "Error staging in file: $msg", getErrorDetail($state));	
 		}
 		return;
 	}
 	elsif ($timeout) {
-		queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file");
-		delete($JOBDATA{$jobid});
+		stageinFailed($jobid, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file");
 		return;
 	}
 	if ($flags & FINAL_FLAG) {
@@ -1405,16 +1499,13 @@ sub getFileCBDataIn {
 				if ($DEBUG_ENABLED) {
 					wlog DEBUG, "$jobid getFileCBDataIn error: $msg\n";
 				}
-				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_RECEIVE, 
-					"Error staging in file: $msg", getErrorDetail($state));
-				delete($JOBDATA{$jobid});
+				stageinFailed($jobid, ERROR_STAGEIN_RECEIVE, "Error staging in file: $msg", getErrorDetail($state));
 			}
 		}
 		return;
 	}
 	elsif ($timeout) {
-		queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file");
-		delete($JOBDATA{$jobid});
+		stageinFailed($jobid, ERROR_STAGEIN_TIMEOUT, "Timeout staging in file");
 		return;
 	}
 	elsif ($s == 0) {
@@ -1434,7 +1525,7 @@ sub getFileCBDataIn {
 					wlog DEBUG, "$jobid Could not write to file: $!. Descriptor was $handle; lfile: $$state{'lfile'}\n";
 				}
 				queueSignal($tag, ("ABORT $!"));
-				queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_FILE_WRITE, "Could not write to file: $!");
+				stageinFaield($jobid, ERROR_STAGEIN_FILE_WRITE, "Could not write to file: $!");
 				delete($$state{"handle"});
 				delete($JOBDATA{$jobid});
 				return;
@@ -1531,11 +1622,10 @@ sub stagein {
 	if (scalar @$STAGE <= $STAGEINDEX) {
 		wlog INFO, "$jobid Done staging in files ($STAGEINDEX, $STAGE)\n";
 		$JOBDATA{$jobid}{"stageindex"} = 0;
-		queueJobStatusCmd($jobid, ACTIVE, 0, "workerid=$BLOCKID:$ID");
-		forkjob($jobid);
+		stageinComplete($jobid);
 	}
 	else {
-		if ($STAGEINDEX == 0) {
+		if ($STAGEINDEX == 0 && $JOBDATA{$jobid}{"type"} eq "full") {
 			queueJobStatusCmd($jobid, STAGEIN, 0, "workerid=$BLOCKID:$ID");
 		}
 		wlog INFO, "$jobid Staging in $$STAGE[$STAGEINDEX]\n";
@@ -1566,8 +1656,7 @@ sub stagein {
 						stagein($jobid);
 					}
 					else {
-						queueJobStatusCmd($jobid, FAILED, ERROR_STAGEIN_IO, $msg);
-						delete($JOBDATA{$jobid});
+						stageinFailed($jobid, ERROR_STAGEIN_IO, $msg);
 					}
 				}
 			);
@@ -1576,6 +1665,31 @@ sub stagein {
 			getFile($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
 		}
 	}
+}
+
+sub stageinComplete {
+	my ($jobid) = @_;
+	
+	my $jobType = $JOBDATA{$jobid}{"type"};
+	
+	if ($jobType eq "full") { 
+		queueJobStatusCmd($jobid, ACTIVE, 0, "workerid=$BLOCKID:$ID");
+		forkjob($jobid);
+	}
+	else {
+		queueReply($JOBDATA{$jobid}{"requestTag"}, ("OK"));
+		delete($JOBDATA{$jobid}); 
+	}
+}
+
+sub stageinFailed {
+	my ($jobid, $code, $msg, $detail) = @_;
+	
+	my $jobType = $JOBDATA{$jobid}{"type"};
+	if ($jobType eq "full") {
+		queueJobStatusCmd($jobid, FAILED, $code, $msg, $detail);
+	}
+	delete($JOBDATA{$jobid});
 }
 
 sub getFile {
@@ -1689,15 +1803,34 @@ sub stageoutStarted {
 	wlog DEBUG, "$jobid Stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
 }
 
+sub stageoutFailed {
+	my ($jobid, $code, $msg) = @_;
+	queueJobStatusCmd($jobid, FAILED, $code, $msg);
+	delete($JOBDATA{$jobid});
+}
+
 sub stageoutEnded {
 	my ($jobid) = @_;
 	
 	wlog DEBUG, "$jobid Stageout done; stagecount is $JOBDATA{$jobid}{stageoutCount}\n";
 	$JOBDATA{$jobid}{"stageoutCount"} -= 1;
 	if ($JOBDATA{$jobid}{"stageoutCount"} == 0) {
-		wlog DEBUG, "$jobid All stageouts acknowledged. Sending notification\n";
+		stageoutsComplete($jobid);
+	}
+}
+
+sub stageoutsComplete {
+	my ($jobid) = @_;
+	
+	wlog DEBUG, "$jobid All stageouts acknowledged. Sending notification\n";
+	
+	if ($JOBDATA{$jobid}{"type"} eq "full") {
 		cleanup($jobid);
 		sendStatus($jobid);
+	}
+	else {
+		queueReply($JOBDATA{$jobid}{"requestTag"}, ("OK"));
+		delete($JOBDATA{$jobid});
 	}
 }
 
@@ -1815,8 +1948,7 @@ sub stageout {
 							stageoutEnded($jobid);
 						}
 						else {
-							queueJobStatusCmd($jobid, FAILED, ERROR_STAGEOUT_IO, $msg);
-							delete($JOBDATA{$jobid});
+							stageoutFailed($jobid, ERROR_STAGEOUT_IO, $msg);
 						}
 					}
 				);
@@ -2009,7 +2141,7 @@ sub readFiles {
 }
 
 sub sendStatus {
-	my ($jobid) = @_;
+	my ($jobid) = @_;	
 
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
 	
@@ -2055,9 +2187,11 @@ sub sendStatus {
 
 sub cleanup {
 	my ($jobid) = @_;
+	
+	my $type = $JOBDATA{$jobid}{"type"};
 
 	my $ec = $JOBDATA{$jobid}{"exitcode"};
-	if (ASYNC) {
+	if (ASYNC && $type eq "full") {
 		wlog DEBUG, "$jobid async is on. Sending notification before cleanup\n";
 		sendStatus($jobid);
 	}
@@ -2087,7 +2221,11 @@ sub cleanup {
 				wlog DEBUG, "$jobid pid: $pid cleanup\n";
 			},
 			sub {
-				if (!ASYNC) {
+				if ($type eq "cleanup") {
+					queueReply($JOBDATA{$jobid}{"requestTag"}, ("OK"));
+					delete($JOBDATA{$jobid});
+				}
+				elsif (!ASYNC) {
 					queueJobStatusCmd($jobid, COMPLETED, 0, "");
 				}
 			}
@@ -2453,6 +2591,7 @@ sub submitjobHandler {
 			maxwalltime => $MAXWALLTIME,
 			perftrace => $PERFTRACE,
 			softimage => $SOFTIMAGE,
+			type => "full",
 		};
 
 		stagein($JOBID);

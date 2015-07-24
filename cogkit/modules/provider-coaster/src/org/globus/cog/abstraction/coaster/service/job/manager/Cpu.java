@@ -104,7 +104,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
         lastTime = now;
         return dif;
     }
-
+    
     private void jobTerminated() {
         assert Thread.holdsLock(this);
         
@@ -119,6 +119,17 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
         busyTime += timeDiff();
         // done.add(running);
         bqp.jobTerminated(running);
+        running = null;
+        if (!checkSuspended(block)) {
+            pullLater();
+        }
+    }
+    
+    protected synchronized void mpiRankTerminated() {        
+        block.remove(this);
+        donetime = Time.now();
+        timelast = donetime;
+        busyTime += timeDiff();
         running = null;
         if (!checkSuspended(block)) {
             pullLater();
@@ -229,10 +240,13 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
         boolean result = false;
         running = job;
         running.start();
-        if (job.mpiProcesses == 1)
+        if (job.getCount() == 1) {
             result = launchSequential();
-        else
-            result = launchMPICH(job);
+        }
+        else {
+            //result = launchMPICH(job);
+            result = launchMPI(job);
+        }
         return result;
     }
 
@@ -261,10 +275,24 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
        PullThread.getSleepers()
      */
     boolean launchMPICH(Job job) {
-    	int cpuCount = job.mpiProcesses/job.mpiPPN;
-        List<Cpu> cpus = getPullThread().getSleepers(cpuCount-1);
+    	int cpuCount = job.getCount() / job.getMpiPPN();
+        List<Cpu> cpus = getPullThread().getSleepers(cpuCount - 1);
         cpus.add(this);
         Mpiexec mpiexec = new Mpiexec(cpus, job);
+        boolean result = mpiexec.launch();
+        return result;
+    }
+    
+    boolean launchMPI(Job job) {
+        int cpuCount = job.getCount() / job.getMpiPPN();
+        List<Cpu> cpus = getPullThread().getSleepers(cpuCount - 1);
+        cpus.add(0, this);
+        idleTime += timeDiff();
+        timelast = running.getEndTime();
+        if (timelast == null) {
+            CoasterService.error(20, "Timelast is null", new Throwable());
+        }
+        Mpiexec2 mpiexec = new Mpiexec2(cpus, job, timelast);
         boolean result = mpiexec.launch();
         return result;
     }

@@ -136,11 +136,9 @@ public class SortedJobSet implements Iterable<Job> {
        given walltime and less than or equal to the given cpus
        Could be cleaned up using Java 1.6 functionality
      */
-    public synchronized Job removeOne(TimeInterval walltime,
-                                      int cpus) {
+    public synchronized Job removeOne(TimeInterval walltime, int cpus) {
         Job result = null;
-        SortedMap<TimeInterval, LinkedList<Job>> smaller =
-            sm.headMap(walltime);
+        SortedMap<TimeInterval, LinkedList<Job>> smaller = sm.headMap(walltime);
 
         while (! smaller.isEmpty()) {
             TimeInterval key = smaller.lastKey();
@@ -148,7 +146,9 @@ public class SortedJobSet implements Iterable<Job> {
             result = removeOne(key, jobs, cpus);
             if (result != null) {
                 jsize -= metric.getSize(result);
-                if (--size == 0) jsize = 0;
+                if (--size == 0) {
+                    jsize = 0;
+                }
                 return result;
             }
             smaller = smaller.headMap(key);
@@ -160,16 +160,16 @@ public class SortedJobSet implements Iterable<Job> {
         Job result = null;
         for (Iterator<Job> it = jobs.iterator(); it.hasNext(); ) {
             Job job = it.next();
-            int jobCpus = job.mpiProcesses != 1 ?
-            	          job.mpiProcesses/job.mpiPPN : 1;
+            int jobCpus = job.getCount() != 1 ? job.getCount() / job.getMpiPPN() : 1;
             if (jobCpus <= cpus) {
                 result = job;
                 it.remove();
                 break;
             }
         }
-        if (jobs.isEmpty())
+        if (jobs.isEmpty()) {
             sm.remove(key);
+        }
         return result;
     }
 

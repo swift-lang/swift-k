@@ -123,16 +123,16 @@ public class Mpiexec implements ProcessListener, ExtendedStatusListener {
         String v = System.getProperty("mpiexec.host.subst");
         if (v != null && v.length() > 0) {
             mpiexecHostSubst = v;
-            logger.debug("Property mpiexec.host.subst="
-                    + mpiexecHostSubst);
+            logger.debug("Property mpiexec.host.subst=" + mpiexecHostSubst);
         }
 
         v = System.getProperty("mpiexec.verbose");
-        if (v != null && v.length() > 0)
+        if (v != null && v.length() > 0) {
             verbose = Boolean.parseBoolean(v);
+        }
     }
 
-    Mpiexec(List<Cpu> cpus, Job job) {
+    public Mpiexec(List<Cpu> cpus, Job job) {
         assert(cpus.size() > 0);
     	this.cpus = cpus;
         this.job = job;
@@ -181,9 +181,7 @@ public class Mpiexec implements ProcessListener, ExtendedStatusListener {
         Streamer streamer = new Streamer(estream, ebytes);
         streamer.start();
         Object object = new Object();
-        StreamProcessor sprocessor =
-        	new StreamProcessor(istream, ibytes, object,
-        	                    "HYDRA_LAUNCH_END");
+        StreamProcessor sprocessor = new StreamProcessor(istream, ibytes, object, "HYDRA_LAUNCH_END");
         monitor(process);
         boolean result = waitForHydra(sprocessor, object);
         output = ibytes.toString();
@@ -210,7 +208,7 @@ public class Mpiexec implements ProcessListener, ExtendedStatusListener {
         cmdl.add("manual");
         cmdl.add("-disable-hostname-propagation");
         cmdl.add("-n");
-        cmdl.add(Integer.toString(job.mpiProcesses));
+        cmdl.add(Integer.toString(job.getCount()));
         cmdl.add("-hosts");
         cmdl.add(hosts);
         cmdl.add(spec.getExecutable());
@@ -261,12 +259,13 @@ public class Mpiexec implements ProcessListener, ExtendedStatusListener {
             Cpu cpu = cpus.get(i);
             Node node = cpu.getNode();
             sb.append(node.getHostname());
-            if (job.mpiPPN > 1) {
+            if (job.getMpiPPN() > 1) {
             	sb.append(':');
-            	sb.append(job.mpiPPN);
+            	sb.append(job.getMpiPPN());
             }
-            if (i < cpus.size() - 1)
+            if (i < cpus.size() - 1) {
                 sb.append(',');
+            }
         }
 
         return sb.toString();
@@ -311,13 +310,15 @@ public class Mpiexec implements ProcessListener, ExtendedStatusListener {
         List<String[]> result = new ArrayList<String[]>();
 
         String[] lines = output.split("\\n");
-        for (String line : lines)
+        for (String line : lines) {
+            System.out.println("mprunc: " + line);
             if (line.startsWith("HYDRA_LAUNCH:")) {
                 line = proxyLineSubst(line);
                 String[] tokens = line.split("\\s");
                 String[] args = StringUtil.subset(tokens, 1);
                 result.add(args);
             }
+        }
 
         return result;
     }
