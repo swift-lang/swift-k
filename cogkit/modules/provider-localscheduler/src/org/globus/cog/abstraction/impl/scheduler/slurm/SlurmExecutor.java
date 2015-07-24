@@ -113,7 +113,7 @@ public class SlurmExecutor extends AbstractExecutor {
 	@Override
 	protected void writeScript(Writer wr, String exitcodefile, String stdout, String stderr) 
 			throws IOException {
-		
+
 		Task task = getTask();
 		JobSpecification spec = getSpec();
 		Properties properties = Properties.getProperties();
@@ -124,11 +124,11 @@ public class SlurmExecutor extends AbstractExecutor {
 
 		String type = (String) spec.getAttribute("jobType");
 		Object countValue = getSpec().getAttribute("count");
-		
+
 		if (countValue != null) {
 			count = parseAndValidateInt(countValue, "count");
 		}
-		
+
 		wr.write("#SBATCH --job-name=" + task.getName() + '\n');
 		wr.write("#SBATCH --output=" + quote(stdout) + '\n');
 		wr.write("#SBATCH --error=" + quote(stderr) + '\n');
@@ -136,23 +136,29 @@ public class SlurmExecutor extends AbstractExecutor {
 		writeNonEmptyAttr("project", "--account", wr);
 		writeNonEmptyAttr("queue", "--partition", wr);
 		writeWallTime(wr);
-		
 
-        wr.write("#SBATCH -n 32\n");
-        /*
 	    if("single".equalsIgnoreCase(type)) {
 			writeNonEmptyAttr("ppn", "--ntasks-per-node", wr);
-	    } else { 
+	    } else {
 	    	wr.write("#SBATCH --ntasks-per-node=1\n");
 	    	writeNonEmptyAttr("jobsPerNode", "--cpus-per-task", wr);
 	    }
-        */
 
 		// Handle all slurm attributes specified by the user
 		for (String a : spec.getAttributeNames()) {
 			if (a != null && a.startsWith("slurm.")) {
 				String attributeName[] = a.split("slurm.");
-				if (attributeName[1].equals("exclusive")) {
+
+                if (attributeName[1].equals("ranks")) {
+
+                    //String ranks = spec.getAttribute(a);
+                    wr.write("#SBATCH -N " + spec.getAttribute(a) + '\n');
+
+                } else if (attributeName[1].equals("mode")) {
+                    if (spec.getAttribute(a).equals("mpi")) {
+                        type = "mpi";
+                    }
+                } else if (attributeName[1].equals("exclusive")) {
 					exclusive_defined = true;
 					if (spec.getAttribute(a).equals("true")) {
 						wr.write("#SBATCH --exclusive");
@@ -160,6 +166,7 @@ public class SlurmExecutor extends AbstractExecutor {
 						wr.write("#SBATCH --share");
 					}
 				} else {
+                    //wr.write("# DEBUG In else block <2> \n");
 					wr.write("#SBATCH --" + attributeName[1] + "="
 							+ spec.getAttribute(a) + '\n');
 				}
@@ -202,10 +209,9 @@ public class SlurmExecutor extends AbstractExecutor {
 		else if("single".equalsIgnoreCase(type)) {
 			wr.write("/bin/bash -c \'");
 		} else {
-            // DEBUG ONLY
-			//wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
-			//wr.write("$RUNCOMMAND /bin/bash -c \'");
-			wr.write("/bin/bash -c \'");
+			wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
+			wr.write("$RUNCOMMAND /bin/bash -c \'");
+			//wr.write("/bin/bash -c \'");
 		}
 
 		if (spec.getDirectory() != null) {

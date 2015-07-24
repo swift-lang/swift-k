@@ -107,9 +107,13 @@ site."*" {
 				pbs {
 					"*": "?Object"
 					aprun: "?Boolean"
-					mpp: "?Boolean"	
+					mpp: "?Boolean"
 					properties: "?String"
 				}
+                slurm {
+                    mode: "?String"
+                    "*": "?Object"
+                }
 				depth: "?StrictlyPositiveInt"
 				ppn: "?StrictlyPositiveInt"
 				condor {
