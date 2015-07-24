@@ -61,7 +61,7 @@ public class BlockRequestedProcessor extends AbstractRemoteLogProcessor {
             p.markTo(",");
             int coresPerWorker = Integer.parseInt(p.getToken());
             p.skip("walltime=");
-            int walltime = Integer.parseInt(p.remaining());
+            long walltime = Long.parseLong(p.remaining());
             
             CoasterStatusItem item = (CoasterStatusItem) state.getItemByID(CoasterStatusItem.ID, StatefulItemClass.MISC);
             item.newBlock(blockId, cores, coresPerWorker, walltime);
