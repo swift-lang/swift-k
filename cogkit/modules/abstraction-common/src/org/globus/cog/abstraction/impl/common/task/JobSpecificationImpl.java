@@ -484,7 +484,18 @@ public class JobSpecificationImpl implements JobSpecification {
                     new HashMap<String,Object>(attributes);
             }
             result.arguments = new ArrayList<String>(arguments);
-
+            if (environment != null) {
+                result.environment = new HashMap<String, String>(environment);
+            }
+            if (cleanUpSet != null) {
+                result.cleanUpSet = (CleanUpSet) cleanUpSet.clone();
+            }
+            if (stagein != null) {
+                result.stagein = (StagingSet) stagein.clone();
+            }
+            if (stageout != null) {
+                result.stageout = (StagingSet) stageout.clone();
+            }
         }
         catch (CloneNotSupportedException e) {
             e.printStackTrace();

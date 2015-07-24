@@ -34,4 +34,15 @@ import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
 
 public class StagingSetImpl extends HashSet<StagingSetEntry> implements StagingSet {
+    public StagingSetImpl() {
+        super();
+    }
+    
+    public StagingSetImpl(StagingSet o) {
+        super(o);
+    }
+    
+    public Object clone() {
+        return new StagingSetImpl(this);
+    }
 }

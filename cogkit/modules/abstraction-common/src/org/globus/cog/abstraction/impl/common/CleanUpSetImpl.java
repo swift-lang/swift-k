@@ -33,6 +33,14 @@ import java.util.HashSet;
 import org.globus.cog.abstraction.interfaces.CleanUpSet;
 
 public class CleanUpSetImpl extends HashSet<String> implements CleanUpSet {
+    
+    public CleanUpSetImpl() {
+        super();
+    }
+    
+    private CleanUpSetImpl(CleanUpSetImpl s) {
+        super(s);
+    }
 
     public boolean add(String e) {
         return super.add(e);
@@ -40,5 +48,9 @@ public class CleanUpSetImpl extends HashSet<String> implements CleanUpSet {
 
     public void remove(String e) {
         super.remove(e);
+    }
+    
+    public Object clone() {
+        return new CleanUpSetImpl(this);
     }
 }

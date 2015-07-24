@@ -29,4 +29,5 @@
 package org.globus.cog.abstraction.interfaces;
 
 public interface StagingSet extends java.util.Set<StagingSetEntry> {
+    Object clone();
 }
