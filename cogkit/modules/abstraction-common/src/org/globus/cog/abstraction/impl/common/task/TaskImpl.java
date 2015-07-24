@@ -398,12 +398,11 @@ public class TaskImpl implements Task {
             e.printStackTrace();
         }
         task.specification = (Specification) specification.clone();
-        if (attributes != null)
+        if (attributes != null) {
             task.attributes = new HashMap<String,Object>(attributes);
-        task.outputListeners = 
-            new CopyOnWriteHashSet<OutputListener>();
-        task.statusListeners = 
-            new CopyOnWriteHashSet<StatusListener>();
+        }
+        task.outputListeners = new CopyOnWriteHashSet<OutputListener>();
+        task.statusListeners = new CopyOnWriteHashSet<StatusListener>();
         
         return task;
     }
