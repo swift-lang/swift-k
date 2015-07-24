@@ -61,7 +61,7 @@ public class SlurmExecutor extends AbstractExecutor {
 
 	/**
 	 * Write walltime in hh:mm:ss
-	 * 
+	 *
 	 * @param wr
 	 * @throws IOException
 	 */
@@ -137,12 +137,20 @@ public class SlurmExecutor extends AbstractExecutor {
 		writeNonEmptyAttr("queue", "--partition", wr);
 		writeWallTime(wr);
 
-	    if("single".equalsIgnoreCase(type)) {
-			writeNonEmptyAttr("ppn", "--ntasks-per-node", wr);
-	    } else {
-	    	wr.write("#SBATCH --ntasks-per-node=1\n");
-	    	writeNonEmptyAttr("jobsPerNode", "--cpus-per-task", wr);
-	    }
+        String mode = (String) spec.getAttribute("slurm.mode");
+        // If mode is set to MPI, ntasks-per-node and cpus-per-task
+        // must be handled manually via jobOptions.slurm.<option> = <value
+        // This is necessary to avoid default tasks per node values
+        // creating conflicts in submission requests
+        if (! mode.equals("mpi")){
+            wr.write("#DEBUG MPI MODE INVOKED! \n");
+            if("single".equalsIgnoreCase(type)) {
+                writeNonEmptyAttr("ppn", "--ntasks-per-node", wr);
+            } else {
+                wr.write("#SBATCH --ntasks-per-node=1\n");
+                writeNonEmptyAttr("jobsPerNode", "--cpus-per-task", wr);
+            }
+        }
 
 		// Handle all slurm attributes specified by the user
 		for (String a : spec.getAttributeNames()) {
