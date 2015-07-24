@@ -375,13 +375,18 @@ public class CoasterPersistentService extends CoasterService {
     private static void addShutdownHook(final CoasterPersistentService s) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
+                System.out.println("Shutting down service...");
             	if (stats) {
             		if (statusDisplay != null) {
             			statusDisplay.close();
             		}           		
             	}
-                System.out.println("Shutting down service...");
-                s.shutdown();
+                try {
+                    s.shutdown();
+                }
+                catch (Exception e) {
+                    logger.warn("Shutdown failed", e);
+                }
             }
         });
     }
