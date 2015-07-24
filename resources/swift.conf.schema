@@ -43,6 +43,9 @@ app."*" {
                 "*"     : "?Object"
         }
 		"*": "?Object"
+		mpi {
+			"*": "?Object"
+		}
 	}
 	env."*": "String"
 }
@@ -184,6 +187,9 @@ site."*" {
                 "*"     : "?Object"
             }
             "*": "?Object"
+            mpi {
+				"*": "?Object"
+			}
 		}
 
 		env."*": "String"
