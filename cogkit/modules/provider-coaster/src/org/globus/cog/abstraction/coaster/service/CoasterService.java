@@ -593,16 +593,20 @@ public class CoasterService extends GSSService implements ChannelListener {
     /**
        This reports a fatal error
      */
-    public static void error(int code, String msg, Throwable t) {
+    public static void error(final int code, String msg, Throwable t) {
+        System.err.println("CoasterService fatal error");
         if (msg != null) {
-        	System.err.println("CoasterService fatal error:");
             System.err.println(msg);
         }
         if (t != null) {
             t.printStackTrace();
         }
         logger.fatal(msg, t);
-        System.exit(code);
+        new Thread() {
+            public void run() {
+                System.exit(code);
+            }
+        }.start();
     }
 
     public boolean isLocal() {
