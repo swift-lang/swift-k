@@ -229,6 +229,19 @@ public class Block implements StatusListener, Comparable<Block> {
                 getEndTime()));
         }
     }
+    
+    public void addAll(List<Cpu> cpus, Time estJobCompletionTime) {
+        Cpu last = null;
+        synchronized (cpus) {
+            for (Cpu cpu : cpus) {
+                if (scpus.put(cpu, estJobCompletionTime) != null) {
+                    CoasterService.error(15, "CPU is already in the block", new Throwable());
+                }
+            }
+            last = scpus.lastKey();
+        }
+        setDeadline(Time.min(estJobCompletionTime.add(bqp.getSettings().getReserve()), getEndTime()));
+    }
 
     public boolean shutdownIfEmpty(Cpu cpu) {
         synchronized (cpus) {
