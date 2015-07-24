@@ -160,7 +160,7 @@ public class SlurmExecutor extends AbstractExecutor {
                 if (attributeName[1].equals("ranks")) {
 
                     //String ranks = spec.getAttribute(a);
-                    wr.write("#SBATCH -N " + spec.getAttribute(a) + '\n');
+                    wr.write("#SBATCH -n " + spec.getAttribute(a) + '\n');
 
                 } else if (attributeName[1].equals("mode")) {
                     if (spec.getAttribute(a).equals("mpi")) {
