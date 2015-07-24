@@ -52,19 +52,20 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
 
     public void run() {
         try {
-            AssociatedTask at;
+            Job at;
             while (!getShutdownFlag()) {
                 at = take();
-                if (at.task == null && getShutdownFlag()) {
+                Task t = at.getTask();
+                if (t == null && getShutdownFlag()) {
                     break;
                 }
                 try {
-                    at.task.setService(0, buildService(at.task));
-                    taskHandler.submit(at.task);
+                    t.setService(0, buildService(t));
+                    taskHandler.submit(t);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
-                    at.task.setStatus(new StatusImpl(Status.FAILED, null, e));
+                    t.setStatus(new StatusImpl(Status.FAILED, null, e));
                 }
             }
             done = true;
@@ -78,7 +79,7 @@ public class LocalQueueProcessor extends AbstractQueueProcessor {
     public void startShutdown() {
         super.startShutdown();
         // wake up the loop
-        getQueue().offer(new AssociatedTask(null));
+        getQueue().offer(new Job(null));
     }
 
     @Override

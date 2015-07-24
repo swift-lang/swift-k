@@ -39,7 +39,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public abstract class AbstractQueueProcessor extends Thread implements QueueProcessor {
-    private final BlockingQueue<AssociatedTask> q;
+    private final BlockingQueue<Job> q;
     private boolean shutdownFlag;
     private boolean wrap;
     private final LocalTCPService localService;
@@ -49,7 +49,7 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
     public AbstractQueueProcessor(String name, LocalTCPService localService) {
         super(name);
         this.localService = localService;
-        q = new LinkedBlockingQueue<AssociatedTask>();
+        q = new LinkedBlockingQueue<Job>();
     }
 
     public LocalTCPService getLocalService() {
@@ -57,10 +57,14 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
     }
 
     public void enqueue(Task t) {
+        enqueue(new Job(t));
+    }
+    
+    protected void enqueue(Job j) {
         if (shutdownFlag) {
             throw new IllegalStateException("Queue is shut down");
         }
-        q.offer(new AssociatedTask(t));
+        q.offer(j);
         queueSeq++;
     }
 
@@ -72,11 +76,11 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
         return shutdownFlag;
     }
 
-    protected final AssociatedTask take() throws InterruptedException {
+    protected final Job take() throws InterruptedException {
         return q.take();
     }
     
-    protected Queue<AssociatedTask> getQueue() {
+    protected Queue<Job> getQueue() {
         return q;
     }
 
@@ -110,16 +114,19 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
         return queueSeq;
     }
     
-    private static final AssociatedTask[] AT_ARRAY = new AssociatedTask[0];
+    private static final Job[] AT_ARRAY = new Job[0];
 
     @Override
     public void cancelTasksForChannel(CoasterChannel channel) {
         String id = channel.getID();
-        AssociatedTask[] ats = q.toArray(AT_ARRAY);
-        for (AssociatedTask at : ats) {
-            String taskChannelId = (String) at.task.getAttribute("channelId");
+        Job[] jobs = q.toArray(AT_ARRAY);
+        for (Job job : jobs) {
+            if (job.getTask() == null) {
+                continue;
+            }
+            String taskChannelId = (String) job.getTask().getAttribute("channelId");
             if (id.equals(taskChannelId)) {
-                at.setCanceled(true);
+                job.setCanceled(true);
             }
         }
     }
