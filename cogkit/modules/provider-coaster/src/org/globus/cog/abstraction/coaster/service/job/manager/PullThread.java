@@ -121,11 +121,10 @@ public class PullThread extends Thread {
        Used to obtain Cpus for MPI jobs 
      */
     public synchronized List<Cpu> getSleepers(int count) {
-        
         logger.debug("getSleepers");
         
         // Allocate space for count sleepers plus the one active Cpu
-        List<Cpu> result = new ArrayList<Cpu>(count+1);
+        List<Cpu> result = new ArrayList<Cpu>(count + 1);
 
         while (result.size() < count) {
             Cpu sleeper = getSleeper();
