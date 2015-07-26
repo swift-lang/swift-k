@@ -87,6 +87,8 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     private Process process;
     private volatile boolean killed;
+    private boolean useMpirun;
+    int count;
 
     public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
             InvalidServiceContactException, TaskSubmissionException {
@@ -109,16 +111,23 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
 
         try {
-            int count = 1;
+            count = 1;
             Object cv = spec.getAttribute("count");
             if (cv != null) {
                 count = Integer.parseInt(cv.toString());
             }
-            log(task, count);
+            Object jobType = spec.getAttribute("jobType");
+            log(task, count, jobType);
+            int actualCount = count;
+            if ("MPI".equals(jobType)) {
+                actualCount = 1;
+                useMpirun = true;
+            }
+            
             synchronized (this) {
                 // run count copies of this task
                 if (task.getStatus().getStatusCode() != Status.CANCELED) {
-                    for (int i = 0; i < count; i++) {
+                    for (int i = 0; i < actualCount; i++) {
                         pool.submit(this);
                     }
                     task.setStatus(Status.SUBMITTED);
@@ -139,7 +148,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
     }
 
-    void log(Task task, int count) {
+    void log(Task task, int count, Object jobType) {
         if (logger.isDebugEnabled()) {
             logger.debug("Submitting task " + task);
         }
@@ -537,6 +546,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     protected List<String> buildCmdArray(JobSpecification spec) {
         List<String> arguments = new ArrayList<String>();
+        if (useMpirun) {
+            arguments.add("mpirun");
+            arguments.add("-n");
+            arguments.add(String.valueOf(count));
+        }
         arguments.add(spec.getExecutable());
         arguments.addAll(spec.getArgumentsAsList());
 
