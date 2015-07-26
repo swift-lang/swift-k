@@ -752,12 +752,13 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
         Logger.getLogger(Log.class).setLevel(Level.INFO);
         if (ap.isPresent(ARG_UI) && !"summary".equals(ap.getStringValue(ARG_UI))) {
-            if ("none".equals(ap.getStringValue(ARG_UI))) {
+            String ui = ap.getStringValue(ARG_UI);
+            if ("none".equals(ui)) {
                 // config should be loaded now
                 SwiftConfig.getDefault().set(SwiftConfig.Key.TICKER_ENABLED, false);
             }
             else {
-                ma = new MonitorAppender(projectName, ap.getStringValue(ARG_UI));
+                ma = new MonitorAppender(projectName, ui);
                 Logger.getRootLogger().addAppender(ma);
                 Logger.getLogger(Log.class).setLevel(Level.DEBUG);
                 Logger.getLogger(AbstractGridNode.class).setLevel(Level.DEBUG);
@@ -766,7 +767,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
                 Logger.getLogger(WeightedHostScoreScheduler.class).setLevel(
                     Level.INFO);
             }
-            ca.setThreshold(Level.FATAL);
+            if ("TUI".equals(ui) || "ANSI".equals(ui)) {
+                ca.setThreshold(Level.FATAL);
+            }
         }
         else if (ap.isPresent(ARG_MINIMAL_LOGGING)) {
             Logger.getLogger("swift").setLevel(Level.WARN);
