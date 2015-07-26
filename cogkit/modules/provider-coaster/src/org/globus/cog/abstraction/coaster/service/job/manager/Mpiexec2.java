@@ -238,13 +238,13 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
         if (logger.isInfoEnabled()) {
             logger.info("mpirun " + job.getTask().getIdentity());
         }
+        Node n = cpus.get(0).getNode();
         Task t = cloneTaskNoStaging();
         t.setIdentity(new IdentityImpl(t.getIdentity().toString() + "-mpi"));
-        addMPIRun((JobSpecification) t.getSpecification());
+        addMPIRun((JobSpecification) t.getSpecification(), n.getHostname());
         
         NotificationManager.getDefault().registerListener(t.getIdentity().getValue(), t, this);
         
-        Node n = cpus.get(0).getNode();
         SubmitJobCommand sjc = new SubmitJobCommand(t);
         try {
             sjc.executeAsync(n.getChannel(), this);
@@ -254,7 +254,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
         }
     }
     
-    private void addMPIRun(JobSpecification spec) {
+    private void addMPIRun(JobSpecification spec, String hnHostname) {
         List<String> args = new ArrayList<String>();
         args.add("-hostfile");
         args.add("_hostfile");
@@ -264,6 +264,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
         spec.setExecutable("mpirun");
         spec.setArguments(args);
         spec.addEnvironmentVariable("SWIFT_MPI_FSMODE", fsMode.toString());
+        spec.addEnvironmentVariable("SWIFT_MPI_HEADNODE", hnHostname);
     }
 
     private void stageout(boolean failed) {
