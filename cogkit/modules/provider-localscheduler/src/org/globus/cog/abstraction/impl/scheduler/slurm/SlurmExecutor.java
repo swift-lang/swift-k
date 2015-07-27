@@ -137,13 +137,16 @@ public class SlurmExecutor extends AbstractExecutor {
 		writeNonEmptyAttr("queue", "--partition", wr);
 		writeWallTime(wr);
 
-        String mode = (String) spec.getAttribute("slurm.mode");
+        Object oMode =  spec.getAttribute("slurm.mode");
+        String mode  = "regular";
+        if ( oMode != null ){
+            mode = (String) oMode;
+        }
         // If mode is set to MPI, ntasks-per-node and cpus-per-task
         // must be handled manually via jobOptions.slurm.<option> = <value
         // This is necessary to avoid default tasks per node values
         // creating conflicts in submission requests
         if (! mode.equals("mpi")){
-            wr.write("#DEBUG MPI MODE INVOKED! \n");
             if("single".equalsIgnoreCase(type)) {
                 writeNonEmptyAttr("ppn", "--ntasks-per-node", wr);
             } else {
