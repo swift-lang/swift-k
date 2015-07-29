@@ -444,6 +444,9 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
 
     @Override
     public void replyReceived(Command cmd) {
+        if (logger.isInfoEnabled()) {
+            logger.info("Reply to command: " + cmd);
+        }
         switch (state) {
             case STAGEIN:
                 int r;
