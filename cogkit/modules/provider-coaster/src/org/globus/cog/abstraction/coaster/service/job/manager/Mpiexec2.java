@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -290,18 +291,18 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
         StagingSet nso = new StagingSetImpl();
         
         for (StagingSetEntry e : so) {
-            if (e.getMode().contains(StagingSetEntry.Mode.ALWAYS)) {
-                nso.add(absolutizeStageout(e, jobdir));
-            }
-            else if (e.getMode().contains(StagingSetEntry.Mode.ON_ERROR) && failed) {
+            if (e.getMode().contains(StagingSetEntry.Mode.ON_ERROR) && failed) {
                 nso.add(absolutizeStageout(e, jobdir));
             }
             else if (e.getMode().contains(StagingSetEntry.Mode.ON_SUCCESS) && !failed) {
                 nso.add(absolutizeStageout(e, jobdir));
             }
+            else {
+                nso.add(absolutizeStageout(e, jobdir));
+            }
         }
         
-        StageOutCommand cmd = new StageOutCommand(so);
+        StageOutCommand cmd = new StageOutCommand(nso);
         try {
             cmd.executeAsync(cpus.get(0).getNode().getChannel(), this);
         }
@@ -325,16 +326,23 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
     
     private StagingSetEntry absolutizeStageout(StagingSetEntry e, String dir) {
         if (dir == null) {
-            return e;
+            return new StagingSetEntryImpl(e.getSource(), e.getDestination(), modMode(e.getMode()));
         }
         if (e.getSource().startsWith("/")) {
-            return e;
+            return new StagingSetEntryImpl(e.getSource(), e.getDestination(), modMode(e.getMode()));
         }
         else {
-            return new StagingSetEntryImpl(dir + "/" + e.getSource(), e.getDestination(), e.getMode());
+            return new StagingSetEntryImpl(dir + "/" + e.getSource(), e.getDestination(), modMode(e.getMode()));
         }
     }
 
+
+    private EnumSet<StagingSetEntry.Mode> modMode(EnumSet<StagingSetEntry.Mode> mode) {
+        EnumSet<StagingSetEntry.Mode> copy = EnumSet.copyOf(mode);
+        copy.remove(StagingSetEntry.Mode.ON_ERROR);
+        copy.remove(StagingSetEntry.Mode.ON_SUCCESS);
+        return copy;
+    }
 
     private void cleanup() {
         JobSpecification spec = (JobSpecification) job.getTask().getSpecification();
