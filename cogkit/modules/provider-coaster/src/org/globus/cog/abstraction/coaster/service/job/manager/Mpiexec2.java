@@ -261,7 +261,6 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
         List<String> args = new ArrayList<String>();
         args.add("-hostfile");
         args.add("_hostfile");
-        args.add("-d");
         args.add(spec.getExecutable());
         args.addAll(spec.getArgumentsAsList());
         spec.setExecutable("mpirun");
