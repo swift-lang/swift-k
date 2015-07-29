@@ -50,6 +50,7 @@ import org.globus.cog.abstraction.impl.execution.coaster.StageOutCommand;
 import org.globus.cog.abstraction.impl.execution.coaster.SubmitJobCommand;
 import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.FileLocation;
+import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
@@ -240,7 +241,9 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
         }
         Node n = cpus.get(0).getNode();
         Task t = cloneTaskNoStaging();
-        t.setIdentity(new IdentityImpl(t.getIdentity().toString() + "-mpi"));
+        Identity nid = new IdentityImpl();
+        nid.setValue(t.getIdentity().toString() + "-mpi");
+        t.setIdentity(nid);
         addMPIRun((JobSpecification) t.getSpecification(), n.getHostname());
         
         NotificationManager.getDefault().registerListener(t.getIdentity().getValue(), t, this);
