@@ -385,7 +385,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
     
     private void done() {
         if (logger.isInfoEnabled()) {
-            logger.info("done " + job.getTask().getIdentity() + ", msg=" + lastErrorMessage + ", ex=" + lastException);
+            logger.info("done " + job.getTask().getIdentity() + ", msg=" + lastErrorMessage + ", ex=" + lastException, new Throwable());
         }
         releaseNonLeadCpus();
         Status s;
