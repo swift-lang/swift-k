@@ -1,5 +1,4 @@
 # this script must be invoked inside of bash, not plain sh
-
 openinfo() {
 	exec 3<> $1
 	INFO=3
@@ -69,7 +68,9 @@ fail() {
 }
 
 checkError() {
-	if [ "$?" != "0" ]; then
+	CHECK=$1
+	shift
+	if [ "$CHECK" != "0" ]; then
 		fail $@
 	fi
 }
@@ -132,12 +133,106 @@ getarg() {
 	fi
 }
 
+MPISetVars() {
+	if [ "$OMPI_COMM_WORLD_RANK" != "" ]; then
+		export MPI_RANK="$OMPI_COMM_WORLD_RANK"
+		export MPI="true"
+		export MPI_ROOT_HOST=`echo $OMPI_MCA_orte_hnp_uri|awk 'BEGIN {FS=";"} {print gensub(/[a-z]+:\\/\\/(.*):[0-9]+/, "\\\\1", "g", $2)}'`
+		export MPI_SIZE="$OMPI_COMM_WORLD_SIZE"
+		export MPI_ROOT_PORT=22
+	elif [ "$PMI_RANK" != "" ]; then
+		export MPI_RANK="$PMI_RANK"
+		export MPI="true"
+		export MPI_SIZE="$PMI_SIZE"
+		export MPI_ROOT_HOST="$PMI_ROOT_HOST"
+		export MPI_ROOT_PORT="$PMI_ROOT_PORT"
+	elif [ "$MPI_RANK" != "" ]; then
+		export MPI="true"
+	else
+		export MPI="false"
+	fi
+}
+
+MPIInitOutputAggregation() {
+	if [ "$MPI" == "true" ]; then
+		if [ "$MPI_ROOT_HOST" == "" ]; then
+			log "MPI_ROOT_HOST is empty; cannot do output aggregation"
+		else
+			# If not visible from other ranks then this is running on a node-local fs
+			if [ "$MPI_RANK" == "0" ]; then
+				touch _mpi.fstest
+			else
+				STDOUT="$STDOUT._mpi.$MPI_RANK"
+				STDERR="$STDERR._mpi.$MPI_RANK"
+			fi
+		fi
+	fi
+}
+
+MPIWriteRankBanner() {
+	echo "                               " >>$1
+	echo "*******************************" >>$1
+	echo "**     RANK: $2                " >>$1
+	echo "*******************************" >>$1
+}
+
+MPIAggregateOutput() {
+	if [ "$MPI" == "true" ]; then
+		if [ "$MPI_ROOT_HOST" != "" ]; then
+			if [ "$MPI_RANK" == "0" ]; then
+				I=1
+				# only initialize J here. If one output times out, the
+				# others would already have taken about the same time to produce nothing
+				J=1
+				while [ "$I" -lt "$MPI_SIZE" ]; do
+					log "Waiting for output from rank $I"
+					while [ ! -f _mpi.done.$I ]; do
+						sleep 1
+						let J=J+1
+						if [ "$J" -ge "60" ]; then
+							log "Timed out waiting for output from rank $I"
+							echo "Timeout" >> $STDOUT._mpi.$I
+							echo "Timeout" >> $STDERR._mpi.$I
+						fi
+					done
+					log "Got output from rank $I"
+					MPIWriteRankBanner $STDOUT $I
+					MPIWriteRankBanner $STDERR $I
+					cat $STDOUT._mpi.$I >> $STDOUT
+					cat $STDERR._mpi.$I >> $STDERR
+					rm _mpi.done.$I
+					let I=I+1
+				done
+				rm _mpi.fstest
+			else
+				log "Staging outputs for rank $MPI_RANK"
+				if [ ! -f _mpi.fstest ]; then
+					scp -P $MPI_ROOT_PORT $STDOUT $STDERR $MPI_ROOT_HOST:$PWD/
+				fi
+				FLAG="_mpi.done.$MPI_RANK"
+				touch $FLAG
+				if [ ! -f _mpi.fstest ]; then
+					scp -P $MPI_ROOT_PORT $FLAG $MPI_ROOT_HOST:$PWD/ 
+				fi
+				# if we exit now, mpirun will terminate rank 0 before it does its job
+				sleep 60
+			fi
+		fi
+	fi
+}
+
+MPISetVars
+
 COMMANDLINE=$@
 
 # make the WFDIR absolute
 PARAMFILE=
 
-openinfo "wrapper.log"
+if [ "$MPI" == "true" ] && [ "$MPI_RANK" != "0" ]; then
+	openinfo "wrapper.log.$MPI_RANK"
+else
+	openinfo "wrapper.log"
+fi
 
 checkparamfile "$@"
 
@@ -263,7 +358,7 @@ for D in $DIRS ; do
 	if [ _$D != _ ]; then
 		mkdir -p "$D" 2>&1 >& "$INFO"
 	fi
-	checkError 254 "Failed to create input directory $D"
+	checkError $? 254 "Failed to create input directory $D"
 	log "Created output directory: $D"
 done
 
@@ -289,6 +384,8 @@ if [ ! -x "$EXEC" ]; then
 	fail 254 "The executable $EXEC does not have the executable bit set"
 fi
 
+MPIInitOutputAggregation
+
 if [ "$STDIN" == "" ]; then
 	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
 		echo "#!/bin/bash" > run.sh
@@ -304,7 +401,9 @@ else
 	fi
 	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 fi
-checkError $? "Application $EXEC failed with an exit code of $?" <$STDERR
+EC=$?
+MPIAggregateOutput
+checkError $EC $EC "Application $EXEC failed with an exit code of $EC" <$STDERR
 
 if [ "$COLLECT" != "" ]; then
 	logstate "COLLECT"
@@ -316,7 +415,6 @@ if [ "$COLLECT" != "" ]; then
 	done
 	exec 4>&-
 fi
-
 
 logstate "EXECUTE_DONE"
 log "Job ran successfully"
