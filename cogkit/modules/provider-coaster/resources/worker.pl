@@ -1853,13 +1853,13 @@ sub stageout {
 	my $sz = scalar @$STAGE;
 	wlog DEBUG, "sz: $sz, STAGEINDEX: $STAGEINDEX\n";
 	if (scalar @$STAGE <= $STAGEINDEX) {
-		if (activeStageoutCount($jobid) > 0) {
+		if ((scalar @$STAGE > 0) && (activeStageoutCount($jobid) > 0)) {
 			# let stageoutEnded() handle it
 			wlog INFO, "$jobid No more stageouts. Waiting for active stageouts to complete.\n";
 		}
 		else {
-			wlog INFO, "$jobid No more stageouts. Doing cleanup.\n";
-			cleanup($jobid);
+			wlog INFO, "$jobid No more stageouts.\n";
+			stageoutsComplete($jobid);
 		}
 	}
 	else {
@@ -2427,7 +2427,7 @@ sub tryWriteLock {
 sub checkSoftimageJobFailure {
 	my ($JOBID, $err) = @_;
 	
-	if ($JOBID == $SOFT_IMAGE_JOB_ID) {
+	if ($JOBID eq $SOFT_IMAGE_JOB_ID) {
 		$SOFT_IMAGE_JOB_ID = -1;
 		open(my $ERRF, ">$SOFT_IMAGE_DIR/.error");
 		print $ERRF $err;
