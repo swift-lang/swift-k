@@ -364,7 +364,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
                 ncl.add(jobdir  + "/" + s);
             }
         }
-        
+                
         Set<Node> nodes = new HashSet<Node>();
         for (Cpu cpu : cpus) {
             nodes.add(cpu.getNode());            
@@ -372,7 +372,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
                 
         cleanupsActive = nodes.size();
         for (Node node : nodes) {
-            CleanupCommand cmd = new CleanupCommand(cl);
+            CleanupCommand cmd = new CleanupCommand(ncl);
             try {
                 cmd.executeAsync(node.getChannel(), this);
             }
