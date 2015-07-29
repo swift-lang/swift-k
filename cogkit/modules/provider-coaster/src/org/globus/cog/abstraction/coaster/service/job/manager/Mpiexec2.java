@@ -379,13 +379,19 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
             }
             catch (ProtocolException e) {
                 setError(e.getMessage(), e);
+                int r;
+                synchronized(this) {
+                    cleanupsActive--;
+                    r = cleanupsActive;
+                }
+                checkCleanups(r);
             }
         }
     }
     
     private void done() {
         if (logger.isInfoEnabled()) {
-            logger.info("done " + job.getTask().getIdentity() + ", msg=" + lastErrorMessage + ", ex=" + lastException, new Throwable());
+            logger.info("done " + job.getTask().getIdentity() + ", msg=" + lastErrorMessage + ", ex=" + lastException);
         }
         releaseNonLeadCpus();
         Status s;
@@ -463,8 +469,19 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
                 cleanup();
                 break;
             case CLEANUP:
-                done();
+                int r2;
+                synchronized(this) {
+                    cleanupsActive--;
+                    r2 = cleanupsActive;
+                }
+                checkCleanups(r2);
                 break;
+        }
+    }
+
+    private void checkCleanups(int count) {
+        if (count == 0) {
+            done();
         }
     }
 
@@ -487,7 +504,12 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
                 cleanup();
                 break;
             case CLEANUP:
-                done();
+                int r2;
+                synchronized(this) {
+                    cleanupsActive--;
+                    r2 = cleanupsActive;
+                }
+                checkCleanups(r2);
                 break;
         }
     }
