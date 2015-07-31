@@ -108,10 +108,20 @@ public class SettingsServer extends AbstractHTTPServer {
             List<Block> blocks = wm.getAllBlocks();
             e.writeMapKey("blocks");
             e.beginArray();
+            long idle = 0;
+            long busy = 0;
             for (Block b : blocks) {
                 writeBlock(e, b);
+                idle += b.getIdleTime();
+                busy += b.getBusyTime();
             }
             e.endArray();
+            if (idle + busy > 0) {
+                e.writeMapItem("utilization", ((double) busy) / (idle + busy));
+            }
+            else {
+                e.writeMapItem("utilization", 0.0);
+            }
         }
         e.endMap();
         return ByteBuffer.wrap(e.toString().getBytes());
@@ -125,6 +135,7 @@ public class SettingsServer extends AbstractHTTPServer {
         e.writeMapItem("workerCount", b.getActiveWorkerCount());
         e.writeMapItem("jobsCompleted", b.getDoneJobCount());
         e.writeMapItem("walltime", b.getWalltime().getMilliseconds());
+        e.writeMapItem("utilization", b.getUtilization());
         writeTime(e, "creationTime", b.getCreationTime());
         writeTime(e, "startTime", b.getStartTime());
         writeTime(e, "shutdownTime", b.getShutdownTime());

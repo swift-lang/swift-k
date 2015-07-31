@@ -323,13 +323,9 @@ public class Block implements StatusListener, Comparable<Block> {
         logger.info("Shutting down block " + this);
         bqp.getRLogger().log("BLOCK_SHUTDOWN id=" + getId());
         
-        long busyTotal = 0;
-        long idleTotal = 0;
         int count = 0;
         if (running) {
             for (Cpu cpu : cpusToShutDown) {
-                idleTotal = cpu.idleTime;
-                busyTotal = cpu.busyTime;
                 if (!failed) {
                     cpu.shutdown();
                 }
@@ -351,12 +347,9 @@ public class Block implements StatusListener, Comparable<Block> {
 				}
 			}
 
-            if (idleTotal > 0) {
-                double u = (busyTotal * 10000) / (busyTotal + idleTotal);
-                u /= 100;
-                logger.info("Average utilization: " + u + "%");
-                bqp.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + ", u=" + u);
-            }
+			double u = getUtilization();
+            logger.info("Average utilization: " + u);
+            bqp.getRLogger().log("BLOCK_UTILIZATION id=" + getId() + ", u=" + u);
         }
         else {
             logger.info("Block " + this + " not running. Cancelling job.");
@@ -659,5 +652,37 @@ public class Block implements StatusListener, Comparable<Block> {
             left = nodes.size();
         }
         bqp.nodeRemoved(node);
+    }
+
+    public double getUtilization() {
+        long busyTotal = 0;
+        long idleTotal = 0;
+        for (Cpu cpu : this.cpus) {
+            busyTotal += cpu.busyTime;
+            idleTotal += cpu.idleTime;
+        }
+        if (idleTotal + busyTotal > 0) {
+            double u = (busyTotal * 10000) / (busyTotal + idleTotal);
+            return u / 10000;
+        }
+        else {
+            return 0.0;
+        }
+    }
+    
+    public long getBusyTime() {
+        long total = 0;
+        for (Cpu cpu : this.cpus) {
+            total += cpu.busyTime;
+        }
+        return total;
+    }
+    
+    public long getIdleTime() {
+        long total = 0;
+        for (Cpu cpu : this.cpus) {
+            total += cpu.idleTime;
+        }
+        return total;
     }
 }
