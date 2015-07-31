@@ -24,7 +24,6 @@ import org.apache.log4j.Level;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
-import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.processors.SimpleParser;
 
@@ -41,11 +40,10 @@ public class AppFailureProcessor extends AbstractSwiftProcessor {
 
     public void processMessage(SystemState state, SimpleParser p, Object details) {
         try {
-            p.skip("thread=");
-            String threadid = p.word();
+            p.skip("jobid=");
+            String jobid = p.word();
 
-            StatefulItem thread = state.getItemByID(threadid, StatefulItemClass.BRIDGE);
-            ApplicationItem app = (ApplicationItem) thread.getParent();
+            ApplicationItem app = (ApplicationItem) state.getItemByID(jobid, StatefulItemClass.APPLICATION);
             app.setState(ApplicationState.FAILED, state.getCurrentTime());
             state.itemUpdated(app);
             state.removeItem(app);

@@ -45,8 +45,12 @@ public class AppThreadProcessor extends AbstractSwiftProcessor {
 			appid = p.word();
 			p.skip("thread=");
 			threadid = p.word();
-			p.skip("replicationGroup=");
-			replicationgroup = p.word();
+			if (p.matchAndSkip("replicationGroup=")) {
+			    replicationgroup = p.word();
+			}
+			else {
+			    replicationgroup = null;
+			}
 				
 			StatefulItem app = state.getItemByID(appid, StatefulItemClass.APPLICATION);
 			if (app == null) {

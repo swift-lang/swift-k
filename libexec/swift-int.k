@@ -305,8 +305,6 @@ namespace(swiftStaging) {
 				
 			jobdir := substring(jobid, 0, to = 1)
 
-			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
-
 			statusMode := configProperty("statusMode", host=rhost)
 			wrapperMode := configProperty("wrapperParameterMode", host=rhost)
 

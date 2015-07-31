@@ -56,8 +56,6 @@ namespace(providerStaging) {
 			stagein, stageout, replicationGroup, replicationChannel) {
 
 			jobdir := substring(jobid, 0, to = 1)
-
-			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
 			
 			wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
 			tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)			
@@ -80,7 +78,6 @@ namespace(providerStaging) {
 				
 				if (wrapperMode == "files") {
 					sys:file:write(wrapfile) {
-						"-scratch ", try(siteProfile(rhost, "scratch"), ""),
 						"\n-e ", executable(tr, rhost),
 						"\n-out ", stdouts,
 						"\n-err ", stderrs,

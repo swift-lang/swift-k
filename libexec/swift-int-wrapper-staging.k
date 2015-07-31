@@ -104,8 +104,6 @@ namespace(wrapperStaging) {
 			
 			jobdir := "{DEBUG_DIR}/jobs/{jobdir}/{jobid}/"
 
-			log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " host={rhost} replicationGroup={replicationGroup}")
-
 			statusMode := configProperty("statusMode", host = rhost)
 			wrapperMode := configProperty("wrapperParameterMode", host = rhost)
 

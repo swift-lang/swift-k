@@ -180,6 +180,7 @@ namespace(swift) {
 										try {
 											log(LOG:DEBUG, "JOB_SITE_SELECT jobid={jobid}")
 											allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
+												log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread(), " replicationGroup={replicationGroup}")
 												executeSelect(
 													jobid, rhost, progress, 
 													tr, if(arguments != null, unwrapClosedList(arguments), []),
@@ -203,6 +204,7 @@ namespace(swift) {
 									try {
 										log(LOG:DEBUG, "JOB_SITE_SELECT jobid={jobid}")
 										allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
+											log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} thread=", currentThread())
 											executeSelect(
 												jobid, rhost, progress, 
 												tr, if(arguments != null, unwrapClosedList(arguments), []),
@@ -228,7 +230,7 @@ namespace(swift) {
 						}
 					}
 					else catch(exception) {
-						log(LOG:INFO, "END_FAILURE thread=", currentThread(), " tr={tr}")
+						log(LOG:INFO, "END_FAILURE jobid=", jobid, " tr={tr}")
 						setProgress(progress, "Failed")
 						if(!swift:configProperty("lazyErrors")) {
 							throw(exception)
