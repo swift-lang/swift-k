@@ -29,16 +29,24 @@
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
+import org.globus.cog.abstraction.impl.execution.coaster.CancelJobCommand;
+import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public abstract class AbstractQueueProcessor extends Thread implements QueueProcessor {
+    public static final Logger logger = Logger.getLogger(AbstractQueueProcessor.class);
+    
     private final BlockingQueue<Job> q;
     private boolean shutdownFlag;
     private boolean wrap;
@@ -83,6 +91,14 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
     protected Queue<Job> getQueue() {
         return q;
     }
+    
+    protected Collection<Job> getAllJobs() {
+        return new ArrayList<Job>(q);
+    }
+    
+    protected Collection<Job> getRunningJobs() {
+        throw new UnsupportedOperationException();
+    }
 
     protected final boolean hasWrapped() {
         return wrap;
@@ -113,20 +129,17 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
     public int getQueueSeq() {
         return queueSeq;
     }
-    
-    private static final Job[] AT_ARRAY = new Job[0];
 
     @Override
     public void cancelTasksForChannel(CoasterChannel channel) {
         String id = channel.getID();
-        Job[] jobs = q.toArray(AT_ARRAY);
-        for (Job job : jobs) {
+        for (Job job : getAllJobs()) {
             if (job.getTask() == null) {
                 continue;
             }
             String taskChannelId = (String) job.getTask().getAttribute("channelId");
             if (id.equals(taskChannelId)) {
-                job.setCanceled(true);
+                job.cancel();
             }
         }
     }

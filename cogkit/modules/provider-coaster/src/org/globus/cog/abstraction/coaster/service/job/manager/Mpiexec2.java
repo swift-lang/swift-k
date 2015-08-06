@@ -44,6 +44,7 @@ import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.StagingSetEntryImpl;
 import org.globus.cog.abstraction.impl.common.StagingSetImpl;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.impl.execution.coaster.CancelJobCommand;
 import org.globus.cog.abstraction.impl.execution.coaster.CleanupCommand;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.impl.execution.coaster.StageInCommand;
@@ -69,7 +70,7 @@ import org.globus.cog.coaster.commands.Command.Callback;
  * 4. cleaning up on all nodes
  * 
  */
-public class Mpiexec2 implements Callback, ExtendedStatusListener {
+public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator {
     public static final Logger logger = Logger.getLogger(Mpiexec2.class);
     
     private static enum State {
@@ -82,6 +83,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
     
     private List<Cpu> cpus;
     private Job job;
+    private Task mpiTask;
     private int stageinsActive, cleanupsActive;
     private State state;
     private Time estCompletionTime;
@@ -94,6 +96,8 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
     private File hostfile;
     
     private FSMode fsMode;
+    
+    private boolean canceled;
     
     public Mpiexec2(List<Cpu> cpus, Job job, Time estCompletionTime) {
         this.cpus = cpus;
@@ -236,20 +240,27 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
     }
 
     private void mpirun() {
-        state = State.RUNNING;
         if (logger.isInfoEnabled()) {
             logger.info("mpirun " + job.getTask().getIdentity());
         }
         Node n = cpus.get(0).getNode();
-        Task t = cloneTaskNoStaging();
+        mpiTask = cloneTaskNoStaging();
         Identity nid = new IdentityImpl();
-        nid.setValue(t.getIdentity().toString() + "-mpi");
-        t.setIdentity(nid);
-        addMPIRun((JobSpecification) t.getSpecification(), n.getHostname());
+        nid.setValue(mpiTask.getIdentity().toString() + "-mpi");
+        mpiTask.setIdentity(nid);
+        addMPIRun((JobSpecification) mpiTask.getSpecification(), n.getHostname());
         
-        NotificationManager.getDefault().registerListener(t.getIdentity().getValue(), t, this);
+        synchronized(this) {
+            if (state == State.CLEANUP) {
+                return;
+            }
+            else {
+                state = State.RUNNING;
+            }
+        }
         
-        SubmitJobCommand sjc = new SubmitJobCommand(t);
+        NotificationManager.getDefault().registerListener(mpiTask.getIdentity().getValue(), mpiTask, this);
+        SubmitJobCommand sjc = new SubmitJobCommand(mpiTask);
         try {
             sjc.executeAsync(n.getChannel(), this);
         }
@@ -283,7 +294,14 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
     }
     
     private void stageout(StagingSet so, boolean failed) {
-        state = State.STAGEOUT;
+        synchronized(this) {
+            if (state == State.CLEANUP) {
+                return;
+            }
+            else {
+                state = State.STAGEOUT;
+            }
+        }
         job.getTask().setStatus(Status.STAGE_OUT);
         if (logger.isInfoEnabled()) {
             logger.info("stageout " + job.getTask().getIdentity());
@@ -345,6 +363,15 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
     }
 
     private void cleanup() {
+        // this can happen asynchronously due to cancellations
+        synchronized(this) {
+            if (state != State.CLEANUP) {
+                state = State.CLEANUP;
+            }
+            else {
+                return;
+            }
+        }
         JobSpecification spec = (JobSpecification) job.getTask().getSpecification();
         
         CleanUpSet cl = spec.getCleanUpSet();
@@ -357,8 +384,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
         }
     }
     
-    private void cleanup(CleanUpSet cl) {
-        state = State.CLEANUP;
+    private void cleanup(CleanUpSet cl) {        
         if (logger.isInfoEnabled()) {
             logger.info("cleanup " + job.getTask().getIdentity());
         }
@@ -402,7 +428,10 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
         }
         releaseNonLeadCpus();
         Status s;
-        if (lastErrorMessage != null || lastException != null) {
+        if (canceled) {
+            s = new StatusImpl(Status.CANCELED);
+        }
+        else if (lastErrorMessage != null || lastException != null) {
             s = new StatusImpl(Status.FAILED, lastErrorMessage, lastException);
         }
         else {
@@ -460,29 +489,30 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
         if (logger.isInfoEnabled()) {
             logger.info("Reply to command: " + cmd);
         }
-        switch (state) {
-            case STAGEIN:
-                int r;
-                synchronized(this) {
-                    stageinsActive--;
-                    r = stageinsActive;
-                }
-                checkStageins(r);
-                break;
-            case RUNNING:
-                // submit completed; wait for task status change
-                break;
-            case STAGEOUT:
-                cleanup();
-                break;
-            case CLEANUP:
-                int r2;
-                synchronized(this) {
-                    cleanupsActive--;
-                    r2 = cleanupsActive;
-                }
-                checkCleanups(r2);
-                break;
+        if (cmd instanceof StageInCommand) {
+            int r;
+            synchronized(this) {
+                stageinsActive--;
+                r = stageinsActive;
+            }
+            checkStageins(r);
+        }
+        else if (cmd instanceof SubmitJobCommand) {
+            // submit completed; wait for task status change
+        }
+        else if (cmd instanceof StageOutCommand) {
+            cleanup();
+        }
+        else if (cmd instanceof CleanupCommand) {
+            int r2;
+            synchronized(this) {
+                cleanupsActive--;
+                r2 = cleanupsActive;
+            }
+            checkCleanups(r2);
+        }
+        else {
+            logger.warn("Received reply from strange command" + cmd);
         }
     }
 
@@ -495,29 +525,30 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
     @Override
     public void errorReceived(Command cmd, String msg, Exception t) {
         setError(msg, t);
-        switch (state) {
-            case STAGEIN:
-                int r;
-                synchronized(this) {
-                    stageinsActive--;
-                    r = stageinsActive;
-                }
-                checkStageins(r);
-                break;
-            case RUNNING:
-                stageout(true);
-                break;
-            case STAGEOUT:
-                cleanup();
-                break;
-            case CLEANUP:
-                int r2;
-                synchronized(this) {
-                    cleanupsActive--;
-                    r2 = cleanupsActive;
-                }
-                checkCleanups(r2);
-                break;
+        if (cmd instanceof StageInCommand) {
+            int r;
+            synchronized(this) {
+                stageinsActive--;
+                r = stageinsActive;
+            }
+            checkStageins(r);
+        }
+        else if (cmd instanceof SubmitJobCommand) {
+            stageout(true);
+        }
+        else if (cmd instanceof StageOutCommand) {
+            cleanup();
+        }
+        else if (cmd instanceof CleanupCommand) {
+            int r2;
+            synchronized(this) {
+                cleanupsActive--;
+                r2 = cleanupsActive;
+            }
+            checkCleanups(r2);
+        }
+        else {
+            logger.warn("Received reply from strange command" + cmd);
         }
     }
 
@@ -545,6 +576,32 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener {
                 setError(s.getMessage() + "\n" + out + "\n" + err, s.getException());
                 stageout(true);
                 break;
+            case Status.CANCELED:
+                done();
+                break;
+        }
+    }
+    
+    @Override
+    public void cancel(Job job) {
+        CancelJobCommand cjc = null;
+        synchronized(this) {
+            if (state == State.RUNNING) {
+                cjc = new CancelJobCommand(mpiTask.getIdentity().getValue());
+            }
+            canceled = true;
+        }
+        if (cjc != null) {
+            Node n = cpus.get(0).getNode();
+            try {
+                cjc.executeAsync(n.getChannel());
+            }
+            catch (ProtocolException ex) {
+                logger.warn("Failed to cancel task " + mpiTask, ex);
+            }
+        }
+        else {
+            done();
         }
     }
 

@@ -39,7 +39,9 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
+import org.globus.cog.abstraction.impl.execution.coaster.CancelJobCommand;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class BlockQueueProcessor extends AbstractBlockWorkerManager implements Runnable {
@@ -66,7 +68,7 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
        since the last updatePlan
      */
     private final SortedJobSet queued;
-
+    
     /* Need to keep an account of running jobs in order to correctly
      * make sense of the allocated size. If running jobs are not
      * considered, it can appear that the allocated size is much
@@ -773,7 +775,8 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
     public void cancelTasksForChannel(CoasterChannel channel) {
         String id = channel.getID();
         cancelTasks(holding, id);
-        cancelTasks(queued, id); 
+        cancelTasks(queued, id);
+        cancelRunningTasks(running, id);
     }
 
     private void cancelTasks(SortedJobSet s, String id) {
@@ -783,6 +786,17 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
                 String taskChannelId = (String) j.getTask().getAttribute("channelId");
                 if (id.equals(taskChannelId)) {
                     s.remove(j);
+                }
+            }
+        }
+    }
+    
+    private void cancelRunningTasks(JobSet s, String id) {
+        synchronized(s) {
+            for (Job j : s) {
+                String taskChannelId = (String) j.getTask().getAttribute("channelId");
+                if (id.equals(taskChannelId)) {
+                    j.cancel();
                 }
             }
         }

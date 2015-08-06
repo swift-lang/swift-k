@@ -116,6 +116,7 @@ use constant {
 	ACTIVE => 0x02,
 	STAGEIN => 0x10,
 	STAGEOUT => 0x11,
+	CANCELED => 0x06,
 };
 
 my $TAG = int(rand(10000));
@@ -177,6 +178,8 @@ my $CONNECTED = 0;
 
 my $myhost=`hostname`;
 $myhost =~ s/\s+$//;
+
+my $WINDOWS = $^O =~ /Win/;
 
 sub wlog {
 	my $msg;
@@ -290,6 +293,7 @@ my %HANDLERS = (
 	"STAGEIN" => \&stageinHandler,
 	"STAGEOUT" => \&stageoutHandler,
 	"CLEANUP" => \&cleanupHandler,
+	"CANCELJOB" => \&cancelHandler,
 );
 
 my @SENDQ = ();
@@ -756,6 +760,7 @@ sub fileData {
 		wlog WARN, "Failed to open $lname\n";
 		# let it go on for now. The next read from the descriptor will fail
 	}
+	binmode($desc);
 	return {
 		"cmd" => $cmd,
 		"jobid" => $jobid,
@@ -900,6 +905,7 @@ sub processRequest {
 			$HANDLERS{$$cmdref}->($tag, 0, $request);
 		}
 		else {
+			wlog INFO, "Unknown command: $$cmdref\n";
 			queueError($tag, ("Unknown command: $$cmdref"));
 		}
 	}
@@ -1374,6 +1380,30 @@ sub cleanupHandler {
 	cleanup($JOBID);
 }
 
+sub cancelHandler {
+	my ($tag, $timeout, $msgs) = @_;
+	
+	my $descref = $$msgs[0];
+	my $jobid = $$descref;
+	
+	wlog INFO, "$jobid Received cancel request\n";
+	
+	if (defined $JOBDATA{$jobid}) {
+		$JOBDATA{$jobid}{"canceled"} = 1;
+		my $pid = $JOBDATA{$jobid}{"pid"};
+		if (defined $pid) {
+			wlog INFO, "$jobid PID is $pid\n";
+			my $result = kill -9, $pid;
+			wlog INFO, "$jobid kill returned $result\n";
+		}
+		else {
+			wlog INFO, "$jobid No PID\n";
+		}
+	}
+	queueJobStatusCmd($jobid, CANCELED, 0, "");
+	queueReply($tag, ("OK"));
+}
+
 
 sub urisplit {
 	my ($name) = @_;
@@ -1613,6 +1643,11 @@ sub completePinnedFile {
 sub stagein {
 	my ($jobid) = @_;
 	
+	if (checkCanceled($jobid)) {
+		wlog INFO, "$jobid was canceled; skipping stagein";
+		return;
+	}
+	
 	wlog TRACE, "stagein(): $jobid\n";
 
 	my $STAGE = $JOBDATA{$jobid}{"stagein"};
@@ -1840,8 +1875,24 @@ sub activeStageoutCount {
 	return $JOBDATA{$jobid}{"stageoutCount"};
 }
 
+sub checkCanceled {
+	my ($jobid) = @_;
+	
+	if ($JOBDATA{$jobid}{"canceled"}) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
 sub stageout {
 	my ($jobid) = @_;
+	
+	if (checkCanceled($jobid)) {
+		wlog INFO, "$jobid was canceled; skipping stageout";
+		return;
+	}
 
 	wlog DEBUG, "$jobid Staging out\n";
 	my $STAGE = $JOBDATA{$jobid}{"stageout"};
@@ -2187,19 +2238,25 @@ sub sendStatus {
 
 sub cleanup {
 	my ($jobid) = @_;
-	
+		
 	my $type = $JOBDATA{$jobid}{"type"};
+	my $ec;
 
-	my $ec = $JOBDATA{$jobid}{"exitcode"};
-	if (ASYNC && $type eq "full") {
-		wlog DEBUG, "$jobid async is on. Sending notification before cleanup\n";
-		sendStatus($jobid);
+	if (!$JOBDATA{$jobid}{"canceled"}) {
+		$ec = $JOBDATA{$jobid}{"exitcode"};
+		if (ASYNC && $type eq "full") {
+			wlog DEBUG, "$jobid async is on. Sending notification before cleanup\n";
+			sendStatus($jobid);
+		}
+	
+		if ($ec != 0) {
+			wlog INFO, "$jobid Job data: ".hts($JOBDATA{$jobid})."\n";
+			wlog INFO, "$jobid Job: ".hts($JOBDATA{$jobid}{'job'})."\n";
+			wlog INFO, "$jobid Job dir ".`ls -al $JOBDATA{$jobid}{'job'}{'directory'}`."\n";
+		}
 	}
-
-	if ($ec != 0) {
-		wlog INFO, "$jobid Job data: ".hts($JOBDATA{$jobid})."\n";
-		wlog INFO, "$jobid Job: ".hts($JOBDATA{$jobid}{'job'})."\n";
-		wlog INFO, "$jobid Job dir ".`ls -al $JOBDATA{$jobid}{'job'}{'directory'}`."\n";
+	else {
+		$ec = 0;
 	}
 
 	my $CLEANUP = $JOBDATA{$jobid}{"cleanup"};
@@ -2631,7 +2688,7 @@ sub checkJob {
 				return "Cannot clean up outside of the job directory (cleanup: $c, jobdir: $dir)";
 			}
 		}
-		chdir $dir;
+		chdir($dir);
 		wlog DEBUG, "$JOBID Job check ok (dir: $dir)\n";
 		wlog DEBUG, "$JOBID Sending submit reply (tag=$tag)\n";
 		queueReply($tag, ("OK"));
@@ -2650,6 +2707,11 @@ sub asyncRun {
 	
 	if (defined($pid)) {
 		if ($pid == 0) {
+			# set process group ID so that the whole process group can be
+			# killed
+			if (!$WINDOWS) {
+				setpgrp(0, 0);
+			}
 			close $PARENT_R;
 			$proc->($CHILD_W);
 			close $CHILD_W;
@@ -2801,7 +2863,7 @@ sub checkSubprocessStatus {
 		my $timeout = $ASYNC_WAIT_DATA{$pid}{"timeout"};
 		if (($timeout > 0) && ($now > $startTime + $timeout)) {
 			wlog DEBUG, "$logid subprocess timed-out (start: $startTime, now: $now, timeout: $timeout); killing\n"; 
-			kill 9, $pid;
+			kill -9, $pid;
 			# only kill it once
 			$ASYNC_WAIT_DATA{$pid}{"startTime"} = -1;
 			$ASYNC_WAIT_DATA{$pid}{"timedOut"} = 1;

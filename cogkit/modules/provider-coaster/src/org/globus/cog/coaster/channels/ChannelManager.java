@@ -28,6 +28,7 @@
  */
 package org.globus.cog.coaster.channels;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -36,8 +37,10 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.globus.cog.coaster.Client;
 import org.globus.cog.coaster.ClientRequestManager;
+import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.RequestManager;
 import org.globus.cog.coaster.UserContext;
+import org.globus.cog.coaster.commands.ShutdownCommand;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 
@@ -62,6 +65,7 @@ public class ChannelManager {
 		rchannels = new HashMap<CoasterChannel, HostCredentialPair>();
 		clientRequestManager = new ClientRequestManager();
 		starting = new HashSet<HostCredentialPair>();
+		Runtime.getRuntime().addShutdownHook(new ChannelReaper(channels.values()));
 	}
 
 	protected void setClientRequestManager(RequestManager crm) {
@@ -250,5 +254,29 @@ public class ChannelManager {
 			return DN + "@" + host;
 		}
 
+	}
+	
+	private static class ChannelReaper extends Thread {
+	    private Collection<CoasterChannel> channels;
+	    
+	    public ChannelReaper(Collection<CoasterChannel> channels) {
+	        this.channels = channels;
+	    }
+	    
+	    public void run() {
+            logger.info("Notifying peers of shutdown");
+            for (CoasterChannel c : channels) {
+                if (!c.isClosed()) {
+                    ShutdownCommand sc = new ShutdownCommand();
+                    try {
+                        sc.executeAsync(c);
+                    }
+                    catch (ProtocolException e) {
+                        logger.warn("Failed to send shutdown command to " + c, e);
+                    }
+                }
+            }
+            
+        }
 	}
 }

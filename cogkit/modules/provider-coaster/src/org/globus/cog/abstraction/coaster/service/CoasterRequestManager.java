@@ -62,7 +62,7 @@ import org.globus.cog.coaster.handlers.VersionHandler;
 public class CoasterRequestManager extends AbstractRequestManager {   
     public CoasterRequestManager() {
         addHandler("VERSION", VersionHandler.class);
-        addHandler("SHUTDOWN", ShutdownHandler.class);
+        addHandler("SHUTDOWN", ServiceShutdownHandler.class);
         addHandler("HEARTBEAT", HeartBeatHandler.class);
         addHandler(InfoCommand.NAME, InfoHandler.class);
         addHandler(SubmitJobCommand.NAME, SubmitJobHandler.class);

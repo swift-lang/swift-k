@@ -33,16 +33,18 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
+import org.globus.cog.abstraction.impl.execution.coaster.CancelJobCommand;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.impl.execution.coaster.SubmitJobCommand;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
 import org.globus.cog.coaster.commands.Command.Callback;
 
-public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
+public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener, JobCancelator {
     public static final Logger logger = Logger.getLogger(Cpu.class);
 
     private int id;
@@ -259,6 +261,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
             CoasterService.error(20, "Timelast is null", new Throwable());
         }
         block.add(this, timelast);
+        running.setCancelator(this);
         submit(running);
         return true;
     }
@@ -293,6 +296,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
             CoasterService.error(20, "Timelast is null", new Throwable());
         }
         Mpiexec2 mpiexec = new Mpiexec2(cpus, job, timelast);
+        job.setCancelator(mpiexec);
         boolean result = mpiexec.launch();
         return result;
     }
@@ -460,7 +464,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
          }
          if (s.isTerminal()) {
              running.setEndTime(Time.now());
-             if (s.getStatusCode() == Status.FAILED) {
+             if (s.getStatusCode() == Status.FAILED || s.getStatusCode() == Status.CANCELED) {
                  failedJobs++;
                  totalFailedJobs++;
              }
@@ -507,5 +511,16 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
         return block.getId() + ":" +
                getNode().getHostname() + ":" +
                getId();
+    }
+
+    @Override
+    public void cancel(Job job) {
+        CancelJobCommand cjc = new CancelJobCommand(job.getTask().getIdentity().getValue());
+        try {
+            cjc.executeAsync(node.getChannel());
+        }
+        catch (ProtocolException e) {
+            logger.warn("Failed to cancel job " + job, e);
+        }
     }
 }

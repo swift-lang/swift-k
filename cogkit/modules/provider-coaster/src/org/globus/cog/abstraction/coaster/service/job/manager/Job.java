@@ -56,10 +56,12 @@ public class Job implements Comparable<Job> {
 
     private TimeInterval walltime;
     private Time starttime, endtime;
-    private boolean done, canceled;
+    private boolean done, canceled, running;
 
     private static int sid;
-
+    
+    private JobCancelator cancelator;
+        
     public Job() {
     	synchronized (Job.class) {
     		id = sid++;
@@ -226,4 +228,14 @@ public class Job implements Comparable<Job> {
         this.mpiPPN = mpiPPN;
     }
 
+    public void cancel() {
+        setCanceled(true);
+        if (cancelator != null) {
+            cancelator.cancel(this);
+        }
+    }
+
+    public void setCancelator(JobCancelator cancelator) {
+        this.cancelator = cancelator;
+    }
 }
