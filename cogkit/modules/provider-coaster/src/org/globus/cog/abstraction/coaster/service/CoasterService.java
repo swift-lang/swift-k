@@ -203,6 +203,7 @@ public class CoasterService extends GSSService implements ChannelListener {
 
     @Override
     public void channelClosed(CoasterChannel channel, Exception e) {
+        logger.info("Channel closed: " + channel);
         shutDownQueuesForChannel(channel);
     }
 
