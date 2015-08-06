@@ -42,8 +42,9 @@ public class AppSelSiteProcessor extends AbstractSwiftProcessor {
         try {
             p.skip("jobid=");
             String id = p.word();
-
-            ApplicationItem app = (ApplicationItem) state.getItemByID(id, StatefulItemClass.APPLICATION);
+            ApplicationItem.QualifiedID qid = ApplicationItem.parseId(id);
+            ApplicationItem app = (ApplicationItem) state.getItemByID(qid.id, StatefulItemClass.APPLICATION);
+            app.addInstance(qid);
             app.setState(ApplicationState.SELECTING_SITE, state.getCurrentTime());
             state.itemUpdated(app);
         }

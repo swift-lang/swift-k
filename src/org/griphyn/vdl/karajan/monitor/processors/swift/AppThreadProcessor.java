@@ -40,9 +40,11 @@ public class AppThreadProcessor extends AbstractSwiftProcessor {
 
 	public void processMessage(SystemState state, SimpleParser p, Object details) {
 	    try {
-			String appid, threadid, replicationgroup;
+			String appid, host, threadid, replicationgroup;
 		    p.skip("jobid=");
 			appid = p.word();
+			p.skip("host=");
+			host = p.word();
 			p.skip("thread=");
 			threadid = p.word();
 			if (p.matchAndSkip("replicationGroup=")) {
@@ -51,12 +53,16 @@ public class AppThreadProcessor extends AbstractSwiftProcessor {
 			else {
 			    replicationgroup = null;
 			}
+			
+			ApplicationItem.QualifiedID qid = ApplicationItem.parseId(appid);
 				
-			StatefulItem app = state.getItemByID(appid, StatefulItemClass.APPLICATION);
+			ApplicationItem app = (ApplicationItem) state.getItemByID(qid.id, StatefulItemClass.APPLICATION);
 			if (app == null) {
-				app = new ApplicationItem(appid);
+				app = new ApplicationItem(qid.id);
+				app.addInstance(qid);
 				state.addItem(app);
 			}
+			app.setHost(host);
 				
 			StatefulItem thread = state.getItemByID(threadid, StatefulItemClass.BRIDGE);
 			if (thread == null) {

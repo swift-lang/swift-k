@@ -145,7 +145,7 @@ namespace(wrapperStaging) {
 					stageWrapperParams(jobid, jobdir, wrapfile, wfdir, rhost)
 				}
 
-				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), " host={rhost}")
+				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)))
 
 				setProgress(progress, "Submitting")
 

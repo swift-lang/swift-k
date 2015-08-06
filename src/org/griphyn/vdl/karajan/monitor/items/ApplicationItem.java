@@ -20,8 +20,24 @@
  */
 package org.griphyn.vdl.karajan.monitor.items;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import org.griphyn.vdl.karajan.monitor.items.ApplicationItem.QualifiedID;
+
 
 public class ApplicationItem extends AbstractStatefulItem {
+    public static class QualifiedID {
+        public String id;
+        public String attempt;
+        public String replicaId;
+        
+        public QualifiedID(String id, String attempt) {
+            this.id = id;
+            this.attempt = attempt;
+        }
+    }
+    
 	private String name, arguments, host, workerId;
 	private long startTime, currentStateTime;
 	/**
@@ -33,6 +49,7 @@ public class ApplicationItem extends AbstractStatefulItem {
 	 * format allowing a summary to be built without keeping a map of thread id states
 	 */
 	private ApplicationState state;
+	private LinkedList<ApplicationInstance> instances;
 
 	public ApplicationItem(String id, String name, String arguments, String host, long startTime) {
 		super(id);
@@ -42,6 +59,7 @@ public class ApplicationItem extends AbstractStatefulItem {
 		this.startTime = startTime;
 		this.state = ApplicationState.INITIALIZING;
 		this.currentStateTime = startTime;
+		this.instances = new LinkedList<ApplicationInstance>();
 	}
 	
 	public ApplicationItem(String id) {
@@ -61,6 +79,7 @@ public class ApplicationItem extends AbstractStatefulItem {
 	}
 
 	public void setHost(String host) {
+	    getCurrentInstance().setHost(host);
 		this.host = host;
 	}
 
@@ -85,6 +104,10 @@ public class ApplicationItem extends AbstractStatefulItem {
 	}
 	
 	public void setState(ApplicationState state, long time) {
+	    ApplicationInstance inst = getCurrentInstance();
+	    if (inst != null) {
+	        inst.setState(state, time);
+	    }
 	    this.state = state;
 	    this.currentStateTime = time;
 	}
@@ -108,4 +131,27 @@ public class ApplicationItem extends AbstractStatefulItem {
     public String toString() {
 		return "APP[" + name + ", " + arguments + ", " + host + "]";
 	}
+
+    public static QualifiedID parseId(String id) {
+        int ix = id.lastIndexOf('-');
+        if (ix == 0) {
+            return new QualifiedID(id, null);
+        }
+        else {
+            return new QualifiedID(id.substring(0, ix), id.substring(ix + 1));
+        }
+    }
+
+    public void addInstance(QualifiedID qid) {
+        instances.add(new ApplicationInstance(qid.attempt, qid.replicaId));
+    }
+
+    public ApplicationInstance getCurrentInstance() {
+        if (instances.isEmpty()) {
+            return null;
+        }
+        else {
+            return instances.getLast();
+        }
+    }
 }

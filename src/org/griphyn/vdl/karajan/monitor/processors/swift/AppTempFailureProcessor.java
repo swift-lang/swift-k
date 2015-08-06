@@ -43,7 +43,9 @@ public class AppTempFailureProcessor extends AbstractSwiftProcessor {
             p.skip("jobid=");
             String jobid = p.word();
 
-            ApplicationItem app = (ApplicationItem) state.getItemByID(jobid, StatefulItemClass.APPLICATION);
+            ApplicationItem.QualifiedID qid = ApplicationItem.parseId(jobid);
+            
+            ApplicationItem app = (ApplicationItem) state.getItemByID(qid.id, StatefulItemClass.APPLICATION);
             // actually, we don't know here if this is the final failure or not
             app.setState(ApplicationState.FAILED_BUT_CAN_RETRY, state.getCurrentTime());
             state.itemUpdated(app);

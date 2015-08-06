@@ -51,12 +51,9 @@ public class AppStartProcessor extends AbstractSwiftProcessor {
                 p.markMatchedTo(']', '[');
                 args = p.getToken();
             }
-            p.skip("host=");
-            String host = p.word();
-            
-            ApplicationItem app = (ApplicationItem) state.getItemByID(id, StatefulItemClass.APPLICATION);
+            ApplicationItem.QualifiedID qid = ApplicationItem.parseId(id);
+            ApplicationItem app = (ApplicationItem) state.getItemByID(qid.id, StatefulItemClass.APPLICATION);
             app.setArguments(args);
-            app.setHost(host);
             app.setState(ApplicationState.SUBMITTING, state.getCurrentTime());
             state.itemUpdated(app);
         }

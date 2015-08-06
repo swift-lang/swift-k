@@ -345,7 +345,7 @@ namespace(swiftStaging) {
 					stageWrapperParams(jobid, jobdir, wrapfile, RUN_DIR, rhost)
 				}
 
-				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), " tmpdir={tmpdir} host={rhost}")
+				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), " tmpdir={tmpdir}")
 
 				setProgress(progress, "Submitting")
 

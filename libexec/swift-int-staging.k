@@ -70,7 +70,7 @@ namespace(providerStaging) {
 			try {
 				eargs := expandArguments(arguments, stagingMethod = sm)
 				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", eargs)), 
-					" tmpdir={tmpdir} host={rhost}")
+					" tmpdir={tmpdir}")
 
 				setProgress(progress, "Submitting")
 				

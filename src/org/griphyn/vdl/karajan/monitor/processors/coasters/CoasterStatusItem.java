@@ -98,6 +98,9 @@ public class CoasterStatusItem extends AbstractStatefulItem {
     public synchronized void workerLost(String blockId, String workerId) {
         Block b = getBlock(blockId);
         Worker w = b.getWorker(workerId);
+        if (w == null) {
+            return;
+        }
         int cores = w.cores;
         activeCores -= cores;
         failedCores += cores;
@@ -209,6 +212,9 @@ public class CoasterStatusItem extends AbstractStatefulItem {
         }
 
         public Worker getWorker(String workerId) {
+            if (workers == null) {
+                return null;
+            }
             return workers.get(workerId);
         }
 

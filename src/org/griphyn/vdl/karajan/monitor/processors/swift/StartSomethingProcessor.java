@@ -47,13 +47,14 @@ public class StartSomethingProcessor extends AbstractSwiftProcessor {
 	    try {
 			if (p.matchAndSkip("jobid=")) {
 			    String appid = p.word();
+			    ApplicationItem.QualifiedID qid = ApplicationItem.parseId(appid);
 			    if (p.matchAndSkip("- Staging in files")) {
-			        ApplicationItem app = (ApplicationItem) state.getItemByID(appid, StatefulItemClass.APPLICATION);
+			        ApplicationItem app = (ApplicationItem) state.getItemByID(qid.id, StatefulItemClass.APPLICATION);
 			        app.setState(ApplicationState.STAGE_IN, state.getCurrentTime());
 			        state.itemUpdated(app);
 			    }
 			    else if (p.matchAndSkip("- Staging out files")) {
-			        ApplicationItem app = (ApplicationItem) state.getItemByID(appid, StatefulItemClass.APPLICATION);
+			        ApplicationItem app = (ApplicationItem) state.getItemByID(qid.id, StatefulItemClass.APPLICATION);
 			        app.setState(ApplicationState.STAGE_OUT, state.getCurrentTime());
 			        state.itemUpdated(app);
 			    }
