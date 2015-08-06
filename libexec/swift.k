@@ -170,7 +170,8 @@ namespace(swift) {
 					try {
 						throttled {
 							setProgress(progress, "Selecting site")
-							collectList := restartOnError(swift:configProperty("executionRetries")) {
+							collectList := restartOnError(counter, swift:configProperty("executionRetries")) {
+								jobid := "{jobid}-{counter}"
 								if (swift:configProperty("replicationEnabled")) {
 									replicationChannel := channel:new()
 									//trigger the first job

@@ -152,7 +152,7 @@ namespace(swiftStaging) {
 				"desthost={desthost} destdir={destdir} provider={provider} ",
 				"policy={policy}")
 			if (policy == "DEFAULT") {
-				restartOnError(2) {
+				restartOnError(i, 2) {
 					task:transfer(srcfile, srcprovider=provider, srchost=srchost,
 						srcdir=srcdir, desthost=desthost, destdir=destdir,
 						transferParams(srchost, desthost, provider))
@@ -223,7 +223,7 @@ namespace(swiftStaging) {
 				policy := cdm:query(file)
 				log(LOG:DEBUG, "CDM: {file} : {policy}")
 				if ((policy == "DEFAULT") | (policy == "BROADCAST")) {
-					restartOnError(2) {
+					restartOnError(i, 2) {
 						task:transfer(bname, srchost=host, srcdir=rdir,
 							destdir=ldir, desthost=dhost, destprovider=provider,
 							transferParams(host, dhost, provider))

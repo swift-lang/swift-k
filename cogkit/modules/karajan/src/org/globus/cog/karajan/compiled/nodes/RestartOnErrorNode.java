@@ -28,6 +28,8 @@
  */
 package org.globus.cog.karajan.compiled.nodes;
 
+import java.util.LinkedList;
+
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
@@ -36,18 +38,24 @@ import k.thr.Yield;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.DynamicScope;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.parser.WrapperNode;
 
 public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 	private ArgRef<String> match;
 	private ArgRef<Number> times;
+	private String counter;
 	private Node body;
+	
+	private VarRef<Object> var;
 	
 	@Override
 	protected Signature getSignature() {
-		return new Signature(params(optional("match", null), "times", block("body")));
+		return new Signature(params(optional("match", null), identifier("counter"), "times", block("body")));
 	}
 
 
@@ -61,6 +69,16 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 			return super.compileBody(w, argScope, scope);
 		}
 	}
+	
+	@Override
+    protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
+            Scope scope) throws CompilationException {
+        Var v = scope.addVar(counter);
+        var = scope.getVarRef(v);
+        DynamicScope ds = new DynamicScope(w, scope);
+        super.compileBlocks(w, sig, blocks, ds);
+        ds.close();
+    }
 
 	protected void runBody(LWThread thr) {
         int i = thr.checkSliceAndPopState();
@@ -72,6 +90,7 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
             fc = stack.frameCount();
             times = this.times.getValue(stack).intValue();
             i++;
+            var.setValue(stack, i);
         }
         while (true) {
 	        try {
@@ -96,6 +115,8 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 	            if (times < 0) {
 	                throw e;
 	            }
+	            i++;
+	            var.setValue(stack, i);
 	        }
         }
     }
