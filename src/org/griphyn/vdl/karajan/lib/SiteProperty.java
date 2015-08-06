@@ -59,6 +59,7 @@ public class SiteProperty extends SwiftFunction {
 	public static final String SWIFT_WRAPPER_INTERPRETER = "wrapperInterpreter";
 	public static final String SWIFT_WRAPPER_INTERPRETER_OPTIONS = "wrapperInterpreterOptions";
 	public static final String SWIFT_WRAPPER_SCRIPT = "wrapperScript";
+	public static final String SWIFT_WRAPPER_SCRIPT_STAGING = "wrapperScript.staging";
 	public static final String SWIFT_CLEANUP_COMMAND = "cleanupCommand";
 	public static final String SWIFT_CLEANUP_COMMAND_OPTIONS = "cleanupCommandOptions";
 	public static final String SYSINFO_OS = "OS";
@@ -99,11 +100,13 @@ public class SiteProperty extends SwiftFunction {
 		DEFAULTS_NAMES = new HashSet<String>();
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_INTERPRETER, "cscript.exe");
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_SCRIPT, "_swiftwrap.vbs");
+		addDefault(Os.WINDOWS, SWIFT_WRAPPER_SCRIPT_STAGING, "_swiftwrap.staging.vbs");
 		addDefault(Os.WINDOWS, SWIFT_WRAPPER_INTERPRETER_OPTIONS, new String[] {"//Nologo"});
 		addDefault(Os.WINDOWS, SWIFT_CLEANUP_COMMAND, "cmd.exe");
 		addDefault(Os.WINDOWS, SWIFT_CLEANUP_COMMAND_OPTIONS, new String[] {"/C", "del", "/Q"});
 		addDefault(null, SWIFT_WRAPPER_INTERPRETER, "/bin/bash");
 		addDefault(null, SWIFT_WRAPPER_SCRIPT, "_swiftwrap");
+		addDefault(null, SWIFT_WRAPPER_SCRIPT_STAGING, "_swiftwrap.staging");
 		addDefault(null, SWIFT_WRAPPER_INTERPRETER_OPTIONS, null);
 		addDefault(null, SWIFT_CLEANUP_COMMAND, "/bin/rm");
 		addDefault(null, SWIFT_CLEANUP_COMMAND_OPTIONS, new String[] {"-rf"});

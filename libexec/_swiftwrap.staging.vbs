@@ -1,3 +1,5 @@
+On Error Resume Next
+
 ai = 0
 Set args = WScript.Arguments
 Dim info, fs
@@ -6,25 +8,31 @@ Set shell = WScript.CreateObject("WScript.Shell")
 MandatoryArg = True
 OptionalArg = False
 
+Sub glob(pattern)
+	'todo: implement globbing
+	Dim a
+	glob = a
+End Sub
 
 Sub fail(message, code)
 	log message
-	If STATUSMODE = "files" Then
-		errf = WFDIR + "\status\" + JOBDIR + "\" + ID + "-error"
-		log "Error file: " + errf
-		Set sf = fs.OpenTextFile(errf, 2, True)
-		sf.Write(message)
-		sf.Write(vbLf)
-		sf.Close
-		WScript.Quit(0)
-	Else
-		WScript.Echo(message)
-		WScript.Quit(code)
+	WScript.Echo("ERR: " + message)
+	Set sf = fs.OpenTextFile("wrapper.error", 2, True)
+	sf.Write(message)
+	sf.Write(vbLf)
+	sf.Close
+	WScript.Quit(code)
+End Sub
+
+Sub checkerror(mymsg)
+	log "Checkerror called: " + CStr(Err.Number)
+	If Err.Number <> 0 Then
+		fail mymsg + vbLf + "Error(" + CStr(Err.Number) + "): " + Err.Description + " at " + Err.Source, 253
 	End If
 End Sub
 
 Sub openinfo(name) 
-	Set info = fs.OpenTextFile(name, 8, True)
+	Set info = fs.OpenTextFile(name, 2, True)
 End Sub
 
 Sub closeinfo
@@ -86,13 +94,13 @@ End Function
 Sub logstate(args)
 	'todo: timestamp and whatever else the "standard" format
 	info.Write("Progress " + args)
-	info.write(vbLf)
+	info.Write(vbLf)
 End Sub	
 
 Sub log(args)
 	'todo: timestamp and whatever else the "standard" format
 	info.Write(args)
-	info.write(vbLf)
+	info.write(vbCrLf)
 End Sub
 
 
@@ -150,24 +158,10 @@ WFDIR = fs.GetAbsolutePathName(".")
 
 openinfo("wrapper.log")
 
-ID = getArgVal(MandatoryArg, "job id")
-expectArg("jobdir")
-JOBDIR = getArgVal(MandatoryArg, "job dir")
-
-mkdir WFDIR + "\info\" + JOBDIR
-
-closeinfo
-deleteIfExists(WFDIR + "\info\" + JOBDIR + "\" + ID + "-info")
-openinfo(WFDIR + "\info\" + JOBDIR + "\" + ID + "-info")
-
 logstate "LOG_START"
 
-expectArg("scratch")
-SCRATCH = getArgVal(MandatoryArg, "job dir")
-'though we'll ignore SCRATCH here
-
 expectArg("e")
-EXEC = getArgVal(MandatoryArg, "executable")
+EXEC=getArgVal(MandatoryArg, "executable")
 
 expectArg("out")
 STDOUT=getArgVal(MandatoryArg, "stdout")
@@ -187,6 +181,9 @@ INF=getOptArg()
 expectArg("of")
 OUTF=getOptArg()
 
+expectArg("cf")
+COLLECT=getOptArg()
+
 expectArg("cdmfile")
 'ignored, but read if specified
 CDMFILE=getOptArg()
@@ -198,14 +195,6 @@ expectArg("a")
 Dim ARGS
 ARGS=getArgVals(OptionalArg, "args")
 
-If STATUSMODE = "files" Then
-	mkdir WFDIR + "\status\" + JOBDIR
-End If
-
-'No linking on Windows
-COPYNOTLINK=True	
-DIR=WFDIR + "\jobs\" + JOBDIR + "\" + ID
-
 Set env = shell.Environment("PROCESS")
 If Not env("PATHPREFIX") = "" Then
 	env("PATH") = env("PATHPREFIX") + ";" + env("PATH")
@@ -216,7 +205,6 @@ If Not env("SWIFT_EXTRA_INFO") = "" Then
 End If
 
 
-log "DIR=" + DIR
 log "EXEC=" + EXEC
 log "STDIN=" + STDIN
 log "STDOUT=" + STDOUT
@@ -224,33 +212,27 @@ log "STDERR=" + STDERR
 log "DIRS=" + DIRS
 log "INF=" + INF
 log "OUTF=" + OUTF
+log "COLLECT=" + COLLECT
 log "STATUSMODE=" + STATUSMODE
 log "ARGS=" + Join(ARGS)
-
-logstate "CREATE_JOBDIR"
-log "Jobdir: " + DIR
-mkdir DIR
-log "Created job directory: " + DIR
 
 logstate "CREATE_INPUTDIR"
 
 For Each D in Split(DIRS, "|")
-	mkdir DIR + "\" + D
-	log "Created output directory: " + DIR + "\" + D
-Next
-
-logstate "LINK_INPUTS"
-For Each L in Split(INF, "|")
-	fs.CopyFile WFDIR + "\shared\" + L, DIR + "\" + L
-	log "Copied input: " + WFDIR + "\shared\" + L + " to " + DIR + "\" + L
+	mkdir D
+	log "Created output directory: " + D
 Next
 
 logstate "EXECUTE"
-shell.CurrentDirectory = DIR
+
+log "Executable: " + EXEC
 
 If LCase(fs.GetAbsolutePathName(EXEC)) <> LCase(EXEC) Then
+	checkerror "Failed to check if executable is relative"
+	log "Relative executable"
 	'relative name
 	If Not fs.FileExists(EXEC) Then
+		checkerror "Failed to check executable existence"
 		found = False
 		'search in path
 		dirs = split(env("PATH"), ";")
@@ -265,6 +247,7 @@ If LCase(fs.GetAbsolutePathName(EXEC)) <> LCase(EXEC) Then
 		End If
 	End If
 Else
+	log "Absolute executable"
 	If Not fs.FileExists(EXEC) Then
 		fail "Executable (" + EXEC + ") does not exist", 251
 	End If
@@ -322,40 +305,25 @@ End If
 If p.ExitCode <> 0 Then
 	fail "Exit code " + CStr(p.ExitCode), p.ExitCode
 End If
-	
-shell.CurrentDirectory = WFDIR
 
-log "Moving back to workflow directory " + WFDIR
+If Not COLLECT Is Nothing Then
+	logstate "COLLECT"
+	log "Collect list is " + COLLECT
+	CF = fs.OpenTextFile("_collect", True)
+	For Each O in Split(COLLECT, "|")
+		log "Collecting " + O
+		
+		OL = glob(O)
+		For Each OLE in OL
+			CF.Write(OLE)
+			CF.Write(vbLf) 
+		Next
+	Next
+	CF.Close
+End If
+
 logstate "EXECUTE_DONE"
 log "Job ran successfully"
-
-MISSING = ""
-For Each O in Split(OUTF, "|")
-	If Not fs.FileExists(DIR + "\" + O) Then
-		If MISSING = "" Then
-			MISSING = O
-		Else
-			MISSING = MISSING + ", " + O
-		End If
-	End If
-Next
-If Not MISSING = "" Then
-	fail "The following output files were not created by the application: " + MISSING, 254
-End If
-
-logstate "MOVING_OUTPUTS"
-For Each O in split(OUTF, "|")
-	fs.MoveFile DIR + "\" + O,  "shared\" + O
-Next
-
-logstate "RM_JOBDIR"
-fs.DeleteFolder DIR, True
-
-If STATUSMODE = "files" Then
-	logstate "TOUCH_SUCCESS"
-	Set sf = fs.OpenTextFile("status\" + JOBDIR + "\" + ID + "-success", 2, True)
-	sf.Close
-End If
 
 logstate "END"
 

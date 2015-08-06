@@ -93,6 +93,8 @@ namespace(providerStaging) {
 						}
 					}
 				}
+				
+				wrapperScript := siteProfile(rhost, "wrapperScript.staging")
 
 				swift:execute(
 					progress,
@@ -100,14 +102,14 @@ namespace(providerStaging) {
 					if (wrapperMode == "files") {
 						list(
 							siteProfile(rhost, "wrapperInterpreterOptions"),
-							"_swiftwrap.staging",
+							wrapperScript,
 							"-p", jobdir
 						)
 					}
 					else {
 						list(
 							siteProfile(rhost, "wrapperInterpreterOptions"),
-							"_swiftwrap.staging",
+							wrapperScript,
 							"-e", executable(tr, rhost),
 							"-out", stdouts,
 							"-err", stderrs,
@@ -130,7 +132,7 @@ namespace(providerStaging) {
 					replicationChannel = replicationChannel
 					jobid = jobid
 
-					stageIn("{PIN}file://localhost/{SWIFT:HOME}/libexec/_swiftwrap.staging", "_swiftwrap.staging")
+					stageIn("{PIN}file://localhost/{SWIFT:HOME}/libexec/{wrapperScript}", wrapperScript)
 					
 					if (wrapperMode == "files") {
 						stageIn("file://localhost/{wrapfile}", "_paramfile")
