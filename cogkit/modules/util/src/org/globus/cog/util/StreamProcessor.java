@@ -86,8 +86,9 @@ public class StreamProcessor extends Streamer {
                         break;
                     }
                 }
-                else
+                else {
                     writer.println(line);
+                }
             }
             writer.flush();
         }
