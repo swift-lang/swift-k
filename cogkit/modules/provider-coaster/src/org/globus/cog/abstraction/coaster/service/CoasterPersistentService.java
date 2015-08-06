@@ -286,10 +286,6 @@ public class CoasterPersistentService extends CoasterService {
                 s.setDefaultQP("block");
             }
             if (ap.isPresent("controlPort")) {
-            	if (!ap.isPresent("shared")) {
-            		System.err.println("Cannot use -controlPort without -shared");
-            		System.exit(3);
-            	}
             	s.setControlPort(ap.getIntValue("controlPort"));
             }
             s.start();
