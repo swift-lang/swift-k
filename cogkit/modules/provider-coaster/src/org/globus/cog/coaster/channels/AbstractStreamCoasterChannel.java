@@ -197,8 +197,8 @@ public abstract class AbstractStreamCoasterChannel extends AbstractCoasterChanne
 							Integer.toHexString(tag ^ flags ^ len) + 
 							", checksum: " + Integer.toHexString(hcsum));
 					logger.warn("Tag: " + tag + ", flags: " + flags + ", len: " + len + ", data: " + ppByteBuf(rhdr));
-					System.exit(3);
-					return;
+					channel.close();
+					throw new IOException("Header checksum failed");
 				}
 				csum = unpack(rhdr, 16);
 				if (len > 1048576) {
