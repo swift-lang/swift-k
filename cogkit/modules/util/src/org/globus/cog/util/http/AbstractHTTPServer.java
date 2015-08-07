@@ -506,14 +506,14 @@ public abstract class AbstractHTTPServer implements Runnable {
         private void sendError(String request, String error, String html) {
             state = SENDING_ERROR;
             List<ByteBuffer> l = new LinkedList<ByteBuffer>();
-            addReply(l, "HTTP/1.1 " + error + "\n");
-            addReply(l, "Date: " + new Date() + "\n");
+            addReply(l, "HTTP/1.1 " + error + "\r\n");
+            addReply(l, "Date: " + new Date() + "\r\n");
             if (html != null) {
-                addReply(l, "Content-Length: " + html.length() + "\n");
+                addReply(l, "Content-Length: " + html.length() + "\r\n");
             }
-            addReply(l, "Connection: close\n");
-            addReply(l, "Content-Type: text/html;\n");
-            addReply(l, "\n");
+            addReply(l, "Connection: close\r\n");
+            addReply(l, "Content-Type: text/html;\r\n");
+            addReply(l, "\r\n");
             if (html != null) {
                 addReply(l, html);
             }
@@ -524,19 +524,19 @@ public abstract class AbstractHTTPServer implements Runnable {
         private void sendHeader(long len, String contentType) {
             state = SENDING_REPLY;
             List<ByteBuffer> l = new LinkedList<ByteBuffer>();
-            addReply(l, "HTTP/1.1 200 OK\n");
-            addReply(l, "Date: " + new Date() + "\n");
-            addReply(l, "Content-Length: " + len + "\n");
-            addReply(l, "Connection: close\n");
+            addReply(l, "HTTP/1.1 200 OK\r\n");
+            addReply(l, "Content-type: " + contentType + "; charset=utf-8\r\n");
+            addReply(l, "Date: " + new Date() + "\r\n");
+            addReply(l, "Content-Length: " + len + "\r\n");
+            addReply(l, "Connection: close\r\n");
             String allowedOrigin = getAllowedOrigin();
             if (allowedOrigin != null) {
-                addReply(l, "Access-Control-Allow-Origin: " + allowedOrigin + "\n");
+                addReply(l, "Access-Control-Allow-Origin: " + allowedOrigin + "\r\n");
             }
-            addReply(l, "Content-Type: " + contentType + ";\n");
-            addReply(l, "Cache-Control: no-cache, no-store, must-revalidate\n");
-            addReply(l, "Pragma: no-cache\n");
-            addReply(l, "Expires: 0\n");
-            addReply(l, "\n");
+            addReply(l, "Cache-Control: no-cache, no-store, must-revalidate\r\n");
+            addReply(l, "Pragma: no-cache\r\n");
+            addReply(l, "Expires: 0\r\n");
+            addReply(l, "\r\n");
             replies = l.iterator();
         }
 
