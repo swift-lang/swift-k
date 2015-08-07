@@ -65,6 +65,17 @@ Function getArgVals(cls, name)
 	getArgVals = val
 End Function
 
+Function getRestArgs()
+	 Dim val(255)
+	 sz = 0
+	 Do While ai < args.count
+	 	val(sz) = args(ai)
+	 	ai = ai + 1
+	 	sz = sz + 1
+	 Loop
+	 getRestArgs = val
+End Function
+
 Function getOptArg() 
 	getOptArg = getArgVal(OptionalArg, "")
 End Function
@@ -196,7 +207,7 @@ STATUSMODE=getArgVal(MandatoryArg, "status")
 
 expectArg("a")
 Dim ARGS
-ARGS=getArgVals(OptionalArg, "args")
+ARGS=getRestArgs()
 
 If STATUSMODE = "files" Then
 	mkdir WFDIR + "\status\" + JOBDIR
