@@ -1456,6 +1456,7 @@ sub getFileCB {
 			dieNicely("Failed to open $dst: $!");
 		}
 		else {
+			binmode($handle);
 			wlog DEBUG, "$jobid Opened $dst\n";
 			return {
 				"jobid" => $jobid,
@@ -2862,8 +2863,13 @@ sub checkSubprocessStatus {
 		# not done
 		my $timeout = $ASYNC_WAIT_DATA{$pid}{"timeout"};
 		if (($timeout > 0) && ($now > $startTime + $timeout)) {
-			wlog DEBUG, "$logid subprocess timed-out (start: $startTime, now: $now, timeout: $timeout); killing\n"; 
-			kill -9, $pid;
+			wlog DEBUG, "$logid subprocess timed-out (start: $startTime, now: $now, timeout: $timeout); killing\n";
+			if ($WINDOWS) { 
+				kill "TERM", $pid;
+			}
+			else {
+				kill -9, $pid;
+			}
 			# only kill it once
 			$ASYNC_WAIT_DATA{$pid}{"startTime"} = -1;
 			$ASYNC_WAIT_DATA{$pid}{"timedOut"} = 1;
