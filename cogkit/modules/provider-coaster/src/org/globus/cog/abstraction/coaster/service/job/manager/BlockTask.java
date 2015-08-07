@@ -132,6 +132,18 @@ public class BlockTask extends TaskImpl {
             scriptArg = script.getAbsolutePath();
         }
         
+        String os = settings.getAttribute("OS");
+        
+        boolean isWindows = os != null && os.toLowerCase().contains("win");
+        String executable;
+        
+        if (isWindows) {
+        	executable = "perl";
+        }
+        else {
+        	executable = "/usr/bin/perl";
+        }
+        
         if ("true".equals(settings.getUseHashBang())) {
             if (!"false".equals(settings.getPerfTraceWorker())) {
                 js.setExecutable("strace");
@@ -164,10 +176,10 @@ public class BlockTask extends TaskImpl {
                 js.addArgument("-e");
                 js.addArgument("trace=" + settings.getPerfTraceWorker());
                 
-                js.addArgument("/usr/bin/perl");
+                js.addArgument(executable);
             }
             else {
-                js.setExecutable("/usr/bin/perl");
+                js.setExecutable(executable);
             }
             js.addArgument(scriptArg);
         }

@@ -41,6 +41,8 @@ public class ServiceConfigurationCommand extends Command {
         super(NAME);
         ExecutionService s = (ExecutionService) task.getService(0);
         
+        String os = (String) s.getAttribute("OS");
+        addOutData("OS=" + os);
         String jm = s.getJobManager();
         if (jm != null) {
             int colon = jm.indexOf(':');
