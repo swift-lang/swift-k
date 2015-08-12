@@ -1,3 +1,5 @@
+[[configuration]]
+@LIBRARY
 == Configuration
 
 Swift is mainly configured using a configuration file, typically called 
@@ -64,7 +66,7 @@ a double slash (+//+):
 # This is a comment
 // This is also a comment
 
-keepSitesDir: true # This is a comment following a valid property
+keepSiteDir: true # This is a comment following a valid property
 -----
 
 === Include Directives
@@ -152,12 +154,12 @@ By default, Swift attempts to load multiple configuration files, merging them se
 . Distribution Configuration (*[D]*): +${swift.home}/etc/swift.conf+
 . Site Configuration (*[S]*): +${env.SWIFT_SITE_CONF}+ (if +SWIFT_SITE_CONF+ is defined)
 . User Configuration (*[U]*): +${env.HOME}/.swift/swift.conf+ (if present)
-. Run Configiuration (*[R]*): +${env.PWD}/swift.conf+ (if present)
+. Run Configuration (*[R]*): +${env.PWD}/swift.conf+ (if present)
 
 In addition, a number of configuration properties can be overridden 
 individually on the Swift command line. For a list of such configuration 
 properties, please use +swift -help+ or refer to the 
-<<invoking:running-swift, Running Swift>> Section.
+<<running:running-swift, Running Swift>> Section.
 
 The run configuration can be overridden on the Swift command line using the 
 +-config <file>+ command line argument. If the +-config+ argument is specified, 
@@ -257,7 +259,8 @@ site:
 
 The +type+ property is used to select one of the mechanisms for application execution
 that is known by Swift. A comprehensinve list of execution mechanisms can be found 
-in <<section-execution-mechanisms, Execution Mechanisms Section>>. A summary is shown below:
+in <<configuration:execution-mechanisms, Execution Mechanisms Section>>. A summary is 
+shown below:
 
 [[table-execution-mechanisms]]
 .Swift Execution Mechanisms
@@ -276,7 +279,7 @@ Submits applications through an automatically-deployed Swift Coasters service
 Uses a manually deployed Swift Coasters service
 
 |+GRAM5+              | yes        | yes           | "fork"           | swift, wrapper                                  | 
-Uses the <<http://toolkit.globus.org/toolkit/docs/latest-stable/gram5/user/#gram5User,GRAM: User's Guide>> component of 
+Uses the http://toolkit.globus.org/toolkit/docs/latest-stable/gram5/user/#gram5User[GRAM: User's Guide] component of 
 the Globus Toolkit.
 
 |+GT2+              4+|                                                                                                 | 
@@ -308,7 +311,7 @@ Submits applications to Platform's Load Sharing Facility
 
 The execution provider +options+ are options that specify finer details on how
 on application should be executed. They depend on the chosen mechanism and are detailed in
-<<section-execution-mechanisms, Execution Mechanisms>> Section. This is where 
+<<configuration:execution-mechanisms, Execution Mechanisms>> Section. This is where 
 Coasters options, such as +nodeGranularity+ or +softImage+, would
 be specified. Example:
 
@@ -327,6 +330,7 @@ execution {
 
 A complete list of Swift Coasters options can be found in <<table-em-options-coaster,Coaster Options>>
 
+[[configuration:staging]]
 ==== Staging
 
 The staging property instructs Swift how to handle application input and output
@@ -337,8 +341,8 @@ dependent on the execution mechanism. The supported staging methods for each
 execution mechanism are listed in the 
 <<table-execution-mechanisms,Execution Mechanisms>> Section 
 above. For more details about each staging method, please refer to the 
-<<runtime:staging-methods, Staging Methods>> Section. A brief description of 
-each staging method is provided below:
+<<runtime:application-functions-execution, Application Function Execution>> 
+Section. A brief description of each staging method is provided below:
 
 +swift+::  This method instructs Swift to use a filesystem provider to direct 
 all necessary staging operations from the Swift client-side to the cluster head 
@@ -390,7 +394,6 @@ Valid types are described below:
 | +GridFTP+ | yes          | An alias for +GSIFTP+
 | +SSH+     | yes          | Uses the SCP protocol
 |==========================================================================
-
 
 
 ==== Site Options
@@ -625,7 +628,7 @@ For example:
 
 The remaining options are:
 
-@CONFIGPROP jobQueue+ <string>
+@CONFIGPROP jobQueue <string>
 
 If the application is executed using a mechanism that submits to a queuing 
 system, this option can be used to select a specific queue for the application
@@ -643,6 +646,7 @@ default value is 10 minutes.
 
 @END
 
+[[configuration:general-swift-options]]
 ==== General Swift Options
 
 There are a number of configuration options that modify the way that
@@ -745,7 +749,7 @@ Specifies a string to prefix to each ticker line output
 
 Specifies the date/time format to use for the time stamp of each ticker line. 
 It must conform to Java's 
-<<http://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html,SimpleDateFormat>>
+http://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html[SimpleDateFormat]
 syntax.
 
 @END
@@ -755,8 +759,8 @@ syntax.
 @CONFIGPROP CDMBroadcastMode <string>
 "file"
 
-@CONFIGPROP CDMLogFile <string>
-"cdm.log"
+@CONFIGPROP CDMFile <string>
+"fs.data"
 
 @END
 
@@ -794,6 +798,7 @@ scheme that is prefixed to local files.
 
 @END
 
+[[configuration:throttling]]
 ==== Throttling Options
 
 @CONFIGPROP jobSubmitThrottle (<strictlyPositiveInteger> | "off")
@@ -836,27 +841,27 @@ listing the contents of a directory, creating a directory, removing a file, etc.
 @CONFIGPROP staging ("swift" | "local" | "service-local" | "shared-fs" | "wrapper")
 "swift"
 
-See <<staging-methods,Staging Methods>>.
+See <<configuration:staging,staging>>.
 
 
 @CONFIGPROP keepSiteDir <boolean>
 false
 
-See See <<site-options:keepSiteDirs, keepSiteDirs>>.
+See See <<gprop:keepSiteDir, keepSiteDir>>.
 
 @CONFIGPROP statusMode ("files" | "provider")
 "files"
 
-See <<site-options:statusMode, statusMode>>.
+See <<gprop:statusMode, statusMode>>.
 
 @CONFIGPROP wrapperParameterMode ("args" | "files")
 "args"
 
-See <<site-options:wrapperParameterMode, wrapperParameterMode>>.
+See <<gprop:wrapperParameterMode, wrapperParameterMode>>.
 
 @END
 
-[[section-execution-mechanisms]]
+[[configuration:execution-mechanisms]]
 === Execution Mechanisms
 
 Swift allows application execution through a number of mechanisms (or execution 
@@ -909,8 +914,8 @@ Example::
 
 @EM GT5
 
-Uses the <<http://toolkit.globus.org/toolkit/docs/latest-stable/gram5/#gram5,GRAM>> component
-of the <<http://toolkit.globus.org, Globus Toolkit>> to launch jobs on remote resources.
+Uses the http://toolkit.globus.org/toolkit/docs/latest-stable/gram5/#gram5[GRAM] component
+of the http://toolkit.globus.org[Globus Toolkit] to launch jobs on remote resources.
 
 General Configuration::
 +
@@ -935,7 +940,7 @@ Options:: N/A
 
 Application Options::
 For a complete list and description of these options, please see the 
-<<http://toolkit.globus.org/toolkit/docs/latest-stable/gram5/user/#gram5-user-rsl, Globus GRAM documentation>>
+http://toolkit.globus.org/toolkit/docs/latest-stable/gram5/user/#gram5-user-rsl[Globus GRAM documentation]
 +
 [options="header",cols="3, 3, 3, 10"]
 |==========================================================================
@@ -1139,6 +1144,7 @@ Example::
     }
 ------
 
+[[configuration:coasters]]
 @EM Coasters
 
 Coasters are a mechanism that packages multiple swift application invocations into larger
@@ -1161,6 +1167,7 @@ General Configuration::
 
 Options::
 +
+[[table-em-options-coaster]]
 [options="header",cols="4, 2, 3, 2"]
 |==========================================================================
 | Name            | Type              | Default Value | Description
@@ -1210,7 +1217,7 @@ Options::
                                                         These options correspond to the execution mechanism specified
                                                         by +em2+ in the job manager setting and are described in the
                                                         *App Options* sections of the corresponding section of 
-                                                        <<section-execution-mechanisms, Execution Mechanisms>>.
+                                                        <<configuration:execution-mechanisms, Execution Mechanisms>>.
 | +workerLoggingLevel+| +"ERROR"+, +"WARN"+, +"INFO"+, +"DEBUG"+, +"TRACE"+, or none
                                       |          none | If specified, the Coaster Workers produce a log file 
 | +workerLoggingDirectory+ | String   |  | The directory where the worker logs will be created.

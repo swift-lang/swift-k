@@ -1,3 +1,4 @@
+[[library:mappers]]
 @MAPPERS
 
 @MAPPER IO <SingleFileMapper; string file>
@@ -107,6 +108,7 @@ comma-separated list (with optional whitespace) of files. Example:
 file[] texts <FixedArrayMapper; files = "file1.txt, fileB.txt, file3.txt">;
 ----
 
+[[library:mappers:FilesysMapper]]
 @MAPPER I <FilesysMapper; string location = ".", string prefix = "", string suffix = "",\n string pattern = "*">
 
 Maps an array of file-valued items and integer keys using a set of files 

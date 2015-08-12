@@ -17,10 +17,11 @@ class State:
 		self.allConstants = []
 		self.allFunctions = []
 		self.allMappers = []
+		self.overloads = {}
 		self.functionsByTopic = {}
 		self.currentTopic = None
 		self.orderedTopics = []
-		self.ix = 1
+		self.itemCount = 0
 		self.inputStack = []
 		self.pushInput(inf)
 	
@@ -131,6 +132,18 @@ class State:
 		self.currentTopic = topic
 		self.orderedTopics.append(topic)
 	
+	def addOverload(self, name):
+		ix = None
+		if name in self.overloads:
+			ix = self.overloads[name] + 1
+			self.overloads[name] = ix
+			ix = "-" + str(ix)
+		else:
+			ix = ""
+			self.overloads[name] = 1
+		self.itemCount = self.itemCount + 1
+		return ix
+	
 	def expand(self, token, rest):
 		if token == "SECTION":
 			self.startSubsection(rest.strip())
@@ -152,7 +165,9 @@ class State:
 				rest = rest[langle:]
 			else:
 				name = self.getFunctionName(rest)
-			self.outf.write("[[" + self.basename + ":" + name + "-" + str(self.ix) + "]]\n")
+			ix = self.addOverload(name)
+			
+			self.outf.write("[[" + self.basename + ":" + name + ix + "]]\n")
 			if token == "DEPRECATEDFN":
 				self.startItem(name, caption = "Deprecated: ")
 			else:
@@ -169,12 +184,13 @@ class State:
 			self.outf.write(rest.replace("\\n", "\n\t"))
 			self.outf.write("----\n\n")
 			self.inFnOrConst = True
-			self.ix = self.ix + 1
 		elif token == "TOPIC":
 			pass
 		elif token == "CONFIGPROP":
 			self.endItem()
 			(name, valid, default) = self.getConfigPropInfo(rest)
+			ix = self.addOverload(name)
+			self.outf.write("[[gprop:" + name + ix + "]]\n")
 			self.startItem(name)
 			self.outf.write("[listing, swiftconf]\n")
 			self.outf.write("----\n")
@@ -186,7 +202,7 @@ class State:
 				self.outf.write("+\n\n")
 		elif token == "EM":
 			self.endItem()
-			self.outf.write("[[" + "em-" + rest + "]]\n")
+			self.outf.write("[[" + "em:" + rest.lower() + "]]\n")
 			self.startItem(rest)
 		elif token == "END":
 			self.endItem()
@@ -197,34 +213,43 @@ class State:
 	
 	def scanForNames(self, line):
 		if line == "":
-			pass
+			return False
 		elif line[0] == "@":
 			tokenEnd = line.find(" ")
 			if tokenEnd == -1:
-				self.scanLineForNames(line[1:], "\n")
+				return self.scanLineForNames(line[1:-1], "\n")
 			else:
-				self.scanLineForNames(line[1:tokenEnd], line[tokenEnd:].lstrip())
+				return self.scanLineForNames(line[1:tokenEnd], line[tokenEnd:].lstrip())
 		else:
-			pass
+			return False
 	
 	def scanLineForNames(self, token, rest):
 		if token == "SECTION":
 			self.setCurrentTopic(rest.strip())
 			self.functionsByTopic[self.currentTopic] = []
+			return False
 		elif token == "CONST":
-			self.allConstants.append(Ref(self.getConstantName(rest), self.ix))
-			self.ix = self.ix + 1
+			name = self.getConstantName(rest)
+			ix = self.addOverload(name)
+			self.allConstants.append(Ref(name, ix))
+			return False
 		elif token == "MAPPER":
-			self.allMappers.append(Ref(self.getMapperName(rest), self.ix))
-			self.ix = self.ix + 1
+			name = self.getMapperName(rest)
+			ix = self.addOverload(name)
+			self.allMappers.append(Ref(name, ix))
+			return False
 		elif token == "FN" or token == "DEPRECATEDFN":
 			name = self.getFunctionName(rest)
-			ref = Ref(name, self.ix);
-			self.ix = self.ix + 1
+			ix = self.addOverload(name)
+			ref = Ref(name, ix);
 			self.allFunctions.append(ref)
 			self.functionsByTopic[self.currentTopic].append(ref)
+			return False
 		elif token == "INCLUDE":
 			self.pushInput(open(rest.strip(), "r"))
+			return False
+		elif token == "MAPPERS" or token == "LIBRARY":
+			return True
 	
 	def outRefs(self, l, sort):
 		if sort:
@@ -235,7 +260,7 @@ class State:
 				first = False
 			else:
 				self.outf.write(", ")
-			self.outf.write("<<" + self.basename + ":" + c.name + "-" + str(c.ix) + ", " + c.name + ">>")
+			self.outf.write("<<" + self.basename + ":" + c.name + c.ix + ", " + c.name + ">>")
 
 	def writeHeading(self, text, char):
 		text = text.strip()
@@ -266,7 +291,8 @@ class State:
 				self.outf.write("\n" + key + ":: ")
 				self.outRefs(self.functionsByTopic[key], False)
 		self.endSubsection()
-		self.ix = 1
+		self.itemCount = 0
+		self.overloads = {}
 	
 	def readLine(self):
 		line = self.inf.readline()
@@ -282,18 +308,24 @@ class State:
 	
 	def run(self):
 		line = self.readLine()
+		headerSeen = False
 		while line != "":
-			self.scanForNames(line)
+			headerSeen = headerSeen or self.scanForNames(line)
+			if not headerSeen:
+				self.outf.write(line)
 			line = self.readLine()
 
 		self.generateSummary()
-
 		self.inf.seek(0)
 		self.pushInput(self.inf)
 
 		line = self.readLine()
+		headerSeen = False
 		while line != "":
-			self.process(line)
+			if not headerSeen:
+				headerSeen = headerSeen or self.scanForNames(line)
+			else:
+				self.process(line)
 			line = self.readLine()
 
 		self.endSubsection()

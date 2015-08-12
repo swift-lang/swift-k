@@ -1,3 +1,5 @@
+@LIBRARY
+
 @FUNCTIONS
 
 @SECTION String Functions
@@ -42,7 +44,8 @@ converted to strings before being concatenated.
 
 Formats the parameters according to +format+ which must conform to the the 
 specification in
-<<http://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html#syntax, Java string formatter>> and returns the resulting string.
+http://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html#syntax[Java string formatter] 
+and returns the resulting string.
 
 @FN string pad(int size, int value)
 
@@ -158,13 +161,13 @@ fields that are of a mapped type, +read()+ returns an error.
 
 @FN <T> T readData2(any f)
 
-An alias to <<library-v2:readStructured, readStructured()>>.
+An alias to <<library-v1:readStructured, readStructured()>>.
 
 @FN file writeData(any value)
 
 Writes the contents of +value+ into a file and returns a reference to the file.
 The format used by +writeData()+ matches the format accepted by 
-<<stdlib-v1:readData, +readData()+>>.
+<<library-v1:readData, +readData()+>>.
 
 @FN int extractInt(any f)
 
@@ -186,18 +189,18 @@ for each of them to be closed. The output is prefixed by the string
 
 Prints, on the console, a formatted representation of +args+ waiting
 for each of them to be closed. The format is as described in 
-<<stdlib-v1:sprintf, +sprintf()+>>.
+<<library-v1:sprintf, +sprintf()+>>.
 
 @FN printf(any... args)
 
-Like <<stdlib-v1:trace, +trace()+>>, except the output is not prefixed by 
+Like <<library-v1:trace, +trace()+>>, except the output is not prefixed by 
 anything.
 
 @FN fprintf(string filename, string spec, any... args)
 
 Writes a formatted set of values to a file. The arguments, +args+, are 
 converted to a string according to +spec+ whose format is as in 
-<<stdlib-v1:sprintf, +sprintf()+>>. The resulting string is appended atomically
+<<library-v1:sprintf, +sprintf()+>>. The resulting string is appended atomically
 to the file with name +filename+.
 
 @INCLUDE filenames.cdef
@@ -218,11 +221,11 @@ nothing.
 
 @FN assert(int assertion)
 
-Equivalent to <<stdlib-v1:assert1, +assert+>>+(assertion != 0)+.
+Equivalent to <<library-v1:assert, +assert+>>+(assertion != 0)+.
 
 @FN assert(int assertion, string message)
 
-Equivalent to <<stdlib-v1:assert2, +assert+>>+(assertion != 0, message)+.
+Equivalent to <<library-v1:assert-2, +assert+>>+(assertion != 0, message)+.
 
 @FN <T> T java(string cls, string method, any... args)
 
@@ -288,32 +291,32 @@ Waits for +array+ to be closed and returns its length.
 
 @DEPRECATEDFN <T> T readdata(any f)
 
-Deprecated capitalization for <<stdlib-v1:readData, +readData()+>>
+Deprecated capitalization for <<library-v1:readData, +readData()+>>
 
 @DEPRECATEDFN <T> T readdata2(any f)
 
-Deprecated capitalization for <<stdlib-v1:readData2, +readData2()+>>
+Deprecated capitalization for <<library-v1:readData2, +readData2()+>>
 
 @DEPRECATEDFN <T> T readstructured(any f)
 
-Deprecated capitalization for <<stdlib-v1:readStructured, +readStructured()+>>
+Deprecated capitalization for <<library-v1:readStructured, +readStructured()+>>
 
 @DEPRECATEDFN file writedata(any f)
 
-Deprecated capitalization for <<stdlib-v1:writeData, +writeData()+>>
+Deprecated capitalization for <<library-v1:writeData, +writeData()+>>
 
 @DEPRECATEDFN int extractint(any f)
 
-Deprecated capitalization for <<stdlib-v1:extractInt, +extractInt()+>>
+Deprecated capitalization for <<library-v1:extractInt, +extractInt()+>>
 
 @DEPRECATEDFN int toint(any value)
 
-Deprecated capitalization for <<stdlib-v1:toInt, +toInt()+>>
+Deprecated capitalization for <<library-v1:toInt, +toInt()+>>
 
 @DEPRECATEDFN float tofloat(any value)
 
-Deprecated capitalization for <<stdlib-v1:toFloat, +toFloat()+>>
+Deprecated capitalization for <<library-v1:toFloat, +toFloat()+>>
 
 @DEPRECATEDFN string tostring(any value)
 
-Deprecated capitalization for <<stdlib-v1:toString, +toString()+>>
+Deprecated capitalization for <<library-v1:toString, +toString()+>>

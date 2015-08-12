@@ -1,3 +1,5 @@
+@LIBRARY
+
 @CONSTANTS
 
 @CONST global float PI;
@@ -314,15 +316,15 @@ Returns the length of +a+, waiting for +a+ to be closed.
 
 @FN <T> T read(file f, string format = "None", any[string] options = {})
 Reads data from +file+, which can either be a string representing a local 
-filesystem path or a <<language:mapped-value, mapped value>>. The valid formats
+filesystem path or a <<language:mapped-types, mapped value>>. The valid formats
 are *None*, *FieldAndValue*, *FV*, and *CSV* and are explained below.
 
 *None*:: The contents of the file is a primitive value with the following 
 format:
 +
 --
-int:::: an <<language:int-literal, int literal>>
-float:::: a <<language:float-literal, float literal>>
+int:::: an <<language:types:int, int literal>>
+float:::: a <<language:types:float, float literal>>
 boolean:::: +true+ or +false+
 string:::: anything; the entire content of the file will be read into the string
 

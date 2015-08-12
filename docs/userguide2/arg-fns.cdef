@@ -2,7 +2,7 @@
 Returns the value of the command line argument +argName+. If there is no
 command line argument named +argName+, +arg()+ returns an error. Named 
 arguments to a Swift program are passed on the command line after the program 
-name (see <<running:invoking, invoking Swift>>) in the following format:
+name (see <<running:running-swift, Running Swift>>) in the following format:
 [listing, shell]
 ----
 swift <options> <swift program> [--<argName>=<argValue>]*
