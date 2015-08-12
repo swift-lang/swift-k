@@ -100,6 +100,7 @@ function displaySection(section, scroll) {
 
 function displayCurrentSection() {
 	var section = getCurrentSection();
+	//console.log("displayCurrentSection(" + section + ")");
 	if (visibleSection != null) {
 		hideSection(visibleSection);
 	}
@@ -116,6 +117,7 @@ function hashHandler() {
         if (that.oldHash != window.location.hash){
             that.oldHash = window.location.hash;
             if (window.location.hash.indexOf("?") == -1) {
+            	disableNextScrollTracking();
 	            displayCurrentSection();
 	        }
         }
@@ -192,6 +194,7 @@ function getBody() {
 
 function getDeltas() {
 	var section = getCurrentSection();
+	//console.log("getDeltas(" + section + ")");
 	var title = document.getElementById(section);
 	var el = title.parentNode;
 	var body = getScrollingContainer();
@@ -213,10 +216,14 @@ function getDeltas() {
 }
 
 function checkVisibleSection() {
+	if (!nextScrollTrackingEnabled) {
+		nextScrollTrackingEnabled = true;
+		return;
+	}
 	var deltas = getDeltas();
-	//console.log(deltas.top + " - " + deltas.bottom);
 	var header = document.getElementById("header");
 	var offset = header.clientHeight + 4;
+	//console.log("deltas.top: " + deltas.top + ", deltas.bottom: " + deltas.bottom + ", offset: " + offset);
 	while (deltas.top < -offset && selectPreviousSection(deltas.section)) {
 		deltas = getDeltas();
 	}
@@ -225,7 +232,23 @@ function checkVisibleSection() {
 	}
 }
 
+function onClick(cls, fn) {
+	els = document.getElementsByClassName(cls);
+	
+	for (var i = 0; i < els.length; i++) {
+		els[i].children[0].onclick = fn;
+	}
+}
+
+var nextScrollTrackingEnabled = true;
+
+function disableNextScrollTracking() {
+	nextScrollTrackingEnabled = false;
+}
+
 function setUpScrollTracker() {
+	onClick("toclevel1", disableNextScrollTracking);
+	onClick("toclevel2", disableNextScrollTracking);
 	var content = getBody();
 	content.onscroll = checkVisibleSection;
 }
