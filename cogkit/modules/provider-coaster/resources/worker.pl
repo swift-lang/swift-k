@@ -2050,13 +2050,15 @@ sub pathExpandStageouts {
 			$i--;
 			
 			for my $f (@lst) {
-				push @$STAGE, "$dir$f";
-				$f =~ m/$resrc/;
-				my $dt;
-				eval "\$dt = qq/$redst/";
-				wlog DEBUG, "$jobid: $dir$f -> $dt\n";
-				push @$STAGED, $dt;
-				push @$STAGEM, $mode;
+				if (-f "$dir$f") {
+					push @$STAGE, "$dir$f";
+					$f =~ m/$resrc/;
+					my $dt;
+					eval "\$dt = qq/$redst/";
+					wlog DEBUG, "$jobid: $dir$f -> $dt\n";
+					push @$STAGED, $dt;
+					push @$STAGEM, $mode;
+				}
 			}
 		}
 		
