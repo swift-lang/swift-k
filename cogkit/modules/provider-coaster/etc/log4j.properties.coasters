@@ -1,0 +1,22 @@
+# Set root category priority to WARN and its appenders to CONSOLE and FILE.
+log4j.rootCategory=INFO, CONSOLE, FILE
+
+log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
+log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONSOLE.Threshold=WARN
+log4j.appender.CONSOLE.layout.ConversionPattern=%m%n
+
+log4j.appender.FILE=org.swift.util.logging.LazyFileAppender
+log4j.appender.FILE.File=coasters.log
+log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
+log4j.appender.FILE.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss,SSSZZZZZ} %-5p %c{1} %m%n
+
+
+log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Cpu=DEBUG
+log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Block=DEBUG
+log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.SimpleCloudWorkerManager=INFO
+
+
+# Special functionality: suppresses auto-deletion of PBS submit file
+log4j.logger.org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor=DEBUG
+log4j.logger.org.globus.cog.abstraction.impl.scheduler.pbs.PBSExecutor=DEBUG

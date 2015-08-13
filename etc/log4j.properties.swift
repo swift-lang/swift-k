@@ -29,6 +29,7 @@ log4j.logger.org.griphyn.vdl.toolkit.VDLt2VDLx=DEBUG
 
 log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Cpu=DEBUG
 log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.Block=DEBUG
+log4j.logger.org.globus.cog.abstraction.coaster.service.job.manager.SimpleCloudWorkerManager=INFO
 
 
 # Special functionality: suppresses auto-deletion of PBS submit file
@@ -45,3 +46,4 @@ log4j.logger.org.globus.cog.karajan.scheduler.WeightedHostScoreScheduler=INFO
 # CoG Providers
 log4j.logger.org.globus.cog.abstraction.impl.common.task.TaskImpl=INFO
 log4j.logger.org.globus.cog.abstraction.coaster.rlog=INFO
+log4j.logger.com.parallelworks.impl.execution.ec2=DEBUG

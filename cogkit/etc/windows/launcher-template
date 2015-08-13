@@ -49,7 +49,7 @@ goto cogpath
 
 :cogpath
 
-	set OPTS=%COG_OPTS% -Djava.endorsed.dirs="%COG_INSTALL_PATH%\lib\endorsed"
+	set OPTS=%COG_OPTS% -Djava.endorsed.dirs="%COG_INSTALL_PATH%\lib\endorsed" @options@
 
 	set LOCALCLASSPATH=%CLASSPATH%;%COG_INSTALL_PATH%\etc
 	

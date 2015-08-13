@@ -49,7 +49,7 @@ goto cogpath
 
 :cogpath
 
-	set OPTS=-DCOG_INSTALL_PATH="%SWIFT_HOME%" -Dswift.home="%SWIFT_HOME%"%COG_OPTS% -Djava.endorsed.dirs="%SWIFT_HOME%\lib\endorsed"
+	set OPTS=-DCOG_INSTALL_PATH="%SWIFT_HOME%" -Dswift.home="%SWIFT_HOME%"%COG_OPTS% -Djava.endorsed.dirs="%SWIFT_HOME%\lib\endorsed" -Dlog4j.configuration=log4j.properties.swift
 
 	set LOCALCLASSPATH=%CLASSPATH%;%SWIFT_HOME%\etc;%SWIFT_HOME%\libexec
 	

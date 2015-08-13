@@ -269,7 +269,7 @@
 			file="${module.dir}/etc/karajan.properties" 
 			overwrite="true"/>
 		<copy todir="${dist.dir}/etc" 
-			file="${module.dir}/etc/log4j.properties" 
+			file="${module.dir}/etc/log4j.properties.swift" 
 			overwrite="true"/>
 		<copy todir="${dist.dir}/etc/templates">
 			<fileset dir="${module.dir}/etc/templates"/>

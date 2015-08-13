@@ -6,7 +6,7 @@
 # SWIFT_USAGE_STATS
 
 EXEC=org.griphyn.vdl.karajan.Loader
-OPTIONS="-XX:+HeapDumpOnOutOfMemoryError"
+OPTIONS="-XX:+HeapDumpOnOutOfMemoryError -Dlog4j.configuration=log4j.properties.swift"
 
 CYGWIN=
 CPDELIM=":"

@@ -3,6 +3,7 @@
 	<ant antfile="${main.buildfile}" target="launcher">
 		<property name="launcher-name" value="coaster-service"/>
 		<property name="class-name" value="org.globus.cog.abstraction.coaster.service.CoasterPersistentService"/>
+		<property name="options" value="-Dlog4j.configuration=log4j.properties.coasters"/>
 	</ant>
 	<ant antfile="${main.buildfile}" target="launcher">
 		<property name="launcher-name" value="coaster-client"/>
