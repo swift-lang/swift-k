@@ -353,10 +353,10 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         }
 
         getTask().setStatus(Status.STAGE_OUT);
-        stage(s, dir, jobSucceeded, true);
+        stage(s, dir, new File("."), jobSucceeded, true);
     }
 
-    private void stage(StagingSet s, File dir, boolean jobSucceeded, boolean pathNameExpansion) throws Exception {
+    private void stage(StagingSet s, File srcdir, File dstdir, boolean jobSucceeded, boolean pathNameExpansion) throws Exception {
         for (StagingSetEntry e : s) {
             String src = e.getSource();
             if (pathNameExpansion && isPattern(src)) {
@@ -368,19 +368,29 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
                 }
                 String dst = e.getDestination();
                 RemoteFile srf = new RemoteFile(src);
+                if (srf.getDirectory() == null) {
+                    srf = addDirectory(srf, srcdir);
+                }
                 String srcScheme = defaultToLocal(srf.getProtocol());
                 Service ss = new ServiceImpl(srcScheme, getServiceContact(srf), null);
                 FileResource sres = FileResourceCache.getDefault().getResource(ss);
                 RemoteFile drf = new RemoteFile(dst);
+                if (drf.getDirectory() == null) {
+                    drf = addDirectory(drf, dstdir);
+                }
                 Collection<String[]> paths = SimplePathExpansion.expand(srf, drf, sres);
                 for (String[] pair : paths) {
-                    copy(pair[0], pair[1], dir, e.getMode(), jobSucceeded);
+                    copy(pair[0], pair[1], srcdir, dstdir, e.getMode(), jobSucceeded);
                 }
             }
             else {
-                copy(e.getSource(), e.getDestination(), dir, e.getMode(), jobSucceeded);
+                copy(e.getSource(), e.getDestination(), srcdir, dstdir, e.getMode(), jobSucceeded);
             }
         }
+    }
+
+    private RemoteFile addDirectory(RemoteFile orig, File dir) {
+        return new RemoteFile(orig.getProtocol(), orig.getHost(), orig.getPort(), dir.getPath(), orig.getName());
     }
 
     private boolean isPattern(String path) {
@@ -404,10 +414,10 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         getTask().setStatus(Status.STAGE_IN);
         // job is considered successful before it runs as far as
         // staging modes are concerned
-        stage(s, dir, true, false);
+        stage(s, new File("."), dir, true, false);
     }
 
-    private void copy(String src, String dest, File dir, EnumSet<Mode> mode, boolean jobSucceeded) throws Exception {
+    private void copy(String src, String dest, File srcdir, File dstdir, EnumSet<Mode> mode, boolean jobSucceeded) throws Exception {
         src = dropCDMPrefix(src);
         RemoteFile srf = new RemoteFile(src);
         RemoteFile drf = new RemoteFile(dest);
@@ -421,7 +431,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         FileResource sres = FileResourceCache.getDefault().getResource(ss);
         FileResource dres = FileResourceCache.getDefault().getResource(ds);
                 
-        String srcPath = getPath(srf, dir);
+        String srcPath = getPath(srf, srcdir);
         
         boolean delete = false;
         if (mode.contains(Mode.IF_PRESENT) && !sres.exists(srcPath)) {
@@ -434,7 +444,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             delete = true;
         }
         
-        String dstPath = getPath(drf, dir);
+        String dstPath = getPath(drf, dstdir);
         if (delete) {
             if (dres.exists(dstPath)) {
                 dres.deleteFile(dstPath);
