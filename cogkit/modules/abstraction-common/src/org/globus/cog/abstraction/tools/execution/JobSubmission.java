@@ -26,11 +26,18 @@
 package org.globus.cog.abstraction.tools.execution;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.AbstractionProperties;
+import org.globus.cog.abstraction.impl.common.CleanUpSetImpl;
+import org.globus.cog.abstraction.impl.common.StagingSetEntryImpl;
+import org.globus.cog.abstraction.impl.common.StagingSetImpl;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
@@ -40,11 +47,13 @@ import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
+import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -61,38 +70,44 @@ import org.globus.cog.util.ArgumentParserException;
 public class JobSubmission implements StatusListener {
     static Logger logger = Logger.getLogger(JobSubmission.class.getName());
 
-    private String name = null;
+    private String name;
+    private String checkpointFile;
+    private Task task;
 
-    private String checkpointFile = null;
-
-    private Task task = null;
-
-    private String serviceContact = null;
-
-    private String provider = null;
-
-    private boolean batch = false;
-
+    private String serviceContact;
+    private String provider;
+    
+    private boolean batch;
     private boolean redirected;
     
+    private String executable;
+    private final List<String> arguments;
 
-    private String executable = null;
+    private final Map<String, String> environment;
 
-    private String arguments = null;
+    private final Map<String, Object> attributes;
 
-    private String environment = null;
-
-    private String attributes = null;
-
-    private String directory = null;
+    private String directory;
 
     private String stderr, stdout, stdin;
+    
+    private StagingSet stagein, stageout;
+    
+    private CleanUpSet cleanup;
 
-    private boolean commandLine = false;
+    private boolean commandLine;
 
-    private String jobmanager = null;
+    private String jobmanager;
 
-    private String specification = null;
+    private String specification;
+    
+    private boolean verbose;
+    
+    public JobSubmission() {
+        arguments = new ArrayList<String>();
+        environment = new HashMap<String, String>();
+        attributes = new HashMap<String, Object>();
+    }
 
     public void prepareTask() throws Exception {
         /*
@@ -108,15 +123,16 @@ public class JobSubmission implements StatusListener {
 
         if (this.specification != null) {
             spec.setSpecification(this.specification);
-        } else {
+        } 
+        else {
             spec.setExecutable(executable);
 
             if (arguments != null) {
                 spec.setArguments(arguments);
             }
 
-            if (environment != null) {
-                setEnvironment(spec);
+            if (!environment.isEmpty()) {
+                spec.setEnvironmentVariables(environment);
             }
 
             if (directory != null) {
@@ -174,8 +190,18 @@ public class JobSubmission implements StatusListener {
              * JobSpecification intercace, it can be provided as a task
              * attribute.
              */
-            if (this.attributes != null) {
-                setAttributes(spec);
+            for (Map.Entry<String, Object> e : attributes.entrySet()) {
+                spec.setAttribute(e.getKey(), e.getValue());
+            }
+            
+            if (stagein != null) {
+                spec.setStageIn(stagein);
+            }
+            if (stageout != null) {
+                spec.setStageOut(stageout);
+            }
+            if (cleanup != null) {
+                spec.setCleanUpSet(cleanup);
             }
         }
         this.task.setSpecification(spec);
@@ -216,30 +242,33 @@ public class JobSubmission implements StatusListener {
     }
 
     private void submitTask() throws Exception {
-        TaskHandler handler = AbstractionFactory
-                .newExecutionTaskHandler(provider);
+        TaskHandler handler = AbstractionFactory.newExecutionTaskHandler(provider);
         try {
             handler.submit(this.task);
-        } catch (InvalidSecurityContextException ise) {
-            System.out.println("Security Exception: " + getMessages(ise));
+        } 
+        catch (InvalidSecurityContextException ise) {
+            System.err.println("Security Exception: " + getMessages(ise));
             logger.debug("Stack trace: ", ise);
             System.exit(1);
-        } catch (TaskSubmissionException tse) {
-            System.out.println("Submission Exception: " + getMessages(tse));
+        } 
+        catch (TaskSubmissionException tse) {
+            System.err.println("Submission Exception: " + getMessages(tse));
             logger.debug("Stack trace: ", tse);
             System.exit(1);
-        } catch (IllegalSpecException ispe) {
-            System.out.println("Specification Exception: " + getMessages(ispe));
+        } 
+        catch (IllegalSpecException ispe) {
+            System.err.println("Specification Exception: " + getMessages(ispe));
             logger.debug("Stack trace: ", ispe);
             System.exit(1);
-        } catch (InvalidServiceContactException isce) {
-            System.out.println("Service Contact Exception: " + getMessages(isce));
+        } 
+        catch (InvalidServiceContactException isce) {
+            System.err.println("Service Contact Exception: " + getMessages(isce));
             logger.debug("Stack trace: ", isce);
             System.exit(1);
         }
         //wait
         while (true) {
-            Thread.sleep(1000);
+            Thread.sleep(500);
         }
     }
     
@@ -263,45 +292,17 @@ public class JobSubmission implements StatusListener {
             File xmlFile = new File(this.checkpointFile);
             xmlFile.createNewFile();
             TaskMarshaller.marshal(this.task, xmlFile);
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             logger.error("Cannot marshal the task", e);
-        }
-    }
-
-    private void setEnvironment(JobSpecification spec) {
-        String env = getEnvironment();
-        StringTokenizer st = new StringTokenizer(env, ",");
-        while (st.hasMoreTokens()) {
-            String token = st.nextToken();
-            if (token.length() > 0) {
-                StringTokenizer st2 = new StringTokenizer(token, "=");
-                while (st2.hasMoreTokens()) {
-                    String name = st2.nextToken().trim();
-                    String value = st2.nextToken().trim();
-                    spec.addEnvironmentVariable(name, value);
-                }
-            }
-        }
-    }
-
-    private void setAttributes(JobSpecification spec) {
-        String att = getAttributes();
-        StringTokenizer st = new StringTokenizer(att, ",");
-        while (st.hasMoreTokens()) {
-            String token = st.nextToken();
-            if (token.length() > 0) {
-                StringTokenizer st2 = new StringTokenizer(token, "=");
-                while (st2.hasMoreTokens()) {
-                    String name = st2.nextToken().trim();
-                    String value = st2.nextToken().trim();
-                    spec.setAttribute(name, value);
-                }
-            }
         }
     }
 
     public void statusChanged(StatusEvent event) {
         Status status = event.getStatus();
+        if (verbose) {
+            System.out.println(status.getTime() + " " + status.getStatusString());
+        }
         logger.debug("Status changed to " + status.getStatusString());
         if (status.getStatusCode() == Status.SUBMITTED) {
             if (this.checkpointFile != null) {
@@ -312,24 +313,28 @@ public class JobSubmission implements StatusListener {
         }
         if (status.getStatusCode() == Status.FAILED) {
             if (event.getStatus().getException() != null) {
-                System.out.println("Job failed: ");
+                System.err.println("Job failed: ");
                 event.getStatus().getException().printStackTrace();
             }
             else if (event.getStatus().getMessage() != null) {
-                System.out.println("Job failed: "
+                System.err.println("Job failed: "
                         + event.getStatus().getMessage());
-            } else {
-                System.out.println("Job failed");
+            } 
+            else {
+                System.err.println("Job failed");
+            }
+            if (this.task.getStdOutput() != null) {
+                System.out.println(this.task.getStdOutput());
+            }
+            if (this.task.getStdError() != null) {
+                System.err.println(this.task.getStdError());
             }
             if (this.commandLine) {
                 System.exit(1);
             }
         }
         if (status.getStatusCode() == Status.COMPLETED) {
-            if (isBatch()) {
-                System.out.println("Job Submitted");
-            } else {
-                System.out.println("Job completed");
+            if (!isBatch()) {
                 if (this.task.getStdOutput() != null) {
                     System.out.println(this.task.getStdOutput());
                 }
@@ -358,64 +363,57 @@ public class JobSubmission implements StatusListener {
                 + AbstractionProperties.getProviders().toString(), "provider",
                 ArgumentParser.OPTIONAL);
         ap.addAlias("provider", "p");
-        ap
-                .addOption(
-                        "specification",
-                        "Provider-specific format of the specification. If this option is used, "
-                                + "then individual specification-related parameters such as "
-                                + "executable, environment, etc are ignored. ",
-                        "spec", ArgumentParser.OPTIONAL);
+        ap.addOption("specification",
+                "Provider-specific format of the specification. If this option is used, "
+                 + "then individual specification-related parameters such as "
+                 + "executable, environment, etc are ignored. ",
+                 "spec", ArgumentParser.OPTIONAL);
         ap.addAlias("specification", "spec");
-        ap.addOption("executable", "Executable", "file",
-                ArgumentParser.OPTIONAL);
-        ap.addAlias("executable", "e");
-        ap.addOption("arguments", "Arguments. If more than one, use quotes",
+        ap.addOption(ArgumentParser.DEFAULT, "Executable", "executable",
+                ArgumentParser.NORMAL);
+        ap.setArguments(true);
+        ap.addOption("environment", "Environment variables for the remote execution environment, "
+                + "specified as \"name=value[,name=value]\"",
                 "string", ArgumentParser.OPTIONAL);
-        ap.addAlias("arguments", "args");
-        ap
-                .addOption(
-                        "environment",
-                        "Environment variables for the remote execution environment, specified as \"name=value[,name=value]\"",
-                        "string", ArgumentParser.OPTIONAL);
         ap.addAlias("environment", "env");
         ap.addOption("directory", "Target directory", "string",
                 ArgumentParser.OPTIONAL);
         ap.addAlias("directory", "d");
         ap.addFlag("batch", "If present, the job is run in batch mode");
         ap.addAlias("batch", "b");
-        ap
-                .addFlag("redirected",
-                        "If present, the arguments to -stdout and -stderr refer to local files");
+        ap.addFlag("redirected",
+                "If present, the arguments to -stdout and -stderr refer to local files");
         ap.addAlias("redirected", "r");
-        ap
-                .addOption(
-                        "stdout",
-                        "Indicates a file where the standard output of the job should be redirected",
-                        "file", ArgumentParser.OPTIONAL);
-        ap
-                .addOption(
-                        "stderr",
-                        "Indicates a file where the standard error of the job should be redirected",
-                        "file", ArgumentParser.OPTIONAL);
-        ap
-                .addOption(
-                        "stdin",
-                        "Indicates a file from which the standard input of the job should be read",
-                        "file", ArgumentParser.OPTIONAL);
-        ap
-                .addOption(
-                        "attributes",
-                        "Additional task specification attributes. Attributes can be specified as \"name=value[,name=value]\"",
-                        "string", ArgumentParser.OPTIONAL);
+        ap.addOption("stdout", "Indicates a file where the standard output of the job should be "
+                + "redirected",
+                "file", ArgumentParser.OPTIONAL);
+        ap.addOption("stderr", "Indicates a file where the standard error of the job should be "
+                + "redirected",
+                "file", ArgumentParser.OPTIONAL);
+        ap.addOption("stdin", "Indicates a file from which the standard input of the job should "
+                + "be read",
+                "file", ArgumentParser.OPTIONAL);
+        ap.addOption("attributes", "Additional task specification attributes. Attributes can be "
+                + "specified as \"name=value[,name=value]\"",
+                "string", ArgumentParser.OPTIONAL);
         ap.addAlias("attributes", "a");
-        ap
-                .addOption(
-                        "checkpoint",
-                        "Checkpoint file name. The task will be checkpointed to this file once submitted",
-                        "fileName", ArgumentParser.OPTIONAL);
+        ap.addOption("checkpoint", "Checkpoint file name. The task will be checkpointed to this "
+                + "file once submitted",
+                "fileName", ArgumentParser.OPTIONAL);
+        ap.addOption("stagein", "A colon-separated list of files to stage-in in the form source -> destination. "
+                + "Leading and trailing spaces in the file names are ignored. Relative files on the remote "
+                + "site are interpreted as relative to the job directory.",
+                "fileList", ArgumentParser.OPTIONAL);
+        ap.addOption("stageout", "A colon-separated list of files to stage-out in the form destination <- source. "
+                + "Leading and trailing spaces in the file names are ignored. Relative files on the remote "
+                + "site are interpreted as relative to the job directory.",
+                "fileList", ArgumentParser.OPTIONAL);
+        ap.addOption("cleanup", "A colon-separated list of files and/or directories to clean up."
+                + "The files/directories can be relative (to the job directory), but they cannot point to"
+                + " anything outside of the job directory.", 
+                "list", ArgumentParser.OPTIONAL);
         ap.addAlias("checkpoint", "c");
-        ap.addFlag("verbose",
-                "If enabled, display information about what is being done");
+        ap.addFlag("verbose", "If enabled, display information about what is being done");
         ap.addAlias("verbose", "v");
         ap.addFlag("help", "Display usage");
         ap.addAlias("help", "h");
@@ -423,55 +421,63 @@ public class JobSubmission implements StatusListener {
             ap.parse(args);
             if (ap.isPresent("help")) {
                 ap.usage();
-            } else {
+            } 
+            else {
                 ap.checkMandatory();
                 try {
                     JobSubmission jobSubmission = new JobSubmission();
-                    jobSubmission.setServiceContact(ap
-                            .getStringValue("service-contact",""));
-                    jobSubmission.setProvider(ap.getStringValue("provider",
-                            "GT2"));
-                    jobSubmission.setJobManager(ap
-                            .getStringValue("job-manager"));
+                    jobSubmission.setServiceContact(ap.getStringValue("service-contact",""));
+                    jobSubmission.setProvider(ap.getStringValue("provider", "GT2"));
+                    jobSubmission.setJobManager(ap.getStringValue("job-manager"));
                     jobSubmission.setName(ap.getStringValue("name", "myTask"));
-                    jobSubmission.setCheckpointFile(ap.getStringValue(
-                            "checkpoint", null));
+                    jobSubmission.setCheckpointFile(ap.getStringValue("checkpoint", null));
                     jobSubmission.setCommandline(true);
                     jobSubmission.setBatch(ap.isPresent("batch"));
                     jobSubmission.setRedirected(ap.isPresent("redirected"));
-                    jobSubmission.setSpecification(ap
-                            .getStringValue("specification"));
-                    jobSubmission
-                            .setExecutable(ap.getStringValue("executable"));
-                    jobSubmission.setArguments(ap.getStringValue("arguments",
-                            null));
-                    jobSubmission.setEnvironment(ap.getStringValue(
-                            "environment", null));
-                    jobSubmission.setAttributes(ap.getStringValue("attributes",
-                            null));
-                    jobSubmission.setDirectory(ap.getStringValue("directory",
-                            null));
+                    jobSubmission.setSpecification(ap.getStringValue("specification"));
+                    jobSubmission.setExecutable(ap.getStringValue(ArgumentParser.DEFAULT));
+                    jobSubmission.setArguments(ap.getArguments());
+                    jobSubmission.setEnvironment(ap.getStringValue("environment", null));
+                    jobSubmission.setAttributes(ap.getStringValue("attributes", null));
+                    jobSubmission.setDirectory(ap.getStringValue("directory", null));
                     jobSubmission.setStdout(ap.getStringValue("stdout", null));
                     jobSubmission.setStderr(ap.getStringValue("stderr", null));
                     jobSubmission.setStdin(ap.getStringValue("stdin", null));
+                    jobSubmission.setStagein(ap.getStringValue("stagein", null));
+                    jobSubmission.setStageout(ap.getStringValue("stageout", null));
+                    jobSubmission.setCleanup(ap.getStringValue("cleanup", null));
+                    jobSubmission.setVerbose(ap.isPresent("verbose"));
                     jobSubmission.prepareTask();
                     jobSubmission.submitTask();
-                } catch (Exception e) {
+                } 
+                catch (Exception e) {
+                    System.err.println("Error: " + e.getMessage());
                     logger.error("Exception in main", e);
                 }
             }
-        } catch (ArgumentParserException e) {
+        } 
+        catch (ArgumentParserException e) {
             System.err.println("Error parsing arguments: " + e.getMessage());
             ap.usage();
         }
     }
 
-    public String getArguments() {
+    public List<String> getArguments() {
         return arguments;
     }
-
+    
     public void setArguments(String arguments) {
-        this.arguments = arguments;
+        if (arguments == null) {
+            return;
+        }
+        String[] l = arguments.split("\\s+");
+        for (String s : l) {
+            this.arguments.add(s);
+        }
+    }
+
+    public void setArguments(List<String> arguments) {
+        this.arguments.addAll(arguments);
     }
 
     public String getExecutable() {
@@ -571,20 +577,48 @@ public class JobSubmission implements StatusListener {
         this.directory = directory;
     }
 
-    public String getEnvironment() {
+    public Map<String, String> getEnvironment() {
         return environment;
     }
 
     public void setEnvironment(String environment) {
-        this.environment = environment;
+        if (environment == null) {
+            return;
+        }
+        StringTokenizer st = new StringTokenizer(environment, ",");
+        while (st.hasMoreTokens()) {
+            String token = st.nextToken();
+            if (token.length() > 0) {
+                StringTokenizer st2 = new StringTokenizer(token, "=");
+                while (st2.hasMoreTokens()) {
+                    String name = st2.nextToken().trim();
+                    String value = st2.nextToken().trim();
+                    this.environment.put(name, value);
+                }
+            }
+        }
     }
 
-    public String getAttributes() {
+    public Map<String, Object> getAttributes() {
         return attributes;
     }
 
     public void setAttributes(String attributes) {
-        this.attributes = attributes;
+        if (attributes == null) {
+            return;
+        }
+        StringTokenizer st = new StringTokenizer(attributes, ",");
+        while (st.hasMoreTokens()) {
+            String token = st.nextToken();
+            if (token.length() > 0) {
+                StringTokenizer st2 = new StringTokenizer(token, "=");
+                while (st2.hasMoreTokens()) {
+                    String name = st2.nextToken().trim();
+                    String value = st2.nextToken().trim();
+                    this.attributes.put(name, value);
+                }
+            }
+        }
     }
 
     public String getJobManager() {
@@ -603,4 +637,59 @@ public class JobSubmission implements StatusListener {
     public void setSpecification(String specification) {
         this.specification = specification;
     }
+    
+    public void setStagein(String stagein) {
+        if (stagein == null) {
+            return;
+        }
+        this.stagein = getStagingSet(stagein, "->", true);
+    }
+    
+    public void setStageout(String stageout) {
+        if (stageout == null) {
+            return;
+        }
+        this.stageout = getStagingSet(stageout, "<-", false);
+    }
+
+    private StagingSet getStagingSet(String s, String sep, boolean srcIsFirst) {
+        StagingSet ss = new StagingSetImpl();
+        StringTokenizer st = new StringTokenizer(s, ":");
+        while (st.hasMoreTokens()) {
+            String tok = st.nextToken();
+            String[] st2 = tok.split(sep);
+            String src;
+            String dst;
+            if (srcIsFirst) {
+                src = st2[0].trim();
+                dst = st2[1].trim();
+            }
+            else {
+                dst = st2[0].trim();
+                src = st2[1].trim();
+            }
+            ss.add(new StagingSetEntryImpl(src, dst));
+        }
+        return ss;
+    }
+    
+    public void setCleanup(String cleanup) {
+        if (cleanup == null) {
+            return;
+        }
+        
+        this.cleanup = new CleanUpSetImpl();
+        StringTokenizer st = new StringTokenizer(cleanup, ":");
+        while (st.hasMoreTokens()) {
+            this.cleanup.add(st.nextToken());
+        }
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }    
 }
