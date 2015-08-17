@@ -355,8 +355,7 @@ public abstract class StandardLibrary {
         protected void makeProcedureSignatures() {
         	addProc("trace", returns(), args(vargs(ANY)),
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.Trace.class);
-        	
-        	
+
         	// ***** I/O *****
         	addProc("read", returns(ANY), args(ANY, optional(STRING, "format"), 
         	    optional(ANY.arrayType(STRING), "options")),
@@ -364,7 +363,19 @@ public abstract class StandardLibrary {
         	addProc("write", returns(ANY), args(ANY, optional(STRING, "format"), 
         	    optional(ANY.arrayType(STRING), "options")),
                 org.griphyn.vdl.karajan.lib.swiftscript.v2.IO.Write.class);
-        	
+            // WARNING!
+            // <UNCLEAN CODE FROM LEGACY STDLIB>
+            addProc("trace", returns(), args(vargs(ANY)),
+                org.griphyn.vdl.karajan.lib.swiftscript.Misc.Trace.class);
+            addProc("tracef", returns(), args(vargs(ANY)),
+                org.griphyn.vdl.karajan.lib.swiftscript.Tracef.class);
+            addProc("printf", returns(), args(vargs(ANY)),
+                org.griphyn.vdl.karajan.lib.swiftscript.Printf.class);
+            addProc("fprintf", returns(), args(vargs(ANY)),
+                org.griphyn.vdl.karajan.lib.swiftscript.Fprintf.class);
+            // <UNCLEAN CODE FROM LEGACY STDLIB.>
+
+
         	// ***** Assertions *****
             addProc("assert", returns(), args(BOOLEAN, optional(STRING, "msg")),
                 org.griphyn.vdl.karajan.lib.swiftscript.v2.Assertions.Assert.class);
@@ -547,6 +558,8 @@ public abstract class StandardLibrary {
                 org.griphyn.vdl.karajan.lib.swiftscript.v2.StringFunctions.Matches.class);
             addFunc("findAllRe", returns(STRING.arrayType()), args(STRING, STRING),
                 org.griphyn.vdl.karajan.lib.swiftscript.v2.StringFunctions.FindAllRe.class);
+            addFunc("pad", returns(STRING), args(INT, INT),
+                org.griphyn.vdl.karajan.lib.swiftscript.Misc.Pad.class);
             
             
             // ***** Arrays *****
