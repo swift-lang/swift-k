@@ -98,12 +98,12 @@ def canonicalFileName(entry):
     output = string.replace(entry.strip(), '/./', '/')
     return output
 
-def insertFile(fName, sRunDir, hname, crs, direction, app_exec_id, useSQLite, usePgSQL):
+def insertFile(fName, sRunDir, hname, crs, direction, app_exec_id, scriptStartTime, useSQLite, usePgSQL):
     fileLocation=sRunDir + "/" + fName
     # files are temporary by default in the concurrent mapper 
     if "_concurrent" in fName:
         fileSize=0
-        fileModify=0
+        fileModify=scriptStartTime
     else:
         fileStat = os.stat(fileLocation)
         fileSize=fileStat.st_size
@@ -333,12 +333,12 @@ if importProv:
             for f in iter(t.stageIn.split(",")):
                 direction="IN"
                 fileName=string.replace(canonicalFileName(f), 'file://localhost/', '')
-                insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId, runIsNewSQLite, runIsNewPgSQL)
+                insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId, scriptStartTime, runIsNewSQLite, runIsNewPgSQL)
 
             for f in iter(t.stageOut.split()):
                 direction="OUT"
                 fileName=canonicalFileName(f)
-                insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId, runIsNewSQLite, runIsNewPgSQL)
+                insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId, scriptStartTime, runIsNewSQLite, runIsNewPgSQL)
 
             for i, a in enumerate(t.arguments.split(",")):
                 position=i+1
