@@ -365,8 +365,6 @@ public abstract class StandardLibrary {
                 org.griphyn.vdl.karajan.lib.swiftscript.v2.IO.Write.class);
             // WARNING!
             // <UNCLEAN CODE FROM LEGACY STDLIB>
-            addProc("trace", returns(), args(vargs(ANY)),
-                org.griphyn.vdl.karajan.lib.swiftscript.Misc.Trace.class);
             addProc("tracef", returns(), args(vargs(ANY)),
                 org.griphyn.vdl.karajan.lib.swiftscript.Tracef.class);
             addProc("printf", returns(), args(vargs(ANY)),
