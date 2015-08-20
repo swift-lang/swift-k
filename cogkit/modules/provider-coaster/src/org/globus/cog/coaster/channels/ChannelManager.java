@@ -175,10 +175,14 @@ public class ChannelManager {
 	        }
 	        setStarting(hcp, true);
 	    }
-	    channel = openChannel(hcp, rm);
-	    synchronized(this) {
-	        setStarting(hcp, false);
-	        notifyAll();
+	    try {
+	        channel = openChannel(hcp, rm);
+	    }
+	    finally {
+    	    synchronized(this) {
+    	        setStarting(hcp, false);
+    	        notifyAll();
+    	    }
 	    }
 		return channel;
 	}
