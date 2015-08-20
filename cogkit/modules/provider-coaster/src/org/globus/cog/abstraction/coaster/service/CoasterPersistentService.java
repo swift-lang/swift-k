@@ -286,6 +286,7 @@ public class CoasterPersistentService extends CoasterService {
                 s.setDefaultQP("block");
             }
             if (ap.isPresent("controlPort")) {
+                System.setProperty("tcp.channel.log.io.performance", "true");
             	s.setControlPort(ap.getIntValue("controlPort"));
             }
             s.start();

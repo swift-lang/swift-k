@@ -35,6 +35,8 @@ import org.globus.cog.abstraction.coaster.service.job.manager.Job;
 import org.globus.cog.abstraction.coaster.service.job.manager.Node;
 import org.globus.cog.abstraction.coaster.service.job.manager.QueueProcessor;
 import org.globus.cog.abstraction.coaster.service.job.manager.Time;
+import org.globus.cog.coaster.channels.PerformanceDiagnosticInputStream;
+import org.globus.cog.coaster.channels.PerformanceDiagnosticOutputStream;
 import org.globus.cog.util.http.AbstractHTTPServer;
 import org.globus.cog.util.json.JSONEncoder;
 
@@ -105,6 +107,8 @@ public class SettingsServer extends AbstractHTTPServer {
             e.writeMapItem("time", Time.now().getMilliseconds());
             e.writeMapKey("wmdata");
             e.writeMap(wmData);
+            e.writeMapKey("runtime");
+            writeRuntimeInfo(e);
             List<Block> blocks = wm.getAllBlocks();
             e.writeMapKey("blocks");
             e.beginArray();
@@ -125,6 +129,22 @@ public class SettingsServer extends AbstractHTTPServer {
         }
         e.endMap();
         return ByteBuffer.wrap(e.toString().getBytes());
+    }
+
+    private void writeRuntimeInfo(JSONEncoder e) {
+        Runtime r = Runtime.getRuntime();
+        e.beginMap();
+        e.writeMapItem("maxHeap", r.maxMemory());
+        e.writeMapItem("crtHeap", r.totalMemory());
+        e.writeMapItem("usedHeap", r.totalMemory() - r.freeMemory());
+        e.writeMapItem("freeHeap", r.freeMemory());
+        e.writeMapItem("readBytesTotal", PerformanceDiagnosticInputStream.getTotal());
+        e.writeMapItem("readCurrentRate", PerformanceDiagnosticInputStream.getCurrentRate());
+        e.writeMapItem("readAverageRate", PerformanceDiagnosticInputStream.getAverageRate());
+        e.writeMapItem("writeBytesTotal", PerformanceDiagnosticOutputStream.getTotal());
+        e.writeMapItem("writeCurrentRate", PerformanceDiagnosticOutputStream.getCurrentRate());
+        e.writeMapItem("writeAverageRate", PerformanceDiagnosticOutputStream.getAverageRate());
+        e.endMap();
     }
 
     private void writeBlock(JSONEncoder e, Block b) {
@@ -152,7 +172,9 @@ public class SettingsServer extends AbstractHTTPServer {
         e.beginArray();
         Collection<Cpu> cpus = b.getCpusSnapshot();
         for (Cpu cpu : cpus) {
+            e.beginArrayItem();
             writeCpu(e, cpu);
+            e.endArrayItem();
         }
         e.endArray();
         e.endMap();
