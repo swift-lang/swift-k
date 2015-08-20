@@ -84,18 +84,20 @@ checkEmpty() {
 
 # Clobbered by SWIFTWRAP_FAST
 checkMissing() {
-	MISSING=
-	for O in $OUTF ; do
-		if [ ! -f "$O" ]; then
-			if [ "$MISSING" == "" ]; then
-				MISSING=$O
-			else
-				MISSING="$MISSING, $O"
+	if [ "$MPI_RANK" == "0" ]; then
+		MISSING=
+		for O in $OUTF ; do
+			if [ ! -f "$O" ]; then
+				if [ "$MISSING" == "" ]; then
+					MISSING=$O
+				else
+					MISSING="$MISSING, $O"
+				fi
 			fi
+		done
+		if [ "$MISSING" != "" ]; then
+			fail 254 "The following output files were not created by the application: $MISSING"
 		fi
-	done
-	if [ "$MISSING" != "" ]; then
-		fail 254 "The following output files were not created by the application: $MISSING"
 	fi
 }
 
@@ -133,6 +135,24 @@ getarg() {
 	fi
 }
 
+retry() {
+	TIMES=$1
+	WAIT=1
+	shift
+	
+	while [ "$TIMES" -ge "0" ]; do
+		"$@"
+		EC=$?
+		if [ "$EC" == "0" ]; then
+			TIMES="-1"
+		else
+			sleep $WAIT
+			let TIMES=TIMES-1
+			let WAIT=WAIT*2
+		fi
+	done
+}
+
 MPISetVars() {
 	if [ "$OMPI_COMM_WORLD_RANK" != "" ]; then
 		export MPI_RANK="$OMPI_COMM_WORLD_RANK"
@@ -150,6 +170,7 @@ MPISetVars() {
 		export MPI="true"
 	else
 		export MPI="false"
+		export MPI_RANK=0
 	fi
 }
 
@@ -193,6 +214,7 @@ MPIAggregateOutput() {
 							log "Timed out waiting for output from rank $I"
 							echo "Timeout" >> $STDOUT._mpi.$I
 							echo "Timeout" >> $STDERR._mpi.$I
+							touch _mpi.done.$I
 						fi
 					done
 					log "Got output from rank $I"
@@ -207,13 +229,15 @@ MPIAggregateOutput() {
 			else
 				log "Staging outputs for rank $MPI_RANK"
 				if [ ! -f _mpi.fstest ]; then
-					scp -P $MPI_ROOT_PORT $STDOUT $STDERR $MPI_ROOT_HOST:$PWD/
+					# use a rank-specific known hosts file to avoid race conditions
+					retry 3 scp -oUserKnownHostsFile=_known_hosts.$MPI_RANK -P $MPI_ROOT_PORT $STDOUT $STDERR $MPI_ROOT_HOST:$PWD/ >& "$INFO" 2>& "$INFO"
 				fi
 				FLAG="_mpi.done.$MPI_RANK"
 				touch $FLAG
 				if [ ! -f _mpi.fstest ]; then
-					scp -P $MPI_ROOT_PORT $FLAG $MPI_ROOT_HOST:$PWD/ 
+					retry 3 scp -oUserKnownHostsFile=_known_hosts.$MPI_RANK -P $MPI_ROOT_PORT $FLAG $MPI_ROOT_HOST:$PWD/ >& "$INFO" 2>& "$INFO"
 				fi
+				log "Output staging done"
 				# if we exit now, mpirun will terminate rank 0 before it does its job
 				sleep 60
 			fi
@@ -233,6 +257,9 @@ if [ "$MPI" == "true" ] && [ "$MPI_RANK" != "0" ]; then
 else
 	openinfo "wrapper.log"
 fi
+
+log "Set MPI_ROOT_HOST to $MPI_ROOT_HOST from OMPI_MCA_orte_hnp_uri=$OMPI_MCA_orte_hnp_uri"
+log "My rank: $MPI_RANK"
 
 checkparamfile "$@"
 
@@ -402,10 +429,11 @@ else
 	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
 fi
 EC=$?
+logstate "DONE EXITCODE=$EC"
 MPIAggregateOutput
 checkError $EC $EC "Application $EXEC failed with an exit code of $EC" <$STDERR
 
-if [ "$COLLECT" != "" ]; then
+if [ "$COLLECT" != "" ] && [ "$MPI_RANK" == "0" ]; then
 	logstate "COLLECT"
 	log "Collect list is $COLLECT"
 	exec 4<> "_collect"
