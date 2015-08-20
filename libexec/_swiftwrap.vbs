@@ -118,7 +118,10 @@ Sub mkdir(f)
 		fail "mkdir called with empty argument", 249
 	End If
 	If Not fs.FolderExists(f) Then
-		mkdir fs.GetParentFolderName(f)
+		parent = fs.GetParentFolderName(f)
+		If Not parent = "" Then
+			mkdir fs.GetParentFolderName(f)
+		End If
 		fs.CreateFolder(f)
 	End If
 End Sub
