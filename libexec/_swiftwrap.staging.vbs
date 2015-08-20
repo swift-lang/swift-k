@@ -122,15 +122,11 @@ Function deleteIfExists(name)
 End Function
 
 Sub mkdir(f)
-	If f = "" Then
-		fail "mkdir called with empty argument", 249
-	End If
-	If Not fs.FolderExists(f) Then
-		parent = fs.GetParentFolderName(f)
-		If Not parent = "" Then
+	If Not f = "" Then
+		If Not fs.FolderExists(f) Then
 			mkdir fs.GetParentFolderName(f)
+			fs.CreateFolder(f)
 		End If
-		fs.CreateFolder(f)
 	End If
 End Sub
 
