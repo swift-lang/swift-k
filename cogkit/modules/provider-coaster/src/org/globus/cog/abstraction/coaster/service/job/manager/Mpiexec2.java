@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -81,7 +82,12 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
         SHARED, NODE_LOCAL
     }
     
+    private static enum MPIFlavor {
+        OPENMPI, MPICH, INTELMPI;
+    }
+    
     private List<Cpu> cpus;
+    private Cpu first;
     private Job job;
     private Task mpiTask;
     private int stageinsActive, cleanupsActive;
@@ -96,16 +102,25 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
     private File hostfile;
     
     private FSMode fsMode;
+    private MPIFlavor mpiFlavor;
     
     private boolean canceled;
     
     public Mpiexec2(List<Cpu> cpus, Job job, Time estCompletionTime) {
         this.cpus = cpus;
+        this.first = cpus.get(0);
+        Collections.sort(this.cpus, new Comparator<Cpu>() {
+            @Override
+            public int compare(Cpu a, Cpu b) {
+                return a.getNode().getHostname().compareTo(b.getNode().getHostname());
+            }
+        });
         this.job = job;
         this.estCompletionTime = estCompletionTime;
         this.state = State.START;
         JobSpecification spec = (JobSpecification) job.getTask().getSpecification();
         this.fsMode = getFSMode(spec);
+        this.mpiFlavor = getMPIFlavor(spec);
         jobdir = spec.getDirectory();
         if (logger.isInfoEnabled()) {
             logger.info("New MPI job: " + job.getTask().getIdentity() + ", count=" + job.getCount() + ", fsmode=" + fsMode);
@@ -119,6 +134,21 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
         }
         else {
             return FSMode.SHARED;
+        }
+    }
+    
+    private MPIFlavor getMPIFlavor(JobSpecification spec) {
+        Object o = spec.getAttribute("mpi.flavor");
+        if ("IntelMPI".equals(o)) {
+            // MPICH style really
+            return MPIFlavor.INTELMPI;
+        }
+        else if ("MPICH".equals(o)) {
+            return MPIFlavor.MPICH;
+        }
+        else {
+            // TODO: autodetect
+            return MPIFlavor.OPENMPI;
         }
     }
 
@@ -261,6 +291,8 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
         
         NotificationManager.getDefault().registerListener(mpiTask.getIdentity().getValue(), mpiTask, this);
         SubmitJobCommand sjc = new SubmitJobCommand(mpiTask);
+        sjc.setCompression(false);
+        sjc.setSimple(true);
         try {
             sjc.executeAsync(n.getChannel(), this);
         }
@@ -271,6 +303,16 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
     
     private void addMPIRun(JobSpecification spec, String hnHostname) {
         List<String> args = new ArrayList<String>();
+        switch (mpiFlavor) {
+            case OPENMPI:
+                args.add("-mca");
+                args.add("rmaps");
+                args.add("seq");
+                break;
+            case INTELMPI:
+            case MPICH:
+                break;
+        }
         args.add("-hostfile");
         args.add("_hostfile");
         args.add(spec.getExecutable());
@@ -438,7 +480,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
             s = new StatusImpl(Status.COMPLETED);
         }
         job.getTask().setStatus(s);
-        cpus.get(0).statusChanged(s, null, null);
+        first.statusChanged(s, null, null);
         if (hostfile != null) {
             hostfile.delete();
         }
@@ -606,8 +648,11 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
     }
 
     private void releaseNonLeadCpus() {
-        for (int i = 1; i < cpus.size(); i++) {
-            cpus.get(i).mpiRankTerminated();
+        for (int i = 0; i < cpus.size(); i++) {
+            Cpu cpu = cpus.get(i);
+            if (cpu != first) {
+                cpu.mpiRankTerminated();
+            }
         }
     }
 }
