@@ -10,9 +10,21 @@ create table script_run (
         duration           real
 );
 
+create table script_run_annot_text (
+			app_exec_id		text references script_run (script_run_id),
+			key				text,
+			value			text
+);
+
+create table script_run_annot_numeric (
+			app_exec_id		text references script_run (script_run_id),
+			key				text,
+			value			numeric
+);
+
 create table app_exec (
 	app_exec_id			text primary key,
-        script_run_id   		text references script_run(script_run_id),
+  script_run_id   		text references script_run(script_run_id),
 	app__name			text,
 	execution_site			text,
 	start_time			text,
@@ -22,11 +34,23 @@ create table app_exec (
 	work_directory			text
 );
 
-create table argument (
+create table app_exec_annot_text (
+			app_exec_id		text references app_exec (app_exec_id),
+			key				text,
+			value			text
+);
+
+create table app_exec_annot_numeric (
+			app_exec_id		text references app_exec (app_exec_id),
+			key				text,
+			value			numeric
+);
+
+create table app_exec_argument (
 	app_exec_id			text references app_exec (app_exec_id),
 	arg_position			integer,
 	app_exec_arg			text
-);	
+);
 
 create table resource_usage (
        app_exec_id	    		text primary key references app_exec (app_exec_id),
@@ -56,11 +80,23 @@ create table resource_usage (
 
 create table file (
        file_id		text primary key,
-       host		text, 
-       name		text, 
+       host		text,
+       name		text,
        size		integer,
        modify		integer
-);	
+);
+
+create table file_annot_text (
+			file_id		text references file (file_id),
+			key				text,
+			value			text
+);
+
+create table file_annot_numeric (
+			file_id		text references file (file_id),
+			key				text,
+			value			numeric
+);
 
 create table staged_in (
        app_exec_id			text references app_exec (app_exec_id),

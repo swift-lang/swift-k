@@ -53,7 +53,7 @@ class Config:
 class File:
     fileId     = ''
     fileName   = ''
-    
+
 # Dictionary containing all tasks
 tasks = {}
 taskCounter = 1
@@ -100,7 +100,7 @@ def canonicalFileName(entry):
 
 def insertFile(fName, sRunDir, hname, crs, direction, app_exec_id, scriptStartTime, useSQLite, usePgSQL):
     fileLocation=sRunDir + "/" + fName
-    # files are temporary by default in the concurrent mapper 
+    # files are temporary by default in the concurrent mapper
     if "_concurrent" in fName:
         fileSize=0
         fileModify=scriptStartTime
@@ -110,7 +110,7 @@ def insertFile(fName, sRunDir, hname, crs, direction, app_exec_id, scriptStartTi
         fileModify=fileStat.st_mtime
 
     fileHost=hname
-        
+
     fileId=fileHost + ":" + fName + ":" + str(fileSize) + ":" + str(fileModify)
     if useSQLite:
         crs.execute('SELECT COUNT(*) FROM file WHERE file_id=:fileId', {"fileId": fileId})
@@ -135,7 +135,7 @@ def insertFile(fName, sRunDir, hname, crs, direction, app_exec_id, scriptStartTi
         else:
             os.popen(pgsqlConnString + ' -c "INSERT INTO staged_out VALUES (\'' + app_exec_id + '\', ' +
                                                                          '\'' + fileId + '\');"')
-        
+
 def getConfigProperty(line):
     configEntry=Config()
     configTokens=line.split("=")
@@ -157,14 +157,14 @@ for line in iter(log_file):
 
     if 'source file' in line:
         scriptFileName=line.split()[4].strip(':')
-  
+
     if 'CWD' in line:
         scriptRunDir=line.split()[5].rstrip('/.')
 
     if 'VERSION' in line:
         versionLine=line.split(" VERSION ")
         swiftVersion=versionLine[1].strip()
-                
+
     if 'JOB_START' in line:
         taskid          = getValue(line, "jobid")
         task            = getTask(taskid)
@@ -190,9 +190,9 @@ for line in iter(log_file):
             task.startStageIn = getISOTime(line)
         if "END" in line:
             taskid       = getValue(line, "jobid")
-            task         = getTask(taskid)           
+            task         = getTask(taskid)
             task.stopStageIn = getISOTime(line)
-            
+
     elif "Staging out" in line:
         if "START" in line:
             taskid       = getValue(line, "jobid")
@@ -202,7 +202,7 @@ for line in iter(log_file):
             taskid       = getValue(line, "jobid")
             task         = getTask(taskid)
             task.stopStageOut = getISOTime(line)
-    
+
 
     elif "FILE_STAGE_OUT_START" in line:
         taskid         = getValue(line, "jobid")
@@ -216,19 +216,19 @@ scriptStartTime=getISOTime(log_file.readline())
 log_file.close()
 scriptEndTime=getISOTime(os.popen("tail -1 " + log_filename).read())
 logFileTailCksum=(os.popen("tail -1000 " + log_filename +" | cksum ").read()).split()[0]
-scriptDuration=computeDuration(scriptStartTime, scriptEndTime) 
+scriptDuration=computeDuration(scriptStartTime, scriptEndTime)
 runDirName=log_filename.split('/')[0]
 runId=os.path.splitext(scriptFileName)[0] + "-" + runDirName + "-" + logFileTailCksum
 
 if importProv:
-    
+
     #read configuration file
     enableSQLite=False
     enablePostgreSQL=False
     enableGlobusOnlineCatalog=False
     provConfigFilename = swiftHomeDir + "/etc/provenance/provenance.config"
     provConfigFile = open(provConfigFilename, "r")
-    
+
     for line in iter(provConfigFile):
         if 'database=' in line:
             config=getConfigProperty(line)
@@ -251,12 +251,12 @@ if importProv:
             config=getConfigProperty(line)
             if config.key=="go_catalog_client":
                 globusOnlineClient=config.value.strip("\"")
-                    
+
     homeDirectory = os.path.expanduser('~')
     sqliteDBFile = homeDirectory + "/.swift_provenance.db"
-    
-    print "Provenance import: checking if database exists" 
-    
+
+    print "Provenance import: checking if database exists"
+
     # Initializes database if it not yet exists
     # Assumes PostgreSQL and Globus Online Catalog already initialized
     if enableSQLite==True:
@@ -269,12 +269,12 @@ if importProv:
             c.executescript(schema)
             conn.commit()
             conn.close()
-    
+
     runIsNewSQLite=False
     runIsNewPgSQL=False
-    
+
     # Check if run was already imported into SQLite
-    if enableSQLite:    
+    if enableSQLite:
         conn = sqlite3.connect(sqliteDBFile)
         c = conn.cursor()
         c.execute('SELECT COUNT(*) FROM script_run WHERE script_run_id=:runId', {"runId": runId})
@@ -286,11 +286,11 @@ if importProv:
         pgSQLOutput=os.popen(pgsqlConnString + ' --tuples-only -c "SELECT COUNT(*) FROM script_run WHERE script_run_id=\'' + runId + '\'"').readline().strip()
         if pgSQLOutput == '0':
             runIsNewPgSQL=True
-    
-    if runIsNewSQLite:        
+
+    if runIsNewSQLite:
         print "Provenance import: importing run into SQLite " + runId
-        c.execute('INSERT INTO script_run VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-                  (runId, scriptFileName, log_filename, hostname, scriptRunDir, 
+        c.execute('INSERT INTO script_run VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                  (runId, scriptFileName, log_filename, hostname, scriptRunDir,
                   swiftVersion, finalState, scriptStartTime, scriptDuration))
 
     if runIsNewPgSQL:
@@ -304,11 +304,11 @@ if importProv:
                                                                      '\'' + finalState + '\', ' +
                                                                      '\'' + scriptStartTime + '\', ' +
                                                                      '\'' + str(scriptDuration) + '\');"')
-                                                                                                                                       
 
-                                                                    
+
+
     if runIsNewSQLite or runIsNewPgSQL:
-        
+
         print "Provenance import: importing application executions"
         for t in sorted(tasks.values(), key=operator.attrgetter('taskNumber')):
             appExecId=runId + ":" + t.taskId
@@ -317,7 +317,7 @@ if importProv:
             stageOutDuration=computeDuration(t.startStageOut, t.stopStageOut)
             if runIsNewSQLite:
                 c.execute('INSERT INTO app_exec VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                          (appExecId, runId, t.app, t.host, t.startTime, appExecDuration, 
+                          (appExecId, runId, t.app, t.host, t.startTime, appExecDuration,
                            stageInDuration, stageOutDuration, t.workdir))
             if runIsNewPgSQL:
                 os.popen(pgsqlConnString + ' -c "INSERT INTO app_exec VALUES (\'' + appExecId + '\', ' +
@@ -329,7 +329,7 @@ if importProv:
                                                                              '\'' + str(stageInDuration) + '\', ' +
                                                                              '\'' + str(stageOutDuration) + '\', ' +
                                                                              '\'' + t.workdir + '\');"')
-                
+
             for f in iter(t.stageIn.split(",")):
                 direction="IN"
                 fileName=string.replace(canonicalFileName(f), 'file://localhost/', '')
@@ -343,9 +343,9 @@ if importProv:
             for i, a in enumerate(t.arguments.split(",")):
                 position=i+1
                 if runIsNewSQLite:
-                    c.execute('INSERT INTO argument VALUES (?, ?, ?)', (appExecId, position, a.strip()))
+                    c.execute('INSERT INTO app_exec_argument VALUES (?, ?, ?)', (appExecId, position, a.strip()))
                 if runIsNewPgSQL:
-                    os.popen(pgsqlConnString + ' -c "INSERT INTO argument VALUES (\'' + appExecId + '\', ' +
+                    os.popen(pgsqlConnString + ' -c "INSERT INTO app_exec_argument VALUES (\'' + appExecId + '\', ' +
                                                                               '\'' + str(position) + '\', ' +
                                                                               '\'' + a.strip() + '\');"')
             # Extracts resource usage information from wrapper logs
@@ -363,26 +363,26 @@ if importProv:
                                 if runIsNewSQLite:
                                     c.execute("INSERT INTO resource_usage (app_exec_id, %s) VALUES ('%s',%s)" % (entry[0], appExecId, entry[1].rstrip('%')))
                                 if runIsNewPgSQL:
-                                    os.popen(pgsqlConnString + ' -c "INSERT INTO resource_usage (app_exec_id, ' + 
+                                    os.popen(pgsqlConnString + ' -c "INSERT INTO resource_usage (app_exec_id, ' +
                                             entry[0] + ') VALUES (\'' + appExecId + '\', ' +
                                             '\'' + entry[1].rstrip('%') + '\');"')
                             else:
                                 if runIsNewSQLite:
                                     c.execute("UPDATE resource_usage SET %s=%s WHERE app_exec_id='%s'" % (entry[0], entry[1].rstrip('%'), appExecId))
                                 if runIsNewPgSQL:
-                                    os.popen(pgsqlConnString + ' -c "UPDATE resource_usage SET ' + entry[0] + '=' + 
+                                    os.popen(pgsqlConnString + ' -c "UPDATE resource_usage SET ' + entry[0] + '=' +
                                             entry[1].rstrip('%') + ' WHERE app_exec_id=\'' + appExecId + '\'"')
                 wrapperLogFile.close()
-        if noWrapperLog: 
+        if noWrapperLog:
             print "Provenance import: wrapper log not found, set wrapperlog.always.transfer=true in swift.properties to gather resource consumption information"
         if runIsNewSQLite:
             print "Provenance import: finished importing to ~/.swift_provenance.db"
         if runIsNewPgSQL:
             print "Provenance import: finished importing to PostgreSQL"
-            
+
     else:
         print "Provenance import: run " + runId + " is already in the database"
-        
+
     if runIsNewSQLite:
         conn.commit()
         conn.close()
@@ -398,4 +398,3 @@ else:
         print "\tWork directory: %s" % t.workdir
         print "\tStaged in: %s" % t.stageIn
         print "\tStaged out: %s\n" % t.stageOut
-
