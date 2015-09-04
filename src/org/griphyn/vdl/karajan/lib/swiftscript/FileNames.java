@@ -67,11 +67,9 @@ public class FileNames extends SwiftFunction {
                 new FileNameExpander(var, MultiMode.SEPARATE, Transform.REMOTE));
         }
         else {
-            result = NodeFactory.newRoot(Field.GENERIC_STRING, 
-                new FileNameExpander(var, MultiMode.COMBINED, Transform.NONE).toCombinedString());
+            result = NodeFactory.newRoot(Field.GENERIC_STRING_ARRAY, 
+                new FileNameExpander(var, MultiMode.SEPARATE, Transform.NONE).toStringList());
         }
-		// DSHandle returnArray = NodeFactory.newRoot(Field.GENERIC_STRING_ARRAY, Arrays.asList(f));
-		// returnArray.closeShallow();
 		
 		if (PROVENANCE_ENABLED) {
 		    int provid = SwiftFunction.nextProvenanceID();
