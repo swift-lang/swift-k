@@ -25,7 +25,7 @@ create table script_run_annot_numeric (
 create table app_exec (
 	app_exec_id			text primary key,
   script_run_id   		text references script_run(script_run_id),
-	app__name			text,
+	app_name			text,
 	execution_site			text,
 	start_time			text,
 	duration			real,
