@@ -420,6 +420,9 @@ public class Block implements StatusListener, Comparable<Block> {
 
     public String workerStarted(String workerID, String workerHostname,
             CoasterChannel channel, Map<String, String> options) {
+    	if (startTime == null) {
+    	    startTime = Time.now();
+    	}
     	running = true;
         int concurrency = 1;
         if (options.containsKey("concurrency")) {
@@ -522,7 +525,9 @@ public class Block implements StatusListener, Comparable<Block> {
                 }
             }
             else if (s.getStatusCode() == Status.ACTIVE) {
-                startTime = Time.now();
+            	if (startTime == null) {
+            	    startTime = Time.now();
+            	}
                 endTime = startTime.add(walltime);
                 setDeadline(startTime.add(bqp.getSettings().getReserve()));
                 running = true;
