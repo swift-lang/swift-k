@@ -6,6 +6,7 @@ import operator
 import sqlite3
 import string
 import datetime
+import re
 
 if len(sys.argv) == 2:
     log_directory = os.path.normpath(sys.argv[1])
@@ -27,7 +28,6 @@ else:
 #log_filename = os.path.join(log_directory, os.path.basename(log_directory) + ".log")
 log_file = open(log_filename, "r")
 swiftHomeDir = os.path.split(os.path.dirname(sys.argv[0]))[0]
-
 # Class definition for a single Task
 class Task:
     taskId     = ''
@@ -85,7 +85,7 @@ def getISOTime(entry):
     return (entryParts[0] + " " + entryParts[1]).replace(',','.')
 
 def getUnixEpoch(entry):
-    return os.popen("echo \"" + entry + "\"" + " | " + swiftHomeDir + "/libexec/log-processing/iso-to-secs").read()
+    return os.popen("echo \"" + entry + "\"" + " | " + swiftHomeDir + "/libexec/log-processing/iso-to-secs" + " | grep -v \"^$\"").read()
 
 def computeDuration(startISOTime, endISOTime):
     return float(getUnixEpoch(endISOTime)) - float(getUnixEpoch(startISOTime))
@@ -144,9 +144,12 @@ def getConfigProperty(line):
     return configEntry
 
 finalState='FAIL'
-
+directStaging=False
 # Parse log
 for line in iter(log_file):
+
+    if re.match('.*staging.*:.*direct.*', line):
+        directStaging=True
 
     if 'Loader Swift finished with no errors' in line:
         finalState='SUCCESS'
@@ -313,8 +316,12 @@ if importProv:
         for t in sorted(tasks.values(), key=operator.attrgetter('taskNumber')):
             appExecId=runId + ":" + t.taskId
             appExecDuration=computeDuration(t.startTime, t.stopTime)
-            stageInDuration=computeDuration(t.startStageIn, t.stopStageIn)
-            stageOutDuration=computeDuration(t.startStageOut, t.stopStageOut)
+            if directStaging == True:
+                stageInDuration=0.0
+                stageOutDuration=0.0
+            else:
+                stageInDuration=computeDuration(t.startStageIn, t.stopStageIn)
+                stageOutDuration=computeDuration(t.startStageOut, t.stopStageOut)
             if runIsNewSQLite:
                 c.execute('INSERT INTO app_exec VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                           (appExecId, runId, t.app, t.host, t.startTime, appExecDuration,
@@ -332,12 +339,12 @@ if importProv:
 
             for f in iter(t.stageIn.split(",")):
                 direction="IN"
-                fileName=string.replace(canonicalFileName(f), 'file://localhost/', '')
+                fileName=string.replace(canonicalFileName(f), 'file://localhost/', '').strip("/")
                 insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId, scriptStartTime, runIsNewSQLite, runIsNewPgSQL)
 
             for f in iter(t.stageOut.split()):
                 direction="OUT"
-                fileName=canonicalFileName(f)
+                fileName=canonicalFileName(f).strip("/")
                 insertFile(fileName, scriptRunDir, hostname, c, direction, appExecId, scriptStartTime, runIsNewSQLite, runIsNewPgSQL)
 
             for i, a in enumerate(t.arguments.split(",")):
