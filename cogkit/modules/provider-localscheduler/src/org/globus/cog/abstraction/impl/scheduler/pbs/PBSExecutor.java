@@ -250,6 +250,9 @@ public class PBSExecutor extends AbstractExecutor {
 		writeNonEmptyAttr("queue", "-q ", wr);
 		wr.write("#PBS -o " + quote(stdout) + '\n');
 		wr.write("#PBS -e " + quote(stderr) + '\n');
+		if (spec.getEnvironmentVariableNames().size() > 0) {
+            wr.write("#PBS -v " + join(spec.getEnvironmentVariableNames(), ", ") + '\n');
+        }
 
 		for (String name : spec.getEnvironmentVariableNames()) {
 			// "export" is necessary on the Cray XT5 Crow
@@ -260,9 +263,6 @@ public class PBSExecutor extends AbstractExecutor {
 			wr.write('\n');
 		}
 
-		if (spec.getEnvironmentVariableNames().size() > 0) {
-		    wr.write("#PBS -v " + join(spec.getEnvironmentVariableNames(), ", ") + '\n');
-		}
 
 		String resources =
 		    (String) spec.getAttribute("pbs.resource_list");
