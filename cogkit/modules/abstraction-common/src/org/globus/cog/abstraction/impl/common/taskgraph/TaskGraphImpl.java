@@ -25,7 +25,6 @@
 
 package org.globus.cog.abstraction.impl.common.taskgraph;
 
-import java.io.File;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -41,8 +40,6 @@ import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.TaskGraph;
-import org.globus.cog.abstraction.xml.MarshalException;
-import org.globus.cog.abstraction.xml.TaskGraphMarshaller;
 
 public class TaskGraphImpl implements TaskGraph {
     private Identity id;
@@ -314,10 +311,6 @@ public class TaskGraphImpl implements TaskGraph {
             }
         }
         return count;
-    }
-
-    public void toXML(File file) throws MarshalException {
-        TaskGraphMarshaller.marshal(this, file);
     }
 
     public Calendar getSubmittedTime() {

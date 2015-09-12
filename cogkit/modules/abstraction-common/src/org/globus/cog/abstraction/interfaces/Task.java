@@ -25,10 +25,7 @@
 
 package org.globus.cog.abstraction.interfaces;
 
-import java.io.File;
 import java.util.Collection;
-
-import org.globus.cog.abstraction.xml.MarshalException;
 
 /**
  * A <code>Task</code> is the atomic unit of execution in the Java CoG Kit
@@ -265,18 +262,6 @@ public interface Task extends ExecutableObject, Cloneable {
      * Removes the output listener.
      */
     public void removeOutputListener(OutputListener listener);
-
-    /**
-     * Checkpoints the current state of this <code>Task</code> in XML format.
-     * Using the {@link org.globus.cog.abstraction.xml.TaskUnmarshaller}, the
-     * checkpointed <code>Task</code> can once again be re-instantiated.
-     * 
-     * @param file
-     *            the file to store the checkpointed task.
-     * @throws MarshalException
-     *             during an error in XML translation.
-     */
-    public void toXML(File file) throws MarshalException;
 
     public String toString();
 

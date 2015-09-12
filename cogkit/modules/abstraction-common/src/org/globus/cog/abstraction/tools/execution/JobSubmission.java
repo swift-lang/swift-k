@@ -25,7 +25,6 @@
 
 package org.globus.cog.abstraction.tools.execution;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +57,6 @@ import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.abstraction.interfaces.TaskHandler;
-import org.globus.cog.abstraction.xml.TaskMarshaller;
 import org.globus.cog.util.ArgumentParser;
 import org.globus.cog.util.ArgumentParserException;
 
@@ -71,7 +69,6 @@ public class JobSubmission implements StatusListener {
     static Logger logger = Logger.getLogger(JobSubmission.class.getName());
 
     private String name;
-    private String checkpointFile;
     private Task task;
 
     private String serviceContact;
@@ -286,31 +283,12 @@ public class JobSubmission implements StatusListener {
     	return sb.toString();
     }
 
-    public void marshal() {
-        try {
-            // Translate the task object into an XML file
-            File xmlFile = new File(this.checkpointFile);
-            xmlFile.createNewFile();
-            TaskMarshaller.marshal(this.task, xmlFile);
-        } 
-        catch (Exception e) {
-            logger.error("Cannot marshal the task", e);
-        }
-    }
-
     public void statusChanged(StatusEvent event) {
         Status status = event.getStatus();
         if (verbose) {
             System.out.println(status.getTime() + " " + status.getStatusString());
         }
         logger.debug("Status changed to " + status.getStatusString());
-        if (status.getStatusCode() == Status.SUBMITTED) {
-            if (this.checkpointFile != null) {
-                marshal();
-                System.out.println("Task checkpointed to file: "
-                        + this.checkpointFile);
-            }
-        }
         if (status.getStatusCode() == Status.FAILED) {
             if (event.getStatus().getException() != null) {
                 System.err.println("Job failed: ");
@@ -397,9 +375,6 @@ public class JobSubmission implements StatusListener {
                 + "specified as \"name=value[,name=value]\"",
                 "string", ArgumentParser.OPTIONAL);
         ap.addAlias("attributes", "a");
-        ap.addOption("checkpoint", "Checkpoint file name. The task will be checkpointed to this "
-                + "file once submitted",
-                "fileName", ArgumentParser.OPTIONAL);
         ap.addOption("stagein", "A colon-separated list of files to stage-in in the form source -> destination. "
                 + "Leading and trailing spaces in the file names are ignored. Relative files on the remote "
                 + "site are interpreted as relative to the job directory.",
@@ -412,7 +387,6 @@ public class JobSubmission implements StatusListener {
                 + "The files/directories can be relative (to the job directory), but they cannot point to"
                 + " anything outside of the job directory.", 
                 "list", ArgumentParser.OPTIONAL);
-        ap.addAlias("checkpoint", "c");
         ap.addFlag("verbose", "If enabled, display information about what is being done");
         ap.addAlias("verbose", "v");
         ap.addFlag("help", "Display usage");
@@ -430,7 +404,6 @@ public class JobSubmission implements StatusListener {
                     jobSubmission.setProvider(ap.getStringValue("provider", "GT2"));
                     jobSubmission.setJobManager(ap.getStringValue("job-manager"));
                     jobSubmission.setName(ap.getStringValue("name", "myTask"));
-                    jobSubmission.setCheckpointFile(ap.getStringValue("checkpoint", null));
                     jobSubmission.setCommandline(true);
                     jobSubmission.setBatch(ap.isPresent("batch"));
                     jobSubmission.setRedirected(ap.isPresent("redirected"));
@@ -543,14 +516,6 @@ public class JobSubmission implements StatusListener {
 
     public boolean isCommandline() {
         return this.commandLine;
-    }
-
-    public String getCheckpointFile() {
-        return checkpointFile;
-    }
-
-    public void setCheckpointFile(String file) {
-        this.checkpointFile = file;
     }
 
     public String getName() {

@@ -25,7 +25,6 @@
 
 package org.globus.cog.abstraction.impl.common.task;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,8 +45,6 @@ import org.globus.cog.abstraction.interfaces.Specification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.abstraction.xml.MarshalException;
-import org.globus.cog.abstraction.xml.TaskMarshaller;
 import org.globus.cog.util.CopyOnWriteHashSet;
 
 
@@ -325,10 +322,6 @@ public class TaskImpl implements Task {
 
     public void removeOutputListener(OutputListener listener) {
         this.outputListeners.remove(listener);
-    }
-
-    public void toXML(File file) throws MarshalException {
-        TaskMarshaller.marshal(this, file);
     }
 
     public String toString() {

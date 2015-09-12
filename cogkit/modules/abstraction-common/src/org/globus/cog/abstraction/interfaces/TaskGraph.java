@@ -25,11 +25,8 @@
 
 package org.globus.cog.abstraction.interfaces;
 
-import java.io.File;
 import java.util.Calendar;
 import java.util.Enumeration;
-
-import org.globus.cog.abstraction.xml.MarshalException;
 
 /**
  * A <code>TaskGraph</code> provides a building block for expressing complex
@@ -214,18 +211,6 @@ public interface TaskGraph extends ExecutableObject {
      */
     public int getCanceledCount();
 
-    /**
-     * Checkpoints the current state of this <code>TaskGraph</code> in XML
-     * format. Using the {@link org.globus.cog.abstraction.xml.TaskGraphUnmarshaller},
-     * the checkpointed <code>TaskGraph</code> can once again be
-     * re-instantiated.
-     * 
-     * @param file
-     *            the file to store the checkpointed task graph.
-     * @throws MarshalException
-     *             during an error in XML translation.
-     */
-    public void toXML(File file) throws MarshalException;
 
     /**
      * Returns the time when this <code>TaskGraph</code> was submitted
