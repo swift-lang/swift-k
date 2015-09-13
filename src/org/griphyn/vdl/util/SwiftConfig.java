@@ -429,7 +429,14 @@ public class SwiftConfig implements Cloneable {
         this.sites.getApplications().putAll(definedSites.getApplications());
         
         for (String leaf : tree.getLeafPaths()) {
-            flat.put(leaf, tree.get(leaf).value);
+            if ("staging".equals(leaf)) {
+                for (BoundContact site : this.sites) {
+                    stagingIfNotSet(site, (String) tree.get(leaf).value);
+                }
+            }
+            else {
+                flat.put(leaf, tree.get(leaf).value);
+            }
         }
     }
     
@@ -631,12 +638,14 @@ public class SwiftConfig implements Cloneable {
         }
     }
     
-    private void staging(SwiftContact sc, Node<ValueLocationPair> n) {
-        String staging = getString(n);
-        if (BUILD_CHECK) {
-            checkValue("site.*.staging", 
-                "swift", "wrapper", "local", "service-local", "shared-fs", "direct");
+    private void stagingIfNotSet(BoundContact sc, String staging) {
+        if (sc.getProperty("staging") != null) {
+            return;
         }
+        staging(sc, staging);
+    }
+    
+    private void staging(BoundContact sc, String staging) {
         if (staging.equals("swift") || staging.equals("wrapper")) {
             sc.setProperty("staging", staging);
         }
@@ -656,6 +665,15 @@ public class SwiftConfig implements Cloneable {
             sc.setProperty("staging", "provider");
             sc.setProperty("stagingMethod", "sfs");
         }
+    }
+
+    private void staging(SwiftContact sc, Node<ValueLocationPair> n) {
+        String staging = getString(n);
+        if (BUILD_CHECK) {
+            checkValue("site.*.staging", 
+                "swift", "wrapper", "local", "service-local", "shared-fs", "direct");
+        }
+        staging(sc, staging);
     }
 
     private boolean isCoaster(SwiftContact sc) {
