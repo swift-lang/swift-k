@@ -23,6 +23,7 @@ package org.griphyn.vdl.karajan;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import k.rt.FutureListener;
 import k.thr.LWThread;
@@ -30,9 +31,9 @@ import k.thr.LWThread;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class WaitingThreadsMonitor {
-	private static Map<LWThread, DSHandle> threads = new HashMap<LWThread, DSHandle>();
-	private static Map<LWThread, List<DSHandle>> outputs = new HashMap<LWThread, List<DSHandle>>();;
-	
+	private static Map<LWThread, DSHandle> threads = new ConcurrentHashMap<LWThread, DSHandle>();
+	private static Map<LWThread, List<DSHandle>> outputs = new ConcurrentHashMap<LWThread, List<DSHandle>>();
+		
 	public static void addThread(FutureListener fl, DSHandle waitingOn) {
 	    if (fl instanceof LWThread.Listener) {
 	        addThread(((LWThread.Listener) fl).getThread(), waitingOn);
@@ -47,39 +48,27 @@ public class WaitingThreadsMonitor {
 	
 	public static void addThread(LWThread thr, DSHandle waitingOn) {
 	    if (thr != null) {
-	        synchronized(threads) {
-	            threads.put(thr, waitingOn);
-	        }
+            threads.put(thr, waitingOn);
 	    }
 	}
 		
 	public static void removeThread(LWThread thr) {
-	    synchronized(threads) {
-	        threads.remove(thr);
-	    }
+        threads.remove(thr);
 	}
 	
 	public static Map<LWThread, DSHandle> getAllThreads() {
-	    synchronized(threads) {
-	        return new HashMap<LWThread, DSHandle>(threads);
-	    }
+        return new HashMap<LWThread, DSHandle>(threads);
 	}
 
     public static void addOutput(LWThread thr, List<DSHandle> outputs) {
-        synchronized(WaitingThreadsMonitor.outputs) {
-            WaitingThreadsMonitor.outputs.put(thr, outputs);
-        }
+        WaitingThreadsMonitor.outputs.put(thr, outputs);
     }
 
     public static void removeOutput(LWThread thr) {
-        synchronized(outputs) {
-            outputs.remove(thr);
-        }
+        outputs.remove(thr);
     }
     
     public static Map<LWThread, List<DSHandle>> getOutputs() {
-        synchronized(outputs) {
-            return new HashMap<LWThread, List<DSHandle>>(outputs);
-        }
+        return new HashMap<LWThread, List<DSHandle>>(outputs);
     }
 }
