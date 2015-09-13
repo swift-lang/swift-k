@@ -133,6 +133,7 @@ public class GridExec extends AbstractGridNode {
 		try {
 			js.setExecutable(this.executable.getValue(stack));
 			setArguments(js, this.arguments.getValue(stack));
+			this.arguments.set(stack, null);
 
 			if (this.redirect.getValue(stack)) {
 				js.setStdOutputLocation(FileLocation.MEMORY);
@@ -276,10 +277,12 @@ public class GridExec extends AbstractGridNode {
 
 	protected void addStageIn(Stack stack, JobSpecificationImpl js) {
 		js.setStageIn(getStagingSet(stack, c_stagein, DEFAULT_STAGEIN_MODE));
+		c_stagein.set(stack, null);
 	}
 	
 	protected void addStageOut(Stack stack, JobSpecificationImpl js) {
         js.setStageOut(getStagingSet(stack, c_stageout, DEFAULT_STAGEOUT_MODE));
+        c_stageout.set(stack, null);
     }
 
 	private StagingSet getStagingSet(Stack stack, ChannelRef<List<?>> cref, EnumSet<Mode> mode)
