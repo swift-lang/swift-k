@@ -195,6 +195,7 @@ public class Execute extends GridExec {
     				    if (replicationEnabled) {
     				        getReplicationManager(stack).submitted(task, s.getTime());
     				    }
+    				    task.setSpecification(null);
     				}
     				else if (c == Status.STAGE_IN) {
     				    ps.setState("Stage in");
