@@ -44,13 +44,17 @@ program returns [Program program = setLine(new Program())]
     EOF
 ;
 
-importStatement [Program program]
-    : "import" name:STRING_LITERAL SEMI {
+importStatement [Program program] {
+	ArrayInitializer selector = setLine(new ArrayInitializer());	
+}
+: 
+	"import" name:STRING_LITERAL (COMMA selector = arrayInitializer)? SEMI {
     	Import i = setLine(new Import());
     	i.setTarget(name.getText());
+    	i.setSelector(selector);
     	program.addImport(i);
     }
-    ;
+;
 
 typedecl [Program program]
 {
@@ -453,30 +457,31 @@ proceduredecl returns [FunctionDeclaration fdecl = null]
         		fdecl.addReturn(param);
             }
         )*
-        RPAREN )?
-        id:ID {fdecl.setName(id.getText());} LPAREN
+     	RPAREN 
+     )?
+     id:ID {fdecl.setName(id.getText());} LPAREN
+     (   
+      	param = formalParameter {
+      		fdecl.addParameter(param);
+        }
         (   
-        	param = formalParameter {
-        		fdecl.addParameter(param);
+          	COMMA param = formalParameter {
+              	fdecl.addParameter(param);
             }
-            (   
-            	COMMA param = formalParameter {
-                	fdecl.addParameter(param);
-                }
-            )*
-        )?
-        RPAREN
-        LCURLY
-        (
-        	(predictAtomicBody) => {
-        		appdecl = new AppDeclaration(fdecl);
-        		fdecl = appdecl;
-        	}
-        	atomicBody[appdecl]
-        	|
-        	compoundBody[fdecl.getBody()]
-        )
-        RCURLY
+        )*
+     )?
+     RPAREN
+     LCURLY
+     (
+      	(predictAtomicBody) => {
+       		appdecl = new AppDeclaration(fdecl);
+       		fdecl = appdecl;
+       	}
+       	atomicBody[appdecl]
+       	|
+       	compoundBody[fdecl.getBody()]
+     )
+     RCURLY
 ;
 
 predictAtomicBody
@@ -620,7 +625,7 @@ innerStatement[StatementContainer scope]
     (
     	(
 			s = ll1statement
-    		|  (procedurecallCode) => s = procedurecallCode
+    		|  (predictProcedurecallCode) => s = procedurecallCode
     		|  (predictAssignStat) => s = assignStat
     		|  (predictAppendStat) => s = appendStat
     	) {
@@ -639,7 +644,7 @@ caseInnerStatement [StatementContainer scope]
     (  
     	s = ll1statement
     	|  
-    	(procedurecallCode) => s = procedurecallCode
+    	(predictProcedurecallCode) => s = procedurecallCode
     	|  
     	(predictAssignStat) => s = assignStat
     	|  
@@ -1090,42 +1095,55 @@ mappingExpr returns [Expression arg = null]
 functionInvocation returns [FunctionInvocation fi = setLine(new FunctionInvocation())]
 {
 	String name = null;
+	LValue ref = null;
 }
 :   
 	AT (
-		(declarator LPAREN) =>
-    		(
-    			name = declarator {
-    				fi.setName(name);
-     			}
-     			LPAREN
-     			(
-     				functionInvocationArgument[fi]
-     				(
-       					COMMA
-       					functionInvocationArgument[fi]
-     				)
-     			*)?
-     			RPAREN
-    		)
-    		|
-    		(name = identifier | (LPAREN name = identifier RPAREN)) {
-      			/*
-		       	* This is matched on expressions like @varname,
-		       	* which are a shortcut for filename(varname).
-		       	* The interpretation of what a function invocation
-		       	* with an empty file name means was moved to the swiftx -> ?
-		       	* compiler and allows that layer to distinguish between
-		       	* '@filename(x)' and '@(x)', the former of which 
-		       	* has been deprecated.
-		       	*/
-		       	fi.setName("");
-		       	ActualParameter param = new ActualParameter();
-		       	VariableReference var = new VariableReference(name);
-		       	param.setValue(var);
-		       	fi.addParameter(param);
-    		}
-    )
+		(
+			(declarator LPAREN) =>
+	    		(
+	    			name = declarator {
+	    				fi.setName(name);
+	     			}
+	     			LPAREN
+	     			(
+	     				functionInvocationArgument[fi]
+	     				(
+	       					COMMA
+	       					functionInvocationArgument[fi]
+	     				)
+	     			*)?
+	     			RPAREN
+	    		)
+	    		|
+	    		(name = identifier | (LPAREN name = identifier RPAREN)) {
+	      			/*
+			       	* This is matched on expressions like @varname,
+			       	* which are a shortcut for filename(varname).
+			       	* The interpretation of what a function invocation
+			       	* with an empty file name means was moved to the swiftx -> ?
+			       	* compiler and allows that layer to distinguish between
+			       	* '@filename(x)' and '@(x)', the former of which 
+			       	* has been deprecated.
+			       	*/
+			       	fi.setName("");
+			       	ActualParameter param = new ActualParameter();
+			       	VariableReference var = new VariableReference(name);
+			       	param.setValue(var);
+			       	fi.addParameter(param);
+	    		}
+	    )
+	    |
+	    (ref = lvalue | (LPAREN ref = lvalue RPAREN)) {
+  			/*
+	       	* This is matched on expressions like @struct.field
+	       	*/
+	       	fi.setName("");
+	       	ActualParameter param = new ActualParameter();
+	       	param.setValue(ref);
+	       	fi.addParameter(param);
+		}
+	)
 ;
 
 functionInvocationArgument [FunctionInvocation fi]
@@ -1301,7 +1319,7 @@ unaryExpr returns [Expression expr = null]
     }
     | 
     NOT arg = unaryExpr {
-    	expr = new UnaryOperator(Expression.Type.NEGATION, arg);
+    	expr = new UnaryOperator(Expression.Type.NOT, arg);
     }
     | 
     expr = primExpr
