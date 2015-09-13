@@ -65,7 +65,7 @@ public class SubmitJobHandler extends RequestHandler {
     
     Logger logger = Logger.getLogger(SubmitJobHandler.class);
     
-    public static final boolean COMPRESSION = false;
+    public static final boolean COMPRESSION = true;
     
     private CoasterService service;
     
@@ -80,19 +80,30 @@ public class SubmitJobHandler extends RequestHandler {
             this.configId = configId;
         }
     }
+    
+    private static final byte[] MAGIC = "configid".getBytes();
 
     public void requestComplete() throws ProtocolException {
         Task task;
         try {
             CoasterChannel channel = getChannel();
             service = (CoasterService) channel.getService();
-            TaskConfigPair p;
-            if (COMPRESSION) {
-                p = read(new InflaterInputStream(new ByteArrayInputStream(getInData(0))));
+            byte[] data = getInData(0);
+            boolean compressed;
+            if (startsWith(data, MAGIC)) {
+                compressed = false;
             }
             else {
-                p = read(new ByteArrayInputStream(getInData(0)));
+                compressed = true;
             }
+            TaskConfigPair p;
+            if (compressed) {
+                p = read(new InflaterInputStream(new ByteArrayInputStream(data)));
+            }
+            else {
+                p = read(new ByteArrayInputStream(data));
+            }
+            data = null;
             task = p.task;
             new TaskNotifier(task, p.clientTaskId, channel);
             task.setAttribute("channelId", channel.getID());
@@ -104,6 +115,18 @@ public class SubmitJobHandler extends RequestHandler {
             throw new ProtocolException("Could not deserialize job description", e);
         }
         sendReply(task.getIdentity().toString());
+    }
+
+    private boolean startsWith(byte[] data, byte[] str) {
+        if (data.length < str.length) {
+            return false;
+        }
+        for (int i = 0; i < str.length; i++) {
+            if (data[i] != str[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private TaskConfigPair read(InputStream is) throws IOException, ProtocolException, IllegalSpecException {
