@@ -67,8 +67,10 @@ public class ReadPrimitive implements SwiftDeserializer {
             String line = br.readLine();
             while (line != null) {
                 sb.append(line);
-                sb.append("\n");
                 line = br.readLine();
+                if (line != null) {
+                    sb.append("\n");
+                }
             }
             return sb.toString();
         }
