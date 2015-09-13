@@ -321,7 +321,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 	private boolean sleep() {
 		try {
 			sleeping = true;
-			wait(100);
+			wait(50);
 			sleeping = false;
 			return true;
 		}
