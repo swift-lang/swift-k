@@ -38,7 +38,7 @@ public class OverloadedHostMonitor extends Thread {
 	public static final Logger logger = Logger.getLogger(OverloadedHostMonitor.class);
 
 	public static final int POLL_INTERVAL = 1000;
-	private Set hosts;
+	private Set<WeightedHost> hosts;
 	private WeightedHostScoreScheduler whss;
 
 	private static final Integer[] DIRS = new Integer[] { new Integer(-1), new Integer(0),
@@ -47,7 +47,7 @@ public class OverloadedHostMonitor extends Thread {
 	public OverloadedHostMonitor(WeightedHostScoreScheduler whss) {
 		super("Overloaded Host Monitor");
 		setDaemon(true);
-		hosts = new HashSet();
+		hosts = new HashSet<WeightedHost>();
 		this.whss = whss;
 		start();
 	}
@@ -65,16 +65,7 @@ public class OverloadedHostMonitor extends Thread {
 			while (true) {
 				Thread.sleep(POLL_INTERVAL);
 				try {
-					synchronized (hosts) {
-						Iterator i = hosts.iterator();
-						while (i.hasNext()) {
-							WeightedHost wh = (WeightedHost) i.next();
-							if (wh.isOverloaded() == 0) {
-								whss.removeOverloaded(wh);
-								i.remove();
-							}
-						}
-					}
+					check();
 				}
 				catch (Exception e) {
 					logger.warn("Exception caught while polling hosts", e);
@@ -83,6 +74,19 @@ public class OverloadedHostMonitor extends Thread {
 		}
 		catch (InterruptedException e) {
 			logger.info("Interrupted", e);
+		}
+	}
+
+	private void check() {
+		synchronized (hosts) {
+			Iterator<WeightedHost> i = hosts.iterator();
+			while (i.hasNext()) {
+				WeightedHost wh = i.next();
+				if (wh.isOverloaded() == 0) {
+					whss.removeOverloaded(wh);
+					i.remove();
+				}
+			}
 		}
 	}
 }
