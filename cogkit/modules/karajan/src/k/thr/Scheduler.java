@@ -29,12 +29,12 @@
 package k.thr;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -53,12 +53,12 @@ public final class Scheduler {
 	
 	private ThreadPoolExecutor workers;
 	private BlockingQueue<Runnable> queue;
-	private final Set<LWThread> sleeping;
+	private final Map<LWThread, Boolean> sleeping;
 	private int crt;
 	private final Timer timer;
 	
 	private Scheduler() {
-		sleeping = new HashSet<LWThread>();
+		sleeping = new ConcurrentHashMap<LWThread, Boolean>();
 		timer = new Timer("LWT Scheduler Timer");
 		queue = new LinkedBlockingQueue<Runnable>();
 		int ps = Runtime.getRuntime().availableProcessors() * 2;
@@ -67,11 +67,9 @@ public final class Scheduler {
 	}
 
 	public void awake(final LWThread thread) {
-		boolean wasSleeping;
-		synchronized(sleeping) {
-			wasSleeping = sleeping.remove(thread);
-		}
-		if (wasSleeping) {
+		Boolean wasSleeping;
+		wasSleeping = sleeping.remove(thread);
+		if (wasSleeping != null) {
 			//System.err.println("awake(" + thread + ")");
 			schedule(thread);
 		}
@@ -104,16 +102,14 @@ public final class Scheduler {
 	    workers.execute(thread);
 	}
 	
-	public synchronized boolean isAnythingRunning() {
+	public boolean isAnythingRunning() {
 		return workers.getActiveCount() > 0 || !queue.isEmpty();
 	}
 	
 	public void putToSleep(final LWThread thread) {
 		if (thread.isSleeping()) {
 			//System.err.println("putToSleep(" + thread + ")");
-			synchronized(sleeping) {
-				sleeping.add(thread);
-			}
+			sleeping.put(thread, Boolean.TRUE);
 		}
 	}
 	
@@ -172,8 +168,6 @@ public final class Scheduler {
 	}
 
 	public List<LWThread> getSleepingThreads() {
-		synchronized(sleeping) {
-			return new ArrayList<LWThread>(sleeping);
-		}
+		return new ArrayList<LWThread>(sleeping.keySet());
 	}
 }
