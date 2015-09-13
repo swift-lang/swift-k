@@ -1,5 +1,6 @@
-package org.globus.cog.karajan.compiled.nodes.restartLog;
+package org.griphyn.vdl.karajan.lib.restartLog;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,7 +13,7 @@ import org.apache.log4j.Logger;
  * A writer that will sync buffers to disks when flush() is called.
  * 
  */
-public class FlushableLockedFileWriter extends OutputStreamWriter {
+public class FlushableLockedFileWriter extends BufferedWriter {
 	public static final Logger logger = Logger.getLogger(FlushableLockedFileWriter.class);
 
 	private final FileOutputStream fos;
@@ -32,7 +33,7 @@ public class FlushableLockedFileWriter extends OutputStreamWriter {
 	}
 
 	private FlushableLockedFileWriter(FileOutputStream fos) {
-		super(fos);
+		super(new OutputStreamWriter(fos));
 		this.fos = fos;
 		syncThread = new SyncThread(this);
 		syncThread.start();

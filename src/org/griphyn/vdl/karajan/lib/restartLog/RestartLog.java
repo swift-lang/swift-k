@@ -26,7 +26,7 @@
 /*
  * Created on Mar 22, 2006
  */
-package org.globus.cog.karajan.compiled.nodes.restartLog;
+package org.griphyn.vdl.karajan.lib.restartLog;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,12 +36,9 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import k.rt.Channel;
-import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
@@ -49,34 +46,28 @@ import k.thr.Yield;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.ChannelRef;
-import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.CompilerSettings;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
-import org.globus.cog.karajan.parser.WrapperNode;
+import org.griphyn.vdl.karajan.SwiftContext;
 
 public class RestartLog extends InternalFunction {
 	public static final int VERSION_MAJ = 2;
 	public static final int VERSION_MIN = 0;
 	
 	public static final Logger logger = Logger.getLogger(RestartLog.class);
-	
-	public static final String LOG_DATA = "RESTART_LOG:DATA";
-	
-	public static final int MAX_INDEX = 16384;
 		
+	public static final int MAX_INDEX = 16384;
+			
 	private ArgRef<String> resume;
 	private ArgRef<String> name;
-	private ChannelRef<String> c_restartLog;
 	
 	private Node body;
 	
-	private VarRef<Context> context;
+	private VarRef<SwiftContext> context;
 	private VarRef<String> fileName;
 	private VarRef<String> cwd;
 	
@@ -92,25 +83,13 @@ public class RestartLog extends InternalFunction {
 		cwd = scope.getVarRef("CWD");
 		super.addLocals(scope);
 	}
-	
-	
-	@Override
-	protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
-			Scope scope) throws CompilationException {
-		Var.Channel rl = scope.addChannel("restartLog");
-		rl.setNoBuffer(true);
-		rl.appendDynamic();
-		c_restartLog = new ChannelRef.Dynamic<String>("restartLog", rl.getIndex());
-		super.compileBlocks(w, sig, blocks, scope);
-	}
-
 
 	@Override
 	public void runBody(LWThread thr) {
 		if (body == null) {
 			return;
 		}
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		int fc = thr.popIntState();
 		Stack stack = thr.getStack();
 		try {
@@ -119,7 +98,7 @@ public class RestartLog extends InternalFunction {
 					fc = stack.frameCount();
 					createLog(stack);
 					i++;
-				case 1:
+				default:
 					if (CompilerSettings.PERFORMANCE_COUNTERS) {
 						startCount++;
 					}
@@ -134,7 +113,7 @@ public class RestartLog extends InternalFunction {
 		}
 		catch (Yield y) {
 			y.getState().push(fc);
-			y.getState().push(i);
+			y.getState().push(i, 1);
 			throw y;
 		}
 	}
@@ -168,9 +147,9 @@ public class RestartLog extends InternalFunction {
 
 	protected void resume(Stack stack, File log) throws ExecutionException {
 		if (log.exists()) {
-		    Map<LogEntry, Object> logData;
+		    Map<LogEntry, Object> map;
 			try {
-				logData = parseLog(log);
+				map = parseLog(log);
 			}
 			catch (FileNotFoundException e) {
 				throw new ExecutionException("Log file was deleted", e);
@@ -182,12 +161,12 @@ public class RestartLog extends InternalFunction {
 			try {
 				FlushableLockedFileWriter logffw = new FlushableLockedFileWriter(log, true);
 				if (!logffw.isLocked()) {
+				    logffw.close();
 					throw new ExecutionException("Could not aquire exclusive lock on log file: "
 							+ log.getAbsolutePath());
 				}
 				writeDate(logffw, "# Log file updated ");
-				c_restartLog.set(stack, new LogChannelOperator(logffw));
-				context.getValue(stack).setAttribute(LOG_DATA, logData);
+				context.getValue(stack).setRestartLog(new RestartLogData(logffw, map));
 			}
 			catch (IOException e) {
 				throw new ExecutionException("Exception caught while creating log file", e);
@@ -239,8 +218,7 @@ public class RestartLog extends InternalFunction {
 		if (logffw == null) {
 			throw new ExecutionException(this, "Could not create unique log file");
 		}
-		c_restartLog.set(stack, new LogChannelOperator(logffw));
-		context.getValue(stack).setAttribute(LOG_DATA, m);
+		context.getValue(stack).setRestartLog(new RestartLogData(logffw, m));
 	}
 
 	private void writeDate(FlushableLockedFileWriter logffw, String prefix) throws IOException {
@@ -251,7 +229,7 @@ public class RestartLog extends InternalFunction {
 
 	private void closeLog(Stack stack) throws ExecutionException {
 		try {
-		    Channel<String> log = c_restartLog.get(stack);
+		    RestartLogData log = context.getValue(stack).getRestartLog();
 		    if (log != null) {
 		        // it's possible for an error to occur during log creation
 		        log.close();
@@ -264,7 +242,7 @@ public class RestartLog extends InternalFunction {
 
 	private void deleteLog(Stack stack) throws ExecutionException {
 		closeLog(stack);
-		File logf = ((LogChannelOperator) c_restartLog.get(stack)).getFile();
+		File logf = context.getValue(stack).getRestartLog().getFile();
 		if (!logf.delete()) {
 			logger.warn("Faile to delete log file (" + logf.getAbsolutePath()
 					+ "). Please delete the file manually.");
@@ -285,24 +263,7 @@ public class RestartLog extends InternalFunction {
 				}
 				try {
 					LogEntry entry = LogEntry.parse(line);
-					if (entry.getValue() == null) {
-						MutableInteger old = (MutableInteger) data.get(entry);
-						if (old == null) {
-							data.put(entry, new MutableInteger(1));
-						}
-						else {
-							old.inc();
-						}
-					}
-					else {
-						@SuppressWarnings("unchecked")
-						List<String> old = (List<String>) data.get(entry);
-						if (old == null) {
-							old = new LinkedList<String>();
-							data.put(entry, old);
-						}
-						old.add(entry.getValue());
-					}
+					data.put(entry, Boolean.TRUE);
 				}
 				catch (ExecutionException e) {
 					logger.warn("Invalid line in log file: " + line);

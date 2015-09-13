@@ -24,34 +24,61 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Mar 22, 2006
+ * Created on Jul 19, 2010
  */
-package org.globus.cog.karajan.compiled.nodes.restartLog;
+package org.griphyn.vdl.karajan.lib.restartLog;
 
-public class MutableInteger {
-	private int value;
+import java.io.IOException;
 
-	public MutableInteger(int value) {
-		this.value = value;
+import org.apache.log4j.Logger;
+
+public class SyncThread extends Thread {
+	public static final Logger logger = Logger.getLogger(SyncThread.class);
+
+	private FlushableLockedFileWriter writer;
+	private volatile boolean flushing;
+
+	public SyncThread(FlushableLockedFileWriter writer) {
+		super("Restart Log Sync");
+		setDaemon(true);
+		this.writer = writer;
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				doFlush();
+			}
+		});
 	}
 
-	public int getValue() {
-		return value;
+	public void flush() {
+		if (!flushing) {
+			synchronized(this) {
+				this.notifyAll();
+			}
+		}
 	}
 
-	public void setValue(int value) {
-		this.value = value;
+	public void run() {
+		try {
+			while (true) {
+				synchronized (this) {
+					flushing = false;
+					wait();
+					flushing = true;
+				}
+				doFlush();
+			}
+		}
+		catch (InterruptedException e) {
+		}
 	}
 
-	public void inc() {
-		value++;
-	}
-	
-	public void dec() {
-		value--;
-	}
-	
-	public String toString() {
-		return String.valueOf(value);
+	private void doFlush() {
+		try {
+			writer.actualFlush();
+		}
+		catch (IOException e) {
+			logger.warn("Failed to sync restart log", e);
+		}
 	}
 }

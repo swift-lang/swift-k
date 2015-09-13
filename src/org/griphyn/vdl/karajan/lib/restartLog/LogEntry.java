@@ -26,7 +26,7 @@
 /*
  * Created on Mar 22, 2006
  */
-package org.globus.cog.karajan.compiled.nodes.restartLog;
+package org.griphyn.vdl.karajan.lib.restartLog;
 
 import java.util.StringTokenizer;
 

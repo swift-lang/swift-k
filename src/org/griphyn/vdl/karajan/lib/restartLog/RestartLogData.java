@@ -26,29 +26,25 @@
 /*
  * Created on Mar 22, 2006
  */
-package org.globus.cog.karajan.compiled.nodes.restartLog;
+package org.griphyn.vdl.karajan.lib.restartLog;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
-import k.rt.ChannelOperator;
-
-public class LogChannelOperator extends ChannelOperator<String, String> {
+public class RestartLogData {
 	private final FlushableLockedFileWriter writer;
 	private boolean closed;
+	private Map<LogEntry, Object> data;
 
-	public LogChannelOperator(FlushableLockedFileWriter writer) {
-		super(null);
+	public RestartLogData(FlushableLockedFileWriter writer, Map<LogEntry, Object> data) {
 		this.writer = writer;
+		this.data = data;
 	}
 
-	protected Object initialValue() {
-		return null;
-	}
-
-	protected synchronized String update(String oldvalue, String str) {
+	public void add(String str) {
 		if (closed) {
-			return null;
+			return;
 		}
 		try {
 			writer.write(str);
@@ -60,11 +56,6 @@ public class LogChannelOperator extends ChannelOperator<String, String> {
 		catch (IOException e) {
 			throw new RuntimeException("Exception caught while writing to log file", e);
 		}
-		return null;
-	}
-
-	public boolean isCommutative() {
-		return true;
 	}
 
 	public synchronized void close() {
@@ -81,5 +72,13 @@ public class LogChannelOperator extends ChannelOperator<String, String> {
 
 	public File getFile() {
 		return writer.getFile();
+	}
+
+	public boolean isEmpty() {
+		return data == null || data.isEmpty();
+	}
+
+	public boolean contains(LogEntry entry) {
+		return data.containsKey(entry);
 	}
 }
