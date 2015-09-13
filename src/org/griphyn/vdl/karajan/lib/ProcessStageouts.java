@@ -22,14 +22,16 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.Collection;
 
-import k.rt.Channel;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.griphyn.vdl.karajan.SwiftContext;
+import org.griphyn.vdl.karajan.lib.restartLog.RestartLogData;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.FileSystemLister;
@@ -37,6 +39,7 @@ import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.mapping.nodes.InitMapper;
+import org.griphyn.vdl.type.Types;
 
 public class ProcessStageouts extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(ProcessStageouts.class);
@@ -44,13 +47,19 @@ public class ProcessStageouts extends SwiftFunction {
 	private ArgRef<Collection<DSHandle>> stageouts;
 	private ArgRef<Collection<AbsFile>> collectList;
     
-    private ChannelRef<Object> cr_restartLog;
+    private VarRef<SwiftContext> context;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("stageouts", "collectList"),   
-            returns(channel("restartLog", DYNAMIC)));
+        return new Signature(params("stageouts", "collectList"));
     }
+
+    @Override
+    protected void addLocals(Scope scope) {
+        context = scope.getVarRef("#context");
+        super.addLocals(scope);
+    }
+
 
     @Override
     public Object function(Stack stack) {
@@ -60,7 +69,7 @@ public class ProcessStageouts extends SwiftFunction {
         if (logger.isDebugEnabled()) {
             logger.debug("Collect list: " + collectList);
         }
-        Channel<Object> log = cr_restartLog.get(stack);
+        RestartLogData log = context.getValue(stack).getRestartLog();
         
         /**
          * This basically does what setDatasetValues(), mark() and log() used to do.
@@ -73,22 +82,27 @@ public class ProcessStageouts extends SwiftFunction {
         return null;
     }
 
-    private void process(Collection<DSHandle> vars, Collection<AbsFile> collectList, Channel<Object> log) {
+    private void process(Collection<DSHandle> vars, Collection<AbsFile> collectList, RestartLogData log) {
         for (DSHandle var : vars) {
-            Mapper m = var.getMapper();
-            if (!m.isStatic() && var.getType().hasArrayComponents()) {
-                Collection<Path> found = m.existing(new FileSystemLister.FileList(collectList));
-                InitMapper.addExisting(found, m, var.getRoot(), var);
-                logOnly(var, log);
+            if (Types.EXTERNAL.equals(var.getType())) {
+                processStatic(var, log);
             }
             else {
-                processStatic(var, log);
+                Mapper m = var.getMapper();
+                if (!m.isStatic() && var.getType().hasArrayComponents()) {
+                    Collection<Path> found = m.existing(new FileSystemLister.FileList(collectList));
+                    InitMapper.addExisting(found, m, var.getRoot(), var);
+                    logOnly(var, log);
+                }
+                else {
+                    processStatic(var, log);
+                }
             }
         }
     }
 
 
-    private void processStatic(DSHandle var, Channel<Object> log) {
+    private void processStatic(DSHandle var, RestartLogData log) {
         try {
             for (DSHandle leaf : var.getLeaves()) {
                 leaf.setValue(AbstractDataNode.FILE_VALUE);
@@ -101,7 +115,7 @@ public class ProcessStageouts extends SwiftFunction {
         }
     }
     
-    private void logOnly(DSHandle var, Channel<Object> log) {
+    private void logOnly(DSHandle var, RestartLogData log) {
         try {
             for (DSHandle leaf : var.getLeaves()) {
                 LogVar.logVar(log, leaf);
