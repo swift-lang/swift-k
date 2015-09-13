@@ -10,6 +10,8 @@ SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
 SWIFT:HOME := contextAttribute("SWIFT:HOME")
 SWIFT:DEBUG_DIR_PREFIX := contextAttribute("SWIFT:DEBUG_DIR_PREFIX")
 
+SWIFT:WFDIR := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
+
 WRAPPER_TRANSFER_MODE :=
 	if (configProperty("alwaysTransferWrapperLog"), 
 		STAGING_MODE:IF_PRESENT, STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
@@ -57,19 +59,19 @@ namespace(providerStaging) {
 
 			jobdir := substring(jobid, 0, to = 1)
 			
-			wfdir := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
-			tmpdir := dircat("{wfdir}/jobs/{jobdir}", jobid)			
+			tmpdir := dircat("{SWIFT:WFDIR}/jobs/{jobdir}", jobid)			
 			
+			argsNotNull := arguments != null
 			
 			sm := siteProfile(rhost, "stagingMethod", default="file"),
-			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout, defaultScheme = sm),
+			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(getAndDelete(stagein, stageout), defaultScheme = sm),
 			(stdins, stdouts, stderrs) := getStandardFilesInfo(stdin, stdout, stderr, defaultScheme = sm)
 						
 			wrapperMode := configProperty("wrapperParameterMode", host=rhost)
 
-			try {
-				eargs := expandArguments(arguments, stagingMethod = sm)
-				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", eargs)), 
+			utry {
+				eargs := expandArguments(getAndDelete(arguments), stagingMethod = sm)
+				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (argsNotNull, (" arguments=", eargs)), 
 					" tmpdir={tmpdir}")
 
 				setProgress(progress, "Submitting")
@@ -88,7 +90,7 @@ namespace(providerStaging) {
 						"\n-cf ", remoteFileNames(outCollect),
 						"\n-cdmfile ", cdm:file(),
 						"\n-status provider",
-						for(a, eargs) {
+						for(a, getAndDelete(eargs)) {
 							"\n-a ", a
 						}
 					}
@@ -114,13 +116,13 @@ namespace(providerStaging) {
 							"-out", stdouts,
 							"-err", stderrs,
 							"-i", if (stdin != null, stdins),
-							"-d", remoteFileNames(fileDirs),
+							"-d", remoteFileNames(getAndDelete(fileDirs)),
 							"-if", remoteFileNames(inFiles),
 							"-of", remoteFileNames(outFiles),
 							"-cf", remoteFileNames(outCollect),
 							"-cdmfile", CDM_FILE,
 							"-status", "provider"
-							"-a", if (arguments != null, each(eargs))
+							"-a", if (argsNotNull, each(getAndDelete(eargs)))
 						)
 					}
 					directory = tmpdir
@@ -148,7 +150,7 @@ namespace(providerStaging) {
 						stageIn("{loc}{SWIFT:HOME}/libexec/cdm_lib.sh", "cdm_lib.sh")
 					}
 					
-					appStageins(jobid, inFiles)
+					appStageins(jobid, getAndDelete(inFiles))
 
 					stageOut("wrapper.log", "file://localhost/{DEBUG_DIR}/{jobid}.info", 
 						mode = WRAPPER_TRANSFER_MODE)
@@ -165,7 +167,7 @@ namespace(providerStaging) {
 					stageOut("wrapper.error", "file://localhost/{DEBUG_DIR}/{jobid}.error", 
 						mode = STAGING_MODE:IF_PRESENT)
 						
-					appStageouts(jobid, outFiles, outCollect)
+					appStageouts(jobid, getAndDelete(outFiles), outCollect)
 					
 					if (!isEmpty(outCollect)) {
 						stageOut("_collect", "file://localhost/{DEBUG_DIR}/{jobid}.collect", 
@@ -196,7 +198,7 @@ namespace(providerStaging) {
 					throw(prev)
 				}
 				else {
-					exception := try(exception(readErrorFiles(DEBUG_DIR, jobid, stdout, stdouts, stderr, stderrs), prev), prev)
+					exception := utry(exception(readErrorFiles(DEBUG_DIR, jobid, stdout, stdouts, stderr, stderrs), prev), prev)
 					setProgress(progress, "Failed but can retry")
 					log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 				
@@ -212,10 +214,10 @@ namespace(providerStaging) {
 						)
 					)
 				}
-			}
-		}
-	)
-}
+			} // try/catch
+		} // function
+	) // export
+} // namespace
 
 // Local variables:
 // tab-width: 4

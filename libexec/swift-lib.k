@@ -1,5 +1,7 @@
 namespace(swift) {
 	export(SWIFT_TICKER, null)
+	
+	export(restartLog, def("org.griphyn.vdl.karajan.lib.restartLog.RestartLog"))
 
 	export(getDatasetProvenanceID, def("org.griphyn.vdl.karajan.lib.GetDatasetProvenanceID"))
 	export(startProgressTicker, def("org.griphyn.vdl.karajan.lib.RuntimeStats$StartProgressTicker"))
@@ -14,6 +16,11 @@ namespace(swift) {
 	export(makeField, def("org.griphyn.vdl.karajan.lib.MakeField"))
 	/* used from VDL2 for arguments to apps and returns relative paths */
 	export(fileName, def("org.griphyn.vdl.karajan.lib.FileName"))
+	export(readVar, def("org.griphyn.vdl.karajan.lib.ReadVariable"))
+	export(unwrapVar, def("org.griphyn.vdl.karajan.lib.UnwrapVariable"))
+	export(deleteVars, def("org.griphyn.vdl.karajan.lib.DeleteVariables"))
+	export(initProcReadRefs, def("org.griphyn.vdl.karajan.lib.InitProcReadRefs"))
+	export(slist, def("org.griphyn.vdl.karajan.lib.SList"))
 
 	export(jobConstraints, def("org.griphyn.vdl.karajan.lib.JobConstraints"))
 	export(getField, def("org.griphyn.vdl.karajan.lib.GetField"))
@@ -28,7 +35,8 @@ namespace(swift) {
 	export(isRestartable, def("org.griphyn.vdl.karajan.lib.IsRestartable"))
 	export(fringePaths, def("org.griphyn.vdl.karajan.lib.FringePaths"))
 	export(closeDataset, def("org.griphyn.vdl.karajan.lib.CloseDataset"))
-	export(partialCloseDataset, def("org.griphyn.vdl.karajan.lib.PartialCloseDataset"))
+	export(partialClose, def("org.griphyn.vdl.karajan.lib.PartialCloseDataset"))
+	export(partialClean, def("org.griphyn.vdl.karajan.lib.PartialCleanDataset"))
 	export(setWaitCount, def("org.griphyn.vdl.karajan.lib.SetWaitCount"))
 	export(cleanDataset, def("org.griphyn.vdl.karajan.lib.CleanDataset"))
 	export(setDatasetValues, def("org.griphyn.vdl.karajan.lib.SetDatasetValues"))

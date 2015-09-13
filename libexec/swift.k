@@ -1,6 +1,5 @@
 import(sys)
 import(task)
-import(rlog)
 import('swift-lib', export = true)
 
 import('swift-int')
@@ -12,6 +11,10 @@ SWIFT:SCRIPT_NAME := contextAttribute("SWIFT:SCRIPT_NAME")
 SWIFT:RUN_ID := contextAttribute("SWIFT:RUN_ID")
 SWIFT:HOME := contextAttribute("SWIFT:HOME")
 SITEDIR_KEEP := configProperty("keepSiteDir")
+
+CLEANUPS := contextAttribute("RUN:CLEANUPS")
+ERRORS := contextAttribute("RUN:ERRORS")
+WARNINGS := contextAttribute("RUN:WARNINGS")
 
 namespace(swift) {
 	export(stageIn, def("org.griphyn.vdl.karajan.lib.Stagein"))
@@ -60,7 +63,7 @@ namespace(swift) {
 				}
 				else catch(exception) {
 					log(LOG:DEBUG, "EXCEPTION - Exception caught while cleaning up", exception)
-					to(warnings, exception("Cleanup on {host} failed", exception))
+					discard(append(WARNINGS, exception("Cleanup on {host} failed", exception)))
 				}
 			}
 			log(LOG:INFO, "END cleanups={cleanup}")
@@ -98,34 +101,22 @@ namespace(swift) {
 	)
 
 	export(mains,
-		function(channel(cleanup), channel(errors), channel(warnings)) {
-			anyerrors := processBulkErrors("The following errors have occurred:", errors)
+		function() {
+			anyerrors := processBulkErrors("The following errors have occurred:", ERRORS)
 
 			//this should be reached after everything is done
 			if (!anyerrors) {
 				log(LOG:DEBUG, "Starting cleanups")
-				discard(append(warnings, from(warnings, cleanups(cleanup))))
+				discard(append(WARNINGS, cleanups(CLEANUPS)))
 				log(LOG:DEBUG, "Ending cleanups")
 			}
 			else {
 				log(LOG:INFO, "Errors detected. Cleanup not done.")
 			}
-			anywarnings := processBulkErrors("The following warnings have occurred:", warnings, onStdout=true)
+			anywarnings := processBulkErrors("The following warnings have occurred:", WARNINGS, onStdout=true)
 			if (anyerrors) {
 				throw("Execution completed with errors")
 			}
-		}
-	)
-
-		/*
-		 * This would run in parallel with the workflow so that we don't keep
-		 * all the data in memory until the workflow is done
-		 */
-	export(mainp,
-		CBFFunction(channel(cleanup)) {
-			parallel(
-				to(cleanup, unique(for(c, cleanup, c)))
-			)
 		}
 	)
 	
@@ -133,18 +124,17 @@ namespace(swift) {
 		stdin, stdout, stderr, stagein, stageout, replicationGroup, replicationChannel) {
 		
 		staging := configProperty("staging", host = rhost)
-		
 		if (staging == "swift") {
-			swiftStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
-				stagein, stageout, replicationGroup, replicationChannel)
+			k:tailcall(swiftStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+				stagein, stageout, replicationGroup, replicationChannel))
 		}
 		else if (staging == "provider") {
-			providerStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
-				stagein, stageout, replicationGroup, replicationChannel)
+			k:tailcall(providerStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+				stagein, stageout, replicationGroup, replicationChannel))
 		}
 		else {
-			wrapperStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
-				stagein, stageout, replicationGroup, replicationChannel)
+			k:tailcall(wrapperStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+				stagein, stageout, replicationGroup, replicationChannel))
 		}
 	}
 	
@@ -156,9 +146,10 @@ namespace(swift) {
 			deperror = false, mdeperror = false, 
 			channel(stagein), channel(stageout)) {
 			
+			progress := initProgressState()
+			
 			jobid := generateJobId(tr)
 		
-			progress := initProgressState()
 			log(LOG:DEBUG, "JOB_INIT jobid={jobid} tr={tr}")
 		
 			done := isDone(stageout)
@@ -167,7 +158,7 @@ namespace(swift) {
 		
 			if(derr == false) {
 				if(!done) {
-					try {
+					utry {
 						throttled {
 							setProgress(progress, "Selecting site")
 							collectList := restartOnError(counter, swift:configProperty("executionRetries")) {
@@ -178,17 +169,17 @@ namespace(swift) {
 									discard(append(replicationChannel, true)) 
 									replicationGroup := UID()
 									parallelFor(i, replicationChannel) {
-										try {
+										utry {
 											log(LOG:DEBUG, "JOB_SITE_SELECT jobid={jobid}")
 											allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
 												log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} host={rhost} thread=", currentThread(), " replicationGroup={replicationGroup}")
-												executeSelect(
+												k:tailcall(executeSelect(
 													jobid, rhost, progress, 
 													tr, if(arguments != null, unwrapClosedList(arguments), []),
 													attributes,
 													stdin, stdout, stderr, 
 													stagein, stageout, replicationGroup, replicationChannel
-												)
+												))
 											}
 										}
 										else catch(exception) {
@@ -202,17 +193,24 @@ namespace(swift) {
 									}
 								}
 								else {
-									try {
+									utry {
 										log(LOG:DEBUG, "JOB_SITE_SELECT jobid={jobid}")
 										allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
 											log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} host={rhost} thread=", currentThread())
-											executeSelect(
-												jobid, rhost, progress, 
-												tr, if(arguments != null, unwrapClosedList(arguments), []),
-												attributes,
-												stdin, stdout, stderr, 
-												stagein, stageout, null, null
-											)
+											if (counter == 0) {
+												k:tailcall(executeSelect(
+													jobid, rhost, progress, 
+													tr, if(arguments != null, unwrapClosedList(k:getAndDelete(arguments)), []),
+													k:getAndDelete(attributes, stdin, stdout, stderr, stagein), stageout, null, null
+												))
+											}
+											else {
+												k:tailcall(executeSelect(
+													jobid, rhost, progress, 
+													tr, if(arguments != null, unwrapClosedList(arguments), []),
+													attributes, stdin, stdout, stderr, stagein, stageout, null, null
+												))
+											}
 										}
 									}
 									else catch(exception) {
@@ -237,7 +235,7 @@ namespace(swift) {
 							throw(exception)
 						}
 						else {
-							to(errors, exception)
+							discard(append(ERRORS, exception))
 							log(LOG:INFO, exception)
 							echo(exception)
 							mark(stageout, true, mapping=false)
@@ -253,12 +251,12 @@ namespace(swift) {
 				if (merr) {
 					exception := exception(concat("Swift: Application ", str:quote(tr),
 						" not executed due to errors in mapping dependencies"))
-					to(errors, exception)
+					discard(append(ERRORS, exception))
 					log(LOG:INFO, exception)
 				}
 				else if (derr) {
 					exception := exception("Swift: Application {tr} not executed due to errors in dependencies")
-					to(errors, exception)
+					discard(append(ERRORS, exception))
 					log(LOG:INFO, exception)
 				}
 				mark(stageout, true, mapping=merr)

@@ -14,6 +14,8 @@ RUN_DIR := "{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}"
 SHARED_DIR := dircat(RUN_DIR, "shared")
 DEBUG_DIR := "{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
 
+CLEANUPS := contextAttribute("RUN:CLEANUPS")
+
 WRAPPER_LOG_ALWAYS_TRANSFER := configProperty("alwaysTransferWrapperLog")
 
 if (!file:exists(DEBUG_DIR)) {
@@ -63,12 +65,12 @@ namespace(swiftStaging) {
 
 	checkJobStatus := function(rhost, jobid, tr, jobdir) {
 		log(LOG:DEBUG, "START jobid={jobid}")
-		try {
+		utry {
 			file:remove("{RUN_DIR}/status/{jobdir}/{jobid}-success", host=rhost)
 			log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
 		}
 		else {
-			msg := try {
+			msg := utry {
 				checkErrorFile(rhost, jobid, jobdir)
 			}
 			else {
@@ -83,10 +85,8 @@ namespace(swiftStaging) {
 		once(list(rhost, "shared")) {
 			setProgress(progress, "Initializing site shared directory")
 			log(LOG:INFO, "START host={rhost} - Initializing shared directory")
-
 			dir:make(SHARED_DIR, host = rhost)
 			transfer(siteProfile(rhost, "wrapperScript"), srcdir="{SWIFT:HOME}/libexec/", destdir=SHARED_DIR, desthost=rhost)
-
 			statusMode := configProperty("statusMode", host=rhost)
 			if (statusMode == "files") {
 				dir:make(dircat(RUN_DIR, "status"), host=rhost)
@@ -100,7 +100,7 @@ namespace(swiftStaging) {
 			dir:make(dircat(RUN_DIR, "info"), host=rhost)
 
 			//we send the cleanup data to vdl:main()
-			to(cleanup, list(RUN_DIR, rhost))
+			discard(append(CLEANUPS, list(RUN_DIR, rhost)))
 			log(LOG:INFO, "END host={rhost} - Done initializing shared directory")
 		}
 	}
@@ -265,7 +265,7 @@ namespace(swiftStaging) {
 			for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))) {
 				(name, file) := each(f)
 				destfile := concat("{jobid}-", basename(file))
-				try {
+				utry {
 					task:transfer(file, srchost=rhost, srcdir=tmpdir, destfile=destfile)
 					"\n    {name}: "
 					strip(file:read(destfile))
@@ -282,7 +282,7 @@ namespace(swiftStaging) {
 	transferWrapperLog := function(rhost, jobid, jobdir) {
 		recfile := "{jobid}-info"
 		srcdir := dircat("{RUN_DIR}/info/", jobdir)
-		try {
+		utry {
 			task:transfer(recfile, srchost=rhost, srcdir=srcdir, destdir=DEBUG_DIR)
 		}
 		else catch (exception) {
@@ -295,14 +295,12 @@ namespace(swiftStaging) {
 	export(execute2,
 		function(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
 			stagein, stageout, replicationGroup, replicationChannel) {
-
-			try {
+			utry {
 				initSharedDir(progress, rhost)
 			}
 			else catch(exception) {
 				throw(exception("Could not initialize shared directory on {rhost}", exception))
 			},
-				
 			jobdir := substring(jobid, 0, to = 1)
 
 			statusMode := configProperty("statusMode", host=rhost)
@@ -318,7 +316,7 @@ namespace(swiftStaging) {
 			
 			if (wrapperMode == "files") {
 				sys:file:write(wrapfile) {
-					"-scratch ", try(siteProfile(rhost, "scratch"), ""),
+					"-scratch ", utry(siteProfile(rhost, "scratch"), ""),
 					"\n-e ", executable(tr, rhost),
 					"\n-out ", stdouts,
 					"\n-err ", stderrs,
@@ -338,7 +336,7 @@ namespace(swiftStaging) {
 			setProgress(progress, "Stage in")
 			tmpdir := dircat("{RUN_DIR}/jobs/{jobdir}", jobid)
 
-			try {
+			utry {
 				createDirSet(jobid, SHARED_DIR, rhost, fileDirs)
 				doStagein(jobid, SHARED_DIR, rhost, inFiles)
 				if (wrapperMode == "files") {
@@ -376,7 +374,7 @@ namespace(swiftStaging) {
 							dircat("shared", siteProfile(rhost, "wrapperScript"), os=os),
 							jobid,
 							"-jobdir", jobdir,
-							"-scratch", try(siteProfile(rhost, "scratch"), "")
+							"-scratch", utry(siteProfile(rhost, "scratch"), "")
 							"-e", executable(tr, rhost),
 							"-out", stdouts,
 							"-err", stderrs,
@@ -444,7 +442,7 @@ namespace(swiftStaging) {
 				}
 				else {
 					setProgress(progress, "Failed but can retry")
-					exception := try(exception(checkErrorFile(rhost, jobid, jobdir), prev), prev)
+					exception := utry(exception(checkErrorFile(rhost, jobid, jobdir), prev), prev)
 					
 					log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 

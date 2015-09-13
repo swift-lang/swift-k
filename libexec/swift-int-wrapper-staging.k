@@ -13,6 +13,8 @@ SITEDIR_KEEP := configProperty("keepSiteDir")
 SWIFT:DEBUG_DIR_PREFIX := contextAttribute("SWIFT:DEBUG_DIR_PREFIX")
 DEBUG_DIR := "{SWIFT:DEBUG_DIR_PREFIX}{SWIFT:SCRIPT_NAME}-{SWIFT:RUN_ID}.d"
 
+CLEANUPS := contextAttribute("RUN:CLEANUPS")
+
 if (!file:exists(DEBUG_DIR)) {
 	task:dir:make(DEBUG_DIR)
 }
@@ -34,7 +36,7 @@ namespace(wrapperStaging) {
 	
 	checkJobStatus := function(jobdir, jobid, tr) {
 		log(LOG:DEBUG, "START jobid={jobid}")
-		try {
+		utry {
 			file:remove("{jobdir}/_swift.success")
 			log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
 		}
@@ -54,7 +56,7 @@ namespace(wrapperStaging) {
 			transfer(srcdir="{SWIFT:HOME}/libexec/", srcfile="_swiftwrap.wrapperstaging", destdir=wfdir, desthost=rhost)
 
 			wfdir
-			to(cleanup, list(wfdir, rhost))
+			discard(append(CLEANUPS, list(wfdir, rhost)))
 			log(LOG:INFO, "END host={rhost} - Done initializing shared directory")
 		}
 	}
@@ -77,7 +79,7 @@ namespace(wrapperStaging) {
 				(name, file) := each(f)
 				destfile := "{jobdir}/{file}"
 				"\n    {name}: "
-				try {
+				utry {
 					file:read(destfile)
 					"\n"
 				}
@@ -93,7 +95,7 @@ namespace(wrapperStaging) {
 		function(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
 			stagein, stageout, replicationGroup, replicationChannel) {
 
-			wfdir := try {
+			wfdir := utry {
 				initSharedDir(progress, rhost)
 			}
 			else catch(exception) {
@@ -140,7 +142,7 @@ namespace(wrapperStaging) {
 
 			setProgress(progress, "Stage in")
 
-			try {
+			utry {
 				if (wrapperMode == "files") {
 					stageWrapperParams(jobid, jobdir, wrapfile, wfdir, rhost)
 				}
@@ -237,7 +239,7 @@ namespace(wrapperStaging) {
 				}
 				else {
 					setProgress(progress, "Failed but can retry")
-					exception := try(exception(checkErrorFile(jobdir, jobid)), prev)
+					exception := utry(exception(checkErrorFile(jobdir, jobid)), prev)
 				
 					log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 
