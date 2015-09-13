@@ -130,7 +130,7 @@ public final class Scheduler {
 		}
 		
 		public RootThread(KRunnable r, Stack stack, boolean printError) {
-			super("R", r, stack);
+			super(0, r, stack);
 			this.printError = printError;
 		}
 

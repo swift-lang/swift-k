@@ -31,6 +31,7 @@ package k.thr;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,14 +62,14 @@ public class LWThread implements Runnable {
     private LWThread parent;
     private KRunnable runnable;
     private State state;
-    private String name;
+    private int id;
     private Stack stack;
     private int runCount;
     private long deadline;
 
     public static int contextSwitches;
 
-    private static int id = 1;
+    private static AtomicInteger sid = new AtomicInteger(1);
         
     public class Listener implements FutureListener {
 		@Override
@@ -83,23 +84,25 @@ public class LWThread implements Runnable {
 		}
     }
 
-    private synchronized static String nextId() {
-        return String.valueOf(id++);
+    private static int nextId() {
+        return sid.incrementAndGet();
     }
 
     public LWThread(KRunnable r, Stack stack) {
-        this(nextId(), r, stack);
+        this(nextId(), -1, r, stack);
         Exception e = new Exception();
         System.out.println(this + " created by " + e.getStackTrace()[1].getClassName());
     }
 
-    public LWThread(String name, KRunnable r, Stack stack) {
-        this.name = name;
+    public LWThread(int id, int forkId, KRunnable r, Stack stack) {
+        this.id = id;
+        this.forkId = forkId;
         this.runnable = r;
         this.stack = stack;
     }
     
     protected LWThread(int forkId, KRunnable r, Stack stack) {
+        this.id = nextId();
     	this.forkId = forkId;
     	this.runnable = r;
     	this.stack = stack;
@@ -284,7 +287,9 @@ public class LWThread implements Runnable {
             if (runnable != null) {
                 if (DEBUG)
                     System.out.println(this + " run()+");
-            	runnable.run(this);
+                
+                runnable.run(this);
+                
                 if (DEBUG)
                     System.out.println(this + " run()-");
             }
@@ -437,16 +442,12 @@ public class LWThread implements Runnable {
             return true;
         }
     }
-
-    public final String getName() {
-        return name;
-    }
-
-    public final void setName(String name) {
-        this.name = name;
-    }
     
-    private static int gqnc = 0;
+    public int getId() {
+		return id;
+	}
+
+	private static int gqnc = 0;
     
     public final String getQualifiedName() {
     	java.util.Stack<LWThread> s = new java.util.Stack<LWThread>();
@@ -457,32 +458,32 @@ public class LWThread implements Runnable {
     	}
     	StringBuilder sb = new StringBuilder();
     	int sameIdCount = 1;
-    	int prevId = -1;
+    	int prevForkId = -1;
     	boolean first = true;
     	while (!s.isEmpty()) {
     		t = s.pop();
-    		if (t.name != null) {
-    			first = flushRun(prevId, sameIdCount, t.forkId, sb, first);
+    		if (forkId != -1) {
+    			first = flushRun(prevForkId, sameIdCount, t.forkId, sb, first);
     			sameIdCount = 1;
-    			prevId = t.forkId;
+    			prevForkId = t.forkId;
     			if (!first) {
     				sb.append('-');
     			}
    				first = false;
-    			sb.append(t.name);			
+    			sb.append(t.id);			
     		}
     		else if (t.forkId != -1) {
-    			if (t.forkId == prevId) {
+    			if (t.forkId == prevForkId) {
     				sameIdCount++;
     			}
     			else {
-    				first = flushRun(prevId, sameIdCount, t.forkId, sb, first);
+    				first = flushRun(prevForkId, sameIdCount, t.forkId, sb, first);
     				sameIdCount = 1;
-    				prevId = t.forkId;
+    				prevForkId = t.forkId;
     			}
     		}
     	}
-    	flushRun(prevId, sameIdCount, t.forkId, sb, first);
+    	flushRun(prevForkId, sameIdCount, t.forkId, sb, first);
     	return sb.toString();
     }
 
@@ -509,20 +510,13 @@ public class LWThread implements Runnable {
 	}
 
 	public String toString() {
-        return "LWThread-" + name;
+        return "LWThread-" + id;
     }
     
     private static final NumberFormat NF = new DecimalFormat("00000000");
     private volatile String cid;
-    
-    public String getID() {
-    	if (cid == null) {
-    		cid = "T[" + NF.format(System.identityHashCode(this)) + "]";
-    	}
-    	return cid;
-    }
-    
-    public int getForkID() {
+        
+    public int getForkId() {
         return forkId;
     }
 
@@ -584,21 +578,6 @@ public class LWThread implements Runnable {
 
     public boolean isAborting() {
         return getState(ABORTING);
-    }
-
-    public final synchronized LWThread fork(int state) {
-        if (DEBUG)
-            System.out.println(this + " fork(" + state + ")");
-        int id = forkIndex++;
-        LWThread child = new LWThread(id, runnable, stack.copy());
-        
-        child.state = new State();
-        child.state.replaceBottom(state);
-        if (child.state.isEmpty()) {
-            System.err.println("Child state empty");
-            System.exit(1);
-        }
-        return child;
     }
     
     public final synchronized LWThread fork(KRunnable r) {

@@ -51,7 +51,7 @@ public class ThreadSetFixed implements Future {
 	public synchronized boolean add(LWThread thread) {
 		if (!abort) {
 		    running++;
-		    threads[thread.getForkID()] = thread;
+		    threads[thread.getForkId()] = thread;
 		}
 		return abort;
 	}
@@ -98,7 +98,7 @@ public class ThreadSetFixed implements Future {
 		if (this.ex == null) {
 			this.ex = e;
 		}
-		threads[thr.getForkID()] = null;
+		threads[thr.getForkId()] = null;
 		running--;
 		if (running == 0) {
 			threads = null;

@@ -217,7 +217,7 @@ public abstract class AbstractGridNode extends InternalFunction {
 	}
 
 	protected void setTaskIdentity(Stack stack, Task task) {
-		task.setIdentity(new IdentityImpl(LWThread.currentThread().getQualifiedName()));
+		task.setIdentity(new IdentityImpl("task", LWThread.currentThread().getId()));
 	}
 	
 	protected class CustomTaskStateFuture extends TaskStateFuture {
