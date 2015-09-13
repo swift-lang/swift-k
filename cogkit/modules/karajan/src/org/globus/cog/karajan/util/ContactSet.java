@@ -28,10 +28,11 @@ package org.globus.cog.karajan.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class ContactSet {
+public class ContactSet implements Iterable<BoundContact> {
 	private Map<String, BoundContact> contacts;
 	private List<BoundContact> cl;
 
@@ -84,5 +85,10 @@ public class ContactSet {
 
 	public String toString() {
 		return contacts.toString();
+	}
+
+	@Override
+	public Iterator<BoundContact> iterator() {
+		return cl.iterator();
 	}
 }
