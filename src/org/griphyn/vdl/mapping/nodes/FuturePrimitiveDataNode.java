@@ -39,13 +39,11 @@ import org.griphyn.vdl.type.Field;
 public class FuturePrimitiveDataNode extends AbstractFutureNonCompositeDataNode {
     private RootHandle root;
     private AbstractDataNode parent;
-    private Path pathFromRoot; 
     
     protected FuturePrimitiveDataNode(Field field, RootHandle root, AbstractDataNode parent) {
         super(field);
         this.root = root;
         this.parent = parent;
-        this.pathFromRoot = calculatePathFromRoot();
     }
     
     public RootHandle getRoot() {
@@ -62,7 +60,7 @@ public class FuturePrimitiveDataNode extends AbstractFutureNonCompositeDataNode 
     
     @Override
     public Path getPathFromRoot() {
-        return pathFromRoot;
+        return calculatePathFromRoot();
     }
     
     @Override
@@ -78,6 +76,5 @@ public class FuturePrimitiveDataNode extends AbstractFutureNonCompositeDataNode 
         super.clean0();
         root = null;
         parent = null;
-        pathFromRoot = null;
     }
 }
