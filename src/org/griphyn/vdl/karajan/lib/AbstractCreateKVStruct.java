@@ -48,7 +48,7 @@ public abstract class AbstractCreateKVStruct<T> extends SetFieldValue {
 
     @Override
     public void runBody(LWThread thr) {
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(1);
         Stack stack = thr.getStack();
         DSHandle var = (DSHandle) thr.popState();
         @SuppressWarnings("unchecked")
@@ -74,7 +74,7 @@ public abstract class AbstractCreateKVStruct<T> extends SetFieldValue {
         catch (Yield y) {
             y.getState().push(vargs);
             y.getState().push(var);
-            y.getState().push(i);
+            y.getState().push(i, 1);
             throw y;
         }
     }

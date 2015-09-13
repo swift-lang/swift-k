@@ -152,7 +152,7 @@ public abstract class InternalFunction extends Sequential {
 	@Override
 	public void run(LWThread thr) {
 		int ec = childCount();
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(ec + 2);
         Stack stack = thr.getStack();
         try {
 	        switch (i) {
@@ -183,7 +183,7 @@ public abstract class InternalFunction extends Sequential {
 		    }
         }
         catch (Yield y) {
-            y.getState().push(i);
+            y.getState().push(i, ec + 2);
             throw y;
         }
 	}

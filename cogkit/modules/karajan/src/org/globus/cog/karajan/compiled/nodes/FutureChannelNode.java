@@ -50,7 +50,7 @@ public class FutureChannelNode extends FramedInternalFunction {
 	@Override
 	public void runBody(LWThread thr) {
 		int ec = childCount();
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(ec);
         Stack stack = thr.getStack();
         try {
 	        for (; i < ec; i++) {
@@ -58,7 +58,7 @@ public class FutureChannelNode extends FramedInternalFunction {
 	        }
         }
         catch (Yield y) {
-            y.getState().push(i);
+            y.getState().push(i, ec);
             throw y;
         }
 	}

@@ -282,7 +282,7 @@ public class FTypes {
         @SuppressWarnings("unchecked")
         @Override
         public void runBody(LWThread thr) {
-            int i = thr.checkSliceAndPopState();
+            int i = thr.checkSliceAndPopState(2);
             Iterator<A> entries = (Iterator<A>) thr.popState();
             S current = (S) thr.popState();
             AbstractDataNode n = (AbstractDataNode) thr.popState();
@@ -306,7 +306,7 @@ public class FTypes {
                             current = reduceOne(current, (T) value);
                         }
                         i++;
-                    case 2:
+                    default:
                         this.ret(stack, makeReturn(getValue(current)));
                 }
             }
@@ -317,7 +317,7 @@ public class FTypes {
                 y.getState().push(n);
                 y.getState().push(current);
                 y.getState().push(entries);
-                y.getState().push(i);
+                y.getState().push(i, 2);
                 throw y;
             }
         }

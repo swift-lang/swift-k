@@ -52,21 +52,21 @@ public class WaitNode extends InternalFunction {
 
 	@Override
 	protected void runBody(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		Stack stack = thr.getStack();
 		try {
 			switch (i) {
 				case 0:
 					wait(thr, stack);
 					break;
-				case 1:
+				default:
 			}
 		}
 		catch (WaitYield y) {
 			throw y;
 		}
 		catch (Yield y) {
-			y.getState().push(i);
+			y.getState().push(i, 1);
 			throw y;
 		}
 	}
@@ -74,12 +74,12 @@ public class WaitNode extends InternalFunction {
 	private void wait(LWThread thr, Stack stack) {
 		Number delay = this.delay.getValue(stack);
 		if (delay != null) {
-			throw new WaitYield(1, delay.intValue());
+			throw new WaitYield(1, 1, delay.intValue());
 		}
 		String until = this.until.getValue(stack);
 		if (until != null) {
 			try {
-				throw new WaitYield(1, DateFormat.getDateTimeInstance().parse(until));
+				throw new WaitYield(1, 1, DateFormat.getDateTimeInstance().parse(until));
 			}
 			catch (ParseException e) {
 				try {
@@ -89,7 +89,7 @@ public class WaitNode extends InternalFunction {
 					cal.set(Calendar.MINUTE, 0);
 					cal.set(Calendar.SECOND, 0);
 					cal.set(Calendar.MILLISECOND, 0);
-					throw new WaitYield(1, DateFormat.getDateInstance().parse(until));
+					throw new WaitYield(1, 2, DateFormat.getDateInstance().parse(until));
 				}
 				catch (ParseException e1) {
 					try {
@@ -102,7 +102,7 @@ public class WaitNode extends InternalFunction {
 						if (cal.before(now)) {
 							cal.add(Calendar.DAY_OF_MONTH, 1);
 						}
-						throw new WaitYield(1, cal.getTime());
+						throw new WaitYield(1, 2, cal.getTime());
 					}
 					catch (ParseException e2) {
 						throw new ExecutionException(this, "Could not parse date/time: " + until, e);

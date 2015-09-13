@@ -86,7 +86,7 @@ public class CacheAddAndLockFile extends CacheFunction {
     
 	@Override
     protected void runBody(LWThread thr) {
-	    int i = thr.checkSliceAndPopState();
+	    int i = thr.checkSliceAndPopState(2);
 	    int fc = thr.popIntState();
 	    Stack stack = thr.getStack();
 	    try {
@@ -99,7 +99,7 @@ public class CacheAddAndLockFile extends CacheFunction {
 	                    break;
 	                }
 	                i++;
-	            case 2:
+	            default:
 	                body.run(thr);
 	                unlock(stack);
 	        }
@@ -111,7 +111,7 @@ public class CacheAddAndLockFile extends CacheFunction {
 	    }
 	    catch (Yield y) {
 	        y.getState().push(fc);
-	        y.getState().push(i);
+	        y.getState().push(i, 2);
 	        throw y;
 	    }
     }

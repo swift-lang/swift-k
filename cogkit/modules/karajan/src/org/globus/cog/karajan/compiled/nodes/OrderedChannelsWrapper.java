@@ -57,7 +57,7 @@ public class OrderedChannelsWrapper extends Node {
 
 	@Override
 	public void run(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		int fc = thr.popIntState();
 		Stack stack = thr.getStack();
 		try {
@@ -65,7 +65,7 @@ public class OrderedChannelsWrapper extends Node {
 				case 0:
 					fc = stack.frameCount();
 					i++;
-				case 1:
+				default:
 					try {
 						child.run(thr);
 						closeArgs(stack);
@@ -79,7 +79,7 @@ public class OrderedChannelsWrapper extends Node {
 		}
 		catch (Yield y) {
 			y.getState().push(fc);
-			y.getState().push(i);
+			y.getState().push(i, 1);
 			throw y;
 		}
 	}

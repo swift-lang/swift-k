@@ -66,7 +66,7 @@ public class CBFInvocationWrapper extends InvocationWrapper {
 	@Override
 	public void run(LWThread thr) throws ExecutionException {
 		int ec = childCount();
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(ec + 1);
         FutureObject fo = (FutureObject) thr.popState();
         Stack stack = thr.getStack();
         try {
@@ -104,7 +104,7 @@ public class CBFInvocationWrapper extends InvocationWrapper {
         }
         catch (Yield y) {
         	y.getState().push(fo);
-            y.getState().push(i);
+            y.getState().push(i, ec + 1);
             throw y;
         }
 	}

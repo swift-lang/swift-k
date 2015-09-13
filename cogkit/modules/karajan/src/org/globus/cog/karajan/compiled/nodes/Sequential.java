@@ -35,14 +35,14 @@ public class Sequential extends CompoundNode {
 	
 	public void run(LWThread thr) {
 	    int ec = childCount();
-	    int i = thr.checkSliceAndPopState();
+	    int i = thr.checkSliceAndPopState(ec);
 	    try {
     	    for (; i < ec; i++) {
     	    	runChild(i, thr);
     	    }
 	    }
 	    catch (Yield y) {
-	    	y.getState().push(i);
+	    	y.getState().push(i, ec);
 	    	throw y;
 	    }
 	}

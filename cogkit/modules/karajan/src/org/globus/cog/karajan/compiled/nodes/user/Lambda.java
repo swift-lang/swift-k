@@ -65,7 +65,7 @@ public class Lambda extends UserDefinedFunction {
 	
 	public void runBody(LWThread thr, List<ChannelRef<Object>> referencedChannels,
 			Channel<Object> args) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		Stack orig = thr.getStack();
 		Stack istk = (Stack) thr.popState();
 		try {
@@ -76,7 +76,7 @@ public class Lambda extends UserDefinedFunction {
 					istk.enter(this, frameSize);
 					bindArgs(orig, istk, referencedChannels, args);
 					i++;
-				case 1:
+				default:
 					thr.setStack(istk);
 					if (CompilerSettings.PERFORMANCE_COUNTERS) {
 						startCount++;
@@ -92,7 +92,7 @@ public class Lambda extends UserDefinedFunction {
 		catch (Yield y) {
 			thr.setStack(orig);
 			y.getState().push(istk);
-			y.getState().push(i);
+			y.getState().push(i, 1);
 			throw y;
 		}
 	}

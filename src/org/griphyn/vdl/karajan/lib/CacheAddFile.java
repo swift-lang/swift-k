@@ -59,18 +59,18 @@ public class CacheAddFile extends CacheFunction {
 
     @Override
     protected void runBody(LWThread thr) {
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(1);
         try {
             switch (i) {
                 case 0:
                     add(thr.getStack());
                     i++;
-                case 1:
+                default:
                     body.run(thr);
             }
         }
         catch (Yield y) {
-            y.getState().push(i);
+            y.getState().push(i, 1);
             throw y;
         }
     }

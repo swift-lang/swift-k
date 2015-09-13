@@ -35,13 +35,13 @@ import k.thr.Yield;
 public class WaitYield extends Yield {
     private long delay;
 
-    public WaitYield(int pstate, long delay) {
-        super(pstate);
+    public WaitYield(int pstate, int maxState, long delay) {
+        super(pstate, maxState);
         this.delay = delay;
     }
     
-    public WaitYield(int pstate, Date until) {
-        super(pstate);
+    public WaitYield(int pstate, int maxState, Date until) {
+        super(pstate, maxState);
         this.delay = until.getTime() - System.currentTimeMillis();
     }
 

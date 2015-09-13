@@ -37,10 +37,10 @@ import k.thr.Yield;
 public class Maybe extends Try {
 	
 	public void run(LWThread thr) {
-        int i = thr.checkSliceAndPopState();
+		int ec = childCount();
+        int i = thr.checkSliceAndPopState(ec + 1);
         int fc = thr.popIntState();
         Stack stack = thr.getStack();
-        int ec = childCount();
         try {
         	switch (i) {
         		case 0:
@@ -61,7 +61,7 @@ public class Maybe extends Try {
         }
         catch (Yield y) {
             y.getState().push(fc);
-            y.getState().push(i);
+            y.getState().push(i, ec + 1);
             throw y;
         }
     }

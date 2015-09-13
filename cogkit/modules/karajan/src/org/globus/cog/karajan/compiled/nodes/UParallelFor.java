@@ -83,7 +83,7 @@ public class UParallelFor extends InternalFunction {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void runBody(final LWThread thr) {		
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(2);
 		Iterator<Object> it = (Iterator<Object>) thr.popState();
 		ThreadSet ts = (ThreadSet) thr.popState();
 		Stack stack = thr.getStack();
@@ -126,14 +126,14 @@ public class UParallelFor extends InternalFunction {
 					}
 					ts.unlock();
 					i++;
-				case 2:
+				default:
 					ts.waitFor();
 			}
 		}
 		catch (Yield y) {
 			y.getState().push(ts);
 			y.getState().push(it);
-			y.getState().push(i);
+			y.getState().push(i, 2);
 			throw y;
 		}
 	}	

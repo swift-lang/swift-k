@@ -74,8 +74,8 @@ public class InvocationWrapper extends InternalFunction {
 	@Override
     public void run(LWThread thr) {
         int ec = childCount();
-        int i = thr.checkSliceAndPopState();
-        Stack stack = thr.getStack();
+        int i = thr.checkSliceAndPopState(ec + 1);
+        Stack stack = thr.getStack(); 
         try {
             switch (i) {
                 case 0:
@@ -99,7 +99,7 @@ public class InvocationWrapper extends InternalFunction {
         }
         catch (Yield y) {
             y.getState().addTraceElement(this);
-            y.getState().push(i);
+            y.getState().push(i, ec + 1);
             throw y;
         }
     }

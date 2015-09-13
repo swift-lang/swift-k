@@ -159,11 +159,11 @@ public class If extends CompoundNode {
 
 	@Override
 	public void run(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
-		Boolean condition = (Boolean) thr.popState();
+	    int nc = childCount();
+		int i = thr.checkSliceAndPopState(nc + 2);
+		boolean condition = thr.popBoolean();
 		
 		Stack stack = thr.getStack();
-		int nc = childCount();
 		try {
 			switch (i) {
 				case 0:
@@ -194,7 +194,7 @@ public class If extends CompoundNode {
 		}
 		catch (Yield y) {
 			y.getState().push(condition);
-			y.getState().push(i);
+			y.getState().push(i, nc + 2);
 			throw y;
 		}
 	}

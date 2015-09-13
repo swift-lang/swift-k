@@ -73,7 +73,7 @@ public abstract class UserDefinedFunction extends CompoundNode {
 	@Override
 	public void run(LWThread thr) {
 		if (runtimeOptionalValues != null) {
-			int i = thr.checkSliceAndPopState();
+			int i = thr.checkSliceAndPopState(runtimeOptionalValues.size() + 2);
 			@SuppressWarnings("unchecked")
 			SingleValueChannel<Object> c = (SingleValueChannel<Object>) thr.popState();
 			Stack stack = thr.getStack();
@@ -99,7 +99,7 @@ public abstract class UserDefinedFunction extends CompoundNode {
 			}
 			catch (Yield y) {
 				y.getState().push(c);
-				y.getState().push(i);
+				y.getState().push(i, runtimeOptionalValues.size() + 2);
 				throw y;
 			}
 		}

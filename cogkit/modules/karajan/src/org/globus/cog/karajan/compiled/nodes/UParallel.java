@@ -73,7 +73,7 @@ public class UParallel extends CompoundNode {
 	
 	@Override
 	public void run(LWThread thr) throws ExecutionException {
-		int state = thr.checkSliceAndPopState();
+		int state = thr.checkSliceAndPopState(1);
 		Stack stack = thr.getStack();
 		ThreadSetFixed ts = (ThreadSetFixed) thr.popState();
 		try {
@@ -107,13 +107,13 @@ public class UParallel extends CompoundNode {
 					}
 					ts.startAll();
 					state++;
-				case 1:
+				default:
 					ts.waitFor();
 			}
 		}
 		catch (Yield y) {
 			y.getState().push(ts);
-			y.getState().push(state);
+			y.getState().push(state, 1);
 			throw y;
 		}
 	}

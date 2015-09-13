@@ -84,7 +84,7 @@ public class ThrottledParallelFor extends UParallelFor {
     @SuppressWarnings("unchecked")
     @Override
     protected void runBody(final LWThread thr) {        
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(2);
         Iterator<Object> it = (Iterator<Object>) thr.popState();
         TPFThreadSet ts = (TPFThreadSet) thr.popState();
         int fc = thr.popIntState();
@@ -121,7 +121,7 @@ public class ThrottledParallelFor extends UParallelFor {
                     ts.unlock();
                     RefCount.decRefs(drefs);
                     i++;
-                case 2:
+                default:
                     ts.waitFor();
             }
         }
@@ -130,7 +130,7 @@ public class ThrottledParallelFor extends UParallelFor {
             y.getState().push(fc);
             y.getState().push(ts);
             y.getState().push(it);
-            y.getState().push(i);
+            y.getState().push(i, 2);
             throw y;
         }
     }

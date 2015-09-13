@@ -186,13 +186,35 @@ public class LWThread implements Runnable {
     }
 
     public final int popIntState() {
-        Integer i = (Integer) popState();
-        return i == null ? 0 : i;
+    	return popIntState(256);
+    }
+
+    public final int popIntState(int maxState) {
+        int i = popState(maxState);
+        return i == Integer.MIN_VALUE ? 0 : i;
     }
     
     public final Object popState() {
-        if (state == null) {
+    	if (state == null) {
             return null;
+        }
+        else {
+            if (state.isEmpty()) {
+                if (getState(ABORTING)) {
+                    throw new Abort();
+                }
+                state = null;
+                return null;
+            }
+            else {
+                return state.pop();
+            }
+        }
+    }
+    
+    public final boolean popBoolean() {
+        if (state == null) {
+            return false;
         }
         else {
             if (state.isEmpty()) {
@@ -200,10 +222,28 @@ public class LWThread implements Runnable {
             		throw new Abort();
             	}
                 state = null;
-                return null;
+                return false;
             }
             else {
-                return state.pop();
+                return state.popBoolean();
+            }
+        }
+    }
+        
+    public final int popState(int maxState) {
+        if (state == null) {
+            return Integer.MIN_VALUE;
+        }
+        else {
+            if (state.isEmpty()) {
+            	if (getState(ABORTING)) {
+            		throw new Abort();
+            	}
+                state = null;
+                return Integer.MIN_VALUE;
+            }
+            else {
+                return state.popInt(maxState);
             }
         }
     }
@@ -496,7 +536,7 @@ public class LWThread implements Runnable {
         if (isAborting()) {
         	throw new Abort();
         }
-        WaitYield y = new WaitYield(state, delay);
+        WaitYield y = new WaitYield(state, 256, delay);
         this.state = y.getState();
         setState(SLEEPING, true);
         throw y;
@@ -508,7 +548,7 @@ public class LWThread implements Runnable {
         if (isAborting()) {
         	throw new Abort();
         }
-        Yield y = new Yield(state);
+        Yield y = new Yield(state, 256);
         this.state = y.getState();
         setState(SLEEPING, true);
         throw y;

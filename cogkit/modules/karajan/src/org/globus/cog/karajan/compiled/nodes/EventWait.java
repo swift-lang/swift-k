@@ -56,7 +56,7 @@ public class EventWait extends InternalFunction {
 
 	@Override
 	public synchronized void runBody(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(2);
 		Stack stack = thr.getStack();
 		try {
 			switch (i) {
@@ -66,11 +66,11 @@ public class EventWait extends InternalFunction {
 				case 1:
 					waitForEvent(thr, stack);
 					break;
-				case 2:
+				default:
 			}
 		}
 		catch (Yield y) {
-			y.getState().push(i);
+			y.getState().push(i, 2);
 			throw y;
 		}
 	}
@@ -106,7 +106,7 @@ public class EventWait extends InternalFunction {
 				throw new ExecutionException("Exception caught while adding listener", e);
 			}
 		}
-		throw new ConditionalYield(2, counter);
+		throw new ConditionalYield(2, 3, counter);
 	}
 
 	protected void addListener(Object source, String methodName, Class<?> argType, FutureCounter counter) {

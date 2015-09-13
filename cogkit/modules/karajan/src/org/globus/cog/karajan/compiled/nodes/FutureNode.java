@@ -58,7 +58,7 @@ public class FutureNode extends FramedInternalFunction {
 	@Override
 	public void runBody(LWThread thr) {
 		int ec = childCount();
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(ec + 1);
         Stack stack = thr.getStack();
         try {
 	        switch (i) {
@@ -72,7 +72,7 @@ public class FutureNode extends FramedInternalFunction {
 		    }
         }
         catch (Yield y) {
-            y.getState().push(i);
+            y.getState().push(i, ec + 1);
             throw y;
         }
 	}

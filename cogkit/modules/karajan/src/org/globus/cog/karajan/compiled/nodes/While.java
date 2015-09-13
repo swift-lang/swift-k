@@ -86,7 +86,7 @@ public class While extends InternalFunction {
 		if (body == null) {
 			return;
 		}
-	    int i = thr.checkSliceAndPopState();
+	    int i = thr.checkSliceAndPopState(1);
 	    @SuppressWarnings("unchecked")
 		SingleValueChannel<Object> next = (SingleValueChannel<Object>) thr.popState();
 	    Stack stack = thr.getStack();
@@ -97,7 +97,7 @@ public class While extends InternalFunction {
 	    			c_next.create(stack);
 	    			next = (SingleValueChannel<Object>) c_next.get(stack);
 	    			i++;
-	    		case 1:
+	    		default:
 	    			while (true) {
 	    				body.run(thr);
 	    				if (next.isEmpty()) {
@@ -110,7 +110,7 @@ public class While extends InternalFunction {
 	    }
 	    catch (Yield y) {
 	    	y.getState().push(next);
-	    	y.getState().push(i);
+	    	y.getState().push(i, 1);
 	    	throw y;
 	    }
 	}

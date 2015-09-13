@@ -55,7 +55,8 @@ public class SetVarK extends CompoundNode {
 
 	@Override
 	public void run(LWThread thr) {
-        int i = thr.checkSliceAndPopState();
+		int nc = childCount();
+        int i = thr.checkSliceAndPopState(nc + 2);
         Stack stack = thr.getStack();
         try {
 	        switch (i) {
@@ -65,7 +66,6 @@ public class SetVarK extends CompoundNode {
 	        		}
 	        		i++;
 	        	default:
-	        		int nc = childCount();
 	        		for (; i <= nc; i++) {
 	        			runChild(i - 1, thr);
 	        		}
@@ -76,7 +76,7 @@ public class SetVarK extends CompoundNode {
         	throw new ExecutionException(this, e);
         }
         catch (Yield y) {
-            y.getState().push(i);
+            y.getState().push(i, nc + 2);
             throw y;
         }
 	}

@@ -93,7 +93,7 @@ public class While extends InternalFunction {
         if (body == null) {
             return;
         }
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(2);
         SingleValueChannel<Object> next = (SingleValueChannel<Object>) thr.popState();
         List<RefCount> drefs = (List<RefCount>) thr.popState();
         LWThread thr2 = (LWThread) thr.popState();
@@ -121,7 +121,7 @@ public class While extends InternalFunction {
                             });
                             i++;
                             thr2.start();
-                        case 2:
+                        default:
                             thr2.waitFor();
                             if (next.isEmpty()) {
                                 // must do this twice since the closeDataSet calls
@@ -147,7 +147,7 @@ public class While extends InternalFunction {
             y.getState().push(thr2);
             y.getState().push(drefs);
             y.getState().push(next);
-            y.getState().push(i);
+            y.getState().push(i, 2);
             throw y;
         }
     }

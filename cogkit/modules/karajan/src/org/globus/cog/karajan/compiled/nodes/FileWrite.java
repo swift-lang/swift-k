@@ -72,7 +72,7 @@ public class FileWrite extends InternalFunction {
 
 	@Override
 	protected void runBody(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		BufferedOutputStream os = (BufferedOutputStream) thr.popState();
 		try {
 			switch (i) {
@@ -80,7 +80,7 @@ public class FileWrite extends InternalFunction {
 					os = openStream(thr);
 					c_vargs.set(thr.getStack(), new OutputStreamSink(os));
 					i++;
-				case 1:
+				default:
 					if (CompilerSettings.PERFORMANCE_COUNTERS) {
 						startCount++;
 					}
@@ -90,7 +90,7 @@ public class FileWrite extends InternalFunction {
 		}
 		catch (Yield y) {
 			y.getState().push(os);
-			y.getState().push(i);
+			y.getState().push(i, 1);
 			throw y;
 		}
 		catch (RuntimeException e) {

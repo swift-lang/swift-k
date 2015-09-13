@@ -101,7 +101,7 @@ public class Function extends UserDefinedFunction {
 		if (body == null) {
 			return;
 		}
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		Stack orig = thr.getStack();
 		Stack istk = (Stack) thr.popState();
 		try {
@@ -109,7 +109,7 @@ public class Function extends UserDefinedFunction {
 				case 0:
 					istk = initializeArgs(orig, referencedChannels, firstIndex, argCount);
 					i++;
-				case 1:
+				default:
 					thr.setStack(istk);
 					if (CompilerSettings.PERFORMANCE_COUNTERS) {
 						startCount++;
@@ -126,7 +126,7 @@ public class Function extends UserDefinedFunction {
 		catch (Yield y) {
 			thr.setStack(orig);
 			y.getState().push(istk);
-			y.getState().push(i);
+			y.getState().push(i, 1);
 			throw y;
 		}
 	}

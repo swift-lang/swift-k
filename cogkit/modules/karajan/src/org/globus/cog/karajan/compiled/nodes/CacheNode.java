@@ -74,7 +74,7 @@ public class CacheNode extends BufferedInternalFunction {
 
 	@Override
 	protected void runBody(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(2);
 		int frame = thr.popIntState();
 		Stack stack = thr.getStack();
 		try {
@@ -89,7 +89,7 @@ public class CacheNode extends BufferedInternalFunction {
 						break;
 					}
 					i++;
-				case 2:
+				default:
 					if (CompilerSettings.PERFORMANCE_COUNTERS) {
 						startCount++;
 					}
@@ -100,7 +100,7 @@ public class CacheNode extends BufferedInternalFunction {
 		}
 		catch (Yield y) {
 			y.getState().push(frame);
-			y.getState().push(i);
+			y.getState().push(i, 2);
 			throw y;
 		}
 		catch (ExecutionException e) {

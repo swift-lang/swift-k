@@ -44,7 +44,7 @@ public class Throttled extends Sequential {
     
     @Override
     public void run(LWThread thr) {
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(1);
         try {
             switch (i) {
                 case 0:
@@ -56,7 +56,7 @@ public class Throttled extends Sequential {
             }
         }
         catch (Yield y) {
-            y.getState().push(i);
+            y.getState().push(i, 1);
             throw y;
         }
         catch (RuntimeException e) {

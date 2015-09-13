@@ -84,15 +84,17 @@ public abstract class AbstractGridNode extends InternalFunction {
 		context = scope.getVarRef("#context");
 		return super.compileBody(w, argScope, scope);
 	}
+	
+	public static final int MAX_STATE = 1;
 
 	public final void runBody(LWThread thr) {
 		TaskStateFuture tsf = (TaskStateFuture) thr.popState();
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(MAX_STATE);
 		try {
 			switch (i) {
 				case 0:
 					submitTask(thr.getStack());
-				case 1:
+				default:
 					if (tsf != null) {
 						tsf.getValue();
 					}
@@ -199,7 +201,7 @@ public abstract class AbstractGridNode extends InternalFunction {
 				throw new TaskException(Executor.getMeaningfulMessage(e), e);
 			}
 		}
-		throw new ConditionalYield(1, tsf);
+		throw new ConditionalYield(1, MAX_STATE, tsf);
 	}
 
 	public void submitScheduled(Scheduler scheduler, Task task, Stack stack,
@@ -211,7 +213,7 @@ public abstract class AbstractGridNode extends InternalFunction {
 		}
 		TaskStateFuture tsf = new CustomTaskStateFuture(stack, task, false);
 		scheduler.enqueue(task, constraints, tsf);
-		throw new ConditionalYield(1, tsf);
+		throw new ConditionalYield(1, MAX_STATE, tsf);
 	}
 
 	protected void setTaskIdentity(Stack stack, Task task) {

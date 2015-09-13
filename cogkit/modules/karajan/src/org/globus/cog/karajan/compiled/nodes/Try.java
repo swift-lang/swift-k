@@ -55,10 +55,10 @@ public class Try extends BufferedNode {
 	}
 
 	public void run(LWThread thr) {
-        int i = thr.checkSliceAndPopState();
+		int ec = childCount();
+        int i = thr.checkSliceAndPopState(ec + 2);
         int fc = thr.popIntState();
         Stack stack = thr.getStack();
-        int ec = childCount();
         try {
         	switch (i) {
         		case 0:
@@ -91,7 +91,7 @@ public class Try extends BufferedNode {
         }
         catch (Yield y) {
             y.getState().push(fc);
-            y.getState().push(i);
+            y.getState().push(i, ec + 2);
             throw y;
         }
     }

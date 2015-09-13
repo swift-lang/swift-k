@@ -86,7 +86,7 @@ public class Apply extends InternalFunction {
 
 	@SuppressWarnings("unchecked")
 	public void runBody(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		Lambda node = (Lambda) thr.popState();
 		List<ChannelRef<Object>> cl = (List<ChannelRef<Object>>) thr.popState();
 		k.rt.Channel<Object> args = null;
@@ -106,7 +106,7 @@ public class Apply extends InternalFunction {
 		catch (Yield y) {
 			y.getState().push(cl);
 			y.getState().push(node);
-			y.getState().push(i);
+			y.getState().push(i, 1);
 			throw y;
 		}
 	}

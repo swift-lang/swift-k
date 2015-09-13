@@ -56,7 +56,7 @@ public class Exclusive extends InternalFunction {
 
 	@Override
 	public void runBody(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		int fc = thr.popIntState();
 		Object on = thr.popState();
 		Stack stack = thr.getStack();
@@ -70,7 +70,7 @@ public class Exclusive extends InternalFunction {
 					monitorEnter(thr, on);
 					fc = stack.frameCount();
 					i++;
-				case 1:
+				default:
 					if (CompilerSettings.PERFORMANCE_COUNTERS) {
 						startCount++;
 					}
@@ -86,13 +86,13 @@ public class Exclusive extends InternalFunction {
 		catch (Yield y) {
 			y.getState().push(on);
 			y.getState().push(fc);
-			y.getState().push(i);
+			y.getState().push(i, 1);
 			throw y;
 		}
 	}
 
 	protected void monitorEnter(LWThread thr, Object on) {	
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		Stack stack = thr.getStack();
 
     	switch (i) {
@@ -107,7 +107,7 @@ public class Exclusive extends InternalFunction {
 						// not the first thread; add a future object to the list and wait
 						FutureObject fo = new FutureObject();
 						waiting.add(fo);
-						throw new ConditionalYield(1, fo);
+						throw new ConditionalYield(1, 1, fo);
 					}
 				}
     		default:

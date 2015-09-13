@@ -111,7 +111,7 @@ public class ParallelFor extends InternalFunction {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void runBody(final LWThread thr) {		
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(2);
 		Iterator<Object> it = (Iterator<Object>) thr.popState();
 		ThreadSet ts = (ThreadSet) thr.popState();
 		int fc = thr.popIntState();
@@ -163,7 +163,7 @@ public class ParallelFor extends InternalFunction {
 					}
 					ts.unlock();
 					i++;
-				case 2:
+				default:
 					ts.waitFor();
 			}
 		}
@@ -172,7 +172,7 @@ public class ParallelFor extends InternalFunction {
 			y.getState().push(fc);
 			y.getState().push(ts);
 			y.getState().push(it);
-			y.getState().push(i);
+			y.getState().push(i, 2);
 			throw y;
 		}
 	}

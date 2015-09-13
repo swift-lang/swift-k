@@ -92,7 +92,7 @@ public class ExecuteFile extends InternalFunction {
 	}
 
 	public void runBody(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		Entry e = (Entry) thr.popState();
 		Stack stack = thr.getStack();
 		try {
@@ -112,7 +112,7 @@ public class ExecuteFile extends InternalFunction {
 		}
 		catch (Yield y) {
 			y.getState().push(e);
-			y.getState().push(i);
+			y.getState().push(i, 1);
 		}
 	}
 

@@ -123,7 +123,7 @@ public class Execute extends GridExec {
 			
 			TaskStateFuture tsf = new SwiftTaskStateFuture(stack, task, false);
 			scheduler.enqueue(task, constraints, tsf);
-			throw new ConditionalYield(1, tsf);
+			throw new ConditionalYield(1, MAX_STATE, tsf);
 		}
 		catch (CanceledReplicaException e) {
 			if (logger.isDebugEnabled()) {

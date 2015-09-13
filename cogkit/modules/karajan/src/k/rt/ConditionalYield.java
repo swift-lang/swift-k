@@ -44,8 +44,8 @@ public class ConditionalYield extends Yield {
         this.sequence = sequence;
     }
     
-    public ConditionalYield(int pstate, Future f) {
-    	super(pstate);
+    public ConditionalYield(int pstate, int maxState, Future f) {
+    	super(pstate, maxState);
         this.f = f;
         this.sequence = -1;
     }

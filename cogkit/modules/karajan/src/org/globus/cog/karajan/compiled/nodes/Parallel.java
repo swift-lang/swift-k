@@ -54,7 +54,7 @@ public class Parallel extends OrderedChannelsNode {
 
 	@Override
 	public void run(LWThread thr) {
-		int state = thr.checkSliceAndPopState();
+		int state = thr.checkSliceAndPopState(2);
 		Stack stack = thr.getStack();
 		ThreadSet ts = (ThreadSet) thr.popState();
 		int fc = thr.popIntState();
@@ -96,14 +96,14 @@ public class Parallel extends OrderedChannelsNode {
 					}
 					ts.startAll();
 					state++;
-				case 2:
+				default:
 					ts.waitFor();
 			}
 		}
 		catch (Yield y) {
 			y.getState().push(fc);
 			y.getState().push(ts);
-			y.getState().push(state);
+			y.getState().push(state, 2);
 			throw y;
 		}
 	}

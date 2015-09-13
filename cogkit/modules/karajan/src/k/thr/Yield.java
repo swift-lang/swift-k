@@ -40,9 +40,9 @@ public class Yield extends Error {
 		state = new State();
 	}
 	
-	public Yield(int pstate) {
+	public Yield(int pstate, int max) {
 		state = new State();
-		state.push(pstate);
+		state.push(pstate, max);
 	}
 	
 	public final State getState() {

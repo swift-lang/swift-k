@@ -81,7 +81,7 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
     }
 
 	protected void runBody(LWThread thr) {
-        int i = thr.checkSliceAndPopState();
+        int i = thr.checkSliceAndPopState(256);
         int fc = thr.popIntState();
         int times = thr.popIntState();
         Stack stack = thr.getStack();
@@ -90,7 +90,7 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
             fc = stack.frameCount();
             times = this.times.getValue(stack).intValue();
             i++;
-            var.setValue(stack, i);
+            var.setValue(stack, times);
         }
         while (true) {
 	        try {
@@ -103,7 +103,7 @@ public class RestartOnErrorNode extends AbstractRegexpFailureHandler {
 	        catch (Yield y) {
 	        	y.getState().push(times);
 	        	y.getState().push(fc);
-	            y.getState().push(i);
+	            y.getState().push(i, 256);
 	            throw y;
 	        }
 	        catch (ExecutionException e) {

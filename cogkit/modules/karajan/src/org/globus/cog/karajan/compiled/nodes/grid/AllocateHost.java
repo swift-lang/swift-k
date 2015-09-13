@@ -78,7 +78,7 @@ public class AllocateHost extends InternalFunction {
 
 	@Override
 	public void runBody(LWThread thr) throws ExecutionException {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(4);
 		int fc = thr.popIntState();
 		Stack stack = thr.getStack();
 		try {
@@ -97,7 +97,7 @@ public class AllocateHost extends InternalFunction {
 						startCount++;
 					}
 					body.run(thr);
-					stack.leave();
+					stack.dropToFrame(fc);
 					_finally(thr.getStack());
 			}
 		}
@@ -108,7 +108,7 @@ public class AllocateHost extends InternalFunction {
 		}
 		catch (Yield y) {
 			y.getState().push(fc);
-			y.getState().push(i);
+			y.getState().push(i, 4);
 			throw y;
 		}
 	}
@@ -123,7 +123,7 @@ public class AllocateHost extends InternalFunction {
 	}
 
 	protected void allocateHost(LWThread thr) {
-		int i = thr.checkSliceAndPopState();
+		int i = thr.checkSliceAndPopState(1);
 		TaskFuture tf = (TaskFuture) thr.popState();
 		Stack stack = thr.getStack();
 		try {
@@ -155,14 +155,14 @@ public class AllocateHost extends InternalFunction {
 					catch (Exception e) {
 						throw new ExecutionException(this, e);
 					}
-				case 1:
+				default:
 					// check if failed
 					tf.getValue();
 			}
 		}
 		catch (Yield y) {
 			y.getState().push(tf);
-			y.getState().push(i);
+			y.getState().push(i, 1);
 			throw y;
 		}
 	}
