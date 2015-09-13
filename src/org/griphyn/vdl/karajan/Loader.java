@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -207,7 +208,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             tree.setProperty("name", projectName + "-" + runID);
             tree.setProperty(WrapperNode.FILENAME, project);
 
-            Context context = new Context();
+            Context context = new SwiftContext();
             context.setArguments(ap.getArguments());
             context.setAttribute("SWIFT:CONFIG", config);
             context.setAttribute("projectName", projectName);
@@ -215,6 +216,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
             context.setAttribute("SWIFT:RUN_ID", runID);
             context.setAttribute("SWIFT:DRY_RUN", ap.isPresent(ARG_DRYRUN));
             context.setAttribute("SWIFT:HOME", System.getProperty("swift.home"));
+            context.setAttribute("RUN:CLEANUPS", new HashSet<Object>());
+            context.setAttribute("RUN:ERRORS", new ArrayList<Object>());
+            context.setAttribute("RUN:WARNINGS", new ArrayList<Object>());
            
             String debugDirPrefix = System.getProperty("debug.dir.prefix");
             if (debugDirPrefix == null) {
@@ -779,6 +783,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             Logger.getLogger(AbstractDataNode.class).setLevel(Level.WARN);
             Logger.getLogger(New.class).setLevel(Level.WARN);
             Logger.getLogger("org.globus.cog.karajan.workflow.service").setLevel(Level.WARN);
+            Logger.getLogger("swift").setLevel(Level.INFO);
         }
         return logfile;
     }
