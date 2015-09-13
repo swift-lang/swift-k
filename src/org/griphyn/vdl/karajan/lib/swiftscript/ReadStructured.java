@@ -82,13 +82,13 @@ public class ReadStructured extends SwiftFunction implements SwiftDeserializer {
 			if (pf instanceof AbsFile) {
 				AbsFile af = (AbsFile) pf;
 				if (!af.getProtocol().equalsIgnoreCase("file")) {
-					throw new ExecutionException("readData2 only supports local files");
+					throw new ExecutionException("readStructured only supports local files");
 				}
 				readData(dest, af.getPath(), this, null);
 				dest.closeDeep();
 			}
 			else {
-				throw new ExecutionException("readData2 only supports reading from files");
+				throw new ExecutionException("readStructured only supports reading from files");
 			}
 		}
 		return null;
@@ -176,7 +176,7 @@ public class ReadStructured extends SwiftFunction implements SwiftDeserializer {
 
     private String processEscapes(String s, Node owner) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
+        for (int i = 1; i < s.length() - 1; i++) {
             char c = s.charAt(i);
             if (c == '\\') {
                 i++;
