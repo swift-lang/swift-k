@@ -40,6 +40,7 @@ import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
 import org.globus.cog.abstraction.impl.execution.coaster.CancelJobCommand;
+import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.CoasterChannel;
@@ -786,6 +787,7 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
                 String taskChannelId = (String) j.getTask().getAttribute("channelId");
                 if (id.equals(taskChannelId)) {
                     s.remove(j);
+                    NotificationManager.getDefault().removeTask(j.getTask());
                 }
             }
         }

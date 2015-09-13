@@ -233,6 +233,9 @@ public class Job implements Comparable<Job> {
         if (cancelator != null) {
             cancelator.cancel(this);
         }
+        else {
+        	NotificationManager.getDefault().removeTask(task);
+        }
     }
 
     public void setCancelator(JobCancelator cancelator) {
