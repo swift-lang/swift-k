@@ -43,6 +43,8 @@ public abstract class ArgRef<T> {
 	
 	public abstract boolean isStatic();
 	
+	public abstract void set(Stack stack, T object);
+	
 	public static class Static<T> extends ArgRef<T> {
 		private final T value;
 		
@@ -63,6 +65,10 @@ public abstract class ArgRef<T> {
 		@Override
 		public boolean isStatic() {
 			return true;
+		}
+
+		@Override
+		public void set(Stack stack, T object) {
 		}
 
 		@Override
@@ -100,6 +106,11 @@ public abstract class ArgRef<T> {
 			return false;
 		}
 		
+		@Override
+		public void set(Stack stack, T object) {
+		    stack.top().set(index, object);
+		}
+
 		@Override
 		public String toString() {
 			return "AD[" + index + "]";
@@ -178,6 +189,11 @@ public abstract class ArgRef<T> {
 		}
 		
 		@Override
+        public void set(Stack stack, T object) {
+            stack.top().set(index, object);
+        }
+		
+		@Override
 		public String toString() {
 			return "ADO[" + index + ", " + value + "]";
 		}
@@ -213,6 +229,11 @@ public abstract class ArgRef<T> {
 		public boolean isStatic() {
 			return false;
 		}
+		
+		@Override
+        public void set(Stack stack, T object) {
+            stack.top().set(index, object);
+        }
 		
 		@Override
 		public String toString() {

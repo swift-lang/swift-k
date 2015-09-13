@@ -28,6 +28,11 @@
  */
 package org.globus.cog.karajan.compiled.nodes.functions;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import k.rt.Channel;
+import k.rt.Frame;
 import k.rt.Stack;
 import k.thr.LWThread;
 
@@ -41,39 +46,36 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 
-public class Variable extends Node {
-	final static Logger logger = Logger.getLogger(Variable.class);
-
-	private VarRef<Object> ref;
+public class GetAndDeleteVariables extends Node {
+	final static Logger logger = Logger.getLogger(GetAndDeleteVariables.class);
+	
 	private ChannelRef<Object> _vargs;
+	private VarRef<?>[] refs;
 
 	@Override
 	public void run(LWThread thr) {
 		Stack stack = thr.getStack();
-		_vargs.append(stack, ref.getValue(stack));
+		
+		Channel<Object> c = _vargs.get(stack);
+		
+		for (VarRef<?> ref : refs) {
+		    c.add(ref.getAndDelete(stack));
+		}		
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Node compile(WrapperNode wn, Scope scope) throws CompilationException {
 		super.compile(wn, scope);
-		String name = wn.getText();
-		
-		ref = scope.getVarRef(name, this);
 		Var.Channel vargs = scope.lookupChannel(Param.VARGS);
+		_vargs = scope.getChannelRef(vargs);
+		vargs.appendDynamic();
 		
-		if (ref.isStatic()) {
-			if (vargs.append(ref.getValue())) {
-				return null;
-			}
-			else {
-				_vargs = scope.getChannelRef(vargs);
-				return this;
-			}
+		refs = new VarRef<?>[wn.nodeCount()];
+		for (int i = 0; i < wn.nodeCount(); i++) {
+			String name = wn.getNode(i).getText();
+			refs[i] = scope.getVarRef(name);
 		}
-		else {
-			vargs.appendDynamic();
-			_vargs = scope.getChannelRef(vargs);
-			return this;
-		}
+		return this;
 	}
 }

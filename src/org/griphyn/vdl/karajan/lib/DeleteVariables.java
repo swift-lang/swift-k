@@ -26,54 +26,49 @@
 /*
  * Created on Jul 2, 2004
  */
-package org.globus.cog.karajan.compiled.nodes.functions;
+package org.griphyn.vdl.karajan.lib;
 
+import k.rt.Frame;
 import k.rt.Stack;
 import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
-import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.analyzer.Scope;
-import org.globus.cog.karajan.analyzer.Var;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 
-public class Variable extends Node {
-	final static Logger logger = Logger.getLogger(Variable.class);
+public class DeleteVariables extends Node {
+	final static Logger logger = Logger.getLogger(DeleteVariables.class);
 
-	private VarRef<Object> ref;
-	private ChannelRef<Object> _vargs;
+	private int[] indices;
 
 	@Override
 	public void run(LWThread thr) {
 		Stack stack = thr.getStack();
-		_vargs.append(stack, ref.getValue(stack));
+		Frame frame = stack.top();
+		for (int i = 0; i < indices.length; i++) {
+		    int index = indices[i];
+		    frame.set(index, null);
+		}
 	}
 
 	@Override
 	public Node compile(WrapperNode wn, Scope scope) throws CompilationException {
 		super.compile(wn, scope);
-		String name = wn.getText();
 		
-		ref = scope.getVarRef(name, this);
-		Var.Channel vargs = scope.lookupChannel(Param.VARGS);
+		int sz = wn.nodeCount();
+		indices = new int[sz];
 		
-		if (ref.isStatic()) {
-			if (vargs.append(ref.getValue())) {
-				return null;
-			}
-			else {
-				_vargs = scope.getChannelRef(vargs);
-				return this;
-			}
+		int index = 0;
+		
+		for (WrapperNode c : wn.nodes()) {
+	        String name = c.getText();
+	        VarRef<?> ref = scope.getVarRef(name);
+	        indices[index] = ref.getIndexInFrame();
+	        index++;
 		}
-		else {
-			vargs.appendDynamic();
-			_vargs = scope.getChannelRef(vargs);
-			return this;
-		}
+		return this;
 	}
 }

@@ -73,6 +73,9 @@ public abstract class ChannelRef<T> {
 		// should override this
 	}
 	
+	public void clean(Stack stack) {
+    }
+	
 	public StaticChannel getValue() {
 		throw new UnsupportedOperationException();
 	}
@@ -421,7 +424,7 @@ public abstract class ChannelRef<T> {
 	
 	public static class ArgMapping<T> extends Dynamic<T> {
 		protected final int first, last;
-		protected Object value; 
+		protected Object value;
 		protected List<String> names;
 		
 		public ArgMapping(int first, int count, int index) {
@@ -452,6 +455,10 @@ public abstract class ChannelRef<T> {
 			if (c.argSize() < names.size()) {
 				throw new IllegalArgumentException("Missing argument '" + names.get(c.argSize()) + "'");
 			}
+		}
+		
+		public void clean(Stack stack) {
+		    stack.top().set(index, null);
 		}
 		
 		public void setNamesP(List<Param> l) {
@@ -527,6 +534,7 @@ public abstract class ChannelRef<T> {
 			if (c.size() < names.size()) {
 				throw new IllegalArgumentException("Missing argument '" + names.get(c.size()) + "'");
 			}
+			stack.top().set(index, null);
 		}
 	}
 	

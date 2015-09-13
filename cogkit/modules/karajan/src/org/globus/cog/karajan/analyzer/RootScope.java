@@ -41,6 +41,7 @@ import org.globus.cog.karajan.compiled.nodes.Namespace;
 import org.globus.cog.karajan.compiled.nodes.Sequential;
 import org.globus.cog.karajan.compiled.nodes.SetVarK;
 import org.globus.cog.karajan.compiled.nodes.functions.ChannelArg;
+import org.globus.cog.karajan.compiled.nodes.functions.GetAndDeleteVariables;
 import org.globus.cog.karajan.compiled.nodes.functions.List;
 import org.globus.cog.karajan.compiled.nodes.functions.Named;
 import org.globus.cog.karajan.compiled.nodes.functions.NumericValue;
@@ -67,6 +68,7 @@ public class RootScope extends ContainerScope {
 		addDef("k", "assign", new JavaDef(SetVarK.class));
 		addDef("k", "named", new JavaDef(Named.class));
 		addDef("k", "var", new JavaDef(Variable.class));
+		addDef("k", "getAndDelete", new JavaDef(GetAndDeleteVariables.class));
 		addDef("k", "slist", new JavaDef(List.Cons.class));
 		addDef("k", "function", new JavaDef(Function.class));
 		addDef("k", "lambda", new JavaDef(Lambda.class));

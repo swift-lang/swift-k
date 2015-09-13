@@ -29,6 +29,7 @@
 package org.globus.cog.karajan.analyzer;
 
 
+import k.rt.Frame;
 import k.rt.Stack;
 
 public abstract class VarRef<T> extends Ref<T> {
@@ -41,6 +42,10 @@ public abstract class VarRef<T> extends Ref<T> {
 	
 	public abstract boolean isStatic();
 	
+	public abstract int getIndexInFrame();
+	
+	public abstract T getAndDelete(Stack stack);
+	
 	public static class Static<T> extends VarRef<T> {
 		private final T value;
 		
@@ -49,6 +54,11 @@ public abstract class VarRef<T> extends Ref<T> {
 		}
 		
 		public T getValue(Stack stack) {
+			return value;
+		}
+
+		@Override
+		public T getAndDelete(Stack stack) {
 			return value;
 		}
 
@@ -69,6 +79,11 @@ public abstract class VarRef<T> extends Ref<T> {
 		public String toString() {
 			return "StaticRef(" + value + ")";
 		}
+
+		@Override
+		public int getIndexInFrame() {
+			return -1;
+		}
 	}
 	
 	public static class DynamicLocal<T> extends VarRef<T> {
@@ -83,6 +98,14 @@ public abstract class VarRef<T> extends Ref<T> {
         @SuppressWarnings("unchecked")
 		public T getValue(Stack stack) {
             return (T) stack.top().get(index);
+        }
+        
+        public T getAndDelete(Stack stack) {
+            Frame frame = stack.top();
+            @SuppressWarnings("unchecked")
+			T value = (T) frame.get(index);
+            frame.set(index, null);
+        	return value;
         }
 
 		@Override
@@ -102,13 +125,18 @@ public abstract class VarRef<T> extends Ref<T> {
 			return false;
 		}
 
+		@Override
+		public int getIndexInFrame() {
+			return index;
+		}
+
 		public String toString() {
-			return "DynamicRef(0, " + index + ")";
+			return "DynamicRef(0, " + index + ", \"" + name + "\")";
 		}
     }
 
 	public static class Dynamic<T> extends VarRef<T> {
-        protected final int frame, index;
+        public final int frame, index;
         public final String name;
         
         public Dynamic(String name, int frame, int index) {
@@ -121,6 +149,14 @@ public abstract class VarRef<T> extends Ref<T> {
 		public T getValue(Stack stack) {
             return (T) stack.getFrame(frame).get(index);
         }
+        
+        public T getAndDelete(Stack stack) {
+            Frame frame = stack.getFrame(this.frame);
+            @SuppressWarnings("unchecked")
+            T value = (T) frame.get(index);
+            frame.set(index, null);
+            return value;
+        }
 
 		@Override
 		public void setValue(Stack stack, T value) {
@@ -130,6 +166,10 @@ public abstract class VarRef<T> extends Ref<T> {
 			}
 		}
 		
+		public int getFrame() {
+			return frame;
+		}
+
 		public T getValue() {
             throw new UnsupportedOperationException();
         }
@@ -139,8 +179,13 @@ public abstract class VarRef<T> extends Ref<T> {
 			return false;
 		}
 
+		@Override
+		public int getIndexInFrame() {
+			return index;
+		}
+
 		public String toString() {
-			return "DynamicRef(" + frame + ", " + index + ")";
+			return "DynamicRef(" + frame + ", " + index + ", \"" + name + "\")";
 		}
     }
 	
