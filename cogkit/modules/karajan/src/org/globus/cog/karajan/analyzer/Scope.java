@@ -40,6 +40,7 @@ import java.util.Set;
 
 import org.globus.cog.karajan.analyzer.Var.Channel;
 import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.functions.Variable;
 import org.globus.cog.karajan.compiled.nodes.user.CBFInvocationWrapper;
 import org.globus.cog.karajan.compiled.nodes.user.Function;
 import org.globus.cog.karajan.compiled.nodes.user.InvocationWrapper;
@@ -445,17 +446,70 @@ public class Scope {
 	protected int frameBump(int frame) {
 		return frame;
 	}
-
+	
 	public <T> VarRef<T> getVarRef(String name) {
-		return getVarRef(name, 0);
+		return getVarRef(name, null);
+	}
+
+	public <T> VarRef<T> getVarRef(String name, Variable reader) {
+		return getVarRef(name, 0, reader);
 	}
 	
 	public <T> VarRef<T> getVarRef(Var var) {
-		return getVarRef(var.name, 0);
+		return getVarRef(var, null);
 	}
 	
+	public <T> VarRef<T> getVarRef(Var var, Variable reader) {
+		return getVarRef(var.name, 0, reader);
+	}
+	
+	public <T> VarRef<T> getDynamicVarRef(String name) {
+        return getDynamicVarRef(name, 0);
+    }
+	
+	public <T> VarRef<T> getDynamicVarRefFromFrame(String name, int frame) {
+	    Scope scope = this;
+	    int f = 0;
+	    while (f < frame) {
+	        f = scope.frameBump(f);
+	        scope = scope.parent; 
+	    }
+        return scope.getDynamicVarRef(name, frame);
+    }
+	
+	protected <T> VarRef<T> getDynamicVarRef(String name, int frame) {
+        if (vars != null) {
+            Var existing = vars.get(name);
+            if (existing != null) {
+                if (!existing.isDynamic()) {
+                    return null;
+                }
+                else {
+                    if (existing.getCanBeNull()) {
+                        if (frame == 0) {
+                            return new VarRef.DynamicLocal<T>(name, existing.getIndex());
+                        }
+                        else {
+                            return new VarRef.Dynamic<T>(name, frame, existing.getIndex());
+                        }
+                    }
+                    else {
+                        return new VarRef.DynamicNotNull<T>(name, frame, existing.getIndex());
+                    }
+                }
+            }
+        }
+        
+        if (parent != null) {
+            return parent.getVarRef(name, frameBump(frame), null);
+        }
+        else {
+            throw new VariableNotFoundException("Variable not found: " + name);
+        }
+    }
+	
 	@SuppressWarnings("unchecked")
-	protected <T> VarRef<T> getVarRef(String name, int frame) {
+	protected <T> VarRef<T> getVarRef(String name, int frame, Variable reader) {
         if (vars != null) {
             Var existing = vars.get(name);
             if (existing != null) {
@@ -463,6 +517,12 @@ public class Scope {
             		return new VarRef.Static<T>((T) existing.getValue());
             	}
             	else {
+            		if (frame == 0) {
+            			existing.addReader(reader);
+            		}
+            		else {
+            			existing.addReader(null);
+            		}
             		if (existing.getCanBeNull()) {
             			if (frame == 0) {
             				return new VarRef.DynamicLocal<T>(name, existing.getIndex());
@@ -479,7 +539,7 @@ public class Scope {
         }
         
         if (parent != null) {
-            return parent.getVarRef(name, frameBump(frame));
+            return parent.getVarRef(name, frameBump(frame), reader);
         }
         else {
             throw new VariableNotFoundException("Variable not found: " + name);

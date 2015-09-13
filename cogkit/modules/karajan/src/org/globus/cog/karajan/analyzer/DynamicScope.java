@@ -31,6 +31,7 @@ package org.globus.cog.karajan.analyzer;
 import java.util.List;
 
 import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.functions.Variable;
 import org.globus.cog.karajan.parser.WrapperNode;
 
 
@@ -58,8 +59,8 @@ public class DynamicScope extends Scope {
 	}
 
 	@Override
-	protected <T> VarRef<T> getVarRef(String name, int frame) {
-		return parent.getVarRef(name, frame);
+	protected <T> VarRef<T> getVarRef(String name, int frame, Variable reader) {
+		return parent.getVarRef(name, frame, reader);
 	}
 
 	@Override

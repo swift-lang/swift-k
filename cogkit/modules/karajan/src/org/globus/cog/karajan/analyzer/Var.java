@@ -28,14 +28,18 @@
  */
 package org.globus.cog.karajan.analyzer;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.globus.cog.karajan.compiled.nodes.functions.Variable;
 
 public class Var {
 	public final String name;
 	private Object value;
 	private int frame, index = -1;
 	protected boolean dynamic, canBeNull;
+	private List<Variable> readers;
 	
 	public Var(String name) {
 	    this.name = name;
@@ -80,6 +84,13 @@ public class Var {
 
 	public boolean isSettableByName() {
 		return true;
+	}
+	
+	public void addReader(Variable reader) {
+		if (readers == null) {
+			readers = new ArrayList<Variable>();
+		}
+		readers.add(reader);
 	}
 
 	@Override
