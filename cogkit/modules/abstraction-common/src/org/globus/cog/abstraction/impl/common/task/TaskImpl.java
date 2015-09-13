@@ -286,10 +286,26 @@ public class TaskImpl implements Task {
         }
         attributes.put(name.toLowerCase(), value);
     }
+    
+    public void setAttributeLC(String name, Object value) {
+        if (attributes == null) {
+            attributes = new HashMap<String, Object>();
+        }
+        attributes.put(name, value);
+    }
 
     public Object getAttribute(String name) {
         if (attributes != null) {
             return attributes.get(name.toLowerCase());
+        }
+        else {
+            return null;
+        }
+    }
+    
+    public Object getAttributeLC(String name) {
+        if (attributes != null) {
+            return attributes.get(name);
         }
         else {
             return null;

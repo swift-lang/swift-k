@@ -228,6 +228,11 @@ public interface Task extends ExecutableObject, Cloneable {
      *            object representing the value of this attribute
      */
     public void setAttribute(String name, Object value);
+    
+    /**
+     * For when you *know* the name is already lowercase
+     */
+    public void setAttributeLC(String name, Object value);
 
     /**
      * Returns the value associated with the given attribute name.
@@ -238,6 +243,8 @@ public interface Task extends ExecutableObject, Cloneable {
      *         available
      */
     public Object getAttribute(String name);
+    
+    public Object getAttributeLC(String name);
 
     /**
      * Returns all the attribute names associated with this <code>Task</code>.
