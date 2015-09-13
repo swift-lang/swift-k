@@ -105,6 +105,7 @@ public class Executor {
 			main.waitFor();
 		}
 		catch (Exception e) {
+			logger.info("Run failed", e);
 			failed = true;
 			failure = e;
 			printFailure(e);
