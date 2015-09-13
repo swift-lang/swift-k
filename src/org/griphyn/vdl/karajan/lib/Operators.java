@@ -21,6 +21,7 @@ import k.rt.ExecutionException;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.util.StringCache;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
@@ -94,7 +95,7 @@ public class Operators {
             DSHandle r;
             try {
                 if (t == Types.STRING) {
-                	r = NodeFactory.newRoot(Field.GENERIC_STRING, StringCache.get((String.valueOf(v1.getValue()) + String.valueOf(v2.getValue()))));
+                	r = NodeFactory.newRoot(Field.GENERIC_STRING, StringCache.intern((String.valueOf(v1.getValue()) + String.valueOf(v2.getValue()))));
                 }
                 else if (t == Types.INT) {
                 	r = NodeFactory.newRoot(Field.GENERIC_INT, getInt(this, v1) + getInt(this, v2));

@@ -36,8 +36,8 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.util.TypeUtil;
+import org.globus.cog.util.StringCache;
 import org.griphyn.vdl.karajan.FileNameExpander;
-import org.griphyn.vdl.karajan.lib.StringCache;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -687,7 +687,7 @@ public class Misc {
             
             StringBuilder sb = new StringBuilder();
             prettyPrint(this, sb, hvalue);
-            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, StringCache.get(sb.toString()));
+            DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, StringCache.intern(sb.toString()));
 
             if (PROVENANCE_ENABLED) {
                 int provid = SwiftFunction.nextProvenanceID();
