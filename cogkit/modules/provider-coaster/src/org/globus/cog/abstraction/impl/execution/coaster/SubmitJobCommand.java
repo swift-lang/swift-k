@@ -28,8 +28,11 @@
  */
 package org.globus.cog.abstraction.impl.execution.coaster;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.HashSet;
@@ -103,14 +106,31 @@ public class SubmitJobCommand extends Command {
         }
         super.send();
     }
+    
+    private char[] buf;
 
     protected void serialize() throws IOException {
         // I'd use Java serialization if not for the fact that a similar
         // thing needs to be done to communicate with the perl client
         JobSpecification spec = (JobSpecification) t.getSpecification();
-        StringBuilder sb = new StringBuilder();
-        
-        String identity = t.getIdentity().getValue();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(256);
+        Writer sb;
+        Deflater def = null;
+        buf = new char[128];
+        if (compression) {
+            DeflaterOutputStream dos = new DeflaterOutputStream(baos, def = new Deflater(2) {
+                @Override
+                protected void finalize() {
+                    // override to avoid having it sit in the finalizer queue
+                }
+            });
+            sb = new BufferedWriter(new OutputStreamWriter(dos, UTF8));
+        }
+        else {
+            sb = new BufferedWriter(new OutputStreamWriter(baos, UTF8));
+        }
+                
+        String identity = t.getIdentity().toString();
         if (!simple) {
             add(sb, "configid", configId);
         }
@@ -138,34 +158,49 @@ public class SubmitJobCommand extends Command {
                 name + "=" + spec.getEnvironmentVariable(name));
     
         if (simple) {
-        	add(sb, "attr", "maxwalltime=" + formatWalltime(spec.getAttribute("maxwalltime")));
+        	addKey(sb, "attr");
+        	sb.write("maxwalltime=");
+        	sb.write(formatWalltime(spec.getAttribute("maxwalltime")));
+        	sb.write('\n');
+
         	if (spec.getAttribute("traceperformance") != null) {
-        	    add(sb, "attr", "traceperformance=" + spec.getAttribute("traceperformance"));
+        		addKey(sb, "attr");
+        		sb.write("traceperformance=");
+        		sb.write(String.valueOf(spec.getAttribute("traceperformance")));
+        		sb.write('\n');
         	}
         	if (spec.getAttribute("softimage") != null) {
         	    String value = (String) spec.getAttribute("softimage");
         	    String[] sd = value.split("\\s+");
-                add(sb, "attr", "softimage=" + sd[0] + " " + sd[1]);
+        	    addKey(sb, "attr");
+        	    sb.write("softimage=");
+        	    escape(sb, sd[0]);
+        	    sb.write(" ");
+        	    escape(sb, sd[1]);
+        	    sb.write('\n');
         	}
         }
         else {
             for (String name : spec.getAttributeNames())
                 if (!IGNORED_ATTRIBUTES.contains(name) || spec.isBatchJob()) {
-                    add(sb, "attr", 
-                        name + "=" + spec.getAttribute(name));
+                	addKey(sb, "attr");
+                	sb.write(name);
+                	sb.write('=');
+                	escape(sb, String.valueOf(spec.getAttribute(name)));
+                	sb.write('\n');
                 }
         }
             
         if (spec.getStageIn() != null) {
-            for (StagingSetEntry e : spec.getStageIn())
-                add(sb, "stagein", e.getSource() + '\n' + 
-                    e.getDestination() + '\n' + Mode.getId(e.getMode()));
+            for (StagingSetEntry e : spec.getStageIn()) {
+            	stagingLine(sb, "stagein", e);
+            }
         }
         
         if (spec.getStageOut() != null) {
-            for (StagingSetEntry e : spec.getStageOut())
-                add(sb, "stageout", e.getSource() + '\n' + 
-                    e.getDestination() + '\n' + Mode.getId(e.getMode()));
+            for (StagingSetEntry e : spec.getStageOut()) {
+            	stagingLine(sb, "stageout", e);
+            }
         }
 
         if (spec.getCleanUpSet() != null)
@@ -185,20 +220,28 @@ public class SubmitJobCommand extends Command {
             }
         }
         
-        String out = sb.toString();
         if (logger.isDebugEnabled()) {
-            logger.debug("Job data: " + out);
+            logger.debug("Job data: " + baos.toString());
+        }
+        sb.close();
+        if (def != null) {
+            def.end();
         }
         
-        byte[] bytes = out.getBytes(UTF8);
+        byte[] bytes = baos.toByteArray();
+        buf = null;
 
-        if (compression) {
-        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        	DeflaterOutputStream dos = new DeflaterOutputStream(baos, new Deflater(2));
-        	dos.write(bytes);
-        	bytes = baos.toByteArray();
-        }
         addOutData(bytes);
+    }
+
+    private void stagingLine(Writer sb, String name, StagingSetEntry e) throws IOException {
+    	addKey(sb, name);
+        escape(sb, e.getSource());
+        sb.write("\\n");
+        escape(sb, e.getDestination());
+        sb.write("\\n");
+        sb.write(String.valueOf(Mode.getId(e.getMode())));
+        sb.write('\n');
     }
 
     private String formatWalltime(Object value) {
@@ -210,33 +253,40 @@ public class SubmitJobCommand extends Command {
         }
     }
 
-    private void add(StringBuilder sb, String key, boolean value) throws IOException {
+    private void add(Writer sb, String key, boolean value) throws IOException {
         add(sb, key, String.valueOf(value));
     }
     
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     @SuppressWarnings("fallthrough")
-    private void add(final StringBuilder sb, final String key, final String value) throws IOException {
+    private void add(Writer sb, final String key, final String value) throws IOException {
         if (value != null) {
-        	sb.append(key);
-            sb.append('=');
-            for (int i = 0; i < value.length(); i++) {
-                char c = value.charAt(i);
-                switch (c) {
-                    case '\n':
-                        c = 'n';
-                    case '\\':
-                        sb.append('\\');
-                    default:
-                        sb.append(c);
-                }
-            }
-
-            sb.append('\n');
+        	addKey(sb, key);
+            escape(sb, value);
+            sb.write('\n');
         }
     }
 
+    private void addKey(Writer sb, String key) throws IOException { 
+    	sb.write(key);
+    	sb.write('=');
+    }
+
+    private void escape(Writer sb, String value) throws IOException {
+    	for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '\n':
+                    c = 'n';
+                case '\\':
+                    sb.write('\\');
+                default:
+                    sb.write(c);
+            }
+        }
+    }
+    
     public void receiveCompleted() {
         id = getInDataAsString(0);
         super.receiveCompleted();
