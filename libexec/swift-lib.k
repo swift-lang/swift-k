@@ -20,7 +20,6 @@ namespace(swift) {
 	export(unwrapVar, def("org.griphyn.vdl.karajan.lib.UnwrapVariable"))
 	export(deleteVars, def("org.griphyn.vdl.karajan.lib.DeleteVariables"))
 	export(initProcReadRefs, def("org.griphyn.vdl.karajan.lib.InitProcReadRefs"))
-	export(slist, def("org.griphyn.vdl.karajan.lib.SList"))
 
 	export(jobConstraints, def("org.griphyn.vdl.karajan.lib.JobConstraints"))
 	export(getField, def("org.griphyn.vdl.karajan.lib.GetField"))
