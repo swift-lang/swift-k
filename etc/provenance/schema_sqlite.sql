@@ -107,3 +107,8 @@ create table staged_out (
        app_exec_id			text references app_exec (app_exec_id),
        file_id				text references file (file_id)
 );
+
+create view provenance_graph_edge as
+	select app_exec_id as parent, file_id as child from staged_out
+	union
+	select file_id as parent, app_exec_id as child from staged_in;
