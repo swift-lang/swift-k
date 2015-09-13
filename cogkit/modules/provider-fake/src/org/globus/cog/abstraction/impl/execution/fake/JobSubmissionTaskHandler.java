@@ -25,8 +25,6 @@
 
 package org.globus.cog.abstraction.impl.execution.fake;
 
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -52,6 +50,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler {
         new Thread() {
             {
                 setName("Fake provider");
+                setDaemon(true);
             }
             
             public void run() {

@@ -88,6 +88,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     private Process process;
     private volatile boolean killed;
     private boolean useMpirun;
+    private JobSpecification spec;
     int count;
 
     public void submit(Task task) throws IllegalSpecException, InvalidSecurityContextException,
@@ -98,7 +99,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
          */
         checkAndSetTask(task);
         task.setStatus(Status.SUBMITTING);
-        JobSpecification spec;
         try {
             spec = (JobSpecification) task.getSpecification();
         }
@@ -194,7 +194,6 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     public void run() {
         try {
             // TODO move away from the multi-threaded approach
-            JobSpecification spec = (JobSpecification) getTask().getSpecification();
 
             File dir = getJobDir(spec);
             stageIn(spec, dir);
@@ -358,39 +357,45 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
 
     private void stage(StagingSet s, File srcdir, File dstdir, boolean jobSucceeded, boolean pathNameExpansion) throws Exception {
         for (StagingSetEntry e : s) {
+            if (e.getMode().contains(Mode.ON_SUCCESS) && !jobSucceeded) {
+                continue;
+            }
+            if (e.getMode().contains(Mode.ON_ERROR) && jobSucceeded) {
+                continue;
+            }
             String src = e.getSource();
+            String dst = e.getDestination();
+            RemoteFile srf = new RemoteFile(src);
+            if (!srf.isAbsolute()) {
+                srf = addDirectory(srf, srcdir);
+            }
+            RemoteFile drf = new RemoteFile(dst);
+            if (!drf.isAbsolute()) {
+                drf = addDirectory(drf, dstdir);
+            }
             if (pathNameExpansion && isPattern(src)) {
-                if (e.getMode().contains(Mode.ON_SUCCESS) && !jobSucceeded) {
-                    continue;
-                }
-                if (e.getMode().contains(Mode.ON_ERROR) && jobSucceeded) {
-                    continue;
-                }
-                String dst = e.getDestination();
-                RemoteFile srf = new RemoteFile(src);
-                if (srf.getDirectory() == null) {
-                    srf = addDirectory(srf, srcdir);
-                }
                 String srcScheme = defaultToLocal(srf.getProtocol());
                 Service ss = new ServiceImpl(srcScheme, getServiceContact(srf), null);
                 FileResource sres = FileResourceCache.getDefault().getResource(ss);
-                RemoteFile drf = new RemoteFile(dst);
-                if (drf.getDirectory() == null) {
-                    drf = addDirectory(drf, dstdir);
-                }
                 Collection<String[]> paths = SimplePathExpansion.expand(srf, drf, sres);
+                FileResourceCache.getDefault().releaseResource(sres);
                 for (String[] pair : paths) {
-                    copy(pair[0], pair[1], srcdir, dstdir, e.getMode(), jobSucceeded);
+                    copy(pair[0], pair[1], e.getMode(), jobSucceeded);
                 }
             }
             else {
-                copy(e.getSource(), e.getDestination(), srcdir, dstdir, e.getMode(), jobSucceeded);
+                copy(srf, drf, e.getMode(), jobSucceeded);
             }
         }
     }
 
     private RemoteFile addDirectory(RemoteFile orig, File dir) {
-        return new RemoteFile(orig.getProtocol(), orig.getHost(), orig.getPort(), dir.getPath(), orig.getName());
+        if (orig.getDirectory() == null) {
+            return new RemoteFile(orig.getProtocol(), orig.getHost(), orig.getPort(), dir.getPath(), orig.getName());
+        }
+        else {
+            return new RemoteFile(orig.getProtocol(), orig.getHost(), orig.getPort(), dir.getPath() + "/" + orig.getDirectory(), orig.getName());
+        }
     }
 
     private boolean isPattern(String path) {
@@ -417,10 +422,14 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         stage(s, new File("."), dir, true, false);
     }
 
-    private void copy(String src, String dest, File srcdir, File dstdir, EnumSet<Mode> mode, boolean jobSucceeded) throws Exception {
+    private void copy(String src, String dest, EnumSet<Mode> mode, boolean jobSucceeded) throws Exception {
         src = dropCDMPrefix(src);
         RemoteFile srf = new RemoteFile(src);
         RemoteFile drf = new RemoteFile(dest);
+        copy(srf, drf, mode, jobSucceeded);
+    }
+        
+    private void copy(RemoteFile srf, RemoteFile drf, EnumSet<Mode> mode, boolean jobSucceeded) throws Exception {
 
         String srcScheme = defaultToLocal(srf.getProtocol());
         String dstScheme = defaultToLocal(drf.getProtocol());
@@ -431,7 +440,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         FileResource sres = FileResourceCache.getDefault().getResource(ss);
         FileResource dres = FileResourceCache.getDefault().getResource(ds);
                 
-        String srcPath = getPath(srf, srcdir);
+        String srcPath = getPath(srf);
         
         boolean delete = false;
         if (mode.contains(Mode.IF_PRESENT) && !sres.exists(srcPath)) {
@@ -444,14 +453,14 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             delete = true;
         }
         
-        String dstPath = getPath(drf, dstdir);
+        String dstPath = getPath(drf);
         if (delete) {
             if (dres.exists(dstPath)) {
                 dres.deleteFile(dstPath);
             }
             return;
         }
-
+        
         InputStream is = sres.openInputStream(srcPath);
         OutputStream os = dres.openOutputStream(dstPath);
         byte[] buffer = new byte[BUFFER_SIZE];
@@ -468,9 +477,9 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
         FileResourceCache.getDefault().releaseResource(dres);
     }
 
-    private String getPath(RemoteFile rf, File dir) {
+    private String getPath(RemoteFile rf) {
         if (rf.getProtocol() == null && !rf.isAbsolute()) {
-            return new File(dir, rf.getPath()).getAbsolutePath();
+            return new File(rf.getPath()).getAbsolutePath();
         }
         else {
             return rf.getPath();
