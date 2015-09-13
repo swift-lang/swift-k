@@ -82,7 +82,7 @@ public class SliceArray extends SwiftFunction {
     
     		Type sourceType = sourceArray.getType();
     
-    		if(!sourceType.isArray()) {
+    		if (!sourceType.isArray()) {
     			throw new RuntimeException("SliceArray can only slice arrays.");
     		}
     
@@ -130,8 +130,8 @@ public class SliceArray extends SwiftFunction {
     
     		 */
 		}
-		catch(NoSuchTypeException nste) {
-			throw new ExecutionException("No such type",nste);
+		catch (NoSuchTypeException nste) {
+			throw new ExecutionException(this, "No such type", nste);
 		}
 		catch (InvalidPathException e) {
             throw new ExecutionException(this, e);

@@ -54,7 +54,7 @@ public class GetFieldConst extends AbstractFunction {
             staticReturn(scope, Field.Factory.getImmutableField(name, types.getValue().getType(type)));
         }
         catch (NoSuchTypeException e) {
-            throw new ExecutionException("No such type: " + name, e);
+            throw new CompilationException(w, "No such type: " + name, e);
         }
         
         return null;
@@ -68,7 +68,7 @@ public class GetFieldConst extends AbstractFunction {
             return Field.Factory.getImmutableField(name, Types.BUILT_IN_TYPES.getType(type));
         }
         catch (NoSuchTypeException e) {
-            throw new ExecutionException("No such type: " + name, e);
+            throw new ExecutionException(this, "No such type: " + name, e);
         }
 	}
 }
