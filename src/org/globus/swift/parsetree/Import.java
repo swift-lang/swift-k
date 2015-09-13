@@ -24,6 +24,7 @@ import java.util.List;
 
 public class Import extends AbstractNode {
     private String target;
+    private ArrayInitializer selector;
 
     public String getTarget() {
         return target;
@@ -38,6 +39,14 @@ public class Import extends AbstractNode {
         return Collections.emptyList();
     }
     
+    public ArrayInitializer getSelector() {
+        return selector;
+    }
+
+    public void setSelector(ArrayInitializer selector) {
+        this.selector = selector;
+    }
+
     @Override
     public String getNodeName() {
         return "import statement";
