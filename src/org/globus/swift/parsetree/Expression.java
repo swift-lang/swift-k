@@ -27,7 +27,7 @@ public interface Expression extends Node {
         OR("||"), AND("&&"), NOT("!"),
         // fishy; this works because of the ordering
         NEGATION("-"), 
-        PLUS("+"), MINUS("-"), MUL("*"), FDIV("/"), IDIV("%/"), MOD("%"),
+        PLUS("+"), MINUS("-"), MUL("*"), FDIV("/"), IDIV("%/"), MOD("%%"),
         EQ("=="), NE("!="), LT("<"), LE("<="), GT(">"), GE(">="), 
         BOOLEAN_CONSTANT, FLOAT_CONSTANT, INTEGER_CONSTANT, STRING_CONSTANT, 
         ARRAY_SUBSCRIPT_EXPRESSION, ARRAY_EXPRESSION, STRUCT_EXPRESSION, STRUCT_MEMBER_REFERENCE, VARIABLE_REFERENCE,
