@@ -206,6 +206,12 @@ public abstract class InternalFunction extends Sequential {
 		}
 	}
 	
+	protected void cleanArgs(final Stack stack) {
+        if (_vargs != null) {
+            _vargs.clean(stack);
+        }
+    }
+	
 	protected void initializeOptional(Stack stack) {
 	    if (firstOptionalIndex != -1) {
             Arrays.fill(stack.top().getAll(), firstOptionalIndex, lastOptionalIndex + 1, null);
