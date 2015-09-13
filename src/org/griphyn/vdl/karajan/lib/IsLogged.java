@@ -20,27 +20,22 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.List;
-import java.util.Map;
-
-import k.rt.Context;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.restartLog.LogEntry;
-import org.globus.cog.karajan.compiled.nodes.restartLog.MutableInteger;
-import org.globus.cog.karajan.compiled.nodes.restartLog.RestartLog;
+import org.griphyn.vdl.karajan.SwiftContext;
+import org.griphyn.vdl.karajan.lib.restartLog.LogEntry;
+import org.griphyn.vdl.karajan.lib.restartLog.RestartLogData;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Types;
 
 public class IsLogged extends SwiftFunction {
 	private ArgRef<DSHandle> var;
-	
-	private VarRef<Context> context;
+	private VarRef<SwiftContext> context;
 	
 	@Override
     protected Signature getSignature() {
@@ -49,19 +44,19 @@ public class IsLogged extends SwiftFunction {
 	
 	@Override
     protected void addLocals(Scope scope) {
-        context = scope.getVarRef("#context");
+	    context = scope.getVarRef("#context");
         super.addLocals(scope);
     }
 
 	@Override
     public Object function(Stack stack) {	
 		DSHandle var = this.var.getValue(stack);
-		return Boolean.valueOf(isLogged(context.getValue(stack), var));
+		RestartLogData log = context.getValue(stack).getRestartLog();
+		return Boolean.valueOf(isLogged(log, var));
 	}
 	
-	public static boolean isLogged(Context ctx, DSHandle var) {
-		@SuppressWarnings("unchecked")
-        Map<LogEntry, Object> logData = (Map<LogEntry, Object>) ctx.getAttribute(RestartLog.LOG_DATA);
+	public static boolean isLogged(RestartLogData logData, DSHandle var) {
+
 		if (logData.isEmpty()) {
 		    return false;
 		}
@@ -85,21 +80,8 @@ public class IsLogged extends SwiftFunction {
         }
 	}
 
-    private static boolean isLogged(Map<LogEntry, Object> logData, String str) {
+    public static boolean isLogged(RestartLogData logData, String str) {
         LogEntry entry = LogEntry.build(str);
-        boolean found = false;
-        synchronized (logData) {
-        	Object v = logData.get(entry);
-        	if (v instanceof MutableInteger) {
-        		return true;
-        	}
-        	else {
-                List<?> files = (List<?>) v;
-                if (files != null && !files.isEmpty()) {
-                    found = true;
-                }
-        	}
-        }
-        return found;
+        return logData.contains(entry);
     }
 }

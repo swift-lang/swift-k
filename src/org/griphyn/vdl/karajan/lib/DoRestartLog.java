@@ -30,27 +30,39 @@ import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
+import org.griphyn.vdl.karajan.SwiftContext;
+import org.griphyn.vdl.karajan.lib.restartLog.RestartLogData;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class DoRestartLog extends InternalFunction {
     
     private ArgRef<List<DSHandle>> stageouts;
     private ChannelRef<Object> cr_vargs;
-    private ChannelRef<Object> cr_restartLog;
+    private VarRef<SwiftContext> context;
    
     @Override
     protected Signature getSignature() {
-        return new Signature(params("stageouts"), returns(channel("...", DYNAMIC), channel("restartLog", DYNAMIC)));
+        return new Signature(params("stageouts"), returns(channel("...", DYNAMIC)));
     }
+
+    @Override
+    protected void addLocals(Scope scope) {
+        context = scope.getVarRef("#context");
+        super.addLocals(scope);
+    }
+
+
 
     @Override
     protected void runBody(LWThread thr) {
         Stack stack = thr.getStack();
         Collection<DSHandle> files = stageouts.getValue(stack);
         Channel<Object> ret = cr_vargs.get(stack);
-        Channel<Object> log = cr_restartLog.get(stack);
+        RestartLogData log = context.getValue(stack).getRestartLog();
         try {
             for (DSHandle file : files) {
                 for (DSHandle leaf : file.getLeaves()) {

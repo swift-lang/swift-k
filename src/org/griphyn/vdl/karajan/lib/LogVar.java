@@ -20,14 +20,16 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import k.rt.Channel;
 import k.rt.Stack;
 import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.analyzer.VariableNotFoundException;
+import org.griphyn.vdl.karajan.SwiftContext;
+import org.griphyn.vdl.karajan.lib.restartLog.RestartLogData;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.mapping.RootHandle;
@@ -35,21 +37,27 @@ import org.griphyn.vdl.type.Types;
 
 public class LogVar extends SwiftFunction {
     private ArgRef<DSHandle> var;
-    private ChannelRef<Object> cr_restartlog;
+    private VarRef<SwiftContext> context;
     
 	@Override
     protected Signature getSignature() {
         return new Signature(params("var"), returns(channel("restartlog", 1)));
     }
+	
+	@Override
+    protected void addLocals(Scope scope) {
+        context = scope.getVarRef("#context");
+        super.addLocals(scope);
+    }
 
     @Override
 	public Object function(Stack stack) {
 		DSHandle var = this.var.getValue(stack);
-        logVar(cr_restartlog.get(stack), var);
+        logVar(context.getValue(stack).getRestartLog(), var);
 		return null;
 	}
 		
-	public static void logVar(Channel<Object> log, DSHandle var) throws VariableNotFoundException {
+	public static void logVar(RestartLogData log, DSHandle var) throws VariableNotFoundException {
 	    if (var.getType().equals(Types.EXTERNAL)) {
 	        log.add(getLogId(var));
 	    }

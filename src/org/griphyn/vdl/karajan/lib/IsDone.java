@@ -20,20 +20,21 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import k.rt.Context;
 import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
+import org.griphyn.vdl.karajan.SwiftContext;
+import org.griphyn.vdl.karajan.lib.restartLog.RestartLogData;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
+import org.griphyn.vdl.type.Types;
 
 public class IsDone extends SwiftFunction {
     private ArgRef<Iterable<DSHandle>> stageout;
-    
-    private VarRef<Context> context;
+    private VarRef<SwiftContext> context;
 
     @Override
     protected Signature getSignature() {
@@ -48,14 +49,17 @@ public class IsDone extends SwiftFunction {
     
     @Override
     public Object function(Stack stack) {
-    	Context ctx = context.getValue(stack);
+    	RestartLogData log = context.getValue(stack).getRestartLog();
         Iterable<DSHandle> files = stageout.getValue(stack);
         for (DSHandle file : files) {
         	if (file.isRestartable()) {
-        		if (file.getMapper().isStatic()) {                
+        	    if (file.getType().equals(Types.EXTERNAL)) {
+        	        return IsLogged.isLogged(log, LogVar.getLogId(file));
+        	    }
+        	    else if (file.getMapper().isStatic()) {                
                     try {
                         for (DSHandle leaf : file.getLeaves()) {
-                            if (!IsLogged.isLogged(ctx, leaf)) {
+                            if (!IsLogged.isLogged(log, leaf)) {
                                 return Boolean.FALSE;
                             }
                         }
@@ -75,11 +79,14 @@ public class IsDone extends SwiftFunction {
         			 * and checking the entire variable rather than its items
         			 */
         			
-        			if (!IsLogged.isLogged(ctx, file)) {
+        			if (!IsLogged.isLogged(log, file)) {
         				return Boolean.FALSE;
         			}
         		}
             }
+        	else {
+        	    return Boolean.FALSE;
+        	}
         }
         if (!files.iterator().hasNext()) {
             return Boolean.FALSE;
