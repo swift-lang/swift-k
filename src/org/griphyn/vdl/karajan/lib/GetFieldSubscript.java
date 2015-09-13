@@ -89,7 +89,7 @@ public class GetFieldSubscript extends SwiftFunction {
             return var.getAllFields();
         }
         else {
-            return var.getField(Path.EMPTY_PATH.addFirst((Comparable<?>) index, true));
+            return var.getField(Path.make((Comparable<?>) index, true));
         }
     }
 }

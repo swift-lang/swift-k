@@ -32,7 +32,7 @@ public class Path {
 	public static final Path CHILDREN = Path.parse("[*]");
 
 	/** A list of Path.Entry that represents the path. */
-	private List<Path.Entry> entries;
+	private final List<Path.Entry> entries;
 
 	/** True if any element of the Path contains a wildcard. */
 	private boolean wildcard;
@@ -143,6 +143,10 @@ public class Path {
 	public static Path parse(String path) {
 		return new PathParser(path).parse();
 	}
+	
+	public static Path make(Comparable<?> key, boolean index) {
+	    return new Path(Collections.singletonList(new Entry(key, index)), false);
+	}
 
 	private Path(List<Entry> entries, boolean wildcard) {
 		this.entries = entries;
@@ -159,8 +163,8 @@ public class Path {
 		}
 	}
 
-	private Path(Path other) {
-		this.entries = new ArrayList<Entry>(other.entries);
+	private Path(Path other, int sz) {
+		this.entries = new ArrayList<Entry>(sz);
 		this.wildcard = other.wildcard;
 	}
 
@@ -189,7 +193,7 @@ public class Path {
 
 	public Comparable<?> getFirst() {
 		return entries.get(0).key;
-	} 
+	}
 	
 	public Comparable<?> getLast() {
 		return entries.get(entries.size() - 1).key;
@@ -216,11 +220,12 @@ public class Path {
 	}
 
 	public Path addFirst(Comparable<?> element, boolean index) {
-		Path p = new Path(this);
+		Path p = new Path(this, this.entries.size() + 1);
 		Entry e;
-		p.entries.add(0, e = new Entry(element, index));
-		if (e.isWildcard()) {
-			this.wildcard = true;
+		p.entries.add(e = new Entry(element, index));
+		p.entries.addAll(this.entries);
+		if (e.isWildcard() || this.wildcard) {
+			p.wildcard = true;
 		}
 		return p;
 	}
@@ -230,20 +235,14 @@ public class Path {
 	}
 
 	public Path addLast(Comparable<?> element, boolean index) {
-		Path p = new Path(this);
+		Path p = new Path(this, this.entries.size() + 1);
 		Entry e = new Entry(element, index);
+		p.entries.addAll(this.entries);
 		p.entries.add(e);
-		if (e.isWildcard()) {
+		if (e.isWildcard() || this.wildcard) {
 			p.wildcard = true;
 		}
 		return p;
-	}
-	
-	protected void addLast(Entry e) {
-	    if (entries.isEmpty()) {
-	        entries = new ArrayList<Entry>();
-	    }
-	    entries.add(e);
 	}
 
 	public Path addLast(Comparable<?> element) {
@@ -389,8 +388,10 @@ public class Path {
 	}
 
 	public Path append(Path path) {
-		Path p = new Path(this);
+		Path p = new Path(this, this.entries.size() + path.entries.size());
+		p.entries.addAll(this.entries);
 		p.entries.addAll(path.entries);
+		p.wildcard = this.wildcard || path.wildcard;
 		return p;
 	}
 
