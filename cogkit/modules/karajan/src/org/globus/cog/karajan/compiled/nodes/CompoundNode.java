@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import k.rt.ExecutionException;
 import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.CompilationException;
@@ -107,7 +108,15 @@ public class CompoundNode extends Node {
 			startCount++;
 		}
 	    Node fn = children.get(index);
-	    fn.run(thr);
+	    try {
+	    	fn.run(thr);
+	    }
+	    catch (ExecutionException e) {
+	        throw e;
+	    }
+	    catch (RuntimeException e) {
+	        throw new ExecutionException(fn, e);
+	    }
 	}
 
 	public int childCount() {
