@@ -4,6 +4,7 @@ namespace(sys) {
 	export(unsynchronized, def("org.globus.cog.karajan.compiled.nodes.UnsynchronizedNode"))
 	export(race, def("org.globus.cog.karajan.compiled.nodes.Race"))
 	export(try, def("org.globus.cog.karajan.compiled.nodes.Try"))
+	export(utry, def("org.globus.cog.karajan.compiled.nodes.UTry"))
 	export(catch, def("org.globus.cog.karajan.compiled.nodes.Catch"))
 	export(maybe, def("org.globus.cog.karajan.compiled.nodes.Maybe"))
 	export(exclusive, def("org.globus.cog.karajan.compiled.nodes.Exclusive"))
