@@ -164,7 +164,7 @@ public class LWThread implements Runnable {
         }
     }
 
-    public final int checkSliceAndPopState() {
+    public final int checkSliceAndPopState(int maxState) {
         if (state == null) {
             if (isSliceExpired()) {
                 yield();
@@ -177,14 +177,14 @@ public class LWThread implements Runnable {
                     yield();
                 }
             }
-            return popIntState();
+            return popIntState(maxState);
         }
     }
 
     protected final boolean isSliceExpired() {
         return Clock.ms > deadline;
     }
-
+    
     public final int popIntState() {
     	return popIntState(256);
     }
