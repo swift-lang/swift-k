@@ -20,6 +20,8 @@
  */
 package org.griphyn.vdl.karajan.monitor.processors;
 
+import org.globus.cog.util.StringCache;
+
 public class SimpleParser {
 	private int crt;
 	private int tokStart;
@@ -90,7 +92,7 @@ public class SimpleParser {
         skipToWhitespace();
         endToken();
         skipWhitespace();
-        return getToken().intern();
+        return StringCache.intern(getToken());
     }
 
 	public String word() {

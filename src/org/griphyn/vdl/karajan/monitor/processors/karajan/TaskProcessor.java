@@ -20,12 +20,17 @@
  */
 package org.griphyn.vdl.karajan.monitor.processors.karajan;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
 import org.apache.log4j.Level;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
+import org.globus.cog.util.StringCache;
 import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
@@ -119,9 +124,15 @@ public class TaskProcessor extends AbstractMessageProcessor {
                     Task t = new TaskImpl();
                     t.setType(Task.JOB_SUBMISSION);
                     JobSpecification spec = new JobSpecificationImpl();
-                    spec.setExecutable(exec);
-                    spec.setArguments(args);
-                    spec.setDirectory(dir);
+                    spec.setExecutable(StringCache.intern(exec));
+                    
+                    List<String> argsl = new ArrayList<String>();
+                    StringTokenizer st = new StringTokenizer(args);
+                    while (st.hasMoreTokens()) {
+                        argsl.add(StringCache.intern(st.nextToken()));
+                    }
+                    spec.setArguments(argsl);
+                    spec.setDirectory(StringCache.intern(dir));
                     t.setSpecification(spec);
                     ti.setTask(t);
                     updateParent(state, id, ti);

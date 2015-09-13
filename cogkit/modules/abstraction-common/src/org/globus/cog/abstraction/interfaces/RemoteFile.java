@@ -28,6 +28,8 @@
  */
 package org.globus.cog.abstraction.interfaces;
 
+import org.globus.cog.util.StringCache;
+
 
 /**
  * Something to fill the gap between a URI and URL. URIs cannot seem to 
@@ -115,19 +117,19 @@ public class RemoteFile {
                 case ':':
                     if (match(str, "//", sp + 1)) {
                         state = 1000;
-                        protocol = str.substring(pp, sp).intern();
+                        protocol = StringCache.intern(str.substring(pp, sp));
                         pp = sp + 3;
                         sp = pp;
                     }
                     break;
                 case 1000 + ':':
-                    host = str.substring(pp, sp).intern();
+                    host = StringCache.intern(str.substring(pp, sp));
                     pp = sp + 1;
                     state = 2000;
                     break;
                 case 1000 + '/':
                     port = -1;
-                    host = str.substring(pp, sp).intern();
+                    host = StringCache.intern(str.substring(pp, sp));
                     parseDirAndName(str, sp + 1);
                     state = 3000;
                     break outer;
@@ -173,7 +175,7 @@ public class RemoteFile {
             name = str.substring(pos + 1);
         }
         else {
-            dir = normalize(str, pos, lastSep).intern();
+            dir = StringCache.intern(normalize(str, pos, lastSep));
             name = str.substring(lastSep + 1);
         }
     }

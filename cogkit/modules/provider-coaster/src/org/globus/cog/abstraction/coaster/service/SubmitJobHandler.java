@@ -40,6 +40,7 @@ import java.util.zip.InflaterInputStream;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.TaskNotifier;
 import org.globus.cog.abstraction.impl.common.CleanUpSetImpl;
+import org.globus.cog.abstraction.impl.common.CompositeIdentityImpl;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.StagingSetEntryImpl;
 import org.globus.cog.abstraction.impl.common.StagingSetImpl;
@@ -58,6 +59,7 @@ import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.handlers.RequestHandler;
+import org.globus.cog.util.StringCache;
 
 public class SubmitJobHandler extends RequestHandler {
     
@@ -118,7 +120,7 @@ public class SubmitJobHandler extends RequestHandler {
             throw new IllegalSpecException("Missing job identity");
         }
         task.setIdentity(new CompositeIdentityImpl(IdentityImpl.parse(clientId)));
-        spec.setExecutable(helper.read("executable").intern());
+        spec.setExecutable(helper.read("executable"));
         spec.setDirectory(helper.read("directory"));
         spec.setBatchJob(helper.readBool("batch"));
         spec.setStdInput(helper.read("stdin"));
@@ -188,21 +190,12 @@ public class SubmitJobHandler extends RequestHandler {
 
         ExecutionService service = new ExecutionServiceImpl();
 
-        setServiceParams(service, intern(helper.read("contact")), intern(helper.read("provider")), intern(helper.read("jm")));
+        setServiceParams(service, helper.read("contact"), helper.read("provider"), helper.read("jm"));
         task.setService(0, service);
         
         return new TaskConfigPair(task, clientId, configId);
     }
     
-    private String intern(String str) {
-        if (str == null) {
-            return null;
-        }
-        else {
-            return str.intern();
-        }
-    }
-
     private static final Pattern COLON = Pattern.compile(":");
 
     protected void setServiceParams(ExecutionService s, String contact, 
@@ -286,7 +279,7 @@ public class SubmitJobHandler extends RequestHandler {
         if (i == -1) {
             throw new ProtocolException("Invalid value: " + s);
         }
-        return s.substring(0, i);
+        return StringCache.intern(s.substring(0, i));
     }
 
     private String getValue(String s) {
@@ -312,7 +305,7 @@ public class SubmitJobHandler extends RequestHandler {
             }
             if (key.equals(this.key)) {
                 this.key = null;
-                return this.value;
+                return StringCache.intern(this.value);
             }
             else {
                 return null;
