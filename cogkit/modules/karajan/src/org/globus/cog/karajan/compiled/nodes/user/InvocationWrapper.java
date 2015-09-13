@@ -61,6 +61,7 @@ public class InvocationWrapper extends InternalFunction {
 	private List<VarRef<Object>> referencedNames;
 	private Object[] staticArgs;
 	private int firstIndex, argCount;
+	private boolean tailCall, dontCleanArgs;
 
 	public InvocationWrapper(Function fn) {
 		this.fn = fn;
@@ -84,6 +85,9 @@ public class InvocationWrapper extends InternalFunction {
                 default:
                         for (; i <= ec; i++) {
                             runChild(i - 1, thr);
+                        }
+                        if (!tailCall && !dontCleanArgs) {
+                        	cleanArgs(stack);
                         }
                         try {
                             runBody(thr);
@@ -172,7 +176,6 @@ public class InvocationWrapper extends InternalFunction {
 	protected void setChannelReturn(WrapperNode w, Param r, Object value) throws CompilationException {
 	}
 
-	
 	@Override
 	protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
 			throws CompilationException {
@@ -270,8 +273,6 @@ public class InvocationWrapper extends InternalFunction {
 		super.initializeArgs(stack);
 	}
 	
-	
-
 	@Override
 	protected void initializeOptional(Stack stack) {
 		List<ArgRef.RuntimeOptional<Object>> opt = fn.getRuntimeOptionalValues();
@@ -284,9 +285,17 @@ public class InvocationWrapper extends InternalFunction {
 
 	@Override
 	protected void runBody(LWThread thr) {
-		fn.runBody(thr, referencedChannels, referencedNames, firstIndex, argCount);
+		fn.runBody(thr, referencedChannels, referencedNames, firstIndex, argCount, tailCall);
 	}
 
 	public void updateReferenced(Function fn) {
+	}
+
+	public boolean getTailCall() {
+		return tailCall;
+	}
+
+	public void setTailCall(boolean tailCall) {
+		this.tailCall = tailCall;
 	}
 }

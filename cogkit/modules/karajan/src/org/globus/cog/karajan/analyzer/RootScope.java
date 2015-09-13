@@ -40,6 +40,7 @@ import org.globus.cog.karajan.compiled.nodes.Main;
 import org.globus.cog.karajan.compiled.nodes.Namespace;
 import org.globus.cog.karajan.compiled.nodes.Sequential;
 import org.globus.cog.karajan.compiled.nodes.SetVarK;
+import org.globus.cog.karajan.compiled.nodes.TailCall;
 import org.globus.cog.karajan.compiled.nodes.functions.ChannelArg;
 import org.globus.cog.karajan.compiled.nodes.functions.GetAndDeleteVariables;
 import org.globus.cog.karajan.compiled.nodes.functions.List;
@@ -74,6 +75,7 @@ public class RootScope extends ContainerScope {
 		addDef("k", "lambda", new JavaDef(Lambda.class));
 		addDef("k", "channel", new JavaDef(ChannelArg.class));
 		addDef("k", "concat", new JavaDef(Str.Concat.class));
+		addDef("k", "tailcall", new JavaDef(TailCall.class));
 		
 		addVar("#context", context);
 		addVar("#properties", props);

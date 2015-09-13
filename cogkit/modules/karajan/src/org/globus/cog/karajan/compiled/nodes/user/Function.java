@@ -28,6 +28,7 @@
  */
 package org.globus.cog.karajan.compiled.nodes.user;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -65,12 +66,14 @@ public class Function extends UserDefinedFunction {
 	@Override
 	public Node compile(WrapperNode w, Scope scope) throws CompilationException {
 		recursive = true;
+		Node n;
 		try {
-			return super.compile(w, scope);
+			 n = super.compile(w, scope);
 		}
 		finally {
 			recursive = false;
 		}
+		return n;
 	}
 
 	@Override
@@ -97,7 +100,7 @@ public class Function extends UserDefinedFunction {
 	}
 
 	public void runBody(LWThread thr, List<ChannelRef<Object>> referencedChannels,
-			List<VarRef<Object>> referencedNames, int firstIndex, int argCount) {
+			List<VarRef<Object>> referencedNames, int firstIndex, int argCount, boolean tailCall) {
 		if (body == null) {
 			return;
 		}
@@ -107,7 +110,10 @@ public class Function extends UserDefinedFunction {
 		try {
 			switch(i) {
 				case 0:
-					istk = initializeArgs(orig, referencedChannels, firstIndex, argCount);
+					istk = initializeArgs(orig, referencedChannels, firstIndex, argCount, tailCall);
+					if (tailCall) {
+						orig.leave();
+					}
 					i++;
 				default:
 					thr.setStack(istk);
@@ -131,17 +137,19 @@ public class Function extends UserDefinedFunction {
 		}
 	}
 	
-	protected Stack initializeArgs(Stack orig, List<ChannelRef<Object>> referencedChannels, int firstIndex, int argCount) {
+	protected Stack initializeArgs(Stack orig, List<ChannelRef<Object>> referencedChannels, int firstIndex, int argCount, boolean tailCall) {
 		Stack istk = defStack.copy();
 		istk.enter(this, frameSize);
-        bindArgs(orig.top(), istk.top(), firstIndex, argCount);
+        bindArgs(orig.top(), istk.top(), firstIndex, argCount, tailCall);
         bindChannels(orig, istk, referencedChannels);
         return istk;
 	}
 
-	protected void bindArgs(Frame src, Frame dst, int firstIndex, int argCount) {
+	protected void bindArgs(Frame src, Frame dst, int firstIndex, int argCount, boolean tailCall) {
 		System.arraycopy(src.getAll(), firstIndex, dst.getAll(), 0, argCount);
-		//Arrays.fill(src.getAll(), firstIndex, firstIndex + argCount, null);
+		if (!tailCall) {
+			Arrays.fill(src.getAll(), firstIndex, firstIndex + argCount, null);
+		}
 	}
 
 	public void bindChannels(Stack parent, Stack def, List<ChannelRef<Object>> wrapperChannels) {
