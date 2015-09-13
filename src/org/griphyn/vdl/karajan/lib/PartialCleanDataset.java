@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-/*
- * Created on Jun 7, 2015
- */
-package org.griphyn.vdl.mapping.file;
 
-import org.griphyn.vdl.mapping.Path;
+package org.griphyn.vdl.karajan.lib;
 
-public class InternalMapper extends ConcurrentMapper {
+import org.griphyn.vdl.mapping.nodes.ReadRefWrapper;
 
+public class PartialCleanDataset extends PartialCleanOrClose<ReadRefWrapper> {
     @Override
-    public boolean isPersistent(Path path) {
-        return false;
+    protected void doWhatNeedsToBeDone(ReadRefWrapper var, int count) {
+        var.decRefCount(count);
     }
-    
+
     @Override
-    public boolean supportsCleaning() {
+    protected boolean ignoreStaticRefs() {
         return true;
     }
 }

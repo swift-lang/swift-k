@@ -77,12 +77,6 @@ public interface Mapper {
      * @throws InvalidPathException 
      */
     void remap(Path path, Mapper sourceMapper, Path sourcePath) throws InvalidPathException;
-
-    /**
-     * Clean the specified path. A temporary mapper may remove the
-     * corresponding file after this call. 
-     */
-    void clean(Path paths);
     
     boolean isPersistent(Path path);
     
@@ -112,4 +106,6 @@ public interface Mapper {
      * Static mappers should return null.
      */
     Collection<AbsFile> getPattern(Path path, Type type);
+
+    boolean supportsCleaning();
 }

@@ -49,6 +49,8 @@ import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.mapping.nodes.PartialCloseable;
+import org.griphyn.vdl.mapping.nodes.ReadRefWrapper;
 import org.griphyn.vdl.type.Field;
 
 public class While extends InternalFunction {
@@ -59,18 +61,20 @@ public class While extends InternalFunction {
     
     private VarRef<Object> var;
     
-    private List<StaticRefCount> srefs;
+    private List<StaticRefCount<PartialCloseable>> swrefs;
+    private List<StaticRefCount<ReadRefWrapper>> srrefs;
     private Tracer tracer;
-    private ArgRef<String> refs;
+    private ArgRef<String> wrefs, rrefs;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params(identifier("name"), optional("refs", null), block("body")));
+        return new Signature(params(identifier("name"), optional("wrefs", null), optional("rrefs", null), block("body")));
     }
     
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
-        srefs = StaticRefCount.build(scope, this.refs.getValue());
+        swrefs = StaticRefCount.build(scope, this.wrefs.getValue(), false);
+        srrefs = StaticRefCount.build(scope, this.rrefs.getValue(), true);
         tracer = Tracer.getTracer(this);
         return super.compileBody(w, argScope, scope);
     }
@@ -95,7 +99,8 @@ public class While extends InternalFunction {
         }
         int i = thr.checkSliceAndPopState(2);
         SingleValueChannel<Object> next = (SingleValueChannel<Object>) thr.popState();
-        List<RefCount> drefs = (List<RefCount>) thr.popState();
+        List<RefCount<PartialCloseable>> dwrefs = (List<RefCount<PartialCloseable>>) thr.popState();
+        List<RefCount<ReadRefWrapper>> drrefs = (List<RefCount<ReadRefWrapper>>) thr.popState();
         LWThread thr2 = (LWThread) thr.popState();
         Stack stack = thr.getStack();
         try {
@@ -103,10 +108,12 @@ public class While extends InternalFunction {
                 while(true) {
                     switch(i) {
                         case 0:
-                            drefs = RefCount.build(stack, srefs);
+                            dwrefs = RefCount.build(stack, swrefs);
+                            drrefs = RefCount.build(stack, srrefs);
                             var.setValue(stack, NodeFactory.newRoot(Field.GENERIC_INT, 0));
                             c_next.create(stack);
-                            RefCount.incRefs(drefs);
+                            RefCount.incWriteRefs(dwrefs);
+                            RefCount.incReadRefs(drrefs);
                             next = (SingleValueChannel<Object>) c_next.get(stack);
                             if (tracer.isEnabled()) {
                                 tracer.trace(thr, unwrap(next));
@@ -127,12 +134,15 @@ public class While extends InternalFunction {
                                 // must do this twice since the closeDataSet calls
                                 // inside the iterate won't be called if the iterate 
                                 // condition is true
-                                RefCount.decRefs(drefs);
-                                RefCount.decRefs(drefs);
+                                RefCount.decWriteRefs(dwrefs);
+                                RefCount.decWriteRefs(dwrefs);
+                                RefCount.decReadRefs(drrefs);
+                                RefCount.decReadRefs(drrefs);
                                 break out;
                             }
                             else {
-                                RefCount.incRefs(drefs);
+                                RefCount.incWriteRefs(dwrefs);
+                                RefCount.incReadRefs(drrefs);
                             }
                             Object val = next.removeFirst();
                             if (tracer.isEnabled()) {
@@ -145,7 +155,8 @@ public class While extends InternalFunction {
         }
         catch (Yield y) {
             y.getState().push(thr2);
-            y.getState().push(drefs);
+            y.getState().push(drrefs);
+            y.getState().push(dwrefs);
             y.getState().push(next);
             y.getState().push(i, 2);
             throw y;

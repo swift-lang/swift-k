@@ -180,6 +180,21 @@ public abstract class AbstractClosedArrayDataNode extends AbstractClosedDataNode
     public int arraySize() {
         return values.length;
     }
+    
+    @Override
+    protected void clean0() {
+        if (isCleaned()) {
+            return;
+        }
+        if (!getType().itemType().isPrimitive()) {
+            for (DSHandle h : values) {
+                ((AbstractDataNode) h).clean0();
+            }
+        }
+        values = null;
+        super.clean0();
+    }
+
 
     @Override
     public void closeArraySizes() {

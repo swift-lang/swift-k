@@ -17,15 +17,19 @@
 
 package org.griphyn.vdl.mapping.file;
 
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.griphyn.vdl.mapping.Mapper;
+import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
+import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.util.SwiftConfig;
 
 public class FileGarbageCollector implements Runnable {
@@ -40,16 +44,14 @@ public class FileGarbageCollector implements Runnable {
         return instance;
     }
     
-    private Queue<PhysicalFormat> queue;
+    private LinkedList<RootHandle> queue;
     private Thread thread;
-    private Map<PhysicalFormat, Integer> usageCount;
-    private Set<PhysicalFormat> persistent;
+    private Set<RootHandle> nodes;
     private boolean shutdown, done, enabled;
     
     public FileGarbageCollector() {
-        queue = new LinkedList<PhysicalFormat>();
-        usageCount = new HashMap<PhysicalFormat, Integer>();
-        persistent = new HashSet<PhysicalFormat>();
+        queue = new LinkedList<RootHandle>();
+        nodes = Collections.synchronizedSet(new HashSet<RootHandle>());
         enabled = SwiftConfig.getDefault().isFileGCEnabled();
         if (enabled) {
             thread = new Thread(this, "File Garbage Collector");
@@ -57,100 +59,83 @@ public class FileGarbageCollector implements Runnable {
             thread.start();
         }
     }
-    
-    public synchronized void markAsPersistent(PhysicalFormat pf) {
-        if (enabled) {
-            persistent.add(pf);
-        }
-    }
-    
-    public synchronized void decreaseUsageCount(PhysicalFormat pf) {
+        
+    public void clean(RootHandle node) {
         if (!enabled) {
             return;
         }
-        assert Thread.holdsLock(this);
-        Integer c = usageCount.get(pf);
-        if (c == null) {
-            if (persistent.remove(pf)) {
-                logger.debug("Usage count of " + pf + " is 0, but file is persistent. Not removing.");
-            }
-            else {
-                logger.debug("Usage count of " + pf + " is 0. Queueing for removal.");
-                queue.add(pf);
-                this.notify();
-            }
-        }
-        else {
-            if (c == 2) {
-                usageCount.remove(pf);
-                logger.debug("Decreasing usage count of " + pf + " to 1");
-            }
-            else {
-                usageCount.put(pf, c - 1);
-                logger.debug("Decreasing usage count of " + pf + " to " + c);
-            }
-        }
+        nodes.remove(node);
+        queue(node);
     }
     
-    public synchronized void increaseUsageCount(PhysicalFormat pf) {
+    private void queue(RootHandle node) {
+        synchronized(queue) {
+            queue.add(node);
+            queue.notify();
+        }
+    }
+
+    public void add(RootHandle node) {
         if (!enabled) {
             return;
         }
-        // a usage count of 1 is assumed if the key is not in the map
-        // A remap of a remappable mapper would increase the usage count to 2 
-        Integer c = usageCount.get(pf);
-        if (c == null) {
-            usageCount.put(pf, 2);
-            logger.debug("Increasing usage count of " + pf + " to 2");
-        }
-        else {
-            usageCount.put(pf, c + 1);
-            logger.debug("Increasing usage count of " + pf + " to " + (c + 1));
-        }
+        nodes.add(node);
     }
     
     public void clean() {
-        synchronized(this) {
-            for (Map.Entry<PhysicalFormat, Integer> e : usageCount.entrySet()) {
-                if (!persistent.contains(e.getKey())) {
-                    queue.add(e.getKey());
-                }
-            }
-            notify();
+        if (!enabled) {
+            return;
+        }
+        synchronized(queue) {
+            queue.addAll(nodes);
+            nodes.clear();
+            queue.notify();
         }
     }
     
     public void run() {
         try {
             while (true) {
-                PhysicalFormat pf;
-                synchronized(this) {
+                RootHandle node;
+                synchronized(queue) {
                     while (queue.isEmpty() && !shutdown) {
-                        this.wait();
+                        queue.wait();
                     }
                     if (shutdown && queue.isEmpty()) {
                         done = true;
                         break;
                     }
-                    pf = queue.remove();
+                    node = queue.remove();
                 }
                 try {
-                    pf.clean();
+                    Mapper m = node.getMapper();
+                    Collection<Path> fringe = node.getFringePaths();
+                    for (Path p : fringe) {
+                        PhysicalFormat pf = m.map(p);
+                        if (!m.isPersistent(p)) {
+                            System.out.println("Cleaning file " + pf);
+                            pf.clean();
+                        }
+                        else {
+                            System.out.println("Not cleaning " + pf + " (not temporary)");
+                        }
+                    }
                 }
                 catch (Exception e) {
-                    logger.info("Failed to clean " + pf, e);
+                    logger.info("Failed to clean " + node, e);
                 }
             }
         }
-        catch (InterruptedException e) {
+        catch (InterruptedException e) { 
         }
+        done = true;
     }
 
     public void waitFor() throws InterruptedException {
         shutdown = true;
         while (!done && enabled) {
-            synchronized(this) {
-                notify();
+            synchronized(queue) {
+                queue.notify();
             }
             Thread.sleep(1);
         }

@@ -34,40 +34,57 @@ import java.util.List;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
-import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.nodes.PartialCloseable;
+import org.griphyn.vdl.mapping.nodes.ReadRefWrapper;
 
-class RefCount {
-    public final DSHandle var;
+class RefCount<T> {
+    public final T var;
     public final int count;
 
-    public RefCount(DSHandle var, int count) {
+    public RefCount(T var, int count) {
         this.var = var;
         this.count = count;
     }
     
-    public static List<RefCount> build(Stack stack, List<StaticRefCount> srefs) {
+    public static <S> List<RefCount<S>> build(Stack stack, List<StaticRefCount<S>> srefs) {
         if (srefs == null) {
             return null;
         }
-        List<RefCount> l = new ArrayList<RefCount>(srefs.size());
-        for (StaticRefCount s : srefs) {
-            l.add(new RefCount((DSHandle) s.ref.getValue(stack), s.count));
+        List<RefCount<S>> l = new ArrayList<RefCount<S>>(srefs.size());
+        for (StaticRefCount<S> s : srefs) {
+            l.add(new RefCount<S>(s.ref.getValue(stack), s.count));
         }
         return l;
     }
     
-    public static void decRefs(List<RefCount> rcs) throws ExecutionException {
+    public static void decWriteRefs(List<RefCount<PartialCloseable>> rcs) throws ExecutionException {
             if (rcs != null) {
-                for (RefCount rc : rcs) {
+                for (RefCount<PartialCloseable> rc : rcs) {
                     rc.var.updateWriteRefCount(-rc.count);
                 }
             }
         }
 
-    public static void incRefs(List<RefCount> rcs) throws ExecutionException {
+    public static void incWriteRefs(List<RefCount<PartialCloseable>> rcs) throws ExecutionException {
         if (rcs != null) {
-            for (RefCount rc : rcs) {
+            for (RefCount<PartialCloseable> rc : rcs) {
                 rc.var.updateWriteRefCount(rc.count);
+            }
+        }
+    }
+    
+    public static void decReadRefs(List<RefCount<ReadRefWrapper>> rcs) throws ExecutionException {
+            if (rcs != null) {
+                for (RefCount<ReadRefWrapper> rc : rcs) {
+                    rc.var.updateReadRefCount(-rc.count);
+                }
+            }
+        }
+
+    public static void incReadRefs(List<RefCount<ReadRefWrapper>> rcs) throws ExecutionException {
+        if (rcs != null) {
+            for (RefCount<ReadRefWrapper> rc : rcs) {
+                rc.var.updateReadRefCount(rc.count);
             }
         }
     }

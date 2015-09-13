@@ -43,7 +43,6 @@ public class ExternalMapper extends AbstractMapper {
 	public static final Logger logger = Logger.getLogger(ExternalMapper.class);	
 	
 	private Map<Path, AbsFile> map;
-    private Map<String, Path> rmap;
     
 	@Override
     public String getName() {
@@ -65,7 +64,6 @@ public class ExternalMapper extends AbstractMapper {
 		
 		ExternalMapperParams cp = getParams();
 		map = new HashMap<Path, AbsFile>();
-		rmap = new HashMap<String, Path>();
 		String exec = cp.getExec();
 		String bdir = getBaseDir();
 		if (bdir != null && !exec.startsWith("/")) {
@@ -179,7 +177,6 @@ public class ExternalMapper extends AbstractMapper {
 		Path p = Path.parse(spath);
 		AbsFile f = new AbsFile(line.substring(m + 1).trim());
 		map.put(p, f);
-		rmap.put(spath, p);
 	}
 
 	@Override
@@ -191,13 +188,6 @@ public class ExternalMapper extends AbstractMapper {
     public Collection<Path> existing(FileSystemLister l) {
         throw new UnsupportedOperationException();
     }
-
-	public Path rmap(String name) {
-		if (name == null || name.equals("")) {
-			return null;
-		}
-		return rmap.get(name);
-	}
 
 	@Override
 	public PhysicalFormat map(Path path) throws InvalidPathException {

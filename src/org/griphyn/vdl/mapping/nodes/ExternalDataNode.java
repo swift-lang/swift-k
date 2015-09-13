@@ -189,9 +189,11 @@ public class ExternalDataNode extends AbstractFutureNonCompositeDataNode impleme
 
     @Override
     protected void getFringePaths(List<Path> list, Path myPath) throws HandleOpenException {
+        list.add(myPath);
     }
 
     @Override
     protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+        list.add(this);
     }
 }

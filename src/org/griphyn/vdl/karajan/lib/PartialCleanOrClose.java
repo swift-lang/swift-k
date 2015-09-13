@@ -17,7 +17,9 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import k.rt.Frame;
+import java.util.ArrayList;
+import java.util.List;
+
 import k.rt.Stack;
 import k.thr.LWThread;
 
@@ -27,47 +29,63 @@ import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
-public class SetWaitCount extends Node {
+public abstract class PartialCleanOrClose<T> extends Node {
 	public static final Logger logger = Logger.getLogger(CloseDataset.class);
-
-	private int[] indices, counts;
-
+	
+	private static class Entry<S> {
+	    public final VarRef<S> ref;
+	    public final int count;
+	    
+	    public Entry(VarRef<S> ref, int count) {
+	        this.ref = ref;
+	        this.count = count;
+	    }
+	}
+	
+	private List<Entry<T>> l;
+	
 	@Override
     public void run(LWThread thr) {
         Stack stack = thr.getStack();
-        Frame frame = stack.top();
-        for (int i = 0; i < indices.length; i++) {
-            int index = indices[i];
-            AbstractDataNode var = (AbstractDataNode) frame.get(index);
-            var.setWriteRefCount(counts[i]);
+        for (Entry<T> e : l) {
+            doWhatNeedsToBeDone(e.ref.getValue(stack), e.count);
         }
     }
 	
-	@Override
+    protected abstract void doWhatNeedsToBeDone(T var, int count);
+
+    @Override
     public Node compile(WrapperNode wn, Scope scope) throws CompilationException {
         super.compile(wn, scope);
-        
-        int sz = wn.nodeCount() / 2;
-        indices = new int[sz];
-        counts = new int[sz];
-        
+        l = new ArrayList<Entry<T>>();
         boolean flip = true;
-        int index = 0;
-        
+        VarRef<T> ref = null;
         for (WrapperNode c : wn.nodes()) {
             if (flip) {
                 String name = c.getText();
-                VarRef<?> ref = scope.getVarRef(name);
-                indices[index] = ref.getIndexInFrame();
+                ref = scope.getVarRef(name);
             }
             else {
-                counts[index] = Integer.parseInt(c.getText());
-                index++;
+                int count = Integer.parseInt(c.getText());
+                if (ref.isStatic() && ignoreStaticRefs()) {
+                    // do nothing
+                }
+                else {
+                    // don't touch statically optimized things
+                    l.add(new Entry<T>(ref, count));
+                }
             }
             flip = !flip;
         }
-        return this;
+        
+        if (l.isEmpty()) {
+            return null;
+        }
+        else {
+            return this;
+        }
     }
+
+    protected abstract boolean ignoreStaticRefs();
 }

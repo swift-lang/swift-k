@@ -25,6 +25,14 @@ public class Assignment extends Statement {
     private LValue lhs;
     private Expression rhs;
     
+    public Assignment() {
+    }
+    
+    public Assignment(LValue lhs, Expression rhs) {
+        this.lhs = lhs;
+        this.rhs = rhs;
+    }
+    
     public LValue getLhs() {
         return lhs;
     }

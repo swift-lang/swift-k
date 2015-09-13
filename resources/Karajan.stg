@@ -3,11 +3,11 @@ group Karajan;
 // TODO can move progress ticker start into vdl:mains so karajan files
 // are smaller
 
-program(types,procedures,declarations,statements,constants,buildversion,stdlibversion,cleanups) ::= <<
+// <program>
+program(types, procedures, declarations, statements, constants, buildversion, stdlibversion, cleanups, line) ::= <<
 // CACHE ID $buildversion$
 import(sys)
 import(scheduler)
-import(rlog)
 import(swift)
 importStdlib($stdlibversion$)
 
@@ -27,19 +27,19 @@ $if(statements)$
 restartLog(name = k:concat(contextAttribute("SWIFT:SCRIPT_NAME"), "-", contextAttribute("SWIFT:RUN_ID"))) {
 	swift:mains(
 		swift:startProgressTicker()
-		swift:mainp(
-			$parallel(statements=statements)$
-		)
+		$parallel(statements=statements)$
 		swift:stopProgressTicker()
 	)
 }
+
 $endif$
 
 $cleanups:swift_cleandataset();separator="\n"$
 swift:cleanDataset(shutdown=true)
 >>
 
-typeDef(name,type,members,sourcelocation) ::= <<
+// <typeDef>
+typeDef(name, type, members, sourcelocation) ::= <<
 $if(type)$
 	xs:element("$name$", "$type$") 
 $else$
@@ -59,15 +59,16 @@ memberdefinition(type,name,sourcelocation) ::= <<
 	xs:element("$name$", "$type$")
 >>
 
-procedure(name, outputs, inputs, stageins, stageouts, arguments, optargs, binding, declarations, statements, config, line, initWaitCounts, cleanups, closes) ::= <<
+// <procedure>
+procedure(name, outputs, inputs, stageins, stageouts, arguments, optargs, binding, declarations, statements, config, line, initWaitCounts, initReadCounts, cleanups, closes) ::= <<
 
 $name$ := function($if(optargs)$$proc_oargs(args=optargs)$$if(arguments)$, $endif$$endif$$if(arguments)$$proc_args(args=arguments)$$endif$) {
 	$swift_log_inputs(inputs)$
 	$swift_log_outputs(outputs)$
 $if(binding)$
-	$swift_execute(outputs=outputs,inputs=inputs,stageins=stageins,stageouts=stageouts,application=binding.application, name=name,line=line)$
+	$swift_execute(outputs=outputs, inputs=inputs, stageins=stageins, stageouts=stageouts, application=binding.application, name=name, initReadCounts=initReadCounts, line=line)$
 $else$
-	$compound(outputs=outputs, inputs=inputs, declarations=declarations, statements=statements, name=name, initWaitCounts=initWaitCounts, cleanups=cleanups)$
+	$compound(outputs=outputs, inputs=inputs, declarations=declarations, statements=statements, name=name, initWaitCounts=initWaitCounts, initReadCounts=initReadCounts, cleanups=cleanups)$
 $endif$
 }
 >>
@@ -79,14 +80,18 @@ swift_log_outputs(params) ::= <<
 $params:log_param("output");separator="\n"$
 >>
 
-compound(outputs, inputs, declarations, statements, config, name, initWaitCounts, cleanups) ::= <<
+// <compound>
+compound(outputs, inputs, declarations, statements, config, name, initWaitCounts, initReadCounts, cleanups) ::= <<
 swift:unitStart("COMPOUND", name="$name$", outputs="$outputs:list();separator=","$")
 $if(initWaitCounts)$
-$initWaitCounts;separator="\n"$
+	$initWaitCounts;separator="\n"$
+$endif$
+$if(initReadCounts)$
+	$initReadCounts$
 $endif$
 $declarations;separator="\n"$
 $if(statements)$
-$parallel(statements=statements)$
+	$parallel(statements=statements)$
 $endif$
 
 $outputs:swift_closedataset();separator="\n"$
@@ -111,29 +116,29 @@ proc_optarg() ::= <<
 $it.name$=$if(it.default)$$it.default$$else$null$endif$
 >>
 
-swift_execute(outputs,inputs,stageins,stageouts,attributes,application,name,line) ::= <<
+swift_execute(outputs, inputs, stageins, stageouts, attributes, application, name, line, initReadCounts) ::= <<
 swift:unitStart("PROCEDURE", name="$name$", line=$line$, outputs="$outputs:list();separator=","$")
-swift:execute(
+k:tailcall(
+  swift:execute(
 	"$application.exec$"
 	$attributes$
-	$stageins:swift_stagein();separator="\n"$
-	$stageouts:swift_stageout();separator="\n"$
+	$if(stageins)$
+	swift:stageIn($stageins;separator=", "$)
+	$endif$
+	$if(stageouts)$
+	swift:stageOut($stageouts;separator=", "$)
+	$endif$
 	$swift_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
+	$if(inputs)$
+	swift:deleteVars($inputs:list();separator=", "$)
+	$endif$
+  )
 )
-$outputs:swift_closedataset();separator="\n"$
 swift:unitEnd("PROCEDURE", name="$name$", line=$line$)
 >>
 
 log_param(dir) ::= <<
 parameterLog("$dir$", "$it.name$", swift:getDatasetProvenanceID($it.name$))
->>
-
-swift_stagein() ::= <<
-swift:stageIn($it.name$)
->>
-
-swift_stageout(outputs) ::= <<
-swift:stageOut($it.name$)
 >>
 
 swift_closedataset() ::= <<
@@ -146,10 +151,10 @@ swift:cleanDataset($it$)
 
 list() ::= <<$it.name$>>
 
-swift_arguments(attributes,arguments,stdin,stdout,stderr) ::= <<
+swift_arguments(attributes, arguments, stdin, stdout, stderr) ::= <<
 $attributes$
 swift:arguments(
-	$arguments;separator=", "$
+	$arguments;separator="\n"$
 )
 
 $if (stdin)$
@@ -191,14 +196,15 @@ $endif$
 // the 'function' template outputs a karajan code fragment
 // that calls a function in the 'swiftscript' namespace.
 
-function(name, args, datatype, line) ::= <<
-swiftscript:$name$(#_line=$line$
-	$if(args)$$args;separator=", "$$endif$
+// <function>
+function(func, inputs, line) ::= <<
+swiftscript:$func$(#_line=$line$
+	$if(inputs)$$inputs;separator=", "$$endif$
 )
 >>
 
-iterate(declarations, statements, cond, var, refs, cleanups, trace, line) ::= <<
-swift:while($var$$if(trace)$, #_line=$line$$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$) {
+iterate(declarations, statements, cond, var, wrefs, rrefs, cleanups, trace, line) ::= <<
+swift:while($var$, #_line=$line$$if(wrefs)$, wrefs="$wrefs;separator=" "$"$endif$$if(rrefs)$, rrefs="$rrefs;separator=" "$"$endif$) {
 	$declarations;separator="\n"$
 	if (!swift:getFieldValue($cond$)) {
 		$sub_comp(statements=statements, cleanups=cleanups)$
@@ -207,14 +213,11 @@ swift:while($var$$if(trace)$, #_line=$line$$endif$$if(refs)$, refs="$refs;separa
 }
 >>
 
-foreach(var, in, indexVar, indexVarField, declarations, statements, line, refs, selfClose, cleanups) ::= <<
-swift:tParallelFor(\$, #_line=$line$$if(indexVar)$, _kvar="$indexVar$"$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(refs)$, refs="$refs;separator=" "$"$endif$,
+// <foreach>
+foreach(var, in, indexVar, indexVarField, declarations, statements, line, wrefs, rrefs, selfClose, cleanups) ::= <<
+swift:tParallelFor(#_line=$line$$if(indexVar)$, _kvar="$indexVar$", _kvarField=$indexVarField$$endif$, _vvar="$var$"$if(selfClose)$, selfClose=true$endif$$if(wrefs)$, wrefs="$wrefs;separator=" "$"$endif$$if(rrefs)$, rrefs="$rrefs;separator=" "$"$endif$,
 $! The iterator !$
 	getArrayIterator($in$)) {
-	(\$\$, $var$) := each(\$)
-$if(indexVar)$
-	$indexVar$ := swift:new($indexVarField$, value=\$\$)
-$endif$
 
 	swift:unitStart("FOREACH_IT", line=$line$) 
 	$declarations;separator="\n"$
@@ -231,16 +234,16 @@ $endif$
 // they are not
 // $outputs:vdl_log_output();separator="\n"$
 
-callInternal(func, outputs, inputs, line, serialize, partialClose) ::= <<
+// <callInternal>
+callInternal(func, outputs, inputs, line, serialize, outputNames) ::= <<
 sequential(
-	swift:unitStart("INTERNALPROC", name="$func$", outputs="$outputs;separator=","$")
+	swift:unitStart("INTERNALPROC", name="$func$", outputs="$outputNames;separator=","$")
 	$func$(#_line=$line$
 		$if(!serialize)$parallel($endif$
     	$outputs:callInternal_log_output();separator="\n"$
     	$inputs:callInternal_log_input();separator="\n"$
   		$if(!serialize)$)$endif$
 	)
-	$if(partialClose)$$partialClose;separator="\n"$$endif$
 	swift:unitEnd("INTERNALPROC", name="$func$")
 )
 >>
@@ -259,23 +262,17 @@ sequential(
 )
 >>
 
-callUserDefined(func, outputs, inputs, line, serialize, partialClose) ::= <<
-$if(partialClose)$
-sequential(
-$endif$
+// <callUserDefined>
+callUserDefined(func, outputs, inputs, line, serialize) ::= <<
 $func$(#_line=$line$
 	$if(!serialize)$parallel($endif$
 	$outputs;separator=", "$
 	$inputs;separator=", "$
 	$if(!serialize)$)$endif$
 )
-$if(partialClose)$
-$partialClose;separator="\n"$
-)
-$endif$
 >>
 
-call_arg(bind, expr, datatype) ::= <<
+call_arg(bind, expr, line) ::= <<
 $if(bind)$
 $bind$ = $expr$
 $else$
@@ -283,24 +280,25 @@ $expr$
 $endif$
 >>
 
-globalConstant(name, expr, datatype) ::= <<
+globalConstant(name, expr, line) ::= <<
 $name$ := $expr$
 >>
 
-variable(name, type, field, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line, unused) ::= <<
+// <variable>
+variable(name, type, field, expr, mapping, file, waitCount, readCount, input, isGlobal, line, unused) ::= <<
 $if(!unused)$
 $name$ := 
 	$if(mapping)$
-	swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
-		$swift_mapping(mapping=mapping, file=file)$
-	)
+		swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(readCount)$, readCount=$readCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+			$swift_mapping(mapping=mapping, file=file)$
+		)
 	$else$
 		$if(file)$
-			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(readCount)$, readCount=$readCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
 				$swift_mapping(mapping=mapping, file=file)$
 			)
 		$else$
-			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$)
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(readCount)$, readCount=$readCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$)
 		$endif$
 	$endif$
 $variable_log()$
@@ -323,33 +321,22 @@ swift_parameter(name,expr) ::= <<
 swift:parameter("$name$", $expr$)
 >>
 
-assign(var, value, line, partialClose) ::= <<
-$if(partialClose)$
-sequential(
-$endif$
+// <assign>
+assign(var, value, line) ::= <<
 swift:setFieldValue($if(line)$#_line=$line$$endif$
 	$var$
 	$value$
 )
-$if(partialClose)$
-$partialClose$)
-$endif$
 >>
 
-append(array, value, partialClose) ::= <<
-$if(partialClose)$
-sequential(
-$endif$
+append(array, value) ::= <<
 swift:appendArray(
 	$array$
 	$value$
 )
-$if(partialClose)$
-$partialClose$)
-$endif$
 >>
 
-callexpr(call, datatype, field, prefix, mapping) ::= <<
+callexpr(call, field, prefix, mapping, line) ::= <<
 sequential(
 	swift.callintermediate := swift:new($field$$if(mapping)$,
 		swift:mapping("concurrent_mapper",
@@ -357,11 +344,11 @@ sequential(
 		)
 	$endif$)
 	$call$
-	swift.callintermediate
+	k:getAndDelete(swift.callintermediate)
 )
 >>
 
-array(elements, datatype, field) ::= <<
+array(elements, field) ::= <<
 swift:createArray($field$,
 	list(
 		$elements;separator="\n"$
@@ -369,7 +356,7 @@ swift:createArray($field$,
 )
 >>
 
-newStruct(fields, var, field, datatype) ::= <<
+newStruct(fields, var, field) ::= <<
 swift:createStruct($if(field)$field=$field$$endif$$if(var)$var=$var$$endif$
 	$fields;separator = "\n"$
 )
@@ -379,15 +366,15 @@ makeField(key, value) ::= <<
 	makeField($key$, $value$)
 >>
 
-newSparseArray(fields, var, field, datatype) ::= <<
+newSparseArray(fields, var, field) ::= <<
 swift:createSparseArray($if(field)$field=$field$$endif$$if(var)$var=$var$$endif$
 	$fields;separator = "\n"$
 )
 >>
 
-range(from, to, step, datatype) ::= <<
+range(from, to, step, line) ::= <<
 sequential(
-	tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$)
+	tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$$if(line)$, #_line=$line$$endif$)
 	tmp
 	$range_log(from=from, to=to, step=step, out="tmp")$
 )
@@ -399,7 +386,8 @@ range_log(from, to, step, out) ::= <<
 		$if(step)$"step=", getDatasetProvenanceID($step$)$else$"step=none"$endif$))
 >>
 
-if(condition,vthen,velse,line,trace) ::= <<
+// <if>
+if(condition, vthen, velse, line, trace) ::= <<
 if (swift:getFieldValue($condition$)) {
 	swift:unitStart("CONDITION_BLOCK")
 	$vthen$
@@ -412,9 +400,13 @@ else {
 $endif$
 >>
 
-sub_comp(declarations, statements, cleanups, preClose) ::= <<
+sub_comp(declarations, statements, cleanups, preClose, preClean) ::= <<
 $if(preClose)$
 $preClose;separator="\n"$
+$endif$
+
+$if(preClean)$
+$preClean;separator="\n"$
 $endif$
 $declarations;separator="\n"$
 $if(statements)$
@@ -423,7 +415,7 @@ $cleanups:swift_cleandataset();separator="\n"$
 $endif$
 >>
 
-switch(condition,cases,sdefault) ::= <<
+switch(condition, cases, sdefault) ::= <<
 sequential(
 	swc := $condition$
 $cases:{case |
@@ -433,9 +425,7 @@ $cases:{case |
 	$if(rest(cases))$else$else$$if(sdefault)$else$endif$$endif$
 }$
 $if(sdefault)$
-    {
-      $sdefault$
-    }
+	$sdefault$
 $endif$
 )
 >>
@@ -454,12 +444,26 @@ $endif$
 >>
 
 
-partialclose(var, count) ::= <<
-swift:partialCloseDataset($var$$if(count)$, count=$count$$endif$)
+partialclose(items) ::= <<
+swift:partialClose($items;separator=", "$)
 >>
 
-setWaitCount(name, waitCount) ::= <<
-swift:setWaitCount($name$$if(waitCount)$, count=$waitCount$$endif$)
+fullclose(var) ::= <<
+swift:closeDataset($var$)
+>>
+
+partialclean(items) ::= <<
+swift:partialClean($items;separator=", "$)
+>>
+
+
+setWaitCount(items) ::= <<
+swift:setWaitCount($items;separator=", "$)
+
+>>
+
+setCleanCount(name, cleanCount) ::= <<
+swift:setCleanCount($name$$if(cleanCount)$, count=$cleanCount$$endif$)
 
 >>
 
@@ -492,33 +496,54 @@ operator ::= [
   "||":"swiftop:or"
 ]
 
-unaryNegation(exp, datatype) ::= <<
+unaryNegation(exp) ::= <<
 swiftop:product(swift:new(swift.field.temp.int, value = -1), $exp$)
 >>
 
-binaryop(op,left,right,datatype) ::= <<
-$operator.(op)$($left$, $right$)
+binaryop(op, left, right, line) ::= <<
+$operator.(op)$($if(line)$, #_line=$line$$endif$
+	$left$
+	$right$
+)
 >>
 
-not(exp, datatype) ::= <<
+not(exp) ::= <<
 swiftop:not($exp$)
 >>
 
-id(var, datatype) ::= <<
+id(var, line) ::= <<
 $var$
 >>
 
-extractarrayelement(parent, arraychild, datatype) ::= <<
-swift:getFieldSubscript($parent$, $arraychild$)
+readVar(var) ::= <<
+swift:readVar($var$)
 >>
 
-extractstructelement(parent, memberchild, datatype) ::= <<
-getField($parent$, "$memberchild$")
+unwrapVar(var) ::= <<
+swift:unwrapVar($var$)
 >>
 
-slicearray(parent, memberchild, datatype) ::= <<
+readAndDeleteVar(var) ::= <<
+k:getAndDelete($var$)
+>>
+
+
+initProcReadRefs(items) ::= <<
+swift:initProcReadRefs($items;separator=", "$)
+
+>>
+
+extractarrayelement(parent, arraychild, line) ::= <<
+swift:getFieldSubscript($parent$, $arraychild$$if(line)$, #_line=$line$$endif$)
+>>
+
+extractstructelement(parent, memberchild, line) ::= <<
+getField($parent$, "$memberchild$"$if(line)$, #_line=$line$$endif$)
+>>
+
+slicearray(parent, memberchild, type) ::= <<
 sequential(
-	slice := swift:sliceArray($parent$, "$memberchild$", "$datatype$")
+	slice := swift:sliceArray($parent$, "$memberchild$", "$type$")
  	$logSliceArray(memberchild=memberchild, array=parent, slice=slice)$
  	slice
 )
@@ -530,23 +555,23 @@ logSliceArray(memberchild, array, slice) ::= <<
 >>
 
 
-iConst(value, datatype) ::= <<
-swift:new(swift.field.const.int, value=$value$)
+iConst(value, line) ::= <<
+swift:new(swift.field.const.int, value=$value$$if(line)$, #_line=$line$$endif$)
 >>
 
-fConst(value, datatype) ::= <<
-swift:new(swift.field.const.float, value=$value$)
+fConst(value, line) ::= <<
+swift:new(swift.field.const.float, value=$value$$if(line)$, #_line=$line$$endif$)
 >>
 
-bConst(value, datatype) ::= <<
-swift:new(swift.field.const.boolean, value=$value$)
+bConst(value, line) ::= <<
+swift:new(swift.field.const.boolean, value=$value$$if(line)$, #_line=$line$$endif$)
 >>
 
-sConst(value, datatype) ::= <<
-swift:new(swift.field.const.string, value="$value$")
+sConst(value, line) ::= <<
+swift:new(swift.field.const.string, value="$value$"$if(line)$, #_line=$line$$endif$)
 >>
 
-fieldConst(name, id, type) ::= <<
+fieldConst(name, id, type, line) ::= <<
 $name$ := swift:field("$id$", "$type$")
 >>
 

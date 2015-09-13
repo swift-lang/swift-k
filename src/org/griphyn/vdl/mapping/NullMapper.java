@@ -77,11 +77,6 @@ public class NullMapper implements Mapper {
     }
 
     @Override
-    public void clean(Path paths) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean isPersistent(Path path) {
         throw new UnsupportedOperationException();
     }
@@ -116,5 +111,10 @@ public class NullMapper implements Mapper {
     @Override
     public String toString() {
         return "<>";
+    }
+    
+    @Override
+    public boolean supportsCleaning() {
+        return false;
     }
 }

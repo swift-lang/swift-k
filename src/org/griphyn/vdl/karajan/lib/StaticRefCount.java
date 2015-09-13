@@ -32,23 +32,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.VarRef;
 
-class StaticRefCount {
-    public final VarRef<?> ref;
+class StaticRefCount<T> {
+    public static final Logger logger = Logger.getLogger(StaticRefCount.class);
+    
+    public final VarRef<T> ref;
     public final int count;
 
-    public StaticRefCount(VarRef<?> ref, int count) {
+    public StaticRefCount(VarRef<T> ref, int count) {
         this.ref = ref;
         this.count = count;
     }
     
-     public static List<StaticRefCount> build(Scope scope, String refs) {
+     public static <S> List<StaticRefCount<S>> build(Scope scope, String refs, boolean ignoreStaticRefs) {
         if (refs == null) {
             return null;
         }
-        List<StaticRefCount> l = new ArrayList<StaticRefCount>();
+        List<StaticRefCount<S>> l = new ArrayList<StaticRefCount<S>>();
         String name = null;
         boolean flip = true;
         StringTokenizer st = new StringTokenizer(refs);
@@ -58,7 +61,15 @@ class StaticRefCount {
             }
             else {
                 int count = Integer.parseInt(st.nextToken());
-                l.add(new StaticRefCount(scope.getVarRef(name), count));
+                VarRef<S> ref = scope.getVarRef(name);
+                if (ref.isStatic() && ignoreStaticRefs) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Skipping refs for " + name + " beacuse it is static");
+                    }
+                }
+                else {
+                    l.add(new StaticRefCount<S>(ref, count));
+                }
             }
             flip = !flip;
         }

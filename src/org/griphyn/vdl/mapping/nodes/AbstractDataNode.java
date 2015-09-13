@@ -45,6 +45,8 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.type.Types;
+import org.griphyn.vdl.type.impl.FieldImpl;
 import org.griphyn.vdl.util.SwiftConfig;
 
 
@@ -57,6 +59,8 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     };
 
     static final String DATASET_URI_PREFIX = "dataset:";
+    
+    public static final Field CLEANED = new FieldImpl("<cleaned>", Types.ANY);
 
     public static final Logger logger = Logger.getLogger(AbstractDataNode.class);
 
@@ -515,11 +519,16 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     protected abstract void notifyListeners();
 
     public synchronized void clean() {
+        //System.out.println("Cleaning " + this.getDisplayableName());
         clean0();
     }
     
     protected void clean0() {
-        field = null;
+        field = CLEANED;
+    }
+    
+    public synchronized boolean isCleaned() {
+        return field == CLEANED;
     }
     
     public abstract void waitFor(Node who);

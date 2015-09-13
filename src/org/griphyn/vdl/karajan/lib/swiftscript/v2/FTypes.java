@@ -466,6 +466,13 @@ public class FTypes {
         public boolean isStatic() {
             return wrapped.isStatic();
         }
+
+        @Override
+        public void set(Stack stack, T object) {
+        	if (object == null) {
+        	    wrapped.set(stack, null);
+        	}
+        }
     }
     
     private static enum ReturnMode {

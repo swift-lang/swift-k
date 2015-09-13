@@ -21,7 +21,6 @@
 package org.griphyn.vdl.mapping.file;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -29,8 +28,6 @@ import java.util.Set;
 import k.thr.LWThread;
 
 import org.griphyn.vdl.mapping.AbsFile;
-import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.mapping.RootHandle;
@@ -93,23 +90,6 @@ public class ConcurrentMapper extends AbstractFileMapper {
     @Override
     public boolean canBeRemapped(Path path) {
         return false;
-    }
-
-    @Override
-    public synchronized void remap(Path path, Mapper sourceMapper, Path sourcePath) 
-            throws InvalidPathException {
-        
-        // this will prevent cleaning of the old file
-        // which doesn't need to be cleaned
-        PhysicalFormat old = map(sourcePath);
-        FileGarbageCollector.getDefault().markAsPersistent(old);
-        
-        if (remappedPaths == null) {
-            remappedPaths = new HashMap<Path, PhysicalFormat>();
-        }
-        PhysicalFormat pf = sourceMapper.map(sourcePath);
-        remappedPaths.put(path, pf);
-        ensureCollectionConsistency(sourceMapper, sourcePath);
     }
 
     @Override

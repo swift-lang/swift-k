@@ -35,6 +35,7 @@ import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.futures.FutureFault;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -69,17 +70,20 @@ public abstract class AbstractUnarySingleValuedSwiftFunction<R, P> extends Abstr
     @Override
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
-        if (param.isStatic()) {
-            DSHandle handle = function(param.getValue());
-            if (staticReturn(scope, handle)) {
-                // only log if the static return actually succeeded
-                if (PROVENANCE_ENABLED) {
-                    int provid = SwiftFunction.nextProvenanceID();
-                    SwiftFunction.logProvenanceParameter(provid, param.getValue(), "param");
-                    SwiftFunction.logProvenanceResult(provid, handle, name);
+        if (this.param.isStatic()) {
+    		AbstractDataNode param = this.param.getValue();
+    		if (param.isClosed()) {
+                DSHandle handle = function(param);
+                if (staticReturn(scope, handle)) {
+                    // only log if the static return actually succeeded
+                    if (PROVENANCE_ENABLED) {
+                        int provid = SwiftFunction.nextProvenanceID();
+                        SwiftFunction.logProvenanceParameter(provid, param, "param");
+                        SwiftFunction.logProvenanceResult(provid, handle, name);
+                    }
+                    return null;
                 }
-                return null;
-            }
+    		}
         }
         return super.compileBody(w, argScope, scope);
     }

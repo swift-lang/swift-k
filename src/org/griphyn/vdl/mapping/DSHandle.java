@@ -20,6 +20,7 @@ package org.griphyn.vdl.mapping;
 import java.util.Collection;
 import java.util.Map;
 
+import org.griphyn.vdl.mapping.nodes.PartialCloseable;
 import org.griphyn.vdl.type.Type;
 
 /** A DSHandle refers to a (possibly complex) piece of SwiftScript
@@ -41,7 +42,7 @@ import org.griphyn.vdl.type.Type;
  * other complex structures. Each of those descendant nodes is a
  * DSHandle.
  */
-public interface DSHandle {
+public interface DSHandle extends PartialCloseable {
 
     /** get the type of the dataset.
      */

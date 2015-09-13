@@ -30,6 +30,7 @@ package org.griphyn.vdl.mapping.nodes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import k.rt.FutureListener;
 import k.thr.Yield;
@@ -42,9 +43,9 @@ import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.type.Field;
 
 public abstract class AbstractFutureDataNode extends AbstractDataNode {
-	private boolean closed;
+	private volatile boolean closed;
 	private List<FutureListener> listeners;
-	private int writeRefCount;
+	private AtomicInteger writeRefCount;
 
 	public AbstractFutureDataNode(Field field) {
 	    super(field);
@@ -84,12 +85,10 @@ public abstract class AbstractFutureDataNode extends AbstractDataNode {
     }
     
     public void closeShallow() {
-        synchronized(this) {
-            if (this.closed) {
-                return;
-            }
-            this.closed = true;
+        if (this.closed) {
+            return;
         }
+        this.closed = true;
         postCloseActions();
     }
     
@@ -110,32 +109,33 @@ public abstract class AbstractFutureDataNode extends AbstractDataNode {
     
     @Override
     public synchronized void setWriteRefCount(int count) {
-        this.writeRefCount = count;
+        this.writeRefCount = new AtomicInteger(count);
     }
 
     @Override
-    public synchronized int updateWriteRefCount(int delta) {
-        this.writeRefCount += delta;
-       
-        if (this.writeRefCount < 0) {
-            throw new IllegalArgumentException("Reference count mismatch for " + this + ". Count is " + this.writeRefCount);
+    public int updateWriteRefCount(int delta) {
+        int count = this.writeRefCount.addAndGet(delta);
+               
+        if (count < 0) {
+            throw new IllegalArgumentException("Write reference count mismatch for " + this + ". Count is " + count);
         }
                         
         if (logger.isDebugEnabled()) {
-            logger.debug(this + " writeRefCount " + this.writeRefCount);
+            logger.debug(this + " writeRefCount " + count);
         }
         if (variableTracer.isEnabled()) {
             RootHandle root = getRoot();
-            variableTracer.trace(root.getThread(), root.getLine(), getDisplayableName() + " REF_COUNT " + delta + " -> " + this.writeRefCount);
+            variableTracer.trace(root.getThread(), root.getLine(), getDisplayableName() + " WRITE_REF_COUNT " + delta + " -> " + count);
         }
-        if (this.writeRefCount == 0) {
+        if (count == 0) {
             if (variableTracer.isEnabled()) {
                 RootHandle root = getRoot();
                 variableTracer.trace(root.getThread(), root.getLine(), getDisplayableName() + " CLOSE write ref count is zero");
             }
             closeDeep();
+            this.writeRefCount = null;
         }
-        return this.writeRefCount;
+        return count;
     }
     
     @Override

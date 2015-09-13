@@ -20,34 +20,61 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
+import k.rt.Channel;
 import k.rt.Stack;
+import k.thr.LWThread;
+import k.thr.Yield;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
+import org.griphyn.vdl.karajan.AssertFailedException;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Types;
 
 public class Stageout extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(Stageout.class);
 
-    private ArgRef<AbstractDataNode> var;
+    private ChannelRef<AbstractDataNode> c_vargs;
     private ChannelRef<Object> cr_stageout;
     private VarRef<Boolean> r_deperror;
     private VarRef<Boolean> r_mdeperror;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("var"), returns("deperror", "mdeperror", 
+        return new Signature(params("..."), returns("deperror", "mdeperror", 
             channel("stageout", DYNAMIC)));
     }
     
     @Override
-    public Object function(Stack stack) {
-        AbstractDataNode var = this.var.getValue(stack);
+    public void runBody(LWThread thr) {
+        Stack stack = thr.getStack();
+        int index = thr.checkSliceAndPopState(256);
+        try {
+            Channel<AbstractDataNode> vars = c_vargs.get(stack);
+            for (; index < vars.size(); index++) {
+                handleVar(stack, vars.get(index));
+            }
+        }
+        catch (Yield y) {
+            y.getState().push(index, 256);
+            throw y;
+        }
+        catch (AssertFailedException e) { 
+            logger.fatal("swift: assert failed: " + e.getMessage());
+            throw e;
+        }
+        catch (DependentException e) {
+            ret(stack, NodeFactory.newRoot(getReturnType(), e));
+        }
+    }
+    
+    public void handleVar(Stack stack, AbstractDataNode var) {
         boolean deperr = false;
         boolean mdeperr = false;
         // currently only static arrays are supported as app returns
@@ -62,7 +89,7 @@ public class Stageout extends SwiftFunction {
                     var.waitFor(this);
                 }
             }
-            if (!var.isPrimitive()) {
+            if (!var.isPrimitive() || Types.EXTERNAL.equals(var.getType())) {
                 cr_stageout.append(stack, var);
             }
         }
@@ -77,6 +104,11 @@ public class Stageout extends SwiftFunction {
         if (mdeperr) {
             this.r_mdeperror.setValue(stack, true);
         }
+    }
+
+    @Override
+    public Object function(Stack stack) {
+        // not used
         return null;
     }
 }

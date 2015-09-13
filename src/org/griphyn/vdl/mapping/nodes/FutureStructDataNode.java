@@ -64,6 +64,9 @@ public class FutureStructDataNode extends AbstractFutureStructDataNode {
     
     @Override
     protected void clean0() {
+        if (isCleaned()) {
+            return;
+        }
         super.clean0();
         root = null;
         parent = null;

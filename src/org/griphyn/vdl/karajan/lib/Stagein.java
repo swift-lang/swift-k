@@ -22,13 +22,14 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.Collection;
 
+import k.rt.Channel;
 import k.rt.ConditionalYield;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
+import k.thr.Yield;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
@@ -37,25 +38,28 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.futures.FutureFault;
 import org.globus.cog.karajan.parser.WrapperNode;
+import org.griphyn.vdl.karajan.AssertFailedException;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.type.Types;
 
 public class Stagein extends SwiftFunction {
     public static final Logger logger = Logger.getLogger(Stagein.class);
 
-    private ArgRef<AbstractDataNode> var;
+    private ChannelRef<AbstractDataNode> c_vargs;
     private ChannelRef<Object> cr_stagein;
     private VarRef<Boolean> r_deperror;
     private VarRef<Boolean> r_mdeperror;
     
-    private Tracer tracer; 
+    private Tracer tracer;
     private String procName;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("var"), returns("deperror", "mdeperror", channel("stagein", DYNAMIC)));
+        return new Signature(params("..."), returns("deperror", "mdeperror", channel("stagein", DYNAMIC)));
     }
 
     @Override
@@ -68,8 +72,29 @@ public class Stagein extends SwiftFunction {
     }
 
     @Override
-    public Object function(Stack stack) {
-        AbstractDataNode var = this.var.getValue(stack);
+    public void runBody(LWThread thr) {
+        Stack stack = thr.getStack();
+        int index = thr.checkSliceAndPopState(256);
+        try {
+            Channel<AbstractDataNode> vars = c_vargs.get(stack);
+            for (; index < vars.size(); index++) {
+                handleVar(stack, vars.get(index));
+            }
+        }
+        catch (Yield y) {
+            y.getState().push(index, 256);
+            throw y;
+        }
+        catch (AssertFailedException e) { 
+            logger.fatal("swift: assert failed: " + e.getMessage());
+            throw e;
+        }
+        catch (DependentException e) {
+            ret(stack, NodeFactory.newRoot(getReturnType(), e));
+        }
+    }
+
+    public void handleVar(Stack stack, AbstractDataNode var) {
         if (!var.isPrimitive()) {
             boolean deperr = false;
             boolean mdeperr = false;
@@ -85,7 +110,9 @@ public class Stagein extends SwiftFunction {
                     deperr = true;
                 }
                 
-                cr_stagein.append(stack, var);
+                if (!Types.EXTERNAL.equals(var.getType())) {
+                    cr_stagein.append(stack, var);
+                }
             }
             catch (ConditionalYield f) {
                 if (tracer.isEnabled()) {
@@ -123,6 +150,11 @@ public class Stagein extends SwiftFunction {
                 var.waitFor(this);
             }
         }
+    }
+
+    @Override
+    public Object function(Stack stack) {
+        // not used
         return null;
     }
 }

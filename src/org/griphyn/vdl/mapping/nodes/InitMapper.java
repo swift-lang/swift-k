@@ -51,6 +51,7 @@ import org.griphyn.vdl.mapping.NotCompositeException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.mapping.file.FileGarbageCollector;
 import org.griphyn.vdl.type.Type;
 
 public class InitMapper implements Mapper, FutureListener {
@@ -68,6 +69,11 @@ public class InitMapper implements Mapper, FutureListener {
         this.dmc = dmc;
     }
     
+    @Override
+    public boolean supportsCleaning() {
+        return mapper.supportsCleaning();
+    }
+
     @Override
     public PhysicalFormat map(Path path) {
         return null;
@@ -102,9 +108,6 @@ public class InitMapper implements Mapper, FutureListener {
     public void remap(Path path, Mapper sourceMapper, Path sourcePath) {
     }
 
-    @Override
-    public void clean(Path paths) {
-    }
 
     @Override
     public boolean isPersistent(Path path) {
@@ -203,6 +206,9 @@ public class InitMapper implements Mapper, FutureListener {
                 // this means that code that would have used this variable is already done
                 // which can happen in cases such as if(false) {a = ...}
                 return;
+            }
+            if (mapper.supportsCleaning()) {
+                FileGarbageCollector.getDefault().add(root);
             }
             if (!root.getType().isComposite()) {
                 checkConsistency(root, root, dmc);
@@ -305,7 +311,9 @@ public class InitMapper implements Mapper, FutureListener {
             if (!type.isPrimitive() && !type.isComposite()) {
                 // mapped. Feed the DMC.
                 try {
-                    PhysicalFormat f = root.getActualMapper().map(handle.getPathFromRoot());
+                    Mapper mapper = root.getActualMapper();
+                    Path pathFromRoot = handle.getPathFromRoot();
+                    PhysicalFormat f = mapper.map(pathFromRoot);
                     if (input) {
                         dmc.addRead(f, handle);
                     }

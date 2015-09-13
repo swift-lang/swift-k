@@ -28,10 +28,7 @@
  */
 package org.griphyn.vdl.mapping.nodes;
 
-import java.util.List;
-
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.type.Field;

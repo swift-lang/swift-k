@@ -22,13 +22,17 @@ package org.griphyn.vdl.karajan.lib;
 
 import k.rt.Stack;
 
+import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.mapping.file.FileGarbageCollector;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
+import org.griphyn.vdl.mapping.nodes.ReadRefWrapper;
 
 public class CleanDataset extends SwiftFunction {
-	private ArgRef<AbstractDataNode> var;
+    public static final Logger logger = Logger.getLogger(CleanDataset.class);
+    
+	private ArgRef<Object> var;
 	private ArgRef<Boolean> shutdown;
 
 	@Override
@@ -50,11 +54,28 @@ public class CleanDataset extends SwiftFunction {
             }
 	    }
 	    else {
-    		AbstractDataNode var = this.var.getValue(stack);
-    		if (logger.isInfoEnabled()) {
-    		    logger.info("Cleaning " + var);
+	        // can probably do this check at compile-time
+    		Object o = this.var.getValue(stack);
+    		AbstractDataNode var;
+    		if (o instanceof ReadRefWrapper) {
+    		    var = ((ReadRefWrapper) o).getHandle();
+    		    if (var == null) {
+    		        // already cleaned
+    		        return null;
+    		    }
     		}
-    		var.clean();
+    		else {
+    		    var = (AbstractDataNode) o;
+    		}
+    		if (var == null) {
+    			return null;
+    		}
+    		if (!var.isCleaned()) {
+        		if (logger.isDebugEnabled()) {
+        		    logger.debug("Cleaning " + var);
+        		}
+        		var.clean();
+    		}
 	    }
 	    return null;
 	}

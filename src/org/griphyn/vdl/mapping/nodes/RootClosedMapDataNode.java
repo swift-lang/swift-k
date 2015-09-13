@@ -42,6 +42,7 @@ import org.griphyn.vdl.mapping.HandleOpenException;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.mapping.file.FileGarbageCollector;
 import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.type.Types;
 
@@ -259,5 +260,19 @@ public class RootClosedMapDataNode extends AbstractClosedDataNode implements Arr
     @Override
     public int arraySize() {
         return values.size();
+    }
+    
+    @Override
+    protected void clean0() {
+        FileGarbageCollector.getDefault().clean(this);
+        super.clean0();
+    }
+    
+    @Override
+    protected void finalize() throws Throwable {
+        if (!isCleaned()) {
+            clean();
+        }
+        super.finalize();
     }
 }

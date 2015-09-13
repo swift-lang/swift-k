@@ -132,7 +132,8 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
     }
         
     public synchronized DSHandle getField(Comparable<?> key) throws NoSuchFieldException {
-        DSHandle handle = handles.get(key);
+        DSHandle handle;
+        handle = handles.get(key);
         if (handle == null) {
             if (isClosed()) {
                 throw new NoSuchFieldException(key.toString());
@@ -246,8 +247,13 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
     
     @Override
     protected void clean0() {
-        for (DSHandle h : handles.values()) {
-            ((AbstractDataNode) h).clean0();
+        if (isCleaned()) {
+            return;
+        }
+        if (!getType().itemType().isPrimitive()) {
+            for (DSHandle h : handles.values()) {
+                ((AbstractDataNode) h).clean0();
+            }
         }
         handles = null;
         super.clean0();
@@ -262,7 +268,12 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
     
     @Override
     public int arraySize() {
-        return handles.size();
+        if (handles == null) {
+            return -1;
+        }
+        else {
+            return handles.size();
+        }
     }
     
     public synchronized void setException(RuntimeException e) {

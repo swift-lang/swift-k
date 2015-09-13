@@ -45,6 +45,7 @@ import org.griphyn.vdl.mapping.RootHandle;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.mapping.nodes.ExternalDataNode;
 import org.griphyn.vdl.mapping.nodes.NodeFactory;
+import org.griphyn.vdl.mapping.nodes.ReadRefWrapper;
 import org.griphyn.vdl.mapping.nodes.RootClosedArrayDataNode;
 import org.griphyn.vdl.mapping.nodes.RootClosedPrimitiveDataNode;
 import org.griphyn.vdl.mapping.nodes.RootFutureArrayDataNode;
@@ -58,12 +59,13 @@ public class New extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(New.class);
 	
 	private static final Mapper NULL_MAPPER = new NullMapper();
-	private static final LWThread STATIC_THREAD = new LWThread("STATIC", null, null);
+	private static final LWThread STATIC_THREAD = new LWThread(-1, -1, null, null);
 		
 	private ArgRef<Field> field;
 	private ArgRef<GenericMappingParamSet> mapping;
 	private ArgRef<Object> value;
 	private ArgRef<Number> waitCount;
+	private ArgRef<Number> readCount;
 	private ArgRef<Boolean> input;
 	private ArgRef<Integer> _defline;
 	
@@ -73,7 +75,8 @@ public class New extends SwiftFunction {
 	@Override
 	protected Signature getSignature() {
 	    return new Signature(params("field", optional("mapping", null), optional("value", null), 
-	        optional("waitCount", null), optional("input", Boolean.FALSE), optional("_defline", null)));
+	        optional("waitCount", null), optional("readCount", null), optional("input", Boolean.FALSE), 
+	        optional("_defline", null)));
 	}
 	
 	private Tracer tracer;
@@ -126,7 +129,9 @@ public class New extends SwiftFunction {
                     	}
                     }
                     else if (t.isPrimitive()) {
-                        r = new RootFuturePrimitiveDataNode(f);
+                        if (!Types.EXTERNAL.equals(t)) {
+                            r = new RootFuturePrimitiveDataNode(f);
+                        }
                     }
                     // TODO can add other types
                 }
@@ -149,7 +154,9 @@ public class New extends SwiftFunction {
 		Field field = this.field.getValue(stack);
 		Object value = this.value.getValue(stack);
         GenericMappingParamSet mapping = this.mapping.getValue(stack);
+        this.mapping.set(stack, null);
 		Number waitCount = this.waitCount.getValue(stack);
+		Number readCount = this.readCount.getValue(stack);
 		boolean input = this.input.getValue(stack);
 		Integer line = this._defline.getValue(stack);
 		
@@ -178,19 +185,14 @@ public class New extends SwiftFunction {
 		LWThread thread = LWThread.currentThread();
 
 		// input means never written to, but read at least once
-		int initialWriteRefCount;
+		int initialWriteRefCount = waitCount == null ? 0 : waitCount.intValue();
+		int initialReadRefCount = readCount == null ? 0 : readCount.intValue();
 		boolean noWriters = input;
-		if (waitCount != null) {
-			initialWriteRefCount = waitCount.intValue();
-		}
-		else {
-		    initialWriteRefCount = 0;
-		}
 	
 		boolean initialize = true;
 		
 		try {
-			DSHandle handle;
+			RootHandle handle;
 			if (Types.EXTERNAL.equals(type)) {
 			    if (tracer.isEnabled()) {
 			        tracer.trace(thread, dbgname + " = external");
@@ -229,7 +231,7 @@ public class New extends SwiftFunction {
 			    if (tracer.isEnabled()) {
 			        tracer.trace(thread, dbgname + " = " + Tracer.getVarName((DSHandle) value));
                 }
-				handle = (DSHandle) value;
+				handle = (RootHandle) value;
 			}
 			else {
 			    if (value == null) {
@@ -257,14 +259,19 @@ public class New extends SwiftFunction {
 			    logger.debug("NEW id=" + handle.getIdentifier());
 			}
 			handle.setWriteRefCount(initialWriteRefCount);
-			return handle;
+			if (initialReadRefCount > 0) {
+			    return new ReadRefWrapper((AbstractDataNode) handle, initialReadRefCount);
+			}
+			else {
+			    return handle;
+			}
 		}
 		catch (Exception e) {
 			throw new ExecutionException(this, e);
 		}
 	}
 
-    private DSHandle initHandle(RootHandle handle, Mapper mapper, LWThread thread, Integer line, boolean input) {
+    private RootHandle initHandle(RootHandle handle, Mapper mapper, LWThread thread, Integer line, boolean input) {
         handle.setThread(thread);
         if (line != null) {
             handle.setLine(line);

@@ -24,8 +24,6 @@ import java.util.Set;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.FileSystemLister;
-import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -55,32 +53,6 @@ public class TestMapper extends AbstractMapper {
     public boolean canBeRemapped(Path path) {
         TestMapperParams cp = getParams();
         return cp.getRemappable();
-    }
-
-    @Override
-    public void remap(Path path, Mapper sourceMapper, Path sourcePath) throws InvalidPathException {
-        TestMapperParams cp = getParams();
-        if (cp.getRemappable()) {
-            remap = sourceMapper.map(sourcePath);
-            System.out.println("Remapping " + path + " -> " + remap);
-            ensureCollectionConsistency(sourceMapper, sourcePath);
-        }
-        else {
-            throw new UnsupportedOperationException("remap");
-        }
-    }
-
-    @Override
-    public void clean(Path path) {
-        TestMapperParams cp = getParams();
-        PhysicalFormat pf = map(path);
-        if (cp.getTemp()) {
-            System.out.println("Cleaning file " + pf);
-            FileGarbageCollector.getDefault().decreaseUsageCount(pf);
-        }
-        else {
-            System.out.println("Not cleaning " + pf + " (not temporary)");
-        }
     }
 
     @Override
@@ -120,4 +92,9 @@ public class TestMapper extends AbstractMapper {
             return false;
         }
     }
+
+    @Override
+    public boolean supportsCleaning() {
+        return true;
+    }    
 }

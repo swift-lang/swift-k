@@ -74,6 +74,7 @@ public abstract class AbstractFutureNonCompositeDataNode extends AbstractFutureD
                     parent.getFullName());
             }
             else if (getType().isPrimitive()) {
+                new Throwable().printStackTrace();
                 throw new RuntimeException(getFullName() + " has no value");
             }
             else {

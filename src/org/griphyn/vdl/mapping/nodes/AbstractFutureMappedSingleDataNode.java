@@ -32,7 +32,6 @@ import java.util.List;
 
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
-import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.type.Field;
 
@@ -52,11 +51,7 @@ public abstract class AbstractFutureMappedSingleDataNode extends AbstractFutureN
     }
     
     @Override
-    protected void clean0() {
-        Mapper mapper = getMapper();
-        if (mapper != null) {
-            mapper.clean(getPathFromRoot());
-        }
-        super.clean0();
+    protected AbstractDataNode getParentNode() {
+        return null;
     }
 }

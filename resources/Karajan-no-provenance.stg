@@ -9,31 +9,31 @@ callInternal_log_input() ::= <<$it$>>
 
 callInternal_log_output() ::= <<$it$>>
 
-range(from, to, step, datatype) ::= <<swift:range($from$, $to$$if(step)$, step = $step$$endif$)>>
+range(from, to, step, line) ::= <<swift:range($from$, $to$$if(step)$, step = $step$$endif$$if(line)$, #_line=$line$$endif$)>>
 
-slicearray(parent, memberchild, datatype) ::= <<
-	swift:sliceArray($parent$, "$memberchild$", "$datatype$")
+slicearray(parent, memberchild, type, line) ::= <<
+	swift:sliceArray($parent$, "$memberchild$", "$type$"$if(line)$, #_line=$line$$endif$)
 >>
 
 log_param(dir) ::= << >>
 
 cs() ::= << >>
 
-variable(name, type, field, expr, mapping, nil, file, waitCount, input, datatype, isGlobal, line, unused) ::= <<
+variable(name, type, field, expr, mapping, nil, file, waitCount, readCount, input, isGlobal, line, unused) ::= <<
 $! Overriding templates doesn't work if overriden template is inside an if !$
 $if(!unused)$
 $name$ := 
 	$if(mapping)$
-	swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
-		$swift_mapping(mapping=mapping, file=file)$
-	)
+		swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(readCount)$, readCount=$readCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+			$swift_mapping(mapping=mapping, file=file)$
+		)
 	$else$
 		$if(file)$
-			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(readCount)$, readCount=$readCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$
 				$swift_mapping(mapping=mapping, file=file)$
 			)
 		$else$
-			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$)
+			swift:new($field$$if(waitCount)$, waitCount=$waitCount$$endif$$if(readCount)$, readCount=$readCount$$endif$$if(line)$, _defline=$line$$endif$$if(input)$, input=true$endif$)
 		$endif$
 	$endif$
 $endif$

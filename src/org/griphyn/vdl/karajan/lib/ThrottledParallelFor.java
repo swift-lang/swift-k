@@ -18,6 +18,7 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import k.rt.ConditionalYield;
@@ -35,23 +36,38 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.CompilerSettings;
+import org.globus.cog.karajan.analyzer.ContainerScope;
+import org.globus.cog.karajan.analyzer.DynamicScope;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.Var;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
-import org.globus.cog.karajan.compiled.nodes.UParallelFor;
 import org.globus.cog.karajan.parser.WrapperNode;
+import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.nodes.PartialCloseable;
+import org.griphyn.vdl.mapping.nodes.ReadRefWrapper;
+import org.griphyn.vdl.mapping.nodes.RootClosedPrimitiveDataNode;
+import org.griphyn.vdl.type.Field;
 import org.griphyn.vdl.util.SwiftConfig;
 
-public class ThrottledParallelFor extends UParallelFor {
+public class ThrottledParallelFor extends InternalFunction {
 	public static final Logger logger = Logger
 			.getLogger(ThrottledParallelFor.class);
 	
 	public static final int DEFAULT_MAX_THREADS = 1024;
 
+	private ArgRef<Iterable<List<?>>> in;
+	private VarRef<DSHandle> kvarRef;
+	private VarRef<DSHandle> vvarRef;
 	private ArgRef<Boolean> selfClose;
-	private ArgRef<String> refs;
+	private ArgRef<String> wrefs, rrefs;
 	private ArgRef<String> _kvar;
 	private ArgRef<String> _vvar;
+	private ArgRef<Field> _kvarField;
+	private Field indexVarField;
+	protected Node body;
 	
 	private boolean sc;
 	    
@@ -59,9 +75,9 @@ public class ThrottledParallelFor extends UParallelFor {
     protected Signature getSignature() {
         return new Signature(
             params(
-                identifier("name"), "in", 
-                optional("selfClose", Boolean.FALSE), optional("refs", null),
-                optional("_kvar", null), optional("_vvar", null),
+                "in", 
+                optional("selfClose", Boolean.FALSE), optional("wrefs", null), optional("rrefs", null),
+                optional("_kvar", null), optional("_kvarField", null), optional("_vvar", null),
                 block("body")
             )
         );
@@ -69,12 +85,36 @@ public class ThrottledParallelFor extends UParallelFor {
 
 	private int maxThreadCount = -1;
 	private Tracer forTracer, iterationTracer;
-    private List<StaticRefCount> srefs;
+    private List<StaticRefCount<PartialCloseable>> swrefs;
+    private List<StaticRefCount<ReadRefWrapper>> srrefs;
+    private int frameSize;
+    
+    @Override
+    protected void compileBlocks(WrapperNode w, Signature sig, LinkedList<WrapperNode> blocks,
+            Scope scope) throws CompilationException {
+        DynamicScope ds = new DynamicScope(w, scope);
+        ContainerScope cs = new ContainerScope(w, ds);
+        Var vvar = cs.addVar(_vvar.getValue());
+        vvarRef = cs.getVarRef(vvar);
+        
+        if (_kvar.getValue() != null) {
+            Var kvar = cs.addVar(_kvar.getValue());
+            kvarRef = cs.getVarRef(kvar);
+            indexVarField = _kvarField.getValue();
+        }
+        
+        super.compileBlocks(w, sig, blocks, cs);
+        
+        frameSize = cs.size();
+        
+        ds.close();
+    }
 
     @Override
     protected Node compileBody(WrapperNode w, Scope argScope, Scope scope)
             throws CompilationException {
-        srefs = StaticRefCount.build(scope, this.refs.getValue());
+        swrefs = StaticRefCount.build(scope, this.wrefs.getValue(), false);
+        srrefs = StaticRefCount.build(scope, this.rrefs.getValue(), true);
         forTracer = Tracer.getTracer(this, "FOREACH");
         iterationTracer = Tracer.getTracer(this, "ITERATION");
         sc = selfClose.getValue();
@@ -85,10 +125,11 @@ public class ThrottledParallelFor extends UParallelFor {
     @Override
     protected void runBody(final LWThread thr) {        
         int i = thr.checkSliceAndPopState(2);
-        Iterator<Object> it = (Iterator<Object>) thr.popState();
+        Iterator<List<?>> it = (Iterator<List<?>>) thr.popState();
         TPFThreadSet ts = (TPFThreadSet) thr.popState();
         int fc = thr.popIntState();
-        List<RefCount> drefs = (List<RefCount>) thr.popState();
+        List<RefCount<PartialCloseable>> dwrefs = (List<RefCount<PartialCloseable>>) thr.popState();
+        List<RefCount<ReadRefWrapper>> drrefs = (List<RefCount<ReadRefWrapper>>) thr.popState();
         Stack stack = thr.getStack();
         try {
             switch(i) {
@@ -101,7 +142,8 @@ public class ThrottledParallelFor extends UParallelFor {
                         ts = new TPFThreadSet(it, getMaxThreads());
                     }
                     
-                    drefs = RefCount.build(stack, srefs);
+                    dwrefs = RefCount.build(stack, swrefs);
+                    drrefs = RefCount.build(stack, srrefs);
                     ts.lock();
                     fc = stack.frameCount() + 1;
                     
@@ -115,18 +157,23 @@ public class ThrottledParallelFor extends UParallelFor {
                     
                     ts.checkFailed();
                     
-                    startBulk(thr, ts, fc, drefs);
-                    startRest(thr, ts, fc, drefs);
+                    startBulk(thr, ts, fc, dwrefs, drrefs);
+                    startRest(thr, ts, fc, dwrefs, drrefs);
                     
                     ts.unlock();
-                    RefCount.decRefs(drefs);
+                    RefCount.decWriteRefs(dwrefs);
+                    RefCount.decReadRefs(drrefs);
+                    dwrefs = null;
+                    drrefs = null;
+                    it = null;
                     i++;
                 default:
                     ts.waitFor();
             }
         }
         catch (Yield y) {
-            y.getState().push(drefs);
+        	y.getState().push(drrefs);
+            y.getState().push(dwrefs);
             y.getState().push(fc);
             y.getState().push(ts);
             y.getState().push(it);
@@ -135,12 +182,14 @@ public class ThrottledParallelFor extends UParallelFor {
         }
     }
 
-	private boolean startBulk(LWThread thr, TPFThreadSet ts, int fcf, List<RefCount> refs) {
+	private boolean startBulk(LWThread thr, TPFThreadSet ts, int fcf, 
+	        List<RefCount<PartialCloseable>> wrefs, List<RefCount<ReadRefWrapper>> rrefs) {
+	    
 	    int available = ts.freeSlots();
 	    int j = 0;
 	    Stack stack = thr.getStack();
 	    for (; j < available && ts.hasNext(); j++) {
-	        if (startOne(thr, ts, ts.next(), fcf, refs)) {
+	        if (startOne(thr, ts, ts.next(), fcf, wrefs, rrefs)) {
                 // aborted
                 return true;
             }
@@ -148,11 +197,13 @@ public class ThrottledParallelFor extends UParallelFor {
         return false;
     }
 	
-	private boolean startRest(LWThread thr, TPFThreadSet ts, int fcf, List<RefCount> refs) {
+	private boolean startRest(LWThread thr, TPFThreadSet ts, int fcf, 
+	        List<RefCount<PartialCloseable>> wrefs, List<RefCount<ReadRefWrapper>> rrefs) {
+	    
         Stack stack = thr.getStack();
         while (ts.hasNext()) {
             ts.waitForSlot();
-            if (startOne(thr, ts, ts.next(), fcf, refs)) {
+            if (startOne(thr, ts, ts.next(), fcf, wrefs, rrefs)) {
                 return true;
             }
         }
@@ -169,12 +220,15 @@ public class ThrottledParallelFor extends UParallelFor {
         }
     }
 
-    private boolean startOne(final LWThread thr, final ThreadSet ts, final Object value, final int fcf, List<RefCount> refs) {
-        RefCount.incRefs(refs);
+    private boolean startOne(final LWThread thr, final ThreadSet ts, final List<?> value, 
+            final int fcf, List<RefCount<PartialCloseable>> wrefs, List<RefCount<ReadRefWrapper>> rrefs) {
+        
+        RefCount.incWriteRefs(wrefs);
+        RefCount.incReadRefs(rrefs);
         LWThread ct = thr.fork(new KRunnable() {
             @Override
             public void run(LWThread thr2) {
-                int i = thr2.checkSliceAndPopState();
+                int i = thr2.checkSliceAndPopState(1);
                 try {
                     switch (i) {
                         case 0:
@@ -186,7 +240,7 @@ public class ThrottledParallelFor extends UParallelFor {
                                 startCount++;
                             }
                             i++;
-                        case 1:
+                        default:
                             body.run(thr2);
                             ts.threadDone(thr2, null);
                     }
@@ -204,7 +258,7 @@ public class ThrottledParallelFor extends UParallelFor {
                     thr.awake();
                 }
                 catch (Yield y) {
-                    y.getState().push(i);
+                    y.getState().push(i, 1);
                     throw y;
                 }
             }
@@ -215,7 +269,10 @@ public class ThrottledParallelFor extends UParallelFor {
         
         Stack cs = ct.getStack();
         cs.enter(this, frameSize);
-        this.var.setValue(cs, value);
+        if (kvarRef != null) {
+            kvarRef.setValue(cs, new RootClosedPrimitiveDataNode(indexVarField, value.get(0)));
+        }
+        vvarRef.setValue(cs, (DSHandle) value.get(1));
         ct.start();
         return false;
     }
@@ -250,9 +307,9 @@ public class ThrottledParallelFor extends UParallelFor {
     }
 	
 	private static class TPFThreadSet extends ThrottledThreadSet {
-	    protected final Iterator<Object> it;
+	    protected Iterator<List<?>> it;
 	    
-	    public TPFThreadSet(Iterator<Object> it, int maxThreads) {
+	    public TPFThreadSet(Iterator<List<?>> it, int maxThreads) {
 	        super(maxThreads);
 	        this.it = it;
 	    }
@@ -261,7 +318,7 @@ public class ThrottledParallelFor extends UParallelFor {
             return it.hasNext();
         }
         
-        public Object next() {
+        public List<?> next() {
             return it.next();
         }
 	}
@@ -270,7 +327,7 @@ public class ThrottledParallelFor extends UParallelFor {
 	    private Helper helper;
 	    private boolean closed;
 	    
-	    public TPFSCThreadSet(Iterator<Object> it, int maxThreads) {
+	    public TPFSCThreadSet(Iterator<List<?>> it, int maxThreads) {
 	        super(it, maxThreads);
 	        helper = new Helper();
 	    }
@@ -279,8 +336,15 @@ public class ThrottledParallelFor extends UParallelFor {
 	        if (closed) {
 	            return false;
 	        }
+	        if (it == null) {
+	        	return false;
+	        }
 	        try {
-	            return it.hasNext();
+	            boolean itHasNext = it.hasNext();
+	            if (!itHasNext) {
+	            	it = null;
+	            }
+	            return itHasNext;
 	        }
 	        catch (ConditionalYield y) {
 	            helper.resetItUpdated();

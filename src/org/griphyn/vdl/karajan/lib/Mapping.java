@@ -66,6 +66,7 @@ public class Mapping {
             for (Pair<String, Object> param : c_vargs.get(stack)) {
             	mp.addParam(param);
             }
+            c_vargs.set(stack, null);
             
             r_mapping.setValue(stack, mp);
         }

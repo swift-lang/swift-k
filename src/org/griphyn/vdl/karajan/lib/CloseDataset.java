@@ -46,6 +46,9 @@ public class CloseDataset extends SwiftFunction {
 	public Object function(Stack stack) {
 		Path path = parsePath(this.path.getValue(stack));
 		DSHandle var = this.var.getValue(stack);
+		if (var == null) {
+		    return null;
+		}
 		try {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Closing " + var);

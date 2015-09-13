@@ -20,7 +20,6 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import k.rt.Stack;
@@ -32,19 +31,18 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.swift.data.Director;
 import org.globus.swift.data.policy.Policy;
 import org.griphyn.vdl.mapping.AbsFile;
 
-public class AppStageins extends InternalFunction {
+public class AppStageins extends AppStageFiles {
 	private ArgRef<String> jobid;
 	private ArgRef<List<AbsFile>> files;
 	
 	private ChannelRef<List<String>> cr_stagein;
 	
 	private VarRef<String> cwd;
-
+	
     static Logger logger = Logger.getLogger(AppStageins.class);
     
     
@@ -64,44 +62,33 @@ public class AppStageins extends InternalFunction {
     	Stack stack = thr.getStack();
     	List<AbsFile> files = this.files.getValue(stack);
         String cwd = this.cwd.getValue(stack);
+        CacheKeyTmp key = new CacheKeyTmp();
         for (AbsFile file : files) {
             Policy policy = Director.lookup(file.toString());
             if (policy != Policy.DEFAULT) {
                 logger.debug("will not stage in (CDM): " + file);
                 continue; 
             }
-                                        
-            String protocol = file.getProtocol();
-            if ("direct".equals(protocol)) {
-                continue;
+            
+            key.set(cwd, file);
+            List<String> cached = getFromCache(key);
+            
+            if (cached != null) {
+                cr_stagein.append(stack, cached);
             }
-            String relpath = PathUtils.remotePathName(file);
-            if (logger.isDebugEnabled()) {
-                logger.debug("will stage in: " + relpath + " via: " + protocol);
+            else {                               
+                String protocol = file.getProtocol();
+                if ("direct".equals(protocol)) {
+                    continue;
+                }
+                String relpath = PathUtils.remotePathName(file);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("will stage in: " + relpath + " via: " + protocol);
+                }
+                List<String> value = makeList(localPath(cwd, protocol, file.getPath(), file), relpath);
+                putInCache(key, value);
+                cr_stagein.append(stack, value);
             }
-            cr_stagein.append(stack,
-                makeList(localPath(cwd, protocol, file.getPath(), file), relpath));
         }
-    }
-
-    protected static String localPath(String cwd, String protocol, String path, AbsFile file) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(protocol);
-        sb.append("://");
-        sb.append(file.getHost());
-        sb.append('/');
-        if (!file.isAbsolute()) {
-            sb.append(cwd);
-            sb.append('/');
-        }
-        sb.append(path);
-        return sb.toString();
-    }
-
-    private List<String> makeList(String s1, String s2) {
-        List<String> l = new LinkedList<String>();
-        l.add(s1);
-        l.add(s2);
-        return l;
     }
 }

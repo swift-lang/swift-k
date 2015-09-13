@@ -31,11 +31,9 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
-import org.globus.cog.karajan.compiled.nodes.InternalFunction;
-import org.griphyn.vdl.karajan.Pair;
 import org.griphyn.vdl.mapping.AbsFile;
 
-public class AppStageouts extends InternalFunction {
+public class AppStageouts extends AppStageFiles {
     private ArgRef<String> jobid;
     private ArgRef<List<AbsFile>> files;
     private ArgRef<List<AbsFile>> outCollect;
@@ -73,19 +71,24 @@ public class AppStageouts extends InternalFunction {
     }
     
     private void process(Stack stack, List<AbsFile> files, String cwd) {
+        CacheKeyTmp key = new CacheKeyTmp();
         for (AbsFile file : files) {
             String protocol = file.getProtocol();
             if ("direct".equals(protocol)) {
                 continue;
             }
-            String relpath = PathUtils.remotePathName(file);
-            cr_stageout.append(stack, 
-                makeList(relpath,
-                    AppStageins.localPath(cwd, protocol, file.getPath(), file)));
+            key.set(cwd, file);
+            List<String> cached = getFromCache(key);
+            
+            if (cached != null) {
+                cr_stageout.append(stack, cached);
+            }
+            else {
+                String relpath = PathUtils.remotePathName(file);
+                List<String> value = makeList(relpath, localPath(cwd, protocol, file.getPath(), file));
+                putInCache(key, value);
+                cr_stageout.append(stack, value);
+            }
         }
-    }
-
-    private List<String> makeList(String s1, String s2) {
-        return new Pair<String>(s1, s2);
     }
 }

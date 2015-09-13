@@ -92,11 +92,13 @@ public class RegularExpressionMapper extends AbstractMapper {
 	    String source = (String) cp.getSource().getValue();
 	    Pattern p = Pattern.compile(cp.getMatch());
 		Matcher m = p.matcher(source);
+		
 		if (!m.find()) {
 			throw new RuntimeException("No match found! source='" + source + 
 			    "' match = '" + cp.getMatch() + "'");
 		}
 		// find group number to replace
+		// What. The. Flywheel.
 		Pattern p2 = Pattern.compile("(\\\\\\d)");
 		Matcher m2 = p2.matcher(cp.getTransform());
 		StringBuffer sb = new StringBuffer();

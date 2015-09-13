@@ -29,6 +29,14 @@ public class MappingDeclaration extends AbstractNode {
     public MappingDeclaration() {
         parameters = new ArrayList<MappingParameter>();
     }
+    
+    public MappingDeclaration(String descriptor, MappingParameter... params) {
+        this();
+        this.descriptor = descriptor;
+        for (MappingParameter param : params) {
+            this.parameters.add(param);
+        }
+    }
 
     public String getDescriptor() {
         return descriptor;

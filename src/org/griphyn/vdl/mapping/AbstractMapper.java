@@ -112,28 +112,11 @@ public abstract class AbstractMapper implements Mapper {
     }
 
     @Override
-    public void clean(Path path) {
-        // no cleaning by default
-    }
-
-    @Override
     public boolean isPersistent(Path path) {
         // persistent unless explicitly overridden
         return true;
     }
-    
-    protected void ensureCollectionConsistency(Mapper sourceMapper, Path sourcePath) throws InvalidPathException {
-        // if remapping from a persistent mapper, then file removal
-        // should be avoided
-        PhysicalFormat pf = sourceMapper.map(sourcePath);
-        if (sourceMapper.isPersistent(sourcePath)) {
-            FileGarbageCollector.getDefault().markAsPersistent(pf);
-        }
-        else {
-            FileGarbageCollector.getDefault().increaseUsageCount(pf);
-        }
-    }
-        
+            
     public abstract String getName();
     
     @Override
@@ -161,5 +144,10 @@ public abstract class AbstractMapper implements Mapper {
         else {
             throw new UnsupportedOperationException(this.getClass().getName() + ".getPattern()");
         }
+    }
+    
+    @Override
+    public boolean supportsCleaning() {
+        return false;
     }
 }

@@ -108,7 +108,7 @@ public class SetFieldValue extends SwiftFunction {
         tracer = Tracer.getTracer(this);
     	if (this.getClass() == SetFieldValue.class && var.isStatic() && path.isStatic() && value.isStatic()) {
     		// it's safe to optimize assignments in the main block
-    		if (getParent().getParent().getParent().getType().equals("swift:mainp")) {
+    		if (getParent().getParent().getType().equals("swift:mains")) {
         		try {
             		DSHandle var = this.var.getValue();
             		Path path = parsePath(this.path.getValue());
@@ -147,6 +147,8 @@ public class SetFieldValue extends SwiftFunction {
 
     @Override
     public Object function(Stack stack) {
+        LWThread thr = LWThread.currentThread();
+        WaitingThreadsMonitor.removeOutput(thr);
 		DSHandle var = this.var.getValue(stack);
 		try {
 		    Path path = parsePath(this.path.getValue(stack));
@@ -176,7 +178,6 @@ public class SetFieldValue extends SwiftFunction {
 			return null;
 		}
 		catch (FutureFault f) {
-		    LWThread thr = LWThread.currentThread();
 		    if (tracer.isEnabled()) {
 		        tracer.trace(thr, var + " waiting for " + Tracer.getFutureName(f.getFuture()));
 		    }

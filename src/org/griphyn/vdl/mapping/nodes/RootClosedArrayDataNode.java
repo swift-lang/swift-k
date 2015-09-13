@@ -37,6 +37,7 @@ import org.griphyn.vdl.mapping.DuplicateMappingChecker;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.mapping.file.FileGarbageCollector;
 import org.griphyn.vdl.type.Field;
 
 public class RootClosedArrayDataNode extends AbstractClosedArrayDataNode implements RootHandle {
@@ -142,5 +143,19 @@ public class RootClosedArrayDataNode extends AbstractClosedArrayDataNode impleme
     @Override
     public void closeArraySizes() {
         // already closed
+    }
+    
+    @Override
+    protected void clean0() {
+        FileGarbageCollector.getDefault().clean(this);
+        super.clean0();
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        if (!isCleaned()) {
+            clean();
+        }
+        super.finalize();
     }
 }

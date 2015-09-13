@@ -26,6 +26,14 @@ public class MappingParameter extends AbstractNode {
     private String name;
     private Expression value;
     
+    public MappingParameter() {
+    }
+    
+    public MappingParameter(String name, Expression value) {
+        this.name = name;
+        this.value = value;
+    }
+    
     public String getName() {
         return name;
     }
