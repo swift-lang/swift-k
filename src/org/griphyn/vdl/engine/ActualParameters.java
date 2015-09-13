@@ -24,44 +24,39 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.antlr.stringtemplate.StringTemplate;
-import org.globus.swift.parsetree.ActualParameter;
 import org.globus.swift.parsetree.Node;
 import org.globus.swift.parsetree.ReturnParameter;
+import org.griphyn.vdl.compiler.intermediate.IActualParameter;
 import org.griphyn.vdl.type.Type;
 
 public class ActualParameters {
     public static class Entry {
         private final Node param;
-        private final String binding;
-        private StringTemplate paramST;
-        private final Type type;
+        private IActualParameter iParam;
         
-        public Entry(Node param, String binding, StringTemplate paramST, Type type) {
+        public Entry(Node param, IActualParameter iParam) {
             this.param = param;
-            this.binding = binding;
-            this.paramST = paramST;
-            this.type = type;
+            this.iParam = iParam;
         }
 
         public Node getParam() {
             return param;
         }
 
+        public IActualParameter getIParam() {
+            return iParam;
+        }
+
+        public void setIParam(IActualParameter iParam) {
+            this.iParam = iParam;
+        }
+        
         public String getBinding() {
-            return binding;
+            return iParam.getBinding();
         }
-
-        public StringTemplate getParamST() {
-            return paramST;
-        }
-
+        
         public Type getType() {
-            return type;
-        }
-
-        public void setParamST(StringTemplate st) {
-            paramST = st;
+            return iParam.getType();
         }
     }
     
@@ -85,29 +80,25 @@ public class ActualParameters {
     // how many positionals are passed by position
     private int passedPositionallyCount;
     
-    private void addParameter(Node param, String binding, StringTemplate exprST, Type type) {
+    public void addParameter(Node param, IActualParameter iParam) {
         if (params == null) {
             params = new ArrayList<Entry>();
         }
-        params.add(new Entry(param, binding, exprST, type));
+        params.add(new Entry(param, iParam));
     }
-    
-    public void addParameter(ActualParameter arg, StringTemplate argST, Type type) {
-        addParameter(arg, arg.getBinding(), argST, type);
-    }
-    
-    public void addParameter(Node arg, StringTemplate argST, Type type) {
-        addParameter(arg, null, argST, type);
-    }
-    
-    public void addReturn(ReturnParameter ret, StringTemplate retST, Type type) {
+        
+    public void addReturn(ReturnParameter ret, IActualParameter iRet) {
         if (returns == null) {
             returns = new ArrayList<Entry>();
         }
         if (ret != null && ret.getBinding() != null) {
             someReturnsHaveNames = true;
         }
-        returns.add(new Entry(ret, ret == null ? null : ret.getBinding(), retST, type));
+        returns.add(new Entry(ret, iRet));
+    }
+    
+    public void setReturn(int index, IActualParameter iRet) {
+        returns.get(index).setIParam(iRet);
     }
 
     public List<Entry> getReturnEntries() {
@@ -123,8 +114,8 @@ public class ActualParameters {
         }
     }
 
-    public Entry getReturn(int i) {
-        return returns.get(i);
+    public IActualParameter getReturn(int i) {
+        return returns.get(i).getIParam();
     }
     
     public List<Entry> getReturns() {
@@ -139,8 +130,8 @@ public class ActualParameters {
         return params;
     }
     
-    public Entry getParameter(int i) {
-        return params.get(i);
+    public IActualParameter getParameter(int i) {
+        return params.get(i).getIParam();
     }
 
     public int parameterCount() {
@@ -190,7 +181,7 @@ public class ActualParameters {
     
     private Entry getOptionalParam(String name) {
         for (Entry p : params) {
-            if (name.equals(p.getBinding())) {
+            if (name.equals(p.getIParam().getBinding())) {
                 return p;
             }
         }
@@ -200,7 +191,7 @@ public class ActualParameters {
     
     private Entry getPositionalParam(String name) {
         for (Entry p : params) {
-            if (name.equals(p.getBinding())) {
+            if (name.equals(p.getIParam().getBinding())) {
                 return p;
             }
         }
@@ -210,7 +201,7 @@ public class ActualParameters {
 
     private Entry getReturn(String name) {
         for (Entry r : returns) {
-            if (r.getBinding().equals(name)) {
+            if (r.getIParam().getBinding().equals(name)) {
                 return r;
             }
         }
@@ -235,24 +226,24 @@ public class ActualParameters {
         }
     }
 
-    public StringTemplate getPositionalST(int i) {
-        return positionals.get(i).getParamST();
+    public IActualParameter getPositional(int i) {
+        return positionals.get(i).getIParam();
     }
 
     public int optionalCount() {
         return optionals.size();
     }
 
-    public StringTemplate getOptionalST(int i) {
-        return optionals.get(i).getParamST();
+    public IActualParameter getOptional(int i) {
+        return optionals.get(i).getIParam();
     }
 
     public int varargCount() {
         return varargs.size();
     }
 
-    public StringTemplate getVarargST(int i) {
-        return varargs.get(i).getParamST();
+    public IActualParameter getVararg(int i) {
+        return varargs.get(i).getIParam();
     }
     
     public String toString() {
@@ -272,10 +263,11 @@ public class ActualParameters {
         Iterator<Entry> i = l.iterator();
         while (i.hasNext()) {
             Entry e = i.next();
-            sb.append(e.getType());
-            if (e.getBinding() != null) {
+            IActualParameter iParam = e.getIParam();
+            sb.append(iParam.getType());
+            if (iParam.getBinding() != null) {
                 sb.append(' ');
-                sb.append(e.getBinding());
+                sb.append(iParam.getBinding());
             }
             if (i.hasNext()) {
                 sb.append(", ");
@@ -298,7 +290,7 @@ public class ActualParameters {
 
     public boolean allPassedByKeyword() {
         for (Entry e : params) {
-            if (e.getBinding() == null) {
+            if (e.getIParam().getBinding() == null) {
                 return false;
             }
         }

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.globus.swift.parsetree.FormalParameter;
+import org.griphyn.vdl.compiler.intermediate.IActualParameter;
 import org.griphyn.vdl.engine.ActualParameters.Entry;
 import org.griphyn.vdl.engine.Signature.Parameter;
 import org.griphyn.vdl.karajan.CompilationException;
@@ -306,7 +307,7 @@ public class FunctionsMap {
         else {
             for (int i = 0; i < actuals.returnCount(); i++) {
                 Signature.Parameter formal = ps.getReturns().get(i);
-                ActualParameters.Entry actual = actuals.getReturn(i);
+                IActualParameter actual = actuals.getReturn(i);
                 // For functions, we need to know if
                 // the formal type can be assigned to the actual type
                 //
