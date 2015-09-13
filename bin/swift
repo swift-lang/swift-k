@@ -187,8 +187,6 @@ if [ "$SWIFT_USAGE_STATS" = 1 ]; then
 	$BASH -c "echo $KEY $USERID $SCRIPTID $SCRIPTLENGTH $return_code 1 > /dev/udp/$LISTENER/$PORT" > /dev/null 2>&1 &
 fi
 
-rm *.swiftx *.kml > /dev/null 2>&1
-
 exit $return_code
 
 # Local Variables:
