@@ -472,20 +472,20 @@ public class WeightedHostScoreScheduler extends LateBindingScheduler {
 		}
 	}
 
-	public static final String TASK_ATTR_SUBMISSION_TIME = "scheduler:submissionTime";
+	public static final String TASK_ATTR_SUBMISSION_TIME = "scheduler:submissiontime";
 
 	private void checkSubmissionTime(int code, Status s, Task t, Contact[] contacts) {
 		synchronized (t) {
 			if (t.getType() == Task.JOB_SUBMISSION) {
 				if (code == Status.SUBMITTING) {
-					t.setAttribute(TASK_ATTR_SUBMISSION_TIME, s.getTime());
+					t.setAttributeLC(TASK_ATTR_SUBMISSION_TIME, s.getTime());
 				}
 				else {
-					Date st = (Date) t.getAttribute(TASK_ATTR_SUBMISSION_TIME);
+					Date st = (Date) t.getAttributeLC(TASK_ATTR_SUBMISSION_TIME);
 					if (st != null) {
 						Date st2 = s.getTime();
 						long submissionTime = st2.getTime() - st.getTime();
-						t.setAttribute(TASK_ATTR_SUBMISSION_TIME, null);
+						t.setAttributeLC(TASK_ATTR_SUBMISSION_TIME, null);
 						double delta = submissionTimeBias + submissionTimeFactor * submissionTime
 								/ 1000;
 						if (logger.isDebugEnabled()) {
