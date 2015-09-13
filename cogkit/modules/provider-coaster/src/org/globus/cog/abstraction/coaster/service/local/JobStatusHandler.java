@@ -33,9 +33,11 @@ import java.io.ObjectInputStream;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
+import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.RemoteException;
@@ -78,7 +80,8 @@ public class JobStatusHandler extends RequestHandler {
                 s.setMessage(message);
             }
             s.setTime(new Date(this.getInDataAsLong(4)));
-            NotificationManager.getDefault().notificationReceived(jobId, s, out, err);
+            Identity id = IdentityImpl.parse(jobId);
+            NotificationManager.getDefault().notificationReceived(id, s, out, err);
             sendReply("OK");
         }
         catch (Exception e) {

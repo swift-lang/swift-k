@@ -36,7 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.IdentityImpl;
+import org.globus.cog.abstraction.impl.common.CompositeIdentityImpl;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Identity;
@@ -360,11 +360,9 @@ public class Mpiexec implements ProcessListener, ExtendedStatusListener {
         Task clone = (Task) job.getTask().clone();
 
         // Update Task Identity and set Notification
-        Identity cloneID = new IdentityImpl(clone.getIdentity());
-        String value = cloneID.getValue() + ":" + i;
-        cloneID.setValue(value);
+        Identity cloneID = new CompositeIdentityImpl(clone.getIdentity(), i);
         clone.setIdentity(cloneID);
-        NotificationManager.getDefault().registerListener(value, clone, this);
+        NotificationManager.getDefault().registerListener(cloneID, clone, this);
 
         // Update Task Specification
         JobSpecification spec = (JobSpecification) clone.getSpecification();

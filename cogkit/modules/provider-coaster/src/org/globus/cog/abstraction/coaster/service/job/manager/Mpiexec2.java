@@ -41,7 +41,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.CleanUpSetImpl;
-import org.globus.cog.abstraction.impl.common.IdentityImpl;
+import org.globus.cog.abstraction.impl.common.CompositeIdentityImpl;
 import org.globus.cog.abstraction.impl.common.StagingSetEntryImpl;
 import org.globus.cog.abstraction.impl.common.StagingSetImpl;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
@@ -275,8 +275,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
         }
         Node n = cpus.get(0).getNode();
         mpiTask = cloneTaskNoStaging();
-        Identity nid = new IdentityImpl();
-        nid.setValue(mpiTask.getIdentity().toString() + "-mpi");
+        Identity nid = new CompositeIdentityImpl(mpiTask.getIdentity(), 0);
         mpiTask.setIdentity(nid);
         addMPIRun((JobSpecification) mpiTask.getSpecification(), n.getHostname());
         
@@ -289,7 +288,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
             }
         }
         
-        NotificationManager.getDefault().registerListener(mpiTask.getIdentity().getValue(), mpiTask, this);
+        NotificationManager.getDefault().registerListener(mpiTask.getIdentity(), mpiTask, this);
         SubmitJobCommand sjc = new SubmitJobCommand(mpiTask);
         sjc.setCompression(false);
         sjc.setSimple(true);
@@ -629,7 +628,7 @@ public class Mpiexec2 implements Callback, ExtendedStatusListener, JobCancelator
         CancelJobCommand cjc = null;
         synchronized(this) {
             if (state == State.RUNNING) {
-                cjc = new CancelJobCommand(mpiTask.getIdentity().getValue());
+                cjc = new CancelJobCommand(mpiTask.getIdentity());
             }
             canceled = true;
         }

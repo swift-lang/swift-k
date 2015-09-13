@@ -254,7 +254,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener, J
 
     boolean launchSequential() {
         Task t = running.getTask();
-        NotificationManager.getDefault().registerListener(t.getIdentity().getValue(), t, this);
+        NotificationManager.getDefault().registerListener(t.getIdentity(), t, this);
         idleTime += timeDiff();
         timelast = running.getEndTime();
         if (timelast == null) {
@@ -515,7 +515,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener, J
 
     @Override
     public void cancel(Job job) {
-        CancelJobCommand cjc = new CancelJobCommand(job.getTask().getIdentity().getValue());
+        CancelJobCommand cjc = new CancelJobCommand(job.getTask().getIdentity());
         try {
             cjc.executeAsync(node.getChannel());
         }

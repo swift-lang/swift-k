@@ -246,7 +246,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 				else if (cluster.size() > 1) {
 					Task t = new TaskImpl();
 					int thisClusterId = clusterId++;
-					t.setIdentity(new IdentityImpl("cluster-" + thisClusterId));
+					t.setIdentity(new IdentityImpl("cluster", thisClusterId));
 					t.setType(Task.JOB_SUBMISSION);
 					t.setRequiredService(1);
 

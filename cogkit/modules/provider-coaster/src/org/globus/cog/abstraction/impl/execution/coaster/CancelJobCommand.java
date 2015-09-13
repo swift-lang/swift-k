@@ -28,13 +28,29 @@
  */
 package org.globus.cog.abstraction.impl.execution.coaster;
 
+import org.globus.cog.abstraction.interfaces.Identity;
+import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.commands.Command;
 
 public class CancelJobCommand extends Command {
     public static final String NAME = "CANCELJOB";
+    private Identity id;
     
-    public CancelJobCommand(String jobid) {
+    public CancelJobCommand(Identity id) {
         super(NAME);
-        addOutData(jobid);
-    }    
+        this.id = id;
+        addOutData(id.toString());
+    }
+
+    @Override
+    public void replyReceived(boolean fin, boolean err, byte[] data) throws ProtocolException {
+        super.replyReceived(fin, err, data);
+        NotificationManager.getDefault().removeTask(id);
+    }
+
+    @Override
+    public void errorReceived(String msg, Exception t) {
+        super.errorReceived(msg, t);
+        NotificationManager.getDefault().removeTask(id);
+    }
 }

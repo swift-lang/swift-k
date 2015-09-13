@@ -37,6 +37,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.ExtendedStatusListener;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
+import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
 
@@ -61,22 +62,22 @@ public class NotificationManager {
     /** 
        Map from Task IDs to Tasks
      */
-    private Map<String, TaskListenerPair> listeners;
+    private Map<Identity, TaskListenerPair> listeners;
     
     /**
        Map from Task IDs to Status updates that arrived before the 
        Task existed in the Map {@link tasks}
      */
-    private Map<String, List<ExtendedStatus>> pending;
+    private Map<Identity, List<ExtendedStatus>> pending;
     private long lastNotificationTime;
 
     public NotificationManager() {
-        listeners = new HashMap<String, TaskListenerPair>();
-        pending = new HashMap<String, List<ExtendedStatus>>();
+        listeners = new HashMap<Identity, TaskListenerPair>();
+        pending = new HashMap<Identity, List<ExtendedStatus>>();
         lastNotificationTime = System.currentTimeMillis();
     }
 
-    public void registerListener(String id, Task task, ExtendedStatusListener l) {
+    public void registerListener(Identity id, Task task, ExtendedStatusListener l) {
         List<ExtendedStatus> p;
         synchronized (listeners) {
             TaskListenerPair tlp = listeners.get(id);
@@ -95,8 +96,18 @@ public class NotificationManager {
             }
         }
     }
+    
+    public void removeTask(Task task) {
+        removeTask(task.getIdentity());
+    }
+    
+    public void removeTask(Identity taskId) {
+        synchronized(listeners) {
+            listeners.remove(taskId);
+        }
+    }
 
-    public void notificationReceived(String id, Status s, String out, String err) {
+    public void notificationReceived(Identity id, Status s, String out, String err) {
         if (logger.isDebugEnabled())
             logger.debug("recvd: for: " + id + " " + s);
         TaskListenerPair ls;
@@ -151,7 +162,7 @@ public class NotificationManager {
         }
     }
 
-    private void addPending(String id, ExtendedStatus es) {
+    private void addPending(Identity id, ExtendedStatus es) {
         List<ExtendedStatus> p = pending.get(id);
         if (p == null) {
             p = new LinkedList<ExtendedStatus>();
@@ -161,12 +172,12 @@ public class NotificationManager {
     }
 
     public void serviceTaskEnded(org.globus.cog.abstraction.interfaces.Service service, String msg) {
-        List<Map.Entry<String, TaskListenerPair>> ts;
+        List<Map.Entry<Identity, TaskListenerPair>> ts;
         synchronized (listeners) {
-            ts = new ArrayList<Map.Entry<String, TaskListenerPair>>(listeners.entrySet());
+            ts = new ArrayList<Map.Entry<Identity, TaskListenerPair>>(listeners.entrySet());
         }
         logger.info(service.toString());
-        for (Map.Entry<String, TaskListenerPair> e: ts) {
+        for (Map.Entry<Identity, TaskListenerPair> e: ts) {
             org.globus.cog.abstraction.interfaces.Service service2 = e.getValue().task.getService(0);
             logger.info(service2.toString());
             if (service2.equals(service)) {

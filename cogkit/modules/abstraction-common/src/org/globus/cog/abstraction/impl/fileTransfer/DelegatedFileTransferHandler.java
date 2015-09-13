@@ -234,7 +234,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
             if (this.sourceResource != null) {
                 if (spec.isRecursive() && this.sourceResource.isDirectory(spec.getSource())) {
                     if (localDestination == null) {
-                        localDestination = File.createTempFile(getTask().getIdentity().getValue(),
+                        localDestination = File.createTempFile(getTask().getIdentity().toString(),
                                 null);
                         localDestination.delete();
                         localDestination.mkdir();
@@ -256,7 +256,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
                 }
                 else {
                     if (localDestination == null) {
-                        localDestination = File.createTempFile(getTask().getIdentity().getValue(),
+                        localDestination = File.createTempFile(getTask().getIdentity().toString(),
                                 null);
                     }
                     if (logger.isDebugEnabled()) {
@@ -276,9 +276,7 @@ public class DelegatedFileTransferHandler extends AbstractDelegatedTaskHandler i
             }
             else {
                 if (localDestination == null) {
-                    localDestination = File
-                            .createTempFile(getTask()
-                                    .getIdentity().getValue(), null);
+                    localDestination = File.createTempFile(getTask().getIdentity().toString(), null);
                 }
                 transferWithHandler(service.getProvider(), service,
                         LOCAL_SERVICE, spec.getSource(), localDestination);

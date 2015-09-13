@@ -44,6 +44,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextExcepti
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
+import org.globus.cog.abstraction.interfaces.Identity;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -175,7 +176,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     private void submitJob(CoasterChannel channel, Task task, String configId) throws ProtocolException {
-        NotificationManager.getDefault().registerListener(task.getIdentity().getValue(), task, this);
+        NotificationManager.getDefault().registerListener(task.getIdentity(), task, this);
         jsc = new SubmitJobCommand(task, configId);
         jsc.executeAsync(channel, this);
     }
@@ -219,12 +220,12 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             TaskSubmissionException {
         // TODO shouldn't this be setting the task status?
         try {
-            String jobid = getTask().getIdentity().getValue();
-            if (jobid != null) {
+            Identity id = getTask().getIdentity();
+            if (id != null) {
                 CoasterChannel channel =
                         ChannelManager.getManager().getOrCreateChannel(url, cred,
                             LocalRequestManager.INSTANCE);
-                CancelJobCommand cc = new CancelJobCommand(jobid);
+                CancelJobCommand cc = new CancelJobCommand(id);
                 cc.execute(channel);
                 cancel = false;
                 getTask().setStatus(new StatusImpl(Status.CANCELED, message, null));

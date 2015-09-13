@@ -58,12 +58,12 @@ public interface Identity {
      *            a String value representing the value for this
      *            <code>Identity</code>.
      */
-    public void setValue(String value);
+    public void setValue(long value);
 
     /**
      * Returns the value for this <code>Identity</code>.
      * 
      * @return the value for this <code>Identity</code>
      */
-    public String getValue(); 
+    public long getValue(); 
 }

@@ -117,7 +117,7 @@ public class SubmitJobHandler extends RequestHandler {
         if (clientId == null) {
             throw new IllegalSpecException("Missing job identity");
         }
-        task.setIdentity(new IdentityImpl(clientId + "-" + new IdentityImpl().getValue()));
+        task.setIdentity(new CompositeIdentityImpl(IdentityImpl.parse(clientId)));
         spec.setExecutable(helper.read("executable").intern());
         spec.setDirectory(helper.read("directory"));
         spec.setBatchJob(helper.readBool("batch"));

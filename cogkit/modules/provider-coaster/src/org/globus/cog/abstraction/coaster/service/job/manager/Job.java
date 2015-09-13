@@ -192,7 +192,7 @@ public class Job implements Comparable<Job> {
     }
 
     public void fail(String message, Exception e) {
-        NotificationManager.getDefault().notificationReceived(task.getIdentity().getValue(), 
+        NotificationManager.getDefault().notificationReceived(task.getIdentity(), 
             new StatusImpl(Status.FAILED, message, e), null, null);
     }
 

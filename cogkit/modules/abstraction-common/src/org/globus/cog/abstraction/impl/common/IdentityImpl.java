@@ -39,15 +39,15 @@ public class IdentityImpl implements Identity {
     static Logger logger = Logger.getLogger(IdentityImpl.class.getName());
     
     private String nameSpace = "cog";
-    private String value;
+    private long value;
     private static long count = System.currentTimeMillis();
     
-    protected static String nextId() {
+    protected static long nextId() {
     	long id;
     	synchronized(IdentityImpl.class) {
     		id = count++;
     	}
-    	return String.valueOf(id);
+    	return id;
     }
 
     /**
@@ -64,6 +64,11 @@ public class IdentityImpl implements Identity {
     public IdentityImpl(String namespace) {
         this.value = nextId();
         this.nameSpace = namespace;
+    }
+    
+    public IdentityImpl(String namespace, long value) {
+        this.nameSpace = namespace;
+        this.value = value;
     }
 
     /**
@@ -86,42 +91,77 @@ public class IdentityImpl implements Identity {
     }
     
     public void setValue(long value) {
-        setValue(String.valueOf(value));
-    }
-
-    public void setValue(String value) {
         this.value = value;
     }
 
-    public String getValue() {
+    public long getValue() {
         return this.value;
     }
-
-    public boolean equals(Identity id) {
-        return compare(value, id.getValue()) && compare(nameSpace, id.getNameSpace());
-    }
-
-    private boolean compare(String s1, String s2) {
-        if (s1 == null) {
-            return s2 == null;
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        IdentityImpl other = (IdentityImpl) obj;
+        if (nameSpace == null) {
+            if (other.nameSpace != null)
+                return false;
         }
-        else {
-            return s1.equals(s2);
-        }
+        else if (!nameSpace.equals(other.nameSpace))
+            return false;
+        if (value != other.value)
+            return false;
+        return true;
     }
 
-    public boolean equals(Object object) {
-        return this.toString().equalsIgnoreCase(((Identity) object).toString());
-    }
-
+    @Override
     public int hashCode() {
-        int hc = 0;
-        hc += nameSpace == null ? 0 : nameSpace.hashCode();
-        hc += value == null ? 0 : value.hashCode();
-        return hc;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((nameSpace == null) ? 0 : nameSpace.hashCode());
+        result = prime * result + (int) (value ^ (value >>> 32));
+        return result;
     }
 
     public String toString() {
-        return "urn:" + nameSpace + "-" + value;
+        return nameSpace + "-" + value;
+    }
+
+    public static Identity parse(String str) {
+        int dashpos = str.lastIndexOf('-');
+        
+        if (dashpos == -1) {
+            throw new IllegalArgumentException("Malformed identity: '" + str + "'. Must be of the form <namespace>-<id>[:<subid>*]");
+        }
+        
+        Identity prev = null;
+        String ns = str.substring(0, dashpos);
+        int lastColPos = dashpos;
+        for (int i = dashpos + 1; i < str.length(); i++) {
+        	char c = str.charAt(i);
+        	if (c == ':') {
+    			long value = Long.parseLong(str.substring(lastColPos + 1, i));
+    		    if (prev == null) {
+    		    	prev = new IdentityImpl(ns, value); 
+    		    }
+    		    else {
+    		    	prev = new CompositeIdentityImpl(prev, value);
+    		    }
+    		    lastColPos = i;
+        	}
+        }
+        long value = Long.parseLong(str.substring(lastColPos + 1));
+        if (prev == null) {
+        	prev = new IdentityImpl(ns, value);
+        }
+        else {
+        	prev = new CompositeIdentityImpl(prev, value);
+        }
+        return prev;
     }
 }
