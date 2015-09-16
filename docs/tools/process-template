@@ -310,7 +310,8 @@ class State:
 		line = self.readLine()
 		headerSeen = False
 		while line != "":
-			headerSeen = headerSeen or self.scanForNames(line)
+			headerSeenInThisLine = self.scanForNames(line)
+			headerSeen = headerSeen or headerSeenInThisLine
 			if not headerSeen:
 				self.outf.write(line)
 			line = self.readLine()
