@@ -267,7 +267,7 @@ public class Block implements StatusListener, Comparable<Block> {
         else if (running) {
             return bqp.getMetric().size(
                 workers,
-                (int) TimeInterval.max(endTime.subtract(Time.max(Time.now(), startTime)), NO_TIME).getSeconds());
+                (int) TimeInterval.max(getEndTime().subtract(Time.max(Time.now(), startTime)), NO_TIME).getSeconds());
         }
         else {
             return bqp.getMetric().size(workers, (int) walltime.getSeconds());
@@ -275,14 +275,20 @@ public class Block implements StatusListener, Comparable<Block> {
     }
 
     public Time getEndTime() {
-        if (startTime == null) {
-            return Time.now().add(walltime);
+        if (endTime == null) {
+            if (startTime == null) {
+                endTime = Time.now().add(walltime);
+            }
+            else {
+                endTime = startTime.add(walltime);
+            }
         }
-        else {
-            return startTime.add(walltime);
-        }
+        return endTime;
     }
 
+    /*
+     * Only used by the BQPStatus system to populate a dummy  
+     */
     public void setEndTime(Time t) {
         this.endTime = t;
     }
