@@ -159,6 +159,7 @@ site."*" {
 	app."*": {
 		executable: "?String"
 		maxWallTime: "?Time"
+		exclusive: "?Boolean"
 
 		options {
 			# known things

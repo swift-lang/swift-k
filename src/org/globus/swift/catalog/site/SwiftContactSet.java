@@ -30,6 +30,7 @@ package org.globus.swift.catalog.site;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.globus.cog.karajan.util.BoundContact;
 import org.globus.cog.karajan.util.ContactSet;
@@ -37,6 +38,7 @@ import org.griphyn.vdl.engine.Warnings;
 
 public class SwiftContactSet extends ContactSet {
     private Map<String, Application> apps;
+    private Set<String> exclusive;
 
     public void addApplication(Application app) {
         if (apps == null) {
@@ -74,5 +76,17 @@ public class SwiftContactSet extends ContactSet {
             apps = new HashMap<String, Application>();
         }
         return apps;
+    }
+
+    public boolean isExclusive(String tr) {
+        return exclusive != null && exclusive.contains(tr);
+    }
+
+    public Set<String> getExclusive() {
+        return exclusive;
+    }
+
+    public void setExclusive(Set<String> exclusive) {
+        this.exclusive = exclusive;
     }
 }

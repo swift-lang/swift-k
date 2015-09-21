@@ -429,6 +429,7 @@ public class SwiftConfig implements Cloneable {
             this.sites.addContact(site);
         }
         this.sites.getApplications().putAll(definedSites.getApplications());
+        markExclusive(this.sites);
         
         for (String leaf : tree.getLeafPaths()) {
             if ("staging".equals(leaf)) {
@@ -442,6 +443,22 @@ public class SwiftConfig implements Cloneable {
         }
     }
     
+    private void markExclusive(SwiftContactSet sites) {
+        Set<String> exclusive = new HashSet<String>();
+        for (BoundContact bc : sites) {
+            SwiftContact sc = (SwiftContact) bc;
+            for (Application app : sc.getApplications()) {
+                if (app.isExclusive()) {
+                    exclusive.add(app.getName());
+                }
+            }
+        }
+
+        if (exclusive.size() > 0) {
+            sites.setExclusive(exclusive);
+        }
+    }
+
     public static String location(ConfigOrigin loc) {
         return loc.filename() + ":" + loc.lineNumber();
     }
@@ -547,6 +564,9 @@ public class SwiftConfig implements Cloneable {
             
             if (k.equals("executable")) {
                 app.setExecutable(getString(c));
+            }
+            else if (k.equals("exclusive")) {
+                app.setExclusive(true);
             }
             else if (k.equals("options")) {
                 

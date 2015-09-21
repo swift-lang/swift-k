@@ -98,11 +98,13 @@ public class SwiftContact extends BoundContact {
      * </ol>
      */
     public Application findApplication(String tr) {
-
         Application app = null;
         if (apps != null) {
             app = apps.get(tr);
             if (app == null) {
+                if (siteCatalog.isExclusive(tr)) {
+                    return null;
+                }
                 app = apps.get("*");
             }
         }

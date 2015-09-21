@@ -38,11 +38,13 @@ import java.util.Set;
 
 import org.globus.cog.abstraction.impl.common.task.EnvironmentVariableImpl;
 import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
+
 public class Application {
     private String name, executable;
     private List<EnvironmentVariable> env;
     private Set<String> envNames;
     private Map<String, Object> properties;
+    private boolean exclusive;
     
     
     public String getName() {
@@ -128,5 +130,13 @@ public class Application {
 
     public boolean executableIsWildcard() {
         return "*".equals(executable);
+    }
+
+    public boolean isExclusive() {
+        return exclusive;
+    }
+
+    public void setExclusive(boolean exclusive) {
+        this.exclusive = exclusive;
     }
 }
