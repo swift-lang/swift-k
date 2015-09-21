@@ -64,8 +64,8 @@ namespace(providerStaging) {
 			argsNotNull := arguments != null
 			
 			sm := siteProfile(rhost, "stagingMethod", default="file"),
-			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(getAndDelete(stagein, stageout), defaultScheme = sm),
 			(stdins, stdouts, stderrs) := getStandardFilesInfo(stdin, stdout, stderr, defaultScheme = sm)
+			(fileDirs, inFiles, outFiles, outCollect, tempRefs) := getStagingInfo(getAndDelete(stagein, stageout), defaultScheme = stagingMethod),
 						
 			wrapperMode := configProperty("wrapperParameterMode", host=rhost)
 
@@ -128,6 +128,7 @@ namespace(providerStaging) {
 					directory = tmpdir
 					redirect = false
 					host = rhost
+					tempRefs = getAndDelete(tempRefs)
 
 					TCProfile(rhost, if (attributes != null, attributes = attributes), tr = tr)
 					replicationGroup = replicationGroup

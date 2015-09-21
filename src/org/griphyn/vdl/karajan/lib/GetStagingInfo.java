@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -60,6 +61,7 @@ public class GetStagingInfo extends SwiftFunction {
         Set<AbsFile> inFiles = Collections.emptySet();
         Set<AbsFile> outFiles = Collections.emptySet();
         Set<AbsFile> collectPatterns = Collections.emptySet();
+        List<DSHandle> tempRefs = new LinkedList<DSHandle>();
     }
 
     @Override
@@ -85,6 +87,7 @@ public class GetStagingInfo extends SwiftFunction {
         ret.add(new ArrayList<AbsFile>(info.inFiles));
         ret.add(new ArrayList<AbsFile>(info.outFiles));
         ret.add(new ArrayList<AbsFile>(info.collectPatterns));
+        ret.add(info.tempRefs);
         return null;
     }
 
@@ -96,10 +99,13 @@ public class GetStagingInfo extends SwiftFunction {
     	        continue;
     	    }
     	    Mapper m = getMapper(var);
+    	    if (m.supportsCleaning()) {
+    	        info.tempRefs.add(var);
+    	    }
     	    if (out && !m.isStatic() && var.getType().hasArrayComponents()) {
     	        Collection<AbsFile> patterns = m.getPattern(var.getPathFromRoot(), var.getType());
     	        for (AbsFile f : patterns) {
-    	            info.collectPatterns = addOne(f, info, info.collectPatterns, defaultScheme);
+    	            info.collectPatterns = addOne(f, info, false, info.collectPatterns, defaultScheme);
     	        }
     	    }
     	    else {
@@ -118,17 +124,21 @@ public class GetStagingInfo extends SwiftFunction {
                 continue;
             }
             if (out) {
-                info.outFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, info.outFiles, defaultScheme);
+                info.outFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, false, info.outFiles, defaultScheme);
             }
             else {
-                info.inFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, info.inFiles, defaultScheme);
+                info.inFiles = addOne((AbsFile) m.map(leaf.getPathFromRoot()), info, true, info.inFiles, defaultScheme);
             }    
         }
     }
 
 
-    private Set<AbsFile> addOne(AbsFile f, Info info, Set<AbsFile> files, String defaultScheme) {
+    private Set<AbsFile> addOne(AbsFile f, Info info, boolean ignoreIfDirect, Set<AbsFile> files, String defaultScheme) {
         String proto = f.getProtocol(defaultScheme);
+        
+        if (ignoreIfDirect && proto.equals("direct")) {
+            return files;
+        }
         String host = f.getHost("localhost");
         
         String dir = f.getDirectory();

@@ -308,7 +308,7 @@ namespace(swiftStaging) {
 
 			wrapfile := "{DEBUG_DIR}/param-{jobid}"
 						
-			(fileDirs, inFiles, outFiles, outCollect) := getStagingInfo(stagein, stageout),
+			(fileDirs, inFiles, outFiles, outCollect, tempRefs) := getStagingInfo(getAndDelete(stagein, stageout)),
 			(stdins, stdouts, stderrs) := getStandardFilesInfo(stdin, stdout, stderr)
 
 			os := siteProfile(rhost, "OS")
@@ -339,6 +339,7 @@ namespace(swiftStaging) {
 			utry {
 				createDirSet(jobid, SHARED_DIR, rhost, fileDirs)
 				doStagein(jobid, SHARED_DIR, rhost, inFiles)
+				discard(getAndDelete(tempRefs))
 				if (wrapperMode == "files") {
 					stageWrapperParams(jobid, jobdir, wrapfile, RUN_DIR, rhost)
 				}
