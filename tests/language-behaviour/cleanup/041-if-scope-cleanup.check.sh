@@ -2,7 +2,7 @@
 
 PREFIX="041-if-scope-cleanup"
 
-if [ -n "$(find . -name "$PREFIX.*.tmp" -print -quit)" ]; then
+if [ -n "$(find . -maxdepth 1 -name "$PREFIX.*.tmp" -print -quit)" ]; then
 	echo "A temporary file wasn't removed"
 	exit 1
 fi

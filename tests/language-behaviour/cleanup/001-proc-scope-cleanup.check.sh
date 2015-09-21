@@ -12,12 +12,12 @@ if [ ! -f $PREFIX.t2.out ]; then
 	exit 1
 fi
 
-if ! grep "^Cleaning file file://.*$PREFIX.t1.tmp" $PREFIX.stdout; then
+if ! grep "^Cleaning file .*$PREFIX.t1.tmp" $PREFIX.stdout; then
 	echo "Test mapper did not claim to clean t1"
 	exit 1
 fi
 
-if ! grep "^Not cleaning file://.*$PREFIX.t2.out" $PREFIX.stdout; then
+if grep "^Cleaning file .*$PREFIX.t2.out" $PREFIX.stdout; then
 	echo "Test mapper did not identify t2 as persistent"
 	exit 1
 fi
