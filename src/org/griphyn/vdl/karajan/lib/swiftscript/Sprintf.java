@@ -27,9 +27,9 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.karajan.FileNameExpander;
-import org.griphyn.vdl.karajan.FileNameExpander.MultiMode;
-import org.griphyn.vdl.karajan.FileNameExpander.Transform;
+import org.griphyn.vdl.karajan.FileNameResolver;
+import org.griphyn.vdl.karajan.FileNameResolver.MultiMode;
+import org.griphyn.vdl.karajan.FileNameResolver.Transform;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
@@ -165,7 +165,7 @@ public class Sprintf extends SwiftFunction {
     private static void append_M(DSHandle arg, StringBuilder output) {
         try {
             synchronized (arg.getRoot()) { 
-                String[] names = new FileNameExpander(arg).getURLsAsArray();
+                String[] names = new FileNameResolver(arg).getURLsAsArray();
                 if (names.length > 1) {
                     output.append(Arrays.asList(names));
                 }

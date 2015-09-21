@@ -26,9 +26,9 @@ import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
-import org.griphyn.vdl.karajan.FileNameExpander;
-import org.griphyn.vdl.karajan.FileNameExpander.MultiMode;
-import org.griphyn.vdl.karajan.FileNameExpander.Transform;
+import org.griphyn.vdl.karajan.FileNameResolver;
+import org.griphyn.vdl.karajan.FileNameResolver.MultiMode;
+import org.griphyn.vdl.karajan.FileNameResolver.Transform;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
@@ -77,11 +77,11 @@ public class FileName extends SwiftFunction {
         DSHandle result;
         if (inAppInvocation) {
             result = NodeFactory.newRoot(Field.GENERIC_ANY, 
-                new FileNameExpander(var, MultiMode.COMBINED, Transform.REMOTE));
+                new FileNameResolver(var, MultiMode.COMBINED, Transform.REMOTE));
         }
         else {
             result = NodeFactory.newRoot(Field.GENERIC_STRING, 
-                new FileNameExpander(var, MultiMode.COMBINED, Transform.NONE).toCombinedString());
+                new FileNameResolver(var, MultiMode.COMBINED, Transform.NONE).toCombinedString());
         }
 		// String s = argList(filename(var), true);
 		// DSHandle result = NodeFactory.newRoot(Field.GENERIC_STRING, s);

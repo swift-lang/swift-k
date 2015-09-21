@@ -39,7 +39,7 @@ import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PathComparator;
 import org.griphyn.vdl.mapping.RootHandle;
 
-public class FileNameExpander {
+public class FileNameResolver {
     public enum MultiMode {
         COMBINED, SEPARATE
     }
@@ -53,11 +53,11 @@ public class FileNameExpander {
     private Transform transform;
     private String defaultScheme;
     
-    public FileNameExpander(DSHandle var) {
+    public FileNameResolver(DSHandle var) {
         this(var, MultiMode.COMBINED, Transform.REMOTE);
     }
 
-    public FileNameExpander(DSHandle var, MultiMode mode, Transform transform) {
+    public FileNameResolver(DSHandle var, MultiMode mode, Transform transform) {
         this.var = var;
         this.mode = mode;
         this.transform = transform;
@@ -131,7 +131,7 @@ public class FileNameExpander {
     }
 
     private String getPath(AbsFile f) {
-        if (isDirect(f) || this.transform == Transform.ABSOLUTE) {
+        if (this.transform == Transform.ABSOLUTE || isDirect(f)) {
             return f.getAbsolutePath();
         }
         else if (this.transform == Transform.REMOTE) {

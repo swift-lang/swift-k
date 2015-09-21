@@ -27,7 +27,7 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.karajan.FileNameExpander;
+import org.griphyn.vdl.karajan.FileNameResolver;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
@@ -50,7 +50,7 @@ public class ExtractFloat extends SwiftFunction {
 		try {
 			handle.waitFor(this);
 			
-			String fn = new FileNameExpander(handle).getSingleLocalPath();
+			String fn = new FileNameResolver(handle).getSingleLocalPath();
 			
 			Reader freader = new FileReader(fn);
 			BufferedReader breader = new BufferedReader(freader);

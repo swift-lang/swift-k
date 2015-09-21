@@ -235,7 +235,7 @@ public class Misc {
         	    filename = SwiftFunction.unwrap(this, dn);
         	}
         	else {
-        	    filename = new FileNameExpander(dn).getSingleLocalPath();
+        	    filename = new FileNameResolver(dn).getSingleLocalPath();
         	}
 
             AbsFile file = new AbsFile(filename);
@@ -722,7 +722,7 @@ public class Misc {
         @Override
         public Object function(Stack stack) {
             AbstractDataNode dn = file.getValue(stack);
-            String name = new FileNameExpander(dn).getSingleLocalPath();
+            String name = new FileNameResolver(dn).getSingleLocalPath();
 
             String result = new AbsFile(name).getDirectory();
             DSHandle handle = NodeFactory.newRoot(Field.GENERIC_STRING, result);
