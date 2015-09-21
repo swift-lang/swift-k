@@ -198,4 +198,6 @@ public interface Type {
     public boolean canBeAssignedTo(Type type);
 
     public boolean isAssignableFrom(Type type);
+    
+    public boolean isMapped();
 }

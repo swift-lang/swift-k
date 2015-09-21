@@ -223,4 +223,9 @@ public class UnresolvedType implements Type {
             return this.equals(type);
         }
     }
+
+    @Override
+    public boolean isMapped() {
+        return !isPrimitive() && !isComposite();
+    }
 }
