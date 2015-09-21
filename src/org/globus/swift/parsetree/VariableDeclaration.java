@@ -26,7 +26,7 @@ public class VariableDeclaration extends AbstractNode {
     private String type;
     private boolean global;
     private MappingDeclaration mapping;
-    private String LFN;
+    private Expression expression;
     
     
     public String getName() {
@@ -60,15 +60,15 @@ public class VariableDeclaration extends AbstractNode {
     public void setMapping(MappingDeclaration mapping) {
         this.mapping = mapping;
     }
-
-    public String getLFN() {
-        return LFN;
-    }
-
-    public void setLFN(String lFN) {
-        LFN = lFN;
-    }
     
+    public Expression getExpression() {
+        return expression;
+    }
+
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
+
     @Override
     public List<? extends Node> getSubNodes() {
         return list(mapping);

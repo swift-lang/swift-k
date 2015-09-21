@@ -206,6 +206,7 @@ declpart [StatementContainer scope, String thisType, boolean isGlobal]
     String keyType = "";
     String name = null;
     MappingDeclaration mdecl = null;
+    Expression simpleMapping = null;
 }
 :
 	name = declarator
@@ -224,14 +225,18 @@ declpart [StatementContainer scope, String thisType, boolean isGlobal]
     }
 	(
 		LT 
-		(mdecl = mappingdecl | f:STRING_LITERAL) GT {
-   			if (mdecl != null) {
-       			vdecl.setMapping(mdecl);
-       		}
-   			else {
-       			vdecl.setLFN(f.getText());
-       		}
-		}
+		(
+			(predictMappingDecl) => (
+				mdecl = mappingdecl {
+					vdecl.setMapping(mdecl);
+				}
+			)
+			|
+			simpleMapping = expression {
+				vdecl.setExpression(simpleMapping);
+			}
+		)
+		GT
 	)?
 
 	// TODO: mapping does here...
@@ -245,6 +250,11 @@ declpart [StatementContainer scope, String thisType, boolean isGlobal]
 		// TODO can shorten variableDecl predictor now we dont' need to
 		//  distinguish it from datasetdecl?
 	)
+;
+
+predictMappingDecl
+:
+	ID SEMI
 ;
 
 variableDecl [StatementContainer scope, String vtype, String name, VariableDeclaration vdecl]
@@ -403,7 +413,7 @@ mapparam returns [MappingParameter mparam = null]
 	Expression value = null;
 }
 :  
-	name = declarator ASSIGN value = mappingExpr {
+	name = declarator ASSIGN value = expression {
     	mparam.setName(name);
     	mparam.setValue(value);
     }

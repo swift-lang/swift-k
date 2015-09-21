@@ -494,23 +494,38 @@ public class Karajan {
 		 */
 		iVar.setInput(true);
 
-		if (var.getMapping() != null || var.getLFN() != null) {
-			if (var.getLFN() != null) {
-			    iVar.setFile(escape(var.getLFN()));
-			}
-
-			MappingDeclaration mapping = var.getMapping();
-
-			if (mapping != null) {
-			    IMapping iMapping = new IMapping();
-			    String mapperType = mapping.getDescriptor();
-                iMapping.setName(mapperType);
-                
-				checkMapperParams(mapperType, mapping);
-				for (MappingParameter param : mapping.getParameters()) {
-					iMapping.addParameter(mappingParameter(param, container));
+		if (var.getMapping() != null || var.getExpression() != null) {
+			if (var.getExpression() != null) {
+				IExpression expr = this.expressionToKarajan(var.getExpression(), container);
+				IMapping iMapping = new IMapping();
+				Type exprType = expr.getType();
+				iMapping.setLine(var.getExpression().getLine());
+				if (exprType.equals(Types.STRING)) {
+					iMapping.setName("SingleFileMapper");
+					iMapping.addParameter(new IMappingParameter("file", expr));
+				}
+				else if (exprType.isArray() && (exprType.itemType().equals(Types.STRING) || exprType.itemType().isMapped())) {
+                    iMapping.setName("FixedArrayMapper");
+                    iMapping.addParameter(new IMappingParameter("files", expr));
+				}
+				else {
+					throw new CompilationException("Cannot use expression of type " + expr.getType() + " as mapping expression");
 				}
 				iVar.setMapping(iMapping);
+			}
+			else {
+				MappingDeclaration mapping = var.getMapping();
+    			if (mapping != null) {
+    			    IMapping iMapping = new IMapping();
+    			    String mapperType = mapping.getDescriptor();
+                    iMapping.setName(mapperType);
+                    
+    				checkMapperParams(mapperType, mapping);
+    				for (MappingParameter param : mapping.getParameters()) {
+    					iMapping.addParameter(mappingParameter(param, container));
+    				}
+    				iVar.setMapping(iMapping);
+    			}
 			}
    		}
 		else {
