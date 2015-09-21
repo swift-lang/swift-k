@@ -28,6 +28,7 @@ import k.rt.Stack;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;

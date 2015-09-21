@@ -38,6 +38,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -156,11 +157,11 @@ public class LSFExecutor extends AbstractExecutor {
         	wr.write("#BSUB -cwd " + getSpec().getDirectory() + '\n');
         }
 		
-		for (String name : spec.getEnvironmentVariableNames()) {
+		for (EnvironmentVariable env: spec.getEnvironment()) {
 			wr.write("export ");
-			wr.write(name);
+			wr.write(env.getName());
 			wr.write('=');
-			wr.write(quote(spec.getEnvironmentVariable(name)));
+			wr.write(quote(env.getValue()));
 			wr.write('\n');
 		}
 		

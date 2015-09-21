@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +47,7 @@ import org.globus.cog.abstraction.impl.common.task.ExecutionServiceImpl;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
@@ -477,7 +479,7 @@ public class SwiftConfig implements Cloneable {
         
         Application all = sc.getApplication("*");
         if (all != null) {
-            mergeEnvsToApps(sc, all.getEnv());
+            mergeEnvsToApps(sc, all, all.getEnv());
             mergePropsToApps(sc, all.getProperties());
             if (all.getExecutable() == null) {
                 sc.removeApplication(all);
@@ -494,13 +496,14 @@ public class SwiftConfig implements Cloneable {
         }
     }
 
-    private void mergeEnvsToApps(SwiftContact bc, Map<String, String> envs) {
+    private void mergeEnvsToApps(SwiftContact bc, Application srcApp, List<EnvironmentVariable> envs) {
         for (Application app : bc.getApplications()) {
-            for (Map.Entry<String, String> e : envs.entrySet()) {
-                if (!app.getEnv().containsKey(e.getKey())) {
-                    // only merge if app does not override
-                    app.setEnv(e.getKey(), e.getValue());
-                }
+            if (app == srcApp) {
+                continue;
+            }
+            int count = 0;
+            for (EnvironmentVariable e : envs) {
+                app.insertEnv(count++, e);
             }
         }
     }

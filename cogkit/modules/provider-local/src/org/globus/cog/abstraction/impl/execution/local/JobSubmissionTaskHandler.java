@@ -57,6 +57,7 @@ import org.globus.cog.abstraction.impl.common.util.OutputStreamMultiplexer;
 import org.globus.cog.abstraction.impl.file.FileResourceCache;
 import org.globus.cog.abstraction.impl.file.SimplePathExpansion;
 import org.globus.cog.abstraction.interfaces.CleanUpSet;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -577,11 +578,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
     }
 
     protected void addEnvs(ProcessBuilder pb, JobSpecification spec) {
-        Collection<String> names = spec.getEnvironmentVariableNames();
-        if (names.size() != 0) {
+        List<EnvironmentVariable> envs = spec.getEnvironment();
+        if (envs.size() != 0) {
             Map<String, String> env = pb.environment();
-            for (String name : names) { 
-                env.put(name, spec.getEnvironmentVariable(name));
+            for (EnvironmentVariable e : envs) { 
+                env.put(e.getName(), e.getValue());
             }
         }
     }

@@ -201,7 +201,12 @@ public interface JobSpecification extends Specification {
 
     public void addEnvironmentVariable(String name, int i);
     
+    @Deprecated
     public void setEnvironmentVariables(Map<String, String> env);
+    
+    public void setEnvironmentVariables(List<EnvironmentVariable> env);
+    
+    public void addEnvironmentVariable(EnvironmentVariable e);
 
     /**
      * Removes the environment variable with the given name from the remote
@@ -226,17 +231,15 @@ public interface JobSpecification extends Specification {
      * Returns a collection representing all the environment variable names
      * associated with the remote execution environment.
      *
-     * @deprecated use getEnvironmentVariableNames();
      */
-    @Deprecated
-    @SuppressWarnings("unchecked")
-    public Collection getEnvironment();
+    public List<EnvironmentVariable> getEnvironment();
 
     /**
      * Returns a collection representing all the environment variable names
      * associated with the remote execution environment.
      *
      */
+    @Deprecated
     public Collection<String> getEnvironmentVariableNames();
 
     /**

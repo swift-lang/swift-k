@@ -45,6 +45,7 @@ import org.globus.cog.abstraction.impl.common.task.GenericTaskHandler;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
 import org.globus.cog.abstraction.interfaces.CleanUpSet;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.SecurityContext;
@@ -85,7 +86,7 @@ public class GridExec extends AbstractGridNode {
 	protected ArgRef<Boolean> failOnJobError;
 	protected ArgRef<Boolean> batch;
 	
-	protected ArgRef<Map<String, String>> environment;
+	protected ArgRef<List<EnvironmentVariable>> environment;
 	protected ChannelRef<List<?>> c_stagein;
 	protected ChannelRef<List<?>> c_stageout;
 	protected ChannelRef<String> c_cleanup;
@@ -264,10 +265,10 @@ public class GridExec extends AbstractGridNode {
 
 	protected void addEnvironment(Stack stack, JobSpecificationImpl js)
 			throws ExecutionException {
-	    Map<String, String> env = this.environment.getValue(stack);
+	    List<EnvironmentVariable> env = this.environment.getValue(stack);
 	    if (env != null) {
-    		for (Map.Entry<String, String> e : env.entrySet()) {
-    			js.addEnvironmentVariable(e.getKey(), e.getValue());
+    		for (EnvironmentVariable e : env) {
+    			js.addEnvironmentVariable(e);
     		}
 	    }
 	}

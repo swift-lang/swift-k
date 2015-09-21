@@ -40,6 +40,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry;
@@ -108,15 +109,15 @@ public class CondorExecutor extends AbstractExecutor {
 			wr.write("input = " + quote(spec.getStdInput()) + "\n");
 		}
 
-		Iterator<String> i = spec.getEnvironmentVariableNames().iterator();
+		Iterator<EnvironmentVariable> i = spec.getEnvironment().iterator();
 		if (i.hasNext()) {
 			wr.write("environment = ");
 		}
 		while (i.hasNext()) {
-			String name = i.next();
-			wr.write(name);
+			EnvironmentVariable env = i.next();
+			wr.write(env.getName());
 			wr.write('=');
-			wr.write(quote(spec.getEnvironmentVariable(name)));
+			wr.write(quote(env.getValue()));
 			wr.write(';');
 		}
 		wr.write("\n");
@@ -137,10 +138,10 @@ public class CondorExecutor extends AbstractExecutor {
 		
 		if (args != null && args.size() > 0) {
 			wr.write("arguments = ");
-			i = args.iterator();
-			while (i.hasNext()) {
-				wr.write(quote(i.next()));
-				if (i.hasNext()) {
+			Iterator<String> i2 = args.iterator();
+			while (i2.hasNext()) {
+				wr.write(quote(i2.next()));
+				if (i2.hasNext()) {
 					wr.write(' ');
 				}
 			}

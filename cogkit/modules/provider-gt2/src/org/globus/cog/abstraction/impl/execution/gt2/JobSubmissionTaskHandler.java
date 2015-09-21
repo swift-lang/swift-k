@@ -26,12 +26,11 @@
 package org.globus.cog.abstraction.impl.execution.gt2;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractDelegatedTaskHandler;
@@ -42,6 +41,7 @@ import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextExcepti
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.Delegation;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -499,12 +499,11 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler
     }
 
     private void addEnvironment(JobSpecification spec, RslNode rsl) {
-        Collection<String> environment = spec.getEnvironmentVariableNames();
+        List<EnvironmentVariable> environment = spec.getEnvironment();
         if (environment.size() > 0) {
             NameOpValue env = new NameOpValue("environment", NameOpValue.EQ);
-            for (String name : environment) {
-                String value = spec.getEnvironmentVariable(name);
-                env.add(valuePair(name, value));
+            for (EnvironmentVariable var : environment) {
+                env.add(valuePair(var.getName(), var.getValue()));
             }
             rsl.add(env);
         }

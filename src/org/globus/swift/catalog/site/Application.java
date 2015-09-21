@@ -28,13 +28,20 @@
  */
 package org.globus.swift.catalog.site;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.globus.cog.abstraction.impl.common.task.EnvironmentVariableImpl;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 public class Application {
     private String name, executable;
-    private Map<String, String> env;
+    private List<EnvironmentVariable> env;
+    private Set<String> envNames;
     private Map<String, Object> properties;
     
     
@@ -56,9 +63,24 @@ public class Application {
 
     public void setEnv(String name, String value) {
         if (env == null) {
-            env = new HashMap<String, String>();
+            env = new ArrayList<EnvironmentVariable>();
+            envNames = new HashSet<String>();
         }
-        env.put(name, value);
+        env.add(new EnvironmentVariableImpl(name, value));
+        envNames.add(name);
+    }
+    
+    public void insertEnv(int index, String name, String value) {
+        insertEnv(index, new EnvironmentVariableImpl(name, value));
+    }
+    
+    public void insertEnv(int index, EnvironmentVariable e) {
+        if (env == null) {
+            env = new ArrayList<EnvironmentVariable>();
+            envNames = new HashSet<String>();
+        }
+        env.add(index, e);
+        envNames.add(name);
     }
 
     public void addProperty(String name, Object value) {
@@ -68,9 +90,27 @@ public class Application {
         properties.put(name, value);
     }
     
-    public Map<String, String> getEnv() {
+    public Set<String> getEnvNames() {
+        if (envNames == null) {
+            return Collections.emptySet();
+        }
+        else {
+            return envNames;
+        }
+    }
+    
+    public boolean hasEnv(String name) {
+        if (envNames == null) {
+            return false;
+        }
+        else {
+            return envNames.contains(name);
+        }
+    }
+    
+    public List<EnvironmentVariable> getEnv() {
         if (env == null) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
         else {
             return env;

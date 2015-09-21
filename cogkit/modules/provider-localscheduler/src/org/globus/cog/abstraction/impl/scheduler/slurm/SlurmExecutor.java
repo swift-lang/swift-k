@@ -11,6 +11,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractExecutor;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -181,9 +182,9 @@ public class SlurmExecutor extends AbstractExecutor {
 
 		// Environment variables
 		wr.write("\n");
-		for (String name : spec.getEnvironmentVariableNames()) {
-			wr.write("export " + name + '='
-					+ quote(spec.getEnvironmentVariable(name)) + '\n');
+		for (EnvironmentVariable var: spec.getEnvironment()) {
+			wr.write("export " + var.getName() + '='
+					+ quote(var.getValue()) + '\n');
 		}
 
 		if (sJobType != null) {

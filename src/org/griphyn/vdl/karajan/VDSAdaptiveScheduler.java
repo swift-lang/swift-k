@@ -192,7 +192,7 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 			while (!dq.isEmpty()) {
 				int clusterTime = 0;
 				LinkedList<Entry> cluster = new LinkedList<Entry>();
-				Map<String, String> env = new HashMap<String, String>();
+				List<EnvironmentVariable> env = new ArrayList<EnvironmentVariable>();
 				Map<String, Object> attrs = new HashMap<String, Object>();
 				Object constraints = null;
 				String dir = null;
@@ -280,8 +280,8 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 						js.addArgument("|");
 					}
 					
-					for (Map.Entry<String, String> e : env.entrySet()) {
-						js.addEnvironmentVariable(e.getKey(), e.getValue());
+					for (EnvironmentVariable e : env) {
+					    js.addEnvironmentVariable(e);
 					}
 
 					for (Map.Entry<String, Object> e : attrs.entrySet()) {
@@ -297,17 +297,11 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 		}
 	}
 
-	private boolean detectConflict(JobSpecification js, Map<String, String> env, Map<String, Object> attrs) {
+	private boolean detectConflict(JobSpecification js, List<EnvironmentVariable> env, Map<String, Object> attrs) {
 		return detectEnvironmentConflict(js, env) || detectAttributeConflict(js, attrs);
 	}
 
-	private boolean detectEnvironmentConflict(JobSpecification js, Map<String, String> env) {
-	    for (String envName : js.getEnvironmentVariableNames()) {
-			Object value = env.get(envName);
-			if (value != null && !value.equals(js.getEnvironmentVariable(envName))) {
-				return true;
-			}
-		}
+	private boolean detectEnvironmentConflict(JobSpecification js, List<EnvironmentVariable> env) {
 		return false;
 	}
 
@@ -324,15 +318,13 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 		return false;
 	}
 
-	private void merge(JobSpecification js, Map<String, String> env, Map<String, Object> attrs) {
+	private void merge(JobSpecification js, List<EnvironmentVariable> env, Map<String, Object> attrs) {
 		mergeEnvironment(js, env);
 		mergeAttributes(js, attrs);
 	}
 
-	private void mergeEnvironment(JobSpecification js, Map<String, String> env) {
-	    for (String envName : js.getEnvironmentVariableNames()) {
-			env.put(envName, js.getEnvironmentVariable(envName));
-		}
+	private void mergeEnvironment(JobSpecification js, List<EnvironmentVariable> env) {
+	    env.addAll(js.getEnvironment());
 	}
 
 	private void mergeAttributes(JobSpecification js, Map<String, Object> attrs) {

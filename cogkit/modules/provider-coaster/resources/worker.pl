@@ -2538,7 +2538,7 @@ sub submitjobHandler {
 	my $SOFTIMAGE;
 	my %JOB = ();
 	my @JOBARGS = ();
-	my %JOBENV = ();
+	my @JOBENV = ();
 	my @STAGEIN = ();
 	my @STAGEIND = ();
 	my @STAGEOUT = ();
@@ -2554,7 +2554,7 @@ sub submitjobHandler {
 		}
 		elsif ($pair[0] eq "env") {
 			my @ep = split(/=/, $pair[1], 2);
-			$JOBENV{"$ep[0]"} = $ep[1];
+			push @JOBENV, [$ep[0], $ep[1]];
 		}
 		elsif ($pair[0] eq "identity") {
 			$JOBID = $pair[1];
@@ -2643,7 +2643,7 @@ sub submitjobHandler {
 			stageindex => 0,
 			job => \%JOB,
 			jobargs => \@JOBARGS,
-			jobenv => \%JOBENV,
+			jobenv => \@JOBENV,
 			stageout => \@STAGEOUT,
 			stageoutd => \@STAGEOUTD,
 			stageoutm => \@STAGEOUTM,
@@ -2926,6 +2926,37 @@ sub tmpSFile {
 	return "/tmp/$pid.$suffix";
 }
 
+sub setEnv {
+	my ($name, $value) = @_;
+	
+	my $ix = index($value, "\$");
+	if ($ix != -1) {
+		my $expanded = '';
+		my @parts = split(/(\$\w+)|(\${\w+})/, $value);
+		foreach my $seg (@parts) {
+    		next if (not defined($seg));
+    		if ($seg =~ m/\${?(\w+)}?/) {
+    			$seg = ($ENV{$1} || '');
+			}
+    		$expanded .= $seg;
+  		}
+  		$ENV{$name} = $expanded;
+  		wlog DEBUG, "SETENV $name = $expanded\n";
+	}
+	else {
+		$ENV{$name} = $value;
+		wlog DEBUG, "SETENV $name = $value\n";
+	}
+}
+
+sub setEnvs {
+	my ($JOBENV) = @_;
+	my $env;
+	foreach $env (@$JOBENV) {
+		setEnv(@$env[0], @$env[1]);
+	}
+}
+
 sub runjob {
 	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA) = @_;
 	my $executable = $$JOB{"executable"};
@@ -2962,10 +2993,8 @@ sub runjob {
 	
 	my $cwd = getcwd();
 	
-	my $ename;
-	foreach $ename (keys %$JOBENV) {
-		$ENV{$ename} = $$JOBENV{$ename};
-	}
+	setEnvs($JOBENV);
+
     $ENV{"SWIFT_JOB_SLOT"} = $JOBSLOT;
     $ENV{"SWIFT_WORKER_PID"} = $WORKERPID;
 	unshift @$JOBARGS, $executable;

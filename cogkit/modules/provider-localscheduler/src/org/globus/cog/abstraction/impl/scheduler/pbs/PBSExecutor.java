@@ -40,6 +40,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -250,16 +251,16 @@ public class PBSExecutor extends AbstractExecutor {
 		writeNonEmptyAttr("queue", "-q ", wr);
 		wr.write("#PBS -o " + quote(stdout) + '\n');
 		wr.write("#PBS -e " + quote(stderr) + '\n');
-		if (spec.getEnvironmentVariableNames().size() > 0) {
+		if (spec.getEnvironment().size() > 0) {
             wr.write("#PBS -v " + join(spec.getEnvironmentVariableNames(), ", ") + '\n');
         }
 
-		for (String name : spec.getEnvironmentVariableNames()) {
+		for (EnvironmentVariable var : spec.getEnvironment()) {
 			// "export" is necessary on the Cray XT5 Crow
 			wr.write("export ");
-			wr.write(name);
+			wr.write(var.getName());
 			wr.write('=');
-			wr.write(quote(spec.getEnvironmentVariable(name)));
+			wr.write(quote(var.getValue()));
 			wr.write('\n');
 		}
 

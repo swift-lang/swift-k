@@ -43,6 +43,7 @@ import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.ssh.ProxyForwarder;
 import org.globus.cog.abstraction.impl.ssh.ProxyForwardingManager;
 import org.globus.cog.abstraction.interfaces.Delegation;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 
@@ -134,11 +135,11 @@ public class JobSubmissionTaskHandler extends org.globus.cog.abstraction.impl.ex
             ps.println(escape(spec.getDirectory()));
         }
         
-        for (String env : spec.getEnvironmentVariableNames()) {
+        for (EnvironmentVariable env : spec.getEnvironment()) {
             ps.print("export ");
-            ps.print(escape(env));
+            ps.print(escape(env.getName()));
             ps.print("=");
-            ps.println(escape(spec.getEnvironmentVariable(env)));
+            ps.println(escape(env.getValue()));
         }
         
         /**

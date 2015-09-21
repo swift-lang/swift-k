@@ -46,6 +46,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.StagingSet;
@@ -129,8 +130,8 @@ public class ShellExecutor extends AbstractExecutor {
         writeStandardFileSpec(spec.getStdError(), spec.getStdErrorLocation(), "stderr", ps);
         
         // Environment variables
-        for (String en : spec.getEnvironmentVariableNames()) {
-            writeSpec("env." + en, escape(spec.getEnvironmentVariable(en)), ps.stdin);
+        for (EnvironmentVariable var : spec.getEnvironment()) {
+            writeSpec("env." + var.getName(), escape(var.getValue()), ps.stdin);
         }
         
         // Attributes

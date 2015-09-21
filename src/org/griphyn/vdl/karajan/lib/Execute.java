@@ -21,10 +21,10 @@
 package org.griphyn.vdl.karajan.lib;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import k.rt.Abort;
@@ -37,6 +37,7 @@ import k.rt.Stack;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -61,7 +62,7 @@ public class Execute extends GridExec {
 	private ArgRef<Channel<Object>> replicationChannel;
 	private ArgRef<String> jobid;
 	private ArgRef<ProgressState> progress;
-	private ArgRef<Map<String, String>> environment;
+	private ArgRef<List<EnvironmentVariable>> environment;
 	
 	private VarRef<Context> context;
 	
@@ -109,7 +110,10 @@ public class Execute extends GridExec {
 
     @Override
     protected void addEnvironment(Stack stack, JobSpecificationImpl js) throws ExecutionException {
-        js.setEnvironmentVariables(environment.getValue(stack));
+        List<EnvironmentVariable> l = environment.getValue(stack);
+        if (l != null) {
+            js.setEnvironmentVariables(l);
+        }
     }
 
     @Override

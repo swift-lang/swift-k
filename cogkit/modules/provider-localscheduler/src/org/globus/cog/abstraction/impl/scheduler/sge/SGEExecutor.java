@@ -43,6 +43,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessException;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -368,14 +369,14 @@ public class SGEExecutor extends AbstractExecutor {
         wr.write("#$ -o " + quote(stdout) + '\n');
         wr.write("#$ -e " + quote(stderr) + '\n');
 
-        if (!spec.getEnvironmentVariableNames().isEmpty()) {
+        if (!spec.getEnvironment().isEmpty()) {
             wr.write("#$ -v ");
-            Iterator<String> i = spec.getEnvironmentVariableNames().iterator();
+            Iterator<EnvironmentVariable> i = spec.getEnvironment().iterator();
             while (i.hasNext()) {
-                String name = i.next();
-                wr.write(name);
+                EnvironmentVariable var = i.next();
+                wr.write(var.getName());
                 wr.write('=');
-                wr.write(quote(spec.getEnvironmentVariable(name)));
+                wr.write(quote(var.getValue()));
                 if (i.hasNext()) {
                     wr.write(',');
                 }

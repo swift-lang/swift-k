@@ -44,6 +44,7 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.SubmitJobHandler;
 import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
@@ -153,9 +154,9 @@ public class SubmitJobCommand extends Command {
         for (String arg : spec.getArgumentsAsList())
             add(sb, "arg", arg);
 
-        for (String name : spec.getEnvironmentVariableNames())
-            add(sb, "env", 
-                name + "=" + spec.getEnvironmentVariable(name));
+        for (EnvironmentVariable var : spec.getEnvironment()) {
+            add(sb, "env", var.getName() + "=" + var.getValue());
+        }
     
         if (simple) {
         	addKey(sb, "attr");

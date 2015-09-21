@@ -32,7 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -43,6 +42,7 @@ import org.globus.cog.abstraction.impl.scheduler.common.AbstractProperties;
 import org.globus.cog.abstraction.impl.scheduler.common.AbstractQueuePoller;
 import org.globus.cog.abstraction.impl.scheduler.common.Job;
 import org.globus.cog.abstraction.impl.scheduler.common.ProcessListener;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Task;
@@ -165,16 +165,16 @@ public class CobaltExecutor extends AbstractExecutor {
 		List<String> result = new ArrayList<String>();
 		//result.add(cqsub);
 		result.add(qsub);
-		Collection<String> names = getSpec().getEnvironmentVariableNames();
-		if (names != null && names.size() > 0) {
+		List<EnvironmentVariable> envs = getSpec().getEnvironment();
+		if (envs != null && envs.size() > 0) {
 			result.add("-e");
 			StringBuffer sb = new StringBuffer();
-			Iterator<String> i = names.iterator();
+			Iterator<EnvironmentVariable> i = envs.iterator();
 			while (i.hasNext()) {
-				String name = i.next();
-				sb.append(name);
+				EnvironmentVariable env = i.next();
+				sb.append(env.getName());
 				sb.append('=');
-				sb.append(quote(getSpec().getEnvironmentVariable(name)));
+				sb.append(quote(env.getValue()));
 				if (i.hasNext()) {
 					sb.append(':');
 				}

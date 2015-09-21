@@ -25,6 +25,7 @@
 
 package org.globus.cog.abstraction.impl.common.task;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,6 +40,7 @@ import java.util.Vector;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.Delegation;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Specification;
@@ -63,7 +65,7 @@ public class JobSpecificationImpl implements JobSpecification {
     private final int type;
     private Map<String, Object> attributes;
     private List<String> arguments;
-    private Map<String, String> environment;
+    private List<EnvironmentVariable> environment;
     private String directory;
     private String executable;
     private FileLocation stdinLocation, stdoutLocation, stderrLocation,
@@ -179,9 +181,9 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public void addEnvironmentVariable(String name, String value) {
         if (environment == null) {
-            environment = new HashMap<String, String>();
+            environment = new ArrayList<EnvironmentVariable>();
         }
-        environment.put(name, value);
+        environment.add(new EnvironmentVariableImpl(name, value));
     }
 
 
@@ -191,7 +193,15 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public String removeEnvironmentVariable(String name) {
         if (environment != null) {
-            return environment.remove(name);
+            Iterator<EnvironmentVariable> i = environment.iterator();
+            while (i.hasNext()) {
+                EnvironmentVariable e = i.next();
+                if (name.equals(e.getName())) {
+                    i.remove();
+                    return e.getValue();
+                }
+            }
+            return null;
         }
         else {
             return null;
@@ -200,25 +210,42 @@ public class JobSpecificationImpl implements JobSpecification {
 
     public String getEnvironmentVariable(String name) {
         if (environment != null) {
-            return environment.get(name);
+            Iterator<EnvironmentVariable> i = environment.iterator();
+            while (i.hasNext()) {
+                EnvironmentVariable e = i.next();
+                if (name.equals(e.getName())) {
+                    return e.getValue();
+                }
+            }
+            return null;
         }
         else {
             return null;
         }
     }
 
-    public Collection<String> getEnvironment() {
+    public List<EnvironmentVariable> getEnvironment() {
         if (environment != null) {
-            return environment.keySet();
+            return environment;
         }
         else {
-            return Collections.emptySet();
+            return Collections.emptyList();
         }
     }
 
     public Collection<String> getEnvironmentVariableNames() {
         if (environment != null) {
-            return environment.keySet();
+            return new AbstractList<String>() {
+                @Override
+                public String get(int index) {
+                    return environment.get(index).getName();
+                }
+
+                @Override
+                public int size() {
+                    return environment.size();
+                }
+            };
         }
         else {
             return Collections.emptySet();
@@ -226,8 +253,24 @@ public class JobSpecificationImpl implements JobSpecification {
     }
 
     @Override
-    public void setEnvironmentVariables(Map<String, String> env) {
+    public void setEnvironmentVariables(List<EnvironmentVariable> env) {
         this.environment = env;
+    }
+
+    @Override
+    public void addEnvironmentVariable(EnvironmentVariable e) {
+        if (environment == null) {
+            environment = new ArrayList<EnvironmentVariable>();
+        }
+        environment.add(e);
+    }
+
+    @Override
+    public void setEnvironmentVariables(Map<String, String> env) {
+        environment = new ArrayList<EnvironmentVariable>();
+        for (Map.Entry<String, String> e : env.entrySet()) {
+            addEnvironmentVariable(new EnvironmentVariableImpl(e.getKey(), e.getValue()));
+        }
     }
 
     public void setStdOutput(String output) {
@@ -485,7 +528,7 @@ public class JobSpecificationImpl implements JobSpecification {
             }
             result.arguments = new ArrayList<String>(arguments);
             if (environment != null) {
-                result.environment = new HashMap<String, String>(environment);
+                result.environment = new ArrayList<EnvironmentVariable>(environment);
             }
             if (cleanUpSet != null) {
                 result.cleanUpSet = (CleanUpSet) cleanUpSet.clone();
