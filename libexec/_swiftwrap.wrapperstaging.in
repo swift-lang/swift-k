@@ -2,58 +2,7 @@
 # this script must be invoked inside of bash, not plain sh
 # note that this script modifies $IFS
 
-# Toggle debugging output from debug()
-DEBUG=0
-
-infosection() {
-	echo >& "$INFO"
-	echo "_____________________________________________________________________________" >& "$INFO"
-	echo >& "$INFO"
-	echo "        $1" >& "$INFO"
-	echo "_____________________________________________________________________________" >& "$INFO"
-	echo >& "$INFO"
-}
-
-info() {
-	infosection "command line"
-	echo $COMMANDLINE 2>&1 >& "$INFO"
-	infosection "uname -a"
-	uname -a 2>&1 >& "$INFO"
-	infosection "id"
-	id 2>&1 >& "$INFO"
-	infosection "env"
-	env 2>&1 >& "$INFO"
-	infosection "df"
-	df 2>&1 >& "$INFO"
-        if [ -e "/proc/cpuinfo" ]; then
-		infosection "/proc/cpuinfo"
-		cat /proc/cpuinfo 2>&1 >& "$INFO"
-	fi
-	if [ -e "/proc/meminfo" ]; then
-		infosection "/proc/meminfo"
-		cat /proc/meminfo 2>&1 >& "$INFO"
-	fi
-	if [ -f "$STDOUT" ] ; then
-		infosection "stdout"
-		cat $STDOUT >& "$INFO"
-	fi
-	if [ -f "$STDERR" ] ; then
-		infosection "stderr"
-		cat $STDERR >& "$INFO"
-	fi
-}
-
-logstate() {
-	echo "Progress " `date +"%Y-%m-%d %H:%M:%S.%N%z"` " $@" >& "$INFO"
-}
-
-log() {
-	echo "$@" >& "$INFO"
-}
-
-debug() {
-	[[ $DEBUG == 1 ]] && echo "$@" >& "$INFO"
-}
+#include _swiftwrap.lib
 
 localPath() {
     # remove protocol://
@@ -195,8 +144,8 @@ fail() {
 	shift
 	
 	if [ "X$DIR" != "X" ]; then
-		echo $@ >"$DIR/_swift.error"
-		stageout "$DIR/_swift.error" "$JOBDIR/_swift.error"
+		echo $@ >"$DIR/_wrapper.error"
+		stageout "$DIR/_wrapper.error" "$JOBDIR/_wrapper.error"
 	else
 		echo $@
 	fi
@@ -210,19 +159,6 @@ fail() {
 	fi
 }
 
-checkError() {
-	if [ "$?" != "0" ]; then
-		fail $@
-	fi
-}
-
-checkEmpty() {
-	if [ "$1" == "" ]; then
-		shift
-		fail 254 $@
-	fi
-}
-
 checkparamfile() {
 	log "checking for paramfile"
 	if [ "$1" == "-p" ]; then
@@ -233,98 +169,7 @@ checkparamfile() {
 	fi
 }
 
-getarg() {
-	NAME=$1
-	shift
-	VALUE=""
-	SHIFTCOUNT=0
-	if [ "$PARAMFILE" == "" ] && [ "$1" == "$NAME" ]; then
-		shift
-		let "SHIFTCOUNT=$SHIFTCOUNT+1"
-		while [ "${1:0:1}" != "-" ] && [ "$#" != "0" ]; do
-			VALUE="$VALUE $1"
-			shift
-			let "SHIFTCOUNT=$SHIFTCOUNT+1"
-		done
-		VALUE="${VALUE:1}"
-	elif [ "$PARAMFILE" != "" ] && grep -E "^$NAME " $PARAMFILE ; then
-		VALUE=$(grep -E "^$NAME " $PARAMFILE | cut -d ' ' -f 2-)
-	else
-		fail 254 "Missing $NAME argument"
-	fi
-}
-
-openinfo() {
-	exec 3<> $1
-	INFO=3
-}
-
-closeinfo() {
-	exec 3>&-
-}
-
-contains() {
-	ARRAY=$1
-	X=$2
-
-	for a in ${!ARRAY}
-	do
-		if [[ ${a} == ${X} ]]; then
-			return 0
-		fi
-	done
-	return 1
-}
-
-genScripts() {
-	echo "#!/bin/bash" > run.sh
-	echo -n "\"$EXEC\" " >> run.sh
-	for CMDARG in "${CMDARGS[@]}"; do
-    	echo -n "\"$CMDARG\" " >> run.sh
-	done
-	echo "1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
-	chmod +x run.sh
-}
-
-cdm_local_output()
-{
- 	L=$1
-
-	if [[ $CDM_FILE == "" ]]; then
-		return
-	fi
-
- 	CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
-	if [[ $CDM_POLICY == "LOCAL" ]]; then
-		cdm_local_output_perform $L $CDM_POLICY
-	fi
-}
-
-cdm_local_output_perform()
-{
-	L=$1
-	TOOL=$2
-	REMOTE_DIR=$3
-	FLAGS=$3
-	log "Copying $REMOTE_DIR/$FILE to $JOBDIR/$FILE"
-	mkdir -p $REMOTE_DIR
-	checkError 254 "CDM[LOCAL]: mkdir -p $REMOTE_DIR failed!"
-	$TOOL $FLAGS $JOBDIR/$FILE $REMOTE_DIR/$FILE
-	checkError 254 "CDM[LOCAL]: Tool failed!"
-}
-
-cdm_gather()
-{
-	GATHER_OUTPUT=${*}
-	if [[ $CDM_FILE == "" ]]; then
-		return
-	fi
-	if [[ $GATHER_OUTPUT == "" ]]; then
-		return
-	fi
-
-	cdm_gather_action $GATHER_MAX $GATHER_OUTPUT
-}
+MPISetVars
 
 COMMANDLINE=$@
 PARAMFILE=
@@ -348,6 +193,10 @@ SCRATCH=$VALUE/$ID
 shift $SHIFTCOUNT
 
 checkparamfile "$@"
+loadParamfile
+if [ "$PARAMARGS" != "" ]; then
+	set -- "$PARAMARGS"
+fi
 
 INFODIR=$SCRATCH
 
@@ -356,35 +205,14 @@ mkdir -p $INFODIR
 log "Info dir is $INFODIR"
 closeinfo
 
-if [ -z $MPI_RANK ]; then
-	INFOFILE="$INFODIR/_swift.info"
+if [ "$MPI_RANK" != "0" ]; then
+	openinfo "$INFODIR/_wrapper.log.$MPI_RANK"
 else
-	# Rename info file for each rank
-	INFOFILE="$INFODIR/_swift.info-${PMI_RANK}"
-	# Build list of per-rank info files
-	echo $INFOFILE >> $INFODIR/_swift.info
+	openinfo "$INFODIR/_wrapper.log"
 fi
-rm -f $INFOFILE
-openinfo "$INFOFILE"
 
 logstate "LOG_START"
 infosection "Wrapper (_swiftwrap.wrapperstaging)"
-
-getarg "-e" "$@"
-EXEC=$VALUE
-shift $SHIFTCOUNT
-
-getarg "-out" "$@"
-STDOUT=$VALUE
-shift $SHIFTCOUNT
-
-getarg "-err" "$@"
-STDERR=$VALUE
-shift $SHIFTCOUNT
-
-getarg "-i" "$@"
-STDIN=$VALUE
-shift $SHIFTCOUNT
 
 getarg "-d" "$@"
 DIRS=$VALUE
@@ -424,30 +252,11 @@ getarg "-status" "$@"
 STATUSMODE=$VALUE
 shift $SHIFTCOUNT
 
-declare -a CMDARGS
-if [ "$PARAMFILE" == "" ] && [ "$1" == "-a" ] ; then
-	shift
-	CMDARGS=("$@")
-elif [ "$PARAMFILE" != "" ] ; then
-	CMDARGS=()
-	FIRST=1
-	while read line ; do
-		if [ "$FIRST" == "1" ] ; then
-			CMDARGS=("$line")
-			FIRST=0
-		else
-			CMDARGS=("${CMDARGS[@]}" "$line")
-		fi
-	done < <(grep -E "^-a " $PARAMFILE | cut -d " " -f 2-)
-else
-	fail 254 "Missing arguments (-a option)"
-fi
-
 if [ "X$CDM_FILE" != "X" ]; then
 	# TODO
 	logstate "SOURCE_CDM_LIB $WFDIR/shared/cdm_lib.sh"
 	source $WFDIR/shared/cdm_lib.sh
-	checkError 254 "Could not source: $WFDIR/shared/cdm_lib.sh"
+	checkError $? 254 "Could not source: $WFDIR/shared/cdm_lib.sh"
 fi
 
 if [ "X$SCRATCH" == "X" ]; then
@@ -466,47 +275,31 @@ if [ "$SWIFT_EXTRA_INFO" != "" ]; then
 	log "EXTRAINFO=$($SWIFT_EXTRA_INFO)"
 fi
 
-if [ "X${EXEC:0:1}" != "X/" ] ; then
-	export ORIGEXEC=$EXEC
-	export EXEC=$(which $EXEC)
-	if [ "X$EXEC" = "X" ] ; then
-		fail 254 "Cannot find executable $ORIGEXEC on site system path"
-	fi
+if [ "$1" != "-e" ]; then
+	fail 254 "Missing -e argument" 
 fi
 
 log "PID=$$"
 log "HOST=$HOST"
 log "PWD=$PWD"
 log "DIR=$DIR"
-log "EXEC=$EXEC"
-log "STDIN=$STDIN"
-log "STDOUT=$STDOUT"
-log "STDERR=$STDERR"
 log "DIRS=$DIRS"
 log "INF=$INF"
 log "OUTF=$OUTF"
 log "WRAPPERLOG_ALWAYS_TRANSFER=$WRAPPER_LOG_ALWAYS_TRANSFER"
 log "SITEDIR_KEEP=$SITEDIR_KEEP"
 log "CDM_FILE=$CDM_FILE"
-log "ARGS=$@"
-log "ARGC=$#"
 
-[ -n $MPI_RANK ] && log "MPI_RANK=$MPI_RANK" && log "PMI_RANK=$PMI_RANK"
 IFS="|"
 
 logstate "CREATE_JOBDIR"
 mkdir -p $DIR
-checkError 254 "Failed to create job directory $DIR"
+checkError $? 254 "Failed to create job directory $DIR"
 log "Created job directory: $DIR"
 
-if [[ $PMI_RANK == "" || $PMI_RANK == 0 ]]; then
+createInputDirs "$DIR/"
 
-	logstate "CREATE_INPUTDIR"
-	for D in $DIRS ; do
-		mkdir -p "$DIR/$D" 2>&1 >>"$INFO"
-		checkError 254 "Failed to create input directory $D"
-		log "Created output directory: $DIR/$D"
-	done
+if [ "$MPI_RANK" == "0" ]; then
 	
 	logstate "LINK_INPUTS"
 	for L in $INF ; do
@@ -550,52 +343,78 @@ cd $DIR
 if [ $? != 0 ]; then
 	log "PWD: $PWD"
 	log $( find . )
-	fail 254 "Could not cd to: $DIR"
-fi
-logstate "EXECUTE"
-
-debug "Command line: $EXEC ${CMDARGS[@]}"
-
-if [ ! -f "$EXEC" ]; then
-	fail 254 "The executable $EXEC does not exist"
-fi
-if [ ! -x "$EXEC" ]; then
-	fail 254 "The executable $EXEC does not have the executable bit set"
+	fail $? 254 "Could not cd to: $DIR"
 fi
 
-if [ "$STDIN" == "" ]; then
-	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
-		genScripts
+handleSetupScript
+initTimingTools
+
+SEQ=1
+while [ "$1" == "-e" ]; do
+	getarg "-e" "$@"
+	EXEC=$VALUE
+	shift $SHIFTCOUNT
+	
+	getarg "-out" "$@"
+	STDOUT=$VALUE
+	shift $SHIFTCOUNT
+	
+	getarg "-err" "$@"
+	STDERR=$VALUE
+	shift $SHIFTCOUNT
+	
+	getarg "-i" "$@"
+	STDIN=$VALUE
+	shift $SHIFTCOUNT
+	
+	getCmdArgs "$@"
+	shift $SHIFTCOUNT
+	
+	log "EXEC=$EXEC"
+	log "STDIN=$STDIN"
+	log "STDOUT=$STDOUT"
+	log "STDERR=$STDERR"
+	log "ARGS=${CMDARGS[@]}"
+	log "ARGC=${#CMDARGS[@]}"
+	
+	resolveExecutable
+	
+	initTimingTools
+	
+	logstate "EXECUTE"
+
+	MPIInitOutputAggregation
+	
+	actualExec
+	
+	MPIAggregateOutput
+	
+	if [ "$MPI_RANK" == "0" ]; then
+		linkOutput $EC _stdout_$SEQ.txt _stdout.txt "$STDOUT"
+		linkOutput $EC _stderr_$SEQ.txt _stderr.txt "$STDERR"
 	fi
-	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR"
-else
-	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
-		genScripts
+	
+	if [ -s _stderr_$SEQ.txt ]; then
+		checkError $EC $EC "Application $EXEC failed with an exit code of $EC"$'\n'$(<_stderr_$SEQ.txt)
+	else
+		checkError $EC $EC "Application $EXEC failed with an exit code of $EC"
 	fi
-	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
-fi
-checkError $? "Application $EXEC failed with an exit code of $?"
+	let "SEQ=$SEQ+1"
+done
+
+# called by collectOutput for each set of files collected 
+collectCB() {
+	# TODO
+}
 
 logstate "EXECUTE_DONE"
-log "Job ran successfully"
+if [ "$MPI_RANK" == "0" ]; then
+	collectOutput
+fi
 
-if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
+if [ "$MPI_RANK" == "0" ]; then
 
-	MISSING=
-	for O in $OUTF ; do
-		LO=`localPath $O`
-		if [ ! -f "$DIR/$LO" ]; then
-			if [ "$MISSING" == "" ]; then
-				MISSING=$LO
-			else
-				MISSING="$MISSING, $LO"
-			fi
-		fi
-	done
-	if [ "$MISSING" != "" ]; then
-		log $( find . )
-		fail 254 "The following output files were not created by the application: $MISSING"
-	fi
+	checkMissing "$DIR/"
 	
 	logstate "MOVING_OUTPUTS $OUTF"
 	for O in $OUTF ; do
@@ -615,17 +434,15 @@ if [[ $MPI_RANK == "" || $MPI_RANK == 0 ]]; then
 	
 	log "Moving back to workflow directory $WFDIR"
 	cd $WFDIR
-	if [ $? != 0 ]; then
-		fail 254 "Could not cd to workflow directory: $WFDIR"
-	fi
+	checkError $? 254 "Could not cd to workflow directory: $WFDIR"
 	
 	if [ "$WRAPPERLOG_ALWAYS_TRANSFER" == "true" ]; then
-		stageout "$INFOFILE" "$JOBDIR/_swift.info"
+		stageout "$INFOFILE" "$JOBDIR/_wrapper.log"
 	fi
 	if [ "$SITEDIR_KEEP" != "true" ]; then
 		logstate "RM_JOBDIR"
 		rm -rf "$DIR" 2>&1 >& "$INFO"
-		checkError 254 "Failed to remove job directory $DIR"
+		checkError $? 254 "Failed to remove job directory $DIR"
 	fi
 else
 	# Allow rank 0 to write output
@@ -635,10 +452,6 @@ fi # MPI_RANK==0
 logstate "END"
 
 closeinfo
-
-if [ "$WRAPPER_LOG_ALWAYS_TRANSFER" == "true" ]; then
-	stageout "$DIR/_swift.info" "$JOBID/_swift.info"
-fi
 
 # ensure we exit with a 0 after a successful execution
 exit 0

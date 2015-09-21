@@ -1,0 +1,504 @@
+# Toggle debugging output from debug()
+DEBUG=0
+
+loadParamfile() {
+	if [ "$PARAMFILE" != "" ]; then 
+		FIRST=1
+		while read line ; do
+			if [ "$FIRST" == "1" ] ; then
+				PARAMARGS=("$line")
+				FIRST=0
+			else
+				PARAMARGS=("${PARAMARGS[@]}" "$line")
+			fi
+		done <$PARAMFILE
+	else
+		unset PARAMARGS
+	fi
+}
+
+debug() {
+	[[ $DEBUG == 1 ]] && echo "$@" >& "$INFO"
+}
+
+openinfo() {
+	if [ "$CRTINFO" != "" ]; then
+		closeinfo
+		mv $CRTINFO $1
+		CRTINFO=
+	fi
+	exec 3>> $1
+	INFO=3
+	CRTINFO=$1
+}
+
+closeinfo() {
+	exec 3>&-
+}
+
+infosection() {
+	echo >& "$INFO"
+	echo "_____________________________________________________________________________" >& "$INFO"
+	echo >& "$INFO"
+	echo "        $1" >& "$INFO"
+	echo "_____________________________________________________________________________" >& "$INFO"
+	echo >& "$INFO"
+}
+
+info() {
+	infosection "command line"
+	echo $COMMANDLINE 2>&1 >& "$INFO"
+	infosection "uname -a"
+	uname -a 2>&1 >& "$INFO"
+	infosection "id"
+	id 2>&1 >& "$INFO"
+	infosection "env"
+	env 2>&1 >& "$INFO"
+	infosection "df"
+	df 2>&1 >& "$INFO"
+        if [ -e "/proc/cpuinfo" ]; then
+		infosection "/proc/cpuinfo"
+		cat /proc/cpuinfo 2>&1 >& "$INFO"
+	fi
+	if [ -e "/proc/meminfo" ]; then
+		infosection "/proc/meminfo"
+		cat /proc/meminfo 2>&1 >& "$INFO"
+	fi
+	if [ -f "$STDOUT" ] ; then
+		infosection "stdout"
+		cat $STDOUT >& "$INFO"
+	fi
+	if [ -f "$STDERR" ] ; then
+		infosection "stderr"
+		cat $STDERR >& "$INFO"
+	fi
+}
+
+log() {
+	echo "$@" >& "$INFO"
+}
+
+
+# lookup exact executable path for date to avoid going through the path
+# multiple times
+
+DATE_BIN=`which date`
+
+logstate() {
+	echo "Progress " `$DATE_BIN +"%Y-%m-%d %H:%M:%S.%N%z"` " $@" >& "$INFO"
+}
+
+checkError() {
+	CHECK=$1
+	shift
+	if [ "$CHECK" != "0" ]; then
+		fail $@
+	fi
+}
+
+checkEmpty() {
+	if [ "$1" == "" ]; then
+		shift
+		fail 254 $@
+	fi
+}
+
+getarg() {
+	NAME=$1
+	shift
+	VALUE=""
+	SHIFTCOUNT=0
+	if [ "$1" == "$NAME" ]; then
+		shift
+		let "SHIFTCOUNT=$SHIFTCOUNT+1"
+		while [ "${1:0:1}" != "-" ] && [ "$#" != "0" ]; do
+			VALUE="$VALUE $1"
+			shift
+			let "SHIFTCOUNT=$SHIFTCOUNT+1"
+		done
+		VALUE="${VALUE:1}"
+		log "Getarg $NAME=$VALUE. Rest is $@"
+	else
+		fail 254 "Missing $NAME argument"
+	fi
+}
+
+getArgs() {
+	SHIFTCOUNT=0
+	while [ "$1" != "" ]; do
+		if [ "$1" == "-e" ]; then
+			if [ "$2" == "-e" ]; then
+				CMDARGS=("${CMDARGS[@]}" "$1")
+				shift
+				shift
+				let "SHIFTCOUNT=$SHIFTCOUNT+2"
+			else
+				break
+			fi
+		else
+			CMDARGS=("${CMDARGS[@]}" "$1")
+			shift
+			let "SHIFTCOUNT=$SHIFTCOUNT+1"
+		fi
+	done 
+}
+
+contains() {
+	ARRAY=$1
+	X=$2
+
+	for a in ${!ARRAY}
+	do
+		if [[ ${a} == ${X} ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+genScripts() {
+	echo "#!/bin/bash" > run.sh
+	echo -n "\"$EXEC\" " >> run.sh
+	for CMDARG in "${CMDARGS[@]}"; do
+    	echo -n "\"$CMDARG\" " >> run.sh
+	done
+	echo "1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
+	chmod +x run.sh
+}
+
+checkMissing() {
+	local DIR
+	DIR=$1
+	
+	MISSING=
+	for O in $OUTF ; do
+		if [ ! -f "$DIR$O" ]; then
+			if [ "$MISSING" == "" ]; then
+				MISSING=$O
+			else
+				MISSING="$MISSING, $O"
+			fi
+		fi
+	done
+	if [ "$MISSING" != "" ]; then
+		log $( find . )
+		fail 254 "The following output files were not created by the application: $MISSING"
+	fi
+}
+
+MPISetVars() {
+	if [ "$OMPI_COMM_WORLD_RANK" != "" ]; then
+		export MPI_RANK="$OMPI_COMM_WORLD_RANK"
+		export MPI="true"
+		export MPI_ROOT_HOST=`echo $OMPI_MCA_orte_hnp_uri|awk 'BEGIN {FS=";"} {print gensub(/[a-z]+:\\/\\/(.*):[0-9]+/, "\\\\1", "g", $2)}'`
+		export MPI_SIZE="$OMPI_COMM_WORLD_SIZE"
+		export MPI_ROOT_PORT=22
+	elif [ "$PMI_RANK" != "" ]; then
+		export MPI_RANK="$PMI_RANK"
+		export MPI="true"
+		export MPI_SIZE="$PMI_SIZE"
+		export MPI_ROOT_HOST="$PMI_ROOT_HOST"
+		export MPI_ROOT_PORT="$PMI_ROOT_PORT"
+	elif [ "$MPI_RANK" != "" ]; then
+		export MPI="true"
+	else
+		export MPI="false"
+		export MPI_RANK=0
+	fi
+}
+
+retry() {
+	TIMES=$1
+	WAIT=1
+	shift
+	
+	while [ "$TIMES" -ge "0" ]; do
+		"$@"
+		EC=$?
+		if [ "$EC" == "0" ]; then
+			TIMES="-1"
+		else
+			sleep $WAIT
+			let TIMES=TIMES-1
+			let WAIT=WAIT*2
+		fi
+	done
+}
+
+
+MPIInitOutputAggregation() {
+	if [ "$MPI" == "true" ]; then
+		if [ "$MPI_ROOT_HOST" == "" ]; then
+			log "MPI_ROOT_HOST is empty; cannot do output aggregation"
+		else
+			# If not visible from other ranks then this is running on a node-local fs
+			if [ "$MPI_RANK" == "0" ]; then
+				touch _mpi.fstest
+			else
+				STDOUT="_stdout_$SEQ.mpi.$MPI_RANK"
+				STDERR="_stderr_$SEQ.mpi.$MPI_RANK"
+			fi
+		fi
+	fi
+}
+
+MPIWriteRankBanner() {
+	echo "                               " >>$1
+	echo "*******************************" >>$1
+	echo "**     RANK: $2                " >>$1
+	echo "*******************************" >>$1
+}
+
+MPIAggregateOutput() {
+	if [ "$MPI" == "true" ]; then
+		if [ "$MPI_ROOT_HOST" != "" ]; then
+			if [ "$MPI_RANK" == "0" ]; then
+				I=1
+				# only initialize J here. If one output times out, the
+				# others would already have taken about the same time to produce nothing
+				J=1
+				while [ "$I" -lt "$MPI_SIZE" ]; do
+					log "Waiting for output from rank $I"
+					while [ ! -f _mpi.done.$I ]; do
+						sleep 1
+						let J=J+1
+						if [ "$J" -ge "60" ]; then
+							log "Timed out waiting for output from rank $I"
+							echo "Timeout" >> _stdout_$SEQ.mpi.$I
+							echo "Timeout" >> _stderr_$SEQ.mpi.$I
+							touch _mpi.done.$I
+						fi
+					done
+					log "Got output from rank $I"
+					MPIWriteRankBanner $STDOUT $I
+					MPIWriteRankBanner $STDERR $I
+					cat _stdout_$SEQ.mpi.$I >> $STDOUT
+					cat _stderr_$SEQ.mpi.$I >> $STDERR
+					rm _mpi.done.$I
+					let I=I+1
+				done
+				rm _mpi.fstest
+			else
+				log "Staging outputs for rank $MPI_RANK"
+				if [ ! -f _mpi.fstest ]; then
+					# use a rank-specific known hosts file to avoid race conditions
+					retry 3 scp -oUserKnownHostsFile=_known_hosts.$MPI_RANK -P $MPI_ROOT_PORT $STDOUT $STDERR $MPI_ROOT_HOST:$PWD/ >& "$INFO" 2>& "$INFO"
+				fi
+				FLAG="_mpi.done.$MPI_RANK"
+				touch $FLAG
+				if [ ! -f _mpi.fstest ]; then
+					retry 3 scp -oUserKnownHostsFile=_known_hosts.$MPI_RANK -P $MPI_ROOT_PORT $FLAG $MPI_ROOT_HOST:$PWD/ >& "$INFO" 2>& "$INFO"
+				fi
+				log "Output staging done"
+				# if we exit now, mpirun will terminate rank 0 before it does its job
+				sleep 60
+			fi
+		fi
+	fi
+}
+
+actualExec() {
+	if [ "$STDIN" == "" ]; then
+		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+			genScripts
+		fi
+		if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
+			"$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>"_stdout_$SEQ.txt" 2>"_stderr_$SEQ.txt"
+		else
+			"$EXEC" "${CMDARGS[@]}" 1>"_stdout_$SEQ.txt" 2>"_stderr_$SEQ.txt"
+		fi
+	else
+		if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+			genScripts
+		fi
+		if [ -n "$TIMECMD" ] && [ -n "$TIMEARGS" ]; then
+			"$TIMECMD" "${TIMEARGS[@]}" "$EXEC" "${CMDARGS[@]}" 1>"_stdout_$SEQ.txt" 2>"_stderr_$SEQ.txt" <"$STDIN"
+		else
+			"$EXEC" "${CMDARGS[@]}" 1>"_stdout_$SEQ.txt" 2>"_stderr_$SEQ.txt" <"$STDIN"
+		fi
+	fi
+	EC=$?
+	
+	if [ "_$TIMECMD" != _ ]; then
+		log "$(cat swiftapp.resources)"
+	fi
+	
+	logstate "DONE EXITCODE=$EC"
+}
+
+resolveExecutable() {
+	if [ "X${EXEC:0:1}" != "X/" ] ; then
+		export ORIGEXEC=$EXEC
+		export EXEC=$(which $EXEC)
+		if [ "X$EXEC" = "X" ] ; then
+			fail 254 "Cannot find executable $ORIGEXEC on site system path"
+		fi
+	fi
+	
+	log "ACTUALEXEC=$EXEC"
+	
+	if [ ! -f "$EXEC" ]; then
+		fail 254 "The executable $EXEC does not exist"
+	fi
+	if [ ! -x "$EXEC" ]; then
+		fail 254 "The executable $EXEC does not have the executable bit set"
+	fi
+}
+
+getCmdArgs() {
+	declare -g -a CMDARGS
+	
+	CMDARGS=()
+	if [ "$1" == "-a" ] ; then
+		shift
+		getArgs "$@"
+		let "SHIFTCOUNT=$SHIFTCOUNT+1"
+	else
+		fail 254 "Missing arguments (-a option)"
+	fi
+}
+
+collectCB() {
+	# do nothing
+	:
+}
+
+collectOutput() {
+	COLLECT_FILE=$1
+	if [ "$COLLECT" != "" ]; then
+		logstate "COLLECT"
+		log "Collect list is $COLLECT"
+		exec 4<> "$COLLECT_FILE"
+		for O in "$COLLECT" ; do
+			log "Collecting $O"
+			ls -1 $O >&4
+			collectCB $O
+		done
+		exec 4>&-
+	fi
+}
+
+handleSetupScript() {
+	if [ "$SETUP_SCRIPT" != "" ]; then
+		if [ -f "$SETUP_SCRIPT" ]; then
+			source "$SETUP_SCRIPT"
+		else
+			fail 254 "Invalid SETUP_SCRIPT. File $SETUP_SCRIPT does not exist."
+		fi
+	fi
+}
+
+createInputDirs() {
+	LOC=$1
+	logstate "CREATE_INPUTDIR"
+	for D in $DIRS ; do
+		if [ "$D" != "" ]; then
+			mkdir -p "$LOC$D" 2>&1 >& "$INFO"
+		fi
+		checkError $? 254 "Failed to create input directory $LOC$D"
+		log "Created directory: $LOC$D"
+	done	
+}
+
+cdm_local_output()
+{
+ 	L=$1
+
+	if [[ $CDM_FILE == "" ]]; then
+		return
+	fi
+
+ 	CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
+	if [[ $CDM_POLICY == "LOCAL" ]]; then
+		cdm_local_output_perform $L $CDM_POLICY
+	fi
+}
+
+cdm_local_output_perform()
+{
+	L=$1
+	TOOL=$2
+	REMOTE_DIR=$3
+	FLAGS=$3
+	log "Copying $REMOTE_DIR/$FILE to $JOBDIR/$FILE"
+	mkdir -p $REMOTE_DIR
+	checkError 254 "CDM[LOCAL]: mkdir -p $REMOTE_DIR failed!"
+	$TOOL $FLAGS $JOBDIR/$FILE $REMOTE_DIR/$FILE
+	checkError 254 "CDM[LOCAL]: Tool failed!"
+}
+
+cdm_gather()
+{
+	GATHER_OUTPUT=${*}
+	if [[ $CDM_FILE == "" ]]; then
+		return
+	fi
+	if [[ $GATHER_OUTPUT == "" ]]; then
+		return
+	fi
+
+	cdm_gather_action $GATHER_MAX $GATHER_OUTPUT
+}
+
+CDMActions() {
+	if [[ $CDM_FILE != "" ]] ; then
+		source cdm_lib.sh
+		for F in $INF ; do
+			CDM_POLICY=$( cdm_lookup cdm.pl $CDM_FILE $F )
+			log "CDM_POLICY: $F -> $CDM_POLICY"
+			eval cdm_action $PWD "INPUT" $F $CDM_POLICY
+		done
+		for F in $OUTF ; do
+			CDM_POLICY=$( cdm_lookup cdm.pl $CDM_FILE $F )
+			log "CDM_POLICY: $F -> $CDM_POLICY"
+			eval cdm_action $PWD "OUTPUT" $F $CDM_POLICY
+		done
+	fi
+}
+
+initTimingTools() {
+	TIMEARGS=(-o swiftapp.resources -f APP_RESOURCES=real_secs:%e,kernel_secs:%S,user_secs:%U,percent_cpu:%P,max_rss:%M,avg_rss:%t,avg_tot_vm:%K,avg_priv_data:%D,avg_priv_stack:%p,avg_shared_text:%X,page_size:%Z,major_pgfaults:%F,minor_pgfaults:%R,swaps:%W,invol_context_switches:%c,vol_waits:%w,fs_reads:%I,fs_writes:%O,sock_recv:%r,sock_send:%s,signals:%k,exit_status:%x)
+
+	if [[ "$OSTYPE" == *darwin* ]]; then
+	    TIMECMD=
+    	TIMEARGS=
+	elif [ -x /usr/bin/time ]; then
+    	TIMECMD="/usr/bin/time"
+	elif [ -x $HOME/swift.time ]; then
+    	TIMECMD="$HOME/swift.time"
+	else
+	    TIMECMD=""
+		TIMEARGS=""
+	fi
+}
+
+# links command output to overall output and possibly swift-specified redirect.
+# - If swift output is requested, always link
+# - If command failed, link to target if not empty. If empty, remove
+# params: cmdFailed src target swiftOutput
+linkOutput() {
+	CMD_FAILED=$1
+	SRC=$2
+	TARGET=$3
+	SWIFT_OUTPUT=$4
+	if [ "$SWIFT_OUTPUT" != "" ]; then
+		# swift output requested
+		if [ "$5" == "copy" ]; then
+			cp "$SRC" "$SWIFT_OUTPUT"
+		else
+			ln -s `readlink -f "$SRC"` "$SWIFT_OUTPUT"
+		fi
+	fi 
+	if [ "$CMD_FAILED" != "0" ]; then
+		# failed
+		if [ -s "$SRC" ]; then
+			ln -s "$SRC" "$TARGET"
+		else
+			rm -f "$SRC"
+		fi
+	else
+		if [ "$SWIFT_OUTPUT" == "" ]; then
+			rm -f "$SRC"
+		fi
+	fi
+}

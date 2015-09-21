@@ -1,0 +1,191 @@
+# this script must be invoked inside of bash, not plain sh
+
+#include _swiftwrap.lib
+
+checkparamfile() {
+	log "checking for paramfile"
+	if [ "$1" == "-p" ]; then
+		if [ ! -f "_paramfile" ]; then
+			fail 254 "-p specified but no _paramfile file found"
+		fi
+		log "paramfile is: _paramfile"
+		
+		PARAMFILE="_paramfile"
+	else
+		log "no paramfile: using command line arguments"
+	fi
+}
+
+
+fail() {
+	EC=$1
+	shift
+
+	log $@
+	info
+	echo "$@" >> _wrapper.error
+	exit $EC
+}
+
+MPISetVars
+
+# make the WFDIR absolute
+PARAMFILE=
+
+if [ "$MPI_RANK" != "0" ]; then
+	openinfo "_wrapper.log.$MPI_RANK"
+else
+	openinfo "_wrapper.log"
+fi
+
+log "My rank: $MPI_RANK"
+
+checkparamfile "$@"
+loadParamfile
+if [ "$PARAMARGS" != "" ]; then
+	set -- "$PARAMARGS"
+fi
+
+# # SWIFTWRAP_FAST: Turn things off for speed
+if [[ $SWIFTWRAP_FAST == "1" ]]; then
+	shopt -s expand_aliases
+	alias infosection=:
+	alias logstate=:
+	alias log=:
+	alias checkMissing=:
+fi
+
+if [ "X$INFODIR" == "X" ]; then
+	INFODIR="."
+fi
+
+logstate "LOG_START"
+infosection "Wrapper (_swiftwrap.staging)"
+
+getarg "-d" "$@"
+DIRS=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-if" "$@"
+INF=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-of" "$@"
+OUTF=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-cf" "$@"
+COLLECT=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-cdmfile" "$@"
+CDM_FILE=
+if [ "X$VALUE" != "X" ]; then
+	CDM_FILE=$VALUE
+	log "CDM_FILE: $CDM_FILE"
+fi
+shift $SHIFTCOUNT
+
+getarg "-status" "$@"
+STATUSMODE=$VALUE
+shift $SHIFTCOUNT
+
+log "PWD=$PWD"
+log "DIRS=$DIRS"
+log "INF=$INF"
+log "OUTF=$OUTF"
+log "COLLECT=$COLLECT"
+	
+PATH=$PATH:/bin:/usr/bin
+
+if [ "$PATHPREFIX" != "" ]; then
+	export PATH=$PATHPREFIX:$PATH
+fi
+
+if [ "$SWIFT_EXTRA_INFO" != "" ]; then
+	log "EXTRAINFO=$($SWIFT_EXTRA_INFO)"
+fi
+
+if [ "$1" != "-e" ]; then
+	fail 254 "Missing -e argument" 
+fi
+
+IFS="|"
+
+createInputDirs
+CDMActions
+handleSetupScript
+initTimingTools
+
+SEQ=1
+while [ "$1" == "-e" ]; do
+	getarg "-e" "$@"
+	EXEC=$VALUE
+	shift $SHIFTCOUNT
+	
+	getarg "-out" "$@"
+	STDOUT=$VALUE
+	shift $SHIFTCOUNT
+	
+	getarg "-err" "$@"
+	STDERR=$VALUE
+	shift $SHIFTCOUNT
+	
+	getarg "-i" "$@"
+	STDIN=$VALUE
+	shift $SHIFTCOUNT
+	
+	getCmdArgs "$@"
+	shitf $SHIFTCOUNT
+	
+	log "EXEC=$EXEC"
+	log "STDIN=$STDIN"
+	log "STDOUT=$STDOUT"
+	log "STDERR=$STDERR"
+	log "ARGS=${CMDARGS[@]}"
+	log "ARGC=${#CMDARGS[@]}"
+	
+	resolveExecutable
+	
+	logstate "EXECUTE"
+
+	MPIInitOutputAggregation
+	
+	actualExec
+	
+	MPIAggregateOutput
+	
+	if [ "$MPI_RANK" == "0" ]; then
+		linkOutput $EC _stdout_$SEQ.txt _stdout.txt "$STDOUT"
+		linkOutput $EC _stderr_$SEQ.txt _stderr.txt "$STDERR"
+	fi
+	
+	if [ -s _stderr_$SEQ.txt ]; then
+		checkError $EC $EC "Application $EXEC failed with an exit code of $EC"$'\n'$(<_stderr_$SEQ.txt)
+	else
+		checkError $EC $EC "Application $EXEC failed with an exit code of $EC"
+	fi
+	let "SEQ=$SEQ+1"
+done
+
+logstate "EXECUTE_DONE"
+if [ "$MPI_RANK" == "0" ]; then
+	
+	collectOutput "_collect"
+	log "Job ran successfully"
+	checkMissing
+fi
+
+logstate "END"
+
+closeinfo
+
+# ensure we exit with a 0 after a successful execution
+exit 0
+
+# Local Variables:
+# mode: sh
+# sh-basic-offset: 4
+# tab-width: 4
+# indent-tabs-mode: 1
+# End:

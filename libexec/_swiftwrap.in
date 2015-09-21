@@ -1,0 +1,384 @@
+#!/bin/bash
+# this script must be invoked inside of bash, not plain sh
+# note that this script modifies $IFS
+
+#include _swiftwrap.lib
+
+moveMiscFilesFromScratch() {
+	if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
+		mkdir -p "$WFDIR/info/$JOBDIR"
+		mv "$INFODIR/${ID}-info" "$WFDIR/info/$JOBDIR/${ID}-info"
+	fi
+	
+	if [ "X$SCRATCH" != "X" ]; then
+		if [ -f "$DIR/_stdout.txt" ] || [ -f "$DIR/_stderr.txt" ]; then
+			mkdir -p "$WFDIR/jobs/$JOBDIR/$ID"
+		fi 
+		if [ -f "$DIR/_stdout.txt" ]; then
+			mv "$DIR/_stdout.txt" "$WFDIR/jobs/$JOBDIR/$ID/_stdout.txt"
+		fi
+		if [ -f "$DIR/_stderr.txt" ]; then
+			mv "$DIR/_stderr.txt" "$WFDIR/jobs/$JOBDIR/$ID/_stderr.txt"
+		fi
+	fi
+}
+
+fail() {
+	EC=$1
+	shift
+	
+	if [ "$STATUSMODE" != "files" ]; then
+		mkdir -p $WFDIR/status/$JOBDIR
+	fi
+	
+	echo $@ >"$WFDIR/status/$JOBDIR/_${ID}-error"
+		
+	log $@
+	info
+	
+	closeinfo
+		
+	moveMiscFilesFromScratch
+		
+	if [ "$STATUSMODE" = "files" ]; then
+		exit 0
+	else
+		exit $EC
+	fi
+}
+
+checkparamfile() {
+	log "checking for paramfile"
+	if [ "$1" == "-p" ]; then
+		JOBDIR=$2
+		PARAMFILE=${WFDIR}/parameters/${JOBDIR}/_param-${ID}
+		log "paramfile is: $PARAMFILE"
+	else
+		log "No paramfile specified"
+	fi
+}
+
+MPISetVars
+
+COMMANDLINE=$@
+
+# get the parent directory of the directory containing _swiftwrap, to use
+# as the run directory
+# this assumes that _swiftwrap is being executed from the top level of
+# the shared directory, and that shared directory is in the top level
+# of the workflow run directory
+WFDIR=$(dirname $(dirname $0))
+
+cd $WFDIR
+
+# make the WFDIR absolute
+WFDIR=$(pwd)
+PARAMFILE=
+
+openinfo "_wrapper.log"
+ID=$1
+checkEmpty "$ID" "Missing job ID"
+
+shift
+
+checkparamfile "$@"
+loadParamfile
+if [ "$PARAMARGS" != "" ]; then
+	set -- "$PARAMARGS"
+fi
+
+
+# JOBDIR might have been assigned through the -p option, or might
+# be a parameter here
+if [ "$JOBDIR" == "" ] ; then
+	getarg "-jobdir" "$@"
+	JOBDIR=$VALUE
+	shift $SHIFTCOUNT
+fi
+
+getarg "-scratch" "$@"
+SCRATCH=$VALUE
+shift $SHIFTCOUNT
+
+if [ "X$PROGRESSIVE_INFO" == "X" ] && [ "X$SCRATCH" != "X" ]; then
+	INFODIR=$SCRATCH
+else
+	INFODIR=$WFDIR/info/$JOBDIR
+fi
+checkEmpty "$JOBDIR" "Missing job directory prefix"
+mkdir -p $INFODIR
+
+if [ "$MPI_RANK" != "0" ]; then
+	openinfo "$INFODIR/${ID}-${MPI_RANK}-info"
+else
+	openinfo "$INFODIR/${ID}-info"
+fi
+
+logstate "LOG_START"
+infosection "Wrapper (_swiftwrap)"
+
+getarg "-d" "$@"
+DIRS=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-if" "$@"
+INF=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-of" "$@"
+OUTF=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-cf" "$@"
+COLLECT=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-cdmfile" "$@"
+CDM_FILE=
+if [ "X$VALUE" != "X" ]; then
+	CDM_FILE=shared/$VALUE
+fi
+shift $SHIFTCOUNT
+
+getarg "-status" "$@"
+STATUSMODE=$VALUE
+shift $SHIFTCOUNT
+
+if [ "$STATUSMODE" = "files" ]; then
+	mkdir -p $WFDIR/status/$JOBDIR
+fi
+
+if [ "X$CDM_FILE" != "X" ]; then
+	logstate "SOURCE_CDM_LIB $WFDIR/shared/cdm_lib.sh"
+	source $WFDIR/shared/cdm_lib.sh
+	checkError $? 254 "Could not source: $WFDIR/shared/cdm_lib.sh"
+fi
+
+if [ "X$SCRATCH" != "X" ]; then
+	log "Job directory mode is: local copy"
+	DIR=$SCRATCH/$JOBDIR/$ID
+	COPYNOTLINK=1
+else
+	log "Job directory mode is: link on shared filesystem"
+	DIR=jobs/$JOBDIR/$ID
+	COPYNOTLINK=0
+fi
+
+log "PID=$$"
+log "HOST=$HOST"
+log "PWD=$PWD"
+log "DIR=$DIR"
+log "DIRS=$DIRS"
+log "INF=$INF"
+log "OUTF=$OUTF"
+log "COLLECT=$COLLECT"
+log "CDM_FILE=$CDM_FILE"
+
+PATH=$PATH:/bin:/usr/bin
+
+if [ "$PATHPREFIX" != "" ]; then
+	export PATH=$PATHPREFIX:$PATH
+fi
+
+if [ "$SWIFT_EXTRA_INFO" != "" ]; then
+	log "EXTRAINFO=$($SWIFT_EXTRA_INFO)"
+fi
+
+if [ "$1" != "-e" ]; then
+	fail 254 "Missing -e argument" 
+fi
+
+
+IFS="|"
+
+logstate "CREATE_JOBDIR"
+mkdir -p $DIR
+checkError $? 254 "Failed to create job directory $DIR"
+log "Created job directory: $DIR"
+
+createInputDirs "$DIR/"
+
+if [ "$MPI_RANK" == "0" ]; then
+	
+	logstate "LINK_INPUTS"
+	for L in $INF ; do
+	    CDM_POLICY="DEFAULT"
+		if [[ $CDM_FILE != "" ]]; then
+			CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
+		fi
+		if [[ $CDM_POLICY != "DEFAULT" && $CDM_POLICY != "EXTERNAL"* ]]; then
+			log "CDM_POLICY: $L -> $CDM_POLICY"
+			eval cdm_action $DIR "INPUT" $L $CDM_POLICY
+			continue
+		fi
+		if [ $COPYNOTLINK = 1 ]; then
+			cp "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			checkError $? 254 "Failed to copy input file $L"
+			log "Copied input: $WFDIR/shared/$L to $DIR/$L"
+		else
+			[ -f $WFDIR/shared/$L ]
+			checkError $? 254 "Could not locate input file: $L"
+			# if it's a link, be careful about creating
+			# long link chains because there is a rather low 
+			# limit to how long that chain can be
+			if [ -L $WFDIR/shared/$L ]; then
+				# this might be of questionable portability
+				cp -P "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			else
+				ln -s "$WFDIR/shared/$L" "$DIR/$L" 2>&1 >& $INFO
+			fi
+			checkError $? 254 "Failed to link input file $L"
+			log "Linked input: $WFDIR/shared/$L to $DIR/$L"
+		fi
+	done
+	
+	if [[ $CDM_FILE != "" ]]; then
+	    logstate "LINK_CDM_OUTPUTS"
+	    SKIPPED_OUTPUT=()
+		GATHER_OUTPUT=()
+		for L in $OUTF ; do
+			CDM_POLICY=$( cdm_lookup shared/cdm.pl $CDM_FILE $L )
+			log "CDM_POLICY: $L -> $CDM_POLICY"
+			if [[ $CDM_POLICY != "DEFAULT" &&
+				  $CDM_POLICY != "BROADCAST"* ]]; then
+	    	    eval cdm_action $DIR "OUTPUT" $L $CDM_POLICY
+				SKIPPED_OUTPUT=( $SKIPPED_OUTPUT $L )
+			fi
+			if [ $CDM_POLICY == "GATHER" ]; then
+				GATHER_OUTPUT=( $GATHER_OUTPUT $L )
+			elif [ $CDM_POLICY == "LOCAL" ]; then
+				CDM_LOCAL_OUTPUT=( $CDM_LOCAL_OUTPUT $L )
+			fi
+		done
+	fi
+
+fi # MPI_RANK==0
+
+debug "Moving to jobdir: $DIR"
+cd $DIR
+if [ $? != 0 ]; then
+	log "PWD: $PWD"
+	log $( find . )
+	fail 254 "Could not cd to: $DIR"
+fi
+
+handleSetupScript
+initTimingTools
+
+SEQ=1
+while [ "$1" == "-e" ]; do
+	getarg "-e" "$@"
+	EXEC=$VALUE
+	shift $SHIFTCOUNT
+	
+	getarg "-out" "$@"
+	STDOUT=$VALUE
+	shift $SHIFTCOUNT
+	
+	getarg "-err" "$@"
+	STDERR=$VALUE
+	shift $SHIFTCOUNT
+	
+	getarg "-i" "$@"
+	STDIN=$VALUE
+	shift $SHIFTCOUNT
+	
+	getCmdArgs "$@"
+	shift $SHIFTCOUNT
+	
+	log "EXEC=$EXEC"
+	log "STDIN=$STDIN"
+	log "STDOUT=$STDOUT"
+	log "STDERR=$STDERR"
+	log "ARGS=${CMDARGS[@]}"
+	log "ARGC=${#CMDARGS[@]}"
+	
+	resolveExecutable
+	
+	initTimingTools
+	
+	logstate "EXECUTE"
+
+	MPIInitOutputAggregation
+	
+	actualExec
+	
+	MPIAggregateOutput
+	
+	if [ "$MPI_RANK" == "0" ]; then
+		linkOutput $EC _stdout_$SEQ.txt _stdout.txt "$STDOUT" "copy"
+		linkOutput $EC _stderr_$SEQ.txt _stderr.txt "$STDERR" "copy"
+	fi
+	
+	if [ -s _stderr_$SEQ.txt ]; then
+		checkError $EC $EC "Application $EXEC failed with an exit code of $EC"$'\n'$(<_stderr_$SEQ.txt)
+	else
+		checkError $EC $EC "Application $EXEC failed with an exit code of $EC"
+	fi
+	let "SEQ=$SEQ+1"
+done
+
+# called by collectOutput for each set of files collected 
+collectCB() {
+	local O
+	O="$1"
+	for OO in $O ; do
+		OODIR=`dirname "$OO"`
+		mv $OO "$WFDIR/shared/$OODIR" 2>&1 >& "$INFO"
+	done
+}
+
+logstate "EXECUTE_DONE"
+if [ "$MPI_RANK" == "0" ]; then
+	collectOutput "$WFDIR/shared/_${ID}-collect"
+fi
+
+log "Moving back to workflow directory $WFDIR"
+cd $WFDIR
+checkError $? 254 "Could not cd to workflow directory: $WFDIR"
+
+if [ "$MPI_RANK" == "0" ]; then
+	log "Job ran successfully"
+
+	checkMissing "$DIR/"
+	
+	logstate "MOVING_OUTPUTS $OUTF"
+			
+	for O in $OUTF ; do
+		if ! contains SKIPPED_OUTPUT $O ; then
+			mv "$DIR/$O" "$WFDIR/shared/$O" 2>&1 >&	"$INFO"
+			checkError $? 254 "Failed to move output file $O to shared directory"
+		fi
+	done
+	
+	cdm_local_output $CDM_LOCAL_OUTPUT
+	cdm_gather $GATHER_OUTPUT
+	
+	logstate "RM_JOBDIR"
+	rm -rf "$DIR" 2>&1 >& "$INFO"
+	checkError $? 254 "Failed to remove job directory $DIR"
+	
+	if [ "$STATUSMODE" = "files" ]; then
+		logstate "TOUCH_SUCCESS"
+		touch $WFDIR/status/${JOBDIR}/_${ID}-success
+	fi
+else
+	# Allow rank 0 to write output
+	sleep 1
+fi # MPI_RANK==0
+
+logstate "END"
+
+closeinfo
+
+moveMiscFilesFromScratch
+
+# ensure we exit with a 0 after a successful execution
+exit 0
+
+# Local Variables:
+# mode: sh
+# sh-basic-offset: 4
+# tab-width: 4
+# indent-tabs-mode: 1
+# End:

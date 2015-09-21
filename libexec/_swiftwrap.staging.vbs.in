@@ -1,0 +1,203 @@
+On Error Resume Next
+
+ai = 0
+Set args = WScript.Arguments
+Dim info, fs
+Set fs = WScript.CreateObject("Scripting.FileSystemObject")
+Set shell = WScript.CreateObject("WScript.Shell")
+MandatoryArg = True
+OptionalArg = False
+
+#include _swiftwrap.vbs.lib
+
+Sub glob(pattern)
+	'todo: implement globbing
+	Dim a
+	glob = a
+End Sub
+
+Sub fail(message, code)
+	log message
+	WScript.Echo("ERR: " + message)
+	Set sf = fs.OpenTextFile("wrapper.error", 2, True)
+	sf.Write(message)
+	sf.Write(vbLf)
+	sf.Close
+	WScript.Quit(code)
+End Sub
+
+Sub checkerror(mymsg)
+	log "Checkerror called: " + CStr(Err.Number)
+	If Err.Number <> 0 Then
+		fail mymsg + vbLf + "Error(" + CStr(Err.Number) + "): " + Err.Description + " at " + Err.Source, 253
+	End If
+End Sub
+
+WFDIR = fs.GetAbsolutePathName(".")
+
+openinfo("_wrapper.log")
+
+logstate "LOG_START"
+
+expectArg("d")
+DIRS=getOptArg()
+
+expectArg("if")
+INF=getOptArg()
+
+expectArg("of")
+OUTF=getOptArg()
+
+expectArg("cf")
+COLLECT=getOptArg()
+
+expectArg("cdmfile")
+'ignored, but read if specified
+CDMFILE=getOptArg()
+
+expectArg("status")
+STATUSMODE=getArgVal(MandatoryArg, "status")
+
+Set env = shell.Environment("PROCESS")
+If Not env("PATHPREFIX") = "" Then
+	env("PATH") = env("PATHPREFIX") + ";" + env("PATH")
+End If
+
+If Not env("SWIFT_EXTRA_INFO") = "" Then
+	log "EXTRAINFO=" + env("SWIFT_EXTRA_INFO")
+End If
+
+
+log "DIRS=" + DIRS
+log "INF=" + INF
+log "OUTF=" + OUTF
+log "COLLECT=" + COLLECT
+log "STATUSMODE=" + STATUSMODE
+
+logstate "CREATE_INPUTDIR"
+
+For Each D in Split(DIRS, "|")
+	mkdir D
+	log "Created output directory: " + D
+Next
+
+
+SEQ = 1
+Do While isNextArg("e")
+
+	expectArg("e")
+	EXEC=getArgVal(MandatoryArg, "executable")
+	
+	expectArg("out")
+	STDOUT=getArgVal(MandatoryArg, "stdout")
+	
+	expectArg("err")
+	STDERR=getArgVal(MandatoryArg, "stderr")
+	
+	expectArg("i")
+	STDIN=getOptArg()
+	
+	expectArg("a")
+	Dim ARGS
+	ARGS=getRestArgs()
+	
+	log "EXEC=" + EXEC
+	log "STDIN=" + STDIN
+	log "STDOUT=" + STDOUT
+	log "STDERR=" + STDERR
+	log "ARGS=" + Join(ARGS)
+	
+	log "Executable: " + EXEC
+	
+	checkExecutable(EXEC)
+	
+	logstate "EXECUTE"
+	
+	Set min = Nothing
+	Set mout = Nothing
+	Set merr = Nothing
+	If STDIN <> "" Then
+		Set min = fs.OpenTextFile(STDIN, 1, False)
+	End If
+	
+	Set mout = fs.OpenTextFile("_stdout_" + SEQ + ".txt", 2, True)
+	Set merr = fs.OpenTextFile("_stderr_" + SEQ + ".txt", 2, True)
+	
+	qargs = prepareArgs(ARGS)
+	log "Cmd: " + prepareOne(EXEC) + " " + qargs
+	Set p = shell.exec(prepareOne(EXEC) + " " + qargs)
+	log "Executable started"
+	
+	Do Until p.StdOut.AtEndOfStream and p.StdErr.AtEndOfStream and p.Status <> 0
+		some = False
+		If Not min Is Nothing Then
+			l = min.ReadLine
+			p.StdIn.Write(l)
+			some = True
+		End If
+		If Not p.StdOut.AtEndOfStream Then
+			l = p.StdOut.ReadLine
+			If Not mout Is Nothing Then
+				mout.Write(l)
+			End If
+			some = True
+		End If
+		If Not p.StdErr.AtEndOfStream Then
+			l = p.StdErr.ReadLine
+			If Not merr Is Nothing Then
+				merr.Write(l)
+			End If
+			some = True
+		End If
+		WScript.Sleep(100)
+	Loop
+	If Not min Is Nothing Then
+		min.close()
+	End If
+	If Not mout Is Nothing Then
+		mout.close()
+	End If
+	If Not merr Is Nothing Then
+		merr.close()
+	End If
+	
+	If STDOUT <> "" Then
+		fs.CopyFile("_stdout_" + SEQ + ".txt", STDOUT)
+	End If
+	If STDERR <> "" Then
+		fs.CopyFile("_stderr_" + SEQ + ".txt", STDERR)
+	End If
+	
+	If p.ExitCode <> 0 Then
+		fail "Exit code " + CStr(p.ExitCode), p.ExitCode
+	End If
+	
+	SEQ = SEQ + 1
+End Do
+
+If Not COLLECT Is Nothing Then
+	logstate "COLLECT"
+	log "Collect list is " + COLLECT
+	CF = fs.OpenTextFile("_collect", True)
+	For Each O in Split(COLLECT, "|")
+		log "Collecting " + O
+		
+		OL = glob(O)
+		For Each OLE in OL
+			CF.Write(OLE)
+			CF.Write(vbLf) 
+		Next
+	Next
+	CF.Close
+End If
+
+logstate "EXECUTE_DONE"
+log "Job ran successfully"
+
+logstate "END"
+
+closeinfo
+
+'ensure we exit with a 0 after a successful exection
+WScript.Quit(0)
+

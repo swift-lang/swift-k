@@ -1,0 +1,241 @@
+ai = 0
+Set args = WScript.Arguments
+Dim info, fs
+Set fs = WScript.CreateObject("Scripting.FileSystemObject")
+Set shell = WScript.CreateObject("WScript.Shell")
+MandatoryArg = True
+OptionalArg = False
+
+#include _swiftwrap.vbs.lib
+
+Sub fail(message, code)
+	log message
+	If STATUSMODE = "files" Then
+		errf = WFDIR + "\status\" + JOBDIR + "\" + ID + "-error"
+		log "Error file: " + errf
+		Set sf = fs.OpenTextFile(errf, 2, True)
+		sf.Write(message)
+		sf.Write(vbLf)
+		sf.Close
+		WScript.Quit(0)
+	Else
+		WScript.Echo(message)
+		WScript.Quit(code)
+	End If
+End Sub
+
+WFDIR = fs.GetAbsolutePathName(".")
+
+openinfo("_wrapper.log")
+
+ID = getArgVal(MandatoryArg, "job id")
+expectArg("jobdir")
+JOBDIR = getArgVal(MandatoryArg, "job dir")
+
+mkdir WFDIR + "\info\" + JOBDIR
+
+closeinfo
+deleteIfExists(WFDIR + "\info\" + JOBDIR + "\" + ID + "-info")
+openinfo(WFDIR + "\info\" + JOBDIR + "\" + ID + "-info")
+
+logstate "LOG_START"
+
+expectArg("scratch")
+SCRATCH = getArgVal(MandatoryArg, "job dir")
+'though we'll ignore SCRATCH here
+
+expectArg("d")
+DIRS=getOptArg()
+
+expectArg("if")
+INF=getOptArg()
+
+expectArg("of")
+OUTF=getOptArg()
+
+expectArg("cdmfile")
+'ignored, but read if specified
+CDMFILE=getOptArg()
+
+expectArg("status")
+STATUSMODE=getArgVal(MandatoryArg, "status")
+
+If STATUSMODE = "files" Then
+	mkdir WFDIR + "\status\" + JOBDIR
+End If
+
+'No linking on Windows
+COPYNOTLINK=True	
+DIR=WFDIR + "\jobs\" + JOBDIR + "\" + ID
+
+Set env = shell.Environment("PROCESS")
+If Not env("PATHPREFIX") = "" Then
+	env("PATH") = env("PATHPREFIX") + ";" + env("PATH")
+End If
+
+If Not env("SWIFT_EXTRA_INFO") = "" Then
+	log "EXTRAINFO=" + env("SWIFT_EXTRA_INFO")
+End If
+
+
+log "DIR=" + DIR
+log "DIRS=" + DIRS
+log "INF=" + INF
+log "OUTF=" + OUTF
+log "STATUSMODE=" + STATUSMODE
+
+logstate "CREATE_JOBDIR"
+log "Jobdir: " + DIR
+mkdir DIR
+log "Created job directory: " + DIR
+
+logstate "CREATE_INPUTDIR"
+
+For Each D in Split(DIRS, "|")
+	mkdir DIR + "\" + D
+	log "Created output directory: " + DIR + "\" + D
+Next
+
+logstate "LINK_INPUTS"
+For Each L in Split(INF, "|")
+	fs.CopyFile WFDIR + "\shared\" + L, DIR + "\" + L
+	log "Copied input: " + WFDIR + "\shared\" + L + " to " + DIR + "\" + L
+Next
+
+shell.CurrentDirectory = DIR
+
+SEQ = 1
+Do While isNextArg("e")
+
+	expectArg("e")
+	EXEC=getArgVal(MandatoryArg, "executable")
+	
+	expectArg("out")
+	STDOUT=getArgVal(MandatoryArg, "stdout")
+	
+	expectArg("err")
+	STDERR=getArgVal(MandatoryArg, "stderr")
+	
+	expectArg("i")
+	STDIN=getOptArg()
+	
+	expectArg("a")
+	Dim ARGS
+	ARGS=getRestArgs()
+	
+	log "EXEC=" + EXEC
+	log "STDIN=" + STDIN
+	log "STDOUT=" + STDOUT
+	log "STDERR=" + STDERR
+	log "ARGS=" + Join(ARGS)
+	
+	log "Executable: " + EXEC
+	
+	checkExecutable(EXEC)
+
+	logstate "EXECUTE"
+
+
+	Set min = Nothing
+	Set mout = Nothing
+	Set merr = Nothing
+	If STDIN <> "" Then
+		Set min = fs.OpenTextFile(STDIN, 1, False)
+	End If
+	
+	Set mout = fs.OpenTextFile("_stdout_" + SEQ + ".txt", 2, True)
+	Set merr = fs.OpenTextFile("_stderr_" + SEQ + ".txt", 2, True)
+
+	qargs = prepareArgs(ARGS)
+	log "Cmd: " + prepareOne(EXEC) + " " + qargs
+	Set p = shell.exec(prepareOne(EXEC) + " " + qargs)
+	log "Executable started"
+
+	Do Until p.StdOut.AtEndOfStream and p.StdErr.AtEndOfStream and p.Status <> 0
+		some = False
+		If Not min Is Nothing Then
+			l = min.ReadLine
+			p.StdIn.Write(l)
+			some = True
+		End If
+		If Not p.StdOut.AtEndOfStream Then
+			l = p.StdOut.ReadLine
+			If Not mout Is Nothing Then
+				mout.Write(l)
+			End If
+			some = True
+		End If
+		If Not p.StdErr.AtEndOfStream Then
+			l = p.StdErr.ReadLine
+			If Not merr Is Nothing Then
+				merr.Write(l)
+			End If
+			some = True
+		End If
+		WScript.Sleep(100)
+	Loop
+	If Not min Is Nothing Then
+		min.close()
+	End If
+	If Not mout Is Nothing Then
+		mout.close()
+	End If
+	If Not merr Is Nothing Then
+		merr.close()
+	End If
+	
+	If STDOUT <> "" Then
+		fs.CopyFile("_stdout_" + SEQ + ".txt", STDOUT)
+	End If
+	If STDERR <> "" Then
+		fs.CopyFile("_stderr_" + SEQ + ".txt", STDERR)
+	End If
+	
+	If p.ExitCode <> 0 Then
+		fail "Exit code " + CStr(p.ExitCode), p.ExitCode
+	End If
+	
+	SEQ = SEQ + 1
+End Do
+	
+shell.CurrentDirectory = WFDIR
+
+log "Moving back to workflow directory " + WFDIR
+logstate "EXECUTE_DONE"
+log "Job ran successfully"
+
+MISSING = ""
+For Each O in Split(OUTF, "|")
+	If Not fs.FileExists(DIR + "\" + O) Then
+		If MISSING = "" Then
+			MISSING = O
+		Else
+			MISSING = MISSING + ", " + O
+		End If
+	End If
+Next
+If Not MISSING = "" Then
+	fail "The following output files were not created by the application: " + MISSING, 254
+End If
+
+logstate "MOVING_OUTPUTS"
+For Each O in split(OUTF, "|")
+	fs.MoveFile DIR + "\" + O,  "shared\" + O
+Next
+
+logstate "RM_JOBDIR"
+fs.DeleteFolder DIR, True
+
+If STATUSMODE = "files" Then
+	logstate "TOUCH_SUCCESS"
+	Set sf = fs.OpenTextFile("status\" + JOBDIR + "\" + ID + "-success", 2, True)
+	sf.Close
+End If
+
+logstate "END"
+
+closeinfo
+
+'ensure we exit with a 0 after a successful exection
+WScript.Quit(0)
+

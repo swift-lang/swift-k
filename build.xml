@@ -97,11 +97,11 @@
 		</copy>
 	</target>
 
-	<target name="dist" depends="generateVersion, antlr, compileParams">
+	<target name="dist" depends="generateVersion, antlr, compileParams, processScriptTemplates">
 		<ant antfile="${main.buildfile}" target="dist"/>
 		<mkdir dir="${dist.dir}/libexec"/>
 		<copy todir="${dist.dir}/libexec">
-			<fileset dir="${module.dir}/libexec"/>
+			<fileset dir="${module.dir}/libexec" excludes="_swiftwrap*.in _swiftwrap*.lib"/>
 		</copy>
 
         <mkdir dir="${dist.dir}/libexec/ec2-cloud-provider"/>
@@ -325,6 +325,23 @@
         <echo message="[swift] Generating mapping parameter classes"/>
         <java classname="org.griphyn.vdl.mapping.file.MappingParamFileGenerator" fork="true" failonerror="true">
         	<arg value="${module.dir}/src"/>
+        	<classpath>
+        		<pathelement location="${build.dir}"/>
+        	</classpath>
+        </java>
+	</target>
+	
+	<target name="processScriptTemplates">
+		<mkdir dir="${build.dir}"/>
+		<echo message="[swift] Compiling script generator"/>
+		<javac  srcdir="${module.dir}/src"
+			destdir="${build.dir}"
+			includes="**/ScriptTemplateProcessor.java"
+			includeAntRuntime="false"/>
+        <!-- then compile the files themselves -->
+        <echo message="[swift] Generating scripts"/>
+        <java classname="org.griphyn.vdl.util.ScriptTemplateProcessor" fork="true" failonerror="true">
+        	<arg value="${module.dir}/libexec"/>
         	<classpath>
         		<pathelement location="${build.dir}"/>
         	</classpath>
