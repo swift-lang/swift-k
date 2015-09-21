@@ -37,7 +37,7 @@ import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.util.StringCache;
-import org.griphyn.vdl.karajan.FileNameExpander;
+import org.griphyn.vdl.karajan.FileNameResolver;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
