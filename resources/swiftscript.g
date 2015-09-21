@@ -31,6 +31,57 @@ options {
 		node.setLine(swiftLexer.getLine());
 		return node;
 	} 
+	
+	private void noWhitespaceSkip() {
+		swiftLexer.conditionalSkip = WS;
+	}
+	
+	private void whitespaceSkip() {
+		swiftLexer.conditionalSkip = Token.SKIP;
+	}
+	
+	public void consume() throws TokenStreamException {
+		if (swiftLexer.conditionalSkip == Token.SKIP) {
+			int token = super.LA(1);
+			if (token == WS) {
+				super.consume();
+			}
+			super.consume();
+		}
+		else {
+        	super.consume();
+        }
+    }
+
+    public int LA(int i) throws TokenStreamException {
+    	if (swiftLexer.conditionalSkip == Token.SKIP) {
+    		int token = super.LA(i);
+    		if (token == WS) {
+    			return super.LA(i + 1);
+    		}
+    		else {
+    			return token;
+    		}
+    	}
+    	else {
+        	return super.LA(i);
+        }
+    }
+
+    public Token LT(int i) throws TokenStreamException {
+        if (swiftLexer.conditionalSkip == Token.SKIP) {
+    		Token token = super.LT(i);
+    		if (token.getType() == WS) {
+    			return super.LT(i + 1);
+    		}
+    		else {
+    			return token;
+    		}
+    	}
+    	else {
+        	return super.LT(i);
+        }
+    }
 }
 
 // The specification for a SwiftScript program
@@ -1097,21 +1148,129 @@ appSpec [AppCommand cmd]
     SEMI RCURLY
 ;
 
+// This needs special handling because whitespaces act as argument separators here, so
+// a lot of things are different. For example, a[0] and a [0] are normally the same thing,
+// but in apps they are not. I wish there was a better way to do context sesitive lexers.
+// Also, dragons, lots of dragons
 appArg [AppCommand cmd]
 {
+	Object dummy = null;
 	Expression arg = null;
-}
-:   
-	arg = mappingExpr	{
-		app.addArgument(arg);
+	int next = 0;
+	noWhitespaceSkip();
+	// consume leftover whitespace from previous arg
+	while (LA(1) == WS) {
+		consume();
 	}
-    |
-    stdioArg[app]
-;
-
-mappingExpr returns [Expression arg = null]
+	int mark = mark();
+	try {
+		switch (LA(1)) {
+			case AT:
+				match(AT);
+				match(ID);
+				switch (LA(1)) {
+					case WS:
+						next = 1; // @name 
+						break;
+					case LPAREN:
+						next = 2; // @fn(
+						break;
+					default:
+						next = 1; // @lvalue
+						break;
+				}
+				break;
+			case LPAREN:
+				next = 4; // (expression)
+				break;
+			case LITERAL_stdin:
+			case LITERAL_stdout:
+			case LITERAL_stderr:
+				next = 3; // stdio arg
+				break;
+			case ID:
+				match(ID);
+				switch (LA(1)) {
+					case EQ:
+						next = 3; // stdio arg
+						break;
+					case WS:
+						match(WS);
+						if (LA(1) == EQ) {
+							next = 3; // stdio arg
+						}
+						else {
+							next = 5; // lvalue
+						}
+						break;
+					case LPAREN:
+						next = 7; // fn(
+						break;
+					default:
+						next = 5; // lvalue.[
+						break;
+				}
+				break;
+			default:
+				next = 6; // constant
+				break;
+		}
+	}
+	finally {
+		rewind(mark);
+		whitespaceSkip();
+	}
+	switch (next) {
+		case 0:
+			throw new RecognitionException("Unhandled case in appArg");
+		case 1:
+			match(AT);
+			arg = setLine(new FunctionInvocation("", new ActualParameter(lvalue())));
+			break;
+		case 2:
+			// function invocation here means @fn(
+			arg = functionInvocation();
+			break;
+		case 3:
+			stdioArg(cmd);
+			break;
+		case 4:
+			match(LPAREN);
+			arg = expression();
+			match(RPAREN);
+			break;
+		case 5:
+			arg = lvalue();
+			break;
+		case 6:
+			arg = constant();
+			break;
+		case 7:
+			arg = procedureCallExpr();
+			break;
+	}
+	if (arg != null) {
+		cmd.addArgument(arg);
+	}
+	// antlr will generate its own things after this, but we want to ignore them.
+	// Doing a plain return would have java complain about dead code.
+	if (true) {
+		return;
+	}
+}
 :
-    arg = expression
+	// just put the rules in here so that antlr can do its calculations
+	AT ID
+	|
+	AT LPAREN
+	|
+	dummy = lvalue
+	|
+	LPAREN dummy = expression RPAREN
+	|
+	stdioArg[cmd]
+	|
+	dummy = constant
 ;
 
 functionInvocation returns [FunctionInvocation fi = setLine(new FunctionInvocation())]
@@ -1121,50 +1280,37 @@ functionInvocation returns [FunctionInvocation fi = setLine(new FunctionInvocati
 }
 :   
 	AT (
+		(declarator LPAREN) =>
 		(
-			(declarator LPAREN) =>
-	    		(
-	    			name = declarator {
-	    				fi.setName(name);
-	     			}
-	     			LPAREN
-	     			(
-	     				functionInvocationArgument[fi]
-	     				(
-	       					COMMA
-	       					functionInvocationArgument[fi]
-	     				)
-	     			*)?
-	     			RPAREN
-	    		)
-	    		|
-	    		(name = identifier | (LPAREN name = identifier RPAREN)) {
-	      			/*
-			       	* This is matched on expressions like @varname,
-			       	* which are a shortcut for filename(varname).
-			       	* The interpretation of what a function invocation
-			       	* with an empty file name means was moved to the swiftx -> ?
-			       	* compiler and allows that layer to distinguish between
-			       	* '@filename(x)' and '@(x)', the former of which 
-			       	* has been deprecated.
-			       	*/
-			       	fi.setName("");
-			       	ActualParameter param = new ActualParameter();
-			       	VariableReference var = new VariableReference(name);
-			       	param.setValue(var);
-			       	fi.addParameter(param);
-	    		}
-	    )
-	    |
-	    (ref = lvalue | (LPAREN ref = lvalue RPAREN)) {
+			name = declarator {
+				fi.setName(name);
+ 			}
+ 			LPAREN
+ 			(
+ 				functionInvocationArgument[fi]
+ 				(
+   					COMMA
+   					functionInvocationArgument[fi]
+ 				)
+ 			*)?
+ 			RPAREN
+		)
+		|
+		(ref = lvalue | (LPAREN name = identifier RPAREN)) {
   			/*
-	       	* This is matched on expressions like @struct.field
+	       	* This is matched on expressions like @varname,
+	       	* which are a shortcut for filename(varname).
+	       	* The interpretation of what a function invocation
+	       	* with an empty file name means was moved to the swiftx -> ?
+	       	* compiler and allows that layer to distinguish between
+	       	* '@filename(x)' and '@(x)', the former of which 
+	       	* has been deprecated.
 	       	*/
 	       	fi.setName("");
 	       	ActualParameter param = new ActualParameter();
 	       	param.setValue(ref);
 	       	fi.addParameter(param);
-		}
+    	}
 	)
 ;
 
@@ -1381,11 +1527,11 @@ lvalue returns [LValue lv = null]
    		lv = new VariableReference(base.getText());
    	}
 
-   	( 
+   	(
    		(
    			index = arrayIndex {
    				lv = new ArrayReference(lv, index);
-   			} 
+   			}
    		)
    		|
    		( 
@@ -1395,7 +1541,6 @@ lvalue returns [LValue lv = null]
    		)
   	)*
 ;
-
 
 arrayIndex returns [Expression ix = null]
 :
@@ -1462,6 +1607,10 @@ options {
     charVocabulary = '\1'..'\377';
     testLiterals=false;    // don't automatically test for literals
     k=2;
+}
+
+{
+	int conditionalSkip = Token.SKIP;
 }
 
 AT        :   "@" ;
@@ -1557,7 +1706,7 @@ WS:
         |   '\r'
         |   '\n' {newline();}
 	)+ { 
-		$setType(Token.SKIP); 
+		$setType(conditionalSkip); 
 	}
 ;
 
