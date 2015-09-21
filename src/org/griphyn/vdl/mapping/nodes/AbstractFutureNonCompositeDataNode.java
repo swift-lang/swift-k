@@ -47,6 +47,7 @@ public abstract class AbstractFutureNonCompositeDataNode extends AbstractFutureD
     }
     
     protected void checkDataException() {
+        // implies checkMappingException()
         if (value instanceof DependentException) {
             throw (DependentException) value;
         }
@@ -56,6 +57,11 @@ public abstract class AbstractFutureNonCompositeDataNode extends AbstractFutureD
         if (value instanceof MappingDependentException) {
             throw (MappingDependentException) value;
         }
+    }
+    
+    @Override
+    public void fail(DependentException e) {
+        setValue(e);
     }
 
     @Override

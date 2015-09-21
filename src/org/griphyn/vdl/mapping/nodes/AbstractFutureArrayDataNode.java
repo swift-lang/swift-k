@@ -74,8 +74,12 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
             keyList.add(key);
         }
     }
-    
         
+    @Override
+    public void fail(DependentException e) {
+        setException(e);
+    }
+
     @Override
     public RootHandle getRoot() {
         return null;
@@ -180,6 +184,11 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
         return handles;
     }
     
+    public boolean isClosed() {
+        checkDataException();
+        return super.isClosed();
+    }
+    
     public Map<Comparable<?>, DSHandle> getArrayValue() {
         checkDataException();
         return handles;
@@ -273,6 +282,15 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
         }
         else {
             return handles.size();
+        }
+    }
+    
+    public void setValue(Object o) {
+        if (o instanceof RuntimeException) {
+            setException((RuntimeException) o);
+        }
+        else {
+            super.setValue(o);
         }
     }
     

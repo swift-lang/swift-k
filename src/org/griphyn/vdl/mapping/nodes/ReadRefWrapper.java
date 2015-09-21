@@ -21,6 +21,7 @@ package org.griphyn.vdl.mapping.nodes;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.karajan.lib.Tracer;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.RootHandle;
 
 public class ReadRefWrapper implements PartialCloseable {
@@ -39,6 +40,11 @@ public class ReadRefWrapper implements PartialCloseable {
         return h;
     }
     
+    @Override
+    public void fail(DependentException e) {
+        h.fail(e);
+    }
+
     @Override
     public int updateWriteRefCount(int delta) {
         int writeCount = h.updateWriteRefCount(delta);

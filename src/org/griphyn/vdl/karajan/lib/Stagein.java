@@ -121,9 +121,17 @@ public class Stagein extends SwiftFunction {
                 throw f;
             }
             catch (MappingDependentException e) {
-            	logger.debug(e);
+                if (logger.isDebugEnabled()) {
+            	    logger.debug(e);
+                }
                 deperr = true;
                 mdeperr = true;
+            }
+            catch (DependentException e) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug(e);
+                }
+                deperr = true;
             }
             catch (Exception e) {
                 throw new ExecutionException(this, e);

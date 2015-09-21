@@ -71,12 +71,18 @@ public abstract class AbstractFutureStructDataNode extends AbstractFutureDataNod
     }
         
     @Override
+    public void fail(DependentException e) {
+        setValue(e);
+    }
+
+    @Override
     protected Object getRawValue() {
         return null;
     }
     
     @Override
     public Object getValue() {
+        checkDataException();
         return Arrays.asList(fields);
     }
     

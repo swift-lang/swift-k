@@ -19,6 +19,10 @@
  */
 package org.griphyn.vdl.mapping.nodes;
 
+import org.griphyn.vdl.mapping.DependentException;
+
 public interface PartialCloseable {
     int updateWriteRefCount(int delta);
+
+    void fail(DependentException e);
 }

@@ -42,6 +42,7 @@ public abstract class AbstractFutureMappedSingleDataNode extends AbstractFutureN
     }
     
     public void getFringePaths(List<Path> list, Path myPath) throws HandleOpenException {
+        checkDataException();
         list.add(myPath);
     }
     

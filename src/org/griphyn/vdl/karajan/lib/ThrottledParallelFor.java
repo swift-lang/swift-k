@@ -46,6 +46,7 @@ import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.nodes.PartialCloseable;
 import org.griphyn.vdl.mapping.nodes.ReadRefWrapper;
 import org.griphyn.vdl.mapping.nodes.RootClosedPrimitiveDataNode;
@@ -170,6 +171,9 @@ public class ThrottledParallelFor extends InternalFunction {
                 default:
                     ts.waitFor();
             }
+        }
+        catch (DependentException e) {
+            RefCount.fail(dwrefs, e);
         }
         catch (Yield y) {
         	y.getState().push(drrefs);

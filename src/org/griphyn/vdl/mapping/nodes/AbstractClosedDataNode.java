@@ -31,6 +31,7 @@ package org.griphyn.vdl.mapping.nodes;
 import k.rt.FutureListener;
 
 import org.globus.cog.karajan.compiled.nodes.Node;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.OOBYield;
 import org.griphyn.vdl.type.Field;
 
@@ -74,6 +75,11 @@ public abstract class AbstractClosedDataNode extends AbstractDataNode {
         if (count != 0) {
             throw new UnsupportedOperationException("Attempt to set non-zero write ref count on read-only node");
         }
+    }
+
+    @Override
+    public void fail(DependentException e) {
+        // do nothing; this is already closed
     }
 
     @Override

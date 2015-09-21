@@ -34,6 +34,7 @@ import java.util.List;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.nodes.PartialCloseable;
 import org.griphyn.vdl.mapping.nodes.ReadRefWrapper;
 
@@ -85,6 +86,14 @@ class RefCount<T> {
         if (rcs != null) {
             for (RefCount<ReadRefWrapper> rc : rcs) {
                 rc.var.updateReadRefCount(rc.count);
+            }
+        }
+    }
+
+    public static void fail(List<RefCount<PartialCloseable>> rcs, DependentException e) {
+        if (rcs != null) {
+            for (RefCount<PartialCloseable> rc : rcs) {
+                rc.var.fail(e);
             }
         }
     }
