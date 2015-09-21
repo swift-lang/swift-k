@@ -56,6 +56,10 @@ public class WriteData extends SwiftFunction implements SwiftSerializer {
         Object o = opts.get(name);
         if (o == null) {
             o = ReadData.DEFAULT_OPTIONS.get(name);
+            if (name.equals("separator")) {
+                // special handling instructions: only use the first separator
+                o = String.valueOf(((String) o).charAt(0));
+            }
         }
         return (T) o;
     }
