@@ -96,5 +96,10 @@ public class TestMapper extends AbstractMapper {
     @Override
     public boolean supportsCleaning() {
         return true;
-    }    
+    }
+
+    @Override
+    public void fileCleaned(PhysicalFormat pf) {
+    	System.out.println("Cleaning file " + pf);
+    }
 }

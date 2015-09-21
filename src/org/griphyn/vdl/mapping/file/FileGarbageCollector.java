@@ -113,11 +113,8 @@ public class FileGarbageCollector implements Runnable {
                     for (Path p : fringe) {
                         PhysicalFormat pf = m.map(p);
                         if (!m.isPersistent(p)) {
-                            System.out.println("Cleaning file " + pf);
                             pf.clean();
-                        }
-                        else {
-                            System.out.println("Not cleaning " + pf + " (not temporary)");
+                            m.fileCleaned(pf);
                         }
                     }
                 }

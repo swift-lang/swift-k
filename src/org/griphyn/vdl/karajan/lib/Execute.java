@@ -53,6 +53,7 @@ import org.globus.cog.karajan.scheduler.Scheduler;
 import org.griphyn.vdl.karajan.lib.RuntimeStats.ProgressState;
 import org.griphyn.vdl.karajan.lib.replication.CanceledReplicaException;
 import org.griphyn.vdl.karajan.lib.replication.ReplicationManager;
+import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.util.SwiftConfig;
 
 public class Execute extends GridExec {
@@ -63,6 +64,7 @@ public class Execute extends GridExec {
 	private ArgRef<String> jobid;
 	private ArgRef<ProgressState> progress;
 	private ArgRef<List<EnvironmentVariable>> environment;
+	private ArgRef<Collection<DSHandle>> tempRefs;
 	
 	private VarRef<Context> context;
 	
@@ -77,6 +79,7 @@ public class Execute extends GridExec {
 	    params.add(optional("replicationGroup", null));
 	    params.add(optional("replicationChannel", null));
 	    params.add(optional("jobid", null));
+	    params.add(optional("tempRefs", null));
 	    removeParams(params, "stdout", "stderr", "stdoutLocation", "stderrLocation", 
 	        "stdin", "provider", "securityContext", "nativespec", 
 	        "delegation", "batch");
@@ -208,6 +211,8 @@ public class Execute extends GridExec {
     				    ps.setState("Stage out");
     				}
     				else if (c == Status.ACTIVE) {
+    				    // remove reference to temporary stageins, so they can be GC-ed and cleaned
+    				    tempRefs.set(stack, null);
     					ps.setState("Active");
     					if (replicationEnabled) {
     					    getReplicationManager(stack).active(task, s.getTime());

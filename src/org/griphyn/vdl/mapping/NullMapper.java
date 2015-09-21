@@ -117,4 +117,8 @@ public class NullMapper implements Mapper {
     public boolean supportsCleaning() {
         return false;
     }
+
+    @Override
+    public void fileCleaned(PhysicalFormat pf) {
+    }
 }

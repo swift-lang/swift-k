@@ -108,4 +108,6 @@ public interface Mapper {
     Collection<AbsFile> getPattern(Path path, Type type);
 
     boolean supportsCleaning();
+
+    void fileCleaned(PhysicalFormat pf);
 }

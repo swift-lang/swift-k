@@ -75,6 +75,11 @@ public class InitMapper implements Mapper, FutureListener {
     }
 
     @Override
+    public void fileCleaned(PhysicalFormat pf) {
+        mapper.fileCleaned(pf);
+    }
+
+    @Override
     public PhysicalFormat map(Path path) {
         return null;
     }
