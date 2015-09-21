@@ -284,13 +284,7 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 					submitUnbound(e);
 				}
 				catch (NoSuchResourceException ex) {
-				    if (e.task instanceof ContactAllocationTask) {
-				    	failTask(e, "The application \"" + getTaskConstraints(e).getConstraint("tr")
-				    		+ "\" is not available on any of the sites", ex);
-				    }
-				    else {
-				        failTask(e, ex.getMessage(), ex);
-				    }
+					handleNoSuchResourceException(e, ex);
 				}
 				catch (NoFreeResourceException ex) {
 					remove = false;
@@ -316,6 +310,10 @@ public abstract class LateBindingScheduler extends AbstractScheduler implements 
 				}
 			}
 		}
+	}
+
+	protected void handleNoSuchResourceException(Entry e, NoSuchResourceException ex) {
+		failTask(e, ex.getMessage(), ex);
 	}
 
 	private boolean sleep() {
