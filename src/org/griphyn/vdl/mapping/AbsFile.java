@@ -64,7 +64,11 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
     
     protected FileResource getFileResource() throws IOException {
 		Service s = new ServiceImpl();
-		s.setProvider(getProtocol("file"));
+		String protocol = getProtocol("file");
+		if (protocol.equals("direct")) {
+		    protocol = "file";
+		}
+		s.setProvider(protocol);
 		s.setType(Service.FILE_OPERATION);
 		s.setServiceContact(new ServiceContactImpl(getHost("localhost"), getPort()));
 		try {
