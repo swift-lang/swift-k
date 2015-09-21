@@ -115,11 +115,20 @@ public class RemoteFile {
             int ms = state + c;
             switch (ms) {
                 case ':':
+                    protocol = StringCache.intern(str.substring(pp, sp));
                     if (match(str, "//", sp + 1)) {
+                        // yes host
                         state = 1000;
-                        protocol = StringCache.intern(str.substring(pp, sp));
                         pp = sp + 3;
-                        sp = pp;
+                        sp = pp - 1;
+                    }
+                    else {
+                        // no host
+                        host = null;
+                        port = -1;
+                        parseDirAndName(str, sp + 1);
+                        state = 3000;
+                        break outer;
                     }
                     break;
                 case 1000 + ':':
@@ -261,9 +270,10 @@ public class RemoteFile {
         StringBuilder sb = new StringBuilder();
         if (protocol != null) {
             sb.append(protocol);
-            sb.append("://");
+            sb.append(":");
         }
         if (host != null) {
+            sb.append("//");
             sb.append(host);
             if (port != -1) {
                 sb.append(':');
@@ -295,7 +305,7 @@ public class RemoteFile {
     }
     
     public String toDebugString() {
-        return "RemoteFile[protocol: '" + protocol + "', host: '" + host + 
+        return "RemoteFile[protocol: '" + protocol + "', host: '" + (host == null ? "null" : "'" + dir + "'") + 
             "', port: " + port + ", dir: " + (dir == null ? "null" : "'" + dir + "'") + ", name: '" + name + "']"; 
     }
 
@@ -340,6 +350,8 @@ public class RemoteFile {
     }
     
     public static void main(String[] args) {
+        test("file:path", "file:path", false);
+        test("direct:/path", "direct:/path", false);
         test("http://ll.com/name", "http://ll.com/name", false);
         test("http://ll.com:30/name", "http://ll.com:30/name", false);
         test("http://ll.com:/name", "http://ll.com:/name", true);
