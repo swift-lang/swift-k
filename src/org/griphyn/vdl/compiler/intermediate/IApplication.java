@@ -19,67 +19,34 @@
  */
 package org.griphyn.vdl.compiler.intermediate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.stringtemplate.StringTemplate;
 
 public class IApplication extends AbstractINode {
-    private String executable;
-    private List<INode> arguments;
-    private IExpression stdin, stdout, stderr;
     private IAppProfile profile;
+    private List<IApplicationCommand> commands;
 
     public IApplication() {
         super();
+        commands = new ArrayList<IApplicationCommand>();
     }
  
-
-    public String getExecutable() {
-        return executable;
-    }
-
-    public void setExecutable(String executable) {
-        this.executable = executable;
-    }
-
-    public void addArgument(INode iArg) {
-        arguments = lazyAdd(arguments, iArg);
-    }
-
-    
-    public IExpression getStdin() {
-        return stdin;
-    }
-
-    public void setStdin(IExpression stdin) {
-        this.stdin = stdin;
-    }
-
-
-    public IExpression getStdout() {
-        return stdout;
-    }
-
-    public void setStdout(IExpression stdout) {
-        this.stdout = stdout;
-    }
-
-
-    public IExpression getStderr() {
-        return stderr;
-    }
-
-    public void setStderr(IExpression stderr) {
-        this.stderr = stderr;
-    }
-
-
     public IAppProfile getProfile() {
         return profile;
     }
 
     public void setProfile(IAppProfile profile) {
         this.profile = profile;
+    }
+    
+    public void addCommand(IApplicationCommand cmd) {
+        commands.add(cmd);
+    }
+
+    public List<IApplicationCommand> getCommands() {
+        return commands;
     }
 
     @Override
@@ -96,17 +63,7 @@ public class IApplication extends AbstractINode {
     @Override
     protected void setTemplateAttributes(OutputContext oc, StringTemplate st) {
         super.setTemplateAttributes(oc, st);
-        st.setAttribute("exec", executable);
-        setAll(oc, st, arguments, "arguments");
-        if (stdin != null) {
-            st.setAttribute("stdin", stdin.getTemplate(oc));
-        }
-        if (stdout != null) {
-            st.setAttribute("stdout", stdout.getTemplate(oc));
-        }
-        if (stderr != null) {
-            st.setAttribute("stderr", stderr.getTemplate(oc));
-        }
+        setAll(oc, st, commands, "commands");
         if (profile != null) {
             st.setAttribute("attributes", profile.getTemplate(oc));
         }

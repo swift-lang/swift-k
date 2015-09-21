@@ -31,17 +31,18 @@ import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
+import org.griphyn.vdl.karajan.Command;
 import org.griphyn.vdl.karajan.lib.cache.CacheMapAdapter;
 import org.griphyn.vdl.mapping.DSHandle;
 
 public class JobConstraints extends CacheFunction {
-    private ArgRef<String> tr;
+    private ArgRef<Command[]> commands;
     private ArgRef<Collection<DSHandle>> stagein;
     private ChannelRef<Object> cr_vargs;
     
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("tr", optional("stagein", null)), returns(channel("...", 1)));
+        return new Signature(params("commands", optional("stagein", null)), returns(channel("...", 1)));
     }
 	
 	private static final String[] STRING_ARRAY = new String[0];
@@ -49,10 +50,10 @@ public class JobConstraints extends CacheFunction {
 	@Override
     public void runBody(LWThread thr) {
 		Stack stack = thr.getStack();
-		String tr = this.tr.getValue(stack);
+		Command[] commands = this.commands.getValue(stack);
 		String[] filenames = null;
 		Collection<DSHandle> stageins = this.stagein.getValue(stack);
-		SwiftTaskConstraints tc = new SwiftTaskConstraints(tr);
+		SwiftTaskConstraints tc = new SwiftTaskConstraints(commands);
 		if (stageins != null) {
 		    tc.setStageins(stageins);
 		    tc.setFilecache(new CacheMapAdapter(getCache(stack)));
@@ -60,17 +61,17 @@ public class JobConstraints extends CacheFunction {
 		cr_vargs.append(stack, tc);
 	}
 	
-	private static final List<String> NAMES1 = Arrays.asList("tr", "trfqn");
-	private static final List<String> NAMES2 = Arrays.asList("tr", "trfqn", "stageins", "filecache");
+	private static final List<String> NAMES1 = Arrays.asList("commands");
+	private static final List<String> NAMES2 = Arrays.asList("commands", "stageins", "filecache");
 	
 	private static class SwiftTaskConstraints implements TaskConstraints {
 	    
-	    private final String tr;
+	    private final Command[] commands;
 	    private Collection<DSHandle> stageins;
 	    private CacheMapAdapter filecache;
 
-	    public SwiftTaskConstraints(String tr) {
-	        this.tr = tr;
+	    public SwiftTaskConstraints(Command[] commands) {
+	        this.commands = commands;
         }
 
         public Collection<DSHandle> getStageins() {
@@ -92,8 +93,8 @@ public class JobConstraints extends CacheFunction {
 
         @Override
         public Object getConstraint(String name) {
-            if ("tr".equals(name)) {
-                return tr;
+            if ("commands".equals(name)) {
+                return commands;
             }
             else if ("stageins".equals(name)) {
                 return stageins;

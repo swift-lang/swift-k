@@ -73,26 +73,26 @@ namespace(wrapperStaging) {
 	}
 
 		
-	readStandardFiles := function(jobdir, stdout, stderr) {
+	readStandardFiles := function(jobdir) {
 		concat(
-			for(f, [["_swift.stderr", stderr], ["_swift.stdout", stdout]]) {
-				(name, file) := each(f)
-				destfile := "{jobdir}/{file}"
-				"\n    {name}: "
-				utry {
-					file:read(destfile)
-					"\n"
-				}
-				else {
-					""
-				}
+			stderrs := "{jobdir}/_stderr.txt"
+			stdouts := "{jobdir}/_stdout.txt"
+			if (file:exists(stderrs)) {
+				"\n\n------- Application STDERR --------\n"
+				str:strip(file:read(stderrs))
+				"\n-----------------------------------\n"
+			}
+			if (file:exists(stdouts)) {
+				"\n\n------- Application STDOUT --------\n"
+				str:strip(file:read(stdouts))
+				"\n-----------------------------------\n"
 			}
 		)
 	}
 		
 
 	export(execute2,
-		function(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
+		function(jobid, rhost, progress, tr, commands, attributes,  
 			stagein, stageout, replicationGroup, replicationChannel) {
 
 			wfdir := utry {
@@ -112,30 +112,23 @@ namespace(wrapperStaging) {
 			wrapfile := "{jobdir}/_paramfile"
 
 			(fileDirs, inFiles, outFiles, outCollect, tempRefs) := getStagingInfo(stagein, stageout),
-			(stdins, stdouts, stderrs) := getStandardFilesInfo(stdin, stdout, stderr)
 
 			os := siteProfile(rhost, "OS")
-			eargs := expandArguments(arguments)
+			resolveFiles(commands, rhost)
 			
 			scratch := siteProfile(rhost, "scratch")
 
 			if (wrapperMode == "files") {
 				file:write(wrapfile) {
-					"-e ", executable(tr, rhost),
-					"\n-out ", stdouts,
-					"\n-err ", stderrs,
-					"\n-i ", if (stdin != null, stdins),
-					"\n-d ", remoteFileNames(fileDirs),
-					"\n-if ", remoteFileNamesWS(inFiles),
-					"\n-of ", remoteFileNamesWS(outFiles),
-					"\n-cf ", remoteFileNamesWS(outCollect),
-					"\n-wt", WRAPPER_LOG_ALWAYS_TRANSFER,
-					"\n-sk", SITEDIR_KEEP,
-					"\n-cdmfile ", cdm:file(),
-					"\n-status ", statusMode,
-					for(a, eargs) {
-						"\n-a ", a
-					}
+					"\n-d\n", remoteFileNames(fileDirs),
+					"\n-if\n", remoteFileNamesWS(inFiles),
+					"\n-of\n", remoteFileNamesWS(outFiles),
+					"\n-cf\n", remoteFileNamesWS(outCollect),
+					"\n-wt\n", WRAPPER_LOG_ALWAYS_TRANSFER,
+					"\n-sk\n", SITEDIR_KEEP,
+					"\n-cdmfile\n", cdm:file(),
+					"\n-status\n", statusMode,
+					swift:formatCommands(commands, "paramfile")
 				}
 			}
 			
@@ -147,7 +140,7 @@ namespace(wrapperStaging) {
 					stageWrapperParams(jobid, jobdir, wrapfile, wfdir, rhost)
 				}
 
-				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)))
+				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", swift:formatCommands(commands, "log"))
 
 				setProgress(progress, "Submitting")
 
@@ -167,7 +160,8 @@ namespace(wrapperStaging) {
 						directory=wfdir
 						redirect=false
 						host=rhost
-						TCProfile(rhost, if (attributes != null, attributes = attributes), tr=tr)
+						tempRefs = tempRefs
+						TCProfile(rhost, if (attributes != null, attributes = attributes), commands = getAndDelete(commands), tr = tr)
 						replicationGroup=replicationGroup
 						replicationChannel=replicationChannel
 						jobid=jobid
@@ -184,10 +178,6 @@ namespace(wrapperStaging) {
 							"-urlprefix", URL_PREFIX,
 							"-jobdir", jobdir,
 							"-scratch", scratch,
-							"-e", executable(tr, rhost),
-							"-out", stdouts,
-							"-err", stderrs,
-							"-i", if (stdin != null, stdins),
 							"-d", remoteFileNames(fileDirs),
 							"-if", remoteFileNamesWS(inFiles),
 							"-of", remoteFileNamesWS(outFiles),
@@ -196,12 +186,13 @@ namespace(wrapperStaging) {
 							"-sk", SITEDIR_KEEP,
 							"-cdmfile", cdm:file(),
 							"-status", statusMode,
-							"-a", if (arguments != null, each(eargs))
+							swift:formatCommands(commands, "args")
 						)
 						directory=wfdir
 						redirect=false
 						host=rhost
-						TCProfile(rhost, if(attributes != null, attributes = attributes), tr=tr)
+						tempRefs = tempRefs
+						TCProfile(rhost, if (attributes != null, attributes = attributes), commands = getAndDelete(commands), tr = tr)
 						replicationGroup=replicationGroup
 						replicationChannel=replicationChannel
 						jobid=jobid
@@ -247,13 +238,12 @@ namespace(wrapperStaging) {
 						throw(exception)
 					}
 					
-					outs := readStandardFiles(jobdir, stdouts, stderrs)
+					outs := readStandardFiles(jobdir)
 					
 					throw(
 						exception(
 							concat(
 								"Exception in {tr}:",
-								if (arguments != null, "\n    Arguments: {arguments}")
 								"\n    Host: {rhost}",
 								"\n    Directory: {jobdir}",
 								"{outs}",

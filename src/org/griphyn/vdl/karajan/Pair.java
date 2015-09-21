@@ -44,4 +44,12 @@ public class Pair<T> extends AbstractList<T> {
 	public int size() {
 		return 2;
 	}
+
+    public T getFirst() {
+        return o1;
+    }
+
+    public T getSecond() {
+        return o2;
+    }
 }

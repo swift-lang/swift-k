@@ -84,12 +84,6 @@ namespace(swift) {
 
 	export(types, function() {})
 	
-	export(arguments,
-		function(...) {
-			arguments = ...
-		}
-	)
-
 	export(mapping, def("org.griphyn.vdl.karajan.lib.Mapping$Cons"))
 	export(parameter, def("org.griphyn.vdl.karajan.lib.Mapping$Parameter"))
 
@@ -120,28 +114,27 @@ namespace(swift) {
 		}
 	)
 	
-	executeSelect := function(jobid, rhost, progress, tr, arguments, attributes,
-		stdin, stdout, stderr, stagein, stageout, replicationGroup, replicationChannel) {
+	executeSelect := function(jobid, rhost, progress, tr, commands, attributes,
+		stagein, stageout, replicationGroup, replicationChannel) {
 		
 		staging := configProperty("staging", host = rhost)
 		if (staging == "swift") {
-			k:tailcall(swiftStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+			k:tailcall(swiftStaging:execute2(jobid, rhost, progress, tr, commands, attributes,
 				stagein, stageout, replicationGroup, replicationChannel))
 		}
 		else if (staging == "provider") {
-			k:tailcall(providerStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+			k:tailcall(providerStaging:execute2(jobid, rhost, progress, tr, commands, attributes,
 				stagein, stageout, replicationGroup, replicationChannel))
 		}
 		else {
-			k:tailcall(wrapperStaging:execute2(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr,
+			k:tailcall(wrapperStaging:execute2(jobid, rhost, progress, tr, commands, attributes,
 				stagein, stageout, replicationGroup, replicationChannel))
 		}
 	}
 	
 	export(execute,
 		function(
-			tr, arguments = null, 
-			stdin = null, stdout = null, stderr = null, 
+			tr, commands, 
 			attributes = null, 
 			deperror = false, mdeperror = false, 
 			channel(stagein), channel(stageout)) {
@@ -171,13 +164,12 @@ namespace(swift) {
 									parallelFor(i, replicationChannel) {
 										utry {
 											log(LOG:DEBUG, "JOB_SITE_SELECT jobid={jobid}")
-											allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
+											allocateHost(rhost, constraints = jobConstraints(commands, stagein = stagein)) {
 												log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} host={rhost} thread=", currentThread(), " replicationGroup={replicationGroup}")
 												k:tailcall(executeSelect(
 													jobid, rhost, progress, 
-													tr, if(arguments != null, unwrapClosedList(arguments), []),
+													tr, commands,
 													attributes,
-													stdin, stdout, stderr, 
 													stagein, stageout, replicationGroup, replicationChannel
 												))
 											}
@@ -195,20 +187,20 @@ namespace(swift) {
 								else {
 									utry {
 										log(LOG:DEBUG, "JOB_SITE_SELECT jobid={jobid}")
-										allocateHost(rhost, constraints = jobConstraints(tr, stagein = stagein)) {
+										allocateHost(rhost, constraints = jobConstraints(commands, stagein = stagein)) {
 											log(LOG:DEBUG, "THREAD_ASSOCIATION jobid={jobid} host={rhost} thread=", currentThread())
 											if (counter == 0) {
 												k:tailcall(executeSelect(
 													jobid, rhost, progress, 
-													tr, if(arguments != null, unwrapClosedList(k:getAndDelete(arguments)), []),
-													k:getAndDelete(attributes, stdin, stdout, stderr, stagein), stageout, null, null
+													tr, k:getAndDelete(commands),
+													k:getAndDelete(attributes, stagein), stageout, null, null
 												))
 											}
 											else {
 												k:tailcall(executeSelect(
 													jobid, rhost, progress, 
-													tr, if(arguments != null, unwrapClosedList(arguments), []),
-													attributes, stdin, stdout, stderr, stagein, stageout, null, null
+													tr, commands,
+													attributes, stagein, stageout, null, null
 												))
 											}
 										}

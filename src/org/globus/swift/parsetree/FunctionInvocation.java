@@ -20,6 +20,17 @@
 package org.globus.swift.parsetree;
 
 public class FunctionInvocation extends Call {
+    
+    public FunctionInvocation() {
+    }
+    
+    public FunctionInvocation(String name, ActualParameter... params) {
+        super();
+        setName(name);
+        for (ActualParameter p : params) {
+            addParameter(p);
+        }
+    }
 
     @Override
     public Type getExpressionType() {

@@ -1285,42 +1285,46 @@ public class Karajan {
 	public IApplication application(AppDeclaration app, IProcedureDeclaration iProcedure) throws CompilationException {
 		try {
 		    IApplication iApp = new IApplication();
-		    iApp.setExecutable(app.getExecutable());
-			for (Expression argument : app.getArguments()) {
-				IExpression iArg = expressionToKarajan(argument, iProcedure, false, null, Types.ANY);
-				Type type = iArg.getType();
-				Type base = type.itemType();
-				Type testType;
-				// if array then use the array item type for testing
-				if (base != null) {
-				    testType = base;
-				}
-				else {
-				    testType = type;
-				}
-				if (testType.isPrimitive()) {
-				    iApp.addArgument(iArg);
-				} 
-				else {
-					throw new CompilationException("Cannot pass type '" + type + 
-					    "' as a parameter to application '" + app.getExecutable() + "'");
-				}
-			}
-			if (app.getRedirect("stdin") != null) {
-			    iApp.setStdin(expressionToKarajan(app.getRedirect("stdin"), iProcedure));
-			}
-			if (app.getRedirect("stdout") != null) {
-			    iApp.setStdout(expressionToKarajan(app.getRedirect("stdout"), iProcedure));
-			}
-			if (app.getRedirect("stderr") != null) {
-			    iApp.setStderr(expressionToKarajan(app.getRedirect("stderr"), iProcedure));
-			}
+		    for (AppCommand cmd : app.getCommands()) {
+		        IApplicationCommand iCmd = new IApplicationCommand();
+    		    iCmd.setExecutable(cmd.getExecutable());
+    			for (Expression argument : cmd.getArguments()) {
+    				IExpression iArg = expressionToKarajan(argument, iProcedure, false, null, Types.ANY);
+    				Type type = iArg.getType();
+    				Type base = type.itemType();
+    				Type testType;
+    				// if array then use the array item type for testing
+    				if (base != null) {
+    				    testType = base;
+    				}
+    				else {
+    				    testType = type;
+    				}
+    				if (testType.isPrimitive()) {
+    				    iCmd.addArgument(iArg);
+    				} 
+    				else {
+    					throw new CompilationException("Cannot pass type '" + type + 
+    					    "' as a parameter to application '" + cmd.getExecutable() + "'");
+    				}
+    			}
+    			if (cmd.getRedirect("stdin") != null) {
+    			    iCmd.setStdin(expressionToKarajan(cmd.getRedirect("stdin"), iProcedure));
+    			}
+    			if (cmd.getRedirect("stdout") != null) {
+    			    iCmd.setStdout(expressionToKarajan(cmd.getRedirect("stdout"), iProcedure));
+    			}
+    			if (cmd.getRedirect("stderr") != null) {
+    			    iCmd.setStderr(expressionToKarajan(cmd.getRedirect("stderr"), iProcedure));
+    			}
+    			iApp.addCommand(iCmd);
+		    }
 			addProfiles(app, iProcedure, iApp);
 			return iApp;
 		} 
 		catch (CompilationException e) {
 			throw new CompilationException(e.getMessage() + 
-			    " in application " + app.getExecutable() + " at " + app.getLine(), e);
+			    " in application " + app.getName() + " at " + app.getLine(), e);
 		}
 	}
 

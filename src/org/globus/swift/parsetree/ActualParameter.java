@@ -25,6 +25,14 @@ public class ActualParameter extends AbstractNode {
     private Expression value;
     private String binding;
     
+    public ActualParameter() {
+    }
+    
+    public ActualParameter(Expression value) {
+        this();
+        setValue(value);
+    }
+    
     public Expression getValue() {
         return value;
     }

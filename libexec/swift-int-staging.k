@@ -32,20 +32,20 @@ namespace(providerStaging) {
 		)
 	}
 
-	readErrorFiles := function(dir, jobid, stdout, stdouts, stderr, stderrs) {
+	readErrorFiles := function(dir, jobid) {
 		concat(
-			if(file:exists("{dir}/{jobid}.error")) {
+			if (file:exists("{dir}/{jobid}.error")) {
 				str:strip(file:read("{dir}/{jobid}.error"))
 				file:remove("{dir}/{jobid}.error")
 			}
-			stderrs := if(stderr == null, "{dir}/{jobid}.stderr", stderrs)
-			stdouts := if(stdout == null, "{dir}/{jobid}.stdout", stdouts)
-			if(file:exists(stderrs)) {
+			stderrs := "{dir}/{jobid}.stderr"
+			stdouts := "{dir}/{jobid}.stdout"
+			if (file:exists(stderrs)) {
 				"\n\n------- Application STDERR --------\n"
 				str:strip(file:read(stderrs))
 				"\n-----------------------------------\n"
 			}
-			else if(file:exists(stdouts)) {
+			if (file:exists(stdouts)) {
 				"\n\n------- Application STDOUT --------\n"
 				str:strip(file:read(stdouts))
 				"\n-----------------------------------\n"
@@ -54,25 +54,21 @@ namespace(providerStaging) {
 	}
 	
 	export(execute2,
-		function(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
+		function(jobid, rhost, progress, tr, commands, attributes,  
 			stagein, stageout, replicationGroup, replicationChannel) {
 
 			jobdir := substring(jobid, 0, to = 1)
 			
-			tmpdir := dircat("{SWIFT:WFDIR}/jobs/{jobdir}", jobid)			
-			
-			argsNotNull := arguments != null
-			
-			sm := siteProfile(rhost, "stagingMethod", default="file"),
-			(stdins, stdouts, stderrs) := getStandardFilesInfo(stdin, stdout, stderr, defaultScheme = sm)
+			tmpdir := dircat("{SWIFT:WFDIR}/jobs/{jobdir}", jobid)
+						
+			stagingMethod := siteProfile(rhost, "stagingMethod", default="file"),
 			(fileDirs, inFiles, outFiles, outCollect, tempRefs) := getStagingInfo(getAndDelete(stagein, stageout), defaultScheme = stagingMethod),
 						
 			wrapperMode := configProperty("wrapperParameterMode", host=rhost)
 
 			utry {
-				eargs := expandArguments(getAndDelete(arguments), stagingMethod = sm)
-				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (argsNotNull, (" arguments=", eargs)), 
-					" tmpdir={tmpdir}")
+				resolveFiles(commands, rhost, stagingMethod = stagingMethod)
+				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", swift:formatCommands(commands, "log"), " tmpdir={tmpdir}")
 
 				setProgress(progress, "Submitting")
 				
@@ -80,19 +76,13 @@ namespace(providerStaging) {
 				
 				if (wrapperMode == "files") {
 					sys:file:write(wrapfile) {
-						"\n-e ", executable(tr, rhost),
-						"\n-out ", stdouts,
-						"\n-err ", stderrs,
-						"\n-i ", if (stdin != null, stdins),
-						"\n-d ", remoteFileNames(fileDirs),
-						"\n-if ", remoteFileNames(inFiles),
-						"\n-of ", remoteFileNames(outFiles),
-						"\n-cf ", remoteFileNames(outCollect),
-						"\n-cdmfile ", cdm:file(),
-						"\n-status provider",
-						for(a, getAndDelete(eargs)) {
-							"\n-a ", a
-						}
+						"\n-d\n", remoteFileNames(getAndDelete(fileDirs)),
+						"\n-if\n", remoteFileNames(inFiles),
+						"\n-of\n", remoteFileNames(outFiles),
+						"\n-cf\n", remoteFileNames(outCollect),
+						"\n-cdmfile\n", cdm:file(),
+						"\n-status\nprovider\n",
+						swift:formatCommands(commands, "paramfile")
 					}
 				}
 				
@@ -112,17 +102,13 @@ namespace(providerStaging) {
 						list(
 							siteProfile(rhost, "wrapperInterpreterOptions"),
 							wrapperScript,
-							"-e", executable(tr, rhost),
-							"-out", stdouts,
-							"-err", stderrs,
-							"-i", if (stdin != null, stdins),
 							"-d", remoteFileNames(getAndDelete(fileDirs)),
 							"-if", remoteFileNames(inFiles),
 							"-of", remoteFileNames(outFiles),
 							"-cf", remoteFileNames(outCollect),
 							"-cdmfile", CDM_FILE,
 							"-status", "provider"
-							"-a", if (argsNotNull, each(getAndDelete(eargs)))
+							swift:formatCommands(commands, "args")
 						)
 					}
 					directory = tmpdir
@@ -130,7 +116,7 @@ namespace(providerStaging) {
 					host = rhost
 					tempRefs = getAndDelete(tempRefs)
 
-					TCProfile(rhost, if (attributes != null, attributes = attributes), tr = tr)
+					TCProfile(rhost, if (attributes != null, attributes = attributes), commands = getAndDelete(commands), tr = tr)
 					replicationGroup = replicationGroup
 					replicationChannel = replicationChannel
 					jobid = jobid
@@ -152,23 +138,17 @@ namespace(providerStaging) {
 					}
 					
 					appStageins(jobid, getAndDelete(inFiles))
+					appStageouts(jobid, getAndDelete(outFiles), outCollect)
 
-					stageOut("wrapper.log", "file://localhost/{DEBUG_DIR}/{jobid}.info", 
+					stageOut("_wrapper.log", "file://localhost/{DEBUG_DIR}/{jobid}.info", 
 						mode = WRAPPER_TRANSFER_MODE)
-					
-					if (stdout == null) {
-						// if not stdout requested, only stage on error
-						stageOut("stdout.txt", "file://localhost/{DEBUG_DIR}/{jobid}.stdout", 
+					stageOut("_stdout.txt", "file://localhost/{DEBUG_DIR}/{jobid}.stdout", 
 							mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
-					}
-					if (stderr == null) {
-						stageOut("stderr.txt", "file://localhost/{DEBUG_DIR}/{jobid}.stderr",
+					stageOut("_stderr.txt", "file://localhost/{DEBUG_DIR}/{jobid}.stderr",
 							mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
-					}
-					stageOut("wrapper.error", "file://localhost/{DEBUG_DIR}/{jobid}.error", 
+					stageOut("_wrapper.error", "file://localhost/{DEBUG_DIR}/{jobid}.error", 
 						mode = STAGING_MODE:IF_PRESENT)
 						
-					appStageouts(jobid, getAndDelete(outFiles), outCollect)
 					
 					if (!isEmpty(outCollect)) {
 						stageOut("_collect", "file://localhost/{DEBUG_DIR}/{jobid}.collect", 
@@ -199,7 +179,7 @@ namespace(providerStaging) {
 					throw(prev)
 				}
 				else {
-					exception := utry(exception(readErrorFiles(DEBUG_DIR, jobid, stdout, stdouts, stderr, stderrs), prev), prev)
+					exception := utry(exception(readErrorFiles(DEBUG_DIR, jobid), prev), prev)
 					setProgress(progress, "Failed but can retry")
 					log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)
 				
@@ -207,7 +187,6 @@ namespace(providerStaging) {
 						exception(
 							concat(
 								"Exception in {tr}:",
-								if (arguments != null, "\n    Arguments: {arguments}")
 								"\n    Host: {rhost}",
 								"\n    Directory: {tmpdir}"
 							)

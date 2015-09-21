@@ -26,30 +26,37 @@ import java.util.List;
 import java.util.Map;
 
 import k.rt.ExecutionException;
+import k.rt.Null;
 import k.rt.Stack;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.griphyn.vdl.karajan.Command;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
-public class UnwrapClosedList extends SwiftFunction {
-	public static final Logger logger = Logger.getLogger(UnwrapClosedList.class);
+public class MakeCommand extends SwiftFunction {
+	public static final Logger logger = Logger.getLogger(MakeCommand.class);
 	
-	private ArgRef<List<AbstractDataNode>> list;
+	private ArgRef<String> executable;
+	private ArgRef<Object> stdin;
+	private ArgRef<Object> stdout;
+	private ArgRef<Object> stderr;
+	
+	private ChannelRef<AbstractDataNode> c_vargs;
 	
 	@Override
     protected Signature getSignature() {
-        return new Signature(params("list"));
+        return new Signature(params("executable", "stdin", "stdout", "stderr", "..."));
     }
 
 	@Override
 	public Object function(Stack stack) {
-        Collection<AbstractDataNode> l = this.list.getValue(stack);
+        Collection<AbstractDataNode> l = c_vargs.get(stack);
 		
-		List<Object> r = new ArrayList<Object>(l.size());
-		
+        int count = 0;
 		for (AbstractDataNode h : l) {
 		    if (h.getType().isArray()) {
 		        h.waitFor(this);
@@ -57,7 +64,7 @@ public class UnwrapClosedList extends SwiftFunction {
 		        for (DSHandle h2 : m.values()) {
 		            if (h2.getType().isPrimitive()) {
 		                ((AbstractDataNode) h2).waitFor(this);
-		                r.add(h2.getValue());
+		                count++;
 		            }
 		            else {
 		                throw new ExecutionException(this, "Cannot pass an array of non-primitives as an application parameter");
@@ -69,13 +76,45 @@ public class UnwrapClosedList extends SwiftFunction {
 		        // and the fringes as returned by getFringePaths(), but
 		        // the latter only returns mapped types
 		        h.waitFor(this);
-		        r.add(h.getValue());
+		        count++;
 		    }
 		    else {
 		        throw new ExecutionException(this, "Cannot pass a structure as an application parameter");
 		    }
 		}
 		
-		return r;
+		Object stdin = wait(this.stdin.getValue(stack));
+        Object stdout = wait(this.stdout.getValue(stack));
+        Object stderr = wait(this.stderr.getValue(stack));
+        
+        Command cmd = new Command();
+        cmd.setExecutable(this.executable.getValue(stack));
+        cmd.setStdin(stdin);
+        cmd.setStdout(stdout);
+        cmd.setStderr(stderr);
+
+		List<Object> args = new ArrayList<Object>(count);
+		for (AbstractDataNode h : l) {
+            if (h.getType().isArray()) {
+                Map<?, DSHandle> m = h.getArrayValue();
+                for (DSHandle h2 : m.values()) {
+                    args.add(h2.getValue());
+                }
+            }
+            else {
+                args.add(h.getValue());
+            }
+        }
+		cmd.setArguments(args);
+		return cmd;
+	}
+	
+	private Object wait(Object o) {
+	    if (o == Null.VALUE) {
+	        return null;
+	    }
+	    AbstractDataNode n = (AbstractDataNode) o;
+	    n.waitFor(this);
+	    return n.getValue();
 	}
 }

@@ -44,14 +44,11 @@ program returns [Program program = setLine(new Program())]
     EOF
 ;
 
-importStatement [Program program] {
-	ArrayInitializer selector = setLine(new ArrayInitializer());	
-}
+importStatement [Program program]
 : 
-	"import" name:STRING_LITERAL (COMMA selector = arrayInitializer)? SEMI {
+	"import" name:STRING_LITERAL SEMI {
     	Import i = setLine(new Import());
     	i.setTarget(name.getText());
-    	i.setSelector(selector);
     	program.addImport(i);
     }
 ;
@@ -494,6 +491,7 @@ appproceduredecl returns [AppDeclaration app = null]
 	app = setLine(new AppDeclaration());
 	FormalParameter param = null;
 	String exec = null;
+	AppCommand cmd = null;
 }
 : 
 	"app"
@@ -526,12 +524,23 @@ appproceduredecl returns [AppDeclaration app = null]
 	RPAREN
 	LCURLY
 	(appProfile[app])*
-	(exec = appDeclarator) {
-		app.setExecutable(exec);
-	}
-    (appArg[app])* 
-    SEMI
+	(
+		(cmd = appCommand) {
+			app.addCommand(cmd);
+		}
+	)*
 	RCURLY
+;
+
+appCommand returns [AppCommand cmd = null] {
+	cmd = setLine(new AppCommand());
+	String exec = null;	
+}:
+	(exec = appDeclarator) {
+		cmd.setExecutable(exec);
+	}
+    (appArg[cmd])* 
+    SEMI
 ;
 
 appProfile [AppDeclaration app]
@@ -1054,28 +1063,31 @@ positionalParam[ActualParameter param]
 	}
 ;
 
-atomicBody [AppDeclaration app]
+atomicBody [AppDeclaration app] {
+	AppCommand cmd = setLine(new AppCommand());
+	app.addCommand(cmd);
+}
 :      
-	appSpec[app]
+	appSpec[cmd]
 ;
 
 /* This is the deprecated format for app { } blocks */
-appSpec [AppDeclaration app]
+appSpec [AppCommand cmd]
 {
 	String exec = null;
 }
 :  
 	"app" LCURLY
     exec = declarator { 
-    	app.setExecutable(exec);
+    	cmd.setExecutable(exec);
     }
     (
-    	appArg[app]
+    	appArg[cmd]
     )*
     SEMI RCURLY
 ;
 
-appArg [AppDeclaration app]
+appArg [AppCommand cmd]
 {
 	Expression arg = null;
 }
@@ -1158,7 +1170,7 @@ functionInvocationArgument [FunctionInvocation fi]
      }
 ;
 
-stdioArg [AppDeclaration app]
+stdioArg [AppCommand cmd]
 {
 	Expression expr = null;
 	String name = null;
@@ -1172,8 +1184,8 @@ stdioArg [AppDeclaration app]
     	"stderr" {name="stderr";}
     )
     ASSIGN
-    expr = mappingExpr {
-    	app.addRedirect(name, expr);
+    expr = expression {
+    	cmd.addRedirect(name, expr);
     }
 ;
 
@@ -1345,9 +1357,6 @@ predictProcedureCallExpr
 : 
 	ID LPAREN 
 ;
-
-// TODO - redo identifier parsing to fit in with the XML style
-// that this patch introduces
 
 // specifically, need the base ID to be distinct from all the
 // other IDs

@@ -42,11 +42,25 @@ public class FileName extends SwiftFunction {
     @Override
     public Node compile(WrapperNode w, Scope scope) throws CompilationException {        
         Node self = super.compile(w, scope);
-        // either execute(arguments(this)) or execute(named(stdxxx, this)) 
-        if (getParent().getParent().getType().equals("swift:execute")) {
-            inAppInvocation = true;
+        // either execute(arguments(this)) or execute(named(stdxxx, this))
+        if (isDescendentOf("swift:execute")) {
+        	inAppInvocation = true;
         }
         return self;
+    }
+
+    private boolean isDescendentOf(String name) {
+        return isDescendentOf(this, name);
+    }
+
+    private boolean isDescendentOf(Node n, String name) {
+    	if (n.getType().equals(name)) {
+    		return true;
+    	}
+    	if (n.getParent() == null) {
+    		return false;
+    	}
+        return isDescendentOf(n.getParent(), name);
     }
 
     @Override

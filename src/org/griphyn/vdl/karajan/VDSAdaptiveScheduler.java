@@ -20,11 +20,14 @@
  */
 package org.griphyn.vdl.karajan;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -35,6 +38,7 @@ import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.task.JobSpecificationImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskImpl;
+import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.Status;
@@ -42,6 +46,7 @@ import org.globus.cog.abstraction.interfaces.StatusListener;
 import org.globus.cog.abstraction.interfaces.Task;
 import org.globus.cog.karajan.scheduler.AbstractScheduler;
 import org.globus.cog.karajan.scheduler.ContactAllocationTask;
+import org.globus.cog.karajan.scheduler.NoSuchResourceException;
 import org.globus.cog.karajan.scheduler.ResourceConstraintChecker;
 import org.globus.cog.karajan.scheduler.TaskConstraints;
 import org.globus.cog.karajan.scheduler.WeightedHost;
@@ -141,7 +146,45 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 		return timer;
 	}
 
-	private boolean shouldBeClustered(Task task, Object constraints) {
+	@Override
+    protected void handleNoSuchResourceException(Entry e, NoSuchResourceException ex) {
+	    if (e.task instanceof ContactAllocationTask) {
+            failTask(e, "The application" + getApps(getTaskConstraints(e))
+                + " not available on any of the sites", ex);
+        }
+        else {
+            super.handleNoSuchResourceException(e, ex);
+        }
+    }
+
+    private String getApps(TaskConstraints tc) {
+        StringBuilder sb = new StringBuilder();
+        Command[] cmds = (Command[]) tc.getConstraint("commands");
+        Set<String> unique = new HashSet<String>();
+        for (Command cmd : cmds) {
+            unique.add(cmd.getExecutable());
+        }
+        for (String s : unique) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(s);
+        }
+        if (unique.size() == 1) {
+            sb.append(" is");
+        }
+        else {
+            sb.append(" are");
+        }
+        if (unique.size() == 1) {
+            return " " + sb.toString();
+        }
+        else {
+            return "s " + sb.toString();
+        }
+    }
+
+    private boolean shouldBeClustered(Task task, Object constraints) {
 		if (!clusteringEnabled) {
 			return false;
 		}
@@ -527,10 +570,15 @@ public class VDSAdaptiveScheduler extends WeightedHostScoreScheduler implements 
 	public static class SwiftSiteChecker implements ResourceConstraintChecker {
 
 		public boolean checkConstraints(BoundContact resource, TaskConstraints tc) {
-			if (isPresent("tr", tc)) {
+			if (isPresent("commands", tc)) {
 			    SwiftContact sc = (SwiftContact) resource;
-				String tr = (String) tc.getConstraint("tr");
-			    return sc.findApplication(tr) != null;
+				Command[] cmds = (Command[]) tc.getConstraint("commands");
+				for (Command cmd : cmds) {
+				    if (sc.findApplication(cmd.getExecutable()) == null) {
+				        return false;
+				    }
+				}
+			    return true;
 			}
 			else {
 				return true;

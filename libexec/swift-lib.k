@@ -83,7 +83,7 @@ namespace(swift) {
 	export(splitFileURL, def("org.griphyn.vdl.karajan.lib.PathUtils$SplitFileURL"))
 
 	export(execute, def("org.griphyn.vdl.karajan.lib.Execute"))
-	export(expandArguments, def("org.griphyn.vdl.karajan.lib.ExpandArguments"))
+	export(resolveFiles, def("org.griphyn.vdl.karajan.lib.ResolveFiles"))
 
 	export(tParallelFor, def("org.griphyn.vdl.karajan.lib.ThrottledParallelFor"))
 	export(throttled, def("org.griphyn.vdl.karajan.lib.Throttled"))
@@ -98,11 +98,13 @@ namespace(swift) {
 	export(mark, def("org.griphyn.vdl.karajan.lib.Mark"))
 	export(parameterlog, def("org.griphyn.vdl.karajan.lib.Parameterlog"))
 	export(getStagingInfo, def("org.griphyn.vdl.karajan.lib.GetStagingInfo"))
-	export(getStandardFilesInfo, def("org.griphyn.vdl.karajan.lib.GetStandardFilesInfo"))
 	export(readCollectList, def("org.griphyn.vdl.karajan.lib.ReadCollectList"))
 	export(processStageouts, def("org.griphyn.vdl.karajan.lib.ProcessStageouts"))
 	export(doRestartLog, def("org.griphyn.vdl.karajan.lib.DoRestartLog"))
-	export(unwrapClosedList, def("org.griphyn.vdl.karajan.lib.UnwrapClosedList"))
+	export(commands, def("org.griphyn.vdl.karajan.lib.MakeCommandList"))
+	export(command, def("org.griphyn.vdl.karajan.lib.MakeCommand"))
+	export(formatCommands, def("org.griphyn.vdl.karajan.lib.FormatCommands"))
+	
 	
 	export(siteCatalog, def("org.griphyn.vdl.karajan.lib.SiteCatalog"))
 	

@@ -20,22 +20,16 @@
 package org.globus.swift.parsetree;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 public class AppDeclaration extends FunctionDeclaration {
-    
-    private String executable;
     private final List<AppProfile> profiles;
-    private final List<Expression> arguments;
-    private final Map<String, Expression> redirects;
+    private final List<AppCommand> commands;
     
     public AppDeclaration() {
         profiles = new ArrayList<AppProfile>();
-        arguments = new ArrayList<Expression>();
-        redirects = new HashMap<String, Expression>();
+        commands = new ArrayList<AppCommand>(1);
     }
     
     public AppDeclaration(FunctionDeclaration fdecl) {
@@ -44,14 +38,6 @@ public class AppDeclaration extends FunctionDeclaration {
         setName(fdecl.getName());
         setParameters(fdecl.getParameters());
         setReturns(fdecl.getReturns());
-    }
-
-    public String getExecutable() {
-        return executable;
-    }
-
-    public void setExecutable(String executable) {
-        this.executable = executable;
     }
     
     public void addProfile(AppProfile p) {
@@ -62,23 +48,11 @@ public class AppDeclaration extends FunctionDeclaration {
         return profiles;
     }
     
-    public void addArgument(Expression arg) {
-        arguments.add(arg);
+    public void addCommand(AppCommand cmd) {
+        commands.add(cmd);
     }
 
-    public List<Expression> getArguments() {
-        return arguments;
-    }
-    
-    public void addRedirect(String name, Expression expr) {
-        redirects.put(name, expr);
-    }
-
-    public Map<String, Expression> getRedirects() {
-        return redirects;
-    }
-
-    public Expression getRedirect(String name) {
-        return redirects.get(name);
+    public List<AppCommand> getCommands() {
+        return commands;
     }
 }

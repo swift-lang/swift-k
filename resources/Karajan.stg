@@ -116,25 +116,28 @@ proc_optarg() ::= <<
 $it.name$=$if(it.default)$$it.default$$else$null$endif$
 >>
 
-swift_execute(outputs, inputs, stageins, stageouts, attributes, application, name, line, initReadCounts) ::= <<
+swift_execute(inputs, outputs, application, stageins, stageouts, attributes, name, line, initReadCounts) ::= <<
 swift:unitStart("PROCEDURE", name="$name$", line=$line$, outputs="$outputs:list();separator=","$")
 k:tailcall(
-  swift:execute(
-	"$application.exec$"
-	$attributes$
-	$if(stageins)$
-	swift:stageIn($stageins;separator=", "$)
-	$endif$
-	$if(stageouts)$
-	swift:stageOut($stageouts;separator=", "$)
-	$endif$
-	$swift_arguments(attributes=application.attributes,arguments=application.arguments, stdin=application.stdin,stdout=application.stdout,stderr=application.stderr)$
-	$if(inputs)$
-	swift:deleteVars($inputs:list();separator=", "$)
-	$endif$
-  )
+	swift:execute(
+		"$name$",
+		$if(stageins)$
+			swift:stageIn($stageins;separator=", "$)
+		$endif$
+		$if(stageouts)$
+			swift:stageOut($stageouts;separator=", "$)
+		$endif$
+  		swift:commands(
+  			$application.commands; separator="\n"$
+  		)
+		$attributes$
+	)
 )
 swift:unitEnd("PROCEDURE", name="$name$", line=$line$)
+>>
+
+command(executable, arguments, stdin, stdout, stderr) ::= <<
+	swift:command("$executable$", $stdin$, $stdout$, $stderr$, $arguments; separator=", "$)
 >>
 
 log_param(dir) ::= <<
@@ -151,8 +154,7 @@ swift:cleanDataset($it$)
 
 list() ::= <<$it.name$>>
 
-swift_arguments(attributes, arguments, stdin, stdout, stderr) ::= <<
-$attributes$
+swift_arguments(arguments, stdin, stdout, stderr) ::= <<
 swift:arguments(
 	$arguments;separator="\n"$
 )

@@ -45,14 +45,14 @@ namespace(swiftStaging) {
 	}
 	
 	checkErrorFile := function(rhost, jobid, jobdir) {
-		if (file:exists("{RUN_DIR}/status/{jobdir}/{jobid}-error", host=rhost)) {
+		if (file:exists("{RUN_DIR}/status/{jobdir}/_{jobid}-error", host=rhost)) {
 			log(LOG:INFO, "FAILURE jobid={jobid} - Failure file found")
-			task:transfer("{jobid}-error", srchost=rhost, srcdir="{RUN_DIR}/status/{jobdir}")
+			task:transfer("_{jobid}-error", srchost=rhost, srcdir="{RUN_DIR}/status/{jobdir}", destdir=DEBUG_DIR)
 			error := parallel(
-				file:remove("{RUN_DIR}/status/{jobdir}/{jobid}-error", host=rhost)
+				file:remove("{RUN_DIR}/status/{jobdir}/_{jobid}-error", host=rhost)
 				sequential(
-					str:strip(file:read("{jobid}-error"))
-					file:remove("{jobid}-error")
+					str:strip(file:read("{DEBUG_DIR}/_{jobid}-error"))
+					file:remove("{DEBUG_DIR}/_{jobid}-error")
 				)
 			)
 			error
@@ -66,7 +66,7 @@ namespace(swiftStaging) {
 	checkJobStatus := function(rhost, jobid, tr, jobdir) {
 		log(LOG:DEBUG, "START jobid={jobid}")
 		utry {
-			file:remove("{RUN_DIR}/status/{jobdir}/{jobid}-success", host=rhost)
+			file:remove("{RUN_DIR}/status/{jobdir}/_{jobid}-success", host=rhost)
 			log(LOG:INFO, "SUCCESS jobid={jobid} - Success file found")
 		}
 		else {
@@ -246,7 +246,7 @@ namespace(swiftStaging) {
 	}
 	
 	doStageoutCollect := function(jobid, dir, host, outFiles) {
-		fileList := "{jobid}-collect"
+		fileList := "_{jobid}-collect"
 		task:transfer(fileList, srchost=host, srcdir=dir)
 		collectList := readCollectList(fileList)
 		doStageout(jobid, dir, host, 
@@ -260,21 +260,26 @@ namespace(swiftStaging) {
 		)
 	}
 
-	transferStandardFiles := function(rhost, tmpdir, jobid, stdout, stderr) {
+	transferStandardFiles := function(rhost, tmpdir, jobid) {
 		concat(
-			for(f, list(list("stderr.txt", stderr), list("stdout.txt", stdout))) {
-				(name, file) := each(f)
-				destfile := concat("{jobid}-", basename(file))
-				utry {
-					task:transfer(file, srchost=rhost, srcdir=tmpdir, destfile=destfile)
-					"\n    {name}: "
-					strip(file:read(destfile))
-				}
-				else {
-					""
-				}
-				maybe(file:remove(destfile))
+			stderrs := "{jobid}_stderr.txt"
+			stdouts := "{jobid}_stdout.txt"
+			utry {
+				task:transfer("_stderr.txt", srchost=rhost, srcdir=tmpdir, destfile=stderrs)
+				"\n\n------- Application STDERR --------\n"
+				str:strip(file:read(stderrs))
+				"\n-----------------------------------\n"
+				maybe(file:remove(stderrs))
 			}
+			else {""}
+			utry {
+				task:transfer("_stdout.txt", srchost=rhost, srcdir=tmpdir, destfile=stdouts)
+				"\n\n------- Application STDOUT --------\n"
+				str:strip(file:read(stdouts))
+				"\n-----------------------------------\n"
+				maybe(file:remove(stdouts))
+			}
+			else {""}
 		)
 	}
 
@@ -293,7 +298,7 @@ namespace(swiftStaging) {
 	}
 
 	export(execute2,
-		function(jobid, rhost, progress, tr, arguments, attributes, stdin, stdout, stderr, 
+		function(jobid, rhost, progress, tr, commands, attributes, 
 			stagein, stageout, replicationGroup, replicationChannel) {
 			utry {
 				initSharedDir(progress, rhost)
@@ -306,30 +311,23 @@ namespace(swiftStaging) {
 			statusMode := configProperty("statusMode", host=rhost)
 			wrapperMode := configProperty("wrapperParameterMode", host=rhost)
 
-			wrapfile := "{DEBUG_DIR}/param-{jobid}"
+			wrapfile := "{DEBUG_DIR}/_param-{jobid}"
 						
 			(fileDirs, inFiles, outFiles, outCollect, tempRefs) := getStagingInfo(getAndDelete(stagein, stageout)),
-			(stdins, stdouts, stderrs) := getStandardFilesInfo(stdin, stdout, stderr)
 
 			os := siteProfile(rhost, "OS")
-			eargs := expandArguments(arguments)
+			resolveFiles(commands, rhost)
 			
 			if (wrapperMode == "files") {
 				sys:file:write(wrapfile) {
 					"-scratch ", utry(siteProfile(rhost, "scratch"), ""),
-					"\n-e ", executable(tr, rhost),
-					"\n-out ", stdouts,
-					"\n-err ", stderrs,
-					"\n-i ", if (stdin != null, stdins),
-					"\n-d ", remoteFileNames(fileDirs),
-					"\n-if ", remoteFileNames(inFiles),
-					"\n-of ", remoteFileNames(outFiles),
-					"\n-cf ", remoteFileNames(outCollect),
-					"\n-cdmfile ", cdm:file(),
-					"\n-status ", statusMode,
-					for(a, eargs) {
-						"\n-a ", a
-					}
+					"\n-d\n", remoteFileNames(fileDirs),
+					"\n-if\n", remoteFileNames(inFiles),
+					"\n-of\n", remoteFileNames(outFiles),
+					"\n-cf\n", remoteFileNames(outCollect),
+					"\n-cdmfile\n", cdm:file(),
+					"\n-status\n", statusMode,
+					swift:formatCommands(getAndDelete(commands), "paramfile")
 				}
 			}
 
@@ -344,7 +342,7 @@ namespace(swiftStaging) {
 					stageWrapperParams(jobid, jobdir, wrapfile, RUN_DIR, rhost)
 				}
 
-				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", if (arguments != null, (" arguments=", arguments)), " tmpdir={tmpdir}")
+				log(LOG:DEBUG, "JOB_START jobid={jobid} tr={tr}", swift:formatCommands(commands, "log"), " tmpdir={tmpdir}")
 
 				setProgress(progress, "Submitting")
 
@@ -360,7 +358,7 @@ namespace(swiftStaging) {
 						directory = RUN_DIR
 						redirect = false
 						host = rhost
-						TCProfile(rhost, if (attributes != null, attributes = attributes), tr = tr)
+						TCProfile(rhost, if (attributes != null, attributes = attributes), commands = getAndDelete(commands), tr = tr)
 						replicationGroup = replicationGroup
 						replicationChannel = replicationChannel
 						jobid = jobid
@@ -376,22 +374,18 @@ namespace(swiftStaging) {
 							jobid,
 							"-jobdir", jobdir,
 							"-scratch", utry(siteProfile(rhost, "scratch"), "")
-							"-e", executable(tr, rhost),
-							"-out", stdouts,
-							"-err", stderrs,
-							"-i", if (stdin != null, stdins),
-							"-d", remoteFileNames(fileDirs),
+							"-d", remoteFileNames(getAndDelete(fileDirs)),
 							"-if", remoteFileNames(inFiles),
 							"-of", remoteFileNames(outFiles),
 							"-cf", remoteFileNames(outCollect),
 							"-cdmfile", cdm:file(),
 							"-status", statusMode,
-							"-a", if (arguments != null, each(eargs))
+							swift:formatCommands(commands, "args")
 						)
 						directory = RUN_DIR
 						redirect = false
 						host = rhost
-						TCProfile(rhost, if(attributes != null, attributes = attributes), tr = tr)
+						TCProfile(rhost, if (attributes != null, attributes = attributes), commands = getAndDelete(commands), tr = tr)
 						replicationGroup = replicationGroup
 						replicationChannel = replicationChannel
 						jobid = jobid
@@ -455,7 +449,7 @@ namespace(swiftStaging) {
 						cleanupFiles(cacheFilesToRemove, rhost)
 					}
 
-					outs := transferStandardFiles(rhost, tmpdir, jobid, stdouts, stderrs)
+					outs := transferStandardFiles(rhost, tmpdir, jobid)
 
 					discard(maybe(transferWrapperLog(rhost, jobid, jobdir)))
 
@@ -464,7 +458,6 @@ namespace(swiftStaging) {
 						exception(
 							concat(
 								"Exception in {tr}:",
-								if (arguments != null, "\n    Arguments: {arguments}")
 								"\n    Host: {rhost}",
 								"\n    Directory: {tmpdir}",
 								"{outs}",
