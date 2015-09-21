@@ -47,6 +47,8 @@ public class UTry extends CompoundNode {
 	protected Node compileChildren(WrapperNode w, Scope scope) throws CompilationException {
 		Var v = scope.addVar(EXCEPTION_VAR_NAME);
 		exception = scope.getVarRef(v);
+		Var.Channel r = scope.parent.lookupChannel("...");
+		r.appendDynamic();
 		Node fn = super.compileChildren(w, scope);
 		return fn;
 	}
