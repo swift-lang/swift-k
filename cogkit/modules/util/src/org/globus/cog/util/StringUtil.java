@@ -231,4 +231,11 @@ public class StringUtil {
     	}
     	return sb.toString();
     }
+    
+    public static String toString(List<? extends Object> l) {
+        if (l == null) {
+            return "null";
+        }
+        return l.toString();
+    }
 }
