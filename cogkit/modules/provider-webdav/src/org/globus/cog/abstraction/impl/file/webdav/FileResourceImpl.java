@@ -310,8 +310,7 @@ public class FileResourceImpl extends AbstractFileResource {
             davClient.setPath(fileName);
             gridFile.setAbsolutePathName(davClient.getPath());
 
-            gridFile.setLastModified(String.valueOf(new Date(davClient
-                    .getGetLastModified())));
+            gridFile.setLastModified(new Date(davClient.getGetLastModified()));
 
             if (davClient.isCollection() == false) {
                 gridFile.setFileType(GridFile.FILE);

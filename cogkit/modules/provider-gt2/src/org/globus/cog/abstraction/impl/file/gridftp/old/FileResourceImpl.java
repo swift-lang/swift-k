@@ -33,8 +33,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -629,7 +632,12 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
             gridFile.setAbsolutePathName(directory + "/" + fi.getName());
         }
 
-        gridFile.setLastModified(fi.getDate());
+        try {
+            gridFile.setLastModified(new SimpleDateFormat().parse(fi.getDate()));
+        }
+        catch (ParseException e) {
+            gridFile.setLastModified(new Date(0));
+        }
 
         if (fi.isFile()) {
             gridFile.setFileType(GridFile.FILE);
@@ -671,7 +679,12 @@ public class FileResourceImpl extends AbstractFTPFileResource implements MarkerL
             gridFile.setAbsolutePathName(directory + "/" + e.getFileName());
         }
 
-        gridFile.setLastModified(e.get(MlsxEntry.MODIFY));
+        try {
+            gridFile.setLastModified(new SimpleDateFormat().parse(e.get(MlsxEntry.MODIFY)));
+        }
+        catch (ParseException ex) {
+            gridFile.setLastModified(new Date(0));
+        }
 
         String type = e.get(MlsxEntry.TYPE);
         if (MlsxEntry.TYPE_FILE.equals(type)) {

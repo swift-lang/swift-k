@@ -221,8 +221,7 @@ public class FileResourceImpl extends AbstractFileResource {
         GridFile gridFile = new GridFileImpl();
 
         gridFile.setAbsolutePathName(f.getAbsolutePath());
-        gridFile.setLastModified(String.valueOf(new Date(f
-                .lastModified())));
+        gridFile.setLastModified(new Date(f.lastModified()));
 
         if (f.isFile() == true) {
             gridFile.setFileType(GridFile.FILE);

@@ -33,6 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -193,7 +194,8 @@ public class FileResourceImpl extends AbstractFileResource {
         else {
             g.setFileType(GridFile.FILE);
         }
-        g.setLastModified(attrs.getModTimeString());
+        // TODO: this is unlikely to be correct
+        g.setLastModified(new Date(attrs.getModifiedTime().longValue()));
         g.setSize(attrs.getSize().longValue());
     }
 

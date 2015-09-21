@@ -29,6 +29,7 @@
 package org.globus.cog.abstraction.impl.file.coaster.commands;
 
 import java.io.File;
+import java.util.Date;
 
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
@@ -47,7 +48,7 @@ public class FileInfoCommand extends Command {
         GridFile f = new GridFileImpl();
         f.setAbsolutePathName(getInDataAsString(0));
         f.setFileType((byte) getInDataAsInt(1));
-        f.setLastModified(getInDataAsString(2));
+        f.setLastModified(new Date(Long.parseLong(getInDataAsString(2))));
         f.setName(new File(f.getAbsolutePathName()).getName());
         f.setSize(getInDataAsLong(3));
         f.setUserPermissions(PermissionsImpl.instance(getInDataAsInt(4)));

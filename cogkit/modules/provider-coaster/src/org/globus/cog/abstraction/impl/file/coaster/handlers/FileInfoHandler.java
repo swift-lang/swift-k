@@ -29,7 +29,6 @@
 package org.globus.cog.abstraction.impl.file.coaster.handlers;
 
 import java.io.File;
-import java.util.Date;
 
 import org.globus.cog.abstraction.impl.file.PermissionsImpl;
 import org.globus.cog.abstraction.interfaces.GridFile;
@@ -43,7 +42,7 @@ public class FileInfoHandler extends CoasterFileRequestHandler {
         
         addOutData(f.getAbsolutePath());
         addOutData(f.isDirectory() ? GridFile.DIRECTORY : GridFile.FILE);
-        addOutData(new Date(f.lastModified()).toString());
+        addOutData(f.lastModified());
         addOutData(f.length());
         
         Permissions p = new PermissionsImpl(f.canRead(), f.canWrite(), false);

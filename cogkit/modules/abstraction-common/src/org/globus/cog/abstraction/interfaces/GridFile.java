@@ -25,6 +25,8 @@
 
 package org.globus.cog.abstraction.interfaces;
 
+import java.util.Date;
+
 /**
  * An abstract representation of file or directory in the remote resource.
  * Carries properties and access rights information of the file.
@@ -55,10 +57,10 @@ public interface GridFile {
     public String getAbsolutePathName();
 
     /** set last modified date of the file */
-    public void setLastModified(String date);
+    public void setLastModified(Date date);
 
     /** return last modified date */
-    public String getLastModified();
+    public Date getLastModified();
 
     /** set file type */
     public void setFileType(byte type);

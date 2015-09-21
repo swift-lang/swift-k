@@ -29,8 +29,11 @@
 package org.globus.cog.abstraction.impl.file.gridftp;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
@@ -129,7 +132,14 @@ public class FileResourceImpl extends
             gfi.setGroupPermissions(new UnixPermissionsImpl(perm.charAt(2)));
             gfi.setAllPermissions(new UnixPermissionsImpl(perm.charAt(3)));
         }
-        gfi.setLastModified(entry.get("modify"));
+        
+        try {
+            gfi.setLastModified(new SimpleDateFormat().parse(entry.get("modify")));
+        }
+        catch (ParseException ex) {
+            gfi.setLastModified(new Date(0));
+        }
+        
         gfi.setSize(Long.parseLong(entry.get("size")));
         String type = entry.get("type");
         if ("dir".equals(type)) {

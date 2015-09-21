@@ -31,6 +31,7 @@ package org.globus.cog.abstraction.impl.file.coaster.commands;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.globus.cog.abstraction.impl.file.GridFileImpl;
@@ -59,7 +60,7 @@ public class ListCommand extends Command {
             GridFile f = new GridFileImpl();
             f.setAbsolutePathName(getInDataAsString(i++));
             f.setName(new File(f.getAbsolutePathName()).getName());
-            f.setLastModified(getInDataAsString(i++));
+            f.setLastModified(new Date(Long.parseLong(getInDataAsString(i++))));
             f.setFileType((byte) getInDataAsInt(i++));
             f.setSize(getInDataAsLong(i++));
             f.setUserPermissions(new PermissionsImpl(getInDataAsInt(i++)));

@@ -32,8 +32,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.PasswordAuthentication;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -485,7 +488,12 @@ public class FileResourceImpl extends AbstractFTPFileResource {
         else {
             gridFile.setAbsolutePathName(directory + "/" + fileInfo.getName());
         }
-        gridFile.setLastModified(fileInfo.getDate());
+        try {
+            gridFile.setLastModified(new SimpleDateFormat().parse(fileInfo.getDate()));
+        }
+        catch (ParseException e) {
+            gridFile.setLastModified(new Date(0));
+        }
 
         if (fileInfo.isFile() == true) {
             gridFile.setFileType(GridFile.FILE);

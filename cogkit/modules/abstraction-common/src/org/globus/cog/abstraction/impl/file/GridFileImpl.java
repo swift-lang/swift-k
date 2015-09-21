@@ -25,6 +25,8 @@
 
 package org.globus.cog.abstraction.impl.file;
 
+import java.util.Date;
+
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.Permissions;
 
@@ -36,7 +38,7 @@ public class GridFileImpl implements GridFile {
     private long size = 0;
     private String name = null;
     private String absolutePathName = null;
-    private String date = null;
+    private Date date = null;
 
     private byte fileType;
     private String mode = null;
@@ -82,12 +84,12 @@ public class GridFileImpl implements GridFile {
     }
 
     /** set the last modified date for this file */
-    public void setLastModified(String date) {
+    public void setLastModified(Date date) {
         this.date = date;
     }
 
     /** return last modified date for this file */
-    public String getLastModified() {
+    public Date getLastModified() {
         return date;
     }
 

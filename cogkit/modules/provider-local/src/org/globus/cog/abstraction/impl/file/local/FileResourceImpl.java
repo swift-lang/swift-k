@@ -39,7 +39,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
-import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.impl.file.AbstractFileResource;
 import org.globus.cog.abstraction.impl.file.DirectoryNotFoundException;
@@ -429,8 +428,7 @@ public class FileResourceImpl extends AbstractFileResource {
         GridFile gridFile = new GridFileImpl();
 
         gridFile.setAbsolutePathName(f.getAbsolutePath());
-        gridFile.setLastModified(String.valueOf(new Date(f
-                .lastModified())));
+        gridFile.setLastModified(new Date(f.lastModified()));
 
         if (f.isFile() == true) {
             gridFile.setFileType(GridFile.FILE);
