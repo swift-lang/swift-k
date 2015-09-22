@@ -136,7 +136,7 @@ while [ "$1" == "-e" ]; do
 	shift $SHIFTCOUNT
 	
 	getCmdArgs "$@"
-	shitf $SHIFTCOUNT
+	shift $SHIFTCOUNT
 	
 	log "EXEC=$EXEC"
 	log "STDIN=$STDIN"
