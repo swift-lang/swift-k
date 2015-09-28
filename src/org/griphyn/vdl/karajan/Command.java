@@ -31,6 +31,13 @@ public class Command {
     private List<Object> arguments;
     private Application application;
     
+    public Command() {
+    }
+    
+    public Command(String executable) {
+        this.executable = executable;
+    }
+    
     public String getExecutable() {
         return executable;
     }

@@ -135,6 +135,9 @@ public class TCProfile extends SwiftFunction {
     }
 
     private void build(CacheEntry e, String tr, Command[] cmds, SwiftContact bc, Map<String, Object> dynamicAttributes) {
+        if (cmds == null) {
+            cmds = new Command[] {new Command(tr)};
+        }
         Application[] apps = new Application[cmds.length];
         Set<Integer> addedEnvs = new HashSet<Integer>();
         for (int i = 0; i < cmds.length; i++) {
