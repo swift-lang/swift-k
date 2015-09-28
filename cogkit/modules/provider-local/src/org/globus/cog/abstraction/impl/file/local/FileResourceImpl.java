@@ -440,7 +440,7 @@ public class FileResourceImpl extends AbstractFileResource {
         gridFile.setName(f.getName());
         gridFile.setSize(f.length());
 
-        Permissions userPermissions = new PermissionsImpl();
+        Permissions userPermissions = new PermissionsImpl(f.canRead(), f.canWrite(), f.canExecute());
         Permissions groupPermissions = new PermissionsImpl();
         Permissions allPermissions = new PermissionsImpl();
         gridFile.setUserPermissions(userPermissions);
