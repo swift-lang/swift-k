@@ -21,10 +21,10 @@ import k.rt.Stack;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.nodes.PartialCloseable;
 
 public class GetDatasetProvenanceID extends SwiftFunction {
-    private ArgRef<DSHandle> var;
+    private ArgRef<PartialCloseable> var;
 
 	@Override
     protected Signature getSignature() {
@@ -33,8 +33,7 @@ public class GetDatasetProvenanceID extends SwiftFunction {
 
 	@Override
 	public Object function(Stack stack) {
-		DSHandle var = this.var.getValue(stack);
+		PartialCloseable var = this.var.getValue(stack);
 		return var.getIdentifier();
 	}
-
 }

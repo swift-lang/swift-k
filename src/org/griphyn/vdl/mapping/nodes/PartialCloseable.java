@@ -25,4 +25,6 @@ public interface PartialCloseable {
     int updateWriteRefCount(int delta);
 
     void fail(DependentException e);
+    
+    String getIdentifier();
 }

@@ -46,6 +46,11 @@ public class ReadRefWrapper implements PartialCloseable {
     }
 
     @Override
+    public String getIdentifier() {
+        return h.getIdentifier();
+    }
+
+    @Override
     public int updateWriteRefCount(int delta) {
         int writeCount = h.updateWriteRefCount(delta);
         updateReadRefCount(delta);
