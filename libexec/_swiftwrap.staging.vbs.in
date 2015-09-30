@@ -1,4 +1,3 @@
-On Error Resume Next
 
 ai = 0
 Set args = WScript.Arguments
@@ -83,7 +82,7 @@ Next
 
 
 SEQ = 1
-Do While isNextArg("e")
+Do While nextArgIs("e")
 
 	expectArg("e")
 	EXEC=getArgVal(MandatoryArg, "executable")
@@ -98,14 +97,14 @@ Do While isNextArg("e")
 	STDIN=getOptArg()
 	
 	expectArg("a")
-	Dim ARGS
-	ARGS=getRestArgs()
+	Dim CARGS
+	CARGS=getRestArgs()
 	
 	log "EXEC=" + EXEC
 	log "STDIN=" + STDIN
 	log "STDOUT=" + STDOUT
 	log "STDERR=" + STDERR
-	log "ARGS=" + Join(ARGS)
+	log "ARGS=" + Join(CARGS)
 	
 	log "Executable: " + EXEC
 	
@@ -120,10 +119,10 @@ Do While isNextArg("e")
 		Set min = fs.OpenTextFile(STDIN, 1, False)
 	End If
 	
-	Set mout = fs.OpenTextFile("_stdout_" + SEQ + ".txt", 2, True)
-	Set merr = fs.OpenTextFile("_stderr_" + SEQ + ".txt", 2, True)
+	Set mout = fs.OpenTextFile("_stdout_" + CStr(SEQ) + ".txt", 2, True)
+	Set merr = fs.OpenTextFile("_stderr_" + CStr(SEQ) + ".txt", 2, True)
 	
-	qargs = prepareArgs(ARGS)
+	qargs = prepareArgs(CARGS)
 	log "Cmd: " + prepareOne(EXEC) + " " + qargs
 	Set p = shell.exec(prepareOne(EXEC) + " " + qargs)
 	log "Executable started"
@@ -162,10 +161,10 @@ Do While isNextArg("e")
 	End If
 	
 	If STDOUT <> "" Then
-		fs.CopyFile("_stdout_" + SEQ + ".txt", STDOUT)
+		fs.CopyFile "_stdout_" + CStr(SEQ) + ".txt", STDOUT
 	End If
 	If STDERR <> "" Then
-		fs.CopyFile("_stderr_" + SEQ + ".txt", STDERR)
+		fs.CopyFile "_stderr_" + CStr(SEQ) + ".txt", STDERR
 	End If
 	
 	If p.ExitCode <> 0 Then
@@ -173,9 +172,9 @@ Do While isNextArg("e")
 	End If
 	
 	SEQ = SEQ + 1
-End Do
+Loop
 
-If Not COLLECT Is Nothing Then
+If COLLECT <> "" Then
 	logstate "COLLECT"
 	log "Collect list is " + COLLECT
 	CF = fs.OpenTextFile("_collect", True)
