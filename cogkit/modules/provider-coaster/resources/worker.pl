@@ -1392,8 +1392,16 @@ sub cancelHandler {
 		$JOBDATA{$jobid}{"canceled"} = 1;
 		my $pid = $JOBDATA{$jobid}{"pid"};
 		if (defined $pid) {
+			my $result;
 			wlog INFO, "$jobid PID is $pid\n";
-			my $result = kill -9, $pid;
+			if ($WINDOWS) { 
+				$result = kill "TERM", $pid;
+			}
+			else {
+				$result = kill -9, $pid;
+			}
+			# only kill it once
+			delete $ASYNC_WAIT_DATA{$pid};
 			wlog INFO, "$jobid kill returned $result\n";
 		}
 		else {
