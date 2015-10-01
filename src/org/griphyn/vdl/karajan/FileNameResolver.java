@@ -215,6 +215,7 @@ public class FileNameResolver {
     private List<AbsFile> mapMultiple() throws HandleOpenException, InvalidPathException {
         RootHandle root = var.getRoot();
         Mapper mapper = root.getMapper();
+        Path fromRoot = var.getPathFromRoot();
                         
         if (mapper == null) {
             throw new ExecutionException(var.getType() + " is not a mapped type");
@@ -232,7 +233,7 @@ public class FileNameResolver {
         Collections.sort(src, new PathComparator());
         
         for (Path p : src) {
-            AbsFile f = (AbsFile) mapper.map(p);
+            AbsFile f = (AbsFile) mapper.map(fromRoot.append(p));
             if (defaultScheme != null && f.getProtocol() == null) {
                 f = new AbsFile(defaultScheme, f.getHost(), f.getPort(), f.getDirectory(), f.getName());
             }
