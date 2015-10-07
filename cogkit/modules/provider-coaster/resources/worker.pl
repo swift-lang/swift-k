@@ -199,16 +199,25 @@ sub wlog {
 
 # Command-line arguments:
 my %OPTS=();
-getopts("c:w:h", \%OPTS);
+getopts("l:c:w:h", \%OPTS);
 
 if (defined $OPTS{"h"}) {
-	print "worker.pl [-w <maxwalltime>] [-c <concurrency>] <serviceURL> <blockID> <logdir>\n";
+	print "worker.pl [-l <loglevel>] [-w <maxwalltime>] [-c <concurrency>] <serviceURL> <blockID> <logdir>\n";
 	exit(1);
 }
 
 my $CONCURRENCY;
 if (defined $OPTS{"c"}) {
 	$CONCURRENCY = $OPTS{"c"};
+}
+
+my $cl_loglevel;
+if (defined $OPTS{"c"}){
+	my $cl_loglevel = $OPTS{"c"};
+	if (!defined $LEVELMAP{$cl_loglevel}) {
+		die "Invalid worker logging level requested: $cl_loglevel";
+	}
+	$LOGLEVEL = $LEVELMAP{$cl_loglevel};
 }
 
 my $URISTR=$ARGV[0];
@@ -455,12 +464,16 @@ my $DEBUG_ENABLED = 1;
 my $INFO_ENABLED = 1;
 
 sub initlog() {
-	my $slevel = $ENV{"WORKER_LOGGING_LEVEL"};
- 	if (defined $slevel) {
-		if (!defined $LEVELMAP{$slevel}) {
-			die "Invalid worker logging level requested: $slevel";
+	# Use env WORKER_LOGGING_LEVEL only if LOGLEVEL was not
+	# set from the -l commandline option
+	if ($LOGLEVEL == NONE){
+		my $slevel = $ENV{"WORKER_LOGGING_LEVEL"};
+		if (defined $slevel) {
+			if (!defined $LEVELMAP{$slevel}) {
+				die "Invalid worker logging level requested: $slevel";
+			}
+			$LOGLEVEL = $LEVELMAP{$slevel};
 		}
-		$LOGLEVEL = $LEVELMAP{$slevel};
 	}
 	if ($LOGLEVEL != NONE) {
 		if ($LOGLEVEL < WARN) {
