@@ -535,32 +535,6 @@ body.manpage div.sectionbody {
 }
 
 
-a:link { color:navy; }
-a:visited { color:navy; }
-
-.monospaced, code, pre {
-  font-family: "Courier New", Courier, monospace;
-  font-size: medium; /* inherit; */
-  color: black;
-  padding: 0;
-  margin: 0;
-}
-
-/*
-  background: #f8f8f8;
-  border: 1px solid #dddddd;
-  border-left: 5px solid #f0f0f0;
-  margin-right: 10%;
-*/
-
-div.listingblock > div.content {
-  padding: 0.5em;
-  background: none;
-  border: none;
-  border-left: none;
-  margin-right: none;
-}
-
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -774,36 +748,36 @@ We recommend Oracle Java, which can be downloaded from the Oracle <a href="http:
 <div class="sectionbody">
 <div class="paragraph"><p>Download the latest packaged binaries from the swift downloads page. Untar the file, and export the path.
 Bash users could append their .bashrc file with the export statement to have swift in their path over multiple sessions.</p></div>
-<div class="paragraph"><p>The latest stable Swift release is Swift-0.96</p></div>
+<div class="paragraph"><p>The latest stable Swift release is Swift-0.96.2</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>wget http://swiftlang.org/packages/swift-0.96.tar.gz.
-tar xfz swift-0.96.tar.gz
-export PATH=$PATH:/path/to/swift-0.96/bin</code></pre>
+<pre><code>wget http://swift-lang.org/packages/swift-0.96.2.tar.gz
+tar xfz swift-0.96.2.tar.gz
+export PATH=$PATH:/path/to/swift-0.96.2/bin</code></pre>
 </div></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_run_swift">Run Swift</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Example Swift scripts can be found in the swift-0.94.1/examples directory.
+<div class="paragraph"><p>Example Swift scripts can be found in the swift-0.96.2/examples/misc directory.
 Scripts have a .swift file extension. Run the following commands
 to launch a simple hello world application.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>cd swift-0.96/examples/
+<pre><code>wget http://swift-lang.org/guides/release-0.96/quickstart/hello.swift
 swift hello.swift</code></pre>
 </div></div>
 <div class="paragraph"><p>When you run this application, it should create a file called hello.txt.</p></div>
 <div class="paragraph"><p>More documentation on how to run Swift can be found at
-<a href="http://www.ci.uchicago.edu/swift/docs/index.php">http://www.ci.uchicago.edu/swift/docs/index.php</a>.</p></div>
+<a href="http://www.ci.uchicago.edu/swift/docs/index.php">http://www.ci.uchicago.edu/swift/docs/index.php</a></p></div>
 </div>
 </div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-20 15:05:52 CST
+Last updated 2015-10-14 13:47:55 CDT
 </div>
 </div>
 </body>
