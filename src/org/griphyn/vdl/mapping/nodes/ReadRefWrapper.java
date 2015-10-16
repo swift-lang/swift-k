@@ -51,6 +51,11 @@ public class ReadRefWrapper implements PartialCloseable {
     }
 
     @Override
+    public Comparable<?> getName() {
+        return h.getField().getId();
+    }
+
+    @Override
     public int updateWriteRefCount(int delta) {
         int writeCount = h.updateWriteRefCount(delta);
         updateReadRefCount(delta);

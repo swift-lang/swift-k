@@ -26,6 +26,7 @@ import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
+import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.CompilationException;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
@@ -36,16 +37,16 @@ import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.nodes.PartialCloseable;
 import org.griphyn.vdl.util.SwiftConfig;
 
-public class Parameterlog extends InternalFunction {
-    public static final Logger logger = Logger.getLogger(Parameterlog.class);
+public class ParameterLogActual extends InternalFunction {
+    public static final Logger logger = Logger.getLogger(ParameterLogActual.class);
     
     private ArgRef<String> direction;
-    private ArgRef<String> name;
     private ArgRef<PartialCloseable> var;
+    private ChannelRef<Object> cr_vargs;
     
     @Override
     protected Signature getSignature() {
-        return new Signature(params("direction", "name", "var"));
+        return new Signature(params("direction", "var"), returns(channel("...", 1)));
     }
 
     private Boolean enabled;
@@ -73,10 +74,15 @@ public class Parameterlog extends InternalFunction {
         }
         if (run) {
             PartialCloseable var = this.var.getValue(stack);
-            String name = this.name.getValue(stack);
             logger.info("PARAM thread=" + SwiftFunction.getThreadPrefix(thr) + " direction="
-                    + direction.getValue(stack) + " variable=" + name
+                    + direction.getValue(stack) + " variable=" + var.getName()
                     + " provenanceid=" + var.getIdentifier());
+            cr_vargs.append(stack, var);
+        }
+        else {
+            super.run(thr);
+            PartialCloseable var = this.var.getValue(stack);
+            cr_vargs.append(stack, var);
         }
     }
 }

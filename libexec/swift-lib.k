@@ -3,7 +3,6 @@ namespace(swift) {
 	
 	export(restartLog, def("org.griphyn.vdl.karajan.lib.restartLog.RestartLog"))
 
-	export(getDatasetProvenanceID, def("org.griphyn.vdl.karajan.lib.GetDatasetProvenanceID"))
 	export(startProgressTicker, def("org.griphyn.vdl.karajan.lib.RuntimeStats$StartProgressTicker"))
 	export(stopProgressTicker, def("org.griphyn.vdl.karajan.lib.RuntimeStats$StopProgressTicker"))
 	export(initProgressState, def("org.griphyn.vdl.karajan.lib.RuntimeStats$InitProgressState"))
@@ -96,7 +95,8 @@ namespace(swift) {
 	export(remoteFileNamesWS, def("org.griphyn.vdl.karajan.lib.RemoteFileNamesWS"))
 	export(isDone, def("org.griphyn.vdl.karajan.lib.IsDone"))
 	export(mark, def("org.griphyn.vdl.karajan.lib.Mark"))
-	export(parameterlog, def("org.griphyn.vdl.karajan.lib.Parameterlog"))
+	export(parameterLog, def("org.griphyn.vdl.karajan.lib.Parameterlog"))
+	export(actualParameterLog, def("org.griphyn.vdl.karajan.lib.ParameterLogActual"))
 	export(getStagingInfo, def("org.griphyn.vdl.karajan.lib.GetStagingInfo"))
 	export(readCollectList, def("org.griphyn.vdl.karajan.lib.ReadCollectList"))
 	export(processStageouts, def("org.griphyn.vdl.karajan.lib.ProcessStageouts"))

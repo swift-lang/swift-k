@@ -141,7 +141,7 @@ command(executable, arguments, stdin, stdout, stderr) ::= <<
 >>
 
 log_param(dir) ::= <<
-parameterLog("$dir$", "$it.name$", swift:getDatasetProvenanceID($it.name$))
+parameterLog("$dir$", "$it.name$", $it.name$)
 >>
 
 swift_closedataset() ::= <<
@@ -252,15 +252,13 @@ sequential(
 
 callInternal_log_input() ::= <<
 sequential(
-	swift:parameterLog("input", "TODO_name_or_pos", swift:getDatasetProvenanceID($it$))
-	$it$
+	swift:actualParameterLog("input", $it$)
 )
 >>
 
 callInternal_log_output() ::= <<
 sequential(
-	swift:parameterLog("output", "TODO_name_or_pos", swift:getDatasetProvenanceID($it$))
-	$it$
+	swift:actualParameterLog("output", $it$)
 )
 >>
 
@@ -308,7 +306,7 @@ $endif$
 >>
 
 variable_log() ::= <<
-	swift:parameterLog("intermediate", "$name$", swift:getDatasetProvenanceID($name$))
+	swift:parameterLog("intermediate", "$name$", $name$)
 >>
 
 swift_mapping(mapping, file) ::= <<
