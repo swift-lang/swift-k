@@ -626,11 +626,11 @@ public class JobSubmission implements StatusListener {
             String src;
             String dst;
             if (srcIsFirst) {
-                src = st2[0].trim();
+                src = "file://localhost/" + st2[0].trim();
                 dst = st2[1].trim();
             }
             else {
-                dst = st2[0].trim();
+                dst = "file://localhost/" + st2[0].trim();
                 src = st2[1].trim();
             }
             ss.add(new StagingSetEntryImpl(src, dst));

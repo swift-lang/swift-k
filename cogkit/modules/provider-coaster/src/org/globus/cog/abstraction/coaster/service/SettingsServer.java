@@ -185,6 +185,7 @@ public class SettingsServer extends AbstractHTTPServer {
         e.beginMap();
         e.writeMapItem("id", node.getId());
         writeTime(e, "startTime", node.getStartTime());
+        e.writeMapItem("hostname", node.getHostname());
         e.endMap();
     }
 

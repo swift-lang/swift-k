@@ -27,4 +27,6 @@ public interface PartialCloseable {
     void fail(DependentException e);
     
     String getIdentifier();
+
+    Comparable<?> getName();
 }
