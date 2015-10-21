@@ -19,4 +19,5 @@ export COG_OPTS=-Dtcp.channel.log.io.performance=true
 
 ./stage_to_remote1x1.setup.sh
 ARGS=`cat stage_to_remote1x1.args`
-swift -config swift.properties -sites.file sites.template.xml -tc.file tc.template.data stage_to_remote1x1.swift $ARGS
+#swift -config swift.properties -sites.file sites.template.xml -tc.file tc.template.data stage_to_remote1x1.swift $ARGS
+swift  stage_to_remote1x1.swift $ARGS
