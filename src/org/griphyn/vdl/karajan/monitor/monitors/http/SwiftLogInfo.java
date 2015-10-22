@@ -70,7 +70,7 @@ public class SwiftLogInfo {
             ap = new MonitorAppender("bla", "http:" + port);
         }
         BufferedReader br = new BufferedReader(new FileReader(logFileName));
-
+        
         long filesz = new File(logFileName).length();
         long pos = 0;
         int lastTenth = 0;
@@ -83,11 +83,13 @@ public class SwiftLogInfo {
         else {
             System.out.print("Parsing " + logFileName + "...");
         }
+
         StringBuilder crt = new StringBuilder();
-        String line = null;
-        while (follow || (line = br.readLine()) != null) {
+        String line = br.readLine();
+        while (follow || (line != null)) {
             if (line == null) {
                 Thread.sleep(FOLLOW_SLEEP_TIME);
+                line = br.readLine();
                 continue;
             }
             if (isMessageHeader(line)) {
@@ -100,6 +102,7 @@ public class SwiftLogInfo {
                 lastTenth = tenth;
             }
             append(crt, line);
+            line = br.readLine();
         }
         commit(crt, firstLogTime, firstActualTime, ap);
         System.out.println("done");
@@ -210,7 +213,7 @@ public class SwiftLogInfo {
         crt.append(line);
     }
     
-    private static final String HEADER_FMT = "0000-00-00 00:00:00,000-0000";
+    private static final String HEADER_FMT = "0000-00-00 00:00:00,000?0000";
 
     private boolean isMessageHeader(String line) {
         if (line.length() < HEADER_FMT.length()) {
@@ -224,6 +227,8 @@ public class SwiftLogInfo {
                     if (actual < '0' || actual > '9') {
                         return false;
                     }
+                    break;
+                case '?':
                     break;
                 default:
                     if (actual != expected) {
