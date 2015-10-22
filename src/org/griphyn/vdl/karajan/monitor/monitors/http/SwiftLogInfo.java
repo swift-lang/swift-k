@@ -52,15 +52,23 @@ public class SwiftLogInfo {
     private String logFileName;
     private boolean follow;
     private double rate;
+    private int port;
     
-    public SwiftLogInfo(String logFileName, boolean follow, double rate) {
+    public SwiftLogInfo(int port, String logFileName, boolean follow, double rate) {
+        this.port = port;
         this.logFileName = logFileName;
         this.follow = follow;
         this.rate = rate;
     }
     
     public void run() throws Exception {
-        MonitorAppender ap = new MonitorAppender("bla", "http");
+        MonitorAppender ap;
+        if (port == -1) {
+            ap = new MonitorAppender("bla", "http");
+        }
+        else {
+            ap = new MonitorAppender("bla", "http:" + port);
+        }
         BufferedReader br = new BufferedReader(new FileReader(logFileName));
 
         long filesz = new File(logFileName).length();
@@ -233,6 +241,8 @@ public class SwiftLogInfo {
         		"generate log events progressively at a rate " +
         		"proportional to that at which they were generated.", 
         		ArgumentParser.OPTIONAL);
+        ap.addOption("p", "integer", "Port: specify the port on which to "
+                + "start the http service.", ArgumentParser.OPTIONAL);
         ap.addOption(ArgumentParser.DEFAULT, "logFile", "The log file to parse", 
             ArgumentParser.NORMAL);
         ap.addFlag("h", "Display usage information");
@@ -248,7 +258,7 @@ public class SwiftLogInfo {
                 ap.usage();
                 System.exit(1);
             }
-            SwiftLogInfo sli = new SwiftLogInfo(ap.getStringValue(ArgumentParser.DEFAULT), 
+            SwiftLogInfo sli = new SwiftLogInfo(ap.getIntValue("p", -1), ap.getStringValue(ArgumentParser.DEFAULT), 
                 ap.isPresent("f"), ap.getFloatValue("rt", 0));
             sli.run();
         }
