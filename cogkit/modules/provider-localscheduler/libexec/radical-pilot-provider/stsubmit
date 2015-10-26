@@ -1,0 +1,77 @@
+#!/bin/bash
+
+rm -f /tmp/stsubmit
+
+LOGGING=1 # Either 1 or 0
+RUNDIRS=$(echo run[0-9][0-9][0-9])
+RUNDIR=${RUNDIRS##*\ }
+LOG=$RUNDIR/scripts/log
+RP_LOCK=$RUNDIR/scripts/rp_lock
+PID_FILE=$RP_LOCK/pid_file
+
+SUBMIT_SCRIPT=$RUNDIR/scripts/radical.$(date +"%H:%M:%S").$RANDOM.submit
+mkdir -p $(dirname $LOG)
+touch $SUBMIT_SCRIPT
+
+[[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
+log()
+{
+    [[ "$LOGGING" == "1" ]] && echo "[PID:$$] $*" >> $LOG
+}
+
+# TODO : UPDATE THIS BEFORE PUSH
+#RADICAL_PY=$SWIFT_HOME/libexec/ec2-cloud-provider/cloud.py
+#activate
+RADICAL_PY=$SWIFT_HOME/libexec/radical-pilot-provider/thrift_tests/client.py
+RADICAL_SERVER=$SWIFT_HOME/libexec/radical-pilot-provider/thrift_tests/server.py
+
+start_daemon()
+{
+    # Ensure that only one application acquires the lock and starts the RADICAL_SERVER
+    if mkdir "$RP_LOCK" ; then
+        log "Locking succeeded"
+        python $RADICAL_SERVER $RUNDIR/rp_server.log &>> $RUNDIR/rp_server.log &
+        sleep 2;
+        echo "[PID:$$] Done" > $RP_LOCK/release
+    else
+        log "Could not acquire lock"
+        # Wait in a spin look till $RP_LOCK/release file is created
+        while [[ ! -f $RP_LOCK/release ]]
+        do
+            sleep 1
+            log "Waiting for lock holder to finish"
+        done
+        log "lock holder has released lock"
+    fi
+}
+
+start_daemon;
+grep "[Errno 98]" rp_server.log > /dev/null
+# Assume that the server has failed if Init done is not posted to rp_server.log
+if [[ "$?" == 0 ]]
+then
+    echo "[ERROR] RP_SERVER Start failed" 1>&2
+    cat rp_server.log 1>&2
+    exit -1
+fi
+
+while read LINE; do
+    echo $LINE >> $SUBMIT_SCRIPT
+done < /dev/stdin
+
+log "##############SUBMIT_SCRIPT###################"
+cat $SUBMIT_SCRIPT >> $LOG
+log "##############SUBMIT_SCRIPT###################"
+
+log "[DEBUG] PWD : $PWD"
+log "[DEBUG] python $RADICAL_PY --logfile $LOG --submit $SUBMIT_SCRIPT"
+
+JOBINFO=$(python $RADICAL_PY --logfile $SUBMIT_SCRIPT.stdout --submit $SUBMIT_SCRIPT) 2>> $LOG
+echo "jobid=$JOBINFO"
+retcode="$?"
+log "JOBINFO : $JOBINFO"
+log "RETCODE : $retcode"
+
+[[ "$retcode" != "0" ]] && exit retcode
+
+exit 0
