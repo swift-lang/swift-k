@@ -20,8 +20,8 @@ log()
 }
 
 # TODO : UPDATE THIS BEFORE PUSH
-#AIMES_CLIENT=$SWIFT_HOME/libexex/aimes-emanager-provider/aimes-swift-client.py
-AIMES_CLIENT=/home/yadu/src/swift-k/cogkit/modules/provider-localscheduler/libexec/aimes-emanager-provider/aimes-swift-client.py
+AIMES_CLIENT=$SWIFT_HOME/libexec/aimes-emanager-provider/aimes-swift-client.py
+#AIMES_CLIENT=/home/yadu/src/swift-k/cogkit/modules/provider-localscheduler/libexec/aimes-emanager-provider/aimes-swift-client.py
 ENDPOINT='http://localhost:8080'
 
 start_session()

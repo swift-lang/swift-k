@@ -10,6 +10,8 @@ import pprint
 import requests
 import logging
 import argparse
+import datetime
+from datetime import datetime
 
 def create_session():
     r = requests.put("%s/swift/sessions/" % ep)
@@ -31,6 +33,7 @@ def compose_compute_unit(task_filename):
     stageins  = []
     stageouts = []
     env_vars  = {}
+    walltime  = 0
     while index < len(task_desc):
         # We don't process directory options.
         if (task_desc[index].startswith("directory=")):
@@ -89,6 +92,11 @@ def compose_compute_unit(task_filename):
                 printf("[ERROR] Stageout source must have a destination")
                 stageouts.append(stageout_item)
 
+        elif (task_desc[index].startswith("attr.maxwalltime=")):
+            l = len("attr.maxwalltime=")
+            d = datetime.strptime(task_desc[index][l:].strip('\n'), "%H:%M:%S")
+            walltime = d.hour*3600 + d.minute*60 + d.second
+
         else:
             logging.debug("ignoring option : {0}".format(task_desc[index].strip('\n')))
 
@@ -98,10 +106,12 @@ def compose_compute_unit(task_filename):
     logging.debug("EXEC      : {0}".format(executable))
     logging.debug("STAGEINS  : {0}".format(stageins))
     logging.debug("STAGEOUTS : {0}".format(stageouts))
+    logging.debug("WALLTIME  : {0}".format(walltime))
 
-    jobdesc = {"executable" : executable,
+    jobdesc = {"executable" : str(executable),
                "arguments"  : args,
                "cores"      : 1,
+               "duration"   : walltime,
                "input_staging" : stageins,
                "output_staging" : stageouts
                }
@@ -119,8 +129,8 @@ def mock_job_desc(jobdesc):
 
 
 def submit_task(jobdesc, ssid, ep):
-    cud  = mock_job_desc(jobdesc)
-    #cud  = compose_compute_unit(jobdesc)
+    #cud  = mock_job_desc(jobdesc)
+    cud  = compose_compute_unit(jobdesc)
     data = {'td': json.dumps(cud)}
     r = requests.put("%s/swift/sessions/%s" % (ep, ssid), data)
     #print r.json()

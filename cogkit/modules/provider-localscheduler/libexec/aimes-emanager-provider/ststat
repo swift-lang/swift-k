@@ -6,8 +6,8 @@ RUNDIRS=$(echo run[0-9][0-9][0-9])
 RUNDIR=${RUNDIRS##*\ }
 LOG=$RUNDIR/scripts/log
 
-#AIMES_CLIENT=$SWIFT_HOME/libexex/aimes-emanager-provider/aimes-swift-client.py
-AIMES_CLIENT=/home/yadu/src/swift-k/cogkit/modules/provider-localscheduler/libexec/aimes-emanager-provider/aimes-swift-client.py
+AIMES_CLIENT=$SWIFT_HOME/libexec/aimes-emanager-provider/aimes-swift-client.py
+#AIMES_CLIENT=/home/yadu/src/swift-k/cogkit/modules/provider-localscheduler/libexec/aimes-emanager-provider/aimes-swift-client.py
 ENDPOINT='http://localhost:8080'
 SESSION_ID=$(cat $RUNDIR/session_id)
 
