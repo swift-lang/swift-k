@@ -97,6 +97,7 @@ namespace(swift) {
 	export(mark, def("org.griphyn.vdl.karajan.lib.Mark"))
 	export(parameterLog, def("org.griphyn.vdl.karajan.lib.Parameterlog"))
 	export(actualParameterLog, def("org.griphyn.vdl.karajan.lib.ParameterLogActual"))
+	export(getDatasetProvenanceID, def("org.griphyn.vdl.karajan.lib.GetDatasetProvenanceID"))
 	export(getStagingInfo, def("org.griphyn.vdl.karajan.lib.GetStagingInfo"))
 	export(readCollectList, def("org.griphyn.vdl.karajan.lib.ReadCollectList"))
 	export(processStageouts, def("org.griphyn.vdl.karajan.lib.ProcessStageouts"))
