@@ -70,7 +70,8 @@ def compose_compute_unit(task_filename):
                     index -= 1
             else:
                 printf("[ERROR] Stagein source must have a destination")
-                stageins.append(stagein_item)
+
+            stageins.append(stagein_item)
 
         elif (task_desc[index].startswith("stageout.source=")):
             stageout_item = {}
@@ -90,7 +91,7 @@ def compose_compute_unit(task_filename):
                     index -= 1
             else:
                 printf("[ERROR] Stageout source must have a destination")
-                stageouts.append(stageout_item)
+            stageouts.append(stageout_item)
 
         elif (task_desc[index].startswith("attr.maxwalltime=")):
             l = len("attr.maxwalltime=")
@@ -114,6 +115,14 @@ def compose_compute_unit(task_filename):
                "duration"   : walltime,
                "input_staging" : stageins,
                "output_staging" : stageouts
+               }
+
+    jobdesc = {"executable" : "/bin/sleep",
+               "arguments"  : ['60'],
+               "cores"      : 1,
+               "duration"   : walltime
+               #"input_staging" : stageins,
+               #"output_staging" : stageouts
                }
 
     logging.debug("Jobdesc : {0}".format(jobdesc))
