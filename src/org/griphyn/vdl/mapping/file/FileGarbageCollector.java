@@ -20,16 +20,15 @@ package org.griphyn.vdl.mapping.file;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
 import org.griphyn.vdl.mapping.RootHandle;
+import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.util.SwiftConfig;
 
 public class FileGarbageCollector implements Runnable {
@@ -60,6 +59,9 @@ public class FileGarbageCollector implements Runnable {
         }
     }
         
+    /**
+     * Cleans the specified handle. Also removes it from the collector.
+     */
     public void clean(RootHandle node) {
         if (!enabled) {
             return;
@@ -75,6 +77,10 @@ public class FileGarbageCollector implements Runnable {
         }
     }
 
+    /**
+     * Registers a root handle with the collector. The handle will 
+     * be cleaned at some point in the future.
+     */
     public void add(RootHandle node) {
         if (!enabled) {
             return;
@@ -82,6 +88,9 @@ public class FileGarbageCollector implements Runnable {
         nodes.add(node);
     }
     
+    /**
+     * Cleans all handles registered with this collector.
+     */
     public void clean() {
         if (!enabled) {
             return;
@@ -108,13 +117,16 @@ public class FileGarbageCollector implements Runnable {
                     node = queue.remove();
                 }
                 try {
-                    Mapper m = node.getMapper();
-                    Collection<Path> fringe = node.getFringePaths();
-                    for (Path p : fringe) {
-                        PhysicalFormat pf = m.map(p);
-                        if (!m.isPersistent(p)) {
-                            pf.clean();
-                            m.fileCleaned(pf);
+                    AbstractDataNode dn = (AbstractDataNode) node;
+                    if (!dn.isCleaned()) {
+                        Mapper m = node.getMapper();
+                        Collection<Path> fringe = node.getFringePaths();
+                        for (Path p : fringe) {
+                            PhysicalFormat pf = m.map(p);
+                            if (!m.isPersistent(p)) {
+                                pf.clean();
+                                m.fileCleaned(pf);
+                            }
                         }
                     }
                 }
