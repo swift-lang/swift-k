@@ -33,6 +33,7 @@ import java.util.List;
 
 import k.rt.ExecutionException;
 import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.nodes.PartialCloseable;
@@ -53,6 +54,11 @@ class RefCount<T> {
         }
         List<RefCount<S>> l = new ArrayList<RefCount<S>>(srefs.size());
         for (StaticRefCount<S> s : srefs) {
+            S var = s.ref.getValue(stack);
+            if (var == null) {
+                throw new NullPointerException("Null var when building read refs in thread " + 
+                        LWThread.currentThread().getQualifiedName() + ", ref: " + s.ref);
+            }
             l.add(new RefCount<S>(s.ref.getValue(stack), s.count));
         }
         return l;
