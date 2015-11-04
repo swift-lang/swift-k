@@ -71,6 +71,11 @@ public class SlurmExecutor extends AbstractExecutor {
 		}
 	}
 
+    @Override
+    protected int getQuotingLevel(RunMode runMode) {
+        return 2;
+    }
+
 	/**
 	 * Ensure tasks have a valid name
 	 */
@@ -149,8 +154,8 @@ public class SlurmExecutor extends AbstractExecutor {
 		
 	    if ("single".equalsIgnoreCase(sJobType)) {
 			writeNonEmptyAttr("ppn", "--ntasks-per-node", wr);
-	    } 
-	    else { 
+	    }
+	    else {
 	    	wr.write("#SBATCH --ntasks-per-node=1\n");
 	    	writeNonEmptyAttr("jobsPerNode", "--cpus-per-task", wr);
 	    }
@@ -190,9 +195,9 @@ public class SlurmExecutor extends AbstractExecutor {
 		if (sJobType != null) {
             writeWrapper(wr, sJobType);
         }
-		
+
 		writePreamble(wr, runMode, null, exitcodefile);
-        writeCommand(wr, runMode);     
+        writeCommand(wr, runMode);
         writePostamble(wr, runMode, exitcodefile, stdout, stderr);
 
 		wr.close();
