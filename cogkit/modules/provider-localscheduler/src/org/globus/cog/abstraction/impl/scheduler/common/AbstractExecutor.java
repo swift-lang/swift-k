@@ -376,7 +376,7 @@ public abstract class AbstractExecutor implements ProcessListener {
                 wr.write("$RUNCOMMAND ");
                 break;
         }
-        wr.write("\"/bin/bash -c \\\"");
+        wr.write("/bin/bash -c \"");
     }
     
     protected void writeCommand(Writer wr, RunMode runMode) throws IOException {
@@ -406,9 +406,9 @@ public abstract class AbstractExecutor implements ProcessListener {
                 // nothing
         }
     }
-
+    
     private void writeRedirects(Writer wr, String exitCodeFile, String stdout, String stderr) throws IOException {
-        wr.write("; echo \\$? > " + exitCodeFile + "\\\" \" ");
+        wr.write("; echo \\$? > " + exitCodeFile + "\" ");
         wr.write(" 1>>");
         wr.write(quote(stdout, 1));
         wr.write(" 2>>");
