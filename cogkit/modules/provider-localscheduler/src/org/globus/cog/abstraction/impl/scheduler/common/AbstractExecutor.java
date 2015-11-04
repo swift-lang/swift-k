@@ -376,11 +376,22 @@ public abstract class AbstractExecutor implements ProcessListener {
                 wr.write("$RUNCOMMAND ");
                 break;
         }
-        wr.write("/bin/bash -c \"");
-    }
-    
-    protected void writeCommand(Writer wr, RunMode runMode) throws IOException {
+        //Reverting commit 5c30017012706b27500731c07e242e7c24c6dd76
+        // getQuotingLevel is overriden in SlurmExecutor to return 2
+        // for every other it returns 1
         int quotingLevel = getQuotingLevel(runMode);
+        if ( quotingLevel == 2 ){
+            wr.write("\"/bin/bash -c \\\"");
+        }else{
+            wr.write("/bin/bash -c \"");
+        }
+    }
+
+    protected void writeCommand(Writer wr, RunMode runMode) throws IOException {
+        // quote currently is broken and does not return the
+        // correct quoted string based on the quotingLevel.
+        // This is 
+        int quotingLevel = 1; //getQuotingLevel(runMode);
 
         wr.write(quote(spec.getExecutable(), quotingLevel));
         writeQuotedList(wr, spec.getArgumentsAsList(), quotingLevel);
@@ -389,14 +400,14 @@ public abstract class AbstractExecutor implements ProcessListener {
             wr.write(" < " + quote(spec.getStdInput(), quotingLevel));
         }
     }
-    
+
     protected void writePostamble(Writer wr, RunMode runMode, String exitCodeFile, String stdout, String stderr) throws IOException {
         switch (runMode) {
             case SSH:
-                writeRedirects(wr, "$ECF.$INDEX", stdout, stderr);
+                writeRedirects(wr, "$ECF.$INDEX", runMode, stdout, stderr);
                 break;
             default:
-                writeRedirects(wr, exitCodeFile, stdout, stderr);
+                writeRedirects(wr, exitCodeFile, runMode, stdout, stderr);
         }
         switch (runMode) {
             case SSH:
@@ -406,9 +417,16 @@ public abstract class AbstractExecutor implements ProcessListener {
                 // nothing
         }
     }
-    
-    private void writeRedirects(Writer wr, String exitCodeFile, String stdout, String stderr) throws IOException {
-        wr.write("; echo \\$? > " + exitCodeFile + "\" ");
+
+    private void writeRedirects(Writer wr, String exitCodeFile, RunMode runMode, String stdout, String stderr) throws IOException {
+        int quotingLevel = getQuotingLevel(runMode);
+        //Reverting commit 5c30017012706b27500731c07e242e7c24c6dd76
+        if ( quotingLevel == 2 ){
+            wr.write("; echo \\$? > " + exitCodeFile + "\\\" \" ");
+        }else{
+            wr.write("; echo \\$? > " + exitCodeFile + "\" ");
+        }
+
         wr.write(" 1>>");
         wr.write(quote(stdout, 1));
         wr.write(" 2>>");
@@ -541,7 +559,7 @@ public abstract class AbstractExecutor implements ProcessListener {
             case 1:
                 return quote(s, "\\");
             case 2:
-                return quote(s, "\\\\\\");    
+                return quote(s, "\\\\\\");
             default:
                 throw new IllegalArgumentException("Unknown quoting level: " + level);
         }
@@ -679,7 +697,7 @@ public abstract class AbstractExecutor implements ProcessListener {
         wr.write("done\n");
         wr.write("echo $EC > $ECF\n");
     }
-    
+
     protected String join(Collection<String> names, String separator) {
         StringBuilder sb = new StringBuilder();
         Iterator<String> i = names.iterator();

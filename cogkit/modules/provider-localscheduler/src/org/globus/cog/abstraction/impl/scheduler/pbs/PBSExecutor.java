@@ -278,7 +278,7 @@ public class PBSExecutor extends AbstractExecutor {
         }
 
 		writePreamble(wr, runMode, "$PBS_NODEFILE", exitcodefile);
-		writeCommand(wr, runMode);		
+		writeCommand(wr, runMode);
 	    writePostamble(wr, runMode, exitcodefile, stdout, stderr);
 		
 		wr.close();
