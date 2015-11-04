@@ -380,9 +380,10 @@ public abstract class AbstractExecutor implements ProcessListener {
         // getQuotingLevel is overriden in SlurmExecutor to return 2
         // for every other it returns 1
         int quotingLevel = getQuotingLevel(runMode);
-        if ( quotingLevel == 2 ){
+        if (quotingLevel == 2) {
             wr.write("\"/bin/bash -c \\\"");
-        }else{
+        }
+        else {
             wr.write("/bin/bash -c \"");
         }
     }
@@ -390,7 +391,7 @@ public abstract class AbstractExecutor implements ProcessListener {
     protected void writeCommand(Writer wr, RunMode runMode) throws IOException {
         // quote currently is broken and does not return the
         // correct quoted string based on the quotingLevel.
-        // This is 
+        // This is
         int quotingLevel = 1; //getQuotingLevel(runMode);
 
         wr.write(quote(spec.getExecutable(), quotingLevel));
@@ -421,9 +422,10 @@ public abstract class AbstractExecutor implements ProcessListener {
     private void writeRedirects(Writer wr, String exitCodeFile, RunMode runMode, String stdout, String stderr) throws IOException {
         int quotingLevel = getQuotingLevel(runMode);
         //Reverting commit 5c30017012706b27500731c07e242e7c24c6dd76
-        if ( quotingLevel == 2 ){
+        if (quotingLevel == 2) {
             wr.write("; echo \\$? > " + exitCodeFile + "\\\" \" ");
-        }else{
+        }
+        else{
             wr.write("; echo \\$? > " + exitCodeFile + "\" ");
         }
 

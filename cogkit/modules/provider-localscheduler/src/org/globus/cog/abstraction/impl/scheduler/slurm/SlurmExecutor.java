@@ -71,6 +71,9 @@ public class SlurmExecutor extends AbstractExecutor {
 		}
 	}
 
+    /**
+     * Override for quotingLevel 
+     */
     @Override
     protected int getQuotingLevel(RunMode runMode) {
         return 2;
