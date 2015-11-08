@@ -402,7 +402,8 @@ public abstract class AbstractExecutor implements ProcessListener {
         }
     }
 
-    protected void writePostamble(Writer wr, RunMode runMode, String exitCodeFile, String stdout, String stderr) throws IOException {
+    protected void writePostamble(Writer wr, RunMode runMode, String exitCodeFile, 
+            String stdout, String stderr, String lrmOutSuffix) throws IOException {
         switch (runMode) {
             case SSH:
                 writeRedirects(wr, "$ECF.$INDEX", runMode, stdout, stderr);
@@ -416,6 +417,12 @@ public abstract class AbstractExecutor implements ProcessListener {
                 break;
             default:
                 // nothing
+        }
+        if (lrmOutSuffix != null) {
+            String lrmOut = quote(stdout + lrmOutSuffix);
+            wr.write("\nif [ -f " + lrmOut + " ]; then cat " + lrmOut + " >> " + quote(stdout) + "; fi\n");
+            String lrmErr = quote(stderr + lrmOutSuffix);
+            wr.write("\nif [ -f " + lrmErr + " ]; then cat " + lrmErr + " >> " + quote(stderr) + "; fi\n");
         }
     }
 

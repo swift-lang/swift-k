@@ -148,8 +148,8 @@ public class SlurmExecutor extends AbstractExecutor {
 		}
 		
 		wr.write("#SBATCH --job-name=" + task.getName() + '\n');
-		wr.write("#SBATCH --output=" + quote(stdout) + '\n');
-		wr.write("#SBATCH --error=" + quote(stderr) + '\n');
+		wr.write("#SBATCH --output=" + quote(stdout + ".slurm") + '\n');
+		wr.write("#SBATCH --error=" + quote(stderr) + ".slurm" + '\n');
 		wr.write("#SBATCH --nodes=" + count + '\n');
 		writeNonEmptyAttr("project", "--account", wr);
 		writeNonEmptyAttr("queue", "--partition", wr);
@@ -201,7 +201,7 @@ public class SlurmExecutor extends AbstractExecutor {
 
 		writePreamble(wr, runMode, null, exitcodefile);
         writeCommand(wr, runMode);
-        writePostamble(wr, runMode, exitcodefile, stdout, stderr);
+        writePostamble(wr, runMode, exitcodefile, stdout, stderr, ".slurm");
 
 		wr.close();
 	}
