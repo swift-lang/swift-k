@@ -354,7 +354,7 @@ public abstract class AbstractExecutor implements ProcessListener {
             case PLAIN:
                 break;
             case MPIRUN:
-                wr.write("mpirun -n " + count + " -hostfile " + nodeFile + " ");
+                wr.write("mpirun -np " + count + " -hostfile " + nodeFile + " ");
                 String mpiOpts = (String) spec.getAttribute("mpiOptions");
                 if (mpiOpts != null) {
                     wr.write(mpiOpts);
