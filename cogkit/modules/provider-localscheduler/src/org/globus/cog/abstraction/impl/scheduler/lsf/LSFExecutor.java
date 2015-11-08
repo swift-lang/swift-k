@@ -117,11 +117,7 @@ public class LSFExecutor extends AbstractExecutor {
         validate(task);
         writeHeader(wr);
         
-        String sJobType = (String) spec.getAttribute("jobType");
-        if (logger.isDebugEnabled()) {
-            logger.debug("Job type: " + sJobType);
-        }
-        RunMode runMode = getRunMode(sJobType);
+        RunMode runMode = getRunMode(spec);
         
 		wr.write("#BSUB -L /bin/bash\n");
 		wr.write("#BSUB -J " + task.getName() + '\n');
@@ -164,11 +160,7 @@ public class LSFExecutor extends AbstractExecutor {
 			wr.write(quote(env.getValue()));
 			wr.write('\n');
 		}
-		
-		if (sJobType != null) {
-            writeWrapper(wr, sJobType);
-        }
-        		
+		        		
 		writePreamble(wr, runMode, "$LSB_HOSTS", exitcodefile);
         writeCommand(wr, runMode);     
         writePostamble(wr, runMode, exitcodefile, stdout, stderr, ".lsf");

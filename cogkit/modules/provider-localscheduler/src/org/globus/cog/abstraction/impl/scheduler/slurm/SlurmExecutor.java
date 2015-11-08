@@ -100,7 +100,14 @@ public class SlurmExecutor extends AbstractExecutor {
 	}
 	
 	@Override
-	protected RunMode getRunMode(String jobType) {
+	protected RunMode getRunMode(JobSpecification spec) {
+	    String jobType = (String) spec.getAttribute("jobType");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Job type: " + jobType);
+        }
+        if (spec.getAttribute("runCommand") != null) {
+            return RunMode.CUSTOM;
+        }
         if (jobType == null) {
             return RunMode.SRUN_OR_IBRUN;
         }
@@ -128,11 +135,7 @@ public class SlurmExecutor extends AbstractExecutor {
 		validate(task);
 		writeHeader(wr);
 
-		String sJobType = (String) spec.getAttribute("jobType");
-        if (logger.isDebugEnabled()) {
-            logger.debug("Job type: " + sJobType);
-        }
-        RunMode runMode = getRunMode(sJobType);
+        RunMode runMode = getRunMode(spec);
         
         if (spec.getAttribute("slurm.srun") != null) {
             runMode = RunMode.SRUN;
@@ -155,6 +158,7 @@ public class SlurmExecutor extends AbstractExecutor {
 		writeNonEmptyAttr("queue", "--partition", wr);
 		writeWallTime(wr);
 		
+		String sJobType = (String) spec.getAttribute("jobType");
 	    if ("single".equalsIgnoreCase(sJobType)) {
 			writeNonEmptyAttr("ppn", "--ntasks-per-node", wr);
 	    }
@@ -194,10 +198,6 @@ public class SlurmExecutor extends AbstractExecutor {
 			wr.write("export " + var.getName() + '='
 					+ quote(var.getValue()) + '\n');
 		}
-
-		if (sJobType != null) {
-            writeWrapper(wr, sJobType);
-        }
 
 		writePreamble(wr, runMode, null, exitcodefile);
         writeCommand(wr, runMode);

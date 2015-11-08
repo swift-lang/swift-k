@@ -336,11 +336,7 @@ public class SGEExecutor extends AbstractExecutor {
     	Task task = getTask();
         JobSpecification spec = getSpec();
 
-        String sJobType = (String) spec.getAttribute("jobType");
-        if (logger.isDebugEnabled()) {
-            logger.debug("Job type: " + sJobType);
-        }
-        RunMode runMode = getRunMode(sJobType);
+        RunMode runMode = getRunMode(spec);
         
         count = Integer.valueOf(getAttribute(spec, "count", "1"));
         String queue = (String)spec.getAttribute("queue");
@@ -398,10 +394,6 @@ public class SGEExecutor extends AbstractExecutor {
         wr.write("   (( SIGNAL+=1 ))\n");
         wr.write("done\n\n");
         
-        if (sJobType != null) {
-            writeWrapper(wr, sJobType);
-        }
-
         writePreamble(wr, runMode, "$PE_HOSTFILE", exitcodefile);
         writeCommand(wr, runMode);     
         writePostamble(wr, runMode, exitcodefile, stdout, stderr, ".sge");

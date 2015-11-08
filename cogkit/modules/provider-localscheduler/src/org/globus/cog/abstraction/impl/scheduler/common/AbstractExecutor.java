@@ -76,7 +76,8 @@ public abstract class AbstractExecutor implements ProcessListener {
         APRUN, // run using aprun
         SRUN, // SLURM specific
         IBRUN,
-        SRUN_OR_IBRUN; 
+        SRUN_OR_IBRUN,
+        CUSTOM; 
     }
 
     protected File script;
@@ -327,7 +328,14 @@ public abstract class AbstractExecutor implements ProcessListener {
      *      use mpirun
      *      
      */
-    protected RunMode getRunMode(String jobType) {
+    protected RunMode getRunMode(JobSpecification spec) {
+        String jobType = (String) spec.getAttribute("jobType");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Job type: " + jobType);
+        }
+        if (spec.getAttribute("runCommand") != null) {
+            return RunMode.CUSTOM;
+        }
         if (jobType == null) {
             return RunMode.SSH;
         }
@@ -374,6 +382,11 @@ public abstract class AbstractExecutor implements ProcessListener {
             case SRUN_OR_IBRUN:
                 wr.write("RUNCOMMAND=$( command -v ibrun || command -v srun )\n");
                 wr.write("$RUNCOMMAND ");
+                break;
+            case CUSTOM:
+                String cmd = replaceVars((String) spec.getAttribute("runCommand"));
+                wr.write(cmd);
+                wr.write(' ');
                 break;
         }
         //Reverting commit 5c30017012706b27500731c07e242e7c24c6dd76
