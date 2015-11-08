@@ -229,11 +229,7 @@ public class PBSExecutor extends AbstractExecutor {
         validate(task);
         writeHeader(wr);
         
-        String sJobType = (String) spec.getAttribute("jobType");
-        if (logger.isDebugEnabled()) {
-            logger.debug("Job type: " + sJobType);
-        }
-        RunMode runMode = getRunMode(sJobType);
+        RunMode runMode = getRunMode(spec);
         
         // aprun option specifically for Cray Beagle, Franklin
         // backwards compatibility
@@ -273,10 +269,6 @@ public class PBSExecutor extends AbstractExecutor {
 		    wr.write("#PBS -l " + resources + '\n');
 		}
 		
-		if (sJobType != null) {
-            writeWrapper(wr, sJobType);
-        }
-
 		writePreamble(wr, runMode, "$PBS_NODEFILE", exitcodefile);
 		writeCommand(wr, runMode);
 	    writePostamble(wr, runMode, exitcodefile, stdout, stderr, ".pbs");
