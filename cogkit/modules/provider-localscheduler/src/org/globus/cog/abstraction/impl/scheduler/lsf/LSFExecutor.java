@@ -125,8 +125,8 @@ public class LSFExecutor extends AbstractExecutor {
         
 		wr.write("#BSUB -L /bin/bash\n");
 		wr.write("#BSUB -J " + task.getName() + '\n');
-		wr.write("#BSUB -o " + quote(stdout) + '\n');
-		wr.write("#BSUB -e " + quote(stderr) + '\n');
+		wr.write("#BSUB -o " + quote(stdout + ".lsf") + '\n');
+		wr.write("#BSUB -e " + quote(stderr) + ".lsf" + '\n');
 		
 		writeNonEmptyAttr("project", "-P", wr);
 		writeNonEmptyAttr("queue", "-q", wr);
@@ -171,7 +171,7 @@ public class LSFExecutor extends AbstractExecutor {
         		
 		writePreamble(wr, runMode, "$LSB_HOSTS", exitcodefile);
         writeCommand(wr, runMode);     
-        writePostamble(wr, runMode, exitcodefile, stdout, stderr);
+        writePostamble(wr, runMode, exitcodefile, stdout, stderr, ".lsf");
         
 		wr.close();
 	}

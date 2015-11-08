@@ -366,8 +366,8 @@ public class SGEExecutor extends AbstractExecutor {
         if (spec.getStdInput() != null) {
             wr.write("#$ -i " + quote(spec.getStdInput()) + '\n');
         }
-        wr.write("#$ -o " + quote(stdout) + '\n');
-        wr.write("#$ -e " + quote(stderr) + '\n');
+        wr.write("#$ -o " + quote(stdout + ".sge") + '\n');
+        wr.write("#$ -e " + quote(stderr + ".sge") + '\n');
 
         if (!spec.getEnvironment().isEmpty()) {
             wr.write("#$ -v ");
@@ -404,7 +404,7 @@ public class SGEExecutor extends AbstractExecutor {
 
         writePreamble(wr, runMode, "$PE_HOSTFILE", exitcodefile);
         writeCommand(wr, runMode);     
-        writePostamble(wr, runMode, exitcodefile, stdout, stderr);
+        writePostamble(wr, runMode, exitcodefile, stdout, stderr, ".sge");
         
         wr.close();
     }

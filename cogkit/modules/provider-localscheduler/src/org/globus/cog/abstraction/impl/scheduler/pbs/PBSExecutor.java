@@ -249,8 +249,8 @@ public class PBSExecutor extends AbstractExecutor {
 
 		writeWallTime(wr);
 		writeNonEmptyAttr("queue", "-q ", wr);
-		wr.write("#PBS -o " + quote(stdout) + '\n');
-		wr.write("#PBS -e " + quote(stderr) + '\n');
+		wr.write("#PBS -o " + quote(stdout + ".pbs") + '\n');
+		wr.write("#PBS -e " + quote(stderr + ".pbs") + '\n');
 		if (spec.getEnvironment().size() > 0) {
             wr.write("#PBS -v " + join(spec.getEnvironmentVariableNames(), ", ") + '\n');
         }
@@ -279,7 +279,7 @@ public class PBSExecutor extends AbstractExecutor {
 
 		writePreamble(wr, runMode, "$PBS_NODEFILE", exitcodefile);
 		writeCommand(wr, runMode);
-	    writePostamble(wr, runMode, exitcodefile, stdout, stderr);
+	    writePostamble(wr, runMode, exitcodefile, stdout, stderr, ".pbs");
 		
 		wr.close();
 	}
