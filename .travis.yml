@@ -1,5 +1,8 @@
 language: java
 
+git:
+  submodules: false
+
 env:
  - TEST=tests/language/cast.swift
 
