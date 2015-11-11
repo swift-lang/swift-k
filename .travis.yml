@@ -1,0 +1,11 @@
+language: java
+
+env:
+ - TEST=tests/language/cast.swift
+
+before_install: 
+ - ant redist
+  
+script: 
+ - ./dist/swift-svn/bin/swift $TEST 
+
