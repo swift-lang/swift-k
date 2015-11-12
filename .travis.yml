@@ -9,11 +9,14 @@ git:
   submodules: false
 
 env:
- - TEST=tests/language/cast.swift
+ - TEST=tests/language/cast.swift  CONF=tests/language/default.conf
+ - TEST=tests/language/cast.swift  CONF=tests/language/prof.conf
+ - TEST=tests/language/sweep.swift CONF=tests/language/default.conf
+ - TEST=tests/language/sweep.swift CONF=tests/language/prov.conf
 
 before_install: 
  - ant redist
   
 script: 
- - ./dist/swift-svn/bin/swift $TEST 
+ - ./dist/swift-svn/bin/swift -config $CONF $TEST 
 
