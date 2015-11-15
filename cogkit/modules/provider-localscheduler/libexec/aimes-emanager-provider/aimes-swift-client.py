@@ -15,7 +15,7 @@ from datetime import datetime
 
 def create_session():
     r = requests.put("%s/swift/sessions/" % ep)
-    ssid = r.json()['ssid']
+    ssid = r.json()['emgr_sid']
     return ssid
 
 def filepath_cleanup(filepath):
@@ -143,16 +143,19 @@ def submit_task(jobdesc, ssid, ep):
     data = {'td': json.dumps(cud)}
     r = requests.put("%s/swift/sessions/%s" % (ep, ssid), data)
     #print r.json()
-    return r.json()['stid']
+    return r.json()['emgr_tid']
 
-state_mapping = {'Done'                : 'C',
-                 'Failed'              : 'F',
-                 'PendingInputStaging' : 'Q',
-                 'New'                 : 'Q',
-                 'PendingAgentInputStaging' : 'R',
-                 'StagingInput'        : 'R',
-                 'AgentStagingInput'   : 'R',
-                 'Executing'           : 'R',
+state_mapping = {'Done'                      : 'C',
+                 'Failed'                    : 'F',
+                 'Unscheduled'               : 'Q',
+                 'PendingInputStaging'       : 'Q',
+                 'New'                       : 'Q',
+                 'PendingAgentInputStaging'  : 'R',
+                 'StagingInput'              : 'R',
+                 'AgentStagingInput'         : 'R',
+                 'AgentStagingInputPending'  : 'R',
+                 'AllocatingPending'         : 'R',
+                 'Executing'                 : 'R',
                  'PendingAgentOutputStaging' : 'R'
                  }
 
