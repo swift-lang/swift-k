@@ -104,7 +104,12 @@ public abstract class SwiftFunction extends AbstractFunction {
 	}
 		
 	public static String getThreadPrefix(LWThread thr) {
-	    return thr.getQualifiedName();
+	    if (thr == null) {
+	        return "STATIC";
+	    }
+	    else {
+	        return thr.getQualifiedName();
+	    }
 	}
 
 	// TODO - is this needed any more? its doing some type inferencing and

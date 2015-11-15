@@ -315,6 +315,8 @@ public abstract class StandardLibrary {
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.StrJoin.class);
             addFunc("toInt", returns(INT), args(STRING),
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.ToInt.class);
+            addFunc("toInt", returns(INT), args(FLOAT),
+                org.griphyn.vdl.karajan.lib.swiftscript.Misc.FloatToInt.class);
             addFunc("toFloat", returns(FLOAT), args(STRING),
                 org.griphyn.vdl.karajan.lib.swiftscript.Misc.ToFloat.class);
             addFunc("toFloat", returns(FLOAT), args(INT),

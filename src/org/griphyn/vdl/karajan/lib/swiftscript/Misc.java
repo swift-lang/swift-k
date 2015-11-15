@@ -565,6 +565,22 @@ public class Misc {
         }
     }
 	
+	public static class FloatToInt extends AbstractUnarySingleValuedSwiftFunction<Integer, Double> {
+        public FloatToInt() {
+            super("toInt", Field.GENERIC_INT);
+        }
+        
+        @Override
+        protected Integer function(Double v) {
+            try {
+                return Integer.valueOf(v.intValue());
+            }
+            catch (Exception e) {
+                throw new ExecutionException(this, "Could not convert value to float: " + valueLiteral(v));
+            }
+        }
+    }
+	
 	public static class ToFloat extends AbstractUnarySingleValuedSwiftFunction<Double, Object> {
 	    
 	    public ToFloat() { 
