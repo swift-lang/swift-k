@@ -45,11 +45,14 @@ start_session()
 
 start_session;
 SESSION_ID=$(cat $RUNDIR/session_id)
-if $SESSION_ID != ssid*
+
+if $SESSION_ID != emgr_sid*
 then
     log "SESSION ID : $SESSION_ID not a valid session id"
     exit -3
 fi
+
+log "[DEBUG] ESSION_ID : $SESSION_ID"
 
 while read LINE; do
     echo $LINE >> $SUBMIT_SCRIPT
