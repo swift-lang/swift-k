@@ -9,12 +9,6 @@ callInternal_log_input() ::= <<$it$>>
 
 callInternal_log_output() ::= <<$it$>>
 
-range(from, to, step, line) ::= <<swift:range($from$, $to$$if(step)$, step = $step$$endif$$if(line)$, #_line=$line$$endif$)>>
-
-slicearray(parent, memberchild, type, line) ::= <<
-	swift:sliceArray($parent$, "$memberchild$", "$type$"$if(line)$, #_line=$line$$endif$)
->>
-
 log_param(dir) ::= << >>
 
 cs() ::= << >>
