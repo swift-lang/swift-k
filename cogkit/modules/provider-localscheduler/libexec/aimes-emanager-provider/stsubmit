@@ -62,7 +62,7 @@ log "##############SUBMIT_SCRIPT###################"
 log "[DEBUG] PWD : $PWD"
 log "python $AIMES_CLIENT --logfile $SUBMIT_SCRIPT.stdout --submit $SUBMIT_SCRIPT --endpoint $ENDPOINT --session $SESSION_ID"
 
-JOBINFO=$(python $AIMES_CLIENT --logfile $SUBMIT_SCRIPT.stdout --submit $SUBMIT_SCRIPT --endpoint $ENDPOINT --session $SESSION_ID) 2>> $LOG
+JOBINFO=$(python $AIMES_CLIENT --logfile $SUBMIT_SCRIPT.foo.stdout --submit $SUBMIT_SCRIPT --endpoint $ENDPOINT --session $SESSION_ID) 2>> $LOG
 echo "jobid=$JOBINFO"
 retcode="$?"
 log "JOBINFO : $JOBINFO"
