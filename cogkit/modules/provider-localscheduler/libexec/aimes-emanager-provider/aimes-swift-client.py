@@ -117,8 +117,15 @@ def compose_compute_unit(task_filename):
                "output_staging" : stageouts
                }
 
-    jobdesc = {"executable" : "/bin/sleep",
-               "arguments"  : ['60'],
+    # Stripping down args to remove swiftwrap
+    stripped_args = []
+    if args[0] == "_swiftwrap.staging":
+        logging.debug("stripped_args : {0}".format(stripped_args))
+        stripped_args = args[20:]
+        executable = "/bin/sleep"
+
+    jobdesc = {"executable" : str(executable),
+               "arguments"  : [args[-1]],
                "cores"      : 1,
                "duration"   : walltime
                #"input_staging" : stageins,
@@ -144,16 +151,30 @@ def submit_task(jobdesc, ssid, ep):
     r = requests.put("%s/swift/sessions/%s" % (ep, ssid), data)
     #print r.json()
     return r.json()['stid']
+    #return r.json()['emgr_tid']
 
-state_mapping = {'Done'                : 'C',
-                 'Failed'              : 'F',
-                 'PendingInputStaging' : 'Q',
-                 'New'                 : 'Q',
-                 'PendingAgentInputStaging' : 'R',
-                 'StagingInput'        : 'R',
-                 'AgentStagingInput'   : 'R',
-                 'Executing'           : 'R',
-                 'PendingAgentOutputStaging' : 'R'
+# Refer to this table for states :
+# https://github.com/radical-cybertools/radical.pilot/blob/devel/src/radical/pilot/states.py
+state_mapping = {'New'                      : 'Q',
+                 'Unscheduled'              : 'Q',
+                 'Scheduling'               : 'Q',
+                 'AllocatingPending'        : 'Q',
+                 'Allocating'               : 'Q',
+                 'PendingAgentInputStaging' : 'Q',
+                 'AgentStagingInputPending' : 'Q',
+                 'PendingInputStaging'      : 'Q',
+                 'AgentStagingInput'        : 'Q',
+                 'StagingInput'             : 'R',
+                 'PendingExecution'         : 'Q',
+                 'ExecutingPending'         : 'Q',
+                 'Executing'                : 'R',
+                 'PendingAgentOutputStaging': 'R',
+                 'AgentStagingOutputPending': 'R',
+                 'AgentStagingOutput'       : 'R',
+                 'PendingOutputStaging'     : 'R',
+                 'StagingOutput'            : 'R',
+                 'Done'                     : 'C',
+                 'Failed'                   : 'F'
                  }
 
 def status_task(jobid, ssid, ep):
