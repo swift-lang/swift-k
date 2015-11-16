@@ -15,7 +15,7 @@ from datetime import datetime
 
 def create_session():
     r = requests.put("%s/swift/sessions/" % ep)
-    ssid = r.json()['ssid']
+    ssid = r.json()['emgr_sid']
     return ssid
 
 def filepath_cleanup(filepath):
@@ -150,31 +150,20 @@ def submit_task(jobdesc, ssid, ep):
     data = {'td': json.dumps(cud)}
     r = requests.put("%s/swift/sessions/%s" % (ep, ssid), data)
     #print r.json()
-    return r.json()['stid']
-    #return r.json()['emgr_tid']
+    return r.json()['emgr_tid']
 
-# Refer to this table for states :
-# https://github.com/radical-cybertools/radical.pilot/blob/devel/src/radical/pilot/states.py
-state_mapping = {'New'                      : 'Q',
-                 'Unscheduled'              : 'Q',
-                 'Scheduling'               : 'Q',
-                 'AllocatingPending'        : 'Q',
-                 'Allocating'               : 'Q',
-                 'PendingAgentInputStaging' : 'Q',
-                 'AgentStagingInputPending' : 'Q',
-                 'PendingInputStaging'      : 'Q',
-                 'AgentStagingInput'        : 'Q',
-                 'StagingInput'             : 'R',
-                 'PendingExecution'         : 'Q',
-                 'ExecutingPending'         : 'Q',
-                 'Executing'                : 'R',
-                 'PendingAgentOutputStaging': 'R',
-                 'AgentStagingOutputPending': 'R',
-                 'AgentStagingOutput'       : 'R',
-                 'PendingOutputStaging'     : 'R',
-                 'StagingOutput'            : 'R',
-                 'Done'                     : 'C',
-                 'Failed'                   : 'F'
+state_mapping = {'Done'                      : 'C',
+                 'Failed'                    : 'F',
+                 'Unscheduled'               : 'Q',
+                 'PendingInputStaging'       : 'Q',
+                 'New'                       : 'Q',
+                 'PendingAgentInputStaging'  : 'R',
+                 'StagingInput'              : 'R',
+                 'AgentStagingInput'         : 'R',
+                 'AgentStagingInputPending'  : 'R',
+                 'AllocatingPending'         : 'R',
+                 'Executing'                 : 'R',
+                 'PendingAgentOutputStaging' : 'R'
                  }
 
 def status_task(jobid, ssid, ep):
