@@ -152,19 +152,26 @@ def submit_task(jobdesc, ssid, ep):
     #print r.json()
     return r.json()['emgr_tid']
 
-state_mapping = {'Done'                      : 'C',
-                 'Failed'                    : 'F',
-                 'Unscheduled'               : 'Q',
-                 'PendingInputStaging'       : 'Q',
-                 'New'                       : 'Q',
-                 'PendingAgentInputStaging'  : 'R',
-                 'StagingInput'              : 'R',
-                 'AgentStagingInput'         : 'R',
-                 'AgentStagingInputPending'  : 'R',
-                 'AllocatingPending'         : 'R',
-                 'Executing'                 : 'R',
-                 'PendingAgentOutputStaging' : 'R'
-                 }
+state_mapping = {'New'                      : 'Q',
+                 'Unscheduled'              : 'Q',
+                 'Scheduling'               : 'Q',
+                 'AllocatingPending'        : 'Q',
+				 'Allocating'               : 'Q',
+                 'PendingAgentInputStaging' : 'Q',
+                 'AgentStagingInputPending' : 'Q',
+                 'PendingInputStaging'      : 'Q',
+                 'AgentStagingInput'        : 'Q',
+                 'StagingInput'             : 'R',
+                 'PendingExecution'         : 'Q',
+                 'ExecutingPending'         : 'Q',
+                 'Executing'                : 'R',
+                 'PendingAgentOutputStaging': 'R',
+                 'AgentStagingOutputPending': 'R',
+                 'AgentStagingOutput'       : 'R',
+                 'PendingOutputStaging'     : 'R',
+                 'StagingOutput'            : 'R',
+                 'Done'                     : 'C',
+				 'Failed'                   : 'F'}
 
 def status_task(jobid, ssid, ep):
     r = requests.get("%s/swift/sessions/%s/%s" % (ep, ssid, jobid))
