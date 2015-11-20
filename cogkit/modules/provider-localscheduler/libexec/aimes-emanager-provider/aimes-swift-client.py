@@ -103,19 +103,15 @@ def compose_compute_unit(task_filename):
 
         index += 1
 
+    # Trim out all info besides the stagein and stageout sources.
+    _stageins  = [x["source"] for x in stageins]
+    _stageouts = [x["source"] for x in stageouts]
+
     logging.debug("ARGS      : {0}".format(args))
     logging.debug("EXEC      : {0}".format(executable))
     logging.debug("STAGEINS  : {0}".format(stageins))
     logging.debug("STAGEOUTS : {0}".format(stageouts))
     logging.debug("WALLTIME  : {0}".format(walltime))
-
-    jobdesc = {"executable" : str(executable),
-               "arguments"  : args,
-               "cores"      : 1,
-               "duration"   : walltime,
-               "input_staging" : stageins,
-               "output_staging" : stageouts
-               }
 
     # Stripping down args to remove swiftwrap
     stripped_args = []
@@ -126,13 +122,13 @@ def compose_compute_unit(task_filename):
 
     jobdesc = {"executable" : str(executable),
                "arguments"  : [args[-1]],
-               "cores"      : 1,
-               "duration"   : walltime
-               #"input_staging" : stageins,
-               #"output_staging" : stageouts
+               "cores"      : env_vars.get("cores", 1),
+               "duration"   : walltime,
+               "input_staging" : stageins,
+               "output_staging" : stageouts
                }
 
-    logging.debug("Jobdesc : {0}".format(jobdesc))
+    logging.error("Jobdesc : {0}".format(jobdesc))
     return jobdesc
 
 
@@ -148,6 +144,7 @@ def submit_task(jobdesc, ssid, ep):
     #cud  = mock_job_desc(jobdesc)
     cud  = compose_compute_unit(jobdesc)
     data = {'td': json.dumps(cud)}
+    logging.debug("Submit : {0}".format(data))
     r = requests.put("%s/swift/sessions/%s" % (ep, ssid), data)
     #print r.json()
     return r.json()['emgr_tid']
@@ -197,10 +194,8 @@ if __name__ == '__main__' :
     if args.logfile:
         if not os.path.exists(os.path.dirname(args.logfile)):
             os.makedirs(os.path.dirname(args.logfile))
-            logging.basicConfig(filename=args.logfile, level=logging.DEBUG)
-        else:
-            logging.basicConfig(filename='/dev/null', level=logging.DEBUG)
 
+    logging.basicConfig(filename=args.logfile, level=logging.DEBUG)
     if not args.endpoint :
         logging.error("Missing endpoint. Cannot proceed");
 
