@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+##############################################
+# This code is deprecated
+##############################################
 
 # this code talks to a swift-aimes rest service and runs a simple workload.  The
 # first argument is the service endpoint.
