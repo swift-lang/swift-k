@@ -70,7 +70,6 @@ def compose_compute_unit(task_filename):
                     index -= 1
             else:
                 printf("[ERROR] Stagein source must have a destination")
-
             stageins.append(stagein_item)
 
         elif (task_desc[index].startswith("stageout.source=")):
@@ -105,27 +104,20 @@ def compose_compute_unit(task_filename):
 
     # Trim out all info besides the stagein and stageout sources.
     _stageins  = [x["source"] for x in stageins]
-    _stageouts = [x["source"] for x in stageouts]
+    _stageouts = [x["source"] for x in stageouts if x["source"] != 'wrapper.error' ]
 
-    logging.debug("ARGS      : {0}".format(args))
-    logging.debug("EXEC      : {0}".format(executable))
-    logging.debug("STAGEINS  : {0}".format(stageins))
-    logging.debug("STAGEOUTS : {0}".format(stageouts))
-    logging.debug("WALLTIME  : {0}".format(walltime))
-
-    # Stripping down args to remove swiftwrap
-    stripped_args = []
-    if args[0] == "_swiftwrap.staging":
-        logging.debug("stripped_args : {0}".format(stripped_args))
-        stripped_args = args[20:]
-        executable = "/bin/sleep"
+    logging.error("ARGS      : {0}".format(args))
+    logging.error("EXEC      : {0}".format(executable))
+    logging.error("STAGEINS  : {0}".format(_stageins))
+    logging.error("STAGEOUTS : {0}".format(_stageouts))
+    logging.error("WALLTIME  : {0}".format(walltime))
 
     jobdesc = {"executable" : str(executable),
-               "arguments"  : [args[-1]],
-               "cores"      : env_vars.get("cores", 1),
+			   "arguments"  : args,
+               "cores"      : int(env_vars.get("cores", 1)),
                "duration"   : walltime,
-               "input_staging" : stageins,
-               "output_staging" : stageouts
+               "input_staging" : _stageins,
+               "output_staging" : _stageouts
                }
 
     logging.error("Jobdesc : {0}".format(jobdesc))
