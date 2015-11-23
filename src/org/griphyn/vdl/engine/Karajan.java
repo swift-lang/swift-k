@@ -681,7 +681,7 @@ public class Karajan {
     public void append(Append append, IStatementContainer container) throws CompilationException {
         try {
             IAppend iAppend = new IAppend();
-            IExpression array = expressionToKarajan(append.getLhs(), container);
+            IExpression array = expressionToKarajan(append.getLhs(), container, true, null);
             IExpression value = expressionToKarajan(append.getRhs(), container);
             Type arrayType = array.getType();
             if (!arrayType.keyType().equals(Types.AUTO)) {
