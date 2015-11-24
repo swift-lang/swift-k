@@ -1157,7 +1157,10 @@ public class Karajan {
         Map<String, Integer> max = new HashMap<String, Integer>();
         for (IConditionBranch branch : branches) {
             for (VariableScope.VariableUsage v : branch.getScope().getVariableUsageValues()) {
-                if (branch.getScope().isVariableLocallyDefined(v.getName())) {
+                if (branch.getScope().isGlobal(v.getName())) {
+                    // we don't clean global variables
+                }
+                else if (branch.getScope().isVariableLocallyDefined(v.getName())) {
                     // this is not about variables defined inside the branches
                 }
                 else {

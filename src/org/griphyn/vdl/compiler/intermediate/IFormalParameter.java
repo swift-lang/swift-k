@@ -133,4 +133,9 @@ public class IFormalParameter extends AbstractINode implements IRefCounted {
     public String toString() {
         return name;
     }
+
+    @Override
+    public boolean isGlobal() {
+        return false;
+    }
 }
