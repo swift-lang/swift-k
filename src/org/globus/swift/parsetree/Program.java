@@ -27,6 +27,7 @@ public class Program extends AbstractNode {
     private final List<FunctionDeclaration> functionDeclarations;
     private final List<TypeDeclaration> types;
     private final StatementBlock body;
+    private String fileName;
     
     public Program() {
         imports = new ArrayList<Import>();
@@ -75,6 +76,14 @@ public class Program extends AbstractNode {
         return l;
     }
     
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
     @Override
     public String getNodeName() {
         return "program";
