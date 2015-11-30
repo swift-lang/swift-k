@@ -212,8 +212,8 @@ if (defined $OPTS{"c"}) {
 }
 
 my $cl_loglevel;
-if (defined $OPTS{"c"}){
-	my $cl_loglevel = $OPTS{"c"};
+if (defined $OPTS{"l"}){
+	my $cl_loglevel = $OPTS{"l"};
 	if (!defined $LEVELMAP{$cl_loglevel}) {
 		die "Invalid worker logging level requested: $cl_loglevel";
 	}

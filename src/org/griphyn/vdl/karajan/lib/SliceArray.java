@@ -24,6 +24,7 @@ import java.util.List;
 
 import k.rt.ExecutionException;
 import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Scope;
@@ -107,6 +108,12 @@ public class SliceArray extends SwiftFunction {
     		// all of the inputs should be closed, so
     		// we only need shallow close
     		destinationArray.closeShallow();
+    		
+    		if (PROVENANCE_ENABLED) {
+                String thread = SwiftFunction.getThreadPrefix(LWThread.currentThread());
+                logger.info("SLICEARRAY thread=" + thread + " slice=" + destinationArray.getIdentifier() + " member=" + 
+                        cutPath + " array=" + sourceArray.getIdentifier());
+            }
     
     		return destinationArray;
     

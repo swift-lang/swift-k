@@ -485,6 +485,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
         if (recompile) {
             Program prog = SwiftParser.parse(new FileInputStream(swiftscript));
+            prog.setFileName(project);
 
             try {
                 FileOutputStream f = new FileOutputStream(kml);
@@ -522,6 +523,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
         debugText("SWIFTSCRIPT", source);
 
         Program prog = SwiftParser.parse(new ByteArrayInputStream(source.getBytes()));
+        prog.setFileName("<string>");
 
         ByteArrayOutputStream kml = new ByteArrayOutputStream();
         try {

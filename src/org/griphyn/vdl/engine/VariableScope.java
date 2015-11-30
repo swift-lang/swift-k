@@ -481,6 +481,16 @@ public class VariableScope {
         }
     }
 	
+	public boolean isGlobal(String name) {
+	    Variable var = lookup(name);
+	    if (var == null) {
+            throw new IllegalArgumentException("Variable " + name + " is not visible in this scope");
+        }
+        else {
+            return var.isGlobal();
+        }
+	}
+	
 	public void setDeclaration(String name, IRefCounted declaration) {
         Variable var = lookup(name);
         if (var == null) {

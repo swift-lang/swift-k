@@ -372,19 +372,7 @@ swift:createSparseArray($if(field)$field=$field$$endif$$if(var)$var=$var$$endif$
 )
 >>
 
-range(from, to, step, line) ::= <<
-sequential(
-	tmp := swift:range($from$, $to$$if(step)$, step = $step$$endif$$if(line)$, #_line=$line$$endif$)
-	tmp
-	$range_log(from=from, to=to, step=step, out="tmp")$
-)
->>
-
-range_log(from, to, step, out) ::= <<
-	swift:log(LOG:INFO, k:concat("ARRAYRANGE thread=", currentThread(), " array=", getDatasetProvenanceID($out$),
-		" from=", getDatasetProvenanceID($from$), "to=", getDatasetProvenanceID($to$),
-		$if(step)$"step=", getDatasetProvenanceID($step$)$else$"step=none"$endif$))
->>
+range(from, to, step, line) ::= <<swift:range($from$, $to$$if(step)$, step = $step$$endif$$if(line)$, #_line=$line$$endif$)>>
 
 // <if>
 if(condition, vthen, velse, line, trace) ::= <<
@@ -541,19 +529,9 @@ extractstructelement(parent, memberchild, line) ::= <<
 getField($parent$, "$memberchild$"$if(line)$, #_line=$line$$endif$)
 >>
 
-slicearray(parent, memberchild, type) ::= <<
-sequential(
-	slice := swift:sliceArray($parent$, "$memberchild$", "$type$")
- 	$logSliceArray(memberchild=memberchild, array=parent, slice=slice)$
- 	slice
-)
+slicearray(parent, memberchild, type, line) ::= <<
+	swift:sliceArray($parent$, "$memberchild$", "$type$"$if(line)$, #_line=$line$$endif$)
 >>
-
-logSliceArray(memberchild, array, slice) ::= <<
-	swift:log(LOG:DEBUG, k:concat("SLICEARRAY thread=", currentThread(), " slice=", swift:getDatasetProvenanceID($slice$),
-		" member=$member$ array=", swift:getDatasetProvenanceID($array$))
->>
-
 
 iConst(value, line) ::= <<
 swift:new(swift.field.const.int, value=$value$$if(line)$, #_line=$line$$endif$)

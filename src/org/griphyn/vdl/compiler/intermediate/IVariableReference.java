@@ -100,7 +100,7 @@ public class IVariableReference extends IAbstractExpression implements ILValue {
         else {
             // not read from, so if there is only one full write,
             // we can delete it on access
-            if (declaration.getWriteCount() == VariableScope.FULL_WRITE_COUNT) {
+            if (declaration.getWriteCount() == VariableScope.FULL_WRITE_COUNT && !declaration.isGlobal()) {
                return "readAndDeleteVar";
             }
             else {

@@ -30,6 +30,7 @@ import java.util.Set;
 
 import k.rt.ExecutionException;
 import k.rt.Stack;
+import k.thr.LWThread;
 
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
@@ -63,6 +64,7 @@ public class Range extends SwiftFunction {
 	    waitFor(this, from);
 	    waitFor(this, to);
 	    waitFor(this, step);
+	    
 		final Type type = from.getType();
 		final double start = ((Number) from.getValue()).doubleValue();
 		final double stop = ((Number) to.getValue()).doubleValue();
@@ -161,6 +163,13 @@ public class Range extends SwiftFunction {
 					};
 				}				
 			};
+			
+			if (PROVENANCE_ENABLED) {
+			    String thread = SwiftFunction.getThreadPrefix(LWThread.currentThread());
+			    logger.info("ARRAYRANGE thread=" + thread + " array=" + handle.getIdentifier() + " from=" + 
+			            from.getIdentifier() + " to=" + to.getIdentifier() + " step=" + step.getIdentifier());
+			}
+			
 			return handle;
 		}
 		catch (Exception e) {

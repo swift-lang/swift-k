@@ -30,4 +30,6 @@ public interface IRefCounted {
     boolean isWrapped();
 
     int getWriteCount();
+    
+    boolean isGlobal();
 }

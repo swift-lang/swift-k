@@ -106,6 +106,8 @@ public class Karajan {
 		matter. */
 
 	private boolean newStdLib;
+	
+	private Program currentProgram;
 
 	public static void compile(Program prog, PrintStream out, boolean provenanceEnabled) throws CompilationException {
 		StringTemplateGroup templates;
@@ -145,6 +147,14 @@ public class Karajan {
 		addInternedField("const", Types.STRING);
 		addInternedField("const", Types.BOOLEAN);
 	}
+
+    private Program getCurrentProgram() {
+        return currentProgram;
+    }
+
+    private void setCurrentProgram(Program currentProgram) {
+        this.currentProgram = currentProgram;
+    }
 
     private void processImports(Program prog) throws CompilationException {
 		List<Import> imports = prog.getImports();
@@ -197,7 +207,9 @@ public class Karajan {
         }
 
         try {
+            Loader.debugText("SWIFTSCRIPT_IMPORT " + swiftfilename, new File(swiftfilename));
             Program importedProgram = SwiftParser.parse(new FileInputStream(swiftfilename));
+            importedProgram.setFileName(swiftfilename);
             importList.addFirst(importedProgram);
             importedNames.add(moduleToImport);
             logger.debug("Added " + moduleToImport + " to import list. Processing imports from that.");
@@ -255,7 +267,7 @@ public class Karajan {
                 }
             }
             catch (DuplicateFieldException e) {
-                throw new CompilationException("Re-definition of field '" + 
+                throw new CompilationException(getLocation(tr) + "re-definition of field '" + 
                     fieldName + "' in type '" + typeName + "'");
             }
             iStructMember.setName(tr.getName());
@@ -330,6 +342,7 @@ public class Karajan {
     }
 
     public IProgram program(Program prog) throws CompilationException {
+        setCurrentProgram(prog);
 		VariableScope scope = new VariableScope(this, null, prog);
 		IProgram iProgram = new IProgram(scope);
 		
@@ -351,18 +364,23 @@ public class Karajan {
 
 		addConstants(prog, scope, constants);
 		for (Program program : importList) {
+		    setCurrentProgram(program);
 		    processTypes(program, iProgram);
 		}
 		for (Program program : importList) {
+		    setCurrentProgram(program);
             statementsForSymbols(program.getBody(), iProgram);
 		}
         for (Program program : importList) {
+            setCurrentProgram(program);
             processProcedures(program, iProgram);
         }
         for (Program program : importList) {
+            setCurrentProgram(program);
             statements(program.getBody(), iProgram);
         }
 		
+        setCurrentProgram(prog);
         generateInternedFields(iProgram);
 		generateInternedConstants(iProgram);
 		scope.analyzeWriters();
@@ -509,7 +527,8 @@ public class Karajan {
                     iMapping.addParameter(new IMappingParameter("files", expr));
 				}
 				else {
-					throw new CompilationException("Cannot use expression of type " + expr.getType() + " as mapping expression");
+					throw new CompilationException(getLocation(var) + "cannot use expression of type " + 
+					        expr.getType() + " as mapping expression");
 				}
 				iVar.setMapping(iMapping);
 			}
@@ -547,12 +566,12 @@ public class Karajan {
 
     private void checkMapperParams(String mapperType, MappingDeclaration mapping) throws CompilationException {
         if (!MapperFactory.isValidMapperType(mapperType)) {
-            throw new CompilationException("Unknown mapper type: '" + mapperType + "'");
+            throw new CompilationException(getLocation(mapping) + "unknown mapper type: '" + mapperType + "'");
         }
         
         Set<String> validParams = MapperFactory.getValidParams(mapperType);
         if (validParams == null && mapping.getParameters().size() > 0) {
-            throw new CompilationException(mapperType + " does not support any parameters");
+            throw new CompilationException(getLocation(mapping) + mapperType + " does not support any parameters");
         }
         if (validParams.contains("*")) {
             // mapper accepts any parameter (e.g. external_mapper)
@@ -560,7 +579,8 @@ public class Karajan {
         }
         for (MappingParameter param : mapping.getParameters()) {
             if (!validParams.contains(param.getName())) {
-                throw new CompilationException(mapperType + " does not support a '" + param.getName() + "' parameter");
+                throw new CompilationException(getLocation(mapping) + mapperType + " does not support a '" + 
+                        param.getName() + "' parameter");
             }
         }
     }
@@ -619,7 +639,7 @@ public class Karajan {
                 IAssignment iAssign = new IAssignment();
                 IExpression lValue = expressionToKarajan(assign.getLhs(), container, true, null);
                 if (!(lValue instanceof ILValue)) {
-                    throw new CompilationException("Expected lvalue");
+                    throw new CompilationException(getLocation(assign.getLhs()) + "expected lvalue");
                 }
                 ILValue iLValue = (ILValue) lValue;
                 iAssign.setLValue(iLValue);
@@ -634,18 +654,17 @@ public class Karajan {
                 iAssign.setRValue(iRValue);
                 iAssign.setLine(assign.getLine());
                     			
-    			checkOrInferReturnedType(iLValue, iRValue);
+    			checkOrInferReturnedType(assign, iLValue, iRValue);
     			
     			container.addStatement(iAssign);
             }
 		} 
 		catch (CompilationException re) {
-			throw new CompilationException("Compile error in assignment at " + 
-			    assign.getLine() + ": " + re.getMessage(), re);
+			throw new CompilationException(getLocation(assign) + "compile error in assignment", re);
 		}
 	}
 
-    private void checkOrInferReturnedType(ILValue var, IExpression value) throws CompilationException {
+    private void checkOrInferReturnedType(Node src, ILValue var, IExpression value) throws CompilationException {
         Type lValueType = var.getType();
         Type rValueType = value.getType();
         if (lValueType.equals(Types.ANY)) {
@@ -668,7 +687,7 @@ public class Karajan {
                 // widening
             }
             else if (!lValueType.equals(rValueType)){
-                throw new CompilationException("Cannot assign a value of type " + rValueType +
+                throw new CompilationException(getLocation(src) + "cannot assign a value of type " + rValueType +
                     " to a variable of type " + lValueType);
             }
         }
@@ -679,30 +698,24 @@ public class Karajan {
     }
     
     public void append(Append append, IStatementContainer container) throws CompilationException {
-        try {
-            IAppend iAppend = new IAppend();
-            IExpression array = expressionToKarajan(append.getLhs(), container);
-            IExpression value = expressionToKarajan(append.getRhs(), container);
-            Type arrayType = array.getType();
-            if (!arrayType.keyType().equals(Types.AUTO)) {
-                throw new CompilationException("Illegal append to an array of type '" + arrayType + 
-                    "'. Array must have 'auto' key type.");
-            }
-            if (!value.getType().equals(arrayType.itemType())) {
-                throw new CompilationException("Cannot append value of type " + value.getType() +
-                        " to an array of type " + array.getType());
-            }
-            iAppend.setLValue((ILValue) array);
-            iAppend.setRValue(value);
-            String rootvar = abstractExpressionToRootVariable(append.getLhs());
-            // an append is always a partial write
-            container.getScope().addWriter(rootvar, WriteType.PARTIAL, append, iAppend);
-            container.addStatement(iAppend);
-        } 
-        catch(CompilationException re) {
-            throw new CompilationException("Compile error in assignment at " + 
-                append.getLine() + ": " + re.getMessage(), re);
+        IAppend iAppend = new IAppend();
+        IExpression array = expressionToKarajan(append.getLhs(), container, true, null);
+        IExpression value = expressionToKarajan(append.getRhs(), container);
+        Type arrayType = array.getType();
+        if (!arrayType.keyType().equals(Types.AUTO)) {
+            throw new CompilationException(getLocation(append) + "illegal append to an array of type '" + arrayType + 
+                "'. Array must have 'auto' key type.");
         }
+        if (!value.getType().equals(arrayType.itemType())) {
+            throw new CompilationException(getLocation(append) + "cannot append value of type " + value.getType() +
+                    " to an array of type " + array.getType());
+        }
+        iAppend.setLValue((ILValue) array);
+        iAppend.setRValue(value);
+        String rootvar = abstractExpressionToRootVariable(append.getLhs());
+        // an append is always a partial write
+        container.getScope().addWriter(rootvar, WriteType.PARTIAL, append, iAppend);
+        container.addStatement(iAppend);
     }
 
 	public void statementsForSymbols(StatementContainer prog, IStatementContainer container) throws CompilationException {
@@ -744,7 +757,7 @@ public class Karajan {
 			switchStat((SwitchStatement) child, container);
 		}
 		else {
-			throw new CompilationException("Unexpected element in parse tree. " +
+			throw new CompilationException(getLocation(child) + "unexpected element in parse tree. " +
 					"Implementing class " + child.getClass() + ", content " + child);
 		}
 	}
@@ -830,7 +843,7 @@ public class Karajan {
 			}
 		} 
 		catch (CompilationException ce) {
-			throw new CompilationException("Compile error in procedure invocation at " + call.getLine(), ce);
+			throw new CompilationException(getLocation(call) + "compile error in procedure invocation", ce);
 		}
 	}
 
@@ -1041,13 +1054,21 @@ public class Karajan {
 			cleanups.remove(foreach.getVar());
 		} 
 		catch (CompilationException re) {
-			throw new CompilationException("Compile error in foreach statement at " + 
-			    foreach.getLine(), re);
+			throw new CompilationException(getLocation(foreach) + "compile error in foreach statement", re);
 		}
 
 	}
 
-	public void ifStat(IfStatement ifstat, IStatementContainer container) throws CompilationException {
+	private String getLocation(Node node) {
+	    if (node.getLine() == 0) {
+	        return "";
+	    }
+	    else {
+	        return currentProgram.getFileName() + ", line " + node.getLine() + ": ";
+	    }
+    }
+
+    public void ifStat(IfStatement ifstat, IStatementContainer container) throws CompilationException {
 	    IIfStatement iIf = new IIfStatement();
 	    IExpression iCondition = expressionToKarajan(ifstat.getCondition(), container);
 	    iIf.setCondition(iCondition);
@@ -1055,7 +1076,7 @@ public class Karajan {
 	    iIf.setSource(ifstat);
 		
 		if (!iCondition.getType().equals(Types.BOOLEAN)) {
-			throw new CompilationException ("Condition in if statement has to be of boolean type.");
+			throw new CompilationException (getLocation(ifstat) + "condition in if statement has to be of boolean type");
 		}
 
 		StatementContainer thenstat = ifstat.getThenScope();
@@ -1105,7 +1126,7 @@ public class Karajan {
 		/* TODO can switch statement can be anything apart from int and float ? */
 		/* TODO: yes, it can be a string, too. And why not boolean? */
 		if (!iCondition.getType().equals(Types.INT) && !iCondition.getType().equals(Types.FLOAT)) {
-			throw new CompilationException("Condition in switch statements has to be of numeric type.");
+			throw new CompilationException(getLocation(switchstat) + "condition in switch statements has to be of numeric type.");
 		}
 
 		IConditionBranch[] iCases = new IConditionBranch[switchstat.getCases().size()];
@@ -1157,7 +1178,10 @@ public class Karajan {
         Map<String, Integer> max = new HashMap<String, Integer>();
         for (IConditionBranch branch : branches) {
             for (VariableScope.VariableUsage v : branch.getScope().getVariableUsageValues()) {
-                if (branch.getScope().isVariableLocallyDefined(v.getName())) {
+                if (branch.getScope().isGlobal(v.getName())) {
+                    // we don't clean global variables
+                }
+                else if (branch.getScope().isVariableLocallyDefined(v.getName())) {
                     // this is not about variables defined inside the branches
                 }
                 else {
@@ -1319,7 +1343,7 @@ public class Karajan {
     				    iCmd.addArgument(iArg);
     				} 
     				else {
-    					throw new CompilationException("Cannot pass type '" + type + 
+    					throw new CompilationException("cannot pass type '" + type + 
     					    "' as a parameter to application '" + cmd.getExecutable() + "'");
     				}
     			}
@@ -1338,8 +1362,8 @@ public class Karajan {
 			return iApp;
 		} 
 		catch (CompilationException e) {
-			throw new CompilationException(e.getMessage() + 
-			    " in application " + app.getName() + " at " + app.getLine(), e);
+			throw new CompilationException(getLocation(app) + e.getMessage() + 
+			    " in application " + app.getName(), e);
 		}
 	}
 
@@ -1371,7 +1395,7 @@ public class Karajan {
 	    Signature funcSignature = functionsMap.find(name, actual, true);
         if (funcSignature == null) {
             funcSignature = functionsMap.find(name, actual, true);
-            throw new CompilationException("Unknown function: '" + name + "'");
+            throw new CompilationException(getLocation(func) + "unknown function: '" + name + "'");
         }
 	    
         return function(func, container, funcSignature, actual);
@@ -1495,7 +1519,8 @@ public class Karajan {
 	        case NEGATION: {
 	            IUnaryOperator iOp = unaryOperator(IUnaryOperator.OperatorType.NEGATION, (UnaryOperator) expression, container);
 	            if (!(iOp.getOperand().getType().equals(Types.FLOAT)) && !(iOp.getOperand().getType().equals(Types.INT))) {
-	                throw new CompilationException("Negation operation can only be applied to parameter of numeric types.");
+	                throw new CompilationException(getLocation(expression) + "negation operation can only be applied to "
+	                        + "parameter of numeric types.");
 	            }
 	            iOp.setType(iOp.getOperand().getType());
 	            return iOp;
@@ -1507,7 +1532,8 @@ public class Karajan {
                     iOp.setType(Types.BOOLEAN);
                 }
                 else {
-                    throw new CompilationException("Not operation can only be applied to parameter of type boolean.");
+                    throw new CompilationException(getLocation(expression) + "not operation can only be applied to "
+                            + "parameter of type boolean.");
                 }
                 return iOp;
 	        }
@@ -1515,7 +1541,7 @@ public class Karajan {
 	            VariableReference ref = (VariableReference) expression;
 	            String name = ref.getName();
 	            if (!container.getScope().isVariableDefined(name)) {
-	                throw new CompilationException("Variable " + name + 
+	                throw new CompilationException(getLocation(expression) + "variable " + name + 
 	                    " was not declared in this scope.");
 	            }
 	            IRefCounted iDecl = container.getScope().getDeclaration(name);
@@ -1557,7 +1583,7 @@ public class Karajan {
 						
 	            if (!indexType.equals(declaredIndexType) 
 	                    && !declaredIndexType.equals(Types.ANY)) {
-	                throw new CompilationException("Supplied array index type (" 
+	                throw new CompilationException(getLocation(expression) + "supplied array index type (" 
 			        + indexType + ") does not match the declared index type (" + declaredIndexType + ")");
 	            }
 			
@@ -1590,7 +1616,8 @@ public class Karajan {
 	            if (!parentType.isComposite() || parentType.isArray()) {
     			    // this happens when trying to access a field of a built-in type
     			    // which cannot currently be a structure
-    			    throw new CompilationException("Type " + parentType + " is not a structure");
+    			    throw new CompilationException(getLocation(expression) + "type " + parentType + 
+    			        " is not a structure");
     			}
 
 	            Type actualType;
@@ -1598,7 +1625,8 @@ public class Karajan {
 	                actualType = parentType.getField(sm.getField()).getType();
 	            }
 	            catch (NoSuchFieldException e) {
-	                throw new CompilationException("No member " + sm.getField() + " in type " + parentType);
+	                throw new CompilationException(getLocation(expression) + "no member " + sm.getField() + 
+	                    " in type " + parentType);
 	            }
     			IStructReference iStructRef;
     			if (arrayMode) {
@@ -1644,17 +1672,19 @@ public class Karajan {
     					elemType = newType;
     				}
     				else if (!elemType.equals(newType)) {
-    					throw new CompilationException("Heterogeneous arrays are not supported");
+    					throw new CompilationException(getLocation(expression) + 
+    					    "heterogeneous arrays are not supported");
     				}
     				iArray.addItem(iItem);
     			}
     			if (expectedType != null) {
         			if (!expectedType.isArray()) {
-        			    throw new CompilationException("Type error. Array used where non-array " +
+        			    throw new CompilationException(getLocation(expression) + 
+        			        "type error. Array used where non-array " +
         			    		"type is expected (" + expectedType + ")");
         			}
         			if (!expectedType.keyType().equals(Types.INT)) {
-        			    throw new CompilationException("Type error. Array expressions have " +
+        			    throw new CompilationException(getLocation(expression) + "type error. Array expressions have " +
         			    		"integer key types, but expected type has non-integer keys (" + 
         			    		expectedType + ")");
         			}
@@ -1664,7 +1694,7 @@ public class Karajan {
     			}
     			else {
     			    if (elemType == null) {
-    			        throw new CompilationException("Cannot infer type of empty array");
+    			        throw new CompilationException(getLocation(expression) + "cannot infer type of empty array");
     			    }
     			}
     			// <elemType>[int]
@@ -1692,14 +1722,16 @@ public class Karajan {
     			Type fromType = iFrom.getType();
     			Type toType = iTo.getType();
     			if (!fromType.equals(toType)) {
-    			    throw new CompilationException("To and from range values must have the same type");
+    			    throw new CompilationException(getLocation(expression) + "to and from range values "
+    			            + "must have the same type");
                 }
     			if (iStep != null && !iStep.getType().equals(fromType)) {
-    			    throw new CompilationException("Step (" + iStep.getType() + 
+    			    throw new CompilationException(getLocation(expression) + "step (" + iStep.getType() + 
     			            ") must be of the same type as from and to (" + toType + ")");
     			}
     			if (iStep == null && (!fromType.equals(Types.INT) || !toType.equals(Types.INT))) {
-    				throw new CompilationException("Step in range specification can be omitted only when from and to types are int");
+    				throw new CompilationException(getLocation(expression) + "step in range specification can "
+    				        + "be omitted only when from and to types are int");
     			}
     			else if (fromType.equals(Types.INT) && toType.equals(Types.INT)) {
     			    // int[int]
@@ -1711,7 +1743,8 @@ public class Karajan {
                     iRange.setType(Types.FLOAT.arrayType(Types.INT));
     			}
     			else {
-    				throw new CompilationException("Range can only be specified with numeric types");
+    				throw new CompilationException(getLocation(expression) + "range can only be specified "
+    				        + "with numeric types");
     			}
     			return iRange;
 	        }
@@ -1763,10 +1796,10 @@ public class Karajan {
     		    }
     		    if (isLvalue) {
     		        if (sparseArray) {
-    		            throw new CompilationException("Array initializer cannot be an lvalue");
+    		            throw new CompilationException(getLocation(expression) + "array initializer cannot be an lvalue");
     		        }
     		        else {
-    		            throw new CompilationException("Structure initializer cannot be an lvalue");
+    		            throw new CompilationException(getLocation(expression) + "structure initializer cannot be an lvalue");
     		        }
     		    }
     		    if (sparseArray) {
@@ -1777,7 +1810,7 @@ public class Karajan {
     		    }
     		}
 	        default:
-	            throw new CompilationException("unknown expression implemented by class " + 
+	            throw new CompilationException(getLocation(expression) + "unknown expression implemented by class " + 
 	                expression.getClass() + " with type " + type + 
 	                " and with content " + expression);
 		}
@@ -1838,7 +1871,7 @@ public class Karajan {
             iOp.setType(retType);
         }
         else {
-            throw new CompilationException(o.getExpressionType() + 
+            throw new CompilationException(getLocation(o) + o.getExpressionType() + 
                 " operation can only be applied to parameters of type " + paramTypes);
         }
         return iOp;
@@ -1848,7 +1881,7 @@ public class Karajan {
             throws CompilationException {
         IStructExpression iStruct = new IStructExpression();
         if (expectedType == null) {
-            throw new CompilationException("Cannot infer destination type in structure initializer");
+            throw new CompilationException(getLocation(s) + "cannot infer destination type in structure initializer");
         }
         if (lvalue != null) {
             iStruct.setVar(lvalue);
@@ -1857,14 +1890,15 @@ public class Karajan {
             iStruct.setFieldName(addInternedField("$structexpr", expectedType));
         }
         if (!expectedType.isComposite() || expectedType.isArray()) {
-            throw new CompilationException("Cannot assign a structure to a non-structure");
+            throw new CompilationException(getLocation(s) + "cannot assign a structure to a non-structure");
         }
         Set<String> seen = new HashSet<String>();
         for (FieldInitializer fi : s.getFieldInitializers()) {
             iStruct.addItem(structField(fi, container, expectedType, seen));
         }
         if (expectedType.getFields().size() != seen.size()) {
-            throw new CompilationException("Missing fields in structure initializer: " + getMissingFields(seen, expectedType));
+            throw new CompilationException(getLocation(s) + "missing fields in structure initializer: " + 
+                    getMissingFields(seen, expectedType));
         }
         iStruct.setType(expectedType);
         
@@ -1882,12 +1916,12 @@ public class Karajan {
         Expression xkey = field.getKey();
         if (xkey.getExpressionType() != Expression.Type.VARIABLE_REFERENCE) {
             // TODO better error message
-            throw new CompilationException("Invalid field name " + xkey.getNodeName());
+            throw new CompilationException(getLocation(field) + "invalid field name " + xkey.getNodeName());
         }
         VariableReference var = (VariableReference) xkey;
         String name = var.getName();
         if (seen.contains(name)) {
-            throw new CompilationException("Duplicate field: '" + name + "'");
+            throw new CompilationException(getLocation(field) + "duplicate field: '" + name + "'");
         }
         seen.add(name);
         
@@ -1898,7 +1932,8 @@ public class Karajan {
                 container, false, null, expectedType.getField(name).getType()));
         }
         catch (NoSuchFieldException e) {
-            throw new CompilationException("Invalid field '" + name + "' for type '" + expectedType + "'");
+            throw new CompilationException(getLocation(field) + "invalid field '" + name + "' for type '" + 
+                    expectedType + "'");
         }
         return iField;
     }
@@ -1921,12 +1956,12 @@ public class Karajan {
         }
         else {
             if (expectedType == null) {
-                throw new CompilationException("Could not infer type in sparse array initializer");
+                throw new CompilationException(getLocation(s) + "could not infer type in sparse array initializer");
             }
             iArray.setFieldName(addInternedField("$arrayexpr", expectedType));
         }
         if (!expectedType.isArray()) {
-            throw new CompilationException("Cannot assign an array to a non-array");
+            throw new CompilationException(getLocation(s) + "cannot assign an array to a non-array");
         }
         for (FieldInitializer fi : s.getFieldInitializers()) {
             iArray.addItem(sparseArrayField(fi, container, expectedType));
@@ -1975,7 +2010,7 @@ public class Karajan {
         ret.setLValue(ref);
 
         if (sig.getReturns().size() != 1) {
-            throw new CompilationException("Procedure '" + sig.getName() + "' must have exactly one " +
+            throw new CompilationException(getLocation(c) + "procedure '" + sig.getName() + "' must have exactly one " +
                     "return value to be used in an expression.");
         }
         
@@ -1991,7 +2026,7 @@ public class Karajan {
                 type = expectedType;
             }
             else {
-                throw new CompilationException("Cannot infer return type of procedure call");
+                throw new CompilationException(getLocation(c) + "cannot infer return type of procedure call");
             }
         }
         
@@ -2066,10 +2101,10 @@ public class Karajan {
         
         String name = call.getName();
         if (call.getReturns().isEmpty()) {
-            throw new CompilationException("Call to a function that does not return a value");
+            throw new CompilationException(getLocation(call) + "call to a function that does not return a value");
         }
         if (call.getReturns().size() > 1) {
-            throw new CompilationException("Cannot assign multiple values with a function invocation");
+            throw new CompilationException(getLocation(call) + "cannot assign multiple values with a function invocation");
         }
         
         IFunctionCall iCall = function(call, name, getCallParams(call), container, expectedType);
@@ -2097,10 +2132,10 @@ public class Karajan {
             iAssign.setLValue((ILValue) iVar);
         }
         else {
-            throw new CompilationException("Expected an lvalue");
+            throw new CompilationException(getLocation(var) + "expected an lvalue");
         }
         if (!iVar.getType().equals(iCall.getType())) {
-            throw new CompilationException("You cannot assign value of type " + iCall.getType() +
+            throw new CompilationException(getLocation(call) + "cannot assign value of type " + iCall.getType() +
                     " to a variable of type " + iVar.getType());
         }
         iAssign.setRValue(iCall);
@@ -2236,7 +2271,7 @@ public class Karajan {
 			return abstractExpressionToRootVariable(((StructReference) expr).getBase());
 		} 
 		else {
-			throw new CompilationException("Could not find root for abstract expression.");
+			throw new CompilationException(getLocation(expr) + "could not find root for abstract expression.");
 		}
 	}
 
