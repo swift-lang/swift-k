@@ -76,7 +76,7 @@ namespace(providerStaging) {
 				
 				if (wrapperMode == "files") {
 					sys:file:write(wrapfile) {
-						"\n-d\n", remoteFileNames(getAndDelete(fileDirs)),
+						"-d\n", remoteFileNames(getAndDelete(fileDirs)),
 						"\n-if\n", remoteFileNames(inFiles),
 						"\n-of\n", remoteFileNames(outFiles),
 						"\n-cf\n", remoteFileNames(outCollect),

@@ -120,7 +120,7 @@ namespace(wrapperStaging) {
 
 			if (wrapperMode == "files") {
 				file:write(wrapfile) {
-					"\n-d\n", remoteFileNames(fileDirs),
+					"-d\n", remoteFileNames(fileDirs),
 					"\n-if\n", remoteFileNamesWS(inFiles),
 					"\n-of\n", remoteFileNamesWS(outFiles),
 					"\n-cf\n", remoteFileNamesWS(outCollect),

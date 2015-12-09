@@ -84,7 +84,7 @@ shift
 checkparamfile "$@"
 loadParamfile
 if [ "$PARAMARGS" != "" ]; then
-	set -- "$PARAMARGS"
+	set -- "${PARAMARGS[@]}"
 fi
 
 
