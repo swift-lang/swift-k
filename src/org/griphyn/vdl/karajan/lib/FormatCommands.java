@@ -74,8 +74,9 @@ public class FormatCommands extends SwiftFunction {
             addOption(ret, paramfile, "err", cmd.getStderr());
             addOption(ret, paramfile, "i", cmd.getStdin());
             if (paramfile) {
+                ret.add("\n-a");
                 for (Object arg : cmd.getArguments()) {
-                    addOption(ret, true, "a", arg);
+                    addOption(ret, true, null, arg);
                 }
             }
             else {
@@ -84,6 +85,9 @@ public class FormatCommands extends SwiftFunction {
                     addOption(ret, false, null, arg);
                 }
             }
+        }
+        if (paramfile) {
+            ret.add("\n");
         }
     }
 
@@ -99,7 +103,10 @@ public class FormatCommands extends SwiftFunction {
 
     private void addOption(Channel<Object> ret, boolean paramfile, String optName, Object value) {
         if (paramfile) {
-            ret.add("\n-" + optName);
+            if (optName != null) {
+                ret.add("\n-");
+                ret.add(optName);
+            }
             if (value != null) {
                 ret.add("\n");
                 ret.add(String.valueOf(value));
