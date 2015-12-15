@@ -97,6 +97,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
     public static final String ARG_MINIMAL_LOGGING = "minimalLogging";
     public static final String ARG_PAUSE_ON_START = "pauseOnStart";
     public static final String ARG_EXECUTE = "e";
+    public static final String ARG_COMPILE_ONLY = "compileOnly";
     
     public static final List<String> CMD_LINE_OPTIONS;
     
@@ -156,7 +157,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
             }
        
             setupLogging(ap, config, projectName, runID);
-            logBasicInfo(argv, runID, config);
+            logBasicInfo(ap, argv, runID, config);
             
             boolean provenanceEnabled = config.isProvenanceEnabled();
             
@@ -193,7 +194,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
             else {
                 // assume swift source otherwise
                 try {
-                    project = compile(project, ap.isPresent(ARG_RECOMPILE), provenanceEnabled);
+                    project = compile(project, ap.isPresent(ARG_RECOMPILE) || ap.isPresent(ARG_COMPILE_ONLY), 
+                        provenanceEnabled);
+                    if (ap.isPresent(ARG_COMPILE_ONLY)) {
+                        logger.debug("Compile only flag. Exiting.");
+                        System.exit(0);
+                    }
                 }
                 catch (ParsingException pe) {
                     // the compiler should have already logged useful
@@ -281,10 +287,12 @@ public class Loader extends org.globus.cog.karajan.Loader {
         }
     }
 
-    private static void logBasicInfo(String[] argv, String runID, SwiftConfig conf) {
+    private static void logBasicInfo(ArgumentParser ap, String[] argv, String runID, SwiftConfig conf) {
         String version = loadVersion();
         System.out.println(version);
-        System.out.println("RunID: " + runID);
+        if (!ap.isPresent(ARG_COMPILE_ONLY)) {
+            System.out.println("RunID: " + runID);
+        }
         if (logger.isInfoEnabled()) {
             logger.info("JAVA " + System.getProperty("java.vendor") + " " + 
                 System.getProperty("java.vm.name") + " " + System.getProperty("java.version"));
@@ -629,6 +637,9 @@ public class Loader extends org.globus.cog.karajan.Loader {
             "Forces Swift to re-compile the invoked Swift script. " +
             "While Swift is meant to detect when recompilation is necessary, " +
             "in some special cases it fails to do so. This flag helps with those special cases.");
+        ap.addFlag(ARG_COMPILE_ONLY, 
+            "Compile but do not run the Swift script.");
+        ap.addAlias(ARG_COMPILE_ONLY, "c");
 
         ap.addFlag(ARG_DRYRUN,
             "Runs the SwiftScript program without submitting any jobs (can be used to get a graph)");
