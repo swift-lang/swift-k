@@ -2700,7 +2700,7 @@ sub checkJob {
 		return "Missing executable";
 	}
 	else {
-		my $dir = $$JOB{directory};
+		my $dir = $$JOB{"directory"};
 		if (!defined $dir) {
 			$dir = ".";
 		}
@@ -2805,6 +2805,7 @@ sub forkjob {
 		sub {
 			# onComplete($err, $msg)
 			my ($err, $msg) = @_;
+			wlog DEBUG, "Job completed. Err: $err, msg: $msg\n";
 			
 			$JOBDATA{$JOBID}{"exitcode"} = $err;
 			$JOBDATA{$JOBID}{"exitmessage"} = $msg;
@@ -2928,6 +2929,7 @@ sub checkSubprocessStatus {
 	close $RD;
 	if (defined $s) {
 		$msg = $s;
+		wlog DEBUG, "Message from sub-process: $msg\n";
 		if ($status == 0) {
 			# force non-zero status if some error message is present
 			$status = 1;
@@ -3022,7 +3024,7 @@ sub runjob {
 	wlog DEBUG, "Command: @$JOBARGS\n";
 	if (defined $$JOB{"directory"}) {
 		wlog DEBUG, "chdir: $$JOB{directory}\n";
-	    chdir $$JOB{directory};
+	    chdir $$JOB{"directory"};
 	}
 	if (defined $$JOB{"redirect"}) {
 		wlog DEBUG, "Redirection is on\n";
