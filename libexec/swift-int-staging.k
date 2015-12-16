@@ -95,7 +95,7 @@ namespace(providerStaging) {
 						list(
 							siteProfile(rhost, "wrapperInterpreterOptions"),
 							wrapperScript,
-							"-p", jobdir
+							"-p"
 						)
 					}
 					else {

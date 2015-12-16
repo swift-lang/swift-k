@@ -159,6 +159,13 @@ public class SubmitJobCommand extends Command {
         }
     
         if (simple) {
+            if (spec.getAttribute("docker.image") != null) {
+                addAttr(sb, "docker.image", spec);
+                addAttr(sb, "docker.user", spec);
+                addAttr(sb, "docker.password", spec);
+                addAttr(sb, "docker.jobdirmountpoint", spec);
+                addAttr(sb, "docker.registry", spec);
+            }
         	addKey(sb, "attr");
         	sb.write("maxwalltime=");
         	sb.write(formatWalltime(spec.getAttribute("maxwalltime")));
@@ -260,6 +267,16 @@ public class SubmitJobCommand extends Command {
     
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
+    private void addAttr(Writer sb, final String key, final JobSpecification spec) throws IOException {
+        Object value = spec.getAttribute(key);
+        if (value != null) {
+            addKey(sb, "attr");
+            addKey(sb, key);
+            escape(sb, value.toString());
+            sb.write('\n');
+        }
+    }
+    
     @SuppressWarnings("fallthrough")
     private void add(Writer sb, final String key, final String value) throws IOException {
         if (value != null) {

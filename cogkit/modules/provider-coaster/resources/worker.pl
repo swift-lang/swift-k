@@ -2569,6 +2569,7 @@ sub submitjobHandler {
 	foreach $line (@lines) {
 		$line =~ s/\\n/\n/g;
 		$line =~ s/\\\\/\\/g;
+		wlog DEBUG, "JOBLINE: $line\n";
 		my @pair = split(/=/, $line, 2);
 		if ($pair[0] eq "arg") {
 			push @JOBARGS, $pair[1];
@@ -2616,6 +2617,9 @@ sub submitjobHandler {
 					# prevent job from trying to unpack the image
 					$SOFTIMAGE = "";
 				}
+			}
+			elsif (index($ap[0], "docker.") != -1) {
+				$JOB{$ap[0]} = $ap[1];
 			}
 			else {
 				wlog WARN, "Ignoring attribute $ap[0] = $ap[1]\n";
@@ -2788,6 +2792,9 @@ sub forkjob {
 			if ($JOBDATA{$JOBID}{"perftrace"} != 0) {
 				stracerunjob($ERR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
 			}
+			elsif (defined $$JOB{"docker.image"}) {
+				rundockerjob($ERR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
+			}
 			else {
 				runjob($ERR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA{$JOBID});
 			}
@@ -2950,7 +2957,7 @@ sub tmpSFile {
 }
 
 sub setEnv {
-	my ($name, $value) = @_;
+	my ($name, $value, $DEST) = @_;
 	
 	my $ix = index($value, "\$");
 	if ($ix != -1) {
@@ -2959,24 +2966,24 @@ sub setEnv {
 		foreach my $seg (@parts) {
     		next if (not defined($seg));
     		if ($seg =~ m/\${?(\w+)}?/) {
-    			$seg = ($ENV{$1} || '');
+    			$seg = ($$DEST{$1} || '');
 			}
     		$expanded .= $seg;
   		}
-  		$ENV{$name} = $expanded;
+  		$$DEST{$name} = $expanded;
   		wlog DEBUG, "SETENV $name = $expanded\n";
 	}
 	else {
-		$ENV{$name} = $value;
+		$$DEST{$name} = $value;
 		wlog DEBUG, "SETENV $name = $value\n";
 	}
 }
 
 sub setEnvs {
-	my ($JOBENV) = @_;
+	my ($JOBENV, $DEST) = @_;
 	my $env;
 	foreach $env (@$JOBENV) {
-		setEnv(@$env[0], @$env[1]);
+		setEnv(@$env[0], @$env[1], $DEST);
 	}
 }
 
@@ -3036,7 +3043,7 @@ sub runjob {
 	
 	my $cwd = getcwd();
 	
-	setEnvs($JOBENV);
+	setEnvs($JOBENV, \%ENV);
 
     $ENV{"SWIFT_JOB_SLOT"} = $JOBSLOT;
     $ENV{"SWIFT_WORKER_PID"} = $WORKERPID;
@@ -3089,6 +3096,99 @@ sub stracerunjob {
 	
 	runjob($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA);
 }
+
+sub rundockerjob {
+	# This is Swift specific and most likely will not work 
+	# for jobs other than Swift jobs 
+	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA) = @_;
+	my $executable = $$JOB{"executable"};
+	my $sout = $$JOB{"stdout"};
+	my $serr = $$JOB{"stderr"};
+	
+	my $cwd = getcwd();
+	my $jobdir = $cwd;
+	
+	unshift @$JOBARGS, $executable;
+	wlog DEBUG, "Command: @$JOBARGS\n";
+	if (defined $$JOB{"directory"}) {
+		wlog DEBUG, "chdir: $$JOB{directory}\n";
+	    $jobdir = $$JOB{"directory"};
+	}
+	if (defined $$JOB{"redirect"}) {
+		wlog DEBUG, "Redirection is on\n";
+		$sout = tmpSFile($$, "out");
+		$serr = tmpSFile($$, "err");
+	}
+	if (defined $sout) {
+		wlog DEBUG, "STDOUT: $sout\n";
+		close STDOUT;
+		open STDOUT, ">$sout" or dieNicely("Cannot redirect STDOUT");
+	}
+	if (defined $serr) {
+		wlog DEBUG, "STDERR: $serr\n";
+		close STDERR;
+		open STDERR, ">$serr" or dieNicely("Cannot redirect STDERR");
+	}
+	close STDIN;
+	
+	my $registry = $$JOB{"docker.registry"};
+		    
+    if ($$JOB{"docker.user"}) {
+    	wlog DEBUG, "Logging into docker registry $registry\n";
+    	my $user = $$JOB{"docker.user"};
+    	my $pass = $$JOB{"docker.password"};
+    	my $out = `docker login -u "$user" -p "$pass" -e "x" $registry 2>&1`;
+    	if ($? != 0) {
+    		print $WR "docker login failed: $out";
+    		return;
+    	}
+    	else {
+    		wlog DEBUG, "Docker login successful\n";
+    	}
+    }
+    
+    if (($$JOBARGS[1] eq "_swiftwrap.staging") && !($$JOBARGS[2] eq "-p")) {
+		$JOBARGS = moveSwiftwrapArgsToFile($jobdir, $JOBARGS);
+	}
+	
+	wlog DEBUG, "JOBARGS: ".join(" ", @$JOBARGS)."\n";
+	
+	# basic things
+	my @a = ("docker", "run", "--rm", "-t", "--net=host");
+	
+	# envs
+	my %ENVS = ();
+	setEnvs($JOBENV, \%ENVS);
+	for my $name (keys %ENVS) {
+		push(@a, "-e");
+		push(@a, "$name=$ENVS{$name}");
+	}
+	push(@a, "-e", "SWIFT_JOB_SLOT=$JOBSLOT");
+	push(@a, "-e", "SWIFT_WORKER_PID=$WORKERPID");
+	
+	# volumes
+	my $mountpoint = "/scratch";
+	if (defined $$JOB{"docker.jobDirMountPoint"}) {
+		$mountpoint = $$JOB{"docker.jobDirMountPoint"};
+	}
+	
+	push(@a, "-v=$jobdir:$mountpoint");
+	push(@a, "-w=$mountpoint");
+	
+	# image and executable
+	push(@a, $registry."/".$$JOB{"docker.image"});
+	
+	push(@a, @$JOBARGS);
+	
+	my $docker = `which docker`;
+	$docker =~ s/^\s+|\s+$//g;
+	
+	wlog DEBUG, "Docker command: $docker ".join(" ", @a)."\n";
+	
+	exec { "$docker" } @a or print $WR "Could not execute $executable: $!\n";
+	die "Could not execute $executable: $!";
+}
+
 
 sub processProbes {
 	my ($in) = @_;

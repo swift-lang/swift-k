@@ -2,6 +2,35 @@
 
 #include _swiftwrap.lib
 
+# Override this to avoid linking to absolute paths since
+# that may interfere with docker volume assignments
+linkOutput() {
+	CMD_FAILED=$1
+	SRC=$2
+	TARGET=$3
+	SWIFT_OUTPUT=$4
+	if [ "$SWIFT_OUTPUT" != "" ]; then
+		# swift output requested
+		if [ "$5" == "copy" ]; then
+			cp "$SRC" "$SWIFT_OUTPUT"
+		else
+			ln -s "$SRC" "$SWIFT_OUTPUT"
+		fi
+	fi 
+	if [ "$CMD_FAILED" != "0" ]; then
+		# failed
+		if [ -s "$SRC" ]; then
+			ln -s "$SRC" "$TARGET"
+		else
+			rm -f "$SRC"
+		fi
+	else
+		if [ "$SWIFT_OUTPUT" == "" ]; then
+			rm -f "$SRC"
+		fi
+	fi
+}
+
 checkparamfile() {
 	log "checking for paramfile"
 	if [ "$1" == "-p" ]; then
@@ -116,6 +145,10 @@ createInputDirs
 CDMActions
 handleSetupScript
 initTimingTools
+
+if [ -f /env.rc ]; then
+	source /env.rc
+fi
 
 SEQ=1
 while [ "$1" == "-e" ]; do

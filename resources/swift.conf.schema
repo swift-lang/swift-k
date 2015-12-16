@@ -46,6 +46,13 @@ app."*" {
 		mpi {
 			"*": "?Object"
 		}
+		docker {
+			image: "?String"
+			user: "?String"
+			password: "?String"
+			jobDirMountPoint: "?String"
+			registry: "?String"
+		}
 	}
 	env."*": "String"
 }
@@ -190,6 +197,13 @@ site."*" {
             "*": "?Object"
             mpi {
 				"*": "?Object"
+			}
+			docker {
+				image: "?String"
+				user: "?String"
+				password: "?String"
+				jobDirMountPoint: "?String"
+				registry: "?String"
 			}
 		}
 
