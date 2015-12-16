@@ -2980,6 +2980,26 @@ sub setEnvs {
 	}
 }
 
+# TODO: quoting/escaping
+sub moveSwiftwrapArgsToFile {
+	my ($jobdir, $JOBARGS) = @_;
+	
+	my @NEWARGS = ($$JOBARGS[0], $$JOBARGS[1], "-p");
+	
+	open(my $pfh, ">", "$jobdir/_paramfile");
+	
+	for (my $i = 2; $i < @$JOBARGS; $i++) {
+		if ($$JOBARGS[$i] eq "-e" && $$JOBARGS[$i + 1] eq "-e") {
+			next;
+		}
+		print $pfh "$$JOBARGS[$i]\n";
+	}
+	
+	close($pfh);
+	
+	return \@NEWARGS;
+}
+
 sub runjob {
 	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA) = @_;
 	my $executable = $$JOB{"executable"};
@@ -3045,6 +3065,10 @@ sub runjob {
 	
 	#wlog DEBUG, "CWD: $cwd\n";
 	#wlog DEBUG, "Running $executable\n";
+	
+	if (($$JOBARGS[1] eq "_swiftwrap.staging") && !($$JOBARGS[2] eq "-p")) {
+		$JOBARGS = moveSwiftwrapArgsToFile(".", $JOBARGS);
+	}
 	
 	exec { $executable } @$JOBARGS or print $WR "Could not execute $executable: $!\n";
 	die "Could not execute $executable: $!";
