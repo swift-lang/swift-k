@@ -483,16 +483,23 @@ linkOutput() {
 	SWIFT_OUTPUT=$4
 	if [ "$SWIFT_OUTPUT" != "" ]; then
 		# swift output requested
+		
+		# there is no clear distinction between a missing stdout/stderr and an
+		# empty stdout/stderr. So pick empty files as standard so that output
+		# checks don't fail.
+		if [ ! -f "$SRC" ]; then
+			touch "$SRC"
+		fi
 		if [ "$5" == "copy" ]; then
 			cp "$SRC" "$SWIFT_OUTPUT"
 		else
-			ln -s `readlink -f "$SRC"` "$SWIFT_OUTPUT"
+			ln -sr "$SRC" "$SWIFT_OUTPUT"
 		fi
 	fi 
 	if [ "$CMD_FAILED" != "0" ]; then
 		# failed
 		if [ -s "$SRC" ]; then
-			ln -s "$SRC" "$TARGET"
+			ln -sr "$SRC" "$TARGET"
 		else
 			rm -f "$SRC"
 		fi
