@@ -181,7 +181,7 @@ checkMissing() {
 		fi
 	done
 	if [ "$MISSING" != "" ]; then
-		log $( find . )
+		log `ls -alR`
 		fail 254 "The following output files were not created by the application: $MISSING"
 	fi
 }
