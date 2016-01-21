@@ -472,6 +472,35 @@ initTimingTools() {
 	fi
 }
 
+relLink2() {
+	SRC=$1
+	DST=$2
+	DIR=$DST
+	
+	while [ `dirname $DIR` != "." ]; do
+		SRC="../$SRC"
+		DIR=`dirname $DIR`
+	done
+	log "Relative link $SRC to $DST" 
+	ln -s "$SRC" "$DST"
+}
+
+relLink() {
+	SRC=$1
+	DST=$2
+	
+	# try ln -sr
+	OUT=`ln -sr "$SRC" "$DST" 2>&1`
+	if [ "$?" != "0" ]; then
+		if echo $OUT|grep "invalid option"; then
+			log "ln doesn't support relative links; using workaround"
+			relLink2 "$SRC" "$DST"
+		else
+			fail 254 "Failed to link output: $OUT"
+		fi 
+	fi
+}
+
 # links command output to overall output and possibly swift-specified redirect.
 # - If swift output is requested, always link
 # - If command failed, link to target if not empty. If empty, remove
@@ -494,7 +523,7 @@ linkOutput() {
 			cp "$SRC" "$SWIFT_OUTPUT"
 		else
 			log "Linking $SRC to $SWIFT_OUTPUT"
-			ln -sr "$SRC" "$SWIFT_OUTPUT" 2>&1 >& "$INFO"
+			relLink "$SRC" "$SWIFT_OUTPUT" >& "$INFO" 2>&1
 			checkError $? 254 "Failed to link output file $SWIFT_OUTPUT"
 		fi
 	fi 
