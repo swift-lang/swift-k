@@ -494,7 +494,8 @@ linkOutput() {
 			cp "$SRC" "$SWIFT_OUTPUT"
 		else
 			log "Linking $SRC to $SWIFT_OUTPUT"
-			ln -sr "$SRC" "$SWIFT_OUTPUT"
+			ln -sr "$SRC" "$SWIFT_OUTPUT" 2>&1 >& "$INFO"
+			checkError $? 254 "Failed to link output file $SWIFT_OUTPUT"
 		fi
 	fi 
 	if [ "$CMD_FAILED" != "0" ]; then
