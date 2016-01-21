@@ -481,9 +481,9 @@ linkOutput() {
 	SRC=$2
 	TARGET=$3
 	SWIFT_OUTPUT=$4
+	log "linkOutput EC: $CMD_FAILED, SRC: $SRC, TARGET: $TARGET, SWIFT_OUTPUT: $SWIFT_OUTPUT"
 	if [ "$SWIFT_OUTPUT" != "" ]; then
 		# swift output requested
-		
 		# there is no clear distinction between a missing stdout/stderr and an
 		# empty stdout/stderr. So pick empty files as standard so that output
 		# checks don't fail.
@@ -493,6 +493,7 @@ linkOutput() {
 		if [ "$5" == "copy" ]; then
 			cp "$SRC" "$SWIFT_OUTPUT"
 		else
+			log "Linking $SRC to $SWIFT_OUTPUT"
 			ln -sr "$SRC" "$SWIFT_OUTPUT"
 		fi
 	fi 
