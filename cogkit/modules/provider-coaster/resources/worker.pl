@@ -3161,8 +3161,11 @@ sub rundockerjob {
 	
 	wlog DEBUG, "JOBARGS: ".join(" ", @$JOBARGS)."\n";
 	
+	my $docker = `which docker`;
+	$docker =~ s/^\s+|\s+$//g;
+	
 	# basic things
-	my @a = ("docker", "run", "--rm", "-t", "--net=host");
+	my @a = ($docker, "run", "--rm", "-t", "--net=host");
 	
 	# envs
 	my %ENVS = ();
@@ -3183,13 +3186,20 @@ sub rundockerjob {
 	push(@a, "-v=$jobdir:$mountpoint");
 	push(@a, "-w=$mountpoint");
 	
+	my $fullImage = $registry."/".$$JOB{"docker.image"}; 
+	
 	# image and executable
-	push(@a, $registry."/".$$JOB{"docker.image"});
+	push(@a, $fullImage);
 	
 	push(@a, @$JOBARGS);
 	
-	my $docker = `which docker`;
-	$docker =~ s/^\s+|\s+$//g;
+	if ($$JOB{"docker.alwaysPull"} eq "true") {
+		wlog DEBUG, "Pulling image $fullImage\n";
+		my $out = `$docker pull $fullImage 2>&1`;
+		if ($? != 0) {
+			exitSubprocess($WR, "Failed to pull image $fullImage: $out");
+		}
+	}
 	
 	wlog DEBUG, "Docker command: $docker ".join(" ", @a)."\n";
 	

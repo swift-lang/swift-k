@@ -52,6 +52,7 @@ app."*" {
 			password: "?String"
 			jobDirMountPoint: "?String"
 			registry: "?String"
+			alwaysPull: "?Boolean"
 		}
 	}
 	env."*": "String"
@@ -204,6 +205,7 @@ site."*" {
 				password: "?String"
 				jobDirMountPoint: "?String"
 				registry: "?String"
+				alwaysPull: "?Boolean"
 			}
 		}
 

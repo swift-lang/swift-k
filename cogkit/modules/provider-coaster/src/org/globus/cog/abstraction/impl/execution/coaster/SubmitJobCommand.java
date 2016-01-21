@@ -165,6 +165,7 @@ public class SubmitJobCommand extends Command {
                 addAttr(sb, "docker.password", spec);
                 addAttr(sb, "docker.jobdirmountpoint", spec);
                 addAttr(sb, "docker.registry", spec);
+                addAttr(sb, "docker.alwaysPull", spec);
             }
         	addKey(sb, "attr");
         	sb.write("maxwalltime=");
