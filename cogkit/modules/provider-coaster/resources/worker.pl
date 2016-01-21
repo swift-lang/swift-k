@@ -3007,6 +3007,15 @@ sub moveSwiftwrapArgsToFile {
 	return \@NEWARGS;
 }
 
+sub exitSubprocess {
+	my ($WR, $msg) = @_;
+	
+	wlog DEBUG, "Subprocess failed: $msg\n";
+	print $WR $msg;
+	
+	exit 253;
+}
+
 sub runjob {
 	my ($WR, $JOB, $JOBARGS, $JOBENV, $JOBSLOT, $WORKERPID, $JOBDATA) = @_;
 	my $executable = $$JOB{"executable"};
@@ -3035,7 +3044,7 @@ sub runjob {
 			while (<$ERRF>) {
 				$err .= $_;
 			}
-			dieNicely("Soft image deployment failed: $err");
+			exitSubprocess($WR, "Soft image deployment failed: $err");
 		}
 		
 		$ENV{SOFTIMAGE} = $SOFT_IMAGE_DIR;
@@ -3077,8 +3086,8 @@ sub runjob {
 		$JOBARGS = moveSwiftwrapArgsToFile(".", $JOBARGS);
 	}
 	
-	exec { $executable } @$JOBARGS or print $WR "Could not execute $executable: $!\n";
-	die "Could not execute $executable: $!";
+	exec { $executable } @$JOBARGS;
+	exitSubprocess($WR, "Could not execute $executable: $!");
 }
 
 sub stracerunjob {
@@ -3122,12 +3131,12 @@ sub rundockerjob {
 	if (defined $sout) {
 		wlog DEBUG, "STDOUT: $sout\n";
 		close STDOUT;
-		open STDOUT, ">$sout" or dieNicely("Cannot redirect STDOUT");
+		open STDOUT, ">$sout" or exitSubprocess($WR, "Cannot redirect STDOUT");
 	}
 	if (defined $serr) {
 		wlog DEBUG, "STDERR: $serr\n";
 		close STDERR;
-		open STDERR, ">$serr" or dieNicely("Cannot redirect STDERR");
+		open STDERR, ">$serr" or exitSubprocess($WR, "Cannot redirect STDERR");
 	}
 	close STDIN;
 	
@@ -3139,8 +3148,7 @@ sub rundockerjob {
     	my $pass = $$JOB{"docker.password"};
     	my $out = `docker login -u "$user" -p "$pass" -e "x" $registry 2>&1`;
     	if ($? != 0) {
-    		print $WR "docker login failed: $out";
-    		return;
+    		exitSubprocess($WR, "docker login failed: $out");
     	}
     	else {
     		wlog DEBUG, "Docker login successful\n";
@@ -3185,8 +3193,8 @@ sub rundockerjob {
 	
 	wlog DEBUG, "Docker command: $docker ".join(" ", @a)."\n";
 	
-	exec { "$docker" } @a or print $WR "Could not execute $executable: $!\n";
-	die "Could not execute $executable: $!";
+	exec @a;
+	exitSubprocess($WR, "Could not execute $executable: $!");
 }
 
 
