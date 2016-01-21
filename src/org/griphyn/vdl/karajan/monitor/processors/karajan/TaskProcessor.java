@@ -35,6 +35,7 @@ import org.griphyn.vdl.karajan.monitor.SystemState;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationItem;
 import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 import org.griphyn.vdl.karajan.monitor.items.Bridge;
+import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.TaskItem;
 import org.griphyn.vdl.karajan.monitor.processors.AbstractMessageProcessor;
@@ -135,7 +136,7 @@ public class TaskProcessor extends AbstractMessageProcessor {
                     spec.setDirectory(StringCache.intern(dir));
                     t.setSpecification(spec);
                     ti.setTask(t);
-                    updateParent(state, id, ti);
+                    updateParent(state, jobid, id, ti);
                     state.addItem(ti);
                 }
                 else if (p.matchAndSkip("TASK_STATUS_CHANGE ")) {
@@ -167,7 +168,7 @@ public class TaskProcessor extends AbstractMessageProcessor {
                     }
                     else {
                         ti = new TaskItem(id, taskType);
-                        updateParent(state, id, ti);
+                        updateParent(state, null, id, ti);
                         state.addItem(ti);
                     }
                 }
@@ -193,7 +194,17 @@ public class TaskProcessor extends AbstractMessageProcessor {
         }
     }
 
-    private void updateParent(SystemState state, String id, TaskItem ti) {
+    private void updateParent(SystemState state, String jobid, String id, TaskItem ti) {
+        if (jobid != null) {
+            ApplicationItem.QualifiedID qid = ApplicationItem.parseId(jobid);
+            StatefulItem app = state.getItemByID(qid.id, StatefulItemClass.APPLICATION);
+            Bridge bridge = new Bridge(id);
+            bridge.setParent(app);
+            ti.setParent(bridge);
+            state.addItem(bridge);
+            app.addChild(bridge);
+            return;
+        }
         if (ti != null && id != null && ti.getParent() == null) {
             int bi = id.indexOf(':');
             int li = id.lastIndexOf('-');
