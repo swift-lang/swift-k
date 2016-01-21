@@ -2346,7 +2346,7 @@ sub putFileCBDataSent {
 	if (ASYNC) {
 		my $jobid = $$state{"jobid"};
 		wlog DEBUG, "$jobid tag: $tag putFileCBDataSent\n";
-		if ($jobid != -1) {
+		if ($jobid ne "-1") {
 			wlog DEBUG, "$jobid tag: $tag Data sent, async is on. Staging out next file\n";
 			stageout($jobid);
 		}
@@ -2381,7 +2381,7 @@ sub putFileCBDataIn {
 		delete $SUSPENDED_TRANSFERS{"$tag"};
 		wlog DEBUG, "$jobid tag: $tag Got continue request. Resuming transfer.\n";
 	}
-	elsif ($jobid != -1) {
+	elsif ($jobid ne "-1") {
 		# OK reply from client
 		if (!ASYNC) {
 			wlog DEBUG, "$jobid tag: $tag Stageout done; staging out next file\n";
@@ -2509,7 +2509,7 @@ sub checkSoftimageJobFailure {
 	my ($JOBID, $err) = @_;
 	
 	if ($JOBID eq $SOFT_IMAGE_JOB_ID) {
-		$SOFT_IMAGE_JOB_ID = -1;
+		$SOFT_IMAGE_JOB_ID = "-1";
 		open(my $ERRF, ">$SOFT_IMAGE_DIR/.error");
 		print $ERRF $err;
 		close($ERRF);
