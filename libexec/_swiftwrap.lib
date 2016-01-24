@@ -473,32 +473,41 @@ initTimingTools() {
 }
 
 relLink2() {
-	SRC=$1
-	DST=$2
-	DIR=$DST
+	TARGET="$1"
+	LINK_NAME="$2"
+	DIR="$LINK_NAME"
 	
 	while [ `dirname $DIR` != "." ]; do
-		SRC="../$SRC"
+		TARGET="../$TARGET"
 		DIR=`dirname $DIR`
+		log "DIR: $DIR"
 	done
-	log "Relative link $SRC to $DST" 
-	ln -s "$SRC" "$DST"
+	log "Relative link $TARGET to $LINK_NAME" 
+	ln -s "$TARGET" "$LINK_NAME"
 }
 
 relLink() {
-	SRC=$1
-	DST=$2
+	TARGET="$1"
+	LINK_NAME="$2"
 	
-	# try ln -sr
-	OUT=`ln -sr "$SRC" "$DST" 2>&1`
-	if [ "$?" != "0" ]; then
-		if echo $OUT|grep "invalid option"; then
-			log "ln doesn't support relative links; using workaround"
-			relLink2 "$SRC" "$DST"
-		else
-			fail 254 "Failed to link output: $OUT"
-		fi 
-	fi
+	case "$LINK_NAME" in
+		/*) 
+			log "Link is absolute: $LINK_NAME"
+			ln -s "$TARGET" "$LINK_NAME"
+			;;
+		*)
+			# try ln -sr
+			OUT=`ln -sr "$TARGET" "$LINK_NAME" 2>&1`
+			if [ "$?" != "0" ]; then
+				if echo $OUT|grep "invalid option"; then
+					log "ln doesn't support relative links; using workaround"
+					relLink2 "$TARGET" "$LINK_NAME"
+				else
+					fail 254 "Failed to link output: $OUT"
+				fi 
+			fi
+			;;
+	esac
 }
 
 # links command output to overall output and possibly swift-specified redirect.
