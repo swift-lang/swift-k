@@ -169,7 +169,7 @@ public class JobSubmissionTaskHandler extends AbstractDelegatedTaskHandler imple
             }
             catch (Exception e) {
                 e.printStackTrace();
-                task.setStatus(new StatusImpl(Status.FAILED, "Failed to configure coaster service", e));
+                throw new ProtocolException("Failed to configure coaster service", e);
             }
         }
         return configId;
