@@ -72,7 +72,7 @@ public class HTTPServer extends SimpleHTTPServer {
     @Override
     protected DataLink getDataLink(String file, Map<String, String> params) {
         if (stateKeys.containsKey(file)) {
-            return new DataLink(stateKeys.get(file).getData(params));
+            return new DataLink(stateKeys.get(file).getData(params), "application/json");
         }
         else {
             return super.getDataLink(file, params);
