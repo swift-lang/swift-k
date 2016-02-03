@@ -110,7 +110,12 @@ public abstract class AbstractHTTPServer implements Runnable {
     }
 
     protected void bind(ServerSocket socket, int port) throws IOException {
-        socket.bind(new InetSocketAddress(port));
+        if (port == 0) {
+            socket.bind(null);
+        }
+        else {
+            socket.bind(new InetSocketAddress(port));
+        }
     }
 
     public String getURL() {
