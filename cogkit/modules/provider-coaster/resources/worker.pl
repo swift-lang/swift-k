@@ -1744,6 +1744,7 @@ sub stageinFailed {
 	
 	my $jobType = $JOBDATA{$jobid}{"type"};
 	if ($jobType eq "full") {
+		wlog DEBUG, "stageinFailed: jobid=$jobid, code=$code, msg=$msg, detail=$detail\n";
 		queueJobStatusCmd($jobid, FAILED, $code, $msg, $detail);
 	}
 	delete($JOBDATA{$jobid});
@@ -2212,7 +2213,23 @@ sub readFiles {
 	
 	my $pid = $JOBDATA{$jobid}{"pid"};
 	
-	return (readFile($jobid, tmpSFile($pid, "out")), readFile($jobid, tmpSFile($pid, "err")));
+	my $dir = $JOBDATA{$jobid}{"job"}{"directory"};
+	if (! defined $dir) {
+		$dir = ".";
+	}
+	my $sout = $dir."/".$JOBDATA{$jobid}{"job"}{"stdout"};
+	my $serr = $dir."/".$JOBDATA{$jobid}{"job"}{"stderr"};
+	
+	wlog DEBUG, "STDOUT: $sout, STDERR: $serr\n";
+	
+	if (! defined $sout) {
+		$sout = tmpSFile($$, "out");
+	}
+	if (! defined $serr) {
+		$serr = tmpSFile($$, "err");
+	}
+	
+	return (readFile($jobid, $sout), readFile($jobid, $serr));
 }
 
 sub sendStatus {
@@ -3064,8 +3081,12 @@ sub runjob {
 	}
 	if (defined $$JOB{"redirect"}) {
 		wlog DEBUG, "Redirection is on\n";
-		$sout = tmpSFile($$, "out");
-		$serr = tmpSFile($$, "err");
+		if (! defined $sout) {
+			$sout = tmpSFile($$, "out");
+		}
+		if (! defined $serr) {
+			$serr = tmpSFile($$, "err");
+		}
 	}
 	if (defined $sout) {
 		wlog DEBUG, "STDOUT: $sout\n";
@@ -3125,8 +3146,12 @@ sub rundockerjob {
 	}
 	if (defined $$JOB{"redirect"}) {
 		wlog DEBUG, "Redirection is on\n";
-		$sout = tmpSFile($$, "out");
-		$serr = tmpSFile($$, "err");
+		if (! defined $sout) {
+			$sout = tmpSFile($$, "out");
+		}
+		if (! defined $serr) {
+			$serr = tmpSFile($$, "err");
+		}
 	}
 	if (defined $sout) {
 		wlog DEBUG, "STDOUT: $sout\n";
