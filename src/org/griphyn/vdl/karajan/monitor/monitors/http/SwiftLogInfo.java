@@ -53,15 +53,19 @@ public class SwiftLogInfo {
     private boolean follow;
     private double rate;
     private int port;
+    private int timeout;
+    private long lastActivityTimestamp;
     
-    public SwiftLogInfo(int port, String logFileName, boolean follow, double rate) {
+    public SwiftLogInfo(int port, String logFileName, boolean follow, double rate, int timeout) {
         this.port = port;
         this.logFileName = logFileName;
         this.follow = follow;
         this.rate = rate;
+        this.timeout = timeout;
     }
     
     public void run() throws Exception {
+        updateTimestamp();
         MonitorAppender ap;
         if (port == -1) {
             ap = new MonitorAppender("bla", "http");
@@ -87,6 +91,10 @@ public class SwiftLogInfo {
         StringBuilder crt = new StringBuilder();
         String line = br.readLine();
         while (follow || (line != null)) {
+            if (timedOut()) {
+                System.out.println("timed out...");
+                break;
+            }
             if (line == null) {
                 Thread.sleep(FOLLOW_SLEEP_TIME);
                 line = br.readLine();
@@ -102,10 +110,25 @@ public class SwiftLogInfo {
                 lastTenth = tenth;
             }
             append(crt, line);
+            updateTimestamp();
             line = br.readLine();
         }
         commit(crt, firstLogTime, firstActualTime, ap);
         System.out.println("done");
+    }
+
+    private boolean timedOut() {
+        if (timeout > 0) {
+            long now = System.currentTimeMillis();
+            if ((now - lastActivityTimestamp) > timeout * 1000) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateTimestamp() {
+        lastActivityTimestamp = System.currentTimeMillis();
     }
 
     private long commit(StringBuilder crt, long firstLogTime, long firstActualTime, MonitorAppender ap) 
@@ -242,14 +265,17 @@ public class SwiftLogInfo {
     public static void main(String[] args) {
         ArgumentParser ap = new ArgumentParser();
         ap.addFlag("f", "Follow: keep parsing the log file as it grows.");
-        ap.addOption("rt", "integer", "Real time: if specified, " +
+        ap.addOption("rt", "Real time: if specified, " +
         		"generate log events progressively at a rate " +
         		"proportional to that at which they were generated.", 
-        		ArgumentParser.OPTIONAL);
-        ap.addOption("p", "integer", "Port: specify the port on which to "
-                + "start the http service.", ArgumentParser.OPTIONAL);
-        ap.addOption(ArgumentParser.DEFAULT, "logFile", "The log file to parse", 
-            ArgumentParser.NORMAL);
+        		"integer", ArgumentParser.OPTIONAL);
+        ap.addOption("p", "Port: specify the port on which to "
+                + "start the http service. Use 0 (zero) to have "
+                + "a port picked automatically.", "integer", ArgumentParser.OPTIONAL);
+        ap.addOption("t", "Timeout: terminate after this many "
+                + "seconds of inactivity", "seconds", ArgumentParser.OPTIONAL);
+        ap.addOption(ArgumentParser.DEFAULT, "The log file to parse", 
+            "logFile", ArgumentParser.NORMAL);
         ap.addFlag("h", "Display usage information");
         
         try {
@@ -264,7 +290,7 @@ public class SwiftLogInfo {
                 System.exit(1);
             }
             SwiftLogInfo sli = new SwiftLogInfo(ap.getIntValue("p", -1), ap.getStringValue(ArgumentParser.DEFAULT), 
-                ap.isPresent("f"), ap.getFloatValue("rt", 0));
+                ap.isPresent("f"), ap.getFloatValue("rt", 0), ap.getIntValue("t", -1));
             sli.run();
         }
         catch (ArgumentParserException e) {
