@@ -117,7 +117,7 @@ public class StatusImpl implements Status {
         return code2String(this.prevStatus);
     }
 
-    private String code2String(int statusCode) {
+    public static String code2String(int statusCode) {
         switch (statusCode) {
             case Status.ACTIVE:
                 return "Active";
