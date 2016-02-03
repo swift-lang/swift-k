@@ -68,12 +68,17 @@ public class JobStatusHandler extends RequestHandler {
             	}
             }
             if (status == Status.FAILED || status == Status.COMPLETED) {
-                if (getInDataSize() == 7) {
-                    out = getInDataAsString(5);
-                    err = getInDataAsString(6);
-                }
-                else if (getInDataSize() == 6) {
-                    s.setException(getException(getInData(5)));
+                switch (getInDataSize()) {
+                    case 8:
+                        // outs + exception
+                        s.setException(getException(getInData(7)));
+                    case 7:
+                        out = getInDataAsString(5);
+                        err = getInDataAsString(6);
+                        break;
+                    case 6:
+                        // just exception
+                        s.setException(getException(getInData(5)));
                 }
             }
             if (message != null && !message.equals("")) {

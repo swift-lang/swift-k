@@ -28,14 +28,15 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.ObjectOutputStream;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.execution.JobException;
 import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.coaster.ProtocolException;
+import org.globus.cog.coaster.RemoteException;
 import org.globus.cog.coaster.commands.Command;
 
 public class JobStatusCommand extends Command {
@@ -72,8 +73,8 @@ public class JobStatusCommand extends Command {
     }
 
     protected void serialize() throws IOException {
-        addOutData(taskId);
-        addOutData(status.getStatusCode());
+        addOutData(taskId); //0
+        addOutData(status.getStatusCode()); //1
         if (status.getException() instanceof JobException) {
             addOutData(((JobException) status.getException()).getExitCode());
         }
@@ -84,20 +85,34 @@ public class JobStatusCommand extends Command {
         if (status.getMessage() != null) {
         	sb.append(status.getMessage());
         }
-        if (status.getException() != null) {
-        	StringWriter sw = new StringWriter();
-        	status.getException().printStackTrace(new PrintWriter(sw));
-        	sb.append('\n');
-        	sb.append(sw.toString());
-        }
-        addOutData(sb.toString());
-        addOutData(status.getTime().getTime());
+        addOutData(sb.toString()); //3
+        addOutData(status.getTime().getTime()); //4
         if (out != null && err != null) {
             addOutData(out);
             addOutData(err);
+            addException(status.getException());
         }
         else if (out != null || err != null) {
             logger.warn("Only one of job STDOUT or STDERR is non-null");
         }
+        else {
+            addException(status.getException());
+        }
+    }
+
+    private void addException(Exception e) {
+        if (e == null) {
+            return;
+        }
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(os);
+            oos.writeObject(e);
+            addOutData(os.toByteArray());
+        }
+        catch (Exception ex) {
+            logger.info("Could not serialize job status exception", ex);
+        }
+        
     }
 }
