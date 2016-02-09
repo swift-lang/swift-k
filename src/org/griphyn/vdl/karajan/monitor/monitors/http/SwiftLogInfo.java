@@ -292,13 +292,16 @@ public class SwiftLogInfo {
             SwiftLogInfo sli = new SwiftLogInfo(ap.getIntValue("p", -1), ap.getStringValue(ArgumentParser.DEFAULT), 
                 ap.isPresent("f"), ap.getFloatValue("rt", 0), ap.getIntValue("t", -1));
             sli.run();
+            System.exit(0);
         }
         catch (ArgumentParserException e) {
             System.err.println(e.getMessage());
             ap.usage();
+            System.exit(1);
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(2);
         }        
     }
     
