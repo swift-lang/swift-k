@@ -322,9 +322,11 @@ done
 collectCB() {
 	local O
 	O="$1"
-	for OO in $O ; do
-		OODIR=`dirname "$OO"`
-		mv $OO "$WFDIR/shared/$OODIR" 2>&1 >& "$INFO"
+	while [ "$O" != "" ]; do
+		OODIR=`dirname "$O"`
+		mv $O "$WFDIR/shared/$OODIR" 2>&1 >& "$INFO"
+		shift
+		O=$1
 	done
 }
 
