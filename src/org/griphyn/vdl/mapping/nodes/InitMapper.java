@@ -327,7 +327,7 @@ public class InitMapper implements Mapper, FutureListener {
                     }
                 }
                 catch (InvalidPathException e) {
-                    throw new RuntimeException("Error mapping " + handle + ". No such path was found by the mapper.", 
+                    throw new RuntimeException("Mapper did properly map " + handle + ".", 
                         new InvalidPathException(handle));
                 }
             }
