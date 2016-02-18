@@ -1,6 +1,6 @@
-type file;
+// THIS-SCRIPT-SHOULD-FAIL
 
-# *_THIS-SCRIPT-SHOULD-FAIL_*
+type file;
 
 string results[] = system("fdjskflsdk");
 foreach r in results {

@@ -1,3 +1,7 @@
+// THIS-SCRIPT-SHOULD-FAIL
+
+// ... because structs are not valid index types
+
 type mystruct{
     int a;
     int b;

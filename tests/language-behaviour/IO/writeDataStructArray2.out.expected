@@ -1,6 +1,6 @@
-r c l 
-Foo FOO foo 
-Bar BAR bar 
-Baz BAZ baz 
-Qux QUX qux 
-Frrrr FRRRR frrrr 
+l	 c	 r
+"foo"	 "FOO"	 "Foo"
+"bar"	 "BAR"	 "Bar"
+"baz"	 "BAZ"	 "Baz"
+"qux"	 "QUX"	 "Qux"
+"frrrr"	 "FRRRR"	 "Frrrr"
