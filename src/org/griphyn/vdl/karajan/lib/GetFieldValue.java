@@ -27,13 +27,13 @@ import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.futures.FutureFault;
+import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.Path;
-import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class GetFieldValue extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(GetFieldValue.class);
 	
-	private ArgRef<AbstractDataNode> var;
+	private ArgRef<DSHandle> var;
     private ArgRef<Object> path; 
     
     @Override
@@ -47,7 +47,7 @@ public class GetFieldValue extends SwiftFunction {
 	 */
     @Override
 	public Object function(Stack stack) {	
-		AbstractDataNode var = this.var.getValue(stack);
+		DSHandle var = this.var.getValue(stack);
 
 		try {
 			Path path = parsePath(this.path.getValue(stack));
@@ -56,7 +56,7 @@ public class GetFieldValue extends SwiftFunction {
 			    return var.getField(path.butLast()).getAllFields().toArray();
 			}
 			else {
-				var = (AbstractDataNode) var.getField(path);
+				var = var.getField(path);
 				if (var.getType().isArray()) {
 					throw new RuntimeException("Getting value for array " + var + " which is not permitted.");
 				}

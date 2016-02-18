@@ -31,6 +31,7 @@ package org.griphyn.vdl.mapping.nodes;
 import java.util.Arrays;
 import java.util.List;
 
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.HandleOpenException;
@@ -129,7 +130,7 @@ public abstract class AbstractFutureStructDataNode extends AbstractFutureDataNod
     }
     
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
         checkMappingException();
         Type t = field.getType();
         for (Field f : t.getFields()) {
@@ -169,6 +170,13 @@ public abstract class AbstractFutureStructDataNode extends AbstractFutureDataNod
     public void closeArraySizes() {
         for (DSHandle h : fields) {
             h.closeArraySizes();
+        }
+    }
+    
+    @Override
+    public void waitForAll(Node who) {
+        for (DSHandle h : fields) {
+            h.waitForAll(who);
         }
     }
 }

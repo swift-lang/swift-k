@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.mapping.ClosedArrayEntries;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.HandleOpenException;
@@ -165,10 +166,9 @@ public abstract class AbstractClosedArrayDataNode extends AbstractClosedDataNode
     }
     
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
         for (DSHandle h : values) {
-            AbstractDataNode child = (AbstractDataNode) h;
-            child.getLeaves(list);
+            h.getLeaves(list);
         }
     }
     
@@ -200,6 +200,13 @@ public abstract class AbstractClosedArrayDataNode extends AbstractClosedDataNode
     public void closeArraySizes() {
         for (DSHandle h : values) {
             h.closeArraySizes();
+        }
+    }
+
+    @Override
+    public void waitForAll(Node who) {
+        for (DSHandle h : values) {
+            h.waitForAll(who);
         }
     }
 }

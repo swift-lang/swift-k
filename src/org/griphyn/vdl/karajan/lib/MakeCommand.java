@@ -35,7 +35,6 @@ import org.globus.cog.karajan.analyzer.ChannelRef;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.griphyn.vdl.karajan.Command;
 import org.griphyn.vdl.mapping.DSHandle;
-import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
 public class MakeCommand extends SwiftFunction {
 	public static final Logger logger = Logger.getLogger(MakeCommand.class);
@@ -45,7 +44,7 @@ public class MakeCommand extends SwiftFunction {
 	private ArgRef<Object> stdout;
 	private ArgRef<Object> stderr;
 	
-	private ChannelRef<AbstractDataNode> c_vargs;
+	private ChannelRef<DSHandle> c_vargs;
 	
 	@Override
     protected Signature getSignature() {
@@ -54,16 +53,16 @@ public class MakeCommand extends SwiftFunction {
 
 	@Override
 	public Object function(Stack stack) {
-        Collection<AbstractDataNode> l = c_vargs.get(stack);
+        Collection<DSHandle> l = c_vargs.get(stack);
 		
         int count = 0;
-		for (AbstractDataNode h : l) {
+		for (DSHandle h : l) {
 		    if (h.getType().isArray()) {
 		        h.waitFor(this);
 		        Map<?, DSHandle> m = h.getArrayValue();
 		        for (DSHandle h2 : m.values()) {
 		            if (h2.getType().isPrimitive()) {
-		                ((AbstractDataNode) h2).waitFor(this);
+		                h2.waitFor(this);
 		                count++;
 		            }
 		            else {
@@ -94,7 +93,7 @@ public class MakeCommand extends SwiftFunction {
         cmd.setStderr(stderr);
 
 		List<Object> args = new ArrayList<Object>(count);
-		for (AbstractDataNode h : l) {
+		for (DSHandle h : l) {
             if (h.getType().isArray()) {
                 Map<?, DSHandle> m = h.getArrayValue();
                 for (DSHandle h2 : m.values()) {
@@ -113,7 +112,7 @@ public class MakeCommand extends SwiftFunction {
 	    if (o == Null.VALUE) {
 	        return null;
 	    }
-	    AbstractDataNode n = (AbstractDataNode) o;
+	    DSHandle n = (DSHandle) o;
 	    n.waitFor(this);
 	    return n.getValue();
 	}

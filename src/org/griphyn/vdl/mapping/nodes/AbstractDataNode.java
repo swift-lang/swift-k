@@ -31,7 +31,6 @@ import k.rt.FutureListener;
 import k.rt.FutureValue;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.karajan.Loader;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.karajan.lib.Tracer;
@@ -323,8 +322,6 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
         return list;
     }
             
-    protected abstract void getLeaves(List<DSHandle> list) throws HandleOpenException;
-
     protected void postCloseActions() {
         // closed
         notifyListeners();
@@ -530,8 +527,6 @@ public abstract class AbstractDataNode implements DSHandle, FutureValue {
     public synchronized boolean isCleaned() {
         return field == CLEANED;
     }
-    
-    public abstract void waitFor(Node who);
     
     public abstract void waitFor() throws OOBYield;
 }

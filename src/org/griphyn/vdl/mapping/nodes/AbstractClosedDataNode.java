@@ -93,5 +93,9 @@ public abstract class AbstractClosedDataNode extends AbstractDataNode {
     
     @Override
     public synchronized void waitFor() throws OOBYield {
-    }    
+    }
+
+    @Override
+    public void waitForAll(Node who) {
+    }
 }

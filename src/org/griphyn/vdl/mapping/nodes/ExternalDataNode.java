@@ -193,7 +193,7 @@ public class ExternalDataNode extends AbstractFutureNonCompositeDataNode impleme
     }
 
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
         list.add(this);
     }
 }

@@ -46,7 +46,7 @@ public abstract class AbstractClosedMappedSingleDataNode extends AbstractClosedN
     }
     
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
         list.add(this);
     }
 }

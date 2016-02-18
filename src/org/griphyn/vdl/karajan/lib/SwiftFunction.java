@@ -218,7 +218,7 @@ public abstract class SwiftFunction extends AbstractFunction {
 	    	n.waitFor(who);
 	    }
 	}
-	
+		
 	public static Map<Comparable<?>, DSHandle> waitForArray(Node who, AbstractDataNode n) throws ExecutionException {
 		n.waitFor(who);
 		Map<Comparable<?>, DSHandle> v = n.getArrayValue();
@@ -227,11 +227,7 @@ public abstract class SwiftFunction extends AbstractFunction {
         }
         return v;
     }
-	
-	protected static void waitFor(Node n, DSHandle h) {
-        ((AbstractDataNode) h).waitFor(n);
-    }
-	
+		
 	public static Channel<Object> unwrapAll(Node who, Channel<AbstractDataNode> vargs) throws ExecutionException {
 		waitForAll(who, vargs);
 		MemoryChannel<Object> mc = new MemoryChannel<Object>();

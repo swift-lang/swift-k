@@ -47,7 +47,7 @@ public abstract class AbstractFutureMappedSingleDataNode extends AbstractFutureN
     }
     
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
         list.add(this);
     }
     

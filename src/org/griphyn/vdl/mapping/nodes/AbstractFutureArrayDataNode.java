@@ -38,6 +38,7 @@ import java.util.Map;
 import k.rt.ConditionalYield;
 import k.rt.FutureListener;
 
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
 import org.griphyn.vdl.karajan.WaitingThreadsMonitor;
 import org.griphyn.vdl.mapping.ClosedArrayEntries;
@@ -239,7 +240,7 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
     }
     
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
         checkMappingException();
         if (!isClosed()) {
             throw new HandleOpenException(this);
@@ -297,5 +298,13 @@ public abstract class AbstractFutureArrayDataNode extends AbstractFutureDataNode
     public synchronized void setException(RuntimeException e) {
         this.exception = e;
         closeShallow();
+    }
+    
+    @Override
+    public void waitForAll(Node who) {
+        waitFor(who);
+        for (DSHandle h : handles.values()) {
+            h.waitForAll(who);
+        }
     }
 }

@@ -244,7 +244,7 @@ public class RootClosedMapDataNode extends AbstractClosedDataNode implements Arr
     }
 
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
         for (Map.Entry<Comparable<?>, DSHandle> e : values.entrySet()) {
             DSHandle h = e.getValue();
             if (h instanceof AbstractDataNode) {

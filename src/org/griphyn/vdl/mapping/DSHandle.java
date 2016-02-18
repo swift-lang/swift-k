@@ -18,8 +18,10 @@
 package org.griphyn.vdl.mapping;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.mapping.nodes.PartialCloseable;
 import org.griphyn.vdl.type.Type;
 
@@ -91,6 +93,8 @@ public interface DSHandle extends PartialCloseable {
     public Collection<Path> getFringePaths() throws HandleOpenException;
     
     public Collection<DSHandle> getLeaves() throws HandleOpenException;
+    
+    public void getLeaves(List<DSHandle> l) throws HandleOpenException;
 
     public Map<Comparable<?>, DSHandle> getArrayValue();
 
@@ -119,4 +123,8 @@ public interface DSHandle extends PartialCloseable {
     public void setWriteRefCount(int count);
     
     public int updateWriteRefCount(int delta);
+    
+    public void waitFor(Node who);
+        
+    public void waitForAll(Node who);
 }

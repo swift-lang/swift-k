@@ -61,9 +61,9 @@ public class Range extends SwiftFunction {
 	    DSHandle to = this.to.getValue(stack);
 	    DSHandle step = this.step.getValue(stack);
 	    
-	    waitFor(this, from);
-	    waitFor(this, to);
-	    waitFor(this, step);
+	    from.waitFor(this);
+	    to.waitFor(this);
+	    step.waitFor(this);
 	    
 		final Type type = from.getType();
 		final double start = ((Number) from.getValue()).doubleValue();

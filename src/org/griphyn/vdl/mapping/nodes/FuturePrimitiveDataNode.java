@@ -68,7 +68,8 @@ public class FuturePrimitiveDataNode extends AbstractFutureNonCompositeDataNode 
     }
 
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
+        list.add(this);
     }
     
     @Override

@@ -46,7 +46,7 @@ public abstract class AbstractFuturePrimitiveDataNode extends AbstractFutureNonC
     }
     
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
         // only mappable paths
     }
 }

@@ -78,7 +78,7 @@ public abstract class AbstractClosedStructDataNode extends AbstractClosedDataNod
     }
     
     @Override
-    protected void getLeaves(List<DSHandle> list) throws HandleOpenException {
+    public void getLeaves(List<DSHandle> list) throws HandleOpenException {
         Type t = field.getType();
         for (Field f : t.getFields()) {
             AbstractDataNode child;

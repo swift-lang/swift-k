@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.mapping.nodes;
 
+import org.globus.cog.karajan.compiled.nodes.Node;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
 import org.griphyn.vdl.mapping.MissingDataException;
@@ -121,5 +122,10 @@ public abstract class AbstractFutureNonCompositeDataNode extends AbstractFutureD
     
     @Override
     public void closeArraySizes() {
+    }
+
+    @Override
+    public void waitForAll(Node who) {
+        waitFor(who);
     }
 }
