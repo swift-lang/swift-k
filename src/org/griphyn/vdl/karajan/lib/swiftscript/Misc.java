@@ -360,7 +360,7 @@ public class Misc {
         @Override
    	    public Object function(Stack stack) {
     		AbstractDataNode hinput = this.input.getValue(stack);
-    		String input     = SwiftFunction.unwrap(this, hinput);
+    		String input = SwiftFunction.unwrap(this, hinput);
     		
     		DSHandle handle = NodeFactory.newOpenRoot(Field.GENERIC_STRING_ARRAY, null);
     
@@ -373,25 +373,29 @@ public class Misc {
     		    proc.waitFor();
                 int exitcode = proc.exitValue();
                 // If the shell returned a non-zero exit code, attempt to print stderr
-                if ( exitcode != 0 ) {
-                    BufferedReader reader = new BufferedReader( new InputStreamReader(proc.getErrorStream()) );
-                    String line = "";
-                    StringBuffer stderr = new StringBuffer();
-                    while ( (line = reader.readLine()) != null ) {
+                if (exitcode != 0) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+                    String line;
+                    StringBuilder stderr = new StringBuilder();
+                    while ((line = reader.readLine()) != null) {
                         stderr.append(line);
                     }
-                    logger.warn("swift:system returned exitcode :" + exitcode);
-                    logger.warn("swift:system stderr:\n " + stderr );
+                    if (logger.isInfoEnabled()) {
+                        logger.info("swift:system returned exitcode :" + exitcode);
+                        logger.info("swift:system stderr:\n " + stderr );
+                    }
+                    throw new ExecutionException(this, input + " returned exit code " + exitcode + "\n" + stderr);
                 }
     		    BufferedReader reader = new BufferedReader( new InputStreamReader(proc.getInputStream()) );
     		    String line = "";
-                while ( (line = reader.readLine()) != null ) {
+                while ((line = reader.readLine()) != null) {
                     DSHandle el;
                     el = handle.getField(i++);
                     el.setValue(line);
                 }
-    		} catch (Exception e) {
-    		    e.printStackTrace();
+    		}
+    		catch (Exception e) {
+    		    throw new ExecutionException(this, e);
     		}
     		handle.closeDeep();
     
