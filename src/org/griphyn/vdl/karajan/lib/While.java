@@ -31,6 +31,8 @@ package org.griphyn.vdl.karajan.lib;
 import java.util.LinkedList;
 import java.util.List;
 
+import k.rt.ExecutionException;
+import k.rt.FutureObject;
 import k.rt.KRunnable;
 import k.rt.SingleValueChannel;
 import k.rt.Stack;
@@ -101,8 +103,8 @@ public class While extends InternalFunction {
         SingleValueChannel<Object> next = (SingleValueChannel<Object>) thr.popState();
         List<RefCount<PartialCloseable>> dwrefs = (List<RefCount<PartialCloseable>>) thr.popState();
         List<RefCount<ReadRefWrapper>> drrefs = (List<RefCount<ReadRefWrapper>>) thr.popState();
-        LWThread thr2 = (LWThread) thr.popState();
-        Stack stack = thr.getStack();
+        FutureObject sync = (FutureObject) thr.popState();
+        final Stack stack = thr.getStack();
         try {
             out:
                 while(true) {
@@ -120,16 +122,27 @@ public class While extends InternalFunction {
                             }
                             i++;
                         case 1:
-                            thr2 = thr.fork(new KRunnable() {
+                            sync = new FutureObject();
+                            final FutureObject syncAlias = sync;
+                            LWThread thr2 = thr.fork(new KRunnable() {
                                 @Override
                                 public void run(LWThread thr) {
-                                    body.run(thr);
+                                    try {
+                                        body.run(thr);
+                                        syncAlias.setValue(Boolean.TRUE);
+                                    }
+                                    catch (ExecutionException e) {
+                                        syncAlias.fail(e);
+                                    }
+                                    catch (Exception e) {
+                                        syncAlias.fail(new ExecutionException(stack, e));
+                                    }
                                 }
                             });
                             i++;
                             thr2.start();
                         default:
-                            thr2.waitFor();
+                            sync.getValue();
                             if (next.isEmpty()) {
                                 // must do this twice since the closeDataSet calls
                                 // inside the iterate won't be called if the iterate 
@@ -154,7 +167,7 @@ public class While extends InternalFunction {
                 }
         }
         catch (Yield y) {
-            y.getState().push(thr2);
+            y.getState().push(sync);
             y.getState().push(drrefs);
             y.getState().push(dwrefs);
             y.getState().push(next);
