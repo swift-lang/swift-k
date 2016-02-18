@@ -28,11 +28,7 @@
  */
 package org.globus.cog.karajan.compiled.nodes.functions;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import k.rt.Channel;
-import k.rt.Frame;
 import k.rt.Stack;
 import k.thr.LWThread;
 
@@ -63,7 +59,6 @@ public class GetAndDeleteVariables extends Node {
 		}		
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Node compile(WrapperNode wn, Scope scope) throws CompilationException {
 		super.compile(wn, scope);
