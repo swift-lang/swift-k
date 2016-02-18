@@ -378,7 +378,7 @@ public class LWThread implements Runnable {
 
 	protected synchronized void done(RuntimeException e) {
         if (DEBUG)
-            System.out.println(this + " done()");
+            System.out.println(this + " done(ex)");
         setState(ALIVE, false);
         if (parent == null) {
         	System.out.println(this + " no parent");
