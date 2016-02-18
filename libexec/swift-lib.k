@@ -26,7 +26,7 @@ namespace(swift) {
 	export(setFieldValue, def("org.griphyn.vdl.karajan.lib.SetFieldValue"))
 	export(appendArray, def("org.griphyn.vdl.karajan.lib.AppendArray"))
 	export(getFieldValue, def("org.griphyn.vdl.karajan.lib.GetFieldValue"))
-	export(waitFieldValue, def("org.griphyn.vdl.karajan.lib.WaitFieldValue"))
+	export(waitFor, def("org.griphyn.vdl.karajan.lib.WaitFieldValue"))
 	export(getArrayIterator, def("org.griphyn.vdl.karajan.lib.GetArrayIterator"))
 	export(sliceArray, def("org.griphyn.vdl.karajan.lib.SliceArray"))
 	export(isFileBound, def("org.griphyn.vdl.karajan.lib.IsFileBound"))

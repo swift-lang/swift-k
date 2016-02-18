@@ -361,21 +361,27 @@ public class SetFieldValue extends SwiftFunction {
         }
         else {
             Mapper dmapper = dest.getMapper();
-            fc = new FileCopier(smapper.map(source.getPathFromRoot()), 
-                dmapper.map(dpath), !smapper.isPersistent(dpath));
-            se.value(fc);
-            try {
-                if (fc.start()) {
-                    // immediate operation
-                    dest.setValue(AbstractDataNode.FILE_VALUE);
-                    popStateEntry(state);
-                    return;
+            if (dmapper.canBeRemapped(dpath)) {
+                dmapper.remap(dpath, smapper, source.getPathFromRoot());
+                dest.setValue(AbstractDataNode.FILE_VALUE);
+            }
+            else {
+                fc = new FileCopier(smapper.map(source.getPathFromRoot()), 
+                    dmapper.map(dpath), !smapper.isPersistent(dpath));
+                se.value(fc);
+                try {
+                    if (fc.start()) {
+                        // immediate operation
+                        dest.setValue(AbstractDataNode.FILE_VALUE);
+                        popStateEntry(state);
+                        return;
+                    }
                 }
+                catch (Exception e) {
+                    throw new ExecutionException("Failed to start file copy", e);
+                }
+                throw new FutureNotYetAvailable(fc);
             }
-            catch (Exception e) {
-                throw new ExecutionException("Failed to start file copy", e);
-            }
-            throw new FutureNotYetAvailable(fc);
         }
         popStateEntry(state);
     }

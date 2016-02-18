@@ -20,8 +20,6 @@
  */
 package org.griphyn.vdl.karajan.lib;
 
-import java.util.Collection;
-
 import k.rt.Channel;
 import k.rt.ConditionalYield;
 import k.rt.ExecutionException;
@@ -36,12 +34,10 @@ import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
-import org.globus.cog.karajan.futures.FutureFault;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.karajan.AssertFailedException;
 import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.MappingDependentException;
-import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Types;
@@ -99,16 +95,8 @@ public class Stagein extends SwiftFunction {
             boolean deperr = false;
             boolean mdeperr = false;
             try {
-                Collection<Path> fp = var.getFringePaths();
-                try {
-                    for (Path p : fp) {
-                        AbstractDataNode n = (AbstractDataNode) var.getField(p);
-                    	n.waitFor(this);
-                    }
-                }
-                catch (DependentException e) {
-                    deperr = true;
-                }
+                // no need to wait since the app now waits
+                // waitForAll(this, var);
                 
                 if (!Types.EXTERNAL.equals(var.getType())) {
                     cr_stagein.append(stack, var);
@@ -141,21 +129,6 @@ public class Stagein extends SwiftFunction {
             }
             if (mdeperr) {
                 this.r_mdeperror.setValue(stack, true);
-            }
-        }
-        else {
-            // we still wait until the primitive value is there
-            if (tracer.isEnabled()) {
-                try {
-                    var.waitFor(this);
-                }
-                catch (FutureFault f) {
-                    tracer.trace(LWThread.currentThread(), procName + " WAIT " + Tracer.getFutureName(f.getFuture()));
-                    throw f;
-                }
-            }
-            else {
-                var.waitFor(this);
             }
         }
     }

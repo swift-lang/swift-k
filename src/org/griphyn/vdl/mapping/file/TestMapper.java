@@ -24,6 +24,8 @@ import java.util.Set;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.FileSystemLister;
+import org.griphyn.vdl.mapping.InvalidPathException;
+import org.griphyn.vdl.mapping.Mapper;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.Path;
 import org.griphyn.vdl.mapping.PhysicalFormat;
@@ -72,6 +74,14 @@ public class TestMapper extends AbstractMapper {
         else {
             return remap;
         }
+    }
+    
+
+    @Override
+    public synchronized void remap(Path path, Mapper sourceMapper, Path sourcePath) throws InvalidPathException {
+        remap = sourceMapper.map(sourcePath);
+        TestMapperParams cp = getParams();
+        cp.setTemp(!sourceMapper.isPersistent(sourcePath));
     }
 
     public Collection<Path> existing() {

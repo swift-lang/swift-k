@@ -118,6 +118,7 @@ $it.name$=$if(it.default)$$it.default$$else$null$endif$
 
 swift_execute(inputs, outputs, application, stageins, stageouts, attributes, name, line, initReadCounts) ::= <<
 swift:unitStart("PROCEDURE", name="$name$", line=$line$, outputs="$outputs:list();separator=","$")
+swift:waitFor($inputs:arg_name();separator=", "$)
 k:tailcall(
 	swift:execute(
 		"$name$",

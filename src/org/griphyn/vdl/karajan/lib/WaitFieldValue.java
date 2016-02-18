@@ -17,41 +17,46 @@
 
 package org.griphyn.vdl.karajan.lib;
 
-import k.rt.ExecutionException;
-import k.rt.Stack;
+import java.lang.reflect.Array;
 
-import org.globus.cog.karajan.analyzer.ArgRef;
-import org.globus.cog.karajan.analyzer.Signature;
-import org.griphyn.vdl.mapping.InvalidPathException;
-import org.griphyn.vdl.mapping.Path;
+import k.rt.Stack;
+import k.thr.LWThread;
+
+import org.apache.log4j.Logger;
+import org.globus.cog.karajan.analyzer.CompilationException;
+import org.globus.cog.karajan.analyzer.Scope;
+import org.globus.cog.karajan.analyzer.VarRef;
+import org.globus.cog.karajan.compiled.nodes.Node;
+import org.globus.cog.karajan.compiled.nodes.functions.GetAndDeleteVariables;
+import org.globus.cog.karajan.parser.WrapperNode;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
-public class WaitFieldValue extends SwiftFunction {
-	private ArgRef<AbstractDataNode> var;
-    private ArgRef<Object> path; 
-    
-    @Override
-    protected Signature getSignature() {
-        return new Signature(params("var", optional("path", Path.EMPTY_PATH)));
-    }
+public class WaitFieldValue extends Node {
+	final static Logger logger = Logger.getLogger(GetAndDeleteVariables.class);
+	
+	private VarRef<AbstractDataNode>[] refs;
 
+	@Override
+	public void run(LWThread thr) {
+		Stack stack = thr.getStack();
+				
+		for (VarRef<AbstractDataNode> ref : refs) {
+		    AbstractDataNode node = ref.getValue(stack);
+		    node.waitForAll(this);
+		}		
+	}
 
-	/**
-	 * Takes a supplied variable and path, and returns the unique value at that
-	 * path. Path can contain wildcards, in which case an array is returned.
-	 */
+	@SuppressWarnings("unchecked")
     @Override
-	public Object function(Stack stack) {
-		AbstractDataNode var = this.var.getValue(stack);
-		try {
-			Path path = parsePath(this.path.getValue(stack));
-			var = (AbstractDataNode) var.getField(path);
-			var.waitFor(this);
-			return null;
+	public Node compile(WrapperNode wn, Scope scope) throws CompilationException {
+		super.compile(wn, scope);
+
+		refs = (VarRef<AbstractDataNode>[]) Array.newInstance(VarRef.class, wn.nodeCount());
+		for (int i = 0; i < wn.nodeCount(); i++) {
+			String name = wn.getNode(i).getText();
+			refs[i] = scope.getVarRef(name);
 		}
-		catch (InvalidPathException e) {
-			throw new ExecutionException(this, e);
-		}
+		return this;
 	}
 
 }

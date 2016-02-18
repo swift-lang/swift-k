@@ -31,13 +31,14 @@ import org.griphyn.vdl.karajan.FileNameResolver.MultiMode;
 import org.griphyn.vdl.karajan.FileNameResolver.Transform;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.DSHandle;
+import org.griphyn.vdl.mapping.DependentException;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.mapping.nodes.NodeFactory;
 import org.griphyn.vdl.type.Field;
 
 public class FileName extends SwiftFunction {
-	private ArgRef<AbstractDataNode> var;
-	private boolean inAppInvocation;
+	protected ArgRef<AbstractDataNode> var;
+	protected boolean inAppInvocation;
     
     @Override
     public Node compile(WrapperNode w, Scope scope) throws CompilationException {        
@@ -74,6 +75,16 @@ public class FileName extends SwiftFunction {
         if (var.getType().isPrimitive()) {
             throw new ExecutionException(this, "Cannot invoke filename() on a primitive value (" + var + ")");
         }
+        
+        if (!inAppInvocation) {
+            try {
+                var.waitForAll(this);
+            }
+            catch (DependentException e) {
+                return NodeFactory.newRoot(Field.GENERIC_ANY, e);
+            }
+        }
+        
         DSHandle result;
         if (inAppInvocation) {
             result = NodeFactory.newRoot(Field.GENERIC_ANY, 
