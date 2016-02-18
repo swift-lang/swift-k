@@ -56,7 +56,7 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
 	
 	static {
 	    DEFAULT_OPTIONS = new HashMap<String, Object>();
-	    DEFAULT_OPTIONS.put("separator", " \t");
+	    DEFAULT_OPTIONS.put("separator", "\t ");
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -285,15 +285,6 @@ public class ReadData extends SwiftFunction implements SwiftDeserializer {
                     }
                     else {
                         inString = false;
-                        i = line.indexOf(sep, i + 1) + 1;
-                        l.add(sb.toString());
-                        if (i == 0) {
-                            i = len;
-                            sb = null;
-                        }
-                        else {
-                            sb = new StringBuilder();
-                        }
                     }
                 }
                 else {
