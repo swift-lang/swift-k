@@ -20,6 +20,7 @@ package org.griphyn.vdl.type.impl;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ import org.griphyn.vdl.type.Types;
 public class TypeImpl extends UnresolvedType {
 	private boolean primitive;
 	private Map<String, Field> fields;
+	private List<String> fieldNames;
 	private Map<String, Integer> fieldIndices;
 	private Type baseType;
 	private Boolean hasMappedComponents, hasArrayComponents;
@@ -52,6 +54,7 @@ public class TypeImpl extends UnresolvedType {
 	private void init(boolean primitive) {
 		this.primitive = primitive;
 		fields = new HashMap<String, Field>();
+		fieldNames = new LinkedList<String>();
 		baseType = null;
 	}
 
@@ -77,6 +80,7 @@ public class TypeImpl extends UnresolvedType {
 			    fieldIndices = new HashMap<String, Integer>();
 			}
 			fieldIndices.put(name, fieldIndices.size());
+			fieldNames.add(name);
 		}
 	}
 
@@ -111,13 +115,15 @@ public class TypeImpl extends UnresolvedType {
 	}
 
 	public List<String> getFieldNames() {
-		List<String> list = new ArrayList<String>();
-		list.addAll(fields.keySet());
-		return list;
+		return fieldNames;
 	}
 
 	public List<Field> getFields() {
-		return new ArrayList<Field>(fields.values());
+	    List<Field> l = new ArrayList<Field>();
+	    for (String name : fieldNames) {
+	        l.add(fields.get(name));
+	    }
+	    return l;
 	}
 	
     public Type getBaseType() {
