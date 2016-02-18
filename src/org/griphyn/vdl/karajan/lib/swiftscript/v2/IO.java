@@ -165,8 +165,10 @@ public class IO {
         
         private void mkdirs(String path) {
             File f = new File(path);
-            synchronized (Write.class) {
-                f.getParentFile().mkdirs();
+            if (f.getParentFile() != null) {
+                synchronized (Write.class) {
+                    f.getParentFile().mkdirs();
+                }
             }
         }
 
