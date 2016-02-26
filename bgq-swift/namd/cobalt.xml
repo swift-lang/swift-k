@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
+
+<pool handle="cluster">
+<execution provider="coaster" jobmanager="local:cobalt" />
+
+<profile namespace="globus" key="slots">2</profile>
+<profile namespace="globus" key="mode">script</profile>
+
+<profile namespace="karajan" key="jobThrottle">2.99</profile>
+<profile namespace="karajan" key="initialScore">10000</profile>
+<profile namespace="globus" key="maxwalltime">00:40:00</profile>
+<profile namespace="globus" key="walltime">2050</profile>
+
+<profile namespace="globus" key="maxnodes">64</profile>
+<profile namespace="globus" key="nodegranularity">64</profile>
+<profile key="SUBBLOCK_SIZE" namespace="env">8</profile>
+<profile key="WORKER_LOGGING_LEVEL" namespace="env">DEBUG</profile>
+<profile key="ENABLE_WORKER_LOGGING" namespace="env">TRUE</profile>
+<profile key="ENABLE_WORKER_LOGGING" namespace="env">ON</profile>
+<profile key="WORKER_LOG_DIR" namespace="env">/home/ketan/workerlogs</profile>
+<profile namespace="globus" key="workerLoggingLevel">DEBUG</profile>
+<profile namespace="globus" key="workerLoggingDirectory">/home/ketan/workerlogs</profile>
+<profile namespace="globus" key="jobsPerNode">8</profile>
+
+<workdirectory>/home/ketan/swiftwork</workdirectory>
+<filesystem provider="local"/>
+
+</pool>
+
+<pool handle="cluster2">
+<execution provider="coaster" jobmanager="local:cobalt" />
+
+<profile namespace="globus" key="slots">2</profile>
+<profile namespace="globus" key="mode">script</profile>
+
+<profile namespace="karajan" key="jobThrottle">2.99</profile>
+<profile namespace="karajan" key="initialScore">10000</profile>
+<profile namespace="globus" key="maxwalltime">00:40:00</profile>
+<profile namespace="globus" key="walltime">2050</profile>
+
+<profile namespace="globus" key="maxnodes">64</profile>
+<profile namespace="globus" key="nodegranularity">64</profile>
+<profile key="SUBBLOCK_SIZE" namespace="env">8</profile>
+<profile key="WORKER_LOGGING_LEVEL" namespace="env">DEBUG</profile>
+<profile key="ENABLE_WORKER_LOGGING" namespace="env">TRUE</profile>
+<profile key="ENABLE_WORKER_LOGGING" namespace="env">ON</profile>
+<profile key="WORKER_LOG_DIR" namespace="env">/home/ketan/workerlogs</profile>
+<profile namespace="globus" key="workerLoggingLevel">DEBUG</profile>
+<profile namespace="globus" key="workerLoggingDirectory">/home/ketan/workerlogs</profile>
+<profile namespace="globus" key="jobsPerNode">8</profile>
+
+<workdirectory>/home/ketan/swiftwork</workdirectory>
+<filesystem provider="local"/>
+
+</pool>
+</config>

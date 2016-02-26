@@ -1,0 +1,3 @@
+#!/bin/bash
+
+qsub -n 1024 -t 00:10:00 -A ExM --mode script --disable_preboot ./myscript

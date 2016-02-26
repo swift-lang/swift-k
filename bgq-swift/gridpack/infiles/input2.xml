@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <Contingency_analysis>
+    <networkConfiguration> IEEE14_ca.raw </networkConfiguration>
+    <groupSize>1</groupSize>
+    <Contingencies>
+      <Contingency>
+        <contingencyType>Line</contingencyType>
+        <contingencyName>CTG1</contingencyName>
+        <contingencyLineBuses> 13 14</contingencyLineBuses>
+        <contingencyLineNames> B1 </contingencyLineNames>
+      </Contingency>
+      <Contingency>
+        <contingencyType>Generator</contingencyType>
+        <contingencyName>CTG2</contingencyName>
+        <contingencyBuses> 3  </contingencyBuses>
+        <contingencyGenerators>  1 </contingencyGenerators>
+      </Contingency>
+    </Contingencies>
+    <LinearSolver>
+      <PETScOptions>
+        -ksp_type richardson
+        -pc_type lu
+        -pc_factor_mat_solver_package superlu_dist
+        -ksp_max_it 1
+      </PETScOptions>
+    </LinearSolver>
+  </Contingency_analysis>
+</Configuration>

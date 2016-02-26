@@ -1,0 +1,7 @@
+#! /bin/sh
+
+bin=$(cd $(dirname $0); pwd)
+
+$bin/ca.x $1
+mv CTG1.out $2
+mv CTG2.out $3

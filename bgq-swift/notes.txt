@@ -1,0 +1,42 @@
+== Sub-block jobs ==
+
+== Components ==
+
+Outer block
+
+Inner blocks
+
+Parameters
+Blockname
+
+Blockshape
+
+Corner
+
+== Open Issues ==
+
+== Possible applications ==
+
+-- xstack mantivo and proxy by Mike Baru from los alamos 
+-- Bill Gropp Mlife game
+-- XMatix Coehmm Justin MPI code
+-- Gromacs, NAMD and LAMMPS
+
+== ToDo ==
+
+robustness testing
+multiple cobalt jobs ("slots")
+multiple sites each with unique subblock sizes
+docs/tutorials
+persistent coasters
+conversion from 0.95 to trunk
+Use the "direct" mode
+cray
+integ runsubjob into swiftwrap and/or worker.pl (initially, swiftwrap)
+(low prio)
+
+all above, but for swift/t
+
+
+separate: ksub/kstat; same but through sockets? ipython tools?
+

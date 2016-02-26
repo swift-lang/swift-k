@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#put bg.sh in path
+
+export PATH=$PWD:$PATH
+

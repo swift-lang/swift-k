@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.ci.uchicago.edu/swift/SwiftSites">
+<pool handle="localhost">
+  <execution provider="local" url="none"/>
+  <filesystem provider="local" url="none" />
+  <profile namespace="karajan" key="jobThrottle">0.01</profile>
+  <workdirectory>/tmp/swift.work</workdirectory>
+</pool>
+</config>
+

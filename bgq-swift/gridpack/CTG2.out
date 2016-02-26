@@ -1,0 +1,22 @@
+
+Maximum voltage limit: 1.100000
+
+Minimum voltage limit: 0.900000
+
+Maximum number of iterations: 50
+
+Convergence tolerance: 0.000001
+
+Isolated bus found for contingency CTG2
+
+Iteration 1 Tol: 9.887566e-03
+
+Iteration 2 Tol: 6.336545e-06
+
+Iteration 3 Tol: 2.715383e-12
+
+   No violations found for contingency CTG2
+
+Contingency evaluation converged
+
+Elapsed time for task:     0.001823
