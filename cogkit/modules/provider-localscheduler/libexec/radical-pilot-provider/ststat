@@ -1,0 +1,22 @@
+#!/bin/bash
+
+LOGGING=1 # Either 1 or 0
+
+RUNDIRS=$(echo run[0-9][0-9][0-9])
+RUNDIR=${RUNDIRS##*\ }
+LOG=$RUNDIR/scripts/log
+
+
+RADICAL_PY=$SWIFT_HOME/libexec/radical-pilot-provider/thrift_tests/client.py
+
+[[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
+log()
+{
+    [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
+}
+
+for JOBID in ${*}
+do
+    log "Stat'ing for $JOBID"
+    python $RADICAL_PY --logfile $LOG --status $JOBID | tee -a $LOG
+done
