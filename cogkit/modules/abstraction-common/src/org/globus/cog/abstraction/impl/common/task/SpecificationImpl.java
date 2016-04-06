@@ -70,4 +70,9 @@ public class SpecificationImpl implements Specification, Cloneable {
         } 
         return result;
     }
+
+    @Override
+    public Object getAttribute(String name) {
+        return null;
+    }
 }

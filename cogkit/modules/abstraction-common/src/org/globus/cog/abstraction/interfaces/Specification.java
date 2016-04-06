@@ -50,4 +50,6 @@ public interface Specification extends Serializable, Cloneable {
     public String getSpecification();
     
     public Object clone();
+    
+    public Object getAttribute(String name);
 }
