@@ -35,7 +35,9 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
@@ -74,6 +76,54 @@ public class SubmitJobCommand extends Command {
     public static final Set<String> ABSOLUTIZE = new HashSet<String>() {
         {}
     };
+    
+    private static interface AttributeFormatter {
+        void format(Writer sb, String name, Object value) throws IOException;
+    }
+    
+    private static class StringAttributeFormatter implements AttributeFormatter {
+        @Override
+        public void format(Writer sb, String name, Object value) throws IOException {
+            if (value != null) {
+                addKey(sb, "attr");
+                sb.write(name);
+                sb.write("=");
+                sb.write(String.valueOf(value));
+                sb.write('\n');
+            }
+        }
+    }
+    
+    private static final AttributeFormatter DEFAULT_ATTR_FORMATTER = new StringAttributeFormatter();
+    
+    public static final Map<String, AttributeFormatter> ATTRIBUTE_FORMATTERS;
+    
+    static {
+        ATTRIBUTE_FORMATTERS = new HashMap<String, AttributeFormatter>();
+        
+        ATTRIBUTE_FORMATTERS.put("maxwalltime", new AttributeFormatter() {
+            @Override
+            public void format(Writer sb, String name, Object value) throws IOException {
+                addKey(sb, "attr");
+                sb.write("maxwalltime=");
+                sb.write(formatWalltime(value));
+                sb.write('\n');
+            }
+        });
+        ATTRIBUTE_FORMATTERS.put("softimage", new AttributeFormatter() {
+            @Override
+            public void format(Writer sb, String name, Object ov) throws IOException {
+                String value = (String) ov;
+                String[] sd = value.split("\\s+");
+                addKey(sb, "attr");
+                sb.write("softimage=");
+                escape(sb, sd[0]);
+                sb.write(" ");
+                escape(sb, sd[1]);
+                sb.write('\n');
+            } 
+        });
+    }
 
     private Task t;
     private boolean compression = SubmitJobHandler.COMPRESSION;
@@ -159,38 +209,16 @@ public class SubmitJobCommand extends Command {
         }
     
         if (simple) {
-            if (spec.getAttribute("docker.image") != null) {
-                addAttr(sb, "docker.image", spec);
-                addAttr(sb, "docker.user", spec);
-                addAttr(sb, "docker.password", spec);
-                addAttr(sb, "docker.jobdirmountpoint", spec);
-                addAttr(sb, "docker.registry", spec);
-                addAttr(sb, "docker.alwaysPull", spec);
+            for (String attrName : spec.getAttributeNames()) {
+                AttributeFormatter f = ATTRIBUTE_FORMATTERS.get(attrName);
+                if (f == null) {
+                    f = DEFAULT_ATTR_FORMATTER;
+                }
+                f.format(sb, attrName, spec.getAttribute(attrName));
             }
-        	addKey(sb, "attr");
-        	sb.write("maxwalltime=");
-        	sb.write(formatWalltime(spec.getAttribute("maxwalltime")));
-        	sb.write('\n');
-
-        	if (spec.getAttribute("traceperformance") != null) {
-        		addKey(sb, "attr");
-        		sb.write("traceperformance=");
-        		sb.write(String.valueOf(spec.getAttribute("traceperformance")));
-        		sb.write('\n');
-        	}
-        	if (spec.getAttribute("softimage") != null) {
-        	    String value = (String) spec.getAttribute("softimage");
-        	    String[] sd = value.split("\\s+");
-        	    addKey(sb, "attr");
-        	    sb.write("softimage=");
-        	    escape(sb, sd[0]);
-        	    sb.write(" ");
-        	    escape(sb, sd[1]);
-        	    sb.write('\n');
-        	}
         }
         else {
-            for (String name : spec.getAttributeNames())
+            for (String name : spec.getAttributeNames()) {
                 if (!IGNORED_ATTRIBUTES.contains(name) || spec.isBatchJob()) {
                 	addKey(sb, "attr");
                 	sb.write(name);
@@ -198,6 +226,7 @@ public class SubmitJobCommand extends Command {
                 	escape(sb, String.valueOf(spec.getAttribute(name)));
                 	sb.write('\n');
                 }
+            }
         }
             
         if (spec.getStageIn() != null) {
@@ -253,7 +282,7 @@ public class SubmitJobCommand extends Command {
         sb.write('\n');
     }
 
-    private String formatWalltime(Object value) {
+    private static String formatWalltime(Object value) {
         if (value == null) {
         	return "600";
         }
@@ -287,12 +316,12 @@ public class SubmitJobCommand extends Command {
         }
     }
 
-    private void addKey(Writer sb, String key) throws IOException { 
+    private static void addKey(Writer sb, String key) throws IOException { 
     	sb.write(key);
     	sb.write('=');
     }
 
-    private void escape(Writer sb, String value) throws IOException {
+    private static void escape(Writer sb, String value) throws IOException {
     	for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
             switch (c) {
