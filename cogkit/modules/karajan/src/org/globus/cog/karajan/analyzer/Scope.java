@@ -187,6 +187,7 @@ public class Scope {
 	public Var addVar(String name) {
 		return addVar(name, null);
 	}
+	
 		
 	public Var addVar(String name, Object value) {
 	    Var v = new Var(name);
@@ -501,7 +502,7 @@ public class Scope {
         }
         
         if (parent != null) {
-            return parent.getVarRef(name, frameBump(frame), null);
+            return parent.getDynamicVarRef(name, frameBump(frame));
         }
         else {
             throw new VariableNotFoundException("Variable not found: " + name);
