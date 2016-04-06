@@ -25,6 +25,8 @@
 
 package org.globus.cog.abstraction.interfaces;
 
+import java.util.Map;
+
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.ietf.jgss.GSSCredential;
 
@@ -64,4 +66,9 @@ public interface SecurityContext {
     public void setServiceContact(ServiceContact serviceContact);
     
     public ServiceContact getServiceContact();
+
+    /**
+     * Allows dynamic/transparent creation of credentials
+     */
+    public void setCredentialProperties(Map<String, Object> props);
 }

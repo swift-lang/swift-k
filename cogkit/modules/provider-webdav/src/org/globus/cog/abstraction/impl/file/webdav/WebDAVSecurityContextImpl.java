@@ -25,6 +25,8 @@
 
 package org.globus.cog.abstraction.impl.file.webdav;
 
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 
@@ -34,5 +36,10 @@ public class WebDAVSecurityContextImpl extends SecurityContextImpl {
             .getLogger(WebDAVSecurityContextImpl.class.getName());
 
     public WebDAVSecurityContextImpl() {
+    }
+
+    @Override
+    public void setCredentialProperties(Map<String, Object> props) {
+        throw new UnsupportedOperationException();
     }
 }

@@ -26,6 +26,7 @@
 package org.globus.cog.abstraction.impl.ssh;
 
 import java.net.PasswordAuthentication;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
@@ -76,5 +77,10 @@ public class InteractiveSSHSecurityContextImpl extends SecurityContextImpl {
 
     public void setHostName(String hostName) {
         this.hostName = hostName;
+    }
+
+    @Override
+    public void setCredentialProperties(Map<String, Object> props) {
+        throw new UnsupportedOperationException();
     }
 }

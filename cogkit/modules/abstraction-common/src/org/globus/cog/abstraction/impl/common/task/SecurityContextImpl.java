@@ -26,6 +26,7 @@
 package org.globus.cog.abstraction.impl.common.task;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
@@ -116,5 +117,47 @@ public class SecurityContextImpl implements SecurityContext {
 
     public void setServiceContact(ServiceContact serviceContact) {
         this.serviceContact = serviceContact;
+    }
+    
+    protected Object getProperty(Map<String, Object> m, String key, Object default_) {
+        Object o = m.get(key);
+        if (o == null) {
+            return default_;
+        }
+        else {
+            return o;
+        }
+    }
+    
+    protected Object getProperty(Map<String, Object> m, String key) {
+        Object o = m.get(key);
+        if (o == null) {
+            throw new IllegalArgumentException("Missing credential property '" + key + "'");
+        }
+        else {
+            return o;
+        }
+    }
+    
+    protected String getStringProperty(Map<String, Object> m, String key) {
+        return toString(getProperty(m, key), key);
+    }
+    
+    protected String getStringProperty(Map<String, Object> m, String key, String default_) {
+        return toString(getProperty(m, key, default_), key);
+    }
+
+    private String toString(Object o, String key) {
+        if (o instanceof String) {
+            return (String) o;
+        }
+        else {
+            throw new IllegalArgumentException("Invalid value for credential property '" + key + "'. Must be a string");
+        }
+    }
+
+    @Override
+    public void setCredentialProperties(Map<String, Object> props) {
+        throw new UnsupportedOperationException();
     }
 }

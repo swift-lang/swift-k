@@ -41,11 +41,11 @@ import org.globus.cog.abstraction.impl.common.StatusEvent;
 import org.globus.cog.abstraction.impl.common.StatusImpl;
 import org.globus.cog.abstraction.impl.common.TaskHandlerSkeleton;
 import org.globus.cog.abstraction.impl.common.task.ActiveTaskException;
+import org.globus.cog.abstraction.impl.common.task.DefaultSecurityContext;
 import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.InvalidServiceContactException;
-import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
 import org.globus.cog.abstraction.interfaces.FileOperationSpecification;
 import org.globus.cog.abstraction.interfaces.FileResource;
@@ -544,7 +544,7 @@ public class TaskHandlerImpl extends TaskHandlerSkeleton implements StatusListen
                 .getSecurityContext();
         if (securityContext == null) {
             // create default credentials
-            securityContext = new SecurityContextImpl();
+            securityContext = new DefaultSecurityContext();
         }
         return securityContext;
     }

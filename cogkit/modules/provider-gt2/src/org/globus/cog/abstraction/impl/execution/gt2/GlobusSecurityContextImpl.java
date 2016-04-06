@@ -209,4 +209,12 @@ public class GlobusSecurityContextImpl extends SecurityContextImpl implements De
             }
         }
     }
+
+    @Override
+    public void setCredentialProperties(Map<String, Object> props) {
+        String proxyPath = getStringProperty(props, "proxyPath", null);
+        if (proxyPath != null) {
+            setCredentials(loadProxyFromFile(proxyPath));
+        }
+    }
 }

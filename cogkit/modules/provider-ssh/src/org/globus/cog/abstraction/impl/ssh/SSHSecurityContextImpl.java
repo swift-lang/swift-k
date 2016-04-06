@@ -25,7 +25,10 @@
 
 package org.globus.cog.abstraction.impl.ssh;
 
+import java.util.Map;
+
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.impl.common.PasswordAuthentication;
 import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
 
 public class SSHSecurityContextImpl extends SecurityContextImpl {
@@ -42,5 +45,18 @@ public class SSHSecurityContextImpl extends SecurityContextImpl {
 
     public void setCredentials(Object credentials, String alias) {
         setCredentials(credentials);
+    }
+
+    @Override
+    public void setCredentialProperties(Map<String, Object> props) {
+        String type = getStringProperty(props, "type");
+        if (type.equals("password")) {
+            String user = getStringProperty(props, "username");
+            String pass = getStringProperty(props, "password");
+            setCredentials(new PasswordAuthentication(user, pass.toCharArray()));
+        }
+        else {
+            throw new IllegalArgumentException("Unknown type: " + type);
+        }
     }
 }

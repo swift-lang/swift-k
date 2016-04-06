@@ -26,6 +26,7 @@
 package org.globus.cog.abstraction.impl.file.ftp;
 
 import java.net.PasswordAuthentication;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.task.SecurityContextImpl;
@@ -47,5 +48,12 @@ public class FTPSecurityContextImpl extends SecurityContextImpl {
 
     public String getAlias() {
         return null;
+    }
+
+    @Override
+    public void setCredentialProperties(Map<String, Object> props) {
+        String user = getStringProperty(props, "username");
+        String pass = getStringProperty(props, "password");
+        setCredentials(new PasswordAuthentication(user, pass.toCharArray()));
     }
 }

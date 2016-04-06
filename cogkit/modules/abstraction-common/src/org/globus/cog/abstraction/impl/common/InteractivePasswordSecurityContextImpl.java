@@ -26,6 +26,7 @@
 package org.globus.cog.abstraction.impl.common;
 
 import java.net.PasswordAuthentication;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.CredentialsDialog;
@@ -75,5 +76,12 @@ public class InteractivePasswordSecurityContextImpl extends SecurityContextImpl 
 
     public void setHostName(String hostName) {
         this.hostName = hostName;
+    }
+
+    @Override
+    public void setCredentialProperties(Map<String, Object> props) {
+        if (props != null && props.size() > 0) {
+            throw new IllegalArgumentException("The interactive username/password security context does not have properties");
+        }
     }
 }
