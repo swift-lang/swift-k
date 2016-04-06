@@ -41,7 +41,6 @@ import k.rt.Stack;
 import k.rt.StdSink.StderrSink;
 import k.rt.StdSink.StdoutNLSink;
 import k.rt.StdSink.StdoutSink;
-import k.thr.LWThread;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ChannelRef;
