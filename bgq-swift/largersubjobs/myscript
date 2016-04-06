@@ -1,0 +1,21 @@
+#!/bin/bash
+
+BLOCKS=$(get-bootable-blocks --size 128 $COBALT_PARTNAME)
+
+for BLOCK in $BLOCKS
+do
+  boot-block --block $BLOCK &
+done
+wait
+
+for BLOCK in $BLOCKS
+do
+  runjob --block $BLOCK : $(pwd)/mpicatnap data.txt ${BLOCK}.txt 1 &
+done
+wait
+
+for BLOCK in $BLOCKS
+do
+   boot-block --block $BLOCK --free &
+done
+wait

@@ -1,0 +1,4 @@
+localhost cat /bin/cat null null null
+cluster bgsh /home/ketan/SwiftApps/subjobs/bg.sh null null null
+cluster2 bgsh /home/ketan/SwiftApps/subjobs/bg.sh null null null
+

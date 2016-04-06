@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContingencyList>
+  <Contingency_analysis>
+    <Contingencies>
+      <Contingency>
+        <contingencyType>Line</contingencyType>
+        <contingencyName>CTG1</contingencyName>
+        <contingencyLineBuses> 13 14</contingencyLineBuses>
+        <contingencyLineNames> B1 </contingencyLineNames>
+      </Contingency>
+      <Contingency>
+        <contingencyType>Generator</contingencyType>
+        <contingencyName>CTG2</contingencyName>
+        <contingencyBuses> 2  </contingencyBuses>
+        <contingencyGenerators>1 </contingencyGenerators>
+      </Contingency>
+    </Contingencies>
+  </Contingency_analysis>
+</ContingencyList>

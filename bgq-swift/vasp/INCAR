@@ -1,0 +1,18 @@
+ SYSTEM =   Fe4N 5  atoms Pm-3m
+
+ Electronic Relaxation 1
+   ENCUT  = 3200 eV
+   NELM   = 50
+   EDIFF  = 5E-05   stopping-criterion for ELM
+
+ Ionic Relaxation
+   NSW    = 400          number of steps for ionic relaxation
+   IBRION = 1           quasi-Newtonian
+   ISIF   = 4           forces, relax ions, compute forces
+   EDIFFG = 5E-04       convergence criterion for ir
+
+
+ Magnetic stuff
+   ISPIN  = 3
+   MAGMOM = 4*5 1*0
+   RWIGS  = 4*1.35 1*1.0

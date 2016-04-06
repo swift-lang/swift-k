@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ -z $1 ] ; then
+
+    asciidoc -a toc -a numbered -a toclevels=2  -a max-width=750px  -a textwidth=80 -o /home/$(whoami)/public_html/subjobs.html README.txt
+else
+    asciidoc -a toc -a numbered -a toclevels=2  -a max-width=750px  -a textwidth=80 -o "$1" README.txt
+fi    

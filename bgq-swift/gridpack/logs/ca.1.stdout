@@ -1,0 +1,43 @@
+
+GridPACK math module configured on 1 processors
+Name: CTG1
+ Line: (to) 13 (from) 14 (line) 'B1'
+Name: CTG2
+ Generator: (bus) 2 (generator ID)  1
+Executing task 0 on process 0
+Executing task 1 on process 0
+
+Number of tasks per processors
+  Number of tasks on process      0:      2
+Timing statistics for: Total Application
+    Average time:                0.0107
+    Maximum time:                0.0107
+    Minimum time:                0.0107
+Timing statistics for: Parse Input
+    Average time:                0.0025
+    Maximum time:                0.0025
+    Minimum time:                0.0025
+Timing statistics for: Partition Network
+    Average time:                0.0007
+    Maximum time:                0.0007
+    Minimum time:                0.0007
+Timing statistics for: Initialize Network
+    Average time:                0.0008
+    Maximum time:                0.0008
+    Minimum time:                0.0008
+Timing statistics for: Evaluate Contingency
+    Average time:                0.0052
+    Maximum time:                0.0052
+    Minimum time:                0.0052
+Timing statistics for: Check for Lone Bus
+    Average time:                0.0001
+    Maximum time:                0.0001
+    Minimum time:                0.0001
+Timing statistics for: Create Matrices and Vectors
+    Average time:                0.0019
+    Maximum time:                0.0019
+    Minimum time:                0.0019
+Timing statistics for: Solve Powerflow Equations
+    Average time:                0.0027
+    Maximum time:                0.0027
+    Minimum time:                0.0027

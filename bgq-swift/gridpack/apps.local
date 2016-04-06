@@ -1,0 +1,5 @@
+localhost cat /bin/cat null null null
+localhost bash /bin/bash null null null
+localhost ca /home/ubuntu/v1.1/mybuild/applications/contingency_analysis/ca.sh
+cluster bgsh /home/ketan/SwiftApps/subjobs/bg.sh null null null
+

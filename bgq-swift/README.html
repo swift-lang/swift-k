@@ -1,0 +1,1100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.9" />
+<title>Running Sub-block jobs via Swift</title>
+<style type="text/css">
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+h5 {
+  font-size: 1.0em;
+}
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
+
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
+  padding: 0;
+  margin: 0;
+}
+pre {
+  white-space: pre-wrap;
+}
+
+#author {
+  color: #527bbd;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+#email {
+}
+#revnumber, #revdate, #revremark {
+}
+
+#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #f0f0f0;
+  color: #888;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; vertical-align: text-bottom; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
+}
+
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
+  margin-bottom: 2.5em;
+}
+
+#toctitle {
+  color: #527bbd;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel0, div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+div.unbreakable { page-break-inside: avoid; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+/*
+ * html5 specific
+ *
+ * */
+
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
+  text-align: right;
+}
+
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
+}
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
+}
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
+}
+
+
+/*
+ * manpage specific
+ *
+ * */
+
+body.manpage h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 2px solid silver;
+  border-bottom: 2px solid silver;
+}
+body.manpage h2 {
+  border-style: none;
+}
+body.manpage div.sectionbody {
+  margin-left: 3em;
+}
+
+@media print {
+  body.manpage div#toc { display: none; }
+}
+
+
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([1-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
+  var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
+}
+
+}
+asciidoc.install(2);
+/*]]>*/
+</script>
+</head>
+<body class="article" style="max-width:750px">
+<div id="header">
+<h1>Running Sub-block jobs via Swift</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_introduction">1. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The BG/Q resource manager, Cobalt, provides a mechanism to run multiple small
+jobs (sub-block jobs) repeatedly over a larger outer block. In order to run an
+application in this mode, the user must manually determine the optimal geometry
+(i.e., select a subset of the nodes based on their interconnection, allowing
+for best internode communication) and related low-level parameters of the
+system. The subjob technique addresses this challenge and enables MTC
+applications on the BG/Q. The technique lets users submit multiple,
+independent, repeated jobs within a single larger Cobalt block.</p></div>
+<div class="paragraph"><p>The Swift-subjob package provides tools, scripts and example use-cases to run
+Swift applications in subjob mode over the ALCF BG/Q resources: <code>Cetus</code> (for
+small-scale testing) and <code>Mira</code>. The framework is flexible in that the same
+configuration can be used to run subjob or non-subjob mode depending on the
+scale and size of a run. Users can run multiple <em>waves</em> of jobs asynchronously
+and in parallel.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_quickstart">2. Quickstart</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Download the subjob demo package as follows:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>wget http://mcs.anl.gov/~ketan/subjobs.tgz</code></pre>
+</div></div>
+<div class="paragraph"><p>followed by:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>tar zxf subjobs.tgz
+cd  subjobs/simanalyze/part05</code></pre>
+</div></div>
+<div class="paragraph"><p>To run the example application:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>./runcetus.sh #on cetus
+#or
+./runmira.sh #on mira</code></pre>
+</div></div>
+<div class="paragraph"><p>Another example is found in <code>subjobs/simanalyze/part06</code></p></div>
+<div class="paragraph"><p>For the details about the working of this example, see Swift tutorial
+<a href="http://swift-lang.org/tutorials/localhost/tutorial.html#_part_3_analyzing_results_of_a_parallel_ensemble">here</a>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_background">3. Background</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>This section briefly discusses the Swift parallel scripting, Subjobs and their integration.</p></div>
+<div class="sect2">
+<h3 id="_swift">3.1. Swift</h3>
+<div class="paragraph"><p>The Swift parallel scripting framework eases the expression and execution of workflow and MTC applications such as ensembles and parameter sweeps.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_subjobs">3.2. Subjobs</h3>
+<div class="paragraph"><p>Subjobs offer a way to run ensembles and parameter sweep like computations over BG/Q resources.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_diving_deep">4. Diving deep</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_convert_any_swift_script_to_subjob">4.1. Convert any Swift script to subjob</h3>
+<div class="paragraph"><p>To configure a Swift application to run in subjob mode, the following
+changes are required:</p></div>
+<div class="paragraph"><p>First, add <code>bg.sh</code> as the application invoker in place of <code>sh</code> or any other
+invoker. For example, if the app definition is as follows:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>sh @exe @i @o arg("s","1") stdout=@sout stderr=@serr;</code></pre>
+</div></div>
+<div class="paragraph"><p>Replace the invocation with the <code>bg.sh</code> invocations like so:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>bg.sh @exe @i @o arg("s","1") stdout=@sout stderr=@serr;</code></pre>
+</div></div>
+<div class="paragraph"><p>Second, export the <code>SUBBLOCK_SIZE</code> environment variable. For example:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>export SUBBLOCK_SIZE=16</code></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">The value of <code>SUBBLOCK_SIZE</code> variable must be a power of 2 and less than 512.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_swift_configuration">4.2. Swift Configuration</h3>
+<div class="paragraph"><p>A complete example config file for a sub-block job run on ALCF is shown below:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>sites : cluster
+site.cluster {
+    execution {
+        type: "coaster"
+        URL: "localhost"
+        jobManager: "local:cobalt"
+        options {
+            maxNodesPerJob: 32
+            maxJobs: 1
+            tasksPerNode: 2
+            #workerLoggingLevel = "DEBUG"
+            nodeGranularity: 32
+            maxJobTime = "00:60:00"
+        }
+    }
+    filesystem {
+        type: "local"
+        URL: "localhost"
+    }
+    staging : direct
+    workDirectory: "/home/"${env.USER}"/swift.work"
+    maxParallelTasks: 30
+    initialParallelTasks: 29
+    app.bgsh {
+        executable: "/home/ketan/SwiftApps/subjobs/bg.sh"
+        maxWallTime: "00:04:00"
+        env.SUBBLOCK_SIZE="16"
+    }
+}
+
+executionRetries: 0
+keepSiteDir: true
+providerStagingPinSwiftFiles: false
+alwaysTransferWrapperLog: true</code></pre>
+</div></div>
+<div class="paragraph"><p>Of note are the <code>SUBBLOCK_SIZE</code> property which must be present in the sites
+definition. It defines the size of the subblock needed to run the script.  In
+this particular example, we have the outer block size to be 256 nodes whereas
+the subblock size is 16 nodes. This results in a total of 16 subblocks
+resulting in <code>jobsPerNode</code> value to be 16.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">Swift installation for sub-block jobs on Vesta and Mira machines can be
+found at <code>/home/ketan/swift-k/dist/swift-svn/bin/swift</code></td>
+</tr></table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_use_case_applications">5. Use-Case Applications</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>This section discusses some of the real-world use-cases that are set up as demo
+applications with this package. These applications are tested with subblock as
+well as non-subblock runs on BG/Q system.</p></div>
+<div class="sect2">
+<h3 id="_namd">5.1. NAMD</h3>
+<div class="paragraph"><p><code>NAMD</code> is a molecular dynamics simulation code developed at
+<a href="http://www.ks.uiuc.edu/Research/namd">uiuc</a>. The Swift source and configuration
+files along with application inputs can be found in the <code>namd</code> directory in the
+subjobs pacjage. To run NAMD example:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>cd namd #change to the package's namd directory
+./runvesta.sh #run on vesta
+./runmira.sh  #run on mira</code></pre>
+</div></div>
+<div class="paragraph"><p>To run NAMD with a different input dataset, change the input files in the
+<code>input_files</code> directory and reflect the changes in the <code>namd.swift</code> source code,
+especially the data definitions part:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>file psf &lt;"input_files/h0_solvion.psf"&gt;;
+file pdb &lt;"input_files/h0_solvion.pdb"&gt;;
+file coord_restart &lt;"input_files/h0_eq.0.restart.coor"&gt;;
+file velocity_restart &lt;"input_files/h0_eq.0.restart.vel"&gt;;
+file system_restart &lt;"input_files/h0_eq.0.restart.xsc"&gt;;
+file namd_config &lt;"input_files/h0_eq.conf"&gt;;
+file charmm_parameters &lt;"input_files/par_all22_prot.inp"&gt;;</code></pre>
+</div></div>
+<div class="paragraph"><p>Similarly, in order to change the scale and size of runs, make changes to the
+parameters in the sites file as described in section 1 above.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_rosetta">5.2. Rosetta</h3>
+<div class="paragraph"><p><code>Rosetta</code> is a molecular <a href="http://rosie.rosettacommons.org/docking">docking</a>
+toolkit with many related programs used by many large-scale HPC science
+applications. This implementation shows how to run <code>FlexPeptide Docking</code> on
+ALCF systems. The Swift scripts, configuration and application specific inputs
+are found in the <code>rosetta</code> directory. To run the example:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>cd rosetta
+./runmira.sh #run on mira</code></pre>
+</div></div>
+<div class="paragraph"><p>To change scale, size and/or inputs of the run, change the location of input
+files in the Swift source file (<code>rosetta.swift</code>) like so:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>file pdb_files[] &lt;filesys_mapper; location="hlac_complex", suffix=".pdb"&gt;;</code></pre>
+</div></div>
+<div class="paragraph"><p>In the above line all <code>.pdb</code> files in the directory <code>hlac_complex</code> will be
+processed in parallel. Change the <code>location</code> from <code>hlac_complex</code> to where you
+have your input files.</p></div>
+<div class="paragraph"><p>To change the number of generated <code>structs</code> by Flexpep Docking program, change
+the struct argument in the call to the rosetta application like so:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>(scorefile, rosetta_output, rosetta_error) = rosetta(pdb, 2);</code></pre>
+</div></div>
+<div class="paragraph"><p>In the above line, the number <code>2</code> indicates the number of <code>structs</code> to be
+generated by the docking. Change this value to the desired size to change the
+desired number of <code>structs</code>. To make changes to other parameters, make changes
+to the commandline as invoked in the <code>app</code> definition in the Swift script like
+so:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>bgsh \
+"/home/ketan/openmp-gnu-july16-mini/build/src/debug/linux/2.6/64/ppc64/xlc/static-mpi/FlexPepDocking.staticmpi.linuxxlcdebug" \
+"-database" "/home/ketan/minirosetta_database" \
+"-pep_refine" "-s" @pdb_file "-ex1" "-ex2aro" \
+"-use_input_sc" "-nstruct" nstruct "-overwrite" \
+"-scorefile" @_scorefile stdout=@out stderr=@err;</code></pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_dock">5.3. Dock</h3>
+<div class="paragraph"><p>Dock is another molecular docking
+<a href="http://dock.compbio.ucsf.edu/DOCK_6/dock6_manual.htm">program</a> used by many
+applications. The Swift source, configuration and application related inputs
+can be found in the <code>dock</code> directory. To run the Dock example:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>cd dock
+./runcetus.sh #run on cetus
+./runmira.sh #run on mira</code></pre>
+</div></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_diving_deeper">6. Diving deeper</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The key driver of the Swift sub-block jobs is a script called <code>bg.sh</code> that does
+the sub-block jobs calculations and othe chores for the users. The script looks
+as follows:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>#!/bin/bash
+
+set -x
+
+mname=$(hostname)
+
+# vesta and mira has different path than cetus
+if [[ $mname == *vesta* || $mname == *mira* ]]
+then
+    export PATH=/soft/cobalt/bgq_hardware_mapper:$PATH
+else
+    export PATH=/soft/cobalt/cetus/bgq_hardware_mapper:$PATH
+fi
+
+#export SUBBLOCK_SIZE=16
+
+# Prepare shape based on subblock size
+# provided by user in sites environment
+case "$SUBBLOCK_SIZE" in
+1) SHAPE="1x1x1x1x1"
+;;
+8) SHAPE="1x2x2x2x1"
+;;
+16) SHAPE="2x2x2x2x1"
+;;
+32) SHAPE="2x2x2x2x2"
+;;
+64) SHAPE="2x2x4x2x2"
+;;
+128) SHAPE="2x4x4x2x2"
+;;
+256) SHAPE="2x4x4x4x2"
+;;
+512) SHAPE="4x4x4x4x2"
+;;
+*) echo "SUBBLOCK_SIZE not set or incorrectly set: will not use subblock jobs"
+;;
+esac
+
+# If subblock size is provided, do subblock business
+if [ "$SUBBLOCK_SIZE"_ != "_" ]
+then
+    export SWIFT_SUBBLOCKS=$(get-corners.py "$COBALT_PARTNAME" $SHAPE)
+    export SWIFT_SUBBLOCK_ARRAY=($SWIFT_SUBBLOCKS)
+
+    #echo "$0": SWIFT_SUBBLOCKS="$SWIFT_SUBBLOCKS"
+
+    if [ "_$SWIFT_SUBBLOCKS" = _ ]; then
+      echo ERROR: "$0": SWIFT_SUBBLOCKS is null.
+      exit 1
+    fi
+
+    nsb=${#SWIFT_SUBBLOCK_ARRAY[@]}
+
+    CORNER=${SWIFT_SUBBLOCK_ARRAY[$SWIFT_JOB_SLOT]}
+
+    #Some logging
+    echo "$0": running BLOCK="$COBALT_PARTNAME" SLOT="$SWIFT_JOB_SLOT"
+    echo "$0": running cmd: "$0" args: "$@"
+    echo "$0": running runjob --strace none --block "$COBALT_PARTNAME" --corner "$CORNER" --shape "$SHAPE" -p 16 --np "$((16*$SUBBLOCK_SIZE))" : "$@"
+
+    #without timeout
+    #runjob --strace none --block "$COBALT_PARTNAME" --corner "$CORNER" --shape "$SHAPE" -p 16 --np "$((16*$SUBBLOCK_SIZE))" : "$@"
+    runjob --block "$COBALT_PARTNAME" --corner "$CORNER" --shape "$SHAPE" -p 16 --np "$((16*$SUBBLOCK_SIZE))" : "$@"
+
+    echo "Runjob finished."
+else
+    # run w/o subblocks if no subblock size provided
+    echo "Running in nonsubblock mode."
+    echo "$0": running runjob -p 16 --block $COBALT_PARTNAME : "$@"
+
+    #strace -o "$HOME/strace.runjob.out" runjob --strace none -p 16 --block $COBALT_PARTNAME : "$@"
+    runjob -p 16 --block $COBALT_PARTNAME : "$@"
+
+    echo "Finished Running in nonsubblock mode."
+fi
+exit 0</code></pre>
+</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_further_information">7. Further Information</h2>
+<div class="sectionbody">
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+More information about Swift can be found <a href="http://swift-lang.org/main">here</a>.
+</p>
+</li>
+<li>
+<p>
+More about ALCF can be found <a href="http://www.alcf.anl.gov">here</a>.
+</p>
+</li>
+<li>
+<p>
+More about IBM BlueGene sub-block jobs can be found <a href="http://www.alcf.anl.gov/files/ensemble_jobs_0.pdf">here</a> (PDF).
+</p>
+</li>
+</ol></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2015-03-24 17:06:25 CDT
+</div>
+</div>
+</body>
+</html>
