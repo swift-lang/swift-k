@@ -33,6 +33,7 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.mapping.nodes.PartialCloseable;
 import org.griphyn.vdl.util.SwiftConfig;
 
@@ -66,7 +67,7 @@ public class Parameterlog extends InternalFunction {
         synchronized(this) {
             if (enabled == null) {
                 Context ctx = this.context.getValue(stack);
-                SwiftConfig config = (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
+                SwiftConfig config = (SwiftConfig) ctx.getAttribute(SwiftContext.ATTR_SWIFT_CONFIG);
                 enabled = config.isProvenanceEnabled();
             }
             run = enabled;

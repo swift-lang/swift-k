@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
@@ -85,13 +86,14 @@ public class ExternalMapperParams extends MappingParamSet {
 		}
 		super.toString(sb);
 	}
+	
 	@Override
-	public void unwrapPrimitives() {
+	public void unwrapPrimitives(AbstractMapper m) {
 		exec = unwrap(exec, String.class);
 		for (Map.Entry<String, Object> e : other.entrySet()) {
 		    e.setValue(unwrap(e.getValue(), String.class));
 		}
-		super.unwrapPrimitives();
+		super.unwrapPrimitives(m);
 	}
 
 	public Map<String, Object> getOtherParams() {

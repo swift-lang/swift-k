@@ -92,12 +92,24 @@ site."*" {
 			_default: null
 		}
 		options: "?Object"
+		credentials {
+			type {
+				_type: "?String"
+			}
+			"*": "?Object"
+		}
 	}
 
 	execution {
 		type: "String"
 		URL: "?URI"
 		jobManager: "?String"
+		credentials {
+			type {
+				_type: "?String"
+			}
+			"*": "?Object"
+		}
 		options {
 			# Coasters
 			workerManager: "?String"
@@ -187,7 +199,7 @@ site."*" {
 			condor {
 				"*": "?Object"
 			}
-            radical-pilot{
+            radical-pilot {
                 mongodb: "?String"
                 resource: "?String"
                 runtime : "?StrictlyPositiveInt"
@@ -481,4 +493,24 @@ maxForeachThreads {
 maxThreads {
 	_type: "?StrictlyPositiveInt"
 	_default: 1000000
+}
+
+rootFS {
+	type {
+		_type: "?String"
+		_default: null
+	}
+	URL {
+		_type: "?URI"
+		_default: null
+	}
+	options {
+		"*": "?Object"
+	}
+	credentials {
+		type {
+			_type: "?String"
+		}
+		"*": "?Object"
+	}
 }

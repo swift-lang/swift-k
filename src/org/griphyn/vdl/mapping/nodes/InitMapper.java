@@ -36,6 +36,7 @@ import k.rt.FutureListener;
 
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.futures.FutureNotYetAvailable;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.karajan.lib.Tracer;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -69,6 +70,11 @@ public class InitMapper implements Mapper, FutureListener {
         this.dmc = dmc;
     }
     
+    @Override
+    public void setContext(SwiftContext ctx) {
+        mapper.setContext(ctx);
+    }
+
     @Override
     public boolean supportsCleaning() {
         return mapper.supportsCleaning();
@@ -160,11 +166,6 @@ public class InitMapper implements Mapper, FutureListener {
     @Override
     public void futureUpdated(Future fv) {
         initialize(node);
-    }
-
-    @Override
-    public void setBaseDir(String baseDir) {
-        mapper.setBaseDir(baseDir);
     }
 
     @Override

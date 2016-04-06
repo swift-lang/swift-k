@@ -139,7 +139,7 @@ public class StructuredRegularExpressionMapper extends AbstractMapper {
 			m2.appendReplacement(sb, m.group(g));
 		}
 		m2.appendTail(sb);
-		return new AbsFile(sb.toString());
+		return newFile(sb.toString());
 	}
 
 	public Path rmap(String name) {

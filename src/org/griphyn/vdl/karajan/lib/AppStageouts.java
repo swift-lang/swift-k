@@ -22,6 +22,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
+import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
@@ -40,7 +41,7 @@ public class AppStageouts extends AppStageFiles {
     
     private ChannelRef<List<String>> cr_stageout;
     
-    private VarRef<String> cwd;
+    private VarRef<Context> ctx;
 
     
     @Override
@@ -52,7 +53,7 @@ public class AppStageouts extends AppStageFiles {
     @Override
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
-        cwd = scope.getVarRef("CWD");
+        ctx = scope.getVarRef(Context.VAR_NAME);
     }
 
     protected void runBody(LWThread thr) {
@@ -60,7 +61,7 @@ public class AppStageouts extends AppStageFiles {
             Stack stack = thr.getStack();
             List<AbsFile> files = this.files.getValue(stack);
             List<AbsFile> outCollect = this.outCollect.getValue(stack);
-            String cwd = this.cwd.getValue(stack);
+            String cwd = this.ctx.getValue(stack).getCWD();
 
             process(stack, files, cwd);
             process(stack, outCollect, cwd);
@@ -77,7 +78,7 @@ public class AppStageouts extends AppStageFiles {
             if ("direct".equals(protocol)) {
                 continue;
             }
-            key.set(cwd, file);
+            key.set(file);
             List<String> cached = getFromCache(key);
             
             if (cached != null) {
@@ -85,7 +86,7 @@ public class AppStageouts extends AppStageFiles {
             }
             else {
                 String relpath = PathUtils.remotePathName(file);
-                List<String> value = makeList(relpath, localPath(cwd, protocol, file.getPath(), file));
+                List<String> value = makeList(relpath, file.toString());
                 putInCache(key, value);
                 cr_stageout.append(stack, value);
             }

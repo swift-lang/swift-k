@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.MappingParamSet;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 
@@ -71,12 +72,12 @@ public class SingleFileMapperParams extends MappingParamSet {
 	}
 
 	@Override
-	public void unwrapPrimitives() {
+	public void unwrapPrimitives(AbstractMapper m) {
 		if (file == null) {
 			throw new IllegalArgumentException("Missing required argument 'file'");
 		}
-		file = new AbsFile((String) unwrap(file, String.class));
-		super.unwrapPrimitives();
+		file = m.newFile((String) unwrap(file, String.class));
+		super.unwrapPrimitives(m);
 	}
 
 

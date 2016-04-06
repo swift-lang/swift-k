@@ -31,26 +31,21 @@ import org.griphyn.vdl.mapping.AbsFile;
 public abstract class AppStageFiles extends InternalFunction {
     
     protected static interface CacheKey {
-        String getCWD();
-
         AbsFile getFile();
     }
     
     protected static abstract class AbstractCacheKey implements CacheKey {
         @Override
         public int hashCode() {
-            String cwd = getCWD();
             AbsFile file = getFile();
             final int prime = 31;
             int result = 1;
-            result = prime * result + ((cwd == null) ? 0 : cwd.hashCode());
             result = prime * result + ((file == null) ? 0 : file.hashCode());
             return result;
         }
 
         @Override
         public boolean equals(Object obj) {
-            String cwd = getCWD();
             AbsFile file = getFile();
             if (this == obj)
                 return true;
@@ -59,12 +54,6 @@ public abstract class AppStageFiles extends InternalFunction {
             if (getClass() != obj.getClass())
                 return false;
             CacheKey other = (CacheKey) obj;
-            if (cwd == null) {
-                if (other.getCWD() != null)
-                    return false;
-            }
-            else if (!cwd.equals(other.getCWD()))
-                return false;
             if (file == null) {
                 if (other.getFile() != null)
                     return false;
@@ -76,24 +65,17 @@ public abstract class AppStageFiles extends InternalFunction {
     }
     
     protected static class CacheKeyTmp extends AbstractCacheKey {
-        public String cwd;
         public AbsFile file;
         
         public CacheKeyTmp() {
         }
         
-        public CacheKeyTmp(String cwd, AbsFile file) {
-            this.cwd = cwd;
+        public CacheKeyTmp(AbsFile file) {
             this.file = file;
         }
         
-        public void set(String cwd, AbsFile file) {
-            this.cwd = cwd;
+        public void set(AbsFile file) {
             this.file = file;
-        }
-
-        public String getCWD() {
-            return cwd;
         }
 
         public AbsFile getFile() {
@@ -102,16 +84,10 @@ public abstract class AppStageFiles extends InternalFunction {
     }
     
     protected static class CacheKeyPerm extends AbstractCacheKey {
-        private String cwd;
-        private WeakReference<AbsFile> file;
+        private final WeakReference<AbsFile> file;
         
-        public CacheKeyPerm(String cwd, AbsFile file) {
-            this.cwd = cwd;
+        public CacheKeyPerm(AbsFile file) {
             this.file = new WeakReference<AbsFile>(file);
-        }
-
-        public String getCWD() {
-            return cwd;
         }
 
         public AbsFile getFile() {
@@ -131,7 +107,7 @@ public abstract class AppStageFiles extends InternalFunction {
                 return null;
             }
             else {
-                survivor.put(new CacheKeyPerm(key.getCWD(), key.getFile()), l);
+                survivor.put(new CacheKeyPerm(key.getFile()), l);
                 return l;
             }
         }
@@ -144,21 +120,7 @@ public abstract class AppStageFiles extends InternalFunction {
         if (eden.size() > MAX_EDEN_SIZE) {
             eden.clear();
         }
-        eden.put(new CacheKeyPerm(key.getCWD(), key.getFile()), value);
-    }
-
-    protected static String localPath(String cwd, String protocol, String path, AbsFile file) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(protocol);
-        sb.append("://");
-        sb.append(file.getHost());
-        sb.append('/');
-        if (!file.isAbsolute()) {
-            sb.append(cwd);
-            sb.append('/');
-        }
-        sb.append(path);
-        return sb.toString();
+        eden.put(new CacheKeyPerm(key.getFile()), value);
     }
 
     protected List<String> makeList(String s1, String s2) {

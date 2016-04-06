@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.FileSystemLister;
@@ -103,7 +102,7 @@ public class FixedArrayFileMapper extends AbstractMapper {
 		    Object o = path.getFirst();
 		    if (o instanceof Integer) {
 		        int index = ((Integer) o).intValue();
-		        return new AbsFile(getFiles()[index]);
+		        return newFile(getFiles()[index]);
 		    }
 		    else {
 		        throw new IllegalArgumentException("The fixed array mapper can only be used with an int key array");

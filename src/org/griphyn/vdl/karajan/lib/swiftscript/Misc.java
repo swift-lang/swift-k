@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import k.rt.Channel;
+import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
@@ -32,12 +33,15 @@ import k.thr.LWThread;
 import org.apache.log4j.Logger;
 import org.globus.cog.karajan.analyzer.ArgRef;
 import org.globus.cog.karajan.analyzer.ChannelRef;
+import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.Signature;
+import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.util.TypeUtil;
 import org.globus.cog.util.StringCache;
 import org.griphyn.vdl.karajan.FileNameResolver;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.karajan.lib.SwiftFunction;
 import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.DSHandle;
@@ -216,12 +220,19 @@ public class Misc {
 	
 	public static class Exists extends AbstractSingleValuedSwiftFunction {
         private ArgRef<AbstractDataNode> file;
+        private VarRef<SwiftContext> ctx;
 
         @Override
         protected Signature getSignature() {
             return new Signature(params("file"));
         }
         
+        @Override
+        protected void addLocals(Scope scope) {
+        	ctx = scope.getVarRef(Context.VAR_NAME);
+            super.addLocals(scope);
+        }
+
         @Override
         protected Field getFieldType() {
             return Field.GENERIC_BOOLEAN;
@@ -238,7 +249,7 @@ public class Misc {
         	    filename = new FileNameResolver(dn).getSingleLocalPath();
         	}
 
-            AbsFile file = new AbsFile(filename);
+            AbsFile file = AbsFile.resolve(filename, ctx.getValue(stack).getRootFS());
             if (logger.isDebugEnabled()) {
                 logger.debug("exists: " + file);
             }

@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
 
@@ -95,7 +96,7 @@ public class NullMapper implements Mapper {
     }
 
     @Override
-    public void setBaseDir(String baseDir) {
+    public void setContext(SwiftContext ctx) {
     }
 
     @Override

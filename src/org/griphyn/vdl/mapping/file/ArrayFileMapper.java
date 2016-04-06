@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.FileSystemLister;
@@ -91,7 +90,7 @@ public class ArrayFileMapper extends AbstractMapper {
         srcNode = dn.getField(path);
         
         String returnValue = srcNode.getValue().toString();
-        return new AbsFile(returnValue);
+        return newFile(returnValue);
 	}
 
 	@Override

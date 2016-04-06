@@ -35,6 +35,7 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.GenericMappingParamSet;
 import org.griphyn.vdl.mapping.InvalidMapperException;
@@ -69,8 +70,8 @@ public class New extends SwiftFunction {
 	private ArgRef<Boolean> input;
 	private ArgRef<Integer> _defline;
 	
-	private VarRef<String> cwd;
 	private VarRef<Types> types;
+	private VarRef<SwiftContext> context;
 	
 	@Override
 	protected Signature getSignature() {
@@ -84,7 +85,7 @@ public class New extends SwiftFunction {
     @Override
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
-        cwd = scope.getVarRef("CWD");
+        context = scope.getVarRef("#context");
         types = scope.getVarRef("#types");
     }
    
@@ -176,7 +177,7 @@ public class New extends SwiftFunction {
                 throw new ExecutionException(this, "Invalid mapper '" + mapping.getDescriptor() + "'");
             }
 		    mapper.setParameters(mapping);
-		    mapper.setBaseDir(cwd.getValue(stack));
+		    mapper.setContext(context.getValue(stack));
 		}
 		else {
 		    mapper = NULL_MAPPER;

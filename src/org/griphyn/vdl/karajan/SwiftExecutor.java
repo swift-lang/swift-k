@@ -21,7 +21,6 @@
 package org.griphyn.vdl.karajan;
 
 import k.rt.Context;
-import k.rt.ExecutionException;
 import k.rt.Executor;
 import k.rt.Stack;
 import k.thr.Scheduler.RootThread;
@@ -65,8 +64,7 @@ public class SwiftExecutor extends Executor {
 		if (logger.isDebugEnabled()) {
             logger.debug(context);
         }
-        logger.info("swift.home = " + 
-                    System.getProperty("swift.home"));
+        logger.info("swift.home = " + System.getProperty("swift.home"));
         start(new RootThread(getRoot(), new Stack()), context);
     }
 }

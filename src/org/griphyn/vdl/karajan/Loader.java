@@ -217,15 +217,16 @@ public class Loader extends org.globus.cog.karajan.Loader {
             Context context = new SwiftContext();
             context.setArguments(ap.getArguments());
             context.setCWD(new File(".").getAbsolutePath());
-            context.setAttribute("SWIFT:CONFIG", config);
+            context.setAttribute(SwiftContext.ATTR_SWIFT_CONFIG, config);
             context.setAttribute("projectName", projectName);
-            context.setAttribute("SWIFT:SCRIPT_NAME", projectName);
-            context.setAttribute("SWIFT:RUN_ID", runID);
-            context.setAttribute("SWIFT:DRY_RUN", ap.isPresent(ARG_DRYRUN));
-            context.setAttribute("SWIFT:HOME", System.getProperty("swift.home"));
-            context.setAttribute("RUN:CLEANUPS", new HashSet<Object>());
-            context.setAttribute("RUN:ERRORS", new ArrayList<Object>());
-            context.setAttribute("RUN:WARNINGS", new ArrayList<Object>());
+            context.setAttribute(SwiftContext.ATTR_SWIFT_SCRIPT_NAME, projectName);
+            context.setAttribute(SwiftContext.ATTR_SWIFT_RUN_ID, runID);
+            context.setAttribute(SwiftContext.ATTR_SWIFT_DRY_RUN, ap.isPresent(ARG_DRYRUN));
+            context.setAttribute(SwiftContext.ATTR_SWIFT_HOME, System.getProperty("swift.home"));
+            context.setAttribute(SwiftContext.ATTR_RUN_CLEANUPS, new HashSet<Object>());
+            context.setAttribute(SwiftContext.ATTR_RUN_ERRORS, new ArrayList<Object>());
+            context.setAttribute(SwiftContext.ATTR_RUN_WARNINGS, new ArrayList<Object>());
+            context.setAttribute(SwiftContext.ATTR_SWIFT_ROOT_FS, config.getRootFS());
            
             String debugDirPrefix = System.getProperty("debug.dir.prefix");
             if (debugDirPrefix == null) {
@@ -236,7 +237,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
                debugDirPrefix += File.separatorChar;
             }
 
-            context.setAttribute("SWIFT:DEBUG_DIR_PREFIX", debugDirPrefix);
+            context.setAttribute(SwiftContext.ATTR_SWIFT_DEBUG_DIR_PREFIX, debugDirPrefix);
 
             Main root = compileKarajan(tree, context);
             root.setFileName(projectName);

@@ -29,6 +29,7 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCache;
 import org.griphyn.vdl.karajan.lib.cache.VDLFileCacheFactory;
 import org.griphyn.vdl.util.SwiftConfig;
@@ -60,7 +61,7 @@ public abstract class CacheFunction extends InternalFunction {
         synchronized(ctx) {
             VDLFileCache cache = (VDLFileCache) ctx.getAttribute("SWIFT:FILE_CACHE");
             if (cache == null) {
-                SwiftConfig conf = (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
+                SwiftConfig conf = (SwiftConfig) ctx.getAttribute(SwiftContext.ATTR_SWIFT_CONFIG);
                 cache = VDLFileCacheFactory.newInstance(conf.getCachingAlgorithm());
                 ctx.setAttribute("SWIFT:FILE_CACHE", cache);
             }

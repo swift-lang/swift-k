@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.InvalidPathException;
@@ -67,7 +66,7 @@ public class TestMapper extends AbstractMapper {
         TestMapperParams cp = getParams();
         if (remap == null) {
             if (map == null) {
-                map = new AbsFile(cp.getFile());
+                map = newFile(cp.getFile());
             }
             return map;
         }

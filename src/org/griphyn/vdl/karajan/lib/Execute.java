@@ -50,6 +50,7 @@ import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.grid.GridExec;
 import org.globus.cog.karajan.compiled.nodes.grid.TaskStateFuture;
 import org.globus.cog.karajan.scheduler.Scheduler;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.karajan.lib.RuntimeStats.ProgressState;
 import org.griphyn.vdl.karajan.lib.replication.CanceledReplicaException;
 import org.griphyn.vdl.karajan.lib.replication.ReplicationManager;
@@ -107,7 +108,7 @@ public class Execute extends GridExec {
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
         context = scope.getVarRef("#context");
-        config = (SwiftConfig) context.getValue().getAttribute("SWIFT:CONFIG");
+        config = (SwiftConfig) context.getValue().getAttribute(SwiftContext.ATTR_SWIFT_CONFIG);
         replicationEnabled = config.isReplicationEnabled();
     }
 

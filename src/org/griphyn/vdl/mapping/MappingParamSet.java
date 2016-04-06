@@ -77,7 +77,7 @@ public abstract class MappingParamSet {
         }
     }
 
-    public void unwrapPrimitives() {
+    public void unwrapPrimitives(AbstractMapper m) {
     }
         
     /** 

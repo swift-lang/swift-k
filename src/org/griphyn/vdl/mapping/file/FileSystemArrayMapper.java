@@ -74,7 +74,7 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
 		if (filename == null) {
 			return null;
 		}
-		return new AbsFile(filename);
+		return newFile(filename);
 	}
 
     @Override
@@ -88,10 +88,10 @@ public class FileSystemArrayMapper extends AbstractFileMapper {
         String suffix = defaultValue(cp.getSuffix(), "");
         String pattern = defaultValue(cp.getPattern(), null);
         if (pattern != null) {
-            return Collections.singletonList(new AbsFile(location + "/" + pattern));
+            return Collections.singletonList(newFile(location + "/" + pattern));
         }
         else {
-            return Collections.singletonList(new AbsFile(location + "/" + prefix + "*" + suffix));
+            return Collections.singletonList(newFile(location + "/" + prefix + "*" + suffix));
         }
     }
 

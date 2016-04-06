@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.DSHandle;
 import org.griphyn.vdl.mapping.FileSystemLister;
@@ -149,7 +148,7 @@ public class CSVMapper extends AbstractMapper {
         GeneralizedFileFormat fileFormat;
         if (handle.getType().equals(Types.STRING)) {
             String path = (String) handle.getValue();
-            fileFormat = new AbsFile(path);
+            fileFormat = newFile(path);
         }
         else {
             PhysicalFormat format = handle.map();
@@ -226,7 +225,7 @@ public class CSVMapper extends AbstractMapper {
 		}
 
 		if (!pi.hasNext()) {
-			return new AbsFile(cl.get(0));
+			return newFile(cl.get(0));
 		}
 
 		pe = pi.next();
@@ -235,7 +234,7 @@ public class CSVMapper extends AbstractMapper {
 			throw new InvalidPathException(path);
 		}
 		int ci = colindex.get(col).intValue();
-		return new AbsFile(cl.get(ci));
+		return newFile(cl.get(ci));
 	}
 
     @Override

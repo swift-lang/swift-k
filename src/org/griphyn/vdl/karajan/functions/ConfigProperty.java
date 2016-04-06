@@ -37,6 +37,7 @@ import org.globus.cog.karajan.compiled.nodes.InternalFunction;
 import org.globus.cog.karajan.compiled.nodes.Node;
 import org.globus.cog.karajan.parser.WrapperNode;
 import org.globus.cog.karajan.util.BoundContact;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.util.SwiftConfig;
 
 public class ConfigProperty extends InternalFunction {
@@ -47,7 +48,6 @@ public class ConfigProperty extends InternalFunction {
     
     private SwiftConfig instanceConfig;
     private VarRef<Context> context;
-    
     
     @Override
     protected Signature getSignature() {
@@ -112,13 +112,13 @@ public class ConfigProperty extends InternalFunction {
     private synchronized SwiftConfig getInstanceConfig(Stack stack) {
         if (instanceConfig == null) {
             Context ctx = this.context.getValue(stack);
-            instanceConfig = (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
+            instanceConfig = (SwiftConfig) ctx.getAttribute(SwiftContext.ATTR_SWIFT_CONFIG);
         }
         return instanceConfig;
     }
     
     private synchronized SwiftConfig getInstanceConfig(Context ctx) {
-    	return (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
+    	return (SwiftConfig) ctx.getAttribute(SwiftContext.ATTR_SWIFT_CONFIG);
     }
 
     public static Object getProperty(String name, SwiftConfig instanceConfig) {

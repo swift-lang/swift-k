@@ -22,9 +22,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.griphyn.vdl.mapping.file.FileGarbageCollector;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
+import org.griphyn.vdl.util.RootFS;
 
 /** AbstractMapper provides an implementation of the Mapper interface to be
     used as a base class for writing other mappers. It provides handling
@@ -37,14 +38,18 @@ public abstract class AbstractMapper implements Mapper {
 	public static final Logger logger = Logger.getLogger(AbstractMapper.class);
 	
 	private MappingParamSet params;
-	private String baseDir;
+	private SwiftContext ctx;
 	
-    public String getBaseDir() {
-        return baseDir;
+    public RootFS getRootFS() {
+        return (RootFS) ctx.getAttribute(SwiftContext.ATTR_SWIFT_ROOT_FS);
+    }
+    
+    public String getCWD() {
+    	return ctx.getCWD();
     }
 
-    public void setBaseDir(String baseDir) {
-        this.baseDir = baseDir;
+    public void setContext(SwiftContext ctx) {
+        this.ctx = ctx;
     }
 
     @Override
@@ -82,7 +87,7 @@ public abstract class AbstractMapper implements Mapper {
 
     @Override
     public void initialize(RootHandle root) {
-        params.unwrapPrimitives();
+        params.unwrapPrimitives(this);
     }
 
     @Override
@@ -153,5 +158,10 @@ public abstract class AbstractMapper implements Mapper {
 
     @Override
     public void fileCleaned(PhysicalFormat pf) {
+    }
+    
+    public AbsFile newFile(String url) {
+    	RootFS rfs = ctx.getRootFS();
+    	return AbsFile.resolve(url, rfs);
     }
 }

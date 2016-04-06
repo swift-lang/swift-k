@@ -153,7 +153,8 @@ public class MappingParamFileGenerator {
     }
 
     private static final List<String> IMPORTS = Arrays.asList("java.util.Arrays", "java.util.Collection", 
-        "java.util.List", "org.griphyn.vdl.mapping.nodes.AbstractDataNode", "org.griphyn.vdl.mapping.MappingParamSet");
+        "java.util.List", "org.griphyn.vdl.mapping.nodes.AbstractDataNode", "org.griphyn.vdl.mapping.MappingParamSet", 
+        "org.griphyn.vdl.mapping.AbstractMapper");
 
     private static void writeFile(File nf, String pkg, List<Param> params, Map<String, Object> opts) throws IOException {
         String name = nf.getName().substring(0, nf.getName().lastIndexOf('.'));
@@ -282,7 +283,7 @@ public class MappingParamFileGenerator {
     
     private static void generateUnwrap(BufferedWriter bw, List<Param> params) throws IOException {
         bw.write("\t@Override\n");
-        bw.write("\tpublic void unwrapPrimitives() {\n");
+        bw.write("\tpublic void unwrapPrimitives(AbstractMapper _m) {\n");
         for (Param p : params) {
             if (!p.internal) {
                 if (p.value == null) {
@@ -296,7 +297,7 @@ public class MappingParamFileGenerator {
                 }
             }
         }
-        bw.write("\t\tsuper.unwrapPrimitives();\n");
+        bw.write("\t\tsuper.unwrapPrimitives(_m);\n");
         bw.write("\t}\n\n");
     }
 

@@ -22,6 +22,7 @@ package org.griphyn.vdl.karajan.lib;
 
 import java.util.List;
 
+import k.rt.Context;
 import k.rt.Stack;
 import k.thr.LWThread;
 
@@ -33,7 +34,9 @@ import org.globus.cog.karajan.analyzer.Signature;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.swift.data.Director;
 import org.globus.swift.data.policy.Policy;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.mapping.AbsFile;
+import org.griphyn.vdl.util.RootFS;
 
 public class AppStageins extends AppStageFiles {
 	private ArgRef<String> jobid;
@@ -41,7 +44,7 @@ public class AppStageins extends AppStageFiles {
 	
 	private ChannelRef<List<String>> cr_stagein;
 	
-	private VarRef<String> cwd;
+	private VarRef<SwiftContext> ctx;
 	
     static Logger logger = Logger.getLogger(AppStageins.class);
     
@@ -54,14 +57,14 @@ public class AppStageins extends AppStageFiles {
     @Override
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
-        cwd = scope.getVarRef("CWD");
+        ctx = scope.getVarRef(Context.VAR_NAME);
     }
 
     
     protected void runBody(LWThread thr) {
     	Stack stack = thr.getStack();
     	List<AbsFile> files = this.files.getValue(stack);
-        String cwd = this.cwd.getValue(stack);
+        RootFS rfs = this.ctx.getValue(stack).getRootFS();
         CacheKeyTmp key = new CacheKeyTmp();
         for (AbsFile file : files) {
             Policy policy = Director.lookup(file.toString());
@@ -70,7 +73,7 @@ public class AppStageins extends AppStageFiles {
                 continue; 
             }
             
-            key.set(cwd, file);
+            key.set(file);
             List<String> cached = getFromCache(key);
             
             if (cached != null) {
@@ -85,7 +88,7 @@ public class AppStageins extends AppStageFiles {
                 if (logger.isDebugEnabled()) {
                     logger.debug("will stage in: " + relpath + " via: " + protocol);
                 }
-                List<String> value = makeList(localPath(cwd, protocol, file.getPath(), file), relpath);
+                List<String> value = makeList(file.toString(), relpath);
                 putInCache(key, value);
                 cr_stagein.append(stack, value);
             }

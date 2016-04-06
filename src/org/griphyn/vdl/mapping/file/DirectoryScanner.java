@@ -70,12 +70,4 @@ public class DirectoryScanner implements Iterator<AbsFile> {
     public void remove() {
         throw new UnsupportedOperationException();
     }
-    
-    public static void main(String[] args) {
-        AbsFile f = new AbsFile(".");
-        DirectoryScanner s = new DirectoryScanner(f);
-        while (s.hasNext()) {
-            System.out.println(s.next());
-        }
-    }
 }

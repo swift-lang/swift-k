@@ -205,7 +205,7 @@ public class FileNameResolver {
     private AbsFile mapSingle() {
         AbsFile f = (AbsFile) var.map();
         if (defaultScheme != null && f.getProtocol() == null) {
-            f = new AbsFile(defaultScheme, f.getHost(), f.getPort(), f.getDirectory(), f.getName());
+            f = new AbsFile(f.getService(), defaultScheme, f.getHost(), f.getPort(), f.getDirectory(), f.getName());
         }
         return f;
     }
@@ -235,7 +235,7 @@ public class FileNameResolver {
         for (Path p : src) {
             AbsFile f = (AbsFile) mapper.map(fromRoot.append(p));
             if (defaultScheme != null && f.getProtocol() == null) {
-                f = new AbsFile(defaultScheme, f.getHost(), f.getPort(), f.getDirectory(), f.getName());
+                f = new AbsFile(f.getService(), defaultScheme, f.getHost(), f.getPort(), f.getDirectory(), f.getName());
             }
             l.add(f);
         }

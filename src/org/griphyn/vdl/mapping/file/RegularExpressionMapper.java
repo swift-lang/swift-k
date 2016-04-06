@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.mapping.AbstractMapper;
 import org.griphyn.vdl.mapping.FileSystemLister;
 import org.griphyn.vdl.mapping.GenericMappingParamSet;
@@ -113,7 +112,7 @@ public class RegularExpressionMapper extends AbstractMapper {
             }
 		}
 		m2.appendTail(sb);
-		return new AbsFile(sb.toString());
+		return newFile(sb.toString());
 	}
 
 	public boolean isStatic() {

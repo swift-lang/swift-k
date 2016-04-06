@@ -190,7 +190,7 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 			logger.debug("mapper id=" + this.hashCode() + " finished mapping " 
 			    + path + " to " + sb.toString());
 		}
-		return new AbsFile(sb.toString());
+		return newFile(sb.toString());
 	}
 
     protected void appendSeparator(StringBuilder sb, int level, int totalTokenCount, FileNameElementMapper em) {
@@ -228,10 +228,10 @@ public abstract class AbstractFileMapper extends AbstractMapper {
 		AbstractFileMapperParams cp = getParams();
 		String location = cp.getLocation();
 		if (location == null) {
-			f = new AbsFile(".");
+			f = newFile(".");
 		}
 		else {
-			f = new AbsFile(location);
+			f = newFile(location);
 			if (!f.exists()) {
 			    throw new IllegalArgumentException("Directory not found: " + location);
 			}

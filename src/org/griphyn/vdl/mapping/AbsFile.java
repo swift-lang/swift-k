@@ -33,6 +33,7 @@ import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
 import org.globus.cog.abstraction.interfaces.RemoteFile;
 import org.globus.cog.abstraction.interfaces.Service;
+import org.griphyn.vdl.util.RootFS;
 
 public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
     
@@ -41,45 +42,105 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
     static {
         cwd = new File(".").getAbsolutePath();
     }
+    
+    private Service service;
 	
     public AbsFile(AbsFile dir, String name) {
         super(dir, name);
+        this.service = dir.getService();
     }
     
-	public AbsFile(String url) {
+    public AbsFile(String path, AbsFile f) {
+        super(f.getProtocol(), f.getHost(), f.getPort(), dircat(path, f.getDirectory()), f.getName());
+        this.service = f.getService();
+    }
+    
+	private static String dircat(String p1, String p2) {
+        if (p2 == null) {
+            return p1;
+        }
+        else if (p2.startsWith("/")) {
+            return p2;
+        }
+        else if (p1 == null) {
+            return p2;
+        }
+        else if (p1.endsWith("/")) {
+            return p1 + p2;
+        }
+        else {
+            return p1 + '/' + p2;
+        }
+    }
+
+    public AbsFile(String url) {
 	    super(url);
 	}
+	
+	/*public AbsFile(String url, RootFS rootFS) {
+        super(url);
+        this.rootFS = rootFS;
+    }*/
     
 	public AbsFile(String protocol, String host, String path) {
 	    super(protocol, host, path);
 	}
-	
+		
 	public AbsFile(String protocol, String host, int port, String dir, String name) {
         super(protocol, host, port, dir, name); 
+    }
+	
+	public AbsFile(Service service, String protocol, String host, int port, String dir, String name) {
+        super(protocol, host, port, dir, name);
+        this.service = service;
     }
 
     public AbsFile(String protocol, String host, int port, String path) {
         super(protocol, host, port, path);    
     }
     
+    public static AbsFile resolve(String url, RootFS rfs) {
+        AbsFile f = new AbsFile(url);
+        if (rfs.isDefault()) {
+            return f;
+        }
+        else {
+            if (f.getProtocol() != null) {
+                // leave this alone
+            }
+            else {
+                f = new AbsFile(rfs.getService(), rfs.getProtocol(), rfs.getHost(), rfs.getPort(),  
+                        dircat(rfs.getPath().getDirectory(), f.getDirectory()), f.getName());
+            }
+        }
+        return f;
+    }
+        
     protected FileResource getFileResource() throws IOException {
-		Service s = new ServiceImpl();
-		String protocol = getProtocol("file");
-		if (protocol.equals("direct")) {
-		    protocol = "file";
-		}
-		s.setProvider(protocol);
-		s.setType(Service.FILE_OPERATION);
-		s.setServiceContact(new ServiceContactImpl(getHost("localhost"), getPort()));
+        ensureServiceNotNull();
 		try {
-			return FileResourceCache.getDefault().getResource(s);
+			return FileResourceCache.getDefault().getResource(service);
 		}
 		catch (Exception e) {
 			throw new RuntimeException("Could not instantiate file resource", e);
 		}
 	}
 
-	protected void releaseResource(FileResource fr) {
+	private void ensureServiceNotNull() {
+	    if (service != null) {
+	        return;
+	    }
+	    service = new ServiceImpl();
+        String protocol = getProtocol("file");
+        if (protocol.equals("direct")) {
+            protocol = "file";
+        }
+        service.setProvider(protocol);
+        service.setType(Service.FILE_OPERATION);
+        service.setServiceContact(new ServiceContactImpl(getHost("localhost"), getPort()));
+    }
+
+    protected void releaseResource(FileResource fr) {
 		FileResourceCache.getDefault().releaseResource(fr);
 	}
 	
@@ -129,7 +190,7 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
                 String dir = getPath();
                 List<AbsFile> l = new ArrayList<AbsFile>();
                 for (GridFile gf : fr.list(dir)) {
-                    AbsFile f = new AbsFile(protocol, host, port, dir, gf.getName());
+                    AbsFile f = new AbsFile(service, protocol, host, port, dir, gf.getName());
                     // f.getDirectory() cannot be null since dir cannot be null since getPath() returns
                     // a non-null string
                     if (gf.isDirectory() && (filter == null || filter.accept(new File(f.getDirectory()), f.getName()))) {
@@ -158,7 +219,7 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
                 String dir = getPath();
 				List<AbsFile> l = new ArrayList<AbsFile>();
 				for (GridFile gf : fr.list(dir)) {
-					AbsFile f = new AbsFile(protocol, host, port, dir, gf.getName());
+					AbsFile f = new AbsFile(service, protocol, host, port, dir, gf.getName());
 					if (filter == null || filter.accept(new File(f.getDirectory()), f.getName())) {
 						l.add(f);
 					}
@@ -186,5 +247,9 @@ public class AbsFile extends RemoteFile implements GeneralizedFileFormat {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Service getService() {
+        return service;
     }
 }

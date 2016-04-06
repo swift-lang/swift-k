@@ -49,6 +49,7 @@ import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
 import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
+import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.ServiceContact;
 import org.globus.cog.karajan.util.BoundContact;
@@ -56,6 +57,7 @@ import org.globus.swift.catalog.site.Application;
 import org.globus.swift.catalog.site.SwiftContact;
 import org.globus.swift.catalog.site.SwiftContactSet;
 import org.globus.swift.catalog.types.SysInfo;
+import org.griphyn.vdl.mapping.AbsFile;
 import org.griphyn.vdl.util.ConfigTree.Node;
 
 import com.typesafe.config.Config;
@@ -95,7 +97,8 @@ public class SwiftConfig implements Cloneable {
         REPLICATION_LIMIT("replicationLimit"), 
         WRAPPER_INVOCATION_MODE("wrapperInvocationMode"), 
         CDM_BROADCAST_MODE("CDMBroadcastMode"), 
-        CMD_FILE("CDMFile");
+        CMD_FILE("CDMFile"),
+        ROOT_FS("rootFS");
         
         public String propName;
         private Key(String propName) {
@@ -353,6 +356,7 @@ public class SwiftConfig implements Cloneable {
         
     private SwiftContactSet definedSites;
     private SwiftContactSet sites;
+    private RootFS rootFS;
     private ConfigTree<ValueLocationPair> tree;
     private Map<String, Object> flat;
     private String fileName;
@@ -417,6 +421,9 @@ public class SwiftConfig implements Cloneable {
                     definedSites.addApplication(app);
                 }
             }
+            else if (e.getKey().equals("rootFS")) {
+                rootFS(e.getValue());
+            }
         }
         if (sites == null || sites.isEmpty()) {
             throw new RuntimeException("No sites enabled");
@@ -441,8 +448,51 @@ public class SwiftConfig implements Cloneable {
                 flat.put(leaf, tree.get(leaf).value);
             }
         }
+        
+        if (rootFS == null) {
+            rootFS = new RootFS(null, null);
+        }
     }
     
+    private void rootFS(Node<ValueLocationPair> e) {
+        Service s = new ServiceImpl();
+        String url = getString(e, "URL", null);
+        AbsFile furl = new AbsFile(url);
+        s.setServiceContact(new ServiceContactImpl(furl.getHost(), furl.getPort()));
+        s.setType(Service.FILE_OPERATION);
+        
+        for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> f : e.entrySet()) {
+            if (f.getKey().equals("type")) {
+                s.setProvider(getString(f.getValue()));
+            }
+            else if (f.getKey().equals("options")) {
+                serviceAttributes(s, f.getValue());
+            }
+            else if (f.getKey().equals("credentials")) {
+                s.setSecurityContext(securityContext(f.getValue(), new ServiceContactImpl(url)));
+            }
+        }
+        this.rootFS = new RootFS(s, furl);
+    }
+
+    private SecurityContext securityContext(Node<ValueLocationPair> e, ServiceContact contact) {
+        String type = getString(e, "type");
+        try {
+            SecurityContext sc = AbstractionFactory.newSecurityContext(type, contact);
+            Map<String, Object> cred = new HashMap<String, Object>();
+            for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> f : e.entrySet()) {
+                if (!f.getKey().equals("type")) {
+                    cred.put(f.getKey(), getObject(f.getValue()));
+                }
+            }
+            sc.setCredentialProperties(cred);
+            return sc;
+        }
+        catch (Exception ex) {
+            throw new RuntimeException("Cannot create credentials of type '" + type + "'", ex);
+        }
+    }
+
     private void markExclusive(SwiftContactSet sites) {
         Set<String> exclusive = new HashSet<String>();
         for (BoundContact bc : sites) {
@@ -744,9 +794,10 @@ public class SwiftConfig implements Cloneable {
                 url = getString(c);
             }
             else if (k.equals("options")) {
-                for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> f : e.getValue().entrySet()) {
-                    s.setAttribute(f.getKey(), getObject(f.getValue()));
-                }
+                serviceAttributes(s, c);
+            }
+            else if (k.equals("credentials")) {
+                s.setSecurityContext(securityContext(c, null));
             }
         }
         
@@ -758,6 +809,12 @@ public class SwiftConfig implements Cloneable {
         }
     }
 
+
+    private void serviceAttributes(Service s, Node<ValueLocationPair> c) {
+        for (Map.Entry<String, ConfigTree.Node<ValueLocationPair>> f : c.entrySet()) {
+            s.setAttribute(f.getKey(), getObject(f.getValue()));
+        }
+    }
 
     private Service execution(ConfigTree.Node<ValueLocationPair> n) throws InvalidProviderException, ProviderMethodException {
         ExecutionService s = new ExecutionServiceImpl();
@@ -790,7 +847,9 @@ public class SwiftConfig implements Cloneable {
             else if (k.equals("options")) {
                 execOptions((ExecutionService) s, c);
             }
-            
+            else if (k.equals("credentials")) {
+                s.setSecurityContext(securityContext(c, null));
+            }
         }
         
         s.setProvider(provider);
@@ -856,6 +915,15 @@ public class SwiftConfig implements Cloneable {
     
     private String getString(ConfigTree.Node<ValueLocationPair> c, String key) {
         return (String) c.get(key).value;
+    }
+    
+    private String getString(ConfigTree.Node<ValueLocationPair> c, String key, String def) {
+        if (c.hasKey(key)) {
+            return (String) c.get(key).value;
+        }
+        else {
+            return def;
+        }
     }
     
     private Object getObject(ConfigTree.Node<ValueLocationPair> c, String key) {
@@ -1047,5 +1115,9 @@ public class SwiftConfig implements Cloneable {
 
     public String getCDMFile() {
         return (String) get(Key.CMD_FILE);
+    }
+    
+    public RootFS getRootFS() {
+        return rootFS;
     }
 }

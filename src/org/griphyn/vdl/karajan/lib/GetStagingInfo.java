@@ -139,7 +139,7 @@ public class GetStagingInfo extends SwiftFunction {
         if (ignoreIfDirect && proto.equals("direct")) {
             return files;
         }
-        String host = f.getHost("localhost");
+        String host = f.getHost();
         
         String dir = f.getDirectory();
         if (info.remoteDirNames.isEmpty()) {
@@ -154,7 +154,9 @@ public class GetStagingInfo extends SwiftFunction {
         if (files.isEmpty()) {
             files = new HashSet<AbsFile>();
         }
-        files.add(new AbsFile(proto, host, f.getPort(), f.getDirectory(), f.getName()));
+        AbsFile f2 = new AbsFile(f.getService(), proto, host, f.getPort(), f.getDirectory(), f.getName());
+        System.out.println("F: " + f2);
+        files.add(f2);
         return files;
     }
 

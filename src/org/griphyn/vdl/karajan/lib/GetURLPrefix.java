@@ -27,11 +27,11 @@ import org.globus.cog.karajan.analyzer.Param;
 import org.globus.cog.karajan.analyzer.Scope;
 import org.globus.cog.karajan.analyzer.VarRef;
 import org.globus.cog.karajan.compiled.nodes.functions.AbstractSingleValuedFunction;
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.util.SwiftConfig;
 
 public class GetURLPrefix extends AbstractSingleValuedFunction {
     private VarRef<Context> context;
-    private VarRef<String> cwd;
     
     @Override
     protected Param[] getParams() {
@@ -42,15 +42,14 @@ public class GetURLPrefix extends AbstractSingleValuedFunction {
     protected void addLocals(Scope scope) {
         super.addLocals(scope);
         context = scope.getVarRef("#context");
-        cwd = scope.getVarRef("CWD");
     }
 
     @Override
     public Object function(Stack stack) {
         Context ctx = this.context.getValue(stack);
-        SwiftConfig config = (SwiftConfig) ctx.getAttribute("SWIFT:CONFIG");
+        SwiftConfig config = (SwiftConfig) ctx.getAttribute(SwiftContext.ATTR_SWIFT_CONFIG);
         String localServerBase = config.getWrapperStagingLocalServer();
-        String cwd = this.cwd.getValue(stack);
+        String cwd = this.context.getValue(stack).getCWD();
         
         if (cwd.endsWith("/.")) {
             cwd = cwd.substring(0, cwd.length() - 2);

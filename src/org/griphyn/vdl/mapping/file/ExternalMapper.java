@@ -65,7 +65,7 @@ public class ExternalMapper extends AbstractMapper {
 		ExternalMapperParams cp = getParams();
 		map = new HashMap<Path, AbsFile>();
 		String exec = cp.getExec();
-		String bdir = getBaseDir();
+		String bdir = getCWD();
 		if (bdir != null && !exec.startsWith("/")) {
 		    if (new File(bdir + File.separator + exec).exists()) {
 		        exec = bdir + File.separator + exec;
@@ -175,7 +175,7 @@ public class ExternalMapper extends AbstractMapper {
 		}
 		String spath = line.substring(0, m);
 		Path p = Path.parse(spath);
-		AbsFile f = new AbsFile(line.substring(m + 1).trim());
+		AbsFile f = newFile(line.substring(m + 1).trim());
 		map.put(p, f);
 	}
 

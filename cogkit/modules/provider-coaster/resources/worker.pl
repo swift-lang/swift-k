@@ -88,6 +88,11 @@ use constant {
 	ERROR_PROCESS_WALLTIME_EXCEEDED => 513
 };
 
+use constant {
+	COPY_DIR_DOWN => 0,
+	COPY_DIR_UP => 1
+};
+
 my $LOGLEVEL = NONE;
 
 my @LEVELS = ("TRACE", "DEBUG", "INFO ", "WARN ", "ERROR");
@@ -1662,6 +1667,83 @@ sub completePinnedFile {
 	}
 }
 
+sub sanitizeS3 {
+	my ($path, $root) = @_;
+	
+	my $full;
+	if (index($path, "/") == 0) {
+		if (rindex($root, "/") == length($root) - 1) {
+			$full = $root.substr($path, 1);
+		}
+		else {
+			$full = $root.$path;
+		}
+	}
+	else {
+		if (rindex($root, "/") == length($root) - 1) {
+			$full = $root.$path;
+		}
+		else {
+			$full = $root."/".$path;
+		}
+	}
+	
+	if (index($full, "/") == 0) {
+		$full = substr($full, 1);
+	}
+	return $full;
+}
+
+sub copyFile {
+	my ($src, $dst, $proto, $host, $dir, $jobid) = @_;
+	
+	wlog DEBUG, "Copying $src -> $dst with proto $proto (jobid: $jobid)\n";
+	if ($proto eq "sfs") {
+		if ($dir == COPY_DIR_UP) {
+			mkfdir($jobid, $dst);
+		}
+		copy($src, $dst);
+		return 0;
+	}
+	elsif ($proto eq "s3m") {
+		wlog DEBUG, "S3 copy\n";
+		my $JOB = $JOBDATA{$jobid}{"job"};
+		my $keyId = $$JOB{"awsaccesskeyid"};
+		my $key = $$JOB{"awsaccesskey"};
+		my $root = $$JOB{"s3root"};
+		
+		wlog DEBUG, "AWS key id: $keyId\n";
+		# this happens in a child process created just for this
+		# copy, so it should not leak anywhere else
+		$ENV{"AWS_ACCESS_KEY_ID"} = $keyId;
+		$ENV{"AWS_SECRET_ACCESS_KEY"} = $key;
+		
+		my $out;
+		if ($dir == COPY_DIR_DOWN) {
+			$src = sanitizeS3($src, $root);
+			wlog DEBUG, "Starting copy\n";
+			$out = `gof3r cp s3://$src $dst 2>1`;
+		}
+		else {
+			$dst = sanitizeS3($dst, $root);
+			wlog DEBUG, "Starting copy\n";
+			$out = `gof3r cp $src s3://$dst 2>1`;
+		}
+		my $ec = $?;
+		if ($ec == 0) {
+			#success
+			wlog DEBUG, "Output from gof3r: $out\n";
+			return 0;
+		}
+		else {
+			return $out;
+		}
+	}
+	else {
+		return "Unknonw protocol: $proto";
+	}
+}
+
 sub stagein {
 	my ($jobid) = @_;
 	
@@ -1692,14 +1774,15 @@ sub stagein {
 		if ($$STAGE[$STAGEINDEX] =~ "pinned:.*") {
 			getPinnedFile($jobid, $$STAGE[$STAGEINDEX], $$STAGED[$STAGEINDEX]);
 		}
-		elsif ($protocol eq "sfs") {
+		elsif ($protocol eq "sfs" || $protocol eq "s3m") {
 			my $dst = $$STAGED[$STAGEINDEX];
 			mkfdir($jobid, $dst);
 			asyncRun($jobid, -1, sub {
 					my ($errpipe) = @_;
-					if (!copy($path, $dst)) {
-						wlog DEBUG, "$jobid Error staging in $path to $dst: $!\n";
-						write $errpipe, "Error staging in $path to $dst: $!";
+					my $err = copyFile($path, $dst, $protocol, $host, COPY_DIR_DOWN, $jobid);
+					if ($err) {
+						wlog DEBUG, "$jobid Error staging in $path to $dst: $err\n";
+						print $errpipe "Error staging in $path to $dst: $err";
 					}
 				},
 				sub {
@@ -1993,7 +2076,7 @@ sub stageout {
 			}
 			wlog DEBUG, "$jobid PUT sent.\n";
 		}
-		elsif ($protocol eq "sfs") {
+		elsif ($protocol eq "sfs" || $protocol eq "s3m") {
 			stageoutStarted($jobid);
 			if ($skip) {
 				wlog DEBUG, "$jobid deleting file $path\n";
@@ -2002,12 +2085,12 @@ sub stageout {
 				stageoutEnded($jobid);
 			}
 			else {
-				mkfdir($jobid, $path);
 				asyncRun($jobid, -1, sub {
 						my ($errpipe) = @_;
-						if (!copy($lfile, $path)) {
-							wlog DEBUG, "$jobid Error staging out $lfile to $path: $!\n";
-							write $errpipe, "Error staging out $lfile to $path: $!";
+						my $err = copyFile($lfile, $path, $protocol, $host, COPY_DIR_UP, $jobid);
+						if ($err) {
+							wlog DEBUG, "$jobid Error staging out $lfile to $path: $err\n";
+							print $errpipe "Error staging out $lfile to $path: $err";
 						}
 					},
 					sub {
@@ -2635,11 +2718,8 @@ sub submitjobHandler {
 					$SOFTIMAGE = "";
 				}
 			}
-			elsif (index($ap[0], "docker.") != -1) {
-				$JOB{$ap[0]} = $ap[1];
-			}
 			else {
-				wlog WARN, "Ignoring attribute $ap[0] = $ap[1]\n";
+				$JOB{$ap[0]} = $ap[1];
 			}
 		}
 		elsif ($pair[0] eq "stagein") {
@@ -2758,9 +2838,20 @@ sub asyncRun {
 				setpgrp(0, 0);
 			}
 			close $PARENT_R;
-			$proc->($CHILD_W);
+			eval {
+				$proc->($CHILD_W);
+			};
+			my $err = $@;
+			if ($err) {
+				print $CHILD_W $err;
+			} 
 			close $CHILD_W;
-			exit 0;
+			if ($err) {
+				exit 1;
+			}
+			else {
+				exit 0;
+			}
 		}
 		else {
 			wlog INFO, "$logid Forked process $pid. Waiting for its completion\n";
@@ -3099,6 +3190,7 @@ sub runjob {
 		open STDERR, ">$serr" or dieNicely("Cannot redirect STDERR");
 	}
 	close STDIN;
+	open STDIN, "</dev/null" or dieNicely("Cannot close STDIN");
 	
 	#wlog DEBUG, "CWD: $cwd\n";
 	#wlog DEBUG, "Running $executable\n";
@@ -3107,7 +3199,7 @@ sub runjob {
 		$JOBARGS = moveSwiftwrapArgsToFile(".", $JOBARGS);
 	}
 	
-	exec { $executable } @$JOBARGS;
+	my $dummy = exec { $executable } @$JOBARGS;
 	exitSubprocess($WR, "Could not execute $executable: $!");
 }
 
@@ -3228,7 +3320,7 @@ sub rundockerjob {
 	
 	wlog DEBUG, "Docker command: $docker ".join(" ", @a)."\n";
 	
-	exec @a;
+	my $dummy = exec @a;
 	exitSubprocess($WR, "Could not execute $executable: $!");
 }
 

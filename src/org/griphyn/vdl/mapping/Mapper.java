@@ -20,6 +20,7 @@ package org.griphyn.vdl.mapping;
 import java.util.Collection;
 import java.util.Set;
 
+import org.griphyn.vdl.karajan.SwiftContext;
 import org.griphyn.vdl.mapping.nodes.AbstractDataNode;
 import org.griphyn.vdl.type.Type;
 
@@ -89,7 +90,7 @@ public interface Mapper {
      */
     void initialize(RootHandle root);
     
-    void setBaseDir(String baseDir);
+    void setContext(SwiftContext ctx);
     
     AbstractDataNode getFirstOpenParameter();
 
