@@ -75,12 +75,12 @@ public class Misc {
 	public static class FileContains extends AbstractSingleValuedFunction {
 		private ArgRef<String> file;
 		private ArgRef<String> value;
-		private VarRef<String> cwd;
+		private VarRef<Context> context;
 
 		@Override
 		protected void addLocals(Scope scope) {
 			super.addLocals(scope);
-			cwd = scope.getVarRef("CWD");
+			context = scope.getVarRef(Context.VAR_NAME);
 		}
 
 		@Override
@@ -90,7 +90,7 @@ public class Misc {
 		
 		@Override
 		public Object function(Stack stack) {
-			File f = TypeUtil.toFile(file.getValue(stack), cwd.getValue(stack));
+			File f = TypeUtil.toFile(file.getValue(stack), context.getValue(stack).getCWD());
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(f));
 				String line = null;
@@ -215,12 +215,12 @@ public class Misc {
 	
 	public static class FileRead extends AbstractSingleValuedFunction {
 		private ArgRef<String> file;
-		private VarRef<String> cwd;
+		private VarRef<Context> context;
 
 		@Override
 		protected void addLocals(Scope scope) {
 			super.addLocals(scope);
-			cwd = scope.getVarRef("CWD");
+			context = scope.getVarRef(Context.VAR_NAME);
 		}
 
 		
@@ -231,7 +231,7 @@ public class Misc {
 		
 		@Override
 		public Object function(Stack stack) {
-			File f = TypeUtil.toFile(file.getValue(stack), cwd.getValue(stack));
+			File f = TypeUtil.toFile(file.getValue(stack), context.getValue(stack).getCWD());
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(f));
 				StringBuilder text = new StringBuilder();
@@ -253,12 +253,12 @@ public class Misc {
 	public static class FileReadLine extends AbstractSingleValuedFunction {
 		private ArgRef<String> file;
 		private ArgRef<Number> offset;
-		private VarRef<String> cwd;
+		private VarRef<Context> context;
 
 		@Override
 		protected void addLocals(Scope scope) {
 			super.addLocals(scope);
-			cwd = scope.getVarRef("CWD");
+			context = scope.getVarRef(Context.VAR_NAME);
 		}
 
 		
@@ -269,7 +269,7 @@ public class Misc {
 		
 		@Override
 		public Object function(Stack stack) {
-			File f = TypeUtil.toFile(file.getValue(stack), cwd.getValue(stack));
+			File f = TypeUtil.toFile(file.getValue(stack), context.getValue(stack).getCWD());
 			long offset = this.offset.getValue(stack).longValue();
 			try {
 				RandomAccessFile file = new RandomAccessFile(f, "r");
@@ -390,12 +390,12 @@ public class Misc {
 	public static class OutputStream extends AbstractSingleValuedFunction {
 		private ArgRef<String> type;
 		private ArgRef<String> file;
-		private VarRef<String> cwd;
+		private VarRef<Context> context;
 
 		@Override
 		protected void addLocals(Scope scope) {
 			super.addLocals(scope);
-			cwd = scope.getVarRef("CWD");
+			context = scope.getVarRef(Context.VAR_NAME);
 		}
 
 	
@@ -413,7 +413,7 @@ public class Misc {
 					throw new ExecutionException(this, "Missing file argument");
 				}
 				try {
-					return new PrintStream(new FileOutputStream(TypeUtil.toFile(file, cwd.getValue(stack))));
+					return new PrintStream(new FileOutputStream(TypeUtil.toFile(file, context.getValue(stack).getCWD())));
 				}
 				catch (FileNotFoundException e) {
 					throw new ExecutionException(this, "Failed to open stream", e);

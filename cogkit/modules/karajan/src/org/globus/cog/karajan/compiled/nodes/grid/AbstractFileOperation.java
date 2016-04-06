@@ -28,6 +28,7 @@
  */
 package org.globus.cog.karajan.compiled.nodes.grid;
 
+import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
@@ -51,12 +52,12 @@ public abstract class AbstractFileOperation extends AbstractGridNode {
 	public static final Logger logger = Logger.getLogger(AbstractFileOperation.class);
 	
 	private ArgRef<String> provider;
-	private VarRef<String> cwd;
+	private VarRef<Context> ctx;
 
 	@Override
 	protected void addLocals(Scope scope) {
 		super.addLocals(scope);
-		cwd = scope.getVarRef("CWD");
+		ctx = scope.getVarRef(Context.VAR_NAME);
 	}
 
 	private static TaskHandler handler;
@@ -73,7 +74,7 @@ public abstract class AbstractFileOperation extends AbstractGridNode {
 			Contact host = getHost(stack, this.host, scheduler, provider);
 			
 			if (provider == null && BoundContact.LOCALHOST.equals(host)) {
-				if (runDirectly(stack, op, arguments, cwd.getValue(stack))) {
+				if (runDirectly(stack, op, arguments, ctx.getValue(stack).getCWD())) {
 					return;
 				}
 			}
@@ -90,7 +91,7 @@ public abstract class AbstractFileOperation extends AbstractGridNode {
 			task.setSpecification(spec);
 			
 			if (host.equals(BoundContact.LOCALHOST)) {
-				spec.setAttribute("cwd", cwd.getValue(stack));
+				spec.setAttribute("cwd", ctx.getValue(stack).getCWD());
 			}
 			
 			if (scheduler == null) {

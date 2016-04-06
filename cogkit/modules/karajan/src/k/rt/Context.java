@@ -33,6 +33,9 @@ import java.util.List;
 import java.util.Map;
 
 public class Context {
+    public static final String VAR_NAME = "#context";
+    public static final String ATTR_CWD = "CWD";
+    
 	private List<String> arguments;
 	private Map<String, Object> attributes;
 
@@ -58,5 +61,13 @@ public class Context {
 	    else {
 	        return attributes.get(name);
 	    }
+	}
+	
+	public void setCWD(String cwd) {
+	    setAttribute(ATTR_CWD, cwd);
+	}
+	
+	public String getCWD() {
+	    return (String) getAttribute(ATTR_CWD);
 	}
 }

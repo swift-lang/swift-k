@@ -216,6 +216,7 @@ public class Loader extends org.globus.cog.karajan.Loader {
 
             Context context = new SwiftContext();
             context.setArguments(ap.getArguments());
+            context.setCWD(new File(".").getAbsolutePath());
             context.setAttribute("SWIFT:CONFIG", config);
             context.setAttribute("projectName", projectName);
             context.setAttribute("SWIFT:SCRIPT_NAME", projectName);

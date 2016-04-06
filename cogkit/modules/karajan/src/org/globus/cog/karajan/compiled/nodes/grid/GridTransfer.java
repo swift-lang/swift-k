@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 
@@ -73,7 +74,7 @@ public class GridTransfer extends AbstractGridNode {
 	private ArgRef<Number> length;
 	private ArgRef<Number> tcpBufferSize;
 
-	private VarRef<String> cwd;
+	private VarRef<Context> ctx;
 	
 	@Override
 	protected Signature getSignature() {
@@ -99,7 +100,7 @@ public class GridTransfer extends AbstractGridNode {
 	@Override
 	protected void addLocals(Scope scope) {
 		super.addLocals(scope);
-		cwd = scope.getVarRef("CWD");
+		ctx = scope.getVarRef(Context.VAR_NAME);
 	}
 
 	public void submitTask(Stack stack) {
@@ -178,17 +179,17 @@ public class GridTransfer extends AbstractGridNode {
 			if (tcpBufsz != null) {
 				fs.setAttribute(GridFTPConstants.ATTR_TCP_BUFFER_SIZE, String.valueOf(tcpBufsz));
 			}
+			
+			String cwd = ctx.getValue(stack).getCWD();
 
 			if (sourceContact.equals(BoundContact.LOCALHOST)
 					&& isRelative(fs.getSourceDirectory())) {
-				fs.setSourceDirectory(pathcat(cwd.getValue(stack),
-						fs.getSourceDirectory()));
+				fs.setSourceDirectory(pathcat(cwd, fs.getSourceDirectory()));
 			}
 
 			if (destinationContact.equals(BoundContact.LOCALHOST)
 					&& isRelative(fs.getDestinationDirectory())) {
-				fs.setDestinationDirectory(pathcat(cwd.getValue(stack),
-						fs.getDestinationDirectory()));
+				fs.setDestinationDirectory(pathcat(cwd, fs.getDestinationDirectory()));
 			}
 
 			task.setType(Task.FILE_TRANSFER);

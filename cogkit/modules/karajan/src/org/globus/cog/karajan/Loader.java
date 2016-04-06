@@ -135,6 +135,7 @@ public class Loader {
 			
 			Context context = new Context();
 			context.setArguments(ap.getArguments());
+			context.setCWD(new File(".").getAbsolutePath());
 			
 			Main root = compile(tree, context);
 			

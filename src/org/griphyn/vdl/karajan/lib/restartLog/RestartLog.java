@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import k.rt.Context;
 import k.rt.ExecutionException;
 import k.rt.Stack;
 import k.thr.LWThread;
@@ -69,7 +70,6 @@ public class RestartLog extends InternalFunction {
 	
 	private VarRef<SwiftContext> context;
 	private VarRef<String> fileName;
-	private VarRef<String> cwd;
 	
 	@Override
 	protected Signature getSignature() {
@@ -78,9 +78,8 @@ public class RestartLog extends InternalFunction {
 	
 	@Override
 	protected void addLocals(Scope scope) {
-		context = scope.getVarRef("#context");
+		context = scope.getVarRef(Context.VAR_NAME);
 		fileName = scope.getVarRef("#filename");
-		cwd = scope.getVarRef("CWD");
 		super.addLocals(scope);
 	}
 
