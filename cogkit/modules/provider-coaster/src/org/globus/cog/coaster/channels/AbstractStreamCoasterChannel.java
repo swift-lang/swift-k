@@ -159,7 +159,7 @@ public abstract class AbstractStreamCoasterChannel extends AbstractCoasterChanne
 					c.update(data);
 					
 					if (((int) c.getValue()) != csum) {
-						logger.warn("Data checksum failed. Compute checksum: " + 
+						logger.warn("Data checksum failed. Computed checksum: " + 
 								Integer.toHexString((int) c.getValue()) + ", checksum: " + Integer.toHexString(csum));
 					}
 				}
