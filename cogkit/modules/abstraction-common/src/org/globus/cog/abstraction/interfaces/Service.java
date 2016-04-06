@@ -183,4 +183,8 @@ public interface Service {
     public Collection<String> getAttributeNames();
 
     public void removeAttribute(String name);
+    
+    boolean equals(Object other);
+    
+    int hashCode();
 }
