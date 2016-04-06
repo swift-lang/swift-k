@@ -43,9 +43,12 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.impl.common.AbstractionFactory;
 import org.globus.cog.abstraction.impl.common.IdentityImpl;
 import org.globus.cog.abstraction.impl.common.ProviderMethodException;
+import org.globus.cog.abstraction.impl.common.task.IllegalSpecException;
 import org.globus.cog.abstraction.impl.common.task.InvalidProviderException;
 import org.globus.cog.abstraction.impl.common.task.InvalidSecurityContextException;
 import org.globus.cog.abstraction.impl.common.task.ServiceImpl;
+import org.globus.cog.abstraction.impl.common.task.TaskSubmissionException;
+import org.globus.cog.abstraction.interfaces.ExecutableObject;
 import org.globus.cog.abstraction.interfaces.FileFragment;
 import org.globus.cog.abstraction.interfaces.FileResource;
 import org.globus.cog.abstraction.interfaces.GridFile;
@@ -477,4 +480,11 @@ public abstract class AbstractFileResource implements FileResource {
         }
         return nl;
     }
+
+    @Override
+    public void submit(ExecutableObject commandWorkflow) throws IllegalSpecException, TaskSubmissionException {
+        throw new UnsupportedOperationException();
+    }
+    
+    
 }
