@@ -29,6 +29,7 @@ public class SymLinker {
     
     static {
         if (init()) {
+            canSymLink = true;
             canSymLink = symLinkTest();
         }
         else {
