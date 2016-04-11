@@ -47,6 +47,7 @@ public class ReplicationManager {
     private long s;
     private long s2;
     private Map<Task, Date> queued, running;
+    private Map<Task, Integer> walltimes;
     private int minQueueTime, limit;
     private boolean enabled;
     private ReplicationGroups replicationGroups;
@@ -57,6 +58,7 @@ public class ReplicationManager {
         this.scheduler = scheduler;
         queued = new HashMap<Task, Date>();
         running = new HashMap<Task, Date>();
+        walltimes = new HashMap<Task, Integer>();
         try {
             minQueueTime = config.getReplicationMinQueueTime();
             enabled = config.isReplicationEnabled();
@@ -77,6 +79,7 @@ public class ReplicationManager {
     public void register(String rg, Task task) throws CanceledReplicaException {
         if (enabled) {
             replicationGroups.add(rg, task);
+            addWalltime(task);
         }
     }
 
@@ -104,19 +107,26 @@ public class ReplicationManager {
             replicationGroups.active(task);
         }
     }
-
-    protected void registerRunning(Task task, Date time) {
+    
+    private void addWalltime(Task task) {
         JobSpecification spec = (JobSpecification) task.getSpecification();
         Object walltime = spec.getAttribute("maxwalltime");
         int seconds;
         if (walltime == null) {
-        	seconds = VERY_LARGE_WALLTIME;
+            seconds = VERY_LARGE_WALLTIME;
         }
         else {
-       		seconds = WallTime.timeToSeconds(walltime.toString());
+            seconds = WallTime.timeToSeconds(walltime.toString());
         }
-        Date deadline = new Date(time.getTime() + WALLTIME_DEADLINE_MULTIPLIER * seconds * 1000);
+        synchronized(this) {
+            walltimes.put(task, seconds);
+        }
+    }
+
+    protected void registerRunning(Task task, Date time) {
         synchronized (this) {
+            int seconds = walltimes.remove(task);
+            Date deadline = new Date(time.getTime() + WALLTIME_DEADLINE_MULTIPLIER * seconds * 1000);
             running.put(task, deadline);
         }
     }

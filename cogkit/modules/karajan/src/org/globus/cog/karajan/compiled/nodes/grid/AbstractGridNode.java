@@ -257,6 +257,9 @@ public abstract class AbstractGridNode extends InternalFunction {
 						fail(new ExecutionException(e.getStatus().getMessage(), e.getStatus().getException()));
 					}
 				}
+				else if (e.getStatus().getStatusCode() == Status.CANCELED) {
+					fail(new ExecutionException("Abort"));
+				}
 			}
 			catch (Exception ex) {
 				logger.debug("Exception caught while processing status event", ex);
