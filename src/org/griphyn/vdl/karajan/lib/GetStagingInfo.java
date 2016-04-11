@@ -155,7 +155,6 @@ public class GetStagingInfo extends SwiftFunction {
             files = new HashSet<AbsFile>();
         }
         AbsFile f2 = new AbsFile(f.getService(), proto, host, f.getPort(), f.getDirectory(), f.getName());
-        System.out.println("F: " + f2);
         files.add(f2);
         return files;
     }
