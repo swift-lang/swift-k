@@ -458,6 +458,7 @@ public abstract class AbstractHTTPServer implements Runnable {
                     }
                     else {
                         state = SENDING_DATA;
+                        initialize(bdata);
                     }
                     replies = null;
                 }
@@ -470,18 +471,60 @@ public abstract class AbstractHTTPServer implements Runnable {
                     close();
                 }
                 else {
-                    int tr = fileChannel.read(bdata);
-                    bdata.rewind();
-                    bdata.limit(tr);
-                    int wr = channel.write(bdata);
-                    bdata.rewind();
-                    sendPos += tr;
-                    if (sendPos >= total) {
-                        close();
-                    }
+                	if (shouldRead(bdata)) {
+                		bdata.rewind();
+                	    int tr = fileChannel.read(bdata);
+                	    switch(tr) {
+                	    	case -1:
+                	    		fileChannel.close();
+                	    		close();
+                	    		// avoide write
+                	    		initialize(bdata);
+                	    		break;
+                	    	case 0:
+                	    		// reset pointer to mark as empty
+                	    		initialize(bdata);
+                	    		break;
+                	    	default:
+                	    		setWriteable(bdata);
+                	    		break;
+                	    }
+                	}
+                	if (shouldWrite(bdata)) {
+                		int wr = channel.write(bdata);
+                		if (allWritten(bdata)) {
+                			initialize(bdata);
+                		}
+                		sendPos += wr;
+                		if (sendPos >= total) {
+                            close();
+                        }
+                	}
                 }
             }
             return true;
+        }
+
+        private boolean allWritten(ByteBuffer b) {
+            return b.position() == b.limit();
+        }
+
+        private boolean shouldWrite(ByteBuffer b) {
+            return b.position() != b.limit();
+        }
+
+        private void setWriteable(ByteBuffer b) {
+        	b.limit(b.position());
+        	b.rewind();
+        }
+
+        private boolean shouldRead(ByteBuffer b) {
+            return b.position() == b.capacity();
+        }
+
+        private void initialize(ByteBuffer b) {
+        	b.limit(b.capacity());
+        	b.position(b.capacity());
         }
 
         private void processCommand(String cmd, Map<String,String> headers, SelectionKey key) {
