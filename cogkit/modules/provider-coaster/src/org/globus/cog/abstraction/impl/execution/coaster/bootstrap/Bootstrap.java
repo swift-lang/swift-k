@@ -130,8 +130,7 @@ public class Bootstrap {
         }
     }
 
-    private void download(File dir, String name, String checksum)
-            throws Exception {
+    private void download(File dir, String name, String checksum) throws Exception {
         try {
             logger.log("Downloading " + name);
             File dest = File.createTempFile("download-", ".jar", dir);
@@ -149,7 +148,7 @@ public class Bootstrap {
             is.close();
             String actualChecksum = Digester.computeMD5(dest);
             if (!actualChecksum.equals(checksum)) {
-                throw new RuntimeException("Checksum does not match.");
+                throw new RuntimeException("Checksum (" + actualChecksum + ") does not match. Expected " + checksum);
             }
             dest.renameTo(new File(dir, buildName(name, checksum)));
         }
