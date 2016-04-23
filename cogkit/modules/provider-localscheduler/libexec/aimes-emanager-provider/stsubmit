@@ -50,6 +50,7 @@ start_session()
 
 start_session;
 SESSION_ID=$(cat $RUNDIR/session_id)
+log "SESSION ID: $SESSION_ID"
 
 if $SESSION_ID != emgr_sid*
 then
