@@ -181,7 +181,7 @@ def cancel_task(jobid, ssid, ep):
 if __name__ == '__main__' :
     parser   = argparse.ArgumentParser()
     mu_group = parser.add_mutually_exclusive_group(required=True)
-    mu_group.add_argument("-i", "--init_session", default=None ,  help='Takes a config file. Submits the CMD_STRING in the configs for execution via Radical Pilots')
+    mu_group.add_argument("-i", "--init_session", action='store_true' ,  help='Takes a config file. Submits the CMD_STRING in the configs for execution via Radical Pilots')
     mu_group.add_argument("-s", "--submit", default=None ,  help='Takes a config file. Submits the CMD_STRING in the configs for execution via Radical Pilots')
     mu_group.add_argument("-t", "--status", default=None ,  help='gets the status of the CMD_STRING in the configs for execution via Radical Pilots')
     mu_group.add_argument("-c", "--cancel", default=None ,  help='cancels the jobs with jobids')
