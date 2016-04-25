@@ -1,44 +1,25 @@
 #!/bin/bash
 
-rm -f /tmp/stsubmit
+source "$SWIFT_HOME/libexec/aimes-emanager-provider/aimes-swift-config.sh"
 
-LOGGING=1 # Either 1 or 0
-RUNDIRS=$(echo run[0-9][0-9][0-9])
-RUNDIR=${RUNDIRS##*\ }
-LOG=$RUNDIR/scripts/log
 AIMES_LOCK=$RUNDIR/scripts/AIMES_lock
 PID_FILE=$AIMES_LOCK/pid_file
 
 SUBMIT_SCRIPT=$PWD/$RUNDIR/scripts/aimes.$(date +"%H.%M.%S").$RANDOM.submit
-mkdir -p $(dirname $LOG)
 touch $SUBMIT_SCRIPT
-
-[[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
-log()
-{
-    [[ "$LOGGING" == "1" ]] && echo "[PID:$$] $*" >> $LOG
-}
-
-# TODO : UPDATE THIS BEFORE PUSH
-AIMES_CLIENT=$SWIFT_HOME/libexec/aimes-emanager-provider/aimes-swift-client.py
-#AIMES_CLIENT=/home/yadu/src/swift-k/cogkit/modules/provider-localscheduler/libexec/aimes-emanager-provider/aimes-swift-client.py
-ENDPOINT='http://localhost:8080'
-START_SESSION='/swift/sessions/'
-SUBMIT_TASK='/swift/sessions/'
 
 start_session()
 {
     # Ensure that only one application acquires the lock and starts the AIMES_SERVER
     if mkdir "$AIMES_LOCK" ; then
         log "Locking succeeded"
-        SESSION_ID=$(python $AIMES_CLIENT -e $ENDPOINT -l $RUNDIR/aimes_client.log --init_session)
-      # SESSION_ID=$(curl -s -X PUT $ENDPOINT$START_SESSION | cut -f 4 -d '"')
+        SESSION_ID=$(python $AIMES_CLIENT -e $ENDPOINT -l $RUNDIR/aimes_client.log --init)
         echo $SESSION_ID > $RUNDIR/session_id
 
         echo "[PID:$$] Done" > $AIMES_LOCK/release
     else
         log "Could not acquire lock"
-        # Wait in a spin look till $AIMES_LOCK/release file is created
+        # spin till $AIMES_LOCK/release file is created
         while [[ ! -f $AIMES_LOCK/release ]]
         do
             sleep 1
@@ -52,12 +33,6 @@ start_session;
 SESSION_ID=$(cat $RUNDIR/session_id)
 log "SESSION ID: $SESSION_ID"
 
-if $SESSION_ID != emgr_sid*
-then
-    log "SESSION ID : $SESSION_ID not a valid session id"
-    exit -3
-fi
-
 log "[DEBUG] SESSION_ID : $SESSION_ID"
 
 while read LINE; do
@@ -69,25 +44,16 @@ cat $SUBMIT_SCRIPT >> $LOG
 log "##############SUBMIT_SCRIPT###################"
 log "[DEBUG] PWD : $PWD"
 
-# CMD="python $AIMES_CLIENT --logfile $SUBMIT_SCRIPT.foo.stdout --submit \
-#      $SUBMIT_SCRIPT --endpoint $ENDPOINT --session $SESSION_ID"
-# CMD="python $AIMES_CLIENT --logfile $SUBMIT_SCRIPT.foo.stdout --submit \
-#      $SUBMIT_SCRIPT --endpoint $ENDPOINT --session $SESSION_ID"
-# CMD="curl    -X PUT -d submit:$SUBMIT_SCRIPT $ENDPOINT"
-# CMD="curl -s -X PUT -d submit:$SUBMIT_SCRIPT $ENDPOINT$SUBMIT_TASK$SESSION_ID"
 CMD="python $AIMES_CLIENT --logfile $SUBMIT_SCRIPT.stdout --submit $SUBMIT_SCRIPT --endpoint $ENDPOINT --session $SESSION_ID"
-
 JOBINFO=$($CMD)
-retcode="$?"
+RETCODE=$?
 
 log "SUBMIT SCRIPT : $SUBMIT_SCRIPT"
 log "SUBMIT CMD    : $CMD"
 log "JOBINFO       : $JOBINFO"
-log "RETCODE       : $retcode"
+log "RETCODE       : $RETCODE"
 
 echo "jobid=$JOBINFO"
 
-[[ "$retcode" != "0" ]] && exit retcode
-
-exit 0
+exit $RETCODE
 

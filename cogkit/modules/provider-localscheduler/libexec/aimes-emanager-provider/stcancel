@@ -1,51 +1,31 @@
 #!/bin/bash
 
-LOGGING=1 # Either 1 or 0
+source "$SWIFT_HOME/libexec/aimes-emanager-provider/aimes-swift-config.sh"
 
-RUNDIRS=$(echo run[0-9][0-9][0-9])
-RUNDIR=${RUNDIRS##*\ }
-LOG=$RUNDIR/scripts/log
-[[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
-
-
-AIMES_CLIENT=$SWIFT_HOME/libexec/aimes-emanager-provider/aimes-swift-client.py
-#AIMES_CLIENT=/home/yadu/src/swift-k/cogkit/modules/provider-localscheduler/libexec/aimes-emanager-provider/aimes-swift-client.py
-ENDPOINT='http://localhost:8080'
 SESSION_ID=$(cat $RUNDIR/session_id)
-
-#CLOUD_PY=$SWIFT_HOME/libexec/radical-provider/cloud.py
-CLOUD_PY=
-
-log()
-{
-    [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
-}
-
 JOBID=$1
 CONF=/tmp/$JOBID
 EXITCODE=0
 
 log "Received cancel directive for $JOBID"
 
-# Check for the conf file for the job at /tmp/<jobid>
-if [ ! -f "$CONF" ]
-then
-    echo "ERROR: Could not find conf script at /tmp/$1" 1>&2
-    exit -1
-fi
-
-if [[ "$1" != "" ]]
+if ! test -z "$JOBID"
 then
     log "Cancelling $JOBID " $(date +"%T")
-    #python $CLOUD_PY --logfile $LOG --cancel $CONF --jobid $JOBID
+    (python $AIMES_CLIENT -e $ENDPOINT -z $SESSION_ID -l $RUNDIR/aimes_client.log --cancel $JOBID)
     EXITCODE=$?
     if [[ "$EXITCODE" == "0" ]]
     then
         log "Done cancelling $JOBID" $(date +"%T")
-        rm $CONF
+        rm -f $CONF
     else
         log "Failed to cancel $JOBID: returned exitcode:$EXITCODE" $(date +"%T")
     fi
+
+    # we also cancel the session at this point
+    # log "Cancelling $SESSION_ID " $(date +"%T")
+    # python $AIMES_CLIENT -e $ENDPOINT -z $SESSION_ID -l $RUNDIR/aimes_client.log --destroy_session 
 fi
 
 exit $EXITCODE
+

@@ -1,25 +1,12 @@
-#!/bin/bash
+#!/bin/bash -x
 
-LOGGING=1 # Either 1 or 0
+source "$SWIFT_HOME/libexec/aimes-emanager-provider/aimes-swift-config.sh"
 
-RUNDIRS=$(echo run[0-9][0-9][0-9])
-RUNDIR=${RUNDIRS##*\ }
-LOG=$RUNDIR/scripts/log
-
-AIMES_CLIENT=$SWIFT_HOME/libexec/aimes-emanager-provider/aimes-swift-client.py
-#AIMES_CLIENT=/home/yadu/src/swift-k/cogkit/modules/provider-localscheduler/libexec/aimes-emanager-provider/aimes-swift-client.py
-ENDPOINT='http://localhost:8080'
 SESSION_ID=$(cat $RUNDIR/session_id)
-
-[[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
-log()
-{
-    [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
-}
 
 for JOBID in ${*}
 do
     log "Stat'ing for $JOBID"
-    log "python $AIMES_CLIENT --logfile $SUBMIT_SCRIPT.stdout --status $JOBID --session $SESSION_ID --endpoint $ENDPOINT"
-    python $AIMES_CLIENT --logfile $LOG --status $JOBID --session $SESSION_ID --endpoint $ENDPOINT | tee -a $LOG
+    (python $AIMES_CLIENT --logfile $LOG --status $JOBID --session $SESSION_ID --endpoint $ENDPOINT | tee -a $LOG)
 done
+
