@@ -84,7 +84,13 @@ public class JobStatusHandler extends RequestHandler {
             if (message != null && !message.equals("")) {
                 s.setMessage(message);
             }
-            s.setTime(new Date(this.getInDataAsLong(4)));
+            long ts = this.getInDataAsLong(4);
+            if (ts == 0) {
+                s.setTime(new Date());
+            }
+            else {
+                s.setTime(new Date(ts));
+            }
             Identity id = IdentityImpl.parse(jobId);
             NotificationManager.getDefault().notificationReceived(id, s, out, err);
             sendReply("OK");
