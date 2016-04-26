@@ -28,6 +28,7 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import org.globus.cog.abstraction.impl.execution.coaster.CancelJobCommand;
 import org.globus.cog.abstraction.impl.execution.coaster.SubmitJobCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.ChmodCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.DeleteCommand;
@@ -56,7 +57,6 @@ import org.globus.cog.coaster.commands.InfoCommand;
 import org.globus.cog.coaster.handlers.ChannelConfigurationHandler;
 import org.globus.cog.coaster.handlers.HeartBeatHandler;
 import org.globus.cog.coaster.handlers.InfoHandler;
-import org.globus.cog.coaster.handlers.ShutdownHandler;
 import org.globus.cog.coaster.handlers.VersionHandler;
 
 public class CoasterRequestManager extends AbstractRequestManager {   
@@ -66,6 +66,7 @@ public class CoasterRequestManager extends AbstractRequestManager {
         addHandler("HEARTBEAT", HeartBeatHandler.class);
         addHandler(InfoCommand.NAME, InfoHandler.class);
         addHandler(SubmitJobCommand.NAME, SubmitJobHandler.class);
+        addHandler(CancelJobCommand.NAME, CancelJobHandler.class);
         addHandler(ServiceShutdownHandler.NAME, ServiceShutdownHandler.class);
         addHandler(WorkerShellHandler.NAME, WorkerShellHandler.class);
         addHandler(ServiceConfigurationHandler.NAME, ServiceConfigurationHandler.class);

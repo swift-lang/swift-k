@@ -227,6 +227,14 @@ public class CoasterService extends GSSService implements ChannelListener {
             logger.info("Queue " + q + " shut down");
         }
     }
+    
+    public void cancelJob(CoasterChannel channel, String jobId) {
+        for (JobQueue q : getQueues().values()) {
+            if (q.getClientChannel() == channel) {
+                q.cancelTasksForChannel(channel, jobId);
+            }
+        }
+    }
 
     public JobQueue createJobQueue(CoasterChannel channel) {
         JobQueue q = new JobQueue(this, localService, channel);

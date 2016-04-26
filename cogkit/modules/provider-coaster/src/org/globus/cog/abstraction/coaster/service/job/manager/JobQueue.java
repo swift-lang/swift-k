@@ -209,4 +209,9 @@ public class JobQueue {
         local.cancelTasksForChannel(channel);
         coaster.cancelTasksForChannel(channel);
     }
+    
+    public void cancelTasksForChannel(CoasterChannel channel, String taskId) {
+        local.cancelTasksForChannel(channel, taskId);
+        coaster.cancelTasksForChannel(channel, taskId);
+    }
 }

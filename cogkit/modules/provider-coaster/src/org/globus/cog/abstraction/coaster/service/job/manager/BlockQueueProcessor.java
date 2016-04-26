@@ -39,10 +39,8 @@ import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
 import org.globus.cog.abstraction.impl.common.execution.WallTime;
-import org.globus.cog.abstraction.impl.execution.coaster.CancelJobCommand;
 import org.globus.cog.abstraction.impl.execution.coaster.NotificationManager;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public class BlockQueueProcessor extends AbstractBlockWorkerManager implements Runnable {
@@ -773,19 +771,22 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
     }
 
     @Override
-    public void cancelTasksForChannel(CoasterChannel channel) {
-        String id = channel.getID();
-        cancelTasks(holding, id);
-        cancelTasks(queued, id);
-        cancelRunningTasks(running, id);
+    public void cancelTasksForChannel(CoasterChannel channel, String taskId) {
+        String channelId = channel.getID();
+        cancelTasks(holding, channelId, taskId);
+        cancelTasks(queued, channelId, taskId);
+        cancelRunningTasks(running, channelId, taskId);
     }
 
-    private void cancelTasks(SortedJobSet s, String id) {
+    private void cancelTasks(SortedJobSet s, String channelId, String taskId) {
         synchronized(s) {
             List<Job> l = s.getAll();
             for (Job j : l) {
+                if (!matchesTaskId(taskId, j)) {
+                    continue;
+                }
                 String taskChannelId = (String) j.getTask().getAttribute("channelId");
-                if (id.equals(taskChannelId)) {
+                if (channelId.equals(taskChannelId)) {
                     s.remove(j);
                     NotificationManager.getDefault().removeTask(j.getTask());
                 }
@@ -793,11 +794,14 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
         }
     }
     
-    private void cancelRunningTasks(JobSet s, String id) {
+    private void cancelRunningTasks(JobSet s, String channelId, String taskId) {
         synchronized(s) {
             for (Job j : s) {
+                if (!matchesTaskId(taskId, j)) {
+                    continue;
+                }
                 String taskChannelId = (String) j.getTask().getAttribute("channelId");
-                if (id.equals(taskChannelId)) {
+                if (channelId.equals(taskChannelId)) {
                     j.cancel();
                 }
             }

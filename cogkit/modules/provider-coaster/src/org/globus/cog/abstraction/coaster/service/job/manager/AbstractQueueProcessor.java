@@ -38,10 +38,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.CoasterService;
 import org.globus.cog.abstraction.coaster.service.LocalTCPService;
-import org.globus.cog.abstraction.impl.execution.coaster.CancelJobCommand;
-import org.globus.cog.abstraction.interfaces.Status;
 import org.globus.cog.abstraction.interfaces.Task;
-import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.CoasterChannel;
 
 public abstract class AbstractQueueProcessor extends Thread implements QueueProcessor {
@@ -132,15 +129,33 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
 
     @Override
     public void cancelTasksForChannel(CoasterChannel channel) {
+        cancelTasksForChannel(channel, null);
+    }
+    
+    @Override
+    public void cancelTasksForChannel(CoasterChannel channel, String taskId) {
         String id = channel.getID();
         for (Job job : getAllJobs()) {
             if (job.getTask() == null) {
                 continue;
             }
+            if (!matchesTaskId(taskId, job)) {
+                continue;
+            }
+            
             String taskChannelId = (String) job.getTask().getAttribute("channelId");
             if (id.equals(taskChannelId)) {
                 job.cancel();
             }
+        }
+    }
+
+    protected boolean matchesTaskId(String taskId, Job job) {
+        if (taskId == null) {
+            return true;
+        }
+        else {
+            return taskId.equals(job.getTask().getIdentity().toString());
         }
     }
 }

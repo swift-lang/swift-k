@@ -24,28 +24,34 @@
 //----------------------------------------------------------------------
 
 /*
- * Created on Apr 21, 2009
+ * Created on Jul 21, 2005
  */
-package org.globus.cog.abstraction.coaster.service.job.manager;
+package org.globus.cog.abstraction.coaster.service;
 
-import org.globus.cog.abstraction.interfaces.Task;
+import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.job.manager.AbstractBlockWorkerManager;
+import org.globus.cog.abstraction.impl.execution.coaster.WorkerShellCommand;
+import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.CoasterChannel;
+import org.globus.cog.coaster.commands.Command;
+import org.globus.cog.coaster.commands.Command.Callback;
+import org.globus.cog.coaster.handlers.RequestHandler;
 
-public interface QueueProcessor {
-
-    void enqueue(Task t);
+public class CancelJobHandler extends RequestHandler {
+    public static final Logger logger = Logger.getLogger(CancelJobHandler.class);
     
-    void start();
+    public static final String NAME = WorkerShellCommand.NAME;
 
-    void startShutdown();
-    
-    boolean isShutDown(); 
-
-    void setBroadcaster(Broadcaster b);
-    
-    AbstractSettings getSettings();
-
-    void cancelTasksForChannel(CoasterChannel channel);
-    
-    void cancelTasksForChannel(CoasterChannel channel, String taskId);
+    public void requestComplete() throws ProtocolException {
+        String id = getInDataAsString(0);
+        CoasterChannel channel = getChannel();
+        CoasterService service = (CoasterService) channel.getService();
+        try {
+            service.cancelJob(channel, id);
+            sendReply("OK");
+        }
+        catch (Exception e) {
+            this.sendError("Failed to cancel job " + id, e);
+        }
+    }
 }
