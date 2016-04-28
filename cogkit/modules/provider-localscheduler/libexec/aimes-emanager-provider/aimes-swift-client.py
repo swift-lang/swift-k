@@ -46,6 +46,7 @@ def filepath_cleanup(filepath):
 #
 def compose_compute_unit(task_filename):
 
+    os.system('cp %s /tmp/' % task_filename)
     task_desc = open(task_filename, 'r').readlines()
     index     = 0
     args      = []
@@ -53,9 +54,13 @@ def compose_compute_unit(task_filename):
     stageouts = []
     env_vars  = {}
     walltime  = 0
+    cores     = 1
+    mpi       = False
+
     while index < len(task_desc):
 
-        line = task_desc[index]
+
+        line = task_desc[index].strip()
 
         # We don't process directory options.
         if (line.startswith("directory=")):
@@ -132,6 +137,14 @@ def compose_compute_unit(task_filename):
             d = datetime.strptime(line[l:].strip(), "%H:%M:%S")
             walltime = d.hour*3600 + d.minute*60 + d.second
 
+        elif (line.startswith("attr.hostcount=")):
+            cores = int(line.split('=',1)[1])
+
+        elif (line.startswith("attr.jobtype=")):
+            jobtype = line.split('=',1)[1]
+            if jobtype.lower() == 'mpi':
+                mpi = True
+
         else:
             logging.debug("ignoring option : {0}".format(line.strip()))
 
@@ -141,21 +154,24 @@ def compose_compute_unit(task_filename):
     _stageins  = [x["source"] for x in stageins]
     _stageouts = [x["source"] for x in stageouts if x["source"] != 'wrapper.error' ]
 
-    logging.error("ARGS      : {0}".format(args))
-    logging.error("EXEC      : {0}".format(executable))
-    logging.error("STAGEINS  : {0}".format(_stageins))
-    logging.error("STAGEOUTS : {0}".format(_stageouts))
-    logging.error("WALLTIME  : {0}".format(walltime))
+    logging.info("ARGS      : {0}".format(args))
+    logging.info("EXEC      : {0}".format(executable))
+    logging.info("STAGEINS  : {0}".format(_stageins))
+    logging.info("STAGEOUTS : {0}".format(_stageouts))
+    logging.info("WALLTIME  : {0}".format(walltime))
+    logging.info("CORES     : {0}".format(cores))
+    logging.info("MPI       : {0}".format(mpi))
 
     jobdesc = {"executable"     : executable,
                "arguments"      : args,
-               "cores"          : int(env_vars.get("cores", 1)),
+               "cores"          : cores,
+               "mpi"            : mpi,
                "duration"       : walltime,
                "input_staging"  : _stageins,
                "output_staging" : _stageouts
                }
 
-    logging.error("Jobdesc : {0}".format(jobdesc))
+    logging.debug("Jobdesc : %s" % pprint.pformat(jobdesc))
     return jobdesc
 
 
