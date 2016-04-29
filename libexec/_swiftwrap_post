@@ -1,0 +1,339 @@
+#!/bin/bash
+
+# This variant of _swiftwrap.staging will only run the parts relevant *after*
+# task execution.  All other arguments are ignored.
+
+# this script must be invoked inside of bash, not plain sh
+
+openinfo() {
+	exec 3<> $1
+	INFO=3
+}
+
+closeinfo() {
+	exec 3>&-
+}
+
+# Clobbered by SWIFTWRAP_FAST
+log() {
+	echo "$@" >& "$INFO"
+}
+
+# Clobbered by SWIFTWRAP_FAST
+infosection() {
+	echo >& "$INFO"
+	echo "_____________________________________________________________________________" >& "$INFO"
+	echo >& "$INFO"
+	echo "        $1" >& "$INFO"
+	echo "_____________________________________________________________________________" >& "$INFO"
+	echo >& "$INFO"
+}
+
+info() {
+	infosection "uname -a"
+	uname -a 2>&1 >& "$INFO"
+	infosection "id"
+	id 2>&1 >& "$INFO"
+	infosection "env"
+	env 2>&1 >& "$INFO"
+	infosection "df"
+	df 2>&1 >& "$INFO"
+        if [ -e "/proc/cpuinfo" ]; then
+		infosection "/proc/cpuinfo"
+		cat /proc/cpuinfo 2>&1 >& "$INFO"
+	fi
+	if [ -e "/proc/meminfo" ]; then
+		infosection "/proc/meminfo"
+		cat /proc/meminfo 2>&1 >& "$INFO"
+	fi
+	infosection "command line"
+	echo $COMMANDLINE 2>&1 >& "$INFO"
+	if [ -f "$STDOUT" ] ; then
+		infosection "stdout"
+		cat $STDOUT >& "$INFO"
+	fi
+	if [ -f "$STDERR" ] ; then
+		infosection "stderr"
+		cat $STDERR >& "$INFO"
+	fi
+}
+
+# Clobbered by SWIFTWRAP_FAST
+logstate() {
+	echo "Progress " `date +"%Y-%m-%d %H:%M:%S.%N%z"` " $@" >& "$INFO"
+}
+
+fail() {
+	EC=$1
+	shift
+
+	log $@
+	info
+	echo "$@" >> wrapper_post.error
+	exit $EC
+}
+
+checkError() {
+	if [ "$?" != "0" ]; then
+		fail $@
+	fi
+}
+
+checkEmpty() {
+	if [ "$1" == "" ]; then
+		shift
+		fail 254 $@
+	fi
+}
+
+# Clobbered by SWIFTWRAP_FAST
+checkMissing() {
+	MISSING=
+	for O in $OUTF ; do
+		if [ ! -f "$O" ]; then
+			if [ "$MISSING" == "" ]; then
+				MISSING=$O
+			else
+				MISSING="$MISSING, $O"
+			fi
+		fi
+	done
+	if [ "$MISSING" != "" ]; then
+		fail 254 "The following output files were not created by the application: $MISSING"
+	fi
+}
+
+checkparamfile() {
+	log "checking for paramfile"
+	if [ "$1" == "-p" ]; then
+		JOBDIR=$2
+		PARAMFILE=${WFDIR}/parameters/${JOBDIR}/param-${ID}
+		log "paramfile is: $PARAMFILE"
+	else
+		log "no paramfile: using command line arguments"
+	fi
+}
+
+getarg() {
+	NAME=$1
+	shift
+	VALUE=""
+	SHIFTCOUNT=0
+	if [ "$PARAMFILE" == "" ] && [ "$1" == "$NAME" ]; then
+		shift
+		let "SHIFTCOUNT=$SHIFTCOUNT+1"
+		while [ "${1:0:1}" != "-" ] && [ "$#" != "0" ]; do
+			VALUE="$VALUE $1"
+			shift
+			let "SHIFTCOUNT=$SHIFTCOUNT+1"
+		done
+		VALUE="${VALUE:1}"
+	elif [ "$PARAMFILE" != "" ] && grep -E "^$NAME " $PARAMFILE ; then
+			VALUE=$(grep -E "^$NAME " $PARAMFILE | cut -d ' ' -f 2-)
+	else
+		fail 254 "Missing $NAME argument"
+	fi
+}
+
+COMMANDLINE=$@
+
+# make the WFDIR absolute
+PARAMFILE=
+
+openinfo "wrapper.log"
+
+checkparamfile "$@"
+
+# # SWIFTWRAP_FAST: Turn things off for speed
+if [[ $SWIFTWRAP_FAST == "1" ]]; then
+	shopt -s expand_aliases
+	alias infosection=:
+	alias logstate=:
+	alias log=:
+	alias checkMissing=:
+fi
+
+if [ "X$INFODIR" == "X" ]; then
+	INFODIR="."
+fi
+
+logstate "LOG_START"
+infosection "Wrapper (_swiftwrap_post.staging)"
+
+log $COMMANDLINE
+
+getarg "-e" "$@"
+EXEC=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-out" "$@"
+STDOUT=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-err" "$@"
+STDERR=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-i" "$@"
+STDIN=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-d" "$@"
+DIRS=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-if" "$@"
+INF=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-of" "$@"
+OUTF=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-cf" "$@"
+COLLECT=$VALUE
+shift $SHIFTCOUNT
+
+getarg "-cdmfile" "$@"
+CDM_FILE=
+if [ "X$VALUE" != "X" ]; then
+	CDM_FILE=$VALUE
+	log "CDM_FILE: $CDM_FILE"
+fi
+shift $SHIFTCOUNT
+
+getarg "-status" "$@"
+STATUSMODE=$VALUE
+shift $SHIFTCOUNT
+
+## declare -a CMDARGS
+## if [ "$PARAMFILE" == "" ] && [ "$1" == "-a" ] ; then
+## 	shift
+## 	CMDARGS=("$@")
+## elif [ "$PARAMFILE" != "" ] ; then
+## 	CMDARGS=()
+## 	FIRST=1
+## 	while read line ; do
+## 		if [ "$FIRST" == "1" ] ; then
+## 			CMDARGS=("$line")
+## 			FIRST=0
+## 		else
+## 			CMDARGS=("${CMDARGS[*]}" "$line")
+## 		fi
+## 	done < <(grep -E "^-a " $PARAMFILE | cut -d " " -f 2-)
+## else
+## 	fail 254 "Missing arguments (-a option)"
+## fi
+
+[[ $CDM_FILE != "" ]] && source cdm_lib.sh
+
+## PATH=$PATH:/bin:/usr/bin
+## 
+## if [ "$PATHPREFIX" != "" ]; then
+## 	export PATH=$PATHPREFIX:$PATH
+## fi
+
+if [ "$SWIFT_EXTRA_INFO" != "" ]; then
+	log "EXTRAINFO=$($SWIFT_EXTRA_INFO)"
+fi
+
+## if [ "X${EXEC:0:1}" != "X/" ] ; then
+## 	export ORIGEXEC=$EXEC
+## 	export EXEC=$(which $EXEC)
+## 	if [ "X$EXEC" = "X" ] ; then
+## 		fail 254 "Cannot find executable $ORIGEXEC on site system path"
+## 	fi
+## fi
+
+log "PWD=$PWD"
+log "EXEC=$EXEC"
+log "STDIN=$STDIN"
+log "STDOUT=$STDOUT"
+log "STDERR=$STDERR"
+log "DIRS=$DIRS"
+log "INF=$INF"
+log "OUTF=$OUTF"
+log "COLLECT=$COLLECT"
+log "ARGS=$@"
+log "ARGC=$#"
+
+IFS="|"
+
+## logstate "CREATE_INPUTDIR"
+## for D in $DIRS ; do
+## 	if [ _$D != _ ]; then
+## 		mkdir -p "$D" 2>&1 >& "$INFO"
+## 	fi
+## 	checkError 254 "Failed to create input directory $D"
+## 	log "Created output directory: $D"
+## done
+## 
+## if [[ $CDM_FILE != "" ]] ; then
+## 	for F in $INF ; do
+## 		CDM_POLICY=$( cdm_lookup cdm.pl $CDM_FILE $F )
+## 		log "CDM_POLICY: $F -> $CDM_POLICY"
+## 		eval cdm_action $PWD "INPUT" $F $CDM_POLICY
+## 	done
+## 	for F in $OUTF ; do
+## 		CDM_POLICY=$( cdm_lookup cdm.pl $CDM_FILE $F )
+## 		log "CDM_POLICY: $F -> $CDM_POLICY"
+## 		eval cdm_action $PWD "OUTPUT" $F $CDM_POLICY
+## 	done
+## fi
+## 
+## logstate "EXECUTE"
+## 
+## if [ ! -f "$EXEC" ]; then
+## 	fail 254 "The executable $EXEC does not exist"
+## fi
+## if [ ! -x "$EXEC" ]; then
+## 	fail 254 "The executable $EXEC does not have the executable bit set"
+## fi
+## 
+## if [ "$STDIN" == "" ]; then
+## 	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+## 		echo "#!/bin/bash" > run.sh
+## 		echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>\"$STDOUT\" 2>\"$STDERR\"" >> run.sh
+## 		chmod +x run.sh
+## 	fi
+## 	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR"
+## else
+## 	if [ "$SWIFT_GEN_SCRIPTS" != "" ]; then
+## 		echo "#!/bin/bash" > run.sh
+## 		echo "\"$EXEC\" \"${CMDARGS[@]}\" 1>\"$STDOUT\" 2>\"$STDERR\" <\"$STDIN\"" >> run.sh
+## 		chmod +x run.sh
+## 	fi
+## 	"$EXEC" "${CMDARGS[@]}" 1>"$STDOUT" 2>"$STDERR" <"$STDIN"
+## fi
+## checkError $? "Application $EXEC failed with an exit code of $?" <$STDERR
+## 
+## if [ "$COLLECT" != "" ]; then
+## 	logstate "COLLECT"
+## 	log "Collect list is $COLLECT"
+## 	exec 4<> "_collect"
+## 	for O in "$COLLECT" ; do
+## 		log "Collecting $O"
+## 		ls -1 $O >&4
+## 	done
+## 	exec 4>&-
+## fi
+## 
+## 
+## logstate "EXECUTE_DONE"
+## log "Job ran successfully"
+
+checkMissing
+
+logstate "END"
+
+closeinfo
+
+# ensure we exit with a 0 after a successful execution
+exit 0
+
+# Local Variables:
+# mode: sh
+# sh-basic-offset: 4
+# tab-width: 4
+# indent-tabs-mode: 1
+# End:
