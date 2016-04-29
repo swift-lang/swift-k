@@ -47,18 +47,23 @@ def filepath_cleanup(filepath):
 def compose_compute_unit(task_filename):
 
     os.system('cp %s /tmp/' % task_filename)
-    task_desc = open(task_filename, 'r').readlines()
-    index     = 0
-    args      = []
-    stageins  = []
-    stageouts = []
-    env_vars  = {}
-    walltime  = 0
-    cores     = 1
-    mpi       = False
+    task_desc  = open(task_filename, 'r').readlines()
+    index      = 0
+    cmd        = list()
+    args       = list()
+    args_pre   = list()
+    args_post  = list()
+    stageins   = list()
+    stageouts  = list()
+    env_vars   = dict()
+    walltime   = 0
+    cores      = 1
+    stdin      = None
+    stdout     = None
+    stderr     = None
+    mpi        = False
 
     while index < len(task_desc):
-
 
         line = task_desc[index].strip()
 
@@ -105,6 +110,7 @@ def compose_compute_unit(task_filename):
                 printf("[ERROR] Stagein source must have a destination")
 
             stageins.append(stagein_item)
+            logging.debug('si: %s', stagein_item)
 
         elif (line.startswith("stageout.source=")):
             stageout_item = {}
@@ -131,6 +137,7 @@ def compose_compute_unit(task_filename):
             else:
                 printf("[ERROR] Stageout source must have a destination")
             stageouts.append(stageout_item)
+            logging.debug('so: %s', stagein_item)
 
         elif (line.startswith("attr.maxwalltime=")):
             l = len("attr.maxwalltime=")
@@ -154,22 +161,100 @@ def compose_compute_unit(task_filename):
     _stageins  = [x["source"] for x in stageins]
     _stageouts = [x["source"] for x in stageouts if x["source"] != 'wrapper.error' ]
 
-    logging.info("ARGS      : {0}".format(args))
-    logging.info("EXEC      : {0}".format(executable))
-    logging.info("STAGEINS  : {0}".format(_stageins))
-    logging.info("STAGEOUTS : {0}".format(_stageouts))
-    logging.info("WALLTIME  : {0}".format(walltime))
-    logging.info("CORES     : {0}".format(cores))
-    logging.info("MPI       : {0}".format(mpi))
+    # we interpret executable + args, and plug things out of the hand of
+    # _swiftwrap.staging.  
+    logging.debug('sis: %s', _stageins)
+    if args[0] == '_swiftwrap.staging':
+
+        libexec = None
+        for si in _stageins:
+            if '_swiftwrap.staging' in si:
+                libexec = os.path.dirname(si)
+                break
+        assert(libexec), si
+        _stageins.append('%s/_swiftwrap_pre'  % libexec)
+        _stageins.append('%s/_swiftwrap_post' % libexec)
+
+
+        # remove wrapper from args
+        new_args = list()
+        args     = [arg.strip() for arg in args[1:]]
+        args.append('--end')
+        for i in range(len(args)):
+            if args[i] == '--end':
+                break
+            elif args[i] == '-e':  # executable
+                if not args[i+1].startswith('-'):
+                    executable = args[i+1]
+                    i+=1
+            elif args[i] == '-a':  # arguments
+                while not args[i+1].startswith('-'):
+                    new_args.append(args[i+1])
+                    i+=1
+            elif args[i] == '-out':  # stdout
+                if not args[i+1].startswith('-'):
+                    stdout = args[i+1]
+                    i+=1
+            elif args[i] == '-err':  # stderr
+                if not args[i+1].startswith('-'):
+                    stderr = args[i+1]
+                    i+=1
+            elif args[i] == '-i':  # stdin
+                if not args[i+1].startswith('-'):
+                    stdin = args[i+1]
+                    i+=1
+            elif args[i] == '-d':  # dirs to create
+                args_pre.append(args[i])
+                while not args[i+1].startswith('-'):
+                    args_pre.append(args[i+1])
+                    i+=1
+            elif args[i] == '-if':  # input files
+                args_pre.append(args[i])
+                while not args[i+1].startswith('-'):
+                    args_pre.append(args[i+1])
+                    i+=1
+            elif args[i] == '-of':  # output files
+                args_post.append(args[i])
+                while not args[i+1].startswith('-'):
+                    args_post.append(args[i+1])
+                    i+=1
+            elif args[i] == '-cf':  # collect (ignore)
+                while not args[i+1].startswith('-'):
+                    i+=1
+            elif args[i] == '-cdmfile':  # cdmfile (ignore)
+                while not args[i+1].startswith('-'):
+                    i+=1
+            elif args[i] == '-status':  # statusmode (ignored)
+                while not args[i+1].startswith('-'):
+                    i+=1
+        args = new_args
+
+
+    logging.info("EXEC      : %s", executable)
+    logging.info("ARGS      : %s", args)
+    logging.info("ARGS_PRE  : %s", args_pre)
+    logging.info("ARGS_POST : %s", args_post)
+    logging.info("STAGEINS  : %s", _stageins)
+    logging.info("STAGEOUTS : %s", _stageouts)
+    logging.info("WALLTIME  : %s", walltime)
+    logging.info("CORES     : %s", cores)
+    logging.info("MPI       : %s", mpi)
 
     jobdesc = {"executable"     : executable,
                "arguments"      : args,
                "cores"          : cores,
                "mpi"            : mpi,
+               "stdout"         : stdout,
+               "stderr"         : stderr,
                "duration"       : walltime,
                "input_staging"  : _stageins,
                "output_staging" : _stageouts
                }
+
+    if args_pre:
+        jobdesc['pre_exec']  = ['bash _swiftwrap_pre "%s"'  % '" "'.join(args_pre)]
+    if args_post:
+        jobdesc['post_exec'] = ['bash _swiftwrap_post "%s"' % '" "'.join(args_post)]
 
     logging.debug("Jobdesc : %s" % pprint.pformat(jobdesc))
     return jobdesc
