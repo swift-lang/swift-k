@@ -503,16 +503,16 @@ public class Block implements StatusListener, Comparable<Block> {
             if (s.isTerminal()) {
                 synchronized (cpus) {
                     if (!shutdown) {
+                        Task t = (Task) event.getSource();
                         if (s.getStatusCode() == Status.FAILED) {
-                            logger.info("Failed task spec: "
-                                    + ((Task) event.getSource()).getSpecification());
-                            taskFailed(prettifyOut(task.getStdOutput())
-                                    + prettifyOut(task.getStdError()), s.getException());
+                            logger.info("Failed task spec: " + t.getSpecification());
+                            taskFailed(prettifyOut(t.getStdOutput())
+                                    + prettifyOut(t.getStdError()), s.getException());
                         }
                         else {
                             taskFailed(id + " Block task ended prematurely\n"
-                                    + prettifyOut(task.getStdOutput())
-                                    + prettifyOut(task.getStdError()), null);
+                                    + prettifyOut(t.getStdOutput())
+                                    + prettifyOut(t.getStdError()), null);
                         }
                         bqp.getRLogger().log("BLOCK_FAILED id=" + getId());
                         totalFailedWorkers += workers;
