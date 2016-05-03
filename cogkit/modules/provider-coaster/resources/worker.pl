@@ -3413,7 +3413,7 @@ sub calculateAndSendDFStats {
 	
 	my @els = split(/\s+/, $line);
 	my $mount = $els[5];
-	if (($mount =~ /^\/sys/) || ($mount =~ /^\/dev/) || $mount =~ (/^\/run/)) {
+	if (!defined $mount || ($mount =~ /^\/sys/) || ($mount =~ /^\/dev/) || $mount =~ (/^\/run/)) {
 		return;
 	}
 	queueCmd((nullCB(), "RLOG", "INFO", "PROBE type=DF workerid=$BLOCKID:$ID time=$time mount=$mount fs=$els[0] used=$els[2] avail=$els[3]"));
@@ -3438,6 +3438,10 @@ sub calculateAndSendDLStats {
 		# see https://www.kernel.org/doc/Documentation/iostats.txt
 		my @els1 = split(/\s+/, $LAST_DL_LINES{$els2[2]}[0]);
 		my $lastTime = $LAST_DL_LINES{$els2[2]}[1];
+		
+		if ($time - $lastTime == 0) {
+			return;
+		}
 		
 		my $ss = getSectorSize($els2[2]);
 		my $wms = ($els2[10] - $els1[10]);
