@@ -5,30 +5,53 @@
 
 # this code talks to a swift-aimes rest service and runs a simple workload.  The
 # first argument is the service endpoint.
+
+import radical.utils as ru
+
 import os
 import sys
 import json
 import time
+import glob
 import pprint
 import requests
-import logging
 import argparse
 
-from datetime import datetime
+
+from flufl.lock import Lock as FLock
+from datetime   import datetime
+
+# FIXME: this is expensive to do on every invokation
+ru_logger = ru.get_logger('aimes.swift', header=False)
+
+RUNDIRS        = glob.glob("run[0-9][0-9][0-9]")
+RUNDIR         = sorted(RUNDIRS)[-1]
+LOG            = "%s/aimes-swift.log" 
+endpoint       = 'http://localhost:8080'
+id_file        = '%s/ssid' % RUNDIR
+lock_file      = '%s/flock' % RUNDIR
 
 # ------------------------------------------------------------------------------
 #
-def create_session():
-    r = requests.put("%s/emgr/sessions/" % ep)
-    ssid = r.json()['emgr_sid']
-    return ssid
+def get_session():
 
+    flock = FLock(lock_file)
+    with flock:
 
-# ------------------------------------------------------------------------------
-#
-def delete_session():
-    r = requests.put("%s/emgr/sessions/" % ep)
-    ssid = r.json()['emgr_sid']
+        if not os.path.exists(id_file):
+
+            r = requests.put("%s/emgr/sessions/" % endpoint)
+            ssid = r.json()['emgr_sid']
+            ru_logger.debug("Session : %s", r.json())
+
+            with open(id_file, 'w') as f:
+                f.write(ssid)
+
+        else:
+            with open(id_file, 'r') as f:
+                ssid = f.read()
+
+    ru_logger.debug("session: %s", ssid)
     return ssid
 
 
@@ -44,10 +67,10 @@ def filepath_cleanup(filepath):
 
 # ------------------------------------------------------------------------------
 #
-def compose_compute_unit(task_filename):
+def compose_compute_unit():
 
-    os.system('cp %s /tmp/' % task_filename)
-    task_desc  = open(task_filename, 'r').readlines()
+    task_desc  = sys.stdin.readlines()
+    swift_tid  = None
     index      = 0
     cmd        = list()
     args       = list()
@@ -67,9 +90,8 @@ def compose_compute_unit(task_filename):
 
         line = task_desc[index].strip()
 
-        # We don't process directory options.
         if (line.startswith("directory=")):
-            l = len("directory=")
+            swift_tid = line.split('/')[-1]
 
         elif (line.startswith("env.")):
             l   = len("env.")
@@ -110,7 +132,7 @@ def compose_compute_unit(task_filename):
                 printf("[ERROR] Stagein source must have a destination")
 
             stageins.append(stagein_item)
-            logging.debug('si: %s', stagein_item)
+            ru_logger.debug('si: %s', stagein_item)
 
         elif (line.startswith("stageout.source=")):
             stageout_item = {}
@@ -137,7 +159,7 @@ def compose_compute_unit(task_filename):
             else:
                 printf("[ERROR] Stageout source must have a destination")
             stageouts.append(stageout_item)
-            logging.debug('so: %s', stagein_item)
+            ru_logger.debug('so: %s', stagein_item)
 
         elif (line.startswith("attr.maxwalltime=")):
             l = len("attr.maxwalltime=")
@@ -153,7 +175,7 @@ def compose_compute_unit(task_filename):
                 mpi = True
 
         else:
-            logging.debug("ignoring option : {0}".format(line.strip()))
+            ru_logger.debug("ignoring option : {0}".format(line.strip()))
 
         index += 1
 
@@ -163,7 +185,7 @@ def compose_compute_unit(task_filename):
 
     # we interpret executable + args, and plug things out of the hand of
     # _swiftwrap.staging.  
-    logging.debug('sis: %s', _stageins)
+    ru_logger.debug('sis: %s', _stageins)
     if args[0] == '_swiftwrap.staging':
 
         libexec = None
@@ -230,17 +252,19 @@ def compose_compute_unit(task_filename):
         args = new_args
 
 
-    logging.info("EXEC      : %s", executable)
-    logging.info("ARGS      : %s", args)
-    logging.info("ARGS_PRE  : %s", args_pre)
-    logging.info("ARGS_POST : %s", args_post)
-    logging.info("STAGEINS  : %s", _stageins)
-    logging.info("STAGEOUTS : %s", _stageouts)
-    logging.info("WALLTIME  : %s", walltime)
-    logging.info("CORES     : %s", cores)
-    logging.info("MPI       : %s", mpi)
+    ru_logger.info("EXEC      : %s", executable)
+    ru_logger.info("ARGS      : %s", args)
+    ru_logger.info("ARGS_PRE  : %s", args_pre)
+    ru_logger.info("ARGS_POST : %s", args_post)
+    ru_logger.info("STAGEINS  : %s", _stageins)
+    ru_logger.info("STAGEOUTS : %s", _stageouts)
+    ru_logger.info("WALLTIME  : %s", walltime)
+    ru_logger.info("CORES     : %s", cores)
+    ru_logger.info("MPI       : %s", mpi)
 
-    jobdesc = {"executable"     : executable,
+    jobdesc = {
+               "swift_tid"      : swift_tid, 
+               "executable"     : executable,
                "arguments"      : args,
                "cores"          : cores,
                "mpi"            : mpi,
@@ -256,31 +280,26 @@ def compose_compute_unit(task_filename):
     if args_post:
         jobdesc['post_exec'] = ['bash _swiftwrap_post "%s"' % '" "'.join(args_post)]
 
-    logging.debug("Jobdesc : %s" % pprint.pformat(jobdesc))
+    ru_logger.debug("Jobdesc : %s" % pprint.pformat(jobdesc))
     return jobdesc
 
 
 # ------------------------------------------------------------------------------
 #
-def mock_job_desc(jobdesc):
-    jobdesc = {"executable" : "/bin/sleep",
-               "arguments"  : ["2"],
-               "cores"      : 1}
-    return jobdesc
+def submit_task(ssid):
 
-
-# ------------------------------------------------------------------------------
-#
-def submit_task(jobdesc, ssid, ep):
-
-   #cud  = mock_job_desc(jobdesc)
-    cud  = compose_compute_unit(jobdesc)
+    cud  = compose_compute_unit()
     data = {'td': json.dumps(cud)}
 
-    logging.debug("Submit : {0}".format(data))
+    ru_logger.debug("Submit : {0}".format(data))
     
-    r = requests.put("%s/emgr/sessions/%s" % (ep, ssid), data)
-    return r.json()['emgr_tid']
+    r = requests.put("%s/emgr/sessions/%s" % (endpoint, ssid), data)
+    emgr_tid  = r.json()['emgr_tid']
+    swift_tid = cud['swift_tid']
+
+    ru_logger.debug('%s -> %s', swift_tid, emgr_tid)
+
+    print "jobid=%s" % emgr_tid
 
 
 # ------------------------------------------------------------------------------
@@ -291,12 +310,12 @@ state_mapping = {'New'                      : 'Q',
                  'AllocatingPending'        : 'Q',
                  'Allocating'               : 'Q',
                  'PendingAgentInputStaging' : 'Q',
-                 'AgentStagingInputPending' : 'Q',
-                 'PendingInputStaging'      : 'Q',
-                 'AgentStagingInput'        : 'Q',
+                 'AgentStagingInputPending' : 'R',
+                 'PendingInputStaging'      : 'R',
+                 'AgentStagingInput'        : 'R',
                  'StagingInput'             : 'R',
-                 'PendingExecution'         : 'Q',
-                 'ExecutingPending'         : 'Q',
+                 'PendingExecution'         : 'R',
+                 'ExecutingPending'         : 'R',
                  'Executing'                : 'R',
                  'PendingAgentOutputStaging': 'R',
                  'AgentStagingOutputPending': 'R',
@@ -304,141 +323,72 @@ state_mapping = {'New'                      : 'Q',
                  'PendingOutputStaging'     : 'R',
                  'StagingOutput'            : 'R',
                  'Done'                     : 'C',
+                 'Canceled'                 : 'F',
                  'Failed'                   : 'F'}
 
-def status_task(jobid, ssid, ep):
+def status_task(jobids, ssid):
 
-    r = requests.get("%s/emgr/sessions/%s/%s" % (ep, ssid, jobid))
-    logging.debug("Status : {0}".format(r.json()))
-    state = r.json()['result']['state']
-    
-    if state in state_mapping :
-        return "{0} {1}".format(jobid, state_mapping[state])
-    else:
-        return "{0} UNKNOWN STATE {1}".format(jobid, state)
+    r = requests.get("%s/emgr/sessions/%s/%s" % (endpoint, ssid, ':'.join(jobids)))
+  # ru_logger.debug("status : %s", r.json())
+
+    task_infos = r.json()['result']
+
+  # import pprint
+  # ru_logger.debug('result: %s', pprint.pformat(task_infos))
+
+    for task in task_infos:
+        jobid       = task['uid']
+        emgr_state  = task['state']
+        swift_state = state_mapping.get(emgr_state)
+
+        ru_logger.debug('state  %s: %s [%s]', jobid, swift_state, emgr_state)
+        
+        if swift_state:
+            print "%s %s" % (jobid, swift_state)
+        else:
+            print "%s UNKNOWN STATE %s" % (jobid, emgr_state)
 
 
 # ------------------------------------------------------------------------------
 #
-def cancel_task(jobid, ssid, ep):
-    r = requests.delete("%s/emgr/sessions/%s/%s" % (ep, ssid, jobid))
-    print "cancel_tasks : %s : %s" % (jobid, r.json())
+def cancel_task(jobid, ssid):
+    r = requests.delete("%s/emgr/sessions/%s/%s" % (endpoint, ssid, jobid))
+    ru_logger.debug("cancel : %s", r.json())
 
 
 # ------------------------------------------------------------------------------
 #
-def destroy_session(ssid, ep):
-    r = requests.delete("%s/emgr/sessions/%s" % (ep, ssid))
-    logging.debug("Close : {0}".format(r.json()))
+def destroy_session(ssid):
+    r = requests.delete("%s/emgr/sessions/%s" % (endpoint, ssid))
+    ru_logger.debug('close session %s', ssid)
 
 
 # ------------------------------------------------------------------------------
 #
 if __name__ == '__main__' :
 
-    parser   = argparse.ArgumentParser()
-    mu_group = parser.add_mutually_exclusive_group(required=True)
-    mu_group.add_argument("-i", "--init",      action='store_true')
-    mu_group.add_argument("-s", "--submit",    default=None,      )
-    mu_group.add_argument("-t", "--status",    default=None,      )
-    mu_group.add_argument("-c", "--cancel",    default=None,      )
-    mu_group.add_argument("-d", "--destroy",   default=None,      )
-    parser.add_argument(  "-v", "--verbose",                      )
-    parser.add_argument(  "-l", "--logfile",                      )
-    parser.add_argument(  "-z", "--session_id",                   )
-    parser.add_argument(  "-e", "--endpoint",  required=True,     )
+    try:
+        ru_logger.debug('aimes-swift %s', sys.argv)
 
-    args = parser.parse_args()
+        ssid = get_session()
 
-    # Setting up logging
-    if args.logfile:
-        logdir = os.path.dirname(args.logfile)
-        if not os.path.exists(logdir):
-            os.makedirs(logdir)
-        logging.basicConfig(filename=args.logfile, level=logging.DEBUG)
+        if sys.argv[0].endswith('submit.py'):
+            submit_task(ssid)
 
-    if not args.endpoint:
-        logging.error("Missing endpoint. Cannot proceed");
-        sys.exit(-1)
+        elif sys.argv[0].endswith('status.py'):
+            status_task(sys.argv[1:], ssid)
 
-    ep = args.endpoint
-    logging.debug("Endpoint : {0}".format(ep));
+        elif sys.argv[0].endswith('cancel.py'):
+            cancel_task(sys.argv[1:], ssid)
 
-    if args.init:
-        ssid = create_session()
-        print ssid
-        sys.exit(0)
+        else:
+            ru_logger.error("undefined handler for %s", sys.argv)
+            exit(-1)
 
-    if not args.session_id:
-        logging.error("Missing session id. Failing")
-        sys.exit(-4)
-    ssid = args.session_id
-
-    if args.submit:
-        print submit_task(args.submit, ssid, ep)
-        sys.exit(0)
-
-    if args.status:
-        print status_task(args.status, ssid, ep)
-        sys.exit(0)
-
-    if args.cancel:
-        print cancel_task(args.cancel, ssid, ep)
-        sys.exit(0)
-
-    if args.destroy:
-        print destroy_task(args.destroy, ssid, ep)
-        sys.exit(0)
-
-    logging.error("Undefined args, cannot be handled")
-    exit(-1)
+    except Exception as e:
+        ru_logger.exception('caught exception')
+        raise
 
 
-# create a session, and begin submitting tasks.  Then let some time expire so
-# that the tasks get executed by the watcher
-print ' ---------- create session'
-ssid = create_session()
-
-print ' ---------- list sessions'
-list_sessions()
-tids = list()
-
-print ' ---------- submit tasks'
-tids.append(add_task(ssid))
-tids.append(add_task(ssid))
-tids.append(add_task(ssid))
-
-print ' ---------- sleep'
-time.sleep(6)
-
-# Now we do the same again, and this batch should get executed in some seconds,
-# too.
-print ' ---------- submit tasks'
-tids.append(add_task(ssid))
-tids.append(add_task(ssid))
-tids.append(add_task(ssid))
-
-while True:
-
-    # we wait for all tasks to finish
-    all_finished = True
-    for tid in tids:
-        if not check_task(ssid, tids[-1]):
-            all_finished = False
-            break
-
-    if all_finished:
-        break
-    else:
-        print ' ---------- sleep 3'
-        time.sleep (3)
-
-print ' ---------- all tasks are final'
-print ' ---------- list sessions, dump this session'
-list_sessions()
-dump_session(ssid)
-
-print ' ---------- delete this session, list sessions'
-destroy_session(ssid)
-list_sessions()
+# ------------------------------------------------------------------------------
 
