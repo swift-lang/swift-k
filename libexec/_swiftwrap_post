@@ -66,11 +66,14 @@ logstate() {
 fail() {
 	EC=$1
 	shift
+	warn $@
+	exit $EC
+}
 
+warn() {
 	log $@
 	info
 	echo "$@" >> wrapper_post.error
-	exit $EC
 }
 
 checkError() {
@@ -131,7 +134,7 @@ getarg() {
 	elif [ "$PARAMFILE" != "" ] && grep -E "^$NAME " $PARAMFILE ; then
 			VALUE=$(grep -E "^$NAME " $PARAMFILE | cut -d ' ' -f 2-)
 	else
-		fail 254 "Missing $NAME argument"
+		warn "Missing $NAME argument"
 	fi
 }
 

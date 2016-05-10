@@ -329,7 +329,7 @@ state_mapping = {'New'                      : 'Q',
 def status_task(jobids, ssid):
 
     r = requests.get("%s/emgr/sessions/%s/%s" % (endpoint, ssid, ':'.join(jobids)))
-  # ru_logger.debug("status : %s", r.json())
+    ru_logger.debug("status : %s", r.json())
 
     task_infos = r.json()['result']
 
