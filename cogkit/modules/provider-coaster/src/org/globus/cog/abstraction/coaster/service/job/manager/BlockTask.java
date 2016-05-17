@@ -231,7 +231,7 @@ public class BlockTask extends TaskImpl {
 
     private void addStagingSpec(JobSpecification js, File script, String scriptArg) {
         StagingSet ss = new StagingSetImpl();
-        ss.add(new StagingSetEntryImpl(script.getAbsolutePath(), scriptArg));
+        ss.add(new StagingSetEntryImpl(script.getAbsoluteFile().toURI().toString(), scriptArg));
         js.setStageIn(ss);
         
         CleanUpSet cs = new CleanUpSetImpl();

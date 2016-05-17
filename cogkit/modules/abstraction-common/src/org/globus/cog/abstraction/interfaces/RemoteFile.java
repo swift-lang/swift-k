@@ -263,9 +263,23 @@ public class RemoteFile {
     }
     
     public boolean isAbsolute() {
-        return dir != null && dir.startsWith("/");
+        return dir != null && (isUnixAbsolutePath(dir) || isWindowsAbsolutePath(dir));
     }
         
+    private boolean isWindowsAbsolutePath(String dir) {
+        if (dir.length() >= 1 && dir.charAt(0) == '\\') {
+            return true;
+        }
+        if (dir.length() >= 2 && Character.isLetter(dir.charAt(0)) && dir.charAt(1) == '\\') {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isUnixAbsolutePath(String dir) {
+        return dir.startsWith("/");
+    }
+
     public String getURIAsString() {
         StringBuilder sb = new StringBuilder();
         if (protocol != null) {
