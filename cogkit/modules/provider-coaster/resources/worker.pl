@@ -3091,10 +3091,10 @@ sub setEnv {
 	my $ix = index($value, "\$");
 	if ($ix != -1) {
 		my $expanded = '';
-		my @parts = split(/(\$\w+)|(\${\w+})/, $value);
+		my @parts = split(/(\$\w+)|(\$\{\w+\})/, $value);
 		foreach my $seg (@parts) {
     		next if (not defined($seg));
-    		if ($seg =~ m/\${?(\w+)}?/) {
+    		if ($seg =~ m/\$\{?(\w+)\}?/) {
     			$seg = ($$DEST{$1} || '');
 			}
     		$expanded .= $seg;
