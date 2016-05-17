@@ -19,9 +19,8 @@ use File::Copy;
 use Getopt::Std;
 use FileHandle;
 use Cwd qw(realpath);
-use Cwd "realpath";
-use POSIX;
-use POSIX ":sys_wait_h";
+use Cwd qw(getcwd);
+use POSIX qw(:sys_wait_h);
 use strict;
 use warnings;
 use File::Temp "tempfile";
@@ -187,6 +186,17 @@ my $myhost=`hostname`;
 $myhost =~ s/\s+$//;
 
 my $WINDOWS = $^O =~ /Win/;
+
+if ($WINDOWS) {
+	eval "use Win32::Process qw(STILL_ACTIVE NORMAL_PRIORITY_CLASS)";
+	eval "use Win32";
+	eval "use Win32::ShellQuote";
+	
+	$SIG{QUIT} = \&KILLWINPROC;
+}
+
+# used by the windows process killing mechanism
+my $QUITRECEIVED = 0;
 
 sub wlog {
 	my $msg;
@@ -1410,23 +1420,7 @@ sub cancelHandler {
 	
 	if (defined $JOBDATA{$jobid}) {
 		$JOBDATA{$jobid}{"canceled"} = 1;
-		my $pid = $JOBDATA{$jobid}{"pid"};
-		if (defined $pid) {
-			my $result;
-			wlog INFO, "$jobid PID is $pid\n";
-			if ($WINDOWS) { 
-				$result = kill "TERM", $pid;
-			}
-			else {
-				$result = kill -9, $pid;
-			}
-			# only kill it once
-			delete $ASYNC_WAIT_DATA{$pid};
-			wlog INFO, "$jobid kill returned $result\n";
-		}
-		else {
-			wlog INFO, "$jobid No PID\n";
-		}
+		killjob($jobid);
 	}
 	queueJobStatusCmd($jobid, CANCELED, 0, "");
 	queueReply($tag, ("OK"));
@@ -3003,6 +2997,33 @@ sub checkSubprocesses {
 	}
 }
 
+sub killjob {
+	my ($jobid) = @_;
+	
+	my $pid = $JOBDATA{$jobid}{"pid"};
+	if (defined $pid) {
+		wlog INFO, "$jobid PID is $pid\n";
+	
+		my $result;
+		if ($WINDOWS) { 
+			$result = kill("QUIT", $pid);
+		}
+		else {
+			$result = kill(-9, $pid);
+		}
+		wlog INFO, "$jobid kill returned $result\n";
+		
+		# only kill it once
+		delete $ASYNC_WAIT_DATA{$pid};
+		
+		return $result;
+	}
+	else {
+		wlog INFO, "$jobid No PID\n";
+		return -1;
+	}
+}
+
 sub checkSubprocessStatus {
 	my ($pid, $now) = @_;
 
@@ -3022,12 +3043,7 @@ sub checkSubprocessStatus {
 		my $timeout = $ASYNC_WAIT_DATA{$pid}{"timeout"};
 		if (($timeout > 0) && ($now > $startTime + $timeout)) {
 			wlog DEBUG, "$logid subprocess timed-out (start: $startTime, now: $now, timeout: $timeout); killing\n";
-			if ($WINDOWS) { 
-				kill "TERM", $pid;
-			}
-			else {
-				kill -9, $pid;
-			}
+			killjob($logid, $pid);
 			# only kill it once
 			$ASYNC_WAIT_DATA{$pid}{"startTime"} = -1;
 			$ASYNC_WAIT_DATA{$pid}{"timedOut"} = 1;
@@ -3211,8 +3227,57 @@ sub runjob {
 		$JOBARGS = moveSwiftwrapArgsToFile(".", $JOBARGS);
 	}
 	
-	my $dummy = exec { $executable } @$JOBARGS;
+	execPortable($executable, $JOBARGS);
 	exitSubprocess($WR, "Could not execute $executable: $!");
+}
+
+sub execPortable {
+	my ($executable, $args) = @_;
+	
+	if ($WINDOWS) {
+		
+		my $process;
+		$_ = shift @$args;
+		my $cmdline = Win32::ShellQuote::quote_system_string(@$args);
+		
+		wlog DEBUG, "cmdline: $cmdline\n";
+		
+		if ($QUITRECEIVED) {
+			wlog DEBUG, "Windows process canceled before it started\n";
+			exit(-1);
+		}
+		if (!Win32::Process::Create($process, $executable, $cmdline, 0, NORMAL_PRIORITY_CLASS(), ".")) {
+			my $errno = $!;
+			wlog DEBUG, "Failed to create process: $!\n";
+			return;
+		}
+		my $pid = $process->GetProcessID();
+		wlog DEBUG, "Windows PID: $pid\n";
+		 
+		my $exitcode;
+		$process->GetExitCode($exitcode);
+		while ($exitcode == STILL_ACTIVE()) {
+			if ($QUITRECEIVED) {
+				my $result = system(("taskkill", "/pid", "$pid", "/f", "/t"));
+				wlog DEBUG, "taskkill result: $result\n";
+				$QUITRECEIVED = 0;
+			}
+			sleep 1;
+			$process->GetExitCode($exitcode);
+		}
+		$process->GetExitCode($exitcode);
+		wlog DEBUG, "Windows process done. Exit code: $exitcode\n";
+		exit($exitcode);
+	}
+	else {
+		my $dummy = exec { $executable } @$args;
+	}
+}
+
+sub KILLWINPROC {
+	wlog DEBUG, "Got cancel signal\n";
+	
+	$QUITRECEIVED = 1;
 }
 
 sub stracerunjob {
