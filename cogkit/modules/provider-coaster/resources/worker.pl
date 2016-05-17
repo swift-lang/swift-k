@@ -18,11 +18,13 @@ use File::Path;
 use File::Copy;
 use Getopt::Std;
 use FileHandle;
+use Cwd qw(realpath);
 use Cwd "realpath";
 use POSIX;
 use POSIX ":sys_wait_h";
 use strict;
 use warnings;
+use File::Temp "tempfile";
 
 BEGIN { eval "use Time::HiRes qw(time); 1" or print "Hi res time not available. Log timestamps will have second granularity\n"; }
 
@@ -2300,19 +2302,23 @@ sub readFiles {
 	if (! defined $dir) {
 		$dir = ".";
 	}
-	my $sout = $dir."/".$JOBDATA{$jobid}{"job"}{"stdout"};
-	my $serr = $dir."/".$JOBDATA{$jobid}{"job"}{"stderr"};
+	my $sout = $JOBDATA{$jobid}{"job"}{"stdout"};
+	my $serr = $JOBDATA{$jobid}{"job"}{"stderr"};
 	
-	wlog DEBUG, "STDOUT: $sout, STDERR: $serr\n";
-	
-	if (! defined $sout) {
-		$sout = tmpSFile($$, "out");
+	my $textout = "";
+	my $texterr = "";
+	if (defined $sout) {
+		wlog DEBUG, "STDOUT: $sout\n";
+		$textout = readFile($jobid, $sout);
+		wlog DEBUG, "APPOUT: $textout\n";
 	}
-	if (! defined $serr) {
-		$serr = tmpSFile($$, "err");
+	if (defined $serr) {
+		wlog DEBUG, "STDERR: $serr\n";
+		$texterr = readFile($jobid, $serr);
+		wlog DEBUG, "APPERR: $texterr\n";
 	}
-	
-	return (readFile($jobid, $sout), readFile($jobid, $serr));
+		
+	return ($textout, $texterr);
 }
 
 sub sendStatus {
@@ -2814,6 +2820,19 @@ sub checkJob {
 			}
 		}
 		chdir($dir);
+		if (defined $$JOB{"redirect"}) {
+			wlog DEBUG, "Redirection is on\n";
+			my $sout = $$JOB{"stdout"}; 
+			if (! defined $sout) {
+				$sout = tmpSFile($$, "out");
+				$$JOB{"stdout"} = $sout;
+			}
+			my $serr = $$JOB{"stderr"};
+			if (! defined $serr) {
+				$serr = tmpSFile($$, "err");
+				$$JOB{"stderr"} = $serr;
+			}
+		}
 		wlog DEBUG, "$JOBID Job check ok (dir: $dir)\n";
 		wlog DEBUG, "$JOBID Sending submit reply (tag=$tag)\n";
 		queueReply($tag, ("OK"));
@@ -3061,7 +3080,9 @@ sub checkSubprocessStatus {
 sub tmpSFile {
 	my ($pid, $suffix) = @_;
 	
-	return "/tmp/$pid.$suffix";
+	my ($fh, $fn) = tempfile("$pid.$suffix.XXXXXX", TMPDIR => 1);
+	close($fh);
+	return $fn;
 }
 
 sub setEnv {
@@ -3170,15 +3191,6 @@ sub runjob {
 		wlog DEBUG, "chdir: $$JOB{directory}\n";
 	    chdir $$JOB{"directory"};
 	}
-	if (defined $$JOB{"redirect"}) {
-		wlog DEBUG, "Redirection is on\n";
-		if (! defined $sout) {
-			$sout = tmpSFile($$, "out");
-		}
-		if (! defined $serr) {
-			$serr = tmpSFile($$, "err");
-		}
-	}
 	if (defined $sout) {
 		wlog DEBUG, "STDOUT: $sout\n";
 		close STDOUT;
@@ -3235,15 +3247,6 @@ sub rundockerjob {
 	if (defined $$JOB{"directory"}) {
 		wlog DEBUG, "chdir: $$JOB{directory}\n";
 	    $jobdir = $$JOB{"directory"};
-	}
-	if (defined $$JOB{"redirect"}) {
-		wlog DEBUG, "Redirection is on\n";
-		if (! defined $sout) {
-			$sout = tmpSFile($$, "out");
-		}
-		if (! defined $serr) {
-			$serr = tmpSFile($$, "err");
-		}
 	}
 	if (defined $sout) {
 		wlog DEBUG, "STDOUT: $sout\n";
