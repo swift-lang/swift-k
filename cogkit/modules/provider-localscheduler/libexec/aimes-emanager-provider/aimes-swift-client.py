@@ -27,7 +27,7 @@ ru_logger = ru.get_logger('aimes.swift', header=False)
 RUNDIRS        = glob.glob("run[0-9][0-9][0-9]")
 RUNDIR         = sorted(RUNDIRS)[-1]
 LOG            = "%s/aimes-swift.log" 
-endpoint       = 'http://localhost:8080'
+endpoint       = 'http://localhost:8090'
 id_file        = '%s/ssid' % RUNDIR
 lock_file      = '%s/flock' % RUNDIR
 
