@@ -94,6 +94,7 @@ namespace(providerStaging) {
 					directory = tmpdir
 					redirect = false
 					host = rhost
+				    log(LOG:DEBUG, "LOG EXE jobid={jobid}")
 
 					TCProfile(rhost, if (attributes != null, attributes = attributes), tr = tr)
 					replicationGroup = replicationGroup
@@ -111,12 +112,17 @@ namespace(providerStaging) {
 						stageIn("{loc}{SWIFT:HOME}/libexec/cdm.pl", "cdm.pl")
 						stageIn("{loc}{SWIFT:HOME}/libexec/cdm_lib.sh", "cdm_lib.sh")
 					}
+				    log(LOG:DEBUG, "LOG SI1 jobid={jobid}")
 					
-					appStageins(jobid, inFiles)
+                    appStageins(jobid, inFiles)
+
+				    log(LOG:DEBUG, "LOG SI2 jobid={jobid}")
 
 					stageOut("wrapper.log", "file://localhost/{DEBUG_DIR}/{jobid}.info", 
 						mode = WRAPPER_TRANSFER_MODE)
 					
+				    log(LOG:DEBUG, "LOG SI3 jobid={jobid}")
+
 					if (stdout == null) {
 						// if not stdout requested, only stage on error
 						stageOut("stdout.txt", "file://localhost/{DEBUG_DIR}/{jobid}.stdout", 
@@ -126,19 +132,24 @@ namespace(providerStaging) {
 						stageOut("stderr.txt", "file://localhost/{DEBUG_DIR}/{jobid}.stderr",
 							mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
 					}
+				    log(LOG:DEBUG, "LOG SO1 jobid={jobid}")
 					stageOut("wrapper.error", "file://localhost/{DEBUG_DIR}/{jobid}.error", 
 						mode = STAGING_MODE:IF_PRESENT)
+				    log(LOG:DEBUG, "LOG SO2 jobid={jobid}")
 						
 					appStageouts(jobid, outFiles, outCollect)
+				    log(LOG:DEBUG, "LOG SO3 jobid={jobid}")
 					
 					if (!isEmpty(outCollect)) {
 						stageOut("_collect", "file://localhost/{DEBUG_DIR}/{jobid}.collect", 
 							mode = STAGING_MODE:ALWAYS)
 					}
 					
+				    log(LOG:DEBUG, "LOG SO4 jobid={jobid}")
 					if (CLEANUP_ENABLED) {
 						task:cleanUp(".")
 					}
+				    log(LOG:DEBUG, "LOG DONE jobid={jobid}")
 				)
 				
 				
@@ -156,7 +167,8 @@ namespace(providerStaging) {
 					log(LOG:DEBUG, "JOB_CANCELED jobid={jobid}")
 					throw(prev)
 				}
-				else {
+                else {
+                    print("k: exception for {jobid}")
 					exception := try(exception(readErrorFiles(DEBUG_DIR, jobid, stdout, stdouts, stderr, stderrs), prev), prev)
 					setProgress(progress, "Failed but can retry")
 					log(LOG:DEBUG, "APPLICATION_EXCEPTION jobid={jobid} - Application exception: ", exception)

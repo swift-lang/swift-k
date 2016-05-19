@@ -5,103 +5,177 @@
 
 # this code talks to a swift-aimes rest service and runs a simple workload.  The
 # first argument is the service endpoint.
+
+import radical.utils as ru
+
 import os
 import sys
 import json
 import time
+import glob
 import pprint
 import requests
-import logging
 import argparse
-import datetime
-from datetime import datetime
 
-def create_session():
-    r = requests.put("%s/swift/sessions/" % ep)
-    ssid = r.json()['emgr_sid']
+
+from flufl.lock import Lock as FLock
+from datetime   import datetime
+
+# FIXME: this is expensive to do on every invokation
+ru_logger = ru.get_logger('aimes.swift', header=False)
+
+RUNDIRS        = glob.glob("run[0-9][0-9][0-9]")
+RUNDIR         = sorted(RUNDIRS)[-1]
+LOG            = "%s/aimes-swift.log" 
+endpoint       = 'http://localhost:8090'
+id_file        = '%s/ssid' % RUNDIR
+lock_file      = '%s/flock' % RUNDIR
+
+# ------------------------------------------------------------------------------
+#
+def get_session():
+
+    flock = FLock(lock_file)
+    with flock:
+
+        if not os.path.exists(id_file):
+
+            r = requests.put("%s/emgr/sessions/" % endpoint)
+            ssid = r.json()['emgr_sid']
+            ru_logger.debug("Session : %s", r.json())
+
+            with open(id_file, 'w') as f:
+                f.write(ssid)
+
+        else:
+            with open(id_file, 'r') as f:
+                ssid = f.read()
+
+    ru_logger.debug("session: %s", ssid)
     return ssid
 
+
+# ------------------------------------------------------------------------------
+#
 def filepath_cleanup(filepath):
-    fpath = filepath.strip('\n')
+    fpath = filepath.strip()
     if fpath.startswith('file://localhost/'):
         l = len('file://localhost/')
         fpath = fpath[l:]
     return fpath
 
-def compose_compute_unit(task_filename):
 
-    task_desc = open(task_filename, 'r').readlines()
-    index     = 0
-    args      = []
-    stageins  = []
-    stageouts = []
-    env_vars  = {}
-    walltime  = 0
+# ------------------------------------------------------------------------------
+#
+def compose_compute_unit():
+
+    task_desc  = sys.stdin.readlines()
+    swift_tid  = None
+    index      = 0
+    cmd        = list()
+    args       = list()
+    args_pre   = list()
+    args_post  = list()
+    stageins   = list()
+    stageouts  = list()
+    env_vars   = dict()
+    walltime   = 0
+    cores      = 1
+    stdin      = None
+    stdout     = None
+    stderr     = None
+    mpi        = False
+
     while index < len(task_desc):
-        # We don't process directory options.
-        if (task_desc[index].startswith("directory=")):
-            l = len("directory=")
 
-        elif (task_desc[index].startswith("env.")):
+        line = task_desc[index].strip()
+
+        if (line.startswith("directory=")):
+            swift_tid = line.split('/')[-1]
+
+        elif (line.startswith("env.")):
             l   = len("env.")
-            [key,value] = task_desc[index][l:].strip('\n').split("=")
+            [key,value] = line[l:].strip().split("=")
             env_vars[key] = value
 
-        elif (task_desc[index].startswith("executable=")):
+        elif (line.startswith("executable=")):
             l = len("executable=")
-            executable = task_desc[index][l:].strip('\n')
+            executable = line[l:].strip()
 
-        elif (task_desc[index].startswith("arg=")):
+        elif (line.startswith("arg=")):
             l = len("arg=")
-            args.append(task_desc[index][l:].strip('\n'))
+            args.append(line[l:].strip())
 
-        elif (task_desc[index].startswith("stagein.source=")):
+        elif (line.startswith("stagein.source=")):
             stagein_item = {}
             l = len("stagein.source=")
-            stagein_item['source'] = filepath_cleanup(task_desc[index][l:])
+            stagein_item['source'] = filepath_cleanup(line[l:])
+
             index += 1
-            if (task_desc[index].startswith("stagein.destination=")):
+            line   = task_desc[index]
+
+            if (line.startswith("stagein.destination=")):
                 l = len("stagein.destination=")
-                stagein_item['destination'] = filepath_cleanup(task_desc[index][l:])
+                stagein_item['destination'] = filepath_cleanup(line[l:])
+
                 index += 1
-                if (task_desc[index].startswith("stagein.mode=")):
+                line   = task_desc[index]
+
+                if (line.startswith("stagein.mode=")):
                     l = len("stagein.mode=")
                     # Ignore mode for now
-                    #stagein_item['destination'] = task_desc[index][l:].strip('\n')
-                    #index += 1
+                    # stagein_item['destination'] = line[l:].strip()
+                    # index += 1
                 else:
                     index -= 1
             else:
                 printf("[ERROR] Stagein source must have a destination")
-            stageins.append(stagein_item)
 
-        elif (task_desc[index].startswith("stageout.source=")):
+            stageins.append(stagein_item)
+            ru_logger.debug('si: %s', stagein_item)
+
+        elif (line.startswith("stageout.source=")):
             stageout_item = {}
             l = len("stageout.source=")
-            stageout_item['source'] = filepath_cleanup(task_desc[index][l:])
+            stageout_item['source'] = filepath_cleanup(line[l:])
+
             index += 1
-            if (task_desc[index].startswith("stageout.destination=")):
+            line   = task_desc[index]
+
+            if (line.startswith("stageout.destination=")):
                 l = len("stageout.destination=")
-                stageout_item['destination'] = filepath_cleanup(task_desc[index][l:])
+                stageout_item['destination'] = filepath_cleanup(line[l:])
+
                 index += 1
-                if (task_desc[index].startswith("stageout.mode=")):
+                line   = task_desc[index]
+
+                if (line.startswith("stageout.mode=")):
                     l = len("stageout.mode=")
                     # Ignore mode for now
-                    #stageout_item['destination'] = task_desc[index][l:].strip('\n')
+                    #stageout_item['destination'] = line[l:].strip()
                     #index += 1
                 else:
                     index -= 1
             else:
                 printf("[ERROR] Stageout source must have a destination")
             stageouts.append(stageout_item)
+            ru_logger.debug('so: %s', stagein_item)
 
-        elif (task_desc[index].startswith("attr.maxwalltime=")):
+        elif (line.startswith("attr.maxwalltime=")):
             l = len("attr.maxwalltime=")
-            d = datetime.strptime(task_desc[index][l:].strip('\n'), "%H:%M:%S")
+            d = datetime.strptime(line[l:].strip(), "%H:%M:%S")
             walltime = d.hour*3600 + d.minute*60 + d.second
 
+        elif (line.startswith("attr.hostcount=")):
+            cores = int(line.split('=',1)[1])
+
+        elif (line.startswith("attr.jobtype=")):
+            jobtype = line.split('=',1)[1]
+            if jobtype.lower() == 'mpi':
+                mpi = True
+
         else:
-            logging.debug("ignoring option : {0}".format(task_desc[index].strip('\n')))
+            ru_logger.debug("ignoring option : {0}".format(line.strip()))
 
         index += 1
 
@@ -109,53 +183,139 @@ def compose_compute_unit(task_filename):
     _stageins  = [x["source"] for x in stageins]
     _stageouts = [x["source"] for x in stageouts if x["source"] != 'wrapper.error' ]
 
-    logging.error("ARGS      : {0}".format(args))
-    logging.error("EXEC      : {0}".format(executable))
-    logging.error("STAGEINS  : {0}".format(_stageins))
-    logging.error("STAGEOUTS : {0}".format(_stageouts))
-    logging.error("WALLTIME  : {0}".format(walltime))
+    # we interpret executable + args, and plug things out of the hand of
+    # _swiftwrap.staging.  
+    ru_logger.debug('sis: %s', _stageins)
+    if args[0] == '_swiftwrap.staging':
 
-    jobdesc = {"executable" : str(executable),
-			   "arguments"  : args,
-               "cores"      : int(env_vars.get("cores", 1)),
-               "duration"   : walltime,
-               "input_staging" : _stageins,
+        libexec = None
+        for si in _stageins:
+            if '_swiftwrap.staging' in si:
+                libexec = os.path.dirname(si)
+                break
+        assert(libexec), si
+        _stageins.append('%s/_swiftwrap_pre'  % libexec)
+        _stageins.append('%s/_swiftwrap_post' % libexec)
+
+
+        # remove wrapper from args
+        new_args = list()
+        args     = [arg.strip() for arg in args[1:]]
+        args.append('--end')
+        for i in range(len(args)):
+            if args[i] == '--end':
+                break
+            elif args[i] == '-e':  # executable
+                if not args[i+1].startswith('-'):
+                    executable = args[i+1]
+                    i+=1
+            elif args[i] == '-a':  # arguments
+                while not args[i+1].startswith('-'):
+                    new_args.append(args[i+1])
+                    i+=1
+            elif args[i] == '-out':  # stdout
+                if not args[i+1].startswith('-'):
+                    stdout = args[i+1]
+                    i+=1
+            elif args[i] == '-err':  # stderr
+                if not args[i+1].startswith('-'):
+                    stderr = args[i+1]
+                    i+=1
+            elif args[i] == '-i':  # stdin
+                if not args[i+1].startswith('-'):
+                    stdin = args[i+1]
+                    i+=1
+            elif args[i] == '-d':  # dirs to create
+                args_pre.append(args[i])
+                while not args[i+1].startswith('-'):
+                    args_pre.append(args[i+1])
+                    i+=1
+            elif args[i] == '-if':  # input files
+                args_pre.append(args[i])
+                while not args[i+1].startswith('-'):
+                    args_pre.append(args[i+1])
+                    i+=1
+            elif args[i] == '-of':  # output files
+                args_post.append(args[i])
+                while not args[i+1].startswith('-'):
+                    args_post.append(args[i+1])
+                    i+=1
+            elif args[i] == '-cf':  # collect (ignore)
+                while not args[i+1].startswith('-'):
+                    i+=1
+            elif args[i] == '-cdmfile':  # cdmfile (ignore)
+                while not args[i+1].startswith('-'):
+                    i+=1
+            elif args[i] == '-status':  # statusmode (ignored)
+                while not args[i+1].startswith('-'):
+                    i+=1
+        args = new_args
+
+
+    ru_logger.info("EXEC      : %s", executable)
+    ru_logger.info("ARGS      : %s", args)
+    ru_logger.info("ARGS_PRE  : %s", args_pre)
+    ru_logger.info("ARGS_POST : %s", args_post)
+    ru_logger.info("STAGEINS  : %s", _stageins)
+    ru_logger.info("STAGEOUTS : %s", _stageouts)
+    ru_logger.info("WALLTIME  : %s", walltime)
+    ru_logger.info("CORES     : %s", cores)
+    ru_logger.info("MPI       : %s", mpi)
+
+    jobdesc = {
+               "swift_tid"      : swift_tid, 
+               "executable"     : executable,
+               "arguments"      : args,
+               "cores"          : cores,
+               "mpi"            : mpi,
+               "stdout"         : stdout,
+               "stderr"         : stderr,
+               "duration"       : walltime,
+               "input_staging"  : _stageins,
                "output_staging" : _stageouts
                }
 
-    logging.error("Jobdesc : {0}".format(jobdesc))
+    if args_pre:
+        jobdesc['pre_exec']  = ['bash _swiftwrap_pre "%s"'  % '" "'.join(args_pre)]
+    if args_post:
+        jobdesc['post_exec'] = ['bash _swiftwrap_post "%s"' % '" "'.join(args_post)]
+
+    ru_logger.debug("Jobdesc : %s" % pprint.pformat(jobdesc))
     return jobdesc
 
 
+# ------------------------------------------------------------------------------
+#
+def submit_task(ssid):
 
-def mock_job_desc(jobdesc):
-    jobdesc = {"executable" : "/bin/sleep",
-               "arguments"  : ["%d" % 2],
-               "cores"      : 1}
-    return jobdesc
-
-
-def submit_task(jobdesc, ssid, ep):
-    #cud  = mock_job_desc(jobdesc)
-    cud  = compose_compute_unit(jobdesc)
+    cud  = compose_compute_unit()
     data = {'td': json.dumps(cud)}
-    logging.debug("Submit : {0}".format(data))
-    r = requests.put("%s/swift/sessions/%s" % (ep, ssid), data)
-    #print r.json()
-    return r.json()['emgr_tid']
 
+    ru_logger.debug("Submit : {0}".format(data))
+    
+    r = requests.put("%s/emgr/sessions/%s" % (endpoint, ssid), data)
+    emgr_tid  = r.json()['emgr_tid']
+    swift_tid = cud['swift_tid']
+
+    ru_logger.debug('%s -> %s', swift_tid, emgr_tid)
+
+    print "jobid=%s" % emgr_tid
+
+
+# ------------------------------------------------------------------------------
+#
 state_mapping = {'New'                      : 'Q',
                  'Unscheduled'              : 'Q',
                  'Scheduling'               : 'Q',
                  'AllocatingPending'        : 'Q',
-				 'Allocating'               : 'Q',
+                 'Allocating'               : 'Q',
                  'PendingAgentInputStaging' : 'Q',
-                 'AgentStagingInputPending' : 'Q',
-                 'PendingInputStaging'      : 'Q',
-                 'AgentStagingInput'        : 'Q',
+                 'AgentStagingInputPending' : 'R',
+                 'PendingInputStaging'      : 'R',
+                 'AgentStagingInput'        : 'R',
                  'StagingInput'             : 'R',
-                 'PendingExecution'         : 'Q',
-                 'ExecutingPending'         : 'Q',
+                 'PendingExecution'         : 'R',
+                 'ExecutingPending'         : 'R',
                  'Executing'                : 'R',
                  'PendingAgentOutputStaging': 'R',
                  'AgentStagingOutputPending': 'R',
@@ -163,117 +323,75 @@ state_mapping = {'New'                      : 'Q',
                  'PendingOutputStaging'     : 'R',
                  'StagingOutput'            : 'R',
                  'Done'                     : 'C',
-				 'Failed'                   : 'F'}
+                 'Canceled'                 : 'F',
+                 'Failed'                   : 'F'}
 
-def status_task(jobid, ssid, ep):
-    r = requests.get("%s/swift/sessions/%s/%s" % (ep, ssid, jobid))
-    logging.debug("Status : {0}".format(r.json()))
-    state = r.json()['result']['state']
-    if state in state_mapping :
-        return "{0} {1}".format(jobid, state_mapping[state])
-    else:
-        return "{0} UNKNOWN STATE {1}".format(jobid, state)
+def status_task(jobids, ssid):
 
-def cancel_task(jobid, ssid, ep):
-    print "cancel_tasks : {0}".format(args)
+    r = requests.get("%s/emgr/sessions/%s/%s" % (endpoint, ssid, ':'.join(jobids)))
+    ru_logger.debug("status : %s", r.json())
+
+    if not r.json()['success']:
+        raise RuntimeError('rest quesry failed: %s' % r.json()['error'])
+
+    task_infos = r.json()['result']
+
+  # import pprint
+  # ru_logger.debug('result: %s', pprint.pformat(task_infos))
+
+    for task in task_infos:
+        jobid       = task['uid']
+        emgr_state  = task['state']
+        swift_state = state_mapping.get(emgr_state)
+
+        ru_logger.debug('state  %s: %s [%s]', jobid, swift_state, emgr_state)
+        
+        if swift_state:
+            print "%s %s" % (jobid, swift_state)
+        else:
+            print "%s UNKNOWN STATE %s" % (jobid, emgr_state)
 
 
+# ------------------------------------------------------------------------------
+#
+def cancel_task(jobid, ssid):
+    r = requests.delete("%s/emgr/sessions/%s/%s" % (endpoint, ssid, jobid))
+    ru_logger.debug("cancel : %s", r.json())
+
+
+# ------------------------------------------------------------------------------
+#
+def destroy_session(ssid):
+    r = requests.delete("%s/emgr/sessions/%s" % (endpoint, ssid))
+    ru_logger.debug('close session %s', ssid)
+
+
+# ------------------------------------------------------------------------------
+#
 if __name__ == '__main__' :
-    parser   = argparse.ArgumentParser()
-    mu_group = parser.add_mutually_exclusive_group(required=True)
-    mu_group.add_argument("-i", "--init_session", default=None ,  help='Takes a config file. Submits the CMD_STRING in the configs for execution via Radical Pilots')
-    mu_group.add_argument("-s", "--submit", default=None ,  help='Takes a config file. Submits the CMD_STRING in the configs for execution via Radical Pilots')
-    mu_group.add_argument("-t", "--status", default=None ,  help='gets the status of the CMD_STRING in the configs for execution via Radical Pilots')
-    mu_group.add_argument("-c", "--cancel", default=None ,  help='cancels the jobs with jobids')
-    parser.add_argument("-v", "--verbose", help="set level of verbosity, DEBUG, INFO, WARN")
-    parser.add_argument("-l", "--logfile", help="set path to logfile, defaults to /dev/null")
-    parser.add_argument("-e", "--endpoint", required=True, help="Endpoint for the aimes service")
-    parser.add_argument("-z", "--session_id", help="Session ID")
 
-    parser.add_argument("-j", "--jobid", type=str, action='append')
-    args   = parser.parse_args()
-    # Setting up logging
-    if args.logfile:
-        if not os.path.exists(os.path.dirname(args.logfile)):
-            os.makedirs(os.path.dirname(args.logfile))
+    try:
+        ru_logger.debug('aimes-swift %s', sys.argv)
 
-    logging.basicConfig(filename=args.logfile, level=logging.DEBUG)
-    if not args.endpoint :
-        logging.error("Missing endpoint. Cannot proceed");
+        ssid = get_session()
 
-    ep = args.endpoint
-    logging.debug("Endpoint : {0}".format(ep));
+        if sys.argv[0].endswith('submit.py'):
+            submit_task(ssid)
 
-    if not args.init_session and not args.session_id:
-        logging.error("Missing session id. Failing")
-        exit(-4)
-    ssid = args.session_id
+        elif sys.argv[0].endswith('status.py'):
+            status_task(sys.argv[1:], ssid)
 
-    if args.init_session:
-        ssid = create_session()
-        print ssid
+        elif sys.argv[0].endswith('cancel.py'):
+            cancel_task(sys.argv[1:], ssid)
 
-    elif args.submit :
-        print submit_task(args.submit, ssid, ep)
+        else:
+            ru_logger.error("undefined handler for %s", sys.argv)
+            exit(-1)
 
-    elif args.status :
-        print status_task(args.status, ssid, ep)
-
-    elif args.cancel :
-        print cancel_task(args.cancel, ssid, ep)
-
-    else:
-        sys.stderr.write("ERROR: Undefined args, cannot be handled")
-        sys.stderr.write("ERROR: Exiting...")
-        exit(-1)
-
-    exit(0)
+    except Exception as e:
+        ru_logger.exception('caught exception')
+        raise
 
 
-# create a session, and begin submitting tasks.  Then let some time expire so
-# that the tasks get executed by the watcher
-print ' ---------- create session'
-ssid = create_session()
+# ------------------------------------------------------------------------------
 
-print ' ---------- list sessions'
-list_sessions()
-tids = list()
-
-print ' ---------- submit tasks'
-tids.append(add_task(ssid))
-tids.append(add_task(ssid))
-tids.append(add_task(ssid))
-
-print ' ---------- sleep'
-time.sleep(6)
-
-# Now we do the same again, and this batch should get executed in some seconds,
-# too.
-print ' ---------- submit tasks'
-tids.append(add_task(ssid))
-tids.append(add_task(ssid))
-tids.append(add_task(ssid))
-
-while True:
-
-    # we wait for all tasks to finish
-    all_finished = True
-    for tid in tids:
-        if not check_task(ssid, tids[-1]):
-            all_finished = False
-            break
-
-    if all_finished:
-        break
-    else:
-        print ' ---------- sleep 3'
-        time.sleep (3)
-
-print ' ---------- all tasks are final'
-print ' ---------- list sessions, dump this session'
-list_sessions()
-dump_session(ssid)
-
-# print ' ---------- delete this session, list sessions'
-# delete_session(ssid)
-# list_sessions()

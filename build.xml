@@ -124,6 +124,21 @@
             <fileset dir="${cog.dir}/modules/provider-localscheduler/libexec/aimes-emanager-provider"/>
         </copy>
 
+        <chmod 
+            file="${dist.dir}/libexec/aimes-emanager-provider/aimes-swift-client.py"
+            perm="ugo+rx"/>
+        <symlink 
+            resource="./aimes-swift-client.py" 
+            link="${dist.dir}/libexec/aimes-emanager-provider/aimes-swift-submit.py" 
+            failonerror="yes"/>
+        <symlink 
+            resource="./aimes-swift-client.py" 
+            link="${dist.dir}/libexec/aimes-emanager-provider/aimes-swift-status.py" 
+            failonerror="yes"/>
+        <symlink 
+            resource="./aimes-swift-client.py" 
+            link="${dist.dir}/libexec/aimes-emanager-provider/aimes-swift-cancel.py" 
+            failonerror="yes"/>
 
 		<copy todir="${dist.dir}/bin">
 			<fileset dir="${module.dir}/bin"/>
