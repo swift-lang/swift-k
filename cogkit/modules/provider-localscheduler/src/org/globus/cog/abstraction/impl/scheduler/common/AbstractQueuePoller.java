@@ -179,6 +179,7 @@ public abstract class AbstractQueuePoller implements Runnable {
             }
 
             String[] cmdarray = getCMDArray();
+            logger.error("Poll command: " + Arrays.asList(cmdarray)); 
             if (logger.isDebugEnabled()) {
                 logger.debug("Poll command: " + Arrays.asList(cmdarray));
             }
@@ -186,6 +187,7 @@ public abstract class AbstractQueuePoller implements Runnable {
             
             processStdout(pqstat.getInputStream());
             String stderr = readStderr(pqstat.getErrorStream());
+            logger.error("Stderr from poll command: " + stderr);
             if (logger.isDebugEnabled()) {
                 logger.debug("Stderr from poll command: " + stderr);
             }
@@ -193,6 +195,7 @@ public abstract class AbstractQueuePoller implements Runnable {
             int ec = pqstat.waitFor();
             if (getError(ec, stderr) != 0) {
                 failures++;
+                logger.error("exit code from poll command: " + ec);
                 if (failures >= MAX_CONSECUTIVE_FAILURES) {
                     failAll(getProperties().getPollCommandName()
                             + " failed (exit code " + ec + "): " + readStderr(pqstat.getErrorStream()));

@@ -62,7 +62,7 @@ public class QueuePoller extends AbstractQueuePoller {
 		String line;
 		do {
 			line = br.readLine();
-			// logger.error("Status parse: " + line);
+			logger.error("Status parse: " + line);
 			if (line != null) {
 				try {
 					String[] el = line.trim().split("\\s+", 4);
