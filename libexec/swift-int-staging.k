@@ -94,7 +94,7 @@ namespace(providerStaging) {
 					directory = tmpdir
 					redirect = false
 					host = rhost
-                    print("k: execute for {jobid}")
+				    log(LOG:DEBUG, "LOG EXE jobid={jobid}"
 
 					TCProfile(rhost, if (attributes != null, attributes = attributes), tr = tr)
 					replicationGroup = replicationGroup
@@ -112,16 +112,16 @@ namespace(providerStaging) {
 						stageIn("{loc}{SWIFT:HOME}/libexec/cdm.pl", "cdm.pl")
 						stageIn("{loc}{SWIFT:HOME}/libexec/cdm_lib.sh", "cdm_lib.sh")
 					}
-                    print("k: stgein done 1 for {jobid}")
+				    log(LOG:DEBUG, "LOG SI1 jobid={jobid}"
 					
                     appStageins(jobid, inFiles)
 
-                    print("k: stgein done 2 for {jobid}")
+				    log(LOG:DEBUG, "LOG SI2 jobid={jobid}"
 
 					stageOut("wrapper.log", "file://localhost/{DEBUG_DIR}/{jobid}.info", 
 						mode = WRAPPER_TRANSFER_MODE)
 					
-                    print("k: stgeout done 2 for {jobid}")
+				    log(LOG:DEBUG, "LOG SI3 jobid={jobid}"
 
 					if (stdout == null) {
 						// if not stdout requested, only stage on error
@@ -132,24 +132,24 @@ namespace(providerStaging) {
 						stageOut("stderr.txt", "file://localhost/{DEBUG_DIR}/{jobid}.stderr",
 							mode = STAGING_MODE:ON_ERROR + STAGING_MODE:IF_PRESENT)
 					}
-                    print("k: stgeout done 3 for {jobid}")
+				    log(LOG:DEBUG, "LOG SO1 jobid={jobid}"
 					stageOut("wrapper.error", "file://localhost/{DEBUG_DIR}/{jobid}.error", 
 						mode = STAGING_MODE:IF_PRESENT)
-                    print("k: stgeout done 4 for {jobid}")
+				    log(LOG:DEBUG, "LOG SO2 jobid={jobid}"
 						
 					appStageouts(jobid, outFiles, outCollect)
-                    print("k: stgeout done 5 for {jobid}")
+				    log(LOG:DEBUG, "LOG SO3 jobid={jobid}"
 					
 					if (!isEmpty(outCollect)) {
 						stageOut("_collect", "file://localhost/{DEBUG_DIR}/{jobid}.collect", 
 							mode = STAGING_MODE:ALWAYS)
 					}
 					
-                    print("k: done 1 for {jobid}")
+				    log(LOG:DEBUG, "LOG SO4 jobid={jobid}"
 					if (CLEANUP_ENABLED) {
 						task:cleanUp(".")
 					}
-                    print("k: done 2 for {jobid}")
+				    log(LOG:DEBUG, "LOG DONE jobid={jobid}"
 				)
 				
 				
