@@ -338,7 +338,7 @@ public class CoasterPersistentService extends CoasterService {
         
         AbstractSettings settings = jobQueue.getQueueProcessor().getSettings();
         for (String name : props.stringPropertyNames()) {
-            settings.set(name, props.getProperty(name));
+            settings.put(name, props.getProperty(name));
         }
         jobQueue.startQueueProcessor();
         return settings;

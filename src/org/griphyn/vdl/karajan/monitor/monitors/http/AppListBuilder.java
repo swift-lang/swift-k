@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -60,7 +61,7 @@ public class AppListBuilder {
         this.hostFilter = host;
     }
 
-    public void getData(JSONEncoder e) {
+    public void getData(JSONEncoder e) throws IOException {
         SortedSet<ApplicationItem> sorted = getInstances(name, stateFilter, hostFilter);
         
         if (pageSize == -1) {

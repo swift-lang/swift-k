@@ -65,7 +65,7 @@ public class SiteBuilder extends SimpleHTTPServer {
     }
 
     @Override
-    protected DataLink getDataLink(String file, Map<String, String> params) {
+    protected DataLink getDataLink(String file, Map<String, String> params) throws IOException {
         if (file.equals(SCHEMA_NAME)) {
             ByteBuffer buf = encodeSchema();
             return new DataLink(buf);
@@ -75,7 +75,7 @@ public class SiteBuilder extends SimpleHTTPServer {
         }
     }
     
-    private void encodeNodes(JSONEncoder enc, Collection<Map.Entry<String, Node<Info>>> s) {
+    private void encodeNodes(JSONEncoder enc, Collection<Map.Entry<String, Node<Info>>> s) throws IOException {
         for (Map.Entry<String, Node<Info>> e : s) {
             enc.writeMapKey(e.getKey());
             enc.beginMap();
@@ -89,7 +89,7 @@ public class SiteBuilder extends SimpleHTTPServer {
         }
     }
     
-    private void encodeInfo(JSONEncoder enc, Info info) {
+    private void encodeInfo(JSONEncoder enc, Info info) throws IOException {
         enc.writeMapKey("type");
         if (info.typeSpec == null) {
             enc.write("?");
@@ -105,7 +105,7 @@ public class SiteBuilder extends SimpleHTTPServer {
         enc.write(info.doc);
     }
 
-    private ByteBuffer encodeSchema() {
+    private ByteBuffer encodeSchema() throws IOException {
         JSONEncoder enc = new JSONEncoder();
         ConfigTree<Info> tree = schema.getInfoTree();
         enc.beginMap();

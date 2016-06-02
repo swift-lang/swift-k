@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,7 +78,7 @@ public class SiteInfoBuilder {
     }
    
 
-    public void getData(JSONEncoder e) {
+    public void getData(JSONEncoder e) throws IOException {
         /*
          * List of sites
          * List of app names it ran with state counts and average times

@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class PlotInfoBuilder extends StateDataBuilder {
     }
 
     @Override
-    public ByteBuffer getData(Map<String, String> params) {
+    public ByteBuffer getData(Map<String, String> params) throws IOException {
         DataSampler sampler = (DataSampler) state.getItemByID(DataSampler.ID, StatefulItemClass.WORKFLOW);
         
         Map<String, List<Series<?>>> series = sampler.getCategories();

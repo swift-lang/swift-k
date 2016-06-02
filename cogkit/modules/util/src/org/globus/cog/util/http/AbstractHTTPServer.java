@@ -150,7 +150,7 @@ public abstract class AbstractHTTPServer implements Runnable {
     
     protected abstract boolean exists(String url);
     
-    protected abstract DataLink getDataLink(String url, Map<String, String> params);
+    protected abstract DataLink getDataLink(String url, Map<String, String> params) throws IOException;
     
     protected String translateURL(String url) {
         if (url.equals("/")) {

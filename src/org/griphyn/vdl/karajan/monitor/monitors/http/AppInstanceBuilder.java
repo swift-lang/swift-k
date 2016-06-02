@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ public class AppInstanceBuilder {
         this.state = db.getState();
     }
 
-    public void getData(JSONEncoder e) {
+    public void getData(JSONEncoder e) throws IOException {
         AppEntry ae = entries.get(id);
         if (ae == null) {
             throw new IllegalArgumentException("Unknown application ID: " + id);
@@ -130,7 +131,7 @@ public class AppInstanceBuilder {
         }
     }
 
-    private void extractJobInfo(JSONEncoder e, List<String> args) {
+    private void extractJobInfo(JSONEncoder e, List<String> args) throws IOException {
         String key = null;
         List<String> l = new ArrayList<String>();
         for (String arg : args) {
@@ -152,7 +153,7 @@ public class AppInstanceBuilder {
         }
     }
 
-    private void writeJobInfoItem(JSONEncoder e, String key, List<String> l) {
+    private void writeJobInfoItem(JSONEncoder e, String key, List<String> l) throws IOException {
         if (l.size() == 0) {
             return;
         }

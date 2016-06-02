@@ -78,7 +78,7 @@ public class ServiceConfigurationHandler extends RequestHandler {
                 AbstractSettings s = q.getQueueProcessor().getSettings();
                 
                 for (Map.Entry<String, String> e : settings.entrySet()) {
-                    s.set(e.getKey(), e.getValue());
+                    s.put(e.getKey(), e.getValue());
                 }
                 q.startQueueProcessor();
                 

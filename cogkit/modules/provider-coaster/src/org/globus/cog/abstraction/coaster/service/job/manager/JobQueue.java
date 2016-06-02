@@ -154,7 +154,7 @@ public class JobQueue {
             return cons.newInstance(localService);
         }
         catch (Exception e) {
-            throw new IllegalArgumentException("Error instantiating class for worker manager: '" + clsName + "'");
+            throw new IllegalArgumentException("Error instantiating class for worker manager: '" + clsName + "'", e);
         }
     }
 

@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
@@ -48,7 +49,7 @@ public class SummaryDataBuilder extends StateDataBuilder {
     }
 
     @Override
-    public ByteBuffer getData(Map<String, String> params) {
+    public ByteBuffer getData(Map<String, String> params) throws IOException {
         e = new JSONEncoder();
         e.beginMap();
         

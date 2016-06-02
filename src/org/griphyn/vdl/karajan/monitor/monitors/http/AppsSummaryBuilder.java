@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -47,7 +48,7 @@ public class AppsSummaryBuilder {
         this.db = db;
     }
 
-    public void getData(JSONEncoder e) {
+    public void getData(JSONEncoder e) throws IOException {
         // counts of each state by name
         e.beginMap();
           db.writeEnabledStates(e, "enabledStates");

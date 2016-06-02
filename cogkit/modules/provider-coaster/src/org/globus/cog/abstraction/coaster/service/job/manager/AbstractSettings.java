@@ -9,8 +9,6 @@
  */
 package org.globus.cog.abstraction.coaster.service.job.manager;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -25,10 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.impl.common.task.ServiceContactImpl;
-import org.globus.cog.abstraction.interfaces.ServiceContact;
 
-public abstract class AbstractSettings {
+public abstract class AbstractSettings extends IntrospectiveMap {
     public static final Logger logger = Logger.getLogger(AbstractSettings.class);
     
     private final Map<String, String> attributes;
@@ -86,89 +82,19 @@ public abstract class AbstractSettings {
         attributes.put(name, value);
     }
     
-    public void set(String name, String value)
-        throws IllegalArgumentException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Setting " + name + " to " + value);
-        }
-        if (name.length() == 0) {
-            throw new IllegalArgumentException("Empty string Settings key "
-                                            + "(value was \"" + value + "\"");
-        }
-
-        boolean complete = false;
-        Method[] methods = getClass().getMethods();
-        String setterName = "set" +
-            Character.toUpperCase(name.charAt(0)) + name.substring(1);
-        try {
-            for (Method method : methods) {
-                if (method.getName().equalsIgnoreCase(setterName)) {
-                    set(method, value);
-                    complete = true;
-                    break;
-                }
-            }
-        }
-        catch (InvocationTargetException e) {
-            throw new IllegalArgumentException
-                ("Cannot set: " + name + " to: " + value);
-        }
-        catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-        if (!complete) {
-            setAttribute(name, value);
-        }
-    }
-
-    protected void set(Method method, String value)
-        throws InvocationTargetException, IllegalAccessException {
-        Class<?> clazz = method.getParameterTypes()[0];
-        Object[] args = null;
-        if (clazz.equals(String.class)) {
-            args = new Object[] { value };
-        }
-        else if (clazz.equals(int.class)) {
-            args = new Object[] { Integer.valueOf(value) };
-        }
-        else if (clazz.equals(double.class)) {
-            args = new Object[] { Double.valueOf(value) };
-        }
-        else if (clazz.equals(boolean.class)) {
-            args = new Object[] { Boolean.valueOf(value) };
-        }
-        else if (clazz.equals(TimeInterval.class)) {
-            args = new Object[]
-                { TimeInterval.fromSeconds(Integer.parseInt(value)) };
-        }
-        else if (clazz.equals(ServiceContact.class)) {
-            args = new Object[]
-                { new ServiceContactImpl(value) };
-        }
-        else {
-            throw new IllegalArgumentException
-                ("Don't know how to set option with type " + clazz);
-        }
-        method.invoke(this, args);
-    }
-
-    private static final Object[] NO_ARGS = new Object[0];
-
-    public Object get(String name) throws IllegalArgumentException, IllegalAccessException,
-            InvocationTargetException {
-        Method[] ms = getClass().getMethods();
-        String getterName = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
-        for (int i = 0; i < ms.length; i++) {
-            if (ms[i].getName().equals(getterName)) {
-                return ms[i].invoke(this, NO_ARGS);
-            }
-        }
-        return null;
-    }
-    
     public String[] getNames() {
         return new String[0];
     }
+    
+    
+    @Override
+    public Object put(String name, Object value) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Setting " + name + " to " + value);
+        } 
+        return super.put(name, value);
+    }
+
     
     protected static String[] extend(String[] a1, String[] a2) {
         String[] r = new String[a1.length + a2.length];

@@ -19,6 +19,7 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashSet;
@@ -75,27 +76,37 @@ public class SettingsServer extends AbstractHTTPServer {
 
     @Override
     protected DataLink getDataLink(String url, Map<String, String> params) {
-        if (url.equals("/get")) {
-            return new DataLink(get(params.get("name")), "text/json");
+        try {
+            if (url.equals("/get")) {
+                return new DataLink(get(params.get("name")), "text/json");
+            }
+            else if (url.equals("/set")) {
+                if (params.containsKey("#content")) {
+                    return new DataLink(set(params.get("name"), params.get("#content")), "text/json");
+                }
+                else {
+                    return new DataLink(set(params.get("name"), params.get("value")), "text/json");
+                }
+            }
+            else if (url.equals("/list")) {
+                return new DataLink(list(), "text/json");
+            }
+            else if (url.equals("/getAll")) {
+                return new DataLink(getAll(), "text/json");
+            }
+            else if (url.equals("/wmInfo")) {
+                return new DataLink(getBlockInfo(), "text/json");
+            }
+            else {
+                return new DataLink(makeIndexPage(), "text/html");
+            }
         }
-        else if (url.equals("/set")) {
-            return new DataLink(set(params.get("name"), params.get("value")), "text/json");
+        catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        else if (url.equals("/list")) {
-            return new DataLink(list(), "text/json");
-        }
-        else if (url.equals("/getAll")) {
-            return new DataLink(getAll(), "text/json");
-        }
-        else if (url.equals("/wmInfo")) {
-            return new DataLink(getBlockInfo(), "text/json");
-        }
-        else {
-            return new DataLink(makeIndexPage(), "text/html");
-        } 
     }
 
-    private ByteBuffer getBlockInfo() {
+    private ByteBuffer getBlockInfo() throws IOException {
         JSONEncoder e = new JSONEncoder();
         e.beginMap();
         if (wm == null) {
@@ -131,7 +142,7 @@ public class SettingsServer extends AbstractHTTPServer {
         return ByteBuffer.wrap(e.toString().getBytes());
     }
 
-    private void writeRuntimeInfo(JSONEncoder e) {
+    private void writeRuntimeInfo(JSONEncoder e) throws IOException {
         Runtime r = Runtime.getRuntime();
         e.beginMap();
         e.writeMapItem("maxHeap", r.maxMemory());
@@ -147,7 +158,7 @@ public class SettingsServer extends AbstractHTTPServer {
         e.endMap();
     }
 
-    private void writeBlock(JSONEncoder e, Block b) {
+    private void writeBlock(JSONEncoder e, Block b) throws IOException {
         e.beginArrayItem();
         e.beginMap();
         e.writeMapItem("id", b.getId());
@@ -181,7 +192,7 @@ public class SettingsServer extends AbstractHTTPServer {
         e.endArrayItem();
     }
 
-    private void writeNode(JSONEncoder e, Node node) {
+    private void writeNode(JSONEncoder e, Node node) throws IOException {
         e.beginMap();
         e.writeMapItem("id", node.getId());
         writeTime(e, "startTime", node.getStartTime());
@@ -189,7 +200,7 @@ public class SettingsServer extends AbstractHTTPServer {
         e.endMap();
     }
 
-    private void writeCpu(JSONEncoder e, Cpu cpu) {
+    private void writeCpu(JSONEncoder e, Cpu cpu) throws IOException {
         e.beginMap();
         e.writeMapItem("id", cpu.getId());
         e.writeMapItem("quality", cpu.getQuality());
@@ -204,7 +215,7 @@ public class SettingsServer extends AbstractHTTPServer {
         e.endMap();
     }
 
-    private void writeJob(JSONEncoder e, Job job) {
+    private void writeJob(JSONEncoder e, Job job) throws IOException {
         e.beginMap();
         e.writeMapItem("id", job.getTask().getIdentity().toString());
         writeTime(e, "startTime", job.getStartTime());
@@ -213,7 +224,7 @@ public class SettingsServer extends AbstractHTTPServer {
         e.endMap();
     }
 
-    private void writeTime(JSONEncoder e, String key, Time t) {
+    private void writeTime(JSONEncoder e, String key, Time t) throws IOException {
         if (t == null) {
             e.writeMapItem(key, null);
         }
@@ -222,7 +233,7 @@ public class SettingsServer extends AbstractHTTPServer {
         }
     }
 
-    private ByteBuffer list() {
+    private ByteBuffer list() throws IOException {
         JSONEncoder e = new JSONEncoder();
         e.beginMap();
         e.writeMapItem("error", false);
@@ -237,7 +248,7 @@ public class SettingsServer extends AbstractHTTPServer {
         return ByteBuffer.wrap(e.toString().getBytes());
     }
     
-    private ByteBuffer getAll() {
+    private ByteBuffer getAll() throws IOException {
         JSONEncoder e = new JSONEncoder();
         e.beginMap();
         e.writeMapItem("error", false);
@@ -256,12 +267,13 @@ public class SettingsServer extends AbstractHTTPServer {
         e.endMap();
         return ByteBuffer.wrap(e.toString().getBytes());
     }
-
-    private ByteBuffer set(String name, String value) {
+    
+    private ByteBuffer set(String name, String value) throws IOException {
         JSONEncoder e = new JSONEncoder();
         e.beginMap();
         try {
-            settings.set(name, value);
+            settings.put(name, value);
+            wm.settingUpdated(name);
             e.writeMapItem("error", false);
             e.writeMapItem("errorMessage", null);
         }
@@ -273,7 +285,7 @@ public class SettingsServer extends AbstractHTTPServer {
         return ByteBuffer.wrap(e.toString().getBytes());
     }
 
-    private ByteBuffer get(String name) {
+    private ByteBuffer get(String name) throws IOException {
         boolean error = false;
         Object value = null;
         String errorMessage = null;

@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +48,7 @@ public class WorkerInfoBuilder {
         this.wid = wid;
     }
 
-    public void getData(JSONEncoder e) {
+    public void getData(JSONEncoder e) throws IOException {
         /*
          * worker, node running on, wall time, run time, apps running
          * probes, all details

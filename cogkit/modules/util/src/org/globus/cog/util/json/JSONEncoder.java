@@ -28,69 +28,59 @@
  */
 package org.globus.cog.util.json;
 
+import java.io.CharArrayWriter;
+import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.Stack;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 
 
 public class JSONEncoder {
-    private StringBuilder sb;
-    private Stack<Boolean> firstElement;
-    private Stack<Boolean> nesting;
+    private static final JsonFactory factory = new JsonFactory();
     
-    public JSONEncoder() {
-        this.sb = new StringBuilder();
-        firstElement = new Stack<Boolean>();
-        nesting = new Stack<Boolean>();
+    private JsonGenerator g;
+    private CharArrayWriter wr;
+    
+    public JSONEncoder() throws IOException {
+        wr = new CharArrayWriter();
+        g = factory.createGenerator(wr);
     }
     
-    public void write(int value) {
-        sb.append(value);
+    public void write(int value) throws IOException {
+        g.writeNumber(value);
     }
     
-    public void write(float value) {
-        sb.append(value);
+    public void write(float value) throws IOException {
+        g.writeNumber(value);
     }
     
-    public void write(long value) {
-        sb.append(value);
+    public void write(long value) throws IOException {
+        g.writeNumber(value);
     }
     
-    public void write(double value) {
-        sb.append(value);
+    public void write(double value) throws IOException {
+        g.writeNumber(value);
     }
     
-    public void write(String value) {
+    public void write(String value) throws IOException {
         if (value == null) {
-            sb.append("null");
+            g.writeNull();
         }
         else {
-            sb.append('"');
-            escape(sb, value);
-            sb.append('"');
+            g.writeString(value);
         }
     }
     
-    private void escape(StringBuilder sb, String value) {
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            switch (c) {
-                case '"':
-                    sb.append('\\');
-                default:
-                    sb.append(c);
-            }
-        }
-    }
-
-    public void write(boolean value) {
-        sb.append(value);
+    
+    public void write(boolean value) throws IOException {
+        g.writeBoolean(value);
     }
     
-    public void write(Object value) {
+    public void write(Object value) throws IOException {
         if (value == null) {
-            sb.append("null");
+            g.writeNull();
         }
         else if (value instanceof Integer) {
             write(((Integer) value).intValue());
@@ -126,167 +116,101 @@ public class JSONEncoder {
         }
     }
     
-    public void beginArray() {
-        sb.append('[');
-        firstElement.push(true);
-        nesting.push(false);
+    public void beginArray() throws IOException {
+        g.writeStartArray();
     }
     
-    public void endArray() {
-        sb.append("]\n");
-        firstElement.pop();
-        nesting.pop();
+    public void endArray() throws IOException {
+        g.writeEndArray();
     }
     
-    public void writeArrayItem(int value) {
-        arraySeparator();
+    public void writeArrayItem(int value) throws IOException {
         write(value);
     }
     
-    public void writeArrayItem(boolean value) {
-        arraySeparator();
+    public void writeArrayItem(boolean value) throws IOException {
         write(value);
     }
     
-    public void writeArrayItem(float value) {
-        arraySeparator();
+    public void writeArrayItem(float value) throws IOException {
         write(value);
     }
     
-    public void writeArrayItem(long value) {
-        arraySeparator();
+    public void writeArrayItem(long value) throws IOException {
         write(value);
     }
     
-    public void writeArrayItem(double value) {
-        arraySeparator();
+    public void writeArrayItem(double value) throws IOException {
         write(value);
     }
     
-    public void writeArrayItem(String value) {
-        arraySeparator();
+    public void writeArrayItem(String value) throws IOException {
         write(value);
     }
     
-    public void writeArrayItem(Object value) {
-        arraySeparator();
+    public void writeArrayItem(Object value) throws IOException {
         write(value);
     }
     
     public void beginArrayItem() {
-        arraySeparator();
     }
     
     public void endArrayItem() {
     }
-
-    private void arraySeparator() {
-        if (nesting.isEmpty()) {
-            throw new IllegalStateException("Not in an array");
-        }
-        if (nesting.peek()) {
-            throw new IllegalStateException("In map");
-        }
-        if (firstElement.peek()) {
-            firstElement.pop();
-            firstElement.push(false);
-        }
-        else {
-            sb.append(", ");
-        }
+    
+    public void beginMap() throws IOException {
+        g.writeStartObject();
     }
     
-    public void beginMap() {
-        sb.append('{');
-        firstElement.push(true);
-        nesting.push(true);
+    public void endMap() throws IOException {
+        g.writeEndObject();
     }
     
-    public void endMap() {
-        sb.append("}\n");
-        firstElement.pop();
-        nesting.pop();
+    public void writeMapKey(String key) throws IOException {
+        g.writeFieldName(key);
     }
     
-    public void writeMapKey(String key) {
-        mapSeparator();
-        write(key);
-        sb.append(": ");
-    }
-    
-    public void writeMapItem(String key, int value) {
-        mapSeparator();
-        write(key);
-        sb.append(": ");
+    public void writeMapItem(String key, int value) throws IOException {
+        g.writeFieldName(key);
         write(value);
     }
     
-    public void writeMapItem(int key, int value) {
-        mapSeparator();
-        write(String.valueOf(key));
-        sb.append(": ");
+    public void writeMapItem(int key, int value) throws IOException {
+        g.writeFieldName(String.valueOf(key));
         write(value);
     }
     
-    public void writeMapItem(String key, boolean value) {
-        mapSeparator();
-        write(key);
-        sb.append(": ");
+    public void writeMapItem(String key, boolean value) throws IOException {
+        g.writeFieldName(key);
         write(value);
     }
     
-    public void writeMapItem(String key, float value) {
-        mapSeparator();
-        write(key);
-        sb.append(": ");
+    public void writeMapItem(String key, float value) throws IOException {
+        g.writeFieldName(key);
         write(value);
     }
     
-    public void writeMapItem(String key, long value) {
-        mapSeparator();
-        write(key);
-        sb.append(": ");
+    public void writeMapItem(String key, long value) throws IOException {
+        g.writeFieldName(key);
         write(value);
     }
     
-    public void writeMapItem(String key, double value) {
-        mapSeparator();
-        write(key);
-        sb.append(": ");
+    public void writeMapItem(String key, double value) throws IOException {
+        g.writeFieldName(key);
         write(value);
     }
     
-    public void writeMapItem(String key, String value) {
-        mapSeparator();
-        write(key);
-        sb.append(": ");
+    public void writeMapItem(String key, String value) throws IOException {
+        g.writeFieldName(key);
         write(value);
     }
     
-    public void writeMapItem(String key, Object value) {
-        mapSeparator();
-        write(key);
-        sb.append(": ");
+    public void writeMapItem(String key, Object value) throws IOException {
+        g.writeFieldName(key);
         write(value);
     }
-
-    private void mapSeparator() {
-        if (nesting.isEmpty()) {
-            throw new IllegalStateException("Not in a map");
-        }
-        if (!nesting.peek()) {
-            throw new IllegalStateException("In array");
-        }
-        if (firstElement.peek()) {
-            firstElement.pop();
-            firstElement.push(false);
-        }
-        else {
-            sb.append(", ");
-        }
-    }
     
-    public void writeArray(Collection<?> a) {
+    public void writeArray(Collection<?> a) throws IOException {
         beginArray();
         for (Object v : a) {
             writeArrayItem(v);
@@ -294,7 +218,7 @@ public class JSONEncoder {
         endArray();
     }
     
-    public void writeArray(int[] a) {
+    public void writeArray(int[] a) throws IOException {
         beginArray();
         for (int v : a) {
             writeArrayItem(v);
@@ -302,7 +226,7 @@ public class JSONEncoder {
         endArray();
     }
     
-    public void writeArray(boolean[] a) {
+    public void writeArray(boolean[] a) throws IOException {
         beginArray();
         for (boolean v : a) {
             writeArrayItem(v);
@@ -310,7 +234,7 @@ public class JSONEncoder {
         endArray();
     }
     
-    public void writeArray(float[] a) {
+    public void writeArray(float[] a) throws IOException {
         beginArray();
         for (float v : a) {
             writeArrayItem(v);
@@ -318,7 +242,7 @@ public class JSONEncoder {
         endArray();
     }
     
-    public void writeArray(double[] a) {
+    public void writeArray(double[] a) throws IOException {
         beginArray();
         for (double v : a) {
             writeArrayItem(v);
@@ -326,7 +250,7 @@ public class JSONEncoder {
         endArray();
     }
     
-    public void writeArray(String[] a) {
+    public void writeArray(String[] a) throws IOException {
         beginArray();
         for (String v : a) {
             writeArrayItem(v);
@@ -334,7 +258,7 @@ public class JSONEncoder {
         endArray();
     }
     
-    public void writeArray(long[] a) {
+    public void writeArray(long[] a) throws IOException {
         beginArray();
         for (long v : a) {
             writeArrayItem(v);
@@ -342,7 +266,7 @@ public class JSONEncoder {
         endArray();
     }
     
-    public void writeArray(Object[] a) {
+    public void writeArray(Object[] a) throws IOException {
         beginArray();
         for (Object v : a) {
             writeArrayItem(v);
@@ -350,7 +274,7 @@ public class JSONEncoder {
         endArray();
     }
     
-    public void writeMap(Map<? extends Object, ? extends Object> m) {
+    public void writeMap(Map<? extends Object, ? extends Object> m) throws IOException {
         beginMap();
         for (Map.Entry<? extends Object, ? extends Object> e : m.entrySet()) {
             writeMapItem(String.valueOf(e.getKey()), e.getValue());
@@ -359,6 +283,17 @@ public class JSONEncoder {
     }
     
     public String toString() {
-        return sb.toString();
+        try {
+            g.flush();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (wr != null) {
+            return wr.toString();
+        }
+        else {
+            return g.toString();
+        }
     }
 }

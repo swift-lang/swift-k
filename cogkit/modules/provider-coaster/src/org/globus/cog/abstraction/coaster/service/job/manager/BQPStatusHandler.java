@@ -32,14 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.globus.cog.abstraction.coaster.service.job.manager.Block;
-import org.globus.cog.abstraction.coaster.service.job.manager.Cpu;
-import org.globus.cog.abstraction.coaster.service.job.manager.Job;
-import org.globus.cog.abstraction.coaster.service.job.manager.Settings;
-import org.globus.cog.abstraction.coaster.service.job.manager.SortedJobSet;
-import org.globus.cog.abstraction.coaster.service.job.manager.SwingBQPMonitor;
-import org.globus.cog.abstraction.coaster.service.job.manager.Time;
-import org.globus.cog.abstraction.coaster.service.job.manager.TimeInterval;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.handlers.RequestHandler;
 
@@ -67,9 +59,9 @@ public class BQPStatusHandler extends RequestHandler {
             String[] items;
             
             items = nextItem("settings");
-            status.settings.set("lowOverallocation", items[0]);
-            status.settings.set("highOverallocation", items[0]);
-            status.settings.set("overallocationDecayFactor", items[0]);
+            status.settings.put("lowOverallocation", items[0]);
+            status.settings.put("highOverallocation", items[0]);
+            status.settings.put("overallocationDecayFactor", items[0]);
                         
             items = nextItem("queuedsize");
             int qs = Integer.parseInt(items[0]);

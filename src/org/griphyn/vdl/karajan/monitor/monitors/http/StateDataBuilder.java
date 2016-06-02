@@ -28,9 +28,10 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
 public abstract class StateDataBuilder {
-    public abstract ByteBuffer getData(Map<String, String> params);
+    public abstract ByteBuffer getData(Map<String, String> params) throws IOException;
 }

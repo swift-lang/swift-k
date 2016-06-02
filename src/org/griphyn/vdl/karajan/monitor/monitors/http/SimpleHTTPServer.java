@@ -77,7 +77,7 @@ public class SimpleHTTPServer extends AbstractHTTPServer {
         return url != null;
     }
     
-    protected DataLink getDataLink(String file, Map<String, String> params) {
+    protected DataLink getDataLink(String file, Map<String, String> params) throws IOException {
         URL url = loader.getResource(webDir + file);
         if (url == null) {
             return null;

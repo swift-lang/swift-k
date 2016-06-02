@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,8 +51,8 @@ import org.griphyn.vdl.karajan.monitor.items.ApplicationState;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItem;
 import org.griphyn.vdl.karajan.monitor.items.StatefulItemClass;
 import org.griphyn.vdl.karajan.monitor.items.TaskItem;
-import org.griphyn.vdl.karajan.monitor.processors.coasters.CoasterStatusItem.Block;
 import org.griphyn.vdl.karajan.monitor.processors.coasters.CoasterStatusItem;
+import org.griphyn.vdl.karajan.monitor.processors.coasters.CoasterStatusItem.Block;
 import org.griphyn.vdl.karajan.monitor.processors.coasters.WorkerProbeItem;
 
 public class BrowserDataBuilder extends StateDataBuilder implements SystemStateListener {
@@ -303,40 +304,45 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
 
     @Override
     public ByteBuffer getData(Map<String, String> params) {
-        e = new JSONEncoder();
-        String type = getParam(params, "type", "apps");
-        
-        if (type.equals("apps")) {
-            new AppsSummaryBuilder(this).getData(e);
+        try {
+            e = new JSONEncoder();
+            String type = getParam(params, "type", "apps");
+            
+            if (type.equals("apps")) {
+                new AppsSummaryBuilder(this).getData(e);
+            }
+            else if (type.equals("applist")) {
+                new AppListBuilder(this, getParam(params, "name", null), 
+                    Integer.parseInt(getParam(params, "page", "1")),
+                    Integer.parseInt(getParam(params, "pageSize", "-1")),
+                    Integer.parseInt(getParam(params, "state", "-1")), 
+                    getParam(params, "host", null)).getData(e);
+            }
+            else if (type.equals("appdetail")) {
+                new AppDetailBuilder(this, getParam(params, "name")).getData(e);
+            }
+            else if (type.equals("appinstance")) {
+                new AppInstanceBuilder(this, getParam(params, "id")).getData(e);
+            }
+            else if (type.equals("sites")) {
+                new SiteInfoBuilder(this).getData(e);
+            }
+            else if (type.equals("workerlist")) {
+                new WorkerListBuilder(this, getParam(params, "site", null), 
+                    Integer.parseInt(getParam(params, "page", "1")),
+                    Integer.parseInt(getParam(params, "pageSize", "20"))).getData(e);
+            }
+            else if (type.equals("worker")) {
+                new WorkerInfoBuilder(this, getParam(params, "id")).getData(e);
+            }
+            else {
+                throw new IllegalArgumentException("Unknown type: " + type);
+            }
+            return ByteBuffer.wrap(e.toString().getBytes());
         }
-        else if (type.equals("applist")) {
-            new AppListBuilder(this, getParam(params, "name", null), 
-                Integer.parseInt(getParam(params, "page", "1")),
-                Integer.parseInt(getParam(params, "pageSize", "-1")),
-                Integer.parseInt(getParam(params, "state", "-1")), 
-                getParam(params, "host", null)).getData(e);
+        catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        else if (type.equals("appdetail")) {
-            new AppDetailBuilder(this, getParam(params, "name")).getData(e);
-        }
-        else if (type.equals("appinstance")) {
-            new AppInstanceBuilder(this, getParam(params, "id")).getData(e);
-        }
-        else if (type.equals("sites")) {
-            new SiteInfoBuilder(this).getData(e);
-        }
-        else if (type.equals("workerlist")) {
-            new WorkerListBuilder(this, getParam(params, "site", null), 
-                Integer.parseInt(getParam(params, "page", "1")),
-                Integer.parseInt(getParam(params, "pageSize", "20"))).getData(e);
-        }
-        else if (type.equals("worker")) {
-            new WorkerInfoBuilder(this, getParam(params, "id")).getData(e);
-        }
-        else {
-            throw new IllegalArgumentException("Unknown type: " + type);
-        }
-        return ByteBuffer.wrap(e.toString().getBytes());
     }
     
     public List<List<Object>> getStateTimes(ApplicationItem app) {
@@ -404,7 +410,7 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
         return byTime;
     }
 
-    public void writeEnabledStates(JSONEncoder e, String key) {
+    public void writeEnabledStates(JSONEncoder e, String key) throws IOException {
         e.writeMapKey(key);
         e.beginArray();
         for (ApplicationState s : ApplicationState.values()) {
@@ -429,7 +435,7 @@ public class BrowserDataBuilder extends StateDataBuilder implements SystemStateL
         return workersByTime;
     }
     
-    public void writePagingData(JSONEncoder e, int size, int page, int pageSize) {
+    public void writePagingData(JSONEncoder e, int size, int page, int pageSize) throws IOException {
         int pages = (int) Math.ceil(((double) size) / pageSize);
         e.writeMapItem("pages", pages);
         e.writeMapItem("hasPrev", page > 1);

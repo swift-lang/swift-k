@@ -28,6 +28,7 @@
  */
 package org.griphyn.vdl.karajan.monitor.monitors.http;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -93,7 +94,7 @@ public class AppDetailBuilder {
     }
 
 
-    public void getData(JSONEncoder e) {
+    public void getData(JSONEncoder e) throws IOException {
         // sites it ran on
         Set<String> sites = new TreeSet<String>();
         Map<String, Set<String>> seen = new HashMap<String, Set<String>>();

@@ -158,4 +158,7 @@ public abstract class AbstractQueueProcessor extends Thread implements QueueProc
             return job.getTask().getIdentity().toString().startsWith(taskId);
         }
     }
+    
+    public void settingUpdated(String name) {
+    }
 }
