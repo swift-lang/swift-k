@@ -5,5 +5,6 @@
 	<classpathentry exported="true" kind="lib" path="lib/jakarta-regexp-1.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/log4j"/>
+	<classpathentry exported="true" kind="lib" path="lib/jackson-core-2.5.3.jar"/>
 	<classpathentry kind="output" path=".build"/>
 </classpath>
