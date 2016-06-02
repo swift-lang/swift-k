@@ -64,6 +64,8 @@ public abstract class AbstractHTTPServer implements Runnable {
             + "<h1>Error: The request could not be understood by this server</h1></body></html>\n";
     public static final String ERROR_INTERNAL = "<html><head><title>Error</title></head><body>"
             + "<h1>Error: Internal server error</h1><h2>@1</h2><pre>@2</pre></body></html>\n";
+    
+    public static final int MAX_BODY_LENGTH = 1024 * 1024; // 1 MB
 
 
     private String name;
@@ -254,6 +256,7 @@ public abstract class AbstractHTTPServer implements Runnable {
                                     ok = s.process(key);
                                 }
                                 catch (Exception e) {
+                                    logger.warn("Error processing key " + key, e);
                                 }
                             }
                             if (!ok) {
@@ -375,10 +378,11 @@ public abstract class AbstractHTTPServer implements Runnable {
         public static final int SENDING_REPLY = 1;
         public static final int SENDING_ERROR = 2;
         public static final int SENDING_DATA = 4;
+        public static final int RECEIVING_BODY = 8;
 
         private SocketChannel channel;
         private int state;
-        private ByteBuffer rbuf, rcb, bdata, sdata;
+        private ByteBuffer rbuf, rcb, bdata, sdata, body;
         private ReadableByteChannel fileChannel;
         private String cmd;
         private Map<String,String> headers;
@@ -392,8 +396,8 @@ public abstract class AbstractHTTPServer implements Runnable {
             this.channel = socket.getChannel();
             this.processor = processor;
             this.server = server;
-            rbuf = ByteBuffer.allocate(8192);
-            bdata = ByteBuffer.allocate(8192);
+            rbuf = ByteBuffer.allocate(16384);
+            bdata = ByteBuffer.allocate(16384);
             rcb = rbuf.asReadOnlyBuffer();
             headers = new HashMap<String,String>();
             state = IDLE;
@@ -402,7 +406,20 @@ public abstract class AbstractHTTPServer implements Runnable {
         }
 
         public boolean process(SelectionKey key) throws IOException {
-            if (state == IDLE && key.isReadable()) {
+            if (state == RECEIVING_BODY && key.isReadable()) {
+                try {
+                    int r = channel.read(body);
+                    if (r == 0) {
+                        return false;
+                    }
+                }
+                catch (BufferOverflowException e) {
+                    logger.warn("Invalid request received", e);
+                }
+                
+                processCommand(cmd, headers, key, body);
+            }
+            else if (state == IDLE && key.isReadable()) {
                 try {
                     int r = channel.read(rbuf);
                     if (r == 0) {
@@ -412,10 +429,13 @@ public abstract class AbstractHTTPServer implements Runnable {
                 catch (BufferOverflowException e) {
                     logger.warn("Invalid request received", e);
                 }
-                headers.clear();
                 while (rcb.position() < rbuf.position()) {
                     int c = rcb.get();
                     if (c == 13) {
+                        c = rcb.get();
+                        if (c != 10) {
+                            sendError("", "400 Bad request", null);
+                        }
                         int pos = rcb.position();
                         rcb.position(lastRead);
                         byte bytes[] = new byte[pos - lastRead];
@@ -424,12 +444,31 @@ public abstract class AbstractHTTPServer implements Runnable {
                         lastRead = pos;
                         String line = new String(bytes).trim();
                         if (line.equals("")) {
-                            processCommand(cmd, headers, key);
+                            int bodyLength = processCommand(cmd, headers, key, null);
+                            
+                            if (bodyLength != -1) {
+                                if (bodyLength > MAX_BODY_LENGTH) {
+                                    sendError("-", "413 Payload Too Large", null);
+                                    break;
+                                }
+                                body = ByteBuffer.allocate(bodyLength);
+                                rcb.limit(rbuf.position());
+                                body.put(rcb);
+                                if (body.limit() == body.position()) {
+                                    processCommand(cmd, headers, key, body);
+                                    body = null;
+                                }
+                                else {
+                                    state = RECEIVING_BODY;
+                                }
+                            }
                             rbuf.clear();
                             rcb.clear();
+                            break;
                         }
                         else if (cmd == null) {
                             cmd = line;
+                            headers.clear();
                         }
                         else {
                             int ix = line.indexOf(":");
@@ -456,9 +495,12 @@ public abstract class AbstractHTTPServer implements Runnable {
                     if (state == SENDING_ERROR) {
                         close();
                     }
-                    else {
+                    else if (sdata != null) {
                         state = SENDING_DATA;
                         initialize(bdata);
+                    }
+                    else {
+                        close();
                     }
                     replies = null;
                 }
@@ -527,12 +569,13 @@ public abstract class AbstractHTTPServer implements Runnable {
         	b.position(b.capacity());
         }
 
-        private void processCommand(String cmd, Map<String,String> headers, SelectionKey key) {
+        private int processCommand(String cmd, Map<String,String> headers, SelectionKey key, ByteBuffer body) {
             logger.info("[" + channel.socket().getRemoteSocketAddress() + "] "
                     + cmd);
             if (logger.isDebugEnabled()) {
                 logger.debug("Headers: " + headers);
             }
+
             String[] tokens = cmd.split("\\s+");
             if (tokens[0].equals("GET")) {
                 String page = getPage(tokens[1]);
@@ -546,9 +589,70 @@ public abstract class AbstractHTTPServer implements Runnable {
                 }
                 key.interestOps(SelectionKey.OP_WRITE);
             }
+            else if (tokens[0].equals("OPTIONS")) {
+                sendOptions();
+                key.interestOps(SelectionKey.OP_WRITE);
+            }
+            else if (tokens[0].equals("POST")) {
+                if (body == null) {
+                    String contentLength = headers.get("content-length");
+                    if (contentLength == null) {
+                        sendError("", "411 Length Required", null);
+                        return -1;
+                    }
+                    return Integer.parseInt(contentLength);
+                }
+                else {
+                    String page = getPage(tokens[1]);
+                    Map<String, String> cgiParams = getCGIParams(tokens[1]);
+                    
+                    String contentType = headers.get("content-type");
+                    int ix = contentType.indexOf(';');
+                    
+                    if (ix != -1) {
+                        contentType = contentType.substring(0, ix);
+                    }
+                    
+                    if ("application/x-www-form-urlencoded".equals(contentType)) {
+                        getCGIParams(cgiParams, byteBufferToString(body));
+                    }
+                    else if ("application/json".equals(contentType)) {
+                        cgiParams.put("#content", byteBufferToString(body));
+                    }
+                    else {    
+                        sendError(contentType, "415 Unsupported Media Type", null);
+                        return -1;
+                    }
+                    
+                    page = translateURL(page);
+                    if (exists(page)) {
+                        createPageBuffer(page, cgiParams);
+                    }
+                    else {
+                        sendError(cmd, "404 Not Found", ERROR_NOTFOUND);
+                    }
+                    key.interestOps(SelectionKey.OP_WRITE);
+                }
+            }
             else {
                 sendError(cmd, "400 Bad Request", ERROR_BAD_REQUEST);
+                key.interestOps(SelectionKey.OP_WRITE);
             }
+            return -1;
+        }
+
+        private String byteBufferToString(ByteBuffer bb) {
+            StringBuilder sb = new StringBuilder();
+            
+            bb.limit(bb.position());
+            bb.position(0);
+            
+            while (bb.position() < bb.limit()) {
+                char c = (char) bb.get();
+                sb.append(c);
+            }
+            
+            return sb.toString();
         }
 
         private void sendError(String request, String error, String html) {
@@ -580,6 +684,26 @@ public abstract class AbstractHTTPServer implements Runnable {
             String allowedOrigin = getAllowedOrigin();
             if (allowedOrigin != null) {
                 addReply(l, "Access-Control-Allow-Origin: " + allowedOrigin + "\r\n");
+                addReply(l, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
+            }
+            addReply(l, "Cache-Control: no-cache, no-store, must-revalidate\r\n");
+            addReply(l, "Pragma: no-cache\r\n");
+            addReply(l, "Expires: 0\r\n");
+            addReply(l, "\r\n");
+            replies = l.iterator();
+        }
+        
+        private void sendOptions() {
+            state = SENDING_REPLY;
+            List<ByteBuffer> l = new LinkedList<ByteBuffer>();
+            addReply(l, "HTTP/1.1 200 OK\r\n");
+            addReply(l, "Date: " + new Date() + "\r\n");
+            addReply(l, "Connection: close\r\n");
+            String allowedOrigin = getAllowedOrigin();
+            if (allowedOrigin != null) {
+                addReply(l, "Access-Control-Allow-Origin: " + allowedOrigin + "\r\n");
+                addReply(l, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
+                addReply(l, "Access-Control-Allow-Headers: origin, content-type, accept\r\n");
             }
             addReply(l, "Cache-Control: no-cache, no-store, must-revalidate\r\n");
             addReply(l, "Pragma: no-cache\r\n");
@@ -642,12 +766,23 @@ public abstract class AbstractHTTPServer implements Runnable {
         }
         
         private Map<String,String> getCGIParams(String local) {
+            return getCGIParams(null, local);
+        }
+                
+        private Map<String,String> getCGIParams(Map<String, String> m, String local) {
             int i = local.indexOf('?');
             if (i == -1) {
-                return Collections.emptyMap();
+                if (m == null) {
+                    return Collections.emptyMap();
+                }
+                else {
+                    return m;
+                }
             }
             else {
-                Map<String,String> m = new HashMap<String,String>();
+                if (m == null) {
+                    m = new HashMap<String,String>();
+                }
                 String[] params = local.substring(i + 1).split("&");
                 for (int j = 0; j < params.length; j++) {
                     int k = params[j].indexOf('=');
