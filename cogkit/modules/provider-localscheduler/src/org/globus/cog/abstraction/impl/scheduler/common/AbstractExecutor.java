@@ -669,9 +669,6 @@ public abstract class AbstractExecutor implements ProcessListener {
                         if (attr != null) {
                             sb.append(attr.toString());
                         }
-                        else if (name.equals("count")) {
-                            sb.append(String.valueOf(count));
-                        }
                         else if (name.equals("nodefile") || name.equals("hostfile")) {
                             sb.append(hostFile);
                         }
