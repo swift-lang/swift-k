@@ -384,7 +384,7 @@ public abstract class AbstractExecutor implements ProcessListener {
                 wr.write("$RUNCOMMAND ");
                 break;
             case CUSTOM:
-                String cmd = replaceVars((String) spec.getAttribute("runCommand"));
+                String cmd = replaceVars((String) spec.getAttribute("runCommand"), nodeFile);
                 wr.write(cmd);
                 wr.write(' ');
                 break;
@@ -455,13 +455,13 @@ public abstract class AbstractExecutor implements ProcessListener {
         wr.write(quote(stderr, 1));
     }
 
-    protected void writeWrapper(Writer wr, String sJobType) throws IOException {
+    protected void writeWrapper(Writer wr, String sJobType, String nodeFile) throws IOException {
         String wrapper = getProperties().getProperty("wrapper." + sJobType);
         if (logger.isDebugEnabled()) {
             logger.debug("Wrapper: " + wrapper);
         }
         if (wrapper != null) {
-            wrapper = replaceVars(wrapper);
+            wrapper = replaceVars(wrapper, nodeFile);
             wr.write(wrapper);
             wr.write(' ');
         }
@@ -641,7 +641,7 @@ public abstract class AbstractExecutor implements ProcessListener {
         }
     }
 
-    protected String replaceVars(String str) {
+    protected String replaceVars(String str, String hostFile) {
         StringBuffer sb = new StringBuffer();
         boolean escaped = false;
         for (int i = 0; i < str.length(); i++) {
@@ -668,6 +668,12 @@ public abstract class AbstractExecutor implements ProcessListener {
                         Object attr = getSpec().getAttribute(name);
                         if (attr != null) {
                             sb.append(attr.toString());
+                        }
+                        else if (name.equals("count")) {
+                            sb.append(String.valueOf(count));
+                        }
+                        else if (name.equals("nodefile") || name.equals("hostfile")) {
+                            sb.append(hostFile);
                         }
                         else {
                             sb.append('$');
