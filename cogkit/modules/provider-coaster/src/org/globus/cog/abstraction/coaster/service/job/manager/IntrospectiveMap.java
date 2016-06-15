@@ -27,6 +27,7 @@ public abstract class IntrospectiveMap extends AbstractMap<String, Object> {
     public abstract String[] getNames();
     
     public void setAttribute(String name, Object value) {
+        throw new UnsupportedOperationException();
     }
     
     public Collection<String> getAttributeNames() {

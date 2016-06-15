@@ -27,10 +27,10 @@ import org.apache.log4j.Logger;
 public abstract class AbstractSettings extends IntrospectiveMap {
     public static final Logger logger = Logger.getLogger(AbstractSettings.class);
     
-    private final Map<String, String> attributes;
+    private final Map<String, Object> attributes;
     
     public AbstractSettings() {
-        attributes = new HashMap<String, String>();
+        attributes = new HashMap<String, Object>();
     }
 
     public Collection<URI> getLocalContacts(int port) {
@@ -74,11 +74,13 @@ public abstract class AbstractSettings extends IntrospectiveMap {
         return attributes.keySet();
     }
 
-    public String getAttribute(String name) {
+    @Override
+    public Object getAttribute(String name) {
         return attributes.get(name);
     }
     
-    public void setAttribute(String name, String value) {
+    @Override
+    public void setAttribute(String name, Object value) {
         attributes.put(name, value);
     }
     

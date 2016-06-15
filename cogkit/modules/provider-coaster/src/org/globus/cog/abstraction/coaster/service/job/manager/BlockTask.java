@@ -132,7 +132,7 @@ public class BlockTask extends TaskImpl {
             scriptArg = script.getAbsolutePath();
         }
         
-        String os = settings.getAttribute("OS");
+        String os = (String) settings.getAttribute("OS");
         
         boolean isWindows = os != null && os.toLowerCase().contains("win");
         String executable;
