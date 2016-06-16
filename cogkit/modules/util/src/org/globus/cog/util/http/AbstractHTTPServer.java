@@ -495,7 +495,7 @@ public abstract class AbstractHTTPServer implements Runnable {
                     if (state == SENDING_ERROR) {
                         close();
                     }
-                    else if (sdata != null) {
+                    else if (sdata != null || fileChannel != null) {
                         state = SENDING_DATA;
                         initialize(bdata);
                     }
