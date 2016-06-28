@@ -294,7 +294,7 @@ public class SubmitJobHandler extends RequestHandler {
                 // at some point relative URLs going file:<relativePath> crept in
                 // but the previous block of code didn't handle that
                 return prefix + "proxy://" + 
-                       getChannel().getID() + 
+                       getChannel().getID() + "/" + 
                        spath.substring("file:".length());
             }
         }
