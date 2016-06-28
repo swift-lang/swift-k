@@ -284,10 +284,19 @@ public class SubmitJobHandler extends RequestHandler {
         else {
             spath = path;
         }
-        if (spath.startsWith("file://localhost")) {
-            return prefix + "proxy://" + 
-                   getChannel().getID() + 
-                   spath.substring("file://localhost".length());
+        if (spath.startsWith("file:")) {
+            if (spath.startsWith("file://localhost")) {
+                return prefix + "proxy://" + 
+                       getChannel().getID() + 
+                       spath.substring("file://localhost".length());
+            }
+            else {
+                // at some point relative URLs going file:<relativePath> crept in
+                // but the previous block of code didn't handle that
+                return prefix + "proxy://" + 
+                       getChannel().getID() + 
+                       spath.substring("file:".length());
+            }
         }
         else if (spath.startsWith("cs://localhost")) {
             return "file://localhost" + spath.substring("cs://localhost".length());
