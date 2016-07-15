@@ -206,6 +206,7 @@ public class Block implements StatusListener, Comparable<Block> {
         synchronized (cpus) {
             if (scpus.remove(cpu) == null) {
                 if (!shutdown) {
+                    logger.info("scpus: " + scpus);
                     CoasterService.error(16, "CPU was not in the block", new Throwable());
                 }
             }

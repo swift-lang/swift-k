@@ -319,7 +319,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
             return sgn(l);
         }
         else {
-            return (int) diff.getMilliseconds();
+            return sgn(diff.getMilliseconds());
         }
     }
 
@@ -355,7 +355,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener {
 
     @Override
     public String toString() {
-        return id + ":" + timelast;
+        return id + ":" + System.identityHashCode(this) + ":" + timelast;
     }
 
     public List<Job> getDoneJobs() {
