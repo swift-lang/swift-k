@@ -48,7 +48,6 @@ import org.globus.cog.abstraction.interfaces.CleanUpSet;
 import org.globus.cog.abstraction.interfaces.EnvironmentVariable;
 import org.globus.cog.abstraction.interfaces.FileLocation;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
-import org.globus.cog.abstraction.interfaces.SecurityContext;
 import org.globus.cog.abstraction.interfaces.Service;
 import org.globus.cog.abstraction.interfaces.StagingSet;
 import org.globus.cog.abstraction.interfaces.StagingSetEntry.Mode;
@@ -75,7 +74,6 @@ public class GridExec extends AbstractGridNode {
 	protected ArgRef<Number> stderrLocation;
 	protected ArgRef<String> stdin;
 	protected ArgRef<String> provider;
-	protected ArgRef<SecurityContext> securityContext;
 	protected ArgRef<Number> count;
 	protected ArgRef<String> jobType;
 	protected ArgRef<Boolean> redirect;

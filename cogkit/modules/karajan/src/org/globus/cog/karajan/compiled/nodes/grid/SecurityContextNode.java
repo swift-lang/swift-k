@@ -46,7 +46,7 @@ public class SecurityContextNode extends AbstractFunction {
 
 	@Override
 	protected Signature getSignature() {
-		return new Signature(params("provider", "credentials"));
+		return new Signature(params("provider", "credentials"), returns(channel("...", 1)));
 	}
 
 
