@@ -39,11 +39,15 @@ public class ServiceConfigurationCommand extends Command {
         
     public ServiceConfigurationCommand(Task task) {
         super(NAME);
-        ExecutionService s = (ExecutionService) task.getService(0);
+        
+        String jm = null;
+        Service s = task.getService(0);
+        if (s instanceof ExecutionService) {
+        	jm = ((ExecutionService) s).getJobManager();
+        }
         
         String os = (String) s.getAttribute("OS");
         addOutData("OS=" + os);
-        String jm = s.getJobManager();
         if (jm != null) {
             int colon = jm.indexOf(':');
             // remove provider used to bootstrap coasters
