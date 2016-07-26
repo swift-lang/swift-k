@@ -35,9 +35,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.globus.cog.abstraction.coaster.service.VersionCommand;
 import org.globus.cog.coaster.channels.CoasterChannel;
 import org.globus.cog.coaster.commands.Command;
-import org.globus.cog.coaster.commands.VersionCommand;
 
 public class Client {
 	private static final Logger logger = Logger.getLogger(Client.class);

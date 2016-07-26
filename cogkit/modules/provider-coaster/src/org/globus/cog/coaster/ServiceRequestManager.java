@@ -28,10 +28,10 @@
  */
 package org.globus.cog.coaster;
 
+import org.globus.cog.abstraction.coaster.service.local.VersionHandler;
 import org.globus.cog.coaster.handlers.EchoHandler;
 import org.globus.cog.coaster.handlers.HeartBeatHandler;
 import org.globus.cog.coaster.handlers.ShutdownHandler;
-import org.globus.cog.coaster.handlers.VersionHandler;
 
 public class ServiceRequestManager extends AbstractRequestManager {
 	public ServiceRequestManager() {

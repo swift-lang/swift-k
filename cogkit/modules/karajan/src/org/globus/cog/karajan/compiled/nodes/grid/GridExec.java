@@ -83,6 +83,7 @@ public class GridExec extends AbstractGridNode {
 	protected ArgRef<Map<String, Object>> attributes;
 	protected ArgRef<Boolean> failOnJobError;
 	protected ArgRef<Boolean> batch;
+	protected ArgRef<String> name;
 	
 	protected ArgRef<List<EnvironmentVariable>> environment;
 	protected ChannelRef<List<?>> c_stagein;
@@ -115,6 +116,7 @@ public class GridExec extends AbstractGridNode {
 						optional("failOnJobError", true),
 						optional("batch", false),
 						optional("environment", null),
+						optional("name", null),
 						channel("stagein"),
 						channel("stageout"),
 						channel("cleanup")
@@ -133,6 +135,11 @@ public class GridExec extends AbstractGridNode {
 			js.setExecutable(this.executable.getValue(stack));
 			setArguments(js, this.arguments.getValue(stack));
 			this.arguments.set(stack, null);
+			
+			String name = this.name.getValue(stack);
+			if (name != null) {
+				task.setName(name);
+			}
 
 			if (this.redirect.getValue(stack)) {
 				js.setStdOutputLocation(FileLocation.MEMORY);

@@ -28,6 +28,7 @@
  */
 package org.globus.cog.abstraction.coaster.service;
 
+import org.globus.cog.abstraction.coaster.service.local.VersionHandler;
 import org.globus.cog.abstraction.impl.execution.coaster.CancelJobCommand;
 import org.globus.cog.abstraction.impl.execution.coaster.SubmitJobCommand;
 import org.globus.cog.abstraction.impl.file.coaster.commands.ChmodCommand;
@@ -57,7 +58,6 @@ import org.globus.cog.coaster.commands.InfoCommand;
 import org.globus.cog.coaster.handlers.ChannelConfigurationHandler;
 import org.globus.cog.coaster.handlers.HeartBeatHandler;
 import org.globus.cog.coaster.handlers.InfoHandler;
-import org.globus.cog.coaster.handlers.VersionHandler;
 
 public class CoasterRequestManager extends AbstractRequestManager {   
     public CoasterRequestManager() {
