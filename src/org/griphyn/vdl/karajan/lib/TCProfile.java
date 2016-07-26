@@ -61,6 +61,7 @@ public class TCProfile extends SwiftFunction {
     private VarRef<Object> r_jobType;
     private VarRef<Object> r_attributes;
     private VarRef<List<EnvironmentVariable>> r_environment;
+    private VarRef<Object> r_name;
     
     private static class CacheEntry {
         private ReentrantLock lock = new ReentrantLock();
@@ -68,13 +69,14 @@ public class TCProfile extends SwiftFunction {
         private Map<String, Object> attrs = null;
         private int count;
         private String jobType;
+        private String name;
     }
     
     private static ReentrantLock cacheLock = new ReentrantLock();
     private static Map<String, CacheEntry> cache;
     
     private enum Attr {
-        COUNT, JOB_TYPE;
+        COUNT, JOB_TYPE, NAME;
     }
     
     private static final Map<String, Attr> ATTR_TYPES;
@@ -83,6 +85,7 @@ public class TCProfile extends SwiftFunction {
         ATTR_TYPES = new HashMap<String, Attr>();
         ATTR_TYPES.put("count", Attr.COUNT);
         ATTR_TYPES.put("jobType", Attr.JOB_TYPE);
+        ATTR_TYPES.put("name", Attr.NAME);
         
         cache = new HashMap<String, CacheEntry>();
     }
@@ -92,7 +95,7 @@ public class TCProfile extends SwiftFunction {
         return new Signature(
             params("host", optional("attributes", null), optional("commands", null), optional("tr", null)),
             returns("count", "jobType",
-                "attributes", "environment")
+                "attributes", "environment", "name")
         );
     }
 
@@ -160,7 +163,7 @@ public class TCProfile extends SwiftFunction {
             
             Map<String, Object> appAttrs = app.getProperties();
             if (appAttrs != null && !appAttrs.isEmpty()) {
-                combineAttributes(e, app.getProperties(), cmd, cmds, bc, dynamicAttributes);
+                combineAttributes(e, tr, app.getProperties(), cmd, cmds, bc, dynamicAttributes);
             }
             
             apps[i] = app;
@@ -178,7 +181,7 @@ public class TCProfile extends SwiftFunction {
     
     private static final String MAX_WALL_TIME = "maxwalltime";
 
-    private void combineAttributes(CacheEntry cv, Map<String, Object> appAttrs, Command cmd, Command[] cmds, SwiftContact bc, 
+    private void combineAttributes(CacheEntry cv, String tr, Map<String, Object> appAttrs, Command cmd, Command[] cmds, SwiftContact bc, 
             Map<String, Object> dynamicAttributes) {
         
         for (Map.Entry<String, Object> e : appAttrs.entrySet()) {
@@ -199,6 +202,9 @@ public class TCProfile extends SwiftFunction {
             }
             else if (e.getKey().equals("jobType")) {
                 cv.jobType = combineJobType(cv.jobType, e.getValue().toString());
+            }
+            else if (e.getKey().equals("name")) {
+                cv.name = tr;
             }
             else {
                 Object old = cv.attrs.put(e.getKey(), e.getValue());
@@ -332,6 +338,7 @@ public class TCProfile extends SwiftFunction {
 	    if (count != null) {
 	        setAttr(Attr.COUNT, stack, count);
 	    }
+	    setAttr(Attr.NAME, stack, e.name);
 	    if (nDynAttrs == 0) {
 	        this.r_attributes.setValue(stack, e.attrs);
 	    }
@@ -354,6 +361,9 @@ public class TCProfile extends SwiftFunction {
                 break;
             case JOB_TYPE:
                 r_jobType.setValue(stack, value);
+                break;
+            case NAME:
+                r_name.setValue(stack, value);
                 break;
         }
     }

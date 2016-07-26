@@ -138,6 +138,7 @@ public class SubmitJobHandler extends RequestHandler {
         task.setSpecification(spec);
 
         String configId = helper.read("configid");
+        task.setName(helper.read("name"));
         String clientId = helper.read("identity");
         if (clientId == null) {
             throw new IllegalSpecException("Missing job identity");

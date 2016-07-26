@@ -234,16 +234,16 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener, J
             e.printStackTrace();
             CoasterService.error(21, "Failed pull", e);
         }
-        if (! success)
+        if (!success)
             CoasterService.error(22, "Launch failed");
     }
 
-    boolean launch(Job job) {
+    protected boolean launch(Job job) {
         boolean result = false;
         running = job;
         running.start();
         if (job.getCount() == 1) {
-            result = launchSequential();
+            result = launchSequential(job);
         }
         else {
             //result = launchMPICH(job);
@@ -252,17 +252,17 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener, J
         return result;
     }
 
-    boolean launchSequential() {
-        Task t = running.getTask();
+    protected boolean launchSequential(Job job) {
+        Task t = job.getTask();
         NotificationManager.getDefault().registerListener(t.getIdentity(), t, this);
         idleTime += timeDiff();
-        timelast = running.getEndTime();
+        timelast = job.getEndTime();
         if (timelast == null) {
             CoasterService.error(20, "Timelast is null", new Throwable());
         }
         block.add(this, timelast);
-        running.setCancelator(this);
-        submit(running);
+        job.setCancelator(this);
+        submit(job);
         return true;
     }
 
@@ -277,16 +277,20 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener, J
        This Cpu is awake but n-1 others must be obtained via
        PullThread.getSleepers()
      */
-    boolean launchMPICH(Job job) {
+    protected boolean launchMPICH(Job job) {
     	int cpuCount = job.getCount() / job.getMpiPPN();
         List<Cpu> cpus = getPullThread().getSleepers(cpuCount - 1);
         cpus.add(this);
         Mpiexec mpiexec = new Mpiexec(cpus, job);
         boolean result = mpiexec.launch();
+        mpiLaunchHook(job, cpus, result);
         return result;
     }
     
-    boolean launchMPI(Job job) {
+    protected void mpiLaunchHook(Job job, List<Cpu> cpus, boolean success) {
+    }
+
+    protected boolean launchMPI(Job job) {
         int cpuCount = job.getCount() / job.getMpiPPN();
         List<Cpu> cpus = getPullThread().getSleepers(cpuCount - 1);
         cpus.add(0, this);
@@ -298,6 +302,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener, J
         Mpiexec2 mpiexec = new Mpiexec2(cpus, job, timelast);
         job.setCancelator(mpiexec);
         boolean result = mpiexec.launch();
+        mpiLaunchHook(job, cpus, result);
         return result;
     }
 
@@ -356,7 +361,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener, J
             return sgn(l);
         }
         else {
-            return (int) diff.getMilliseconds();
+            return sgn(diff.getMilliseconds());
         }
     }
 
@@ -392,7 +397,7 @@ public class Cpu implements Comparable<Cpu>, Callback, ExtendedStatusListener, J
 
     @Override
     public String toString() {
-        return id + ":" + timelast;
+        return id + ":" + System.identityHashCode(this) + ":" + timelast;
     }
 
     public List<Job> getDoneJobs() {

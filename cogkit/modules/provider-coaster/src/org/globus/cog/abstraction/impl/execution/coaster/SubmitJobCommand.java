@@ -184,6 +184,7 @@ public class SubmitJobCommand extends Command {
         String identity = t.getIdentity().toString();
         if (!simple) {
             add(sb, "configid", configId);
+            add(sb, "name", t.getName());
         }
         add(sb, "identity", identity);
         add(sb, "executable", spec.getExecutable());

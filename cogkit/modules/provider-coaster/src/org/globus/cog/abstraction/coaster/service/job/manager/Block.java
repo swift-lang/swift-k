@@ -207,6 +207,7 @@ public class Block implements StatusListener, Comparable<Block> {
         synchronized (cpus) {
             if (scpus.remove(cpu) == null) {
                 if (!shutdown) {
+                    logger.info("scpus: " + scpus);
                     CoasterService.error(16, "CPU was not in the block", new Throwable());
                 }
             }
@@ -447,7 +448,7 @@ public class Block implements StatusListener, Comparable<Block> {
             for (int i = 0; i < concurrency; i++) {
                 //this id scheme works out because the sid is based on the
                 //number of cpus already added (i.e. cpus.size()).
-                Cpu cpu = new Cpu(wid + i, n);
+                Cpu cpu = newCpu(wid + i, n);
                 scpus.put(cpu, cpu.getTimeLast());
                 cpus.add(cpu);
                 n.add(cpu);
@@ -463,6 +464,10 @@ public class Block implements StatusListener, Comparable<Block> {
         }
     }
     
+    protected Cpu newCpu(int id, Node n) {
+        return new Cpu(id, n);
+    }
+
     private int seq;
 
     public String nextId() {
