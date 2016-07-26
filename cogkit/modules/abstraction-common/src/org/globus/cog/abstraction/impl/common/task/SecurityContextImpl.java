@@ -48,7 +48,7 @@ public class SecurityContextImpl implements SecurityContext {
 
     public SecurityContextImpl(Object credentials, String alias) {
         this();
-        this.credentials = credentials;
+        setCredentials(credentials);
         this.alias = alias;
     }
 
@@ -130,7 +130,13 @@ public class SecurityContextImpl implements SecurityContext {
     }
     
     protected Object getProperty(Map<String, Object> m, String key) {
+        if (m == null) {
+            throw new IllegalArgumentException("Missing credential property '" + key + "'");
+        }
         Object o = m.get(key);
+        if (o == null) {
+            o = m.get(key.toLowerCase());
+        }
         if (o == null) {
             throw new IllegalArgumentException("Missing credential property '" + key + "'");
         }
@@ -148,6 +154,9 @@ public class SecurityContextImpl implements SecurityContext {
     }
 
     private String toString(Object o, String key) {
+        if (o == null) {
+            return null;
+        }
         if (o instanceof String) {
             return (String) o;
         }
