@@ -28,6 +28,7 @@
  */
 package org.globus.cog.abstraction.impl.execution.coaster;
 
+import org.globus.cog.abstraction.coaster.service.local.VersionHandler;
 import org.globus.cog.abstraction.interfaces.ExecutionService;
 import org.globus.cog.abstraction.interfaces.JobSpecification;
 import org.globus.cog.abstraction.interfaces.Service;
@@ -40,6 +41,7 @@ public class ServiceConfigurationCommand extends Command {
     public ServiceConfigurationCommand(Task task) {
         super(NAME);
         
+        addOutData("requireVersion=" + VersionHandler.VERSION);
         String jm = null;
         Service s = task.getService(0);
         if (s instanceof ExecutionService) {

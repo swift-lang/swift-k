@@ -35,6 +35,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.globus.cog.abstraction.coaster.service.job.manager.AbstractSettings;
 import org.globus.cog.abstraction.coaster.service.job.manager.JobQueue;
+import org.globus.cog.abstraction.coaster.service.local.VersionHandler;
 import org.globus.cog.abstraction.impl.execution.coaster.ServiceConfigurationCommand;
 import org.globus.cog.coaster.ProtocolException;
 import org.globus.cog.coaster.channels.ChannelManager;
@@ -47,6 +48,20 @@ public class ServiceConfigurationHandler extends RequestHandler {
     public static final String NAME = ServiceConfigurationCommand.NAME;
 
     public void requestComplete() throws ProtocolException {
+        String requiredVersion = getInDataAsString(0);
+        
+        if (requiredVersion.startsWith("requireVersion=")) {
+            int ix = requiredVersion.indexOf('=');
+            String vnum = requiredVersion.substring(ix + 1).trim();
+            if (!vnum.equals(VersionHandler.VERSION)) {
+                throw new ProtocolException("Client requires version " + vnum + 
+                    ", but this service is version " + VersionHandler.VERSION);
+            }
+        }
+        else {
+            throw new ProtocolException("No version requirement information supplied by the client. Please update the client.");
+        }
+        
         CoasterChannel channel = getChannel();
         
         ChannelManager.getManager().registerChannel("id://" + channel.getID(), channel);
@@ -66,7 +81,7 @@ public class ServiceConfigurationHandler extends RequestHandler {
             try {
                 List<byte[]> l = getInDataChunks();
                 if (l != null) {
-                    for (byte[] b : l) {
+                    for (byte[] b : l.subList(1, l.size())) {
                         String s = new String(b);
                         String[] p = s.split("=", 2);
                         settings.put(p[0], p[1]);
