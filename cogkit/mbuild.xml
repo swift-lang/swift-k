@@ -34,7 +34,7 @@
 
 	<property name="jar.name" value="cog-${module.name}-${version}.jar"/>
 	<property name="jar.file" value="${build.dir}/${jar.name}"/>
-	<property name="force.java.version" value="1.5"/>
+	<property name="force.java.version" value="1.6"/>
     
 	<property name="javadoc.files" value="*"/>
 	<property name="javadoc.index.dir" value="${dist.dir}/javadoc"/>
