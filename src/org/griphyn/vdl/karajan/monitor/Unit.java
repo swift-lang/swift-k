@@ -199,7 +199,7 @@ public abstract class Unit {
                 case -3:
                     return "n";
                 case -2:
-                    return "μ";
+                    return "\u00B5";
                 case -1:
                     return "m";
                 case 0:
