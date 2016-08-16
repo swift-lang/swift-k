@@ -520,11 +520,13 @@ public class Karajan {
 				iMapping.setLine(var.getExpression().getLine());
 				if (exprType.equals(Types.STRING)) {
 					iMapping.setName("SingleFileMapper");
-					iMapping.addParameter(new IMappingParameter("file", expr));
+					//iMapping.addParameter(new IMappingParameter("file", expr));
+					iMapping.addParameter(mappingParameter(new MappingParameter("file", var.getExpression()), expr, container));
 				}
 				else if (exprType.isArray() && (exprType.itemType().equals(Types.STRING) || exprType.itemType().isMapped())) {
                     iMapping.setName("FixedArrayMapper");
-                    iMapping.addParameter(new IMappingParameter("files", expr));
+                    //iMapping.addParameter(new IMappingParameter("files", expr));
+                    iMapping.addParameter(mappingParameter(new MappingParameter("files", var.getExpression()), expr, container));
 				}
 				else {
 					throw new CompilationException(getLocation(var) + "cannot use expression of type " + 
@@ -541,7 +543,7 @@ public class Karajan {
                     
     				checkMapperParams(mapperType, mapping);
     				for (MappingParameter param : mapping.getParameters()) {
-    					iMapping.addParameter(mappingParameter(param, container));
+    					iMapping.addParameter(mappingParameter(param, null, container));
     				}
     				iVar.setMapping(iMapping);
     			}
@@ -585,13 +587,16 @@ public class Karajan {
         }
     }
 
-    private IMappingParameter mappingParameter(MappingParameter param, IStatementContainer container) throws CompilationException {
+    private IMappingParameter mappingParameter(MappingParameter param, IExpression iParamValue, IStatementContainer container) throws CompilationException {
         IMappingParameter iParam = new IMappingParameter();
         iParam.setName(param.getName());
         Expression.Type type = param.getValue().getExpressionType();
+        if (iParamValue == null) {
+            iParamValue = expressionToKarajan(param.getValue(), container);
+        }
         if (type == Expression.Type.VARIABLE_REFERENCE) {
-            iParam.setValue(expressionToKarajan(param.getValue(), container));
-        } 
+            iParam.setValue(iParamValue);
+        }
         else {
             /*
              * The declarations are not processed in parallel. In order to avoid issues when
@@ -599,9 +604,7 @@ public class Karajan {
              * futures as placeholders. Then the actual processing happens.
              */
             String parameterVariableName = "swift.mapper." + (internedIDCounter++);
-            
-            IExpression iParamValue = expressionToKarajan(param.getValue(), container);
-            
+                        
             // use the abstract syntax tree rather than the intermediate tree
             VariableDeclaration decl = new VariableDeclaration();
             decl.setName(parameterVariableName);
