@@ -3253,8 +3253,8 @@ sub execPortable {
 			exit(-1);
 		}
 		if (!Win32::Process::Create($process, $executable, $cmdline, 0, NORMAL_PRIORITY_CLASS(), ".")) {
-			my $errno = $!;
-			wlog DEBUG, "Failed to create process: $!\n";
+			my $err = Win32::FormatMessage(Win32::GetLastError());
+			wlog DEBUG, "Failed to create process: $err\n";
 			return;
 		}
 		my $pid = $process->GetProcessID();
