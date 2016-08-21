@@ -3016,6 +3016,12 @@ sub killjob {
 		# only kill it once
 		delete $ASYNC_WAIT_DATA{$pid};
 		
+		# decrement these here since removing the job from ASYNC_WAIT_DATA
+		# prevents the worker from checking the process status and thus
+		# updating these variables 
+		$ASYNC_RUNNING--;
+		$JOBS_RUNNING--;
+		
 		return $result;
 	}
 	else {
