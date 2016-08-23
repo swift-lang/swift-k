@@ -191,6 +191,7 @@ if ($WINDOWS) {
 	eval "use Win32::Process qw(STILL_ACTIVE NORMAL_PRIORITY_CLASS)";
 	eval "use Win32";
 	eval "use Win32::ShellQuote";
+	eval "use File::Which";
 	
 	$SIG{QUIT} = \&KILLWINPROC;
 }
@@ -3233,8 +3234,8 @@ sub runjob {
 		$JOBARGS = moveSwiftwrapArgsToFile(".", $JOBARGS);
 	}
 	
-	execPortable($executable, $JOBARGS);
-	exitSubprocess($WR, "Could not execute $executable: $!");
+	my $launcherr = execPortable($executable, $JOBARGS);
+	exitSubprocess($WR, "Could not execute $executable: $launcherr");
 }
 
 sub execPortable {
@@ -3243,19 +3244,22 @@ sub execPortable {
 	if ($WINDOWS) {
 		
 		my $process;
-		$_ = shift @$args;
 		my $cmdline = Win32::ShellQuote::quote_system_string(@$args);
+		my $fullpath = which($executable);
+		if ($fullpath) {
+			return "Could not find executable '$executable' in path";
+		} 
 		
-		wlog DEBUG, "cmdline: $cmdline\n";
+		wlog DEBUG, "exec: $fullpath, cmdline: $cmdline\n";
 		
 		if ($QUITRECEIVED) {
 			wlog DEBUG, "Windows process canceled before it started\n";
 			exit(-1);
 		}
-		if (!Win32::Process::Create($process, $executable, $cmdline, 0, NORMAL_PRIORITY_CLASS(), ".")) {
+		if (!Win32::Process::Create($process, $fullpath, $cmdline, 0, NORMAL_PRIORITY_CLASS(), ".")) {
 			my $err = Win32::FormatMessage(Win32::GetLastError());
 			wlog DEBUG, "Failed to create process: $err\n";
-			return;
+			return $err;
 		}
 		my $pid = $process->GetProcessID();
 		wlog DEBUG, "Windows PID: $pid\n";
@@ -3277,6 +3281,7 @@ sub execPortable {
 	}
 	else {
 		my $dummy = exec { $executable } @$args;
+		return $!;
 	}
 }
 
