@@ -3244,7 +3244,7 @@ sub execPortable {
 	if ($WINDOWS) {
 		
 		my $process;
-		my $cmdline = Win32::ShellQuote::quote_system_string(@$args);
+		my $cmdline = Win32::ShellQuote::quote_native(@$args);
 		my $fullpath = which($executable);
 		wlog DEBUG, "exec: $fullpath, cmdline: $cmdline\n";
 		if (!$fullpath) {
