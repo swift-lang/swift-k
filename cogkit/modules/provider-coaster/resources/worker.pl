@@ -3246,11 +3246,11 @@ sub execPortable {
 		my $process;
 		my $cmdline = Win32::ShellQuote::quote_system_string(@$args);
 		my $fullpath = which($executable);
-		if ($fullpath) {
-			return "Could not find executable '$executable' in path";
-		} 
-		
 		wlog DEBUG, "exec: $fullpath, cmdline: $cmdline\n";
+		if ($fullpath) {
+			wlog DEBUG, "PATH: $ENV{PATH}\n";
+			return "Could not find executable '$executable' in path";
+		}
 		
 		if ($QUITRECEIVED) {
 			wlog DEBUG, "Windows process canceled before it started\n";
