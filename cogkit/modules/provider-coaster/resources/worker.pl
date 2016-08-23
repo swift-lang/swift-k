@@ -3210,9 +3210,15 @@ sub runjob {
     $ENV{"SWIFT_WORKER_PID"} = $WORKERPID;
 	unshift @$JOBARGS, $executable;
 	wlog DEBUG, "Command: @$JOBARGS\n";
+	
+	my $dir;
 	if (defined $$JOB{"directory"}) {
-		wlog DEBUG, "chdir: $$JOB{directory}\n";
-	    chdir $$JOB{"directory"};
+		$dir = $$JOB{"directory"};
+		wlog DEBUG, "chdir: $dir\n";
+	    chdir $dir;
+	}
+	else {
+		$dir = ".";
 	}
 	if (defined $sout) {
 		wlog DEBUG, "STDOUT: $sout\n";
@@ -3234,12 +3240,12 @@ sub runjob {
 		$JOBARGS = moveSwiftwrapArgsToFile(".", $JOBARGS);
 	}
 	
-	my $launcherr = execPortable($executable, $JOBARGS);
+	my $launcherr = execPortable($executable, $JOBARGS, $dir);
 	exitSubprocess($WR, "Could not execute $executable: $launcherr");
 }
 
 sub execPortable {
-	my ($executable, $args) = @_;
+	my ($executable, $args, $dir) = @_;
 	
 	if ($WINDOWS) {
 		
@@ -3256,7 +3262,7 @@ sub execPortable {
 			wlog DEBUG, "Windows process canceled before it started\n";
 			exit(-1);
 		}
-		if (!Win32::Process::Create($process, $fullpath, $cmdline, 0, NORMAL_PRIORITY_CLASS(), ".")) {
+		if (!Win32::Process::Create($process, $fullpath, $cmdline, 0, NORMAL_PRIORITY_CLASS(), $dir)) {
 			my $err = Win32::FormatMessage(Win32::GetLastError());
 			wlog DEBUG, "Failed to create process: $err\n";
 			return $err;
