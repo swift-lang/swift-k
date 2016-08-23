@@ -3247,7 +3247,7 @@ sub execPortable {
 		my $cmdline = Win32::ShellQuote::quote_system_string(@$args);
 		my $fullpath = which($executable);
 		wlog DEBUG, "exec: $fullpath, cmdline: $cmdline\n";
-		if ($fullpath) {
+		if (!$fullpath) {
 			wlog DEBUG, "PATH: $ENV{PATH}\n";
 			return "Could not find executable '$executable' in path";
 		}
