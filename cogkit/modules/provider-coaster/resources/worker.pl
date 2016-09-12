@@ -3381,8 +3381,8 @@ sub rundockerjob {
 	
 	# volumes
 	my $mountpoint = "/scratch";
-	if (defined $$JOB{"docker.jobDirMountPoint"}) {
-		$mountpoint = $$JOB{"docker.jobDirMountPoint"};
+	if (defined $$JOB{"docker.jobdirmountpoint"}) {
+		$mountpoint = $$JOB{"docker.jobdirmountpoint"};
 	}
 	
 	push(@a, "-v=$jobdir:$mountpoint");
@@ -3395,7 +3395,7 @@ sub rundockerjob {
 	
 	push(@a, @$JOBARGS);
 	
-	if ($$JOB{"docker.alwaysPull"} eq "true") {
+	if ($$JOB{"docker.alwayspull"} eq "true") {
 		wlog DEBUG, "Pulling image $fullImage\n";
 		my $out = `$docker pull $fullImage 2>&1`;
 		if ($? != 0) {
