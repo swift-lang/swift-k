@@ -65,7 +65,7 @@ public class Block implements StatusListener, Comparable<Block> {
         return submitter;
     }
 
-    private int workers, activeWorkers;
+    private int workers, activeWorkers, failedWorkers;
     private TimeInterval walltime, maxIdleTime;
     private Time endTime, startTime, deadline, creationTime, terminationTime, shutdownTime;
     private final SortedMap<Cpu, Time> scpus;
@@ -267,7 +267,7 @@ public class Block implements StatusListener, Comparable<Block> {
         }
         else if (running) {
             return bqp.getMetric().size(
-                workers,
+                workers - failedWorkers,
                 (int) TimeInterval.max(getEndTime().subtract(Time.max(Time.now(), startTime)), NO_TIME).getSeconds());
         }
         else {
@@ -661,6 +661,8 @@ public class Block implements StatusListener, Comparable<Block> {
         int left;
         synchronized(cpus) {
             nodes.remove(node);
+            this.activeWorkers -= node.getConcurrency();
+            this.failedWorkers += node.getConcurrency();
             for (Cpu cpu : node.getCpus()) {
                 scpus.remove(cpu);
                 cpus.remove(cpu);
