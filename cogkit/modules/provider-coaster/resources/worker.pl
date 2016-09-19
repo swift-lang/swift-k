@@ -571,16 +571,28 @@ sub sockSend {
 	
 	my $start = time();
 	my $r = $SOCK->send($buf, 0);
+	my $err = $!;
 	if (!defined $r) {
-		if ($! == POSIX::EWOULDBLOCK) {
+		if ($err == POSIX::EWOULDBLOCK) {
 			wlog(TRACE, "Send would block\n");
+			$r = 0;
+		}
+		elsif ($err == POSIX::EPIPE) {
+			wlog(INFO, "Broken pipe; trying to re-connect\n");
+			$CONNECTED = 0;
+			reconnect();
+			if (!$CONNECTED) {
+				dieNicely("Failed to re-connect to service");
+			}
+			# resend
 			$r = 0;
 		}
 		else {
 			$CONNECTED = 0;
-			dieNicely("Send failed: $!");
+			dieNicely("Send failed: $err");
 		}
 	}
+
 	my $diff = sprintf("%.8f", time() - $start);
 	
 	my $left = length($buf) - $r;
@@ -3658,6 +3670,7 @@ wlog(INFO, "Running on node $myhost\n");
 # wlog(INFO, "New log name: $LOGNEW \n");
 
 init();
+$SIG{"PIPE"} = "IGNORE"; 
 
 mainloop();
 

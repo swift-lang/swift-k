@@ -300,6 +300,7 @@ public class BlockQueueProcessor extends AbstractBlockWorkerManager implements R
                 holding.add(j);
                 count++;
             }
+            runningSize = getRunningSizeLeft();
         }
         if (count > 0) {
             if (logger.isInfoEnabled()) {

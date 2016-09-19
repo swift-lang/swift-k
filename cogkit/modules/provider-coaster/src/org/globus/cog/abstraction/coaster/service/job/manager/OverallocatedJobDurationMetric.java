@@ -76,6 +76,9 @@ public class OverallocatedJobDurationMetric implements Metric {
         if (startTime != null) {
             timeLeft = timeLeft.subtract(Time.now().subtract(startTime));
         }
+        if (timeLeft.getMilliseconds() < 0) {
+            timeLeft = TimeInterval.fromMilliseconds(0);
+        }
         return pow(timeLeft.getSeconds(), settings.getParallelism());
     }
 

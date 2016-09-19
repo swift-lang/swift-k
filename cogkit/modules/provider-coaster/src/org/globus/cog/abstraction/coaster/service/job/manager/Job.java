@@ -185,6 +185,7 @@ public class Job implements Comparable<Job> {
     public void start() {
         starttime = Time.now();
         endtime = Time.now().add(walltime);
+        running = true;
         if (logger.isDebugEnabled())
             logger.debug(this.toString() + " start: " +
                          starttime.getSeconds() + "-" +
