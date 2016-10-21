@@ -61,7 +61,8 @@ public abstract class AbstractCoasterChannel implements CoasterChannel {
 	public static final int DEFAULT_HBI_SPREAD = 10;
 	
 	public static final int TIMEOUT_CHECK_INTERVAL = 1;
-	public static final int TIMEOUT = 120;
+	// Blue Waters increase
+	public static final int TIMEOUT = 300;
 	
 	private final UserContext userContext;
 	private RequestManager requestManager;

@@ -127,12 +127,20 @@ public class PBSExecutor extends AbstractExecutor {
 	}
 	
 	protected void writeWallTime(Writer wr) throws IOException {
-		Object walltime = getSpec().getAttribute("maxwalltime");
-		if (walltime != null) {
-			wr.write("#PBS -l walltime="
-					+ WallTime.normalize(walltime.toString(), "pbs-native")
-					+ '\n');
-		}
+
+	    /* mjw hack */
+	    /* If pbs.resource_list is specified, OMIT the maxwalltime attribute. User MUST MANUALLY put walltime= in the pbs.resource_list. */
+	    String resources =
+		(String) spec.getAttribute("pbs.resource_list");
+	    if (resources != null && resources.length() > 0) return;
+	    /* end mjw hack */
+
+	    Object walltime = getSpec().getAttribute("maxwalltime");
+	    if (walltime != null) {
+		wr.write("#PBS -l walltime="
+			 + WallTime.normalize(walltime.toString(), "pbs-native")
+			 + '\n');
+	    }
 	}
 
 	private int parseAndValidateInt(Object obj, String name) {
@@ -275,15 +283,6 @@ public class PBSExecutor extends AbstractExecutor {
 		wr.write("#PBS -o " + quote(stdout) + '\n');
 		wr.write("#PBS -e " + quote(stderr) + '\n');
 
-		for (String name : spec.getEnvironmentVariableNames()) {
-			// "export" is necessary on the Cray XT5 Crow
-			wr.write("export ");
-			wr.write(name);
-			wr.write('=');
-			wr.write(quote(spec.getEnvironmentVariable(name)));
-			wr.write('\n');
-		}
-
 		if (spec.getEnvironmentVariableNames().size() > 0) {
 		    wr.write("#PBS -v " + makeList(spec.getEnvironmentVariableNames()) + '\n');
 		}
@@ -300,6 +299,15 @@ public class PBSExecutor extends AbstractExecutor {
 		boolean aprun = false;
 		if (spec.getAttribute("pbs.aprun") != null) {
 		    aprun = true;
+		}
+
+		for (String name : spec.getEnvironmentVariableNames()) {
+			// "export" is necessary on the Cray XT5 Crow
+			wr.write("export ");
+			wr.write(name);
+			wr.write('=');
+			wr.write(quote(spec.getEnvironmentVariable(name)));
+			wr.write('\n');
 		}
 
 		String type = (String) spec.getAttribute("jobType");

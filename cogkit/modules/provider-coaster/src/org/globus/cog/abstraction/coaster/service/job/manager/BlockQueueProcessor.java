@@ -352,6 +352,7 @@ public class BlockQueueProcessor extends AbstractQueueProcessor implements Regis
                 holding.add(j);
                 count++;
             }
+            runningSize = getRunningSizeLeft();
         }
         if (count > 0) {
             if (logger.isInfoEnabled()) {

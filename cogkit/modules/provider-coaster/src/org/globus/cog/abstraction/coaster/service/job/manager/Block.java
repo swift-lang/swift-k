@@ -249,7 +249,7 @@ public class Block implements StatusListener, Comparable<Block> {
         }
         else if (running) {
             return bqp.getMetric().size(
-                workers,
+                activeWorkers,
                 (int) TimeInterval.max(endtime.subtract(Time.max(Time.now(), starttime)), NO_TIME).getSeconds());
         }
         else {
@@ -607,6 +607,7 @@ public class Block implements StatusListener, Comparable<Block> {
         int left;
         synchronized(cpus) {
             nodes.remove(node);
+            this.activeWorkers -= node.getConcurrency();
             for (Cpu cpu : node.getCpus()) {
                 scpus.remove(cpu);
                 cpus.remove(cpu);

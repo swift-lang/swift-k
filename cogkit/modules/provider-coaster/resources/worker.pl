@@ -120,7 +120,8 @@ use constant {
 
 my $TAG = int(rand(10000));
 use constant RETRIES => 3;
-use constant CHANNEL_TIMEOUT => 180;
+# increased to avoid timeout on Blue Waters during quiesce events
+use constant CHANNEL_TIMEOUT => 300;
 use constant HEARTBEAT_INTERVAL => 60;
 use constant MAXFRAGS => 16;
 # TODO: Make this configurable (#537)
@@ -522,16 +523,28 @@ sub sockSend {
 	
 	my $start = time();
 	my $r = $SOCK->send($buf, 0);
+	my $err = $!;
 	if (!defined $r) {
-		if ($! == POSIX::EWOULDBLOCK) {
+		if ($err == POSIX::EWOULDBLOCK) {
 			wlog(TRACE, "Send would block\n");
+			$r = 0;
+		}
+		elsif ($err == POSIX::EPIPE) {
+			wlog(INFO, "Broken pipe; trying to re-connect\n");
+			$CONNECTED = 0;
+			reconnect();
+			if (!$CONNECTED) {
+				dieNicely("Failed to re-connect to service");
+			}
+			# resend
 			$r = 0;
 		}
 		else {
 			$CONNECTED = 0;
-			dieNicely("Send failed: $!");
+			dieNicely("Send failed: $err");
 		}
 	}
+
 	my $diff = sprintf("%.8f", time() - $start);
 	
 	my $left = length($buf) - $r;
@@ -2987,6 +3000,7 @@ wlog(INFO, "Running on node $myhost\n");
 # wlog(INFO, "New log name: $LOGNEW \n");
 
 init();
+$SIG{"PIPE"} = "IGNORE"; 
 
 mainloop();
 

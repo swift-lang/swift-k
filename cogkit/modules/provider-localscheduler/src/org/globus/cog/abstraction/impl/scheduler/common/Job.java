@@ -84,6 +84,9 @@ public class Job {
 		}
 		File f = null;
 		if (exitcodeFileName != null) {
+		    if (logger.isDebugEnabled()) {
+		        logger.debug("Reading exit code file for " + jobID);
+		    }
 			f = new File(exitcodeFileName);	
 			if (f != null && !f.exists()) {
 				if (ticks == 5) {
@@ -99,6 +102,11 @@ public class Job {
 			else if (exitcode != NO_EXITCODE) {
 				f.delete();
 			}
+		}
+		else {
+		    if (logger.isDebugEnabled()) {
+                logger.debug("Job " + jobID + " has no exit code file");
+            }
 		}
 
 		processExitCode(tentativeState);

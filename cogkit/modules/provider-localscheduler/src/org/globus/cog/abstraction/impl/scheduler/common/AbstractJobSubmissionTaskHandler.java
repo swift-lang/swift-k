@@ -104,6 +104,9 @@ public abstract class AbstractJobSubmissionTaskHandler extends
 	}
 
 	public void processCompleted(int exitCode) {
+	    if (logger.isDebugEnabled()) {
+	        logger.debug("Process " + getTask().getIdentity() + " completed. Exit code: " + exitCode);
+	    }
 		if (getTask().getStatus().getStatusCode() != Status.FAILED) {
 			if (exitCode == 0) {
 				getTask().setStatus(Status.COMPLETED);
@@ -115,14 +118,23 @@ public abstract class AbstractJobSubmissionTaskHandler extends
 	}
 
 	public void processFailed(String message) {
+	    if (logger.isDebugEnabled()) {
+            logger.debug("Process " + getTask().getIdentity() + " failed: " + message);
+        }
 		failTask(message, null);
 	}
 
 	public void processFailed(Exception e) {
+	    if (logger.isDebugEnabled()) {
+            logger.debug("Process " + getTask().getIdentity() + " failed: " + e);
+        }
 		failTask(null, e);
 	}
 
 	public void statusChanged(int status) {
+	    if (logger.isDebugEnabled()) {
+            logger.debug("Process " + getTask().getIdentity() + " status changed: " + status);
+        }
 		if (status == Job.STATE_RUNNING) {
 		    Job job = executor.getJob();
 		    String location = null;
