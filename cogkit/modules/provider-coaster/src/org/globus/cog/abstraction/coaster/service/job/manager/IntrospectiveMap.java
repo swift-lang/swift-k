@@ -173,6 +173,11 @@ public abstract class IntrospectiveMap extends AbstractMap<String, Object> {
                     }
 
                     @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
                     public java.util.Map.Entry<String, Object> next() {
                         final String name;
                         final Object value;
