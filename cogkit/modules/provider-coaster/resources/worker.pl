@@ -738,7 +738,7 @@ sub nextFileData {
 	}
 	elsif ($s == PUT_CMD_SENT) {
 		$$state{"state"} = $s + 1;
-		return (0, pack("VV", $$state{"size"}, 0), CONTINUE);
+		return (0, pack("VV", $$state{"size"} & 0xffffffff, $$state{"size"} >> 32), CONTINUE);
 	}
 	elsif ($s == PUT_SIZE_SENT) {
 		$$state{"state"} = $s + 1;
