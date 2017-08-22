@@ -127,8 +127,7 @@ use constant {
 
 my $TAG = int(rand(10000));
 use constant RETRIES => 3;
-# increased to avoid timeout on Blue Waters during quiesce events
-use constant CHANNEL_TIMEOUT => 300;
+use constant CHANNEL_TIMEOUT => 180;
 use constant HEARTBEAT_INTERVAL => 60;
 use constant MAXFRAGS => 16;
 # TODO: Make this configurable (#537)
@@ -571,23 +570,14 @@ sub sockSend {
 	my ($buf) = @_;
 	
 	my $start = time();
-	my $r;
-	my $err;
-	eval {
-		$r = $SOCK->send($buf, 0);
-		$err = $!; # possibly EPIPE
-	};
-	if ($@) {
-		$err = $@;
-		wlog(DEBUG, "Caught send error: $err\n");
-	}
+	my $r = $SOCK->send($buf, 0);
+	my $err = $!;
 	if (!defined $r) {
 		if ($err == POSIX::EWOULDBLOCK) {
 			wlog(TRACE, "Send would block\n");
 			$r = 0;
 		}
-		elsif (($err == POSIX::EPIPE) || (index($err, "send: Cannot determine peer address") != -1)) {
-			initiateReconnect();
+		elsif ($err == POSIX::EPIPE) {
 			wlog(INFO, "Broken pipe; trying to re-connect\n");
 			$CONNECTED = 0;
 			reconnect();
