@@ -99,6 +99,7 @@ def canonicalFileName(entry):
     return output
 
 def insertFile(fName, sRunDir, hname, crs, direction, app_exec_id, scriptStartTime, useSQLite, usePgSQL):
+    
     fileLocation=sRunDir + "/" + fName
     # files are temporary by default in the concurrent mapper
     if "_concurrent" in fName:
@@ -145,6 +146,10 @@ def getConfigProperty(line):
 
 finalState='FAIL'
 directStaging=False
+
+args=[]
+values=[]
+
 # Parse log
 for line in iter(log_file):
 
@@ -158,9 +163,14 @@ for line in iter(log_file):
     if 'GLOBUS_HOSTNAME' in line:
         hostname=line.split()[5]
 
-    if 'source file' in line:
-        scriptFileName=line.split()[4].strip(':')
-
+    if 'Loader ARGUMENTS' in line:
+        scriptFileName=line.split()[9].strip(',').strip(']')
+	if len(line.split()) > 9:
+	    for arg in range(10, len(line.split())):
+	        arg, value = (line.split()[arg].strip(',').strip(']').split('='))
+		args.append(arg.strip('-'))
+		values.append(value)
+	
     if 'CWD' in line:
         scriptRunDir=line.split()[5].rstrip('/.')
 
@@ -191,22 +201,23 @@ for line in iter(log_file):
             task         = getTask(taskid)
             task.stageIn = getBracketedText(line)
             task.startStageIn = getISOTime(line)
+	   				
         if "END" in line:
             taskid       = getValue(line, "jobid")
             task         = getTask(taskid)
             task.stopStageIn = getISOTime(line)
-
+	           
     elif "Staging out" in line:
         if "START" in line:
             taskid       = getValue(line, "jobid")
             task         = getTask(taskid)
             task.startStageOut = getISOTime(line)
+	
         if "END" in line:
             taskid       = getValue(line, "jobid")
             task         = getTask(taskid)
             task.stopStageOut = getISOTime(line)
-
-
+    
     elif "FILE_STAGE_OUT_START" in line:
         taskid         = getValue(line, "jobid")
         task           = getTask(taskid)
@@ -295,6 +306,10 @@ if importProv:
         c.execute('INSERT INTO script_run VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                   (runId, scriptFileName, log_filename, hostname, scriptRunDir,
                   swiftVersion, finalState, scriptStartTime, scriptDuration))
+      
+	for i in range(len(args)):
+	   c.execute('INSERT INTO script_run_args VALUES (?, ?, ?)', (runId, args[i], values[i]))
+
 
     if runIsNewPgSQL:
         print "Provenance import: importing run into PostgreSQL " + runId
@@ -316,11 +331,11 @@ if importProv:
         for t in sorted(tasks.values(), key=operator.attrgetter('taskNumber')):
             appExecId=runId + ":" + t.taskId
             appExecDuration=computeDuration(t.startTime, t.stopTime)
-            if directStaging == True:
+	    if directStaging == True:
                 stageInDuration=0.0
                 stageOutDuration=0.0
             else:
-                stageInDuration=computeDuration(t.startStageIn, t.stopStageIn)
+		stageInDuration=computeDuration(t.startStageIn, t.stopStageIn)
                 stageOutDuration=computeDuration(t.startStageOut, t.stopStageOut)
             if runIsNewSQLite:
                 c.execute('INSERT INTO app_exec VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -375,7 +390,10 @@ if importProv:
                                             '\'' + entry[1].rstrip('%') + '\');"')
                             else:
                                 if runIsNewSQLite:
-                                    c.execute("UPDATE resource_usage SET %s=%s WHERE app_exec_id='%s'" % (entry[0], entry[1].rstrip('%'), appExecId))
+				    if entry[1].rstrip('%') == "?":
+                                    	c.execute("UPDATE resource_usage SET %s=%s WHERE app_exec_id='%s'" % (entry[0], 'NULL', appExecId))
+				    else:
+					c.execute("UPDATE resource_usage SET %s=%s WHERE app_exec_id='%s'" % (entry[0], entry[1].rstrip('%'), appExecId))
                                 if runIsNewPgSQL:
                                     os.popen(pgsqlConnString + ' -c "UPDATE resource_usage SET ' + entry[0] + '=' +
                                             entry[1].rstrip('%') + ' WHERE app_exec_id=\'' + appExecId + '\'"')
