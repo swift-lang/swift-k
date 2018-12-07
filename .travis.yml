@@ -9,10 +9,12 @@ git:
   submodules: false
 
 env:
- - TEST=tests/language/cast.swift  CONF=tests/language/default.conf
- - TEST=tests/language/cast.swift  CONF=tests/language/prof.conf
- - TEST=tests/language/sweep.swift CONF=tests/language/default.conf
- - TEST=tests/language/sweep.swift CONF=tests/language/prov.conf
+ - TEST=tests/language/cast.swift    CONF=tests/language/default.conf
+ - TEST=tests/language/cast.swift    CONF=tests/language/prov.conf
+ - TEST=tests/language/sweep.swift   CONF=tests/language/default.conf
+ - TEST=tests/language/sweep.swift   CONF=tests/language/prov.conf
+ - TEST=tests/language/foreach.swift CONF=tests/language/default.conf
+ - TEST=tests/language/foreach.swift CONF=tests/language/prov.conf
 
 before_install: 
  - ant redist
